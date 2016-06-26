@@ -1,6 +1,43 @@
-# TinyG 2
+# TinyG 2 - Edge Branch
 
 This branch (`edge`) is for the adventurous. It is not guaranteed to be stable. It's not guaranteed AT ALL.
+
+### Notes
+
+- Get rid of the build instructions and point people at the correct wiki pages
+- Take a pass through those same wiki pages to make sure they are up to date
+- Add a Line Transmission Protocol wiki page - perhaps combined with the G sender information
+
+
+## Changelog for Edge Branch
+Most functions and changes to functions are noted here: https://github.com/synthetos/g2_private/wiki/Configuration-for-Firmware-Version-0.98
+
+Specific Changes:
+- JA
+- Linemode and recommended protocol
+
+### G sender
+- Provide links to Node G Sender and instruction how to install and use
+
+### Changes to Project Structure and Motate
+- Need to document these
+
+### Build Notes
+See One of:
+
+- https://github.com/synthetos/g2_private/wiki/Compiling-G2-on-Linux-and-OS-X-(command-line)
+
+- https://github.com/synthetos/g2_private/wiki/Compiling-G2-on-OS-X-(with-Xcode)
+
+- https://github.com/synthetos/g2_private/wiki/Compiling-G2-on-Windows-(Atmel-Studio-6.2)
+
+
+
+### Known Issues
+- Communications bug for high-speed transmission
+
+
+# ---- DEPRECATED ----
 
 # Build Instructions
 
