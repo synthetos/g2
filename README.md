@@ -7,7 +7,10 @@ This branch (`edge`) is for the adventurous. It is not guaranteed to be stable. 
 - Get rid of the build instructions and point people at the correct wiki pages
 - Take a pass through those same wiki pages to make sure they are up to date
 - Add a Line Transmission Protocol wiki page - perhaps combined with the G sender information
-- There are a bunch of wiki pages that need to be moved to public. And edit out the notes that say they need to be moved. See the Sidebar in G2_private for a list of the pages to be completed and moved
+- Update Status COdes page
+- Document Tram command
+- DOcucment temerature control commands (and M100's)
+- Remove _debug_trap()s_
 
 
 ## Changelog for Edge Branch
@@ -21,25 +24,58 @@ Communications has been advanced to support a linemode protocol to greatly simpl
 Build 100.xx also significantly advances the project structure to support multiple processor architectures, hardware configurations and machine configurations in the same code base. Motate has been cleaved off into its own subproject. We recommend carefully reading the Dev pages if you are coding or compiling.
 
 #### Functional Changes:
-- **Planner Changes**
-  - {ja:n} Junction Aggression
-  - {xjd:n} deprecated
+- Planner improvements to handle extreme cases found in some 3DP slicer outputs
 
-- {fbc:n} added
+- `{ja:n}` Junction Aggression replaces Junction Acceleration. Cornering now obeys full jerk limitation instead of the centripetal acceleration heuristic. JA is now a scaled value that is nominally set to 1.000. Set to less than 1 for slower cornering (less aggressive), greater than 1 (but probably less than 2) for more aggressive cornering.
 
-- Linemode and recommended protocol
+- Deprecated `{_jd:n}` as it was in support of the Junction Acceleration scheme.
+
+- Added `{fbc:n}` to report configuration file used during compilation
+
+- Added `G38.3`, `G38.4`, `G38.5` Gcodes to complete the G38.2 probing suite
+
+- Added automatic bed leveling (tramming) using 3 point probe and coordinate rotation
+
+- Added `{he1:n}`, `{he2:n}`, `{he3:n}` heater control groups. These codes are experimental and will change.
+
+- Added `{pid1:n}`, `{pid2:n}`, `{pid3:n}` ADC PID groups. These codes are experimental and may change.
+
+- Added `{do1:n}` ... `{do12:n}` digital output controls for controlling fans. These are experimental and will change.
+
+- Added `{out1:n}` ... `{out12:n}` digital output state readers for reading the condition of do's. These are experimental and may change.
+
+- Added `M100 ({...})` active comment. Currently only supports temperature setting command. The semantics of the temperature commands are experimental and will be changed in later releases.
+
+- Added `M101 ({...})` "wait-on-event" active comment. Currently only supports temperature wait command. The semantics of the temperature commands are experimental and will be changed in later releases.
+
+- Added `Linemode` communication protocol, and provide guidance to use linemode for much simpler and more reliable application-level flow control
+
+- Footer format has changed. Checksum is no longer supported and has been removed `(CONFIRM THAT THIS IS A build 100 change and not earlier)`
+
+- Added `ENQ/ACK handshake`. If the host sends an ASCII ENQ (0x05) the board should respond with an ACK (0x06). This is provided to facilitate automated testing (See Github/Synthetos/tg_pytest)
+
+- Added `setpoint` to homing to accommodate setting home position for non-zero switches.
+
+- Exception reports now provide more information about the nature and location of the exception.
+
+- Made changes to the Status Codes. See Status Codes wiki page
+
+- Removed `{cv:n}` configuration version tag
+
+- Code level changes are numerous. Here are a few:
+  - Added `tinyg_info.h` to isolate revision info from tinyg.h
+  - Removed char_t casts
 
 #### G sender
 - Provide links to Node G Sender and instruction how to install and use
 
 #### Project Structure and Motate Changes
-- See here for build instructions
-- Need to document these
+- Motate underpinnings and project structure have changed significantly to support multiple processor architectures, boards, and machine configurations cleanly in the same project. If this affects you please read up on the wiki.
 
 #### Known Issues
 - Communications bug for high-speed transmission
 - sbv300 configuration does not compile
-- An otherwise successful compile throws 3 Warnings: `changing start of section by 8 bytes` in ld.exe. This can be ignored.
+- Three compile warnings: `Changing start of section by 8 bytes` in ld.exe are thrown. These should be ignored (and if you know how to turn them off please let us know).
 
 
 ## Earlier Edges
