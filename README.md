@@ -7,14 +7,18 @@ This branch (`edge`) is for the adventurous. It is not guaranteed to be stable. 
 - Get rid of the build instructions and point people at the correct wiki pages
 - Take a pass through those same wiki pages to make sure they are up to date
 - Add a Line Transmission Protocol wiki page - perhaps combined with the G sender information
+- There are a bunch of wiki pages that need to be moved to public. And edit out the notes that say they need to be moved. See the Sidebar in G2_private for a list of the pages to be completed and moved
 
 
 ## Changelog for Edge Branch
 Most functions and changes to functions are noted here: https://github.com/synthetos/g2_private/wiki/Configuration-for-Firmware-Version-0.98
 
 Specific Changes:
-- JA
+- {ja:n} Junction Aggression
+- {xjd:n} deprecated
+- {fbc:n} added
 - Linemode and recommended protocol
+
 
 ### G sender
 - Provide links to Node G Sender and instruction how to install and use
@@ -35,6 +39,7 @@ See One of:
 
 ### Known Issues
 - Communications bug for high-speed transmission
+- sbv300 configuration does not compile
 
 
 # ---- DEPRECATED ----
