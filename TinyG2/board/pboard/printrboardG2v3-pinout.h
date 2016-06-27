@@ -127,7 +127,7 @@ namespace Motate {
     _MAKE_MOTATE_PIN(kUnassigned3                       , A, 'A',  3);  // nc
     _MAKE_MOTATE_PIN(kADC0_PinNumber                    , A, 'A',  4);  // BED_ADC
     _MAKE_MOTATE_PIN(kOutput1_PinNumber                 , A, 'A',  5);  // DO_1 (Extruder1_PWM)
-    _MAKE_MOTATE_PIN(kOutput4_PinNumber                 , A, 'A',  6);  // DO_4 (Fan1B_PWM)
+    _MAKE_MOTATE_PIN(kOutput3_PinNumber                 , A, 'A',  6);  // DO_3 (Fan1B_PWM)
     _MAKE_MOTATE_PIN(kOutputSAFE_PinNumber              , A, 'A',  7);  // DO_9 (SAFE_PULSES - output from MCU)
     _MAKE_MOTATE_PIN(kSerial_RX                         , A, 'A',  8);  // UART_RX
     _MAKE_MOTATE_PIN(kSerial_TX                         , A, 'A',  9);  // UART_TX
@@ -179,7 +179,7 @@ namespace Motate {
     _MAKE_MOTATE_PIN(kOutput11_PinNumber                , B, 'B', 24);  // DO_11 (Header Bed FET)
     _MAKE_MOTATE_PIN(kOutput5_PinNumber                 , B, 'B', 25);  // DO_5 (Fan2A_PWM)
     _MAKE_MOTATE_PIN(kInput1_PinNumber                  , B, 'B', 26);  // DI_1 (XMin)
-    _MAKE_MOTATE_PIN(kOutput3_PinNumber                 , B, 'B', 27);  // DO_3 (Fan1A_PWM)
+    _MAKE_MOTATE_PIN(kOutput4_PinNumber                 , B, 'B', 27);  // DO_4 (Fan1A_PWM)
     _MAKE_MOTATE_PIN(kUnassigned16                      , B, 'B', 28);	// JTAG_CLK / SWD_CLK (unassigned)
     _MAKE_MOTATE_PIN(kUnassigned17                      , B, 'B', 29);	// JTAG_TDI (unassigned)
     _MAKE_MOTATE_PIN(kUnassigned18                      , B, 'B', 30);	// JTAG_TDO (unassigned)
