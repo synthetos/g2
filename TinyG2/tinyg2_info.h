@@ -21,7 +21,7 @@
 #ifndef INFO_H_ONCE
 #define INFO_H_ONCE
 
-#define TINYG_FIRMWARE_BUILD            100.07  // removed new fwd diff math comments
+#define TINYG_FIRMWARE_BUILD            100.08  // tweaks to printrbot settings
 #ifdef GIT_VERSION
 #define TINYG_FIRMWARE_BUILD_STRING     GIT_VERSION
 #else
