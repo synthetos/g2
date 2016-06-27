@@ -21,7 +21,7 @@
 #ifndef INFO_H_ONCE
 #define INFO_H_ONCE
 
-#define TINYG_FIRMWARE_BUILD            100.06  // Changes to Play and Simple Motor power, and swapped Simple endstops
+#define TINYG_FIRMWARE_BUILD            100.07  // removed new fwd diff math comments
 #ifdef GIT_VERSION
 #define TINYG_FIRMWARE_BUILD_STRING     GIT_VERSION
 #else
