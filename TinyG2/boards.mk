@@ -110,7 +110,7 @@ ifeq ("$(CONFIG)","PrintrbotSimple1406")
     ifeq ("$(BOARD)","NONE")
         BOARD=printrboardG2v3
     endif
-    SETTINGS_FILE="settings_printrbot_simple_1406.h"
+    SETTINGS_FILE="settings_printrbot_simple_1607.h"
 endif
 
 ifeq ("$(CONFIG)","PrintrbotPlay")
