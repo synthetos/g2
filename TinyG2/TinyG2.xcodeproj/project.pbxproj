@@ -102,6 +102,8 @@
 		D48F5A7F172CB21100D0E055 /* tinyg2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tinyg2.h; sourceTree = "<group>"; };
 		D48F5A80172CB21100D0E055 /* util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = util.h; sourceTree = "<group>"; };
 		D48F5A81172CB21100D0E055 /* xio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xio.h; sourceTree = "<group>"; };
+		D49177A11D21CFC50029CDEB /* settings_Printrbot_Simple_1403.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Printrbot_Simple_1403.h; sourceTree = "<group>"; };
+		D49177A21D21CFDB0029CDEB /* settings_Printrbot_Simple_1607.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Printrbot_Simple_1607.h; sourceTree = "<group>"; };
 		D4922F3F1CB8361B00A565FF /* boards.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = boards.mk; sourceTree = "<group>"; };
 		D49367CA1B827706000BB759 /* g2ref.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = g2ref.gdb; sourceTree = "<group>"; };
 		D49367CB1B827706000BB759 /* g2ref.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = g2ref.mk; sourceTree = "<group>"; };
@@ -115,7 +117,6 @@
 		D4AC390B1C77C1F20098D685 /* settings_othermill.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = settings_othermill.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D4AC390C1C77C1F20098D685 /* settings_Printrbot_Play.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = settings_Printrbot_Play.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D4AC390D1C77C1F20098D685 /* settings_Printrbot_Plus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = settings_Printrbot_Plus.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		D4AC390E1C77C1F20098D685 /* settings_Printrbot_Simple.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = settings_Printrbot_Simple.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D4AC390F1C77C1F20098D685 /* settings_probotixV90.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = settings_probotixV90.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D4AC39101C77C1F20098D685 /* settings_shapeoko2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = settings_shapeoko2.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D4AC39111C77C1F20098D685 /* settings_shopbot_sbv300.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = settings_shopbot_sbv300.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
@@ -190,7 +191,8 @@
 				D4AC390B1C77C1F20098D685 /* settings_othermill.h */,
 				D4AC390C1C77C1F20098D685 /* settings_Printrbot_Play.h */,
 				D4AC390D1C77C1F20098D685 /* settings_Printrbot_Plus.h */,
-				D4AC390E1C77C1F20098D685 /* settings_Printrbot_Simple.h */,
+				D49177A11D21CFC50029CDEB /* settings_Printrbot_Simple_1403.h */,
+				D49177A21D21CFDB0029CDEB /* settings_Printrbot_Simple_1607.h */,
 				D4AC390F1C77C1F20098D685 /* settings_probotixV90.h */,
 				D4AC39101C77C1F20098D685 /* settings_shapeoko2.h */,
 				D4AC39111C77C1F20098D685 /* settings_shopbot_sbv300.h */,
@@ -298,20 +300,6 @@
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
-		D4522DBD1C4558C70086AAE6 /* TinyG pBoard-a PrintrbotPlus */ = {
-			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=PrintrbotPlus BOARD=pboard-a DEBUG=2";
-			buildConfigurationList = D4522DBE1C4558C70086AAE6 /* Build configuration list for PBXLegacyTarget "TinyG pBoard-a PrintrbotPlus" */;
-			buildPhases = (
-			);
-			buildToolPath = /usr/bin/make;
-			buildWorkingDirectory = .;
-			dependencies = (
-			);
-			name = "TinyG pBoard-a PrintrbotPlus";
-			passBuildSettingsInEnvironment = 1;
-			productName = g3_due;
-		};
 		D4522DCF1C5FC8ED0086AAE6 /* TinyG2 G2Ref Ultimaker */ = {
 			isa = PBXLegacyTarget;
 			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s CONFIG=UltimakerTests";
@@ -337,20 +325,6 @@
 			dependencies = (
 			);
 			name = "TinyG2 gShield";
-			passBuildSettingsInEnvironment = 1;
-			productName = g3_due;
-		};
-		D49367C61B827608000BB759 /* TinyG g2ref-a */ = {
-			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 BOARD=g2ref-a";
-			buildConfigurationList = D49367C71B827608000BB759 /* Build configuration list for PBXLegacyTarget "TinyG g2ref-a" */;
-			buildPhases = (
-			);
-			buildToolPath = /usr/bin/make;
-			buildWorkingDirectory = .;
-			dependencies = (
-			);
-			name = "TinyG g2ref-a";
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
@@ -481,13 +455,11 @@
 			targets = (
 				D45710C21705330C00EA19A8 /* TinyG2 gShield */,
 				D4E9135D1AC46B8B0042A16C /* TinyG2 gShield Debugger */,
-				D49367C61B827608000BB759 /* TinyG g2ref-a */,
 				D43C7AE31B155C33007440D6 /* TinyG2 G2V9k */,
 				D4522DCF1C5FC8ED0086AAE6 /* TinyG2 G2Ref Ultimaker */,
 				D4CBBAD01A0D51FE00150DE2 /* TinyG2 G2V9k Ultimaker */,
 				D4B485B21AB1F3CB00C6614F /* TinyG2 V9 Shapeoko Dual-Y */,
 				D49367CE1B82C8D2000BB759 /* TinyG G2Ref PrintrbotPlus */,
-				D4522DBD1C4558C70086AAE6 /* TinyG pBoard-a PrintrbotPlus */,
 				D4037C091CDA42F300BC72AD /* TinyG printrboardG2v3 PrintrbotPlus */,
 				D4AC391A1C7BAB8E0098D685 /* TinyG sbv300 */,
 				D4F226F31D088A48008ED57C /* TinyG gQuintic PrintrbotPlus */,
@@ -566,22 +538,6 @@
 			buildSettings = {
 				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
 				PRODUCT_NAME = "TinyG2 G2V9k";
-			};
-			name = Release;
-		};
-		D4522DBF1C4558C70086AAE6 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Debug;
-		};
-		D4522DC01C4558C70086AAE6 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
-				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
@@ -714,22 +670,6 @@
 			};
 			name = Release;
 		};
-		D49367C81B827608000BB759 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
-				PRODUCT_NAME = "TinyG2 g2ref";
-			};
-			name = Debug;
-		};
-		D49367C91B827608000BB759 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
-				PRODUCT_NAME = "TinyG2 g2ref";
-			};
-			name = Release;
-		};
 		D49367D01B82C8D2000BB759 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -847,15 +787,6 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		D4522DBE1C4558C70086AAE6 /* Build configuration list for PBXLegacyTarget "TinyG pBoard-a PrintrbotPlus" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				D4522DBF1C4558C70086AAE6 /* Debug */,
-				D4522DC01C4558C70086AAE6 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		D4522DD01C5FC8ED0086AAE6 /* Build configuration list for PBXLegacyTarget "TinyG2 G2Ref Ultimaker" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -888,15 +819,6 @@
 			buildConfigurations = (
 				D457112B17053BFB00EA19A8 /* Debug */,
 				D457112C17053BFB00EA19A8 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		D49367C71B827608000BB759 /* Build configuration list for PBXLegacyTarget "TinyG g2ref-a" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				D49367C81B827608000BB759 /* Debug */,
-				D49367C91B827608000BB759 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
