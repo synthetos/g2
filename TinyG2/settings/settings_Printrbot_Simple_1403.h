@@ -1,5 +1,5 @@
 /*
- * settings_Printrbot_simple.h
+ * settings_printrbot_simple_1403.h - 2013 Simple model
  * This file is part of the the TinyG project
  *
  * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
@@ -39,7 +39,7 @@
 /***********************************************************************/
 
 // ***> NOTE: The init message must be a single line with no CRs or LFs
-#define INIT_MESSAGE "Initializing configs to Printrbot Simple profile"
+#define INIT_MESSAGE "Initializing configs to Printrbot Simple 1403 profile"
 
 #ifndef PI
 #define PI 3.14159628
@@ -84,11 +84,14 @@
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
 
 // Defaults for 3DP
-#define STATUS_REPORT_DEFAULTS	"line","posx","posy","posz","posa","vel","he1t","he1st","he1at","he2t","he2st","he2at","he3t","he3st","he3at","feed","vel","unit","path","stat"
+//#define STATUS_REPORT_DEFAULTS	"line","posx","posy","posz","posa","vel","he1t","he1st","he1at","feed","vel","unit","path","stat"
+// There are no heater two or three, but these would show those: ,"he2t","he2st","he2at","he3t","he3st","he3at"
+
 // Defaults for motion debugging
 //#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","vel","he1t","he1st","he1at","he2t","he2st","he2at","he3t","he3st","he3at","_fe5","_fe4","feed","vel","unit","path","stat"
+
 // Defaults for PID tuning
-//#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","vel","he1t","he1st","he1at","he1op","he2t","he2st","he2at","he3t","he3st","he3at","pid1p","pid1i","pid1d","feed","vel","unit","path","stat"
+#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","vel","he1t","he1st","he1at","he1op","pid1p","pid1i","pid1d","feed","vel","unit","path","stat"
 
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS         MILLIMETERS             // MILLIMETERS or INCHES
@@ -108,7 +111,7 @@
 #define M1_MICROSTEPS               32                      // 1mi		1,2,4,8,16,32
 #define M1_POLARITY                 1                       // 1po		0=normal, 1=reversed
 #define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm		standard
-#define M1_POWER_LEVEL              0.3                    // 1mp
+#define M1_POWER_LEVEL              0.4                    // 1mp
 
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
 #define M3_MOTOR_MAP                AXIS_Y
@@ -117,7 +120,7 @@
 #define M3_MICROSTEPS               32
 #define M3_POLARITY                 0
 #define M3_POWER_MODE               MOTOR_POWER_MODE
-#define M3_POWER_LEVEL              0.3
+#define M3_POWER_LEVEL              0.4
 
 // 2020 steps/mm at 1/16 microstepping = 1.58416 mm/rev
 #define M2_MOTOR_MAP                AXIS_Z
@@ -126,7 +129,7 @@
 #define M2_MICROSTEPS               32
 #define M2_POLARITY                 1
 #define M2_POWER_MODE               MOTOR_POWER_MODE
-#define M2_POWER_LEVEL              0.3
+#define M2_POWER_LEVEL              0.4
 
 // 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
 #define M4_MOTOR_MAP                AXIS_A
@@ -135,7 +138,7 @@
 #define M4_MICROSTEPS               32
 #define M4_POLARITY                 0
 #define M4_POWER_MODE               MOTOR_POWER_MODE
-#define M4_POWER_LEVEL              0.5
+#define M4_POWER_LEVEL              0.4
 
 // 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
 #define M5_MOTOR_MAP                AXIS_B
@@ -155,7 +158,7 @@
 #define X_TRAVEL_MAX                200                     // xtm  travel between switches or crashes
 #define X_JERK_MAX                  18000                    // xjm  yes, that's "100 billion" mm/(min^3)
 #define X_JERK_HIGH_SPEED			8000                   // xjh
-#define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
+#define X_HOMING_INPUT              4                       // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIRECTION          0                       // xhd  0=search moves negative, 1= search moves positive
 #define X_SEARCH_VELOCITY           2500                    // xsv  move in negative direction
 #define X_LATCH_VELOCITY            200                     // xlv  mm/min
@@ -169,7 +172,7 @@
 #define Y_TRAVEL_MAX                150
 #define Y_JERK_MAX                  8000 // {yjm:15000} {xjm:15000}   {yjm:10000} {xjm:10000}
 #define Y_JERK_HIGH_SPEED			30000
-#define Y_HOMING_INPUT              4
+#define Y_HOMING_INPUT              1
 #define Y_HOMING_DIRECTION          1
 #define Y_SEARCH_VELOCITY           3000
 #define Y_LATCH_VELOCITY            200
@@ -188,7 +191,7 @@
 #define Z_SEARCH_VELOCITY           300
 #define Z_LATCH_VELOCITY            100
 #define Z_LATCH_BACKOFF             2
-#define Z_ZERO_BACKOFF              -0.4
+#define Z_ZERO_BACKOFF              0
 
 // Rotary values are chosen to make the motor react the same as X for testing
 /***************************************************************************************
@@ -341,18 +344,18 @@
 
 /*** Extruders / Heaters ***/
 
-#define MIN_FAN_TEMP                145.0
-#define MAX_FAN_TEMP                150.0
+#define MIN_FAN_TEMP                50.0
+#define MAX_FAN_TEMP                100.0
 
 #define H1_DEFAULT_ENABLE           true
-#define H1_DEFAULT_P                9.0
-#define H1_DEFAULT_I                0.12
-#define H1_DEFAULT_D                400.0
+#define H1_DEFAULT_P                7.0
+#define H1_DEFAULT_I                0.05
+#define H1_DEFAULT_D                150.0
 
 #define H2_DEFAULT_ENABLE           false
-#define H2_DEFAULT_P                9.0
-#define H2_DEFAULT_I                0.12
-#define H2_DEFAULT_D                400.0
+#define H2_DEFAULT_P                7.0
+#define H2_DEFAULT_I                0.05
+#define H2_DEFAULT_D                150.0
 
 #define H3_DEFAULT_ENABLE           false
 #define H3_DEFAULT_P                9.0

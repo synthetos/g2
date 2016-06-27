@@ -4,8 +4,8 @@
  *
  * This file is part of the TinyG project
  *
- * Copyright (c) 2013 - 2014 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2014 Robert Giseburt
+ * Copyright (c) 2013 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2016 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -177,28 +177,31 @@ void hw_hard_reset(void);
 stat_t hw_flash(nvObj_t *nv);
 
 stat_t hw_get_fbs(nvObj_t *nv);
+stat_t hw_get_fbc(nvObj_t *nv);
 stat_t hw_set_hv(nvObj_t *nv);
 stat_t hw_get_id(nvObj_t *nv);
 
 #ifdef __TEXT_MODE
 
-	void hw_print_fb(nvObj_t *nv);
+    void hw_print_fb(nvObj_t *nv);
     void hw_print_fbs(nvObj_t *nv);
-	void hw_print_fv(nvObj_t *nv);
-	void hw_print_cv(nvObj_t *nv);
-	void hw_print_hp(nvObj_t *nv);
-	void hw_print_hv(nvObj_t *nv);
-	void hw_print_id(nvObj_t *nv);
+    void hw_print_fbc(nvObj_t *nv);
+    void hw_print_fv(nvObj_t *nv);
+    void hw_print_cv(nvObj_t *nv);
+    void hw_print_hp(nvObj_t *nv);
+    void hw_print_hv(nvObj_t *nv);
+    void hw_print_id(nvObj_t *nv);
 
 #else
 
-	#define hw_print_fb tx_print_stub
+    #define hw_print_fb tx_print_stub
     #define hw_print_fbs tx_print_stub
-	#define hw_print_fv tx_print_stub
-	#define hw_print_cv tx_print_stub
-	#define hw_print_hp tx_print_stub
-	#define hw_print_hv tx_print_stub
-	#define hw_print_id tx_print_stub
+    #define hw_print_fbc tx_print_stub
+    #define hw_print_fv tx_print_stub
+    #define hw_print_cv tx_print_stub
+    #define hw_print_hp tx_print_stub
+    #define hw_print_hv tx_print_stub
+    #define hw_print_id tx_print_stub
 
 #endif // __TEXT_MODE
 

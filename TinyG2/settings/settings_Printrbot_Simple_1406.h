@@ -1,5 +1,5 @@
 /*
- * settings_Printrbot_play.h
+ * settings_printrbot_simple_1406.h - New Simple, 2016 version
  * This file is part of the the TinyG project
  *
  * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
@@ -35,11 +35,11 @@
  */
 
 /***********************************************************************/
-/**** Printrbot Play profile *******************************************/
+/**** Printrbot Simple profile *******************************************/
 /***********************************************************************/
 
 // ***> NOTE: The init message must be a single line with no CRs or LFs
-#define INIT_MESSAGE "Initializing configs to Printrbot Play profile"
+#define INIT_MESSAGE "Initializing configs to Printrbot Simple 1406 profile"
 
 #ifndef PI
 #define PI 3.14159628
@@ -47,7 +47,7 @@
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
-#define JUNCTION_AGGRESSION         1.1  					// cornering - between 0.05 and 1.00 (max)
+#define JUNCTION_AGGRESSION         1.05  	// {ja:1.0}				// cornering - between 0.05 and 1.00 (max)
 #define CHORDAL_TOLERANCE           0.01					// chordal accuracy for arc drawing (in mm)
 
 #define JUNCTION_DEVIATION          0.1                     // larger is faster
@@ -74,7 +74,7 @@
 #define XIO_ENABLE_ECHO             false
 #define XIO_ENABLE_FLOW_CONTROL     FLOW_CONTROL_XON        // FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
 
-#define JSON_VERBOSITY              JV_LINENUM             // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
+#define JSON_VERBOSITY              JV_MESSAGES             // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
 #define JSON_SYNTAX_MODE            JSON_SYNTAX_STRICT      // one of JSON_SYNTAX_RELAXED, JSON_SYNTAX_STRICT
 
 #define QUEUE_REPORT_VERBOSITY		QR_OFF		            // one of: QR_OFF, QR_SINGLE, QR_TRIPLE
@@ -111,7 +111,7 @@
 #define M1_MICROSTEPS               32                      // 1mi		1,2,4,8,16,32
 #define M1_POLARITY                 1                       // 1po		0=normal, 1=reversed
 #define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm		standard
-#define M1_POWER_LEVEL              0.4                    // 1mp
+#define M1_POWER_LEVEL              0.3                    // 1mp
 
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
 #define M3_MOTOR_MAP                AXIS_Y
@@ -120,15 +120,16 @@
 #define M3_MICROSTEPS               32
 #define M3_POLARITY                 0
 #define M3_POWER_MODE               MOTOR_POWER_MODE
-#define M3_POWER_LEVEL              0.4
+#define M3_POWER_LEVEL              0.3
 
+// 2020 steps/mm at 1/16 microstepping = 1.58416 mm/rev
 #define M2_MOTOR_MAP                AXIS_Z
 #define M2_STEP_ANGLE               1.8
-#define M2_TRAVEL_PER_REV           1.5875
+#define M2_TRAVEL_PER_REV           8
 #define M2_MICROSTEPS               32
 #define M2_POLARITY                 1
 #define M2_POWER_MODE               MOTOR_POWER_MODE
-#define M2_POWER_LEVEL              0.4
+#define M2_POWER_LEVEL              0.3
 
 // 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
 #define M4_MOTOR_MAP                AXIS_A
@@ -146,50 +147,50 @@
 #define M5_MICROSTEPS               32
 #define M5_POLARITY                 0
 #define M5_POWER_MODE               MOTOR_POWER_MODE
-#define M5_POWER_LEVEL              0.35
+#define M5_POWER_LEVEL              0.3
 
 // *** axis settings **********************************************************************************
 
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX              30000 				    // xvm  G0 max velocity in mm/min
+#define X_VELOCITY_MAX              20000 				    // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
-#define X_TRAVEL_MAX                100                     // xtm  travel between switches or crashes
-#define X_JERK_MAX                  15000                    // xjm  yes, that's "100 billion" mm/(min^3)
-#define X_JERK_HIGH_SPEED			20000                   // xjh
+#define X_TRAVEL_MAX                200                     // xtm  travel between switches or crashes
+#define X_JERK_MAX                  18000                    // xjm  yes, that's "100 billion" mm/(min^3)
+#define X_JERK_HIGH_SPEED			8000                   // xjh
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIRECTION          0                       // xhd  0=search moves negative, 1= search moves positive
-#define X_SEARCH_VELOCITY           3000                    // xsv  move in negative direction
+#define X_SEARCH_VELOCITY           2500                    // xsv  move in negative direction
 #define X_LATCH_VELOCITY            200                     // xlv  mm/min
 #define X_LATCH_BACKOFF             5                       // xlb  mm
 #define X_ZERO_BACKOFF              0.5                       // xzb  mm
 
 #define Y_AXIS_MODE                 AXIS_STANDARD
-#define Y_VELOCITY_MAX              30000
+#define Y_VELOCITY_MAX              20000
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
-#define Y_TRAVEL_MAX                100
-#define Y_JERK_MAX                  15000
-#define Y_JERK_HIGH_SPEED			20000
+#define Y_TRAVEL_MAX                150
+#define Y_JERK_MAX                  8000 // {yjm:15000} {xjm:15000}   {yjm:10000} {xjm:10000}
+#define Y_JERK_HIGH_SPEED			30000
 #define Y_HOMING_INPUT              4
 #define Y_HOMING_DIRECTION          1
-#define Y_SEARCH_VELOCITY           1500
+#define Y_SEARCH_VELOCITY           3000
 #define Y_LATCH_VELOCITY            200
 #define Y_LATCH_BACKOFF             5
 #define Y_ZERO_BACKOFF              0.5
 
 #define Z_AXIS_MODE                 AXIS_STANDARD
-#define Z_VELOCITY_MAX              300
+#define Z_VELOCITY_MAX              4000
 #define Z_FEEDRATE_MAX              Z_VELOCITY_MAX
 #define Z_TRAVEL_MIN                0
-#define Z_TRAVEL_MAX                125
-#define Z_JERK_MAX                  800
-#define Z_JERK_HIGH_SPEED			1600
+#define Z_TRAVEL_MAX                200
+#define Z_JERK_MAX                  3000
+#define Z_JERK_HIGH_SPEED			3000
 #define Z_HOMING_INPUT              5
 #define Z_HOMING_DIRECTION          0
-#define Z_SEARCH_VELOCITY           200
+#define Z_SEARCH_VELOCITY           300
 #define Z_LATCH_VELOCITY            100
-#define Z_LATCH_BACKOFF             5
+#define Z_LATCH_BACKOFF             2
 #define Z_ZERO_BACKOFF              0
 
 // Rotary values are chosen to make the motor react the same as X for testing
@@ -343,8 +344,8 @@
 
 /*** Extruders / Heaters ***/
 
-#define MIN_FAN_TEMP                50.0
-#define MAX_FAN_TEMP                100.0
+#define MIN_FAN_TEMP                145.0
+#define MAX_FAN_TEMP                150.0
 
 #define H1_DEFAULT_ENABLE           true
 #define H1_DEFAULT_P                7.0

@@ -464,9 +464,7 @@ bool mp_is_phat_city_time()
  *  The flow of control and division of responsibilities for planning is:
  *
  *  - mp_aline() receives new Gcode blocks and initializes the local variables 
- *    for the new block. It also manages block merges that sometimes result in 
- *    no actual increase in the number of blocks in the planner queue, as the 
- *    new block is consumed by a block merge.
+ *    for the new block.
  *
  *  - mp_planner_callback() is called regularly from the main loop. 
  *    It's job is to determine whether or not to call mp_plan_block_list(),

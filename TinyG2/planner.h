@@ -199,7 +199,6 @@ struct mpBuffer_to_clear {
     bool axis_flags[AXES];          // set true for axes participating in the move & for command parameters
 
     bool plannable;                 // set true when this block can be used for planning
-    bool mergeable;                 // set true when this block can be merged into
 
     float length;                   // total length of line or helix in mm
     float block_time;               // computed move time for entire block (move)
@@ -276,20 +275,13 @@ typedef struct mpMotionPlannerSingleton {  // common variables for planning (mov
     bool ramp_active;               // true when a ramp is occurring
     bool entry_changed;             // mark if exit_velocity changed to invalidate next block's hint
 
-    // block merge controls
-    bool block_merge_enable;
-    float block_merge_ratio;
-    float block_merge_velocity_max;
-    float block_merge_length_max;
-    float block_merge_cosine_min;
-
     // feed overrides and ramp variables (these extend the variables in cm.gmx)
     float mfo_factor;               // runtime override factor
     float ramp_target;
     float ramp_dvdt;
 
     // objects
-    Timeout block_timeout;          // Timeout object used to time out blocks emerging form the annealer
+    Timeout block_timeout;          // Timeout object for block planning
 
     // planner pointers
 	mpBuf_t *p;						// planner buffer pointer

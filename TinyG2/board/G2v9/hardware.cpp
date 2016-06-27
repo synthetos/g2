@@ -2,7 +2,8 @@
  * hardware.cpp - general hardware support functions
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2016 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -104,6 +105,26 @@ stat_t hw_get_fbs(nvObj_t *nv)
 }
 
 /*
+ * hw_get_fbc() - get configuration settings file
+ */
+
+stat_t hw_get_fbc(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_STRING;
+    #ifdef SETTINGS_FILE
+    #define settings_file_string1(s) #s
+    #define settings_file_string2(s) settings_file_string1(s)
+    ritorno(nv_copy_string(nv, settings_file_string2(SETTINGS_FILE)));
+    #undef settings_file_string1
+    #undef settings_file_string2
+    #else
+    ritorno(nv_copy_string(nv, "<default-settings>"));
+    #endif
+
+    return (STAT_OK);
+}
+
+/*
  * hw_get_id() - get device ID (signature)
  */
 
@@ -143,18 +164,20 @@ stat_t hw_set_hv(nvObj_t *nv)
 
 static const char fmt_fb[] PROGMEM =  "[fb]  firmware build%18.2f\n";
 static const char fmt_fbs[] PROGMEM = "[fbs] firmware build \"%32s\"\n";
+static const char fmt_fbc[] PROGMEM = "[fbc] firmware config \"%s\"\n";
 static const char fmt_fv[] PROGMEM =  "[fv]  firmware version%16.2f\n";
 static const char fmt_cv[] PROGMEM =  "[cv]  configuration version%11.2f\n";
 static const char fmt_hp[] PROGMEM =  "[hp]  hardware platform%15.2f\n";
 static const char fmt_hv[] PROGMEM =  "[hv]  hardware version%16.2f\n";
 static const char fmt_id[] PROGMEM =  "[id]  TinyG ID%21s\n";
 
-void hw_print_fb(nvObj_t *nv)  { text_print(nv, fmt_fb);}    // TYPE_FLOAT
+void hw_print_fb(nvObj_t *nv)  { text_print(nv, fmt_fb);}   // TYPE_FLOAT
 void hw_print_fbs(nvObj_t *nv) { text_print(nv, fmt_fbs);}  // TYPE_STRING
-void hw_print_fv(nvObj_t *nv)  { text_print(nv, fmt_fv);}    // TYPE_FLOAT
-void hw_print_cv(nvObj_t *nv)  { text_print(nv, fmt_cv);}    // TYPE_FLOAT
-void hw_print_hp(nvObj_t *nv)  { text_print(nv, fmt_hp);}    // TYPE_FLOAT
-void hw_print_hv(nvObj_t *nv)  { text_print(nv, fmt_hv);}    // TYPE_FLOAT
-void hw_print_id(nvObj_t *nv)  { text_print(nv, fmt_id);}    // TYPE_STRING
+void hw_print_fbc(nvObj_t *nv) { text_print(nv, fmt_fbc);}  // TYPE_STRING
+void hw_print_fv(nvObj_t *nv)  { text_print(nv, fmt_fv);}   // TYPE_FLOAT
+void hw_print_cv(nvObj_t *nv)  { text_print(nv, fmt_cv);}   // TYPE_FLOAT
+void hw_print_hp(nvObj_t *nv)  { text_print(nv, fmt_hp);}   // TYPE_FLOAT
+void hw_print_hv(nvObj_t *nv)  { text_print(nv, fmt_hv);}   // TYPE_FLOAT
+void hw_print_id(nvObj_t *nv)  { text_print(nv, fmt_id);}   // TYPE_STRING
 
 #endif //__TEXT_MODE

@@ -119,6 +119,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	// group token flags p, print_func,	 get_func,  set_func, target for get/set,       default value
 	{ "sys", "fb", _fipn,2, hw_print_fb, get_flt,   set_nul,  (float *)&cs.fw_build,    TINYG_FIRMWARE_BUILD }, // MUST BE FIRST!
     { "sys", "fbs",_fn,  2, hw_print_fbs,hw_get_fbs,set_nul,  (float *)&cs.null, 0 },
+    { "sys", "fbc",_fn,  2, hw_print_fbc,hw_get_fbc,set_nul,  (float *)&cs.null, 0 },
 	{ "sys", "fv", _fipn,2, hw_print_fv, get_flt,   set_nul,  (float *)&cs.fw_version,  TINYG_FIRMWARE_VERSION },
 	{ "sys", "hp", _fipn,0, hw_print_hp, get_flt,   set_flt,  (float *)&cs.hw_platform, TINYG_HARDWARE_PLATFORM },
 	{ "sys", "hv", _fipn,0, hw_print_hv, get_flt,   hw_set_hv,(float *)&cs.hw_version,  TINYG_HARDWARE_VERSION },
@@ -579,12 +580,6 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "sys","ja", _fipn, 2, cm_print_ja,  get_flt, cm_set_ja,(float *)&cm.junction_aggression,      JUNCTION_AGGRESSION },
 	{ "sys","ct", _fipnc,4, cm_print_ct,  get_flt, set_flu,  (float *)&cm.chordal_tolerance,        CHORDAL_TOLERANCE },
 	{ "sys","sl", _fipn, 0, cm_print_sl,  get_ui8, set_01,   (float *)&cm.soft_limit_enable,        SOFT_LIMIT_ENABLE },
-
-	{ "sys","bme",_fipn, 0, cm_print_bme, get_ui8, set_01,   (float *)&mp.block_merge_enable,       BLOCK_MERGE_ENABLE },
-	{ "sys","bmr",_fipn, 0, cm_print_bmr, get_flt, set_nul,  (float *)&mp.block_merge_ratio,  0 },
-	{ "sys","bmv",_fipn, 0, cm_print_bmv, get_flt, set_flt,  (float *)&mp.block_merge_velocity_max, BLOCK_MERGE_VELOCITY_MAX },
-	{ "sys","bml",_fipn, 2, cm_print_bml, get_flt, set_flt,  (float *)&mp.block_merge_length_max,   BLOCK_MERGE_LENGTH_MAX },
-	{ "sys","bmc",_fipn, 2, cm_print_bmc, get_flt, set_flt,  (float *)&mp.block_merge_cosine_min,   BLOCK_MERGE_COSINE_MIN },
 
 	{ "sys","lim",_fipn, 0, cm_print_lim, get_ui8, set_01,   (float *)&cm.limit_enable,	            HARD_LIMIT_ENABLE },
 	{ "sys","saf",_fipn, 0, cm_print_saf, get_ui8, set_01,   (float *)&cm.safety_interlock_enable,	SAFETY_INTERLOCK_ENABLE },

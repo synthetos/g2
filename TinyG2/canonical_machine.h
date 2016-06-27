@@ -2,7 +2,7 @@
  * canonical_machine.h - rs274/ngc canonical machining functions
  * This file is part of the TinyG project
  *
- * Copyright (c) 2010 - 2015 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2016 Alden S. Hart Jr.
  * Copyright (c) 2016 Rob Giseburt
  *
  * This code is a loose implementation of Kramer, Proctor and Messina's
@@ -833,12 +833,6 @@ stat_t cm_get_tram(nvObj_t *nv);        // return if the rotation matrix is non-
 	void cm_print_lim(nvObj_t *nv);
 	void cm_print_saf(nvObj_t *nv);
 
-    void cm_print_bme(nvObj_t *nv);
-    void cm_print_bmr(nvObj_t *nv);
-    void cm_print_bmv(nvObj_t *nv);
-    void cm_print_bml(nvObj_t *nv);
-    void cm_print_bmc(nvObj_t *nv);
-
 	void cm_print_m48e(nvObj_t *nv);
 	void cm_print_mfoe(nvObj_t *nv);
 	void cm_print_mfo(nvObj_t *nv);
@@ -905,12 +899,6 @@ stat_t cm_get_tram(nvObj_t *nv);        // return if the rotation matrix is non-
 	#define cm_print_sl tx_print_stub
 	#define cm_print_lim tx_print_stub
 	#define cm_print_saf tx_print_stub
-
-	#define cm_print_bme tx_print_stub
-	#define cm_print_bmr tx_print_stub
-	#define cm_print_bmv tx_print_stub
-	#define cm_print_bml tx_print_stub
-	#define cm_print_bmc tx_print_stub
 
 	#define cm_print_m48e tx_print_stub
 	#define cm_print_mfoe tx_print_stub

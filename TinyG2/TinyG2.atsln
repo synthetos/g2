@@ -14,6 +14,7 @@ Global
 		PrintrbotPlay-g2refa|ARM = PrintrbotPlay-g2refa|ARM
 		PrintrbotPlay-v3|ARM = PrintrbotPlay-v3|ARM
 		PrintrbotPlus-g2refa|ARM = PrintrbotPlus-g2refa|ARM
+		PrintrbotSimple1403-printrboardG2v3|ARM = PrintrbotSimple1403-printrboardG2v3|ARM
 		PrintrbotSimple-g2refa|ARM = PrintrbotSimple-g2refa|ARM
 		ProbotixV90|ARM = ProbotixV90|ARM
 		sbv300|ARM = sbv300|ARM
@@ -40,6 +41,8 @@ Global
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.PrintrbotPlay-v3|ARM.Build.0 = PrintrbotPlay-v3|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.PrintrbotPlus-g2refa|ARM.ActiveCfg = PrintrbotPlus-g2refa|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.PrintrbotPlus-g2refa|ARM.Build.0 = PrintrbotPlus-g2refa|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.PrintrbotSimple1403-printrboardG2v3|ARM.ActiveCfg = PrintrbotSimple1403-printrboardG2v3|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.PrintrbotSimple1403-printrboardG2v3|ARM.Build.0 = PrintrbotSimple1403-printrboardG2v3|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.PrintrbotSimple-g2refa|ARM.ActiveCfg = PrintrbotSimple-g2refa|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.PrintrbotSimple-g2refa|ARM.Build.0 = PrintrbotSimple-g2refa|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.ProbotixV90|ARM.ActiveCfg = ProbotixV90|ARM
@@ -65,6 +68,7 @@ Global
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.PrintrbotPlay-v3|ARM.ActiveCfg = Stub|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.PrintrbotPlay-v3|ARM.Build.0 = Stub|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.PrintrbotPlus-g2refa|ARM.ActiveCfg = Stub|ARM
+		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.PrintrbotSimple1403-printrboardG2v3|ARM.ActiveCfg = Stub|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.PrintrbotSimple-g2refa|ARM.ActiveCfg = Stub|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.ProbotixV90|ARM.ActiveCfg = Stub|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.sbv300|ARM.ActiveCfg = Stub|ARM

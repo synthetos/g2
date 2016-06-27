@@ -84,11 +84,14 @@
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
 
 // Defaults for 3DP
-#define STATUS_REPORT_DEFAULTS	"line","posx","posy","posz","posa","vel","he1t","he1st","he1at","he2t","he2st","he2at","he3t","he3st","he3at","feed","vel","unit","path","stat"
+//#define STATUS_REPORT_DEFAULTS	"line","posx","posy","posz","posa","vel","he1t","he1st","he1at","feed","vel","unit","path","stat"
+// There are no heater two or three, but these would show those: ,"he2t","he2st","he2at","he3t","he3st","he3at"
+
 // Defaults for motion debugging
 //#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","vel","he1t","he1st","he1at","he2t","he2st","he2at","he3t","he3st","he3at","_fe5","_fe4","feed","vel","unit","path","stat"
+
 // Defaults for PID tuning
-//#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","vel","he1t","he1st","he1at","he1op","he2t","he2st","he2at","he3t","he3st","he3at","pid1p","pid1i","pid1d","feed","vel","unit","path","stat"
+#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","vel","he1t","he1st","he1at","he1op","pid1p","pid1i","pid1d","feed","vel","unit","path","stat"
 
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS         MILLIMETERS             // MILLIMETERS or INCHES
@@ -117,7 +120,7 @@
 #define M5_MICROSTEPS               32                      // 1mi		1,2,4,8,16,32
 #define M5_POLARITY                 1                       // 1po		0=normal, 1=reversed
 #define M5_POWER_MODE               MOTOR_POWER_MODE        // 1pm		standard
-#define M5_POWER_LEVEL              0.6                    // 1mp
+#define M5_POWER_LEVEL              0.3                    // 1mp
 
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
 #define M4_MOTOR_MAP                AXIS_Y
@@ -126,7 +129,7 @@
 #define M4_MICROSTEPS               32
 #define M4_POLARITY                 1
 #define M4_POWER_MODE               MOTOR_POWER_MODE
-#define M4_POWER_LEVEL              0.6
+#define M4_POWER_LEVEL              0.3
 
 // 2020 steps/mm at 1/16 microstepping = 1.58416 mm/rev
 #define M3_MOTOR_MAP                AXIS_Z
@@ -135,7 +138,7 @@
 #define M3_MICROSTEPS               32
 #define M3_POLARITY                 1
 #define M3_POWER_MODE               MOTOR_POWER_MODE
-#define M3_POWER_LEVEL              0.6
+#define M3_POWER_LEVEL              0.3
 
 // 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
 #define M2_MOTOR_MAP                AXIS_A
@@ -144,7 +147,7 @@
 #define M2_MICROSTEPS               32
 #define M2_POLARITY                 0
 #define M2_POWER_MODE               MOTOR_POWER_MODE
-#define M2_POWER_LEVEL              0.6
+#define M2_POWER_LEVEL              0.3
 
 // 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
 #define M1_MOTOR_MAP                AXIS_B
@@ -153,7 +156,7 @@
 #define M1_MICROSTEPS               32
 #define M1_POLARITY                 0
 #define M1_POWER_MODE               MOTOR_POWER_MODE
-#define M1_POWER_LEVEL              0.35
+#define M1_POWER_LEVEL              0.3
 
 #define M6_MOTOR_MAP                AXIS_C
 #define M6_STEP_ANGLE               1.8
@@ -161,7 +164,7 @@
 #define M6_MICROSTEPS               32
 #define M6_POLARITY                 0
 #define M6_POWER_MODE               MOTOR_POWER_MODE
-#define M6_POWER_LEVEL              0.35
+#define M6_POWER_LEVEL              0.3
 
 // *** axis settings **********************************************************************************
 
@@ -206,7 +209,7 @@
 #define Z_SEARCH_VELOCITY           (Z_VELOCITY_MAX * 0.3333)
 #define Z_LATCH_VELOCITY            100
 #define Z_LATCH_BACKOFF             5
-#define Z_ZERO_BACKOFF              0.5
+#define Z_ZERO_BACKOFF              0
 
 // Rotary values are chosen to make the motor react the same as X for testing
 /***************************************************************************************
@@ -348,21 +351,20 @@
 
 /*** Extruders / Heaters ***/
 
-#define MIN_FAN_TEMP                40.0
-#define MAX_FAN_TEMP                150.0
+#define MIN_FAN_TEMP                50.0
+#define MAX_FAN_TEMP                100.0
 
 #define H1_DEFAULT_ENABLE           true
-#define H1_DEFAULT_P                9.0
-#define H1_DEFAULT_I                0.12
-#define H1_DEFAULT_D                400.0
+#define H1_DEFAULT_P                7.0
+#define H1_DEFAULT_I                0.05
+#define H1_DEFAULT_D                150.0
 
 #define H2_DEFAULT_ENABLE           false
-#define H2_DEFAULT_P                9.0
-#define H2_DEFAULT_I                0.12
-#define H2_DEFAULT_D                400.0
+#define H2_DEFAULT_P                7.0
+#define H2_DEFAULT_I                0.05
+#define H2_DEFAULT_D                150.0
 
 #define H3_DEFAULT_ENABLE           false
 #define H3_DEFAULT_P                9.0
 #define H3_DEFAULT_I                0.12
 #define H3_DEFAULT_D                400.0
-
