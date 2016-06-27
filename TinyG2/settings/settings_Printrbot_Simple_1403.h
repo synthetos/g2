@@ -1,5 +1,5 @@
 /*
- * settings_Printrbot_simple.h
+ * settings_printrbot_simple_1403.h - 2013 Simple model
  * This file is part of the the TinyG project
  *
  * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
@@ -39,7 +39,7 @@
 /***********************************************************************/
 
 // ***> NOTE: The init message must be a single line with no CRs or LFs
-#define INIT_MESSAGE "Initializing configs to Printrbot Simple profile"
+#define INIT_MESSAGE "Initializing configs to Printrbot Simple 1403 profile"
 
 #ifndef PI
 #define PI 3.14159628
