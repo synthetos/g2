@@ -128,7 +128,7 @@
 #define M2_TRAVEL_PER_REV           8
 #define M2_MICROSTEPS               32
 #define M2_POLARITY                 1
-#define M2_POWER_MODE               MOTOR_POWER_MODE
+#define M2_POWER_MODE               MOTOR_ALWAYS_POWERED
 #define M2_POWER_LEVEL              0.4
 
 // 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
@@ -344,8 +344,8 @@
 
 /*** Extruders / Heaters ***/
 
-#define MIN_FAN_TEMP                145.0
-#define MAX_FAN_TEMP                150.0
+#define MIN_FAN_TEMP                50.0
+#define MAX_FAN_TEMP                100.0
 
 #define H1_DEFAULT_ENABLE           true
 #define H1_DEFAULT_P                7.0
