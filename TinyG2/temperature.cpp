@@ -432,7 +432,7 @@ void temperature_init()
     fet_pin3.setFrequency(fet_pin3_freq);
 
     fan_pin1 = 0;
-    fan_pin1.setFrequency(50000);
+    fan_pin1.setFrequency(200000);
 //    fan_pin2 = 0;
 //    fan_pin2.setFrequency(50000);
 //    fan_pin3 = 1;
