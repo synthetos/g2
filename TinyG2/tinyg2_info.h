@@ -21,7 +21,7 @@
 #ifndef INFO_H_ONCE
 #define INFO_H_ONCE
 
-#define TINYG_FIRMWARE_BUILD            100.08  // tweaks to printrbot settings
+#define TINYG_FIRMWARE_BUILD            100.09  // adjust simple settings, fixed broken temperature reading
 #ifdef GIT_VERSION
 #define TINYG_FIRMWARE_BUILD_STRING     GIT_VERSION
 #else
