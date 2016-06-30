@@ -278,7 +278,7 @@ PWMOutputPin<kOutput3_PinNumber> fan_pin1;
 
 
 // We're going to register a SysTick event
-const int16_t fet_pin1_sample_freq = 1; // every fet_pin1_sample_freq interrupts, sample
+const int16_t fet_pin1_sample_freq = 10; // every fet_pin1_sample_freq interrupts, sample
 int16_t fet_pin1_sample_counter = fet_pin1_sample_freq;
 SysTickEvent adc_tick_event {[&] {
     if (!--fet_pin1_sample_counter) {
@@ -433,14 +433,14 @@ void temperature_init()
 
     fan_pin1 = 0;
     fan_pin1.setFrequency(50000);
-    fan_pin2 = 0;
-    fan_pin2.setFrequency(50000);
+//    fan_pin2 = 0;
+//    fan_pin2.setFrequency(50000);
 //    fan_pin3 = 1;
 //    fan_pin3.setFrequency(50000);
 
     // Register the SysTick event (described above)
 #if TEMPERATURE_OUTPUT_ON == 1
-    SysTickTimer.registerEvent(adc_tick_event);
+    SysTickTimer.registerEvent(&adc_tick_event);
 #endif
 
     temperature_reset();
