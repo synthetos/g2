@@ -21,7 +21,7 @@
 #ifndef INFO_H_ONCE
 #define INFO_H_ONCE
 
-#define TINYG_FIRMWARE_BUILD            100.08  // tweaks to printrbot settings
+#define TINYG_FIRMWARE_BUILD            100.10  // adjust simple settings, set fan freq to 200KHz
 #ifdef GIT_VERSION
 #define TINYG_FIRMWARE_BUILD_STRING     GIT_VERSION
 #else

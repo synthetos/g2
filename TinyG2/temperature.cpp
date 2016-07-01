@@ -270,20 +270,32 @@ PWMOutputPin<kOutput3_PinNumber> fan_pin1;
 //PWMOutputPin<kOutput5_PinNumber> fan_pin3;
 
 
-// We're going to utilize the fet_pin1 PWMOutputPin<>'s timer interrupt to drive the ADC sampling.
-const int16_t fet_pin1_sample_freq = 1; // every fet_pin1_sample_freq interrupts, sample
+//// We're going to utilize the fet_pin1 PWMOutputPin<>'s timer interrupt to drive the ADC sampling.
+//const int16_t fet_pin1_sample_freq = 1; // every fet_pin1_sample_freq interrupts, sample
+//int16_t fet_pin1_sample_counter = fet_pin1_sample_freq;
+//#if TEMPERATURE_OUTPUT_ON == 1
+//namespace Motate {
+//    template<>
+//    void PWMOutputPin<kOutput1_PinNumber>::parentTimerType::interrupt() {
+//        if (!--fet_pin1_sample_counter) {
+//            ADC_Module::startSampling();
+//            fet_pin1_sample_counter = fet_pin1_sample_freq;
+//        }
+//    };
+//}
+//#endif
+
+
+// We're going to register a SysTick event
+const int16_t fet_pin1_sample_freq = 10; // every fet_pin1_sample_freq interrupts, sample
 int16_t fet_pin1_sample_counter = fet_pin1_sample_freq;
-#if TEMPERATURE_OUTPUT_ON == 1
-namespace Motate {
-    template<>
-    void PWMOutputPin<kOutput1_PinNumber>::parentTimerType::interrupt() {
-        if (!--fet_pin1_sample_counter) {
-            ADC_Module::startSampling();
-            fet_pin1_sample_counter = fet_pin1_sample_freq;
-        }
-    };
-}
-#endif
+SysTickEvent adc_tick_event {[&] {
+    if (!--fet_pin1_sample_counter) {
+        ADC_Module::startSampling();
+        fet_pin1_sample_counter = fet_pin1_sample_freq;
+    }
+}, nullptr};
+
 
 struct PID {
     static constexpr float output_max = 1.0;
@@ -428,12 +440,17 @@ void temperature_init()
     fet_pin2.setFrequency(fet_pin2_freq);
     fet_pin3.setFrequency(fet_pin3_freq);
 
-//    fan_pin1 = 0;
-//    fan_pin1.setFrequency(200000);
-//    fan_pin2 = 1;
-//    fan_pin2.setFrequency(200000);
+    fan_pin1 = 0;
+    fan_pin1.setFrequency(200000);
+//    fan_pin2 = 0;
+//    fan_pin2.setFrequency(50000);
 //    fan_pin3 = 1;
 //    fan_pin3.setFrequency(200000);
+
+    // Register the SysTick event (described above)
+#if TEMPERATURE_OUTPUT_ON == 1
+    SysTickTimer.registerEvent(&adc_tick_event);
+#endif
 
     temperature_reset();
 }
