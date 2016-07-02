@@ -39,7 +39,7 @@
 /***********************************************************************/
 
 // ***> NOTE: The init message must be a single line with no CRs or LFs
-#define INIT_MESSAGE "Initializing configs to Printrbot Simple 1406 profile"
+#define INIT_MESSAGE "Initializing configs to Printrbot Simple 1608 profile"
 
 #ifndef PI
 #define PI 3.14159628

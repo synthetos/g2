@@ -103,7 +103,7 @@
 		D48F5A80172CB21100D0E055 /* util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = util.h; sourceTree = "<group>"; };
 		D48F5A81172CB21100D0E055 /* xio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xio.h; sourceTree = "<group>"; };
 		D49177A11D21CFC50029CDEB /* settings_Printrbot_Simple_1403.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Printrbot_Simple_1403.h; sourceTree = "<group>"; };
-		D49177A21D21CFDB0029CDEB /* settings_Printrbot_Simple_1607.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Printrbot_Simple_1607.h; sourceTree = "<group>"; };
+		D49177A21D21CFDB0029CDEB /* settings_Printrbot_Simple_1608.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Printrbot_Simple_1608.h; sourceTree = "<group>"; };
 		D4922F3F1CB8361B00A565FF /* boards.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = boards.mk; sourceTree = "<group>"; };
 		D49367CA1B827706000BB759 /* g2ref.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = g2ref.gdb; sourceTree = "<group>"; };
 		D49367CB1B827706000BB759 /* g2ref.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = g2ref.mk; sourceTree = "<group>"; };
@@ -192,7 +192,7 @@
 				D4AC390C1C77C1F20098D685 /* settings_Printrbot_Play.h */,
 				D4AC390D1C77C1F20098D685 /* settings_Printrbot_Plus.h */,
 				D49177A11D21CFC50029CDEB /* settings_Printrbot_Simple_1403.h */,
-				D49177A21D21CFDB0029CDEB /* settings_Printrbot_Simple_1607.h */,
+				D49177A21D21CFDB0029CDEB /* settings_Printrbot_Simple_1608.h */,
 				D4AC390F1C77C1F20098D685 /* settings_probotixV90.h */,
 				D4AC39101C77C1F20098D685 /* settings_shapeoko2.h */,
 				D4AC39111C77C1F20098D685 /* settings_shopbot_sbv300.h */,
