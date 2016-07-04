@@ -29,8 +29,8 @@
  *
  */
 
-#ifndef gShield_pinout_h
-#define gShield_pinout_h
+#ifndef Archim_pinout_h
+#define Archim_pinout_h
 
 #include <MotatePins.h>
 
