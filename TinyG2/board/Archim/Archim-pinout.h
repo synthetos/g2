@@ -103,105 +103,93 @@ namespace Motate {
     pin_number kSPI0_MISOPinNumber              =  74;
     pin_number kSPI0_MOSIPinNumber              =  75;
 
-//    pin_number kX_StepPinNumber                 =  53;
-//    pin_number kX_DirPinNumber                  =  52;
-//    pin_number kX_EnablePinNumber               =  -1;
-//
-//    pin_number kY_StepPinNumber                 =  51;
-//    pin_number kY_DirPinNumber                  =  50;
-//    pin_number kY_EnablePinNumber               =  -1;
-//
-//    pin_number kZ_StepPinNumber                 =  49;
-//    pin_number kZ_DirPinNumber                  =  48;
-//    pin_number kZ_EnablePinNumber               =  -1;
-
-    pin_number kDebug1_PinNumber                =  49;
-    pin_number kDebug2_PinNumber                =  47;
-    pin_number kDebug3_PinNumber                =  45;
+    pin_number kDebug1_PinNumber                =  -1;
+    pin_number kDebug2_PinNumber                =  -1;
+    pin_number kDebug3_PinNumber                =  -1;
     pin_number kDebug4_PinNumber                =  -1;
 
-    pin_number kKinen_SyncPinNumber             =  53;
+    pin_number kKinen_SyncPinNumber             =  -1;
 
-    pin_number kSocket1_SPISlaveSelectPinNumber =  -1;//10;
+    pin_number kSocket1_SPISlaveSelectPinNumber =  -1;
     pin_number kSocket1_InterruptPinNumber      =  -1;
-    pin_number kSocket1_StepPinNumber           =   2;
-    pin_number kSocket1_DirPinNumber            =   5;
-    pin_number kSocket1_EnablePinNumber         =  22;
-    pin_number kSocket1_Microstep_0PinNumber    =  23;
-    pin_number kSocket1_Microstep_1PinNumber    =  24;
-    pin_number kSocket1_Microstep_2PinNumber    =  -1;
-    pin_number kSocket1_VrefPinNumber           =  -1;//34; //PWMTimer<0>
+    pin_number kSocket1_StepPinNumber           =  40;//PC8 STEP1
+    pin_number kSocket1_DirPinNumber            =  59;//PA4 DIR1
+    pin_number kSocket1_EnablePinNumber         =  41;//PC9 EN1
+    pin_number kSocket1_Microstep_0PinNumber    =  39;//PC7 MOD0E1
+    pin_number kSocket1_Microstep_1PinNumber    =  38;//PC6 MOD1E1
+    pin_number kSocket1_Microstep_2PinNumber    =  37;//PC5 MOD2E1
+    pin_number kSocket1_VrefPinNumber           =  12;//PD8 REF1 TIOB8
 
-    pin_number kSocket2_SPISlaveSelectPinNumber =  65;
+    pin_number kSocket2_SPISlaveSelectPinNumber =  -1;
     pin_number kSocket2_InterruptPinNumber      =  -1;
-    pin_number kSocket2_StepPinNumber           =   3;
-    pin_number kSocket2_DirPinNumber            =   6;
-    pin_number kSocket2_EnablePinNumber         =  25;
-    pin_number kSocket2_Microstep_0PinNumber    =  26;
-    pin_number kSocket2_Microstep_1PinNumber    =  27;
-    pin_number kSocket2_Microstep_2PinNumber    =  -1;
-    pin_number kSocket2_VrefPinNumber           =  -1;//62; //PWMTimer<1>
+    pin_number kSocket2_StepPinNumber           =  49;//PC14 STEP2
+    pin_number kSocket2_DirPinNumber            =  47;//PC16 DIR2
+    pin_number kSocket2_EnablePinNumber         =  48;//PC15 EN2
+    pin_number kSocket2_Microstep_0PinNumber    =  50;//PC13 MODE0E2
+    pin_number kSocket2_Microstep_1PinNumber    =  51;//PC12 MODE1E2
+    pin_number kSocket2_Microstep_2PinNumber    =  92;//PC11 MODE2E2 -AddOns
+    pin_number kSocket2_VrefPinNumber           =  58;//PA6 REF2 TIOB2
 
-    pin_number kSocket3_SPISlaveSelectPinNumber =  52;
+    pin_number kSocket3_SPISlaveSelectPinNumber =  -1;
     pin_number kSocket3_InterruptPinNumber      =  -1;
-    pin_number kSocket3_StepPinNumber           =   4;
-    pin_number kSocket3_DirPinNumber            =   7;
-    pin_number kSocket3_EnablePinNumber         =  28;
-    pin_number kSocket3_Microstep_0PinNumber    =  29;
-    pin_number kSocket3_Microstep_1PinNumber    =  30;
-    pin_number kSocket3_Microstep_2PinNumber    =  -1;
-    pin_number kSocket3_VrefPinNumber           =  -1;//63; //PWMTimer<2>
+    pin_number kSocket3_StepPinNumber           =  36;//PC4 STEP Z
+    pin_number kSocket3_DirPinNumber            = 107;//PB10 DIR Z
+    pin_number kSocket3_EnablePinNumber         =  96;//PC10 EN Z -AddOns
+    pin_number kSocket3_Microstep_0PinNumber    =  44;//PC19 MOD0E Z
+    pin_number kSocket3_Microstep_1PinNumber    =  45;//PC18 MOD1E Z
+    pin_number kSocket3_Microstep_2PinNumber    =  46;//PC17 MOD2E Z
+    pin_number kSocket3_VrefPinNumber           =  10;//PC29 REFZ TIOB7
 
-    pin_number kSocket4_SPISlaveSelectPinNumber =  77;
+    pin_number kSocket4_SPISlaveSelectPinNumber =  -1;
     pin_number kSocket4_InterruptPinNumber      =  -1;
-    pin_number kSocket4_StepPinNumber           =  31;
-    pin_number kSocket4_DirPinNumber            =  32;
-    pin_number kSocket4_EnablePinNumber         =  33;
-    pin_number kSocket4_Microstep_0PinNumber    =  35;
-    pin_number kSocket4_Microstep_1PinNumber    =  36;
-    pin_number kSocket4_Microstep_2PinNumber    =  -1;
-    pin_number kSocket4_VrefPinNumber           =  -1;//64; //PWMTimer<3>
+    pin_number kSocket4_StepPinNumber           =  78;//PB23 STEP3
+    pin_number kSocket4_DirPinNumber            =  22;//PB26 DIR3
+    pin_number kSocket4_EnablePinNumber         =  97;//PB24 EN3 -Addons
+    pin_number kSocket4_Microstep_0PinNumber    = 105;//PB22 MOD0E3 -AddOns
+    pin_number kSocket4_Microstep_1PinNumber    = 106;//PC27 MOD1E3 -AddOns
+    pin_number kSocket4_Microstep_2PinNumber    = 104;//PC20 MOD2E3 -AddOns
+    pin_number kSocket4_VrefPinNumber           =   3;//PC28 REF3 TIOA7
 
-    pin_number kSocket5_SPISlaveSelectPinNumber =  78;
+    pin_number kSocket5_SPISlaveSelectPinNumber =  -1;
     pin_number kSocket5_InterruptPinNumber      =  -1;
-    pin_number kSocket5_StepPinNumber           =  37;
-    pin_number kSocket5_DirPinNumber            =  38;
-    pin_number kSocket5_EnablePinNumber         =  39;
-    pin_number kSocket5_Microstep_0PinNumber    =  40;
-    pin_number kSocket5_Microstep_1PinNumber    =  41;
-    pin_number kSocket5_Microstep_2PinNumber    =  -1;
-    pin_number kSocket5_VrefPinNumber           =  -1;//66; //PWMTimer<3>
+    pin_number kSocket5_StepPinNumber           =  26;//PD1 STEP4 
+    pin_number kSocket5_DirPinNumber            =  27;//PD2 DIR4
+    pin_number kSocket5_EnablePinNumber         =  28;//PD3 EN4
+    pin_number kSocket5_Microstep_0PinNumber    =  25;//PD0 MOD0E4
+    pin_number kSocket5_Microstep_1PinNumber    =  18;//PA11 MOD1E4
+    pin_number kSocket5_Microstep_2PinNumber    =  19;//PA10 MOD2E4
+    pin_number kSocket5_VrefPinNumber           =  11;//PD7  REF4 TIOA8
 
-    pin_number kSocket6_SPISlaveSelectPinNumber =  50;
+    pin_number kSocket6_SPISlaveSelectPinNumber =  -1;
     pin_number kSocket6_InterruptPinNumber      =  -1;
-    pin_number kSocket6_StepPinNumber           =  42;
-    pin_number kSocket6_DirPinNumber            =  43;
-    pin_number kSocket6_EnablePinNumber         =  44;
-    pin_number kSocket6_Microstep_0PinNumber    =  -1;//45;
-    pin_number kSocket6_Microstep_1PinNumber    =  46;
+    pin_number kSocket6_StepPinNumber           =  -1;
+    pin_number kSocket6_DirPinNumber            =  -1;
+    pin_number kSocket6_EnablePinNumber         =  -1;
+    pin_number kSocket6_Microstep_0PinNumber    =  -1;
+    pin_number kSocket6_Microstep_1PinNumber    =  -1;
     pin_number kSocket6_Microstep_2PinNumber    =  -1;
-    pin_number kSocket6_VrefPinNumber           =  -1;//67; //PWMTimer<0>
+    pin_number kSocket6_VrefPinNumber           =  -1;
 
 
-    pin_number kInput1_PinNumber              =  14;
-    pin_number kInput2_PinNumber              =  15;
-    pin_number kInput3_PinNumber              =  16;
-    pin_number kInput4_PinNumber              =  17;
-    pin_number kInput5_PinNumber              =  18;
-    pin_number kInput6_PinNumber              =  19;
+    pin_number kInput1_PinNumber              =  14;//PD4 MIN ES1
+    pin_number kInput2_PinNumber              =  -1; //32;//PD10 MAX ES1
+    pin_number kInput3_PinNumber              =  29;//PD6 MIN ES2
+    pin_number kInput4_PinNumber              =  -1;//15;//PD5 MAX ES2
+    pin_number kInput5_PinNumber              =  31;//PA7 MIN ES3
+    pin_number kInput6_PinNumber              =  -1; //30;//PD9 MAX ES3
 
-    pin_number kInput7_PinNumber              =  58;
-    pin_number kInput8_PinNumber              =  59;
-    pin_number kInput9_PinNumber              =  60;
-    pin_number kInput10_PinNumber              =  61;
-    pin_number kInput11_PinNumber              =  65;
-    pin_number kInput12_PinNumber              =  51;
+    pin_number kInput7_PinNumber              =  -1;
+    pin_number kInput8_PinNumber              =  -1;
+    pin_number kInput9_PinNumber              =  -1;
+    pin_number kInput10_PinNumber              =  -1;
+    pin_number kInput11_PinNumber              =  -1;
+    pin_number kInput12_PinNumber              =  -1;
 
-    pin_number kSpindle_EnablePinNumber         =  12;
-    pin_number kSpindle_DirPinNumber            =  -1;//13;
-    pin_number kSpindle_PwmPinNumber            =  11;
-    pin_number kSpindle_Pwm2PinNumber           =   9;
-    pin_number kCoolant_EnablePinNumber         =  57;
+    pin_number kSpindle_EnablePinNumber         =  -1;
+    pin_number kSpindle_DirPinNumber            =  -1;
+    pin_number kSpindle_PwmPinNumber            =  -1;
+    pin_number kSpindle_Pwm2PinNumber           =  -1;
+    pin_number kCoolant_EnablePinNumber         =  -1;
 
     pin_number kSD_CardDetectPinNumber          =  -1;
     pin_number kInterlock_InPinNumber           =  -1;
@@ -211,10 +199,10 @@ namespace Motate {
     pin_number kLED_USBTXPinNumber              =  73;
 
 
-    pin_number kOutput1_PinNumber               =  -1;   // DO_1: Extruder1_PWM
-    pin_number kOutput2_PinNumber               =  -1;   // DO_2: Extruder2_PWM
-    pin_number kOutput3_PinNumber               =  -1;   // DO_3: Fan1A_PWM
-    pin_number kOutput4_PinNumber               =  -1;   // DO_4: Fan1B_PWM
+    pin_number kOutput1_PinNumber               =   6;   // DO_1: Extruder1_PWM
+    pin_number kOutput2_PinNumber               =   7;   // DO_2: Extruder2_PWM
+    pin_number kOutput3_PinNumber               =   4;   // DO_3: Fan1A_PWM
+    pin_number kOutput4_PinNumber               =   5;   // DO_4: Fan1B_PWM
     pin_number kOutput5_PinNumber               =  -1;   // DO_5: Fan2A_PWM
 
     pin_number kOutput6_PinNumber               =  -1;   // 135;     // See Spindle Enable
@@ -223,16 +211,16 @@ namespace Motate {
     pin_number kOutput9_PinNumber               =  -1;               // <unassigned, available out>
     pin_number kOutput10_PinNumber              =  -1;               // DO_10: Fan2B_PWM
 
-    pin_number kOutput11_PinNumber              =  -1;   // DO_11: Heted Bed FET
+    pin_number kOutput11_PinNumber              =   9;   // DO_11: Heted Bed FET
     pin_number kOutput12_PinNumber              =  -1;   // DO_12: Indicator_LED
     pin_number kOutput13_PinNumber              =  -1;   // 142;
     pin_number kOutput14_PinNumber              =  -1;   // 143;
     pin_number kOutput15_PinNumber              =  -1;   // 144;
     pin_number kOutput16_PinNumber              =  -1;   // 145;
 
-    pin_number kADC0_PinNumber                  =  -1;   // Heated bed thermistor ADC
-    pin_number kADC1_PinNumber                  =  -1;   // Extruder1_ADC
-    pin_number kADC2_PinNumber                  =  -1;   // Extruder2_ADC
+    pin_number kADC0_PinNumber                  =  11;   // Heated bed thermistor ADC
+    pin_number kADC1_PinNumber                  =  10;   // Extruder1_ADC
+    pin_number kADC2_PinNumber                  =   8;   // Extruder2_ADC
     pin_number kADC3_PinNumber                  =  -1;   // 153;
     pin_number kADC4_PinNumber                  =  -1;   // 154;
     pin_number kADC5_PinNumber                  =  -1;   // 155;
@@ -249,11 +237,11 @@ namespace Motate {
 
     // GRBL / gShield compatibility pins -- Due board ONLY
 
-    pin_number kGRBL_ResetPinNumber             =  54;
-    pin_number kGRBL_FeedHoldPinNumber          =  55;
-    pin_number kGRBL_CycleStartPinNumber        =  56;
+    pin_number kGRBL_ResetPinNumber             =  -1;
+    pin_number kGRBL_FeedHoldPinNumber          =  -1;
+    pin_number kGRBL_CycleStartPinNumber        =  -1;
 
-    pin_number kGRBL_CommonEnablePinNumber      =   8;
+    pin_number kGRBL_CommonEnablePinNumber      =   -1;
     
     /** NOTE: When adding pin definitions here, they must be
      *        added to ALL board pin assignment files, even if

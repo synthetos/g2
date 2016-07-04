@@ -166,6 +166,21 @@ namespace Motate {
 
     _MAKE_MOTATE_PIN(78, B, 'B', 23);	// SS1
 
+    //Archim extra pins
+    _MAKE_MOTATE_PIN(92, C, 'C', 11);	// D92
+
+    _MAKE_MOTATE_PIN(96, C, 'C', 10);	// D96
+
+    _MAKE_MOTATE_PIN(97, B, 'B', 24);	// D97
+
+    _MAKE_MOTATE_PIN(104, C, 'C', 20);	// D104
+
+    _MAKE_MOTATE_PIN(105, B, 'B', 22);	// D105
+
+    _MAKE_MOTATE_PIN(106, C, 'C', 27);	// D106
+
+    _MAKE_MOTATE_PIN(107, B, 'B', 10);	// D107
+
 } // namespace Motate
 
 // We then allow each chip-type to have it's own function definitions
