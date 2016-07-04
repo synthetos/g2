@@ -3,52 +3,25 @@
 
 
 # To compile:
-#   make BOARD=gShield
-# Or:
-#   make BOARD=shopbotShield
+#   make BOARD=Archim
 
-# You can also choose a CONFIG from boards.mk:
-#   make CONFIG=ShapeokoDualY BOARD=gShield
-
-
-
-# Backward compatibility with old projects that use PLATFORM instead, but with a warning:
-ifneq ("$(PLATFORM)","")
-    $(warning Using PLATFORM value of $(PLATFORM) as BOARD.)
-    $(warning Please swich to using BOARD on the command line.)
-    BOARD = $(PLATFORM)
-endif
 
 
 ##########
 # BOARDs for use directly from the make command line (with default settings) or by CONFIGs.
 
-ifeq ("$(BOARD)","gShield")
-    # This is a due with a Synthetos gShield. We'll use the Due platform, but set defines
-    # for the code to get the pinout right.
-
-    # Note: we call it "tinyg-due" instead of "due" since the Motate built-in provides
-    # a "due" BASE_BOARD.
-    BASE_BOARD = tinyg-due
-    DEVICE_DEFINES += MOTATE_BOARD="gShield"
-    DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
-endif
-
-ifeq ("$(BOARD)","shopbotShield")
-    # This is a due with a shopbot shield. We'll use the Due platform, but set defines
-    # for the code to get the pinout right.
-
-    BASE_BOARD = tinyg-due
-    DEVICE_DEFINES += MOTATE_BOARD="shopbotShield"
+ifeq ("$(BOARD)","Archim")
+    BASE_BOARD = archim
+    DEVICE_DEFINES += MOTATE_BOARD="Archim"
     DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
 endif
 
 
 
 ##########
-# The general tinyg-due BASE_BOARD.
+# The archim BASE_BOARD.
 
-ifeq ("$(BASE_BOARD)","tinyg-due")
+ifeq ("$(BASE_BOARD)","archim")
     _BOARD_FOUND = 1
 
     DEVICE_DEFINES += MOTATE_CONFIG_HAS_USBSERIAL=1
@@ -59,9 +32,7 @@ ifeq ("$(BASE_BOARD)","tinyg-due")
     export CHIP
     CHIP_LOWERCASE = sam3x8e
 
-    # Note: we call it "tinyg-due" instead of "due" since the Motate built-in provides
-    # a "due" BASE_BOARD.
-    BOARD_PATH = ./board/ArduinoDue
+    BOARD_PATH = ./board/Archim
     SOURCE_DIRS += ${BOARD_PATH}
 
     PLATFORM_BASE = ${MOTATE_PATH}/platform/atmel_sam
