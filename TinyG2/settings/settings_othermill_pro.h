@@ -38,10 +38,6 @@
 // default to same settings as standard Othermill, unless they are overridden in this file
 #include "settings_othermill.h"
 
-// enable the detection of a jumper on AMAX
-#undef  A_SWITCH_MODE_MAX
-#define A_SWITCH_MODE_MAX 		SW_MODE_CUSTOM
-
 // interim max values for testing
 #undef X_VELOCITY_MAX
 #undef Y_VELOCITY_MAX
