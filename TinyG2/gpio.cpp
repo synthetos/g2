@@ -108,17 +108,17 @@ static IRQPin<kInput12_PinNumber> input_12_pin {kPullUp|kDebounce, []{_dispatch_
 // perl -e 'for($i=1;$i<14;$i++) { print "#if OUTPUT${i}_PWM == 1\nstatic PWMOutputPin<kOutput${i}_PinNumber>  output_${i}_pin;\n#else\nstatic PWMLikeOutputPin<kOutput${i}_PinNumber>  output_${i}_pin;\n#endif\n";}'
 // BEGIN generated
 #if OUTPUT1_PWM == 1
-static PWMOutputPin<kOutput1_PinNumber>  output_1_pin;
+static PWMOutputPin<kOutput1_PinNumber>  output_1_pin {kPWMOn, 200000};
 #else
 static PWMLikeOutputPin<kOutput1_PinNumber>  output_1_pin;
 #endif
 #if OUTPUT2_PWM == 1
-static PWMOutputPin<kOutput2_PinNumber>  output_2_pin;
+static PWMOutputPin<kOutput2_PinNumber>  output_2_pin {kPWMOn, 200000};
 #else
 static PWMLikeOutputPin<kOutput2_PinNumber>  output_2_pin;
 #endif
 #if OUTPUT3_PWM == 1
-static PWMOutputPin<kOutput3_PinNumber>  output_3_pin;
+static PWMOutputPin<kOutput3_PinNumber>  output_3_pin {kPWMOn, 200000};
 #else
 static PWMLikeOutputPin<kOutput3_PinNumber>  output_3_pin;
 #endif
@@ -128,47 +128,47 @@ static PWMOutputPin<kOutput4_PinNumber>  output_4_pin {kPWMOn, 200000};
 static PWMLikeOutputPin<kOutput4_PinNumber>  output_4_pin;
 #endif
 #if OUTPUT5_PWM == 1
-static PWMOutputPin<kOutput5_PinNumber>  output_5_pin;
+static PWMOutputPin<kOutput5_PinNumber>  output_5_pin {kPWMOn, 200000};
 #else
 static PWMLikeOutputPin<kOutput5_PinNumber>  output_5_pin;
 #endif
 #if OUTPUT6_PWM == 1
-static PWMOutputPin<kOutput6_PinNumber>  output_6_pin;
+static PWMOutputPin<kOutput6_PinNumber>  output_6_pin {kPWMOn, 200000};
 #else
 static PWMLikeOutputPin<kOutput6_PinNumber>  output_6_pin;
 #endif
 #if OUTPUT7_PWM == 1
-static PWMOutputPin<kOutput7_PinNumber>  output_7_pin;
+static PWMOutputPin<kOutput7_PinNumber>  output_7_pin {kPWMOn, 200000};
 #else
 static PWMLikeOutputPin<kOutput7_PinNumber>  output_7_pin;
 #endif
 #if OUTPUT8_PWM == 1
-static PWMOutputPin<kOutput8_PinNumber>  output_8_pin;
+static PWMOutputPin<kOutput8_PinNumber>  output_8_pin {kPWMOn, 200000};
 #else
 static PWMLikeOutputPin<kOutput8_PinNumber>  output_8_pin;
 #endif
 #if OUTPUT9_PWM == 1
-static PWMOutputPin<kOutput9_PinNumber>  output_9_pin;
+static PWMOutputPin<kOutput9_PinNumber>  output_9_pin {kPWMOn, 200000};
 #else
 static PWMLikeOutputPin<kOutput9_PinNumber>  output_9_pin;
 #endif
 #if OUTPUT10_PWM == 1
-static PWMOutputPin<kOutput10_PinNumber>  output_10_pin;
+static PWMOutputPin<kOutput10_PinNumber>  output_10_pin {kPWMOn, 200000};
 #else
 static PWMLikeOutputPin<kOutput10_PinNumber>  output_10_pin;
 #endif
 #if OUTPUT11_PWM == 1
-static PWMOutputPin<kOutput11_PinNumber>  output_11_pin;
+static PWMOutputPin<kOutput11_PinNumber>  output_11_pin {kPWMOn, 200000};
 #else
 static PWMLikeOutputPin<kOutput11_PinNumber>  output_11_pin;
 #endif
 #if OUTPUT12_PWM == 1
-static PWMOutputPin<kOutput12_PinNumber>  output_12_pin;
+static PWMOutputPin<kOutput12_PinNumber>  output_12_pin {kPWMOn, 200000};
 #else
 static PWMLikeOutputPin<kOutput12_PinNumber>  output_12_pin;
 #endif
 #if OUTPUT13_PWM == 1
-static PWMOutputPin<kOutput13_PinNumber>  output_13_pin;
+static PWMOutputPin<kOutput13_PinNumber>  output_13_pin {kPWMOn, 200000};
 #else
 static PWMLikeOutputPin<kOutput13_PinNumber>  output_13_pin;
 #endif

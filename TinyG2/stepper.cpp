@@ -103,10 +103,9 @@ struct Stepper {
 	/* stepper default values */
 
 	// sets default pwm freq for all motor vrefs (commented line below also sets HiZ)
-	Stepper(const uint32_t frequency = 500000) : _vref(kPWMOn, frequency) {
+    Stepper(const uint32_t frequency = 500000) : _vref {kPWMOn, frequency} {
         setDirection(STEP_INITIAL_DIRECTION);
     };
-//	Stepper(const uint32_t frequency = 500000) : vref(kDriveLowOnly, frequency) {};
 
 	/* functions bound to stepper structures */
 
