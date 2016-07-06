@@ -1,7 +1,14 @@
-# Uncomment the correct interface for your adapter.
+# This file need modified in order to debug with OpenOCD
 
-# For an Atmel ICE:
+# Keep the following two lines as-is for connection to GDB
+gdb_port pipe
+log_output openocd.log
+
+
+# Uncomment the correct interface below for your adapter:
+
+# For an Atmel ICE, or any other CMSIS-DAP device:
 #source [find interface/cmsis-dap.cfg]
 
-# For a JLink (or compatoble) device:
-source [find interface/jlink.cfg]
+# For a JLink (or compatible) device:
+#source [find interface/jlink.cfg]
