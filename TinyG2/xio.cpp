@@ -549,6 +549,11 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
             // Look for line endings
             // Classify the line
             char c = _data[_scan_offset];
+
+            if (c == 0) {
+                _debug_trap("scan ran into NULL");
+            }
+
             if (c == '\r' ||
                 c == '\n'
                 ) {
@@ -732,6 +737,10 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
         uint16_t read_offset = search_header->_read_offset;
         char *dst_ptr = _line_buffer;
         line_size = 0;
+
+        if (_data[read_offset] == 0) {
+            _debug_trap("read ran into NULL");
+        }
 
         // scan past any leftover CR or LF from the previous line
         while ((_data[read_offset] == '\n') || (_data[read_offset] == '\r')) {
