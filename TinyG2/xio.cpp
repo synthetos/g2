@@ -162,6 +162,7 @@ struct xioDeviceWrapperBase {				// C++ base class for device primitives
     // Don't use pure virtuals! They massively slow down the calls.
     // But these MUST be overridden!
     virtual int16_t readchar() { return -1; };
+    virtual void flush() {};
     virtual void flushRead() {};       // This should call _flushLine() before flushing the device.
     virtual int16_t write(const char *buffer, int16_t len) { return -1; };
 
@@ -265,6 +266,16 @@ struct xio_t {
         int16_t len = strlen(buffer);
         return write(buffer, len);
     };
+
+    /*
+     * flush() - flush all readable devices' write buffers
+     */
+    void flush()
+    {
+        for (int8_t i = 0; i < _dev_count; ++i) {
+            DeviceWrappers[i]->flush();
+        }
+    }
 
     /*
      * flushRead() - flush all readable devices' read buffers
@@ -812,9 +823,17 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
     };
 
     virtual int16_t readchar() final {
+        if (!isConnected()) {
+            return -1;
+        }
         return _rx_buffer.read();
 //        return _dev->readByte();					// readByte calls the USB endpoint's read function
     };
+
+    void flush() final {
+        _tx_buffer.flush();
+        return _dev->flush();
+    }
 
     virtual void flushRead() final {
         // Flush out any partially or wholly read lines being stored:
@@ -824,20 +843,23 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
     }
 
     virtual int16_t write(const char *buffer, int16_t len) final {
+        if (!isConnected()) {
+            return -1;
+        }
         return _tx_buffer.write(buffer, len);
     }
 
     virtual char *readline(devflags_t limit_flags, uint16_t &size) final {
-        if (!(limit_flags & flags)) {
-            size = 0;
-            return NULL;
+        if ((limit_flags & flags) && isConnected()) {
+            return _rx_buffer.readline(!(limit_flags & DEV_IS_DATA), size);
         }
-
-        return _rx_buffer.readline(!(limit_flags & DEV_IS_DATA), size);
+        
+        size = 0;
+        return NULL;
     };
 
     void _flushLine() {
-
+        // TODO: Call to flush the RX buffer line structures
     };
 
     void connectedStateChanged(bool connected) {
@@ -889,6 +911,7 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {	// describes a device for readi
 
                     devflags_t oldflags = flags;
                     clearFlags();
+                    flush();
                     flushRead();
 
                     if(checkForNotActive(oldflags) || isAlwaysDataAndCtrl()) {
