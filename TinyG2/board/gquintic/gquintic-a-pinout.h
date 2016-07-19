@@ -123,7 +123,7 @@ namespace Motate {
     _MAKE_MOTATE_PIN(kI2C1_SDAPinNumber                 , 'A',  3); //
     _MAKE_MOTATE_PIN(kI2C1_SCLPinNumber                 , 'A',  4); //
     _MAKE_MOTATE_PIN(kUnassigned1                       , 'A',  5); //
-    _MAKE_MOTATE_PIN(kUnassigned14                      , 'A',  6); // CPU_CLK
+    _MAKE_MOTATE_PIN(kExternalClock1_PinNumber          , 'A',  6); // CPU_CLK
     _MAKE_MOTATE_PIN(kSerial_CTS                        , 'A',  7); //
     _MAKE_MOTATE_PIN(kUnassigned2                       , 'A',  8); //
     _MAKE_MOTATE_PIN(kSerial_RX                         , 'A',  9); //

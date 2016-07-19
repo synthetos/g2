@@ -211,7 +211,10 @@ namespace Motate {
     pin_number kADC13_PinNumber                 = 163;  // Not physically pinned out
     pin_number kADC14_PinNumber                 = 164;  // Not physically pinned out
 
-    // start next sequence at 170
+    pin_number kExternalClock1_PinNumber        = 170;  // External pins for exporting a clock signal (for Trinamics)
+
+
+    // start next sequence at 171
 
     // blank spots for unassigned pins - all unassigned pins need a unique number (do not re-use numbers)
 
