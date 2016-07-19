@@ -285,6 +285,7 @@ PWMOutputPin<kOutput3_PinNumber> fan_pin1;
 //}
 //#endif
 
+#if TEMPERATURE_OUTPUT_ON == 1
 
 // We're going to register a SysTick event
 const int16_t fet_pin1_sample_freq = 10; // every fet_pin1_sample_freq interrupts, sample
@@ -295,6 +296,8 @@ SysTickEvent adc_tick_event {[&] {
         fet_pin1_sample_counter = fet_pin1_sample_freq;
     }
 }, nullptr};
+
+#endif
 
 
 struct PID {
