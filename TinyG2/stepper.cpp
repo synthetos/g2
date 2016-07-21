@@ -41,6 +41,10 @@
 #include "xio.h"
 
 
+#include "MotateSPI.h"
+#include "MotateBuffer.h"
+
+
 /**** Allocate structures ****/
 
 stConfig_t st_cfg;
@@ -66,6 +70,141 @@ extern OutputPin<kDebug1_PinNumber> debug_pin1;
 extern OutputPin<kDebug2_PinNumber> debug_pin2;
 extern OutputPin<kDebug3_PinNumber> debug_pin3;
 //extern OutputPin<kDebug4_PinNumber> debug_pin4;
+
+
+
+
+// ############ SPI TESTING ###########
+
+SPIChipSelectPinMux<kSocket1_SPISlaveSelectPinNumber, kSocket2_SPISlaveSelectPinNumber, kSocket3_SPISlaveSelectPinNumber, -1> spiCSPinMux;
+SPIBus<kSPI_MISOPinNumber, kSPI_MOSIPinNumber, kSPI_SCKPinNumber> spiBus;
+
+// Mostly complete base class for Trinamic2130s. Only missing the Chip Select.
+struct Trinamic2130Base {
+
+    // SPI and message handling code
+    SPIBusDeviceBase *_device;
+
+    SPIMessage msg_0;
+    SPIMessage msg_1;
+
+    struct trinamic_buffer_t {
+        union {
+            uint8_t addr;
+            uint8_t status;
+        };
+        uint8_t value[4];
+    } __attribute__ ((packed));
+
+    trinamic_buffer_t out_buffer;
+    trinamic_buffer_t in_buffer;
+
+    // Make volatile?
+    bool reading = false;
+
+    Motate::Buffer<32> _registers_to_read;
+    Motate::Buffer<32> _registers_to_write;
+
+    Trinamic2130Base(SPIBusDeviceBase *device) : _device{device} {
+        msg_1.message_done_callback = [&] { this->_doneReadingCallback(); };
+    };
+
+    // Prevent copying, but support moving semeantics
+    Trinamic2130Base(const Trinamic2130Base &) = delete;
+    Trinamic2130Base(Trinamic2130Base && other) : _device{other._device} {
+        msg_1.message_done_callback = [&] { this->_doneReadingCallback(); };
+    };
+
+    void readRegister(uint8_t reg) {
+        _registers_to_read.write(reg);
+        startNextRead();
+    };
+
+    void startNextRead() {
+        if (_registers_to_read.isEmpty() || reading) {
+            return;
+        }
+
+        reading = true;
+
+        int16_t next_reg = _registers_to_read.read();
+
+        out_buffer.addr = (uint8_t) next_reg;
+        _device->queueMessage(msg_0.setup((uint8_t *)&out_buffer,               nullptr, 5, SPIMessageDeassertAfter, SPIMessageKeepTransaction));
+        _device->queueMessage(msg_1.setup((uint8_t *)&out_buffer, (uint8_t *)&in_buffer, 5, SPIMessageDeassertAfter, SPIMessageEndTransaction));
+    };
+
+
+
+    // From here on we store actual values from the trinamic, and marshall data
+    // from the in_buffer buffer to them, or from the values to the out_buffer
+
+    uint8_t status = 0;
+    union {
+        uint8_t raw[4];
+        struct {
+            uint8_t I_scale_analog  : 1; // 0
+            uint8_t internal_Rsense : 1; // 1
+            uint8_t en_pwm_mode     : 1; // 2
+            uint8_t enc_commutation : 1; // 3
+            uint8_t shaft           : 1; // 4
+            uint8_t diag0_error     : 1; // 5
+        }  __attribute__ ((packed));
+    } GCONF;
+
+    void _doneReadingCallback() {
+        reading = false;
+
+        status = in_buffer.status;
+        switch(out_buffer.addr) {
+            case 0x00: // GCONF
+                GCONF.raw[0] = out_buffer.value[0];
+                GCONF.raw[1] = out_buffer.value[1];
+                GCONF.raw[2] = out_buffer.value[2];
+                GCONF.raw[3] = out_buffer.value[3];
+                break;
+
+            default:
+                break;
+        }
+
+        startNextRead();
+    }
+};
+
+template <typename device_t>
+struct Trinamic2130 : Trinamic2130Base {
+    device_t _raw_device;
+
+    template <typename SPIBus_t, typename chipSelect_t>
+    Trinamic2130(SPIBus_t &spi_bus, const chipSelect_t &_cs) :
+        Trinamic2130Base {&_raw_device},
+        _raw_device{spi_bus.getDevice(_cs,
+                                      4000000, //1MHz
+                                      kSPIMode2 | kSPI8Bit,
+                                      0, // min_between_cs_delay_ns
+                                      10, // cs_to_sck_delay_ns
+                                      0  // between_word_delay_ns
+                                      )}
+    {};
+
+    // Prevent copying, and prevent moving (so we know if it happens)
+    Trinamic2130(const Trinamic2130 &) = delete;
+    Trinamic2130(Trinamic2130 &&other) : Trinamic2130Base{_raw_device}, _raw_device{std::move(other._raw_device)} {};
+};
+
+Trinamic2130<decltype(spiBus)::SPIBusDevice> trinamics[] = {
+    {spiBus, spiCSPinMux.getCS(4)},
+    {spiBus, spiCSPinMux.getCS(3)},
+    {spiBus, spiCSPinMux.getCS(2)},
+    {spiBus, spiCSPinMux.getCS(1)},
+    {spiBus, spiCSPinMux.getCS(0)},
+};
+
+// ############ SPI TESTING ###########
+
+
+
 
 #ifdef __ARM
 
@@ -310,6 +449,61 @@ void stepper_init()
 		st_run.mot[motor].power_level_dynamic = st_cfg.mot[motor].power_level_scaled;
 	}
 #endif // __ARM
+
+
+
+    // ############ SPI TESTING ###########
+
+    spiBus.init();
+//    spiBus._TMP_setChannel(spiCSTrinamic5.csValue);
+
+//    spiBus._TMP_setMsgDone([] {
+//
+//        // clear msg done
+//        spiBus._TMP_setMsgDone(nullptr);
+//
+//        
+//        spiBus._TMP_setChannel(spiCSTrinamic5.csValue);
+//        spiBus._TMP_startTransfer(
+//                                  out_buffer,
+//                                  in_buffer,
+//                                  5
+//                                  );
+//    });
+//
+//    spiBus._TMP_startTransfer(
+//                              out_buffer,
+//                              nullptr,
+//                              5
+//                              );
+
+//    int16_t toss;
+//    spiBus._TMP_write(0x6F, toss, false);
+//    spiBus._TMP_write(0, toss, false);
+//    spiBus._TMP_write(0, toss, false);
+//    spiBus._TMP_write(0, toss, false);
+//    spiBus._TMP_write(0, toss, true);
+//
+//    spiBus._TMP_write(0x6F, toss, false); in_buffer[0] = toss;
+//    spiBus._TMP_write(0, toss, false); in_buffer[0] = toss;
+//    spiBus._TMP_write(0, toss, false); in_buffer[0] = toss;
+//    spiBus._TMP_write(0, toss, false); in_buffer[0] = toss;
+//    spiBus._TMP_write(0, toss, true); in_buffer[0] = toss;
+
+//    trinamic1.queueMessage(read_message_pt1.setup(out_buffer, in_buffer, 5, SPIMessageDeassertAfter, SPIMessageKeepTransaction));
+//    trinamic1.queueMessage(read_message_pt2.setup(out_buffer, in_buffer, 5, SPIMessageDeassertAfter, SPIMessageEndTransaction));
+
+    trinamics[0].readRegister(0x00);
+    trinamics[0].readRegister(0x01);
+    trinamics[0].readRegister(0x04);
+    trinamics[1].readRegister(0x10);
+    trinamics[2].readRegister(0x10);
+    trinamics[3].readRegister(0x10);
+    trinamics[4].readRegister(0x10);
+
+    // ############ SPI TESTING ###########
+
+
 
     stepper_reset();                            // reset steppers to known state
 }
