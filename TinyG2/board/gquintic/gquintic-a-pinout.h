@@ -164,8 +164,7 @@ namespace Motate {
     //_MAKE_MOTATE_PIN(                                 , 'B', 11); // USB_D+
     //_MAKE_MOTATE_PIN(                                 , 'B', 12); // ERASE
     _MAKE_MOTATE_PIN(kLED_USBRXPinNumber                , 'B', 13); // LED_1 (Heartbeat) - PWM2
-    _MAKE_MOTATE_PIN(kUnassigned4
-, 'B', 14); //
+    _MAKE_MOTATE_PIN(kSocket4_SPISlaveSelectPinNumber   , 'B', 14); // NOT CONNECTED
 
 
     //_MAKE_MOTATE_PIN(                                 , 'D',  0); // USB_VBUS
