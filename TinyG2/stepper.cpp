@@ -100,7 +100,7 @@ struct Trinamic2130Base {
     trinamic_buffer_t in_buffer;
 
     // Make volatile?
-    bool reading = false;
+    volatile bool reading = false;
 
     Motate::Buffer<32> _registers_to_read;
     Motate::Buffer<32> _registers_to_write;
@@ -130,7 +130,7 @@ struct Trinamic2130Base {
         int16_t next_reg = _registers_to_read.read();
 
         out_buffer.addr = (uint8_t) next_reg;
-        _device->queueMessage(msg_0.setup((uint8_t *)&out_buffer,               nullptr, 5, SPIMessageDeassertAfter, SPIMessageKeepTransaction));
+        _device->queueMessage(msg_0.setup((uint8_t *)&out_buffer, (uint8_t *)&in_buffer, 5, SPIMessageDeassertAfter, SPIMessageKeepTransaction));
         _device->queueMessage(msg_1.setup((uint8_t *)&out_buffer, (uint8_t *)&in_buffer, 5, SPIMessageDeassertAfter, SPIMessageEndTransaction));
     };
 
@@ -150,7 +150,44 @@ struct Trinamic2130Base {
             uint8_t shaft           : 1; // 4
             uint8_t diag0_error     : 1; // 5
         }  __attribute__ ((packed));
-    } GCONF;
+    } GCONF; // 0x00 - READ/WRITE
+    union {
+        uint8_t raw[4];
+    } GSTAT; // 0x01 - CLEARS ON READ
+    union {
+        uint8_t raw[4];
+    } IOIN; // 0x04 - READ ONLY
+//    union {
+//        uint8_t raw[4];
+//    } IHOLD_IRUN; // 0x10 - WRITE ONLY
+//    union {
+//        uint8_t raw[4];
+//    } TPOWERDOWN; // 0x11 - WRITE ONLY
+    union {
+        uint8_t raw[4];
+    } TSTEP; // 0x12 - READ ONLY
+//    union {
+//        uint8_t raw[4];
+//    } TPWMTHRS; // 0x13 - WRITE ONLY
+//    union {
+//        uint8_t raw[4];
+//    } TCOOLTHRS; // 0x14 - WRITE ONLY
+//    union {
+//        uint8_t raw[4];
+//    } THIGH; // 0x15 - WRITE ONLY
+    union {
+        uint8_t raw[4];
+    } XDIRECT; // 0x2D - READ/WRITE
+//    union {
+//        uint8_t raw[4];
+//    } VDCMIN; // 0x33 - WRITE ONLY
+    union {
+        uint8_t raw[4];
+    } CHOPCONF; // 0x6C- READ?/RITE
+    union {
+        uint8_t raw[4];
+    } COOLCONF; // 0x6D - READ ONLY
+
 
     void _doneReadingCallback() {
         reading = false;
@@ -158,10 +195,52 @@ struct Trinamic2130Base {
         status = in_buffer.status;
         switch(out_buffer.addr) {
             case 0x00: // GCONF
-                GCONF.raw[0] = out_buffer.value[0];
-                GCONF.raw[1] = out_buffer.value[1];
-                GCONF.raw[2] = out_buffer.value[2];
-                GCONF.raw[3] = out_buffer.value[3];
+                GCONF.raw[0] = in_buffer.value[0];
+                GCONF.raw[1] = in_buffer.value[1];
+                GCONF.raw[2] = in_buffer.value[2];
+                GCONF.raw[3] = in_buffer.value[3];
+                break;
+
+            case 0x01: // GSTAT
+                GSTAT.raw[0] = in_buffer.value[0];
+                GSTAT.raw[1] = in_buffer.value[1];
+                GSTAT.raw[2] = in_buffer.value[2];
+                GSTAT.raw[3] = in_buffer.value[3];
+                break;
+
+            case 0x04: // IOIN
+                IOIN.raw[0] = in_buffer.value[0];
+                IOIN.raw[1] = in_buffer.value[1];
+                IOIN.raw[2] = in_buffer.value[2];
+                IOIN.raw[3] = in_buffer.value[3];
+                break;
+
+            case 0x12: // TSTEP
+                TSTEP.raw[0] = in_buffer.value[0];
+                TSTEP.raw[1] = in_buffer.value[1];
+                TSTEP.raw[2] = in_buffer.value[2];
+                TSTEP.raw[3] = in_buffer.value[3];
+                break;
+
+            case 0x2D: // XDIRECT
+                XDIRECT.raw[0] = in_buffer.value[0];
+                XDIRECT.raw[1] = in_buffer.value[1];
+                XDIRECT.raw[2] = in_buffer.value[2];
+                XDIRECT.raw[3] = in_buffer.value[3];
+                break;
+
+            case 0x6C: // CHOPCONF
+                CHOPCONF.raw[0] = in_buffer.value[0];
+                CHOPCONF.raw[1] = in_buffer.value[1];
+                CHOPCONF.raw[2] = in_buffer.value[2];
+                CHOPCONF.raw[3] = in_buffer.value[3];
+                break;
+
+            case 0x6D: // COOLCONF
+                COOLCONF.raw[0] = in_buffer.value[0];
+                COOLCONF.raw[1] = in_buffer.value[1];
+                COOLCONF.raw[2] = in_buffer.value[2];
+                COOLCONF.raw[3] = in_buffer.value[3];
                 break;
 
             default:
@@ -496,10 +575,14 @@ void stepper_init()
     trinamics[0].readRegister(0x00);
     trinamics[0].readRegister(0x01);
     trinamics[0].readRegister(0x04);
-    trinamics[1].readRegister(0x10);
-    trinamics[2].readRegister(0x10);
-    trinamics[3].readRegister(0x10);
-    trinamics[4].readRegister(0x10);
+    trinamics[0].readRegister(0x12);
+    trinamics[0].readRegister(0x2D);
+    trinamics[0].readRegister(0x6C);
+    trinamics[0].readRegister(0x6D);
+//    trinamics[1].readRegister(0x10);
+//    trinamics[2].readRegister(0x10);
+//    trinamics[3].readRegister(0x10);
+//    trinamics[4].readRegister(0x10);
 
     // ############ SPI TESTING ###########
 
