@@ -99,11 +99,9 @@ struct Trinamic2130Base {
     trinamic_buffer_t out_buffer;
     trinamic_buffer_t in_buffer;
 
-    // Make volatile?
-    volatile bool reading = false;
+    volatile bool transmitting = false;
 
-    Motate::Buffer<32> _registers_to_read;
-    Motate::Buffer<32> _registers_to_write;
+    Motate::Buffer<32> _registers_to_access;
 
     Trinamic2130Base(SPIBusDeviceBase *device) : _device{device} {
         msg_1.message_done_callback = [&] { this->_doneReadingCallback(); };
@@ -116,18 +114,18 @@ struct Trinamic2130Base {
     };
 
     void readRegister(uint8_t reg) {
-        _registers_to_read.write(reg);
+        _registers_to_access.write(reg);
         startNextRead();
     };
 
     void startNextRead() {
-        if (_registers_to_read.isEmpty() || reading) {
+        if (_registers_to_access.isEmpty() || transmitting) {
             return;
         }
 
-        reading = true;
+        transmitting = true;
 
-        int16_t next_reg = _registers_to_read.read();
+        int16_t next_reg = _registers_to_access.read();
 
         out_buffer.addr = (uint8_t) next_reg;
         _device->queueMessage(msg_0.setup((uint8_t *)&out_buffer, (uint8_t *)&in_buffer, 5, SPIMessageDeassertAfter, SPIMessageKeepTransaction));
@@ -190,7 +188,7 @@ struct Trinamic2130Base {
 
 
     void _doneReadingCallback() {
-        reading = false;
+        transmitting = false;
 
         status = in_buffer.status;
         switch(out_buffer.addr) {
