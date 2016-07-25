@@ -81,13 +81,12 @@ SPIBus<kSPI_MISOPinNumber, kSPI_MOSIPinNumber, kSPI_SCKPinNumber> spiBus;
 
 // Mostly complete base class for Trinamic2130s. Only missing the Chip Select.
 struct Trinamic2130Base {
-
-    // SPI and message handling code
+    // SPI and message handling properties
     SPIBusDeviceBase *_device;
-
     SPIMessage msg_0;
-    SPIMessage msg_1;
+//    SPIMessage msg_1;
 
+    // Create the type of a buffer
     struct trinamic_buffer_t {
         union {
             uint8_t addr;
@@ -96,156 +95,342 @@ struct Trinamic2130Base {
         uint8_t value[4];
     } __attribute__ ((packed));
 
+    // And make two statically allocated buffers
     trinamic_buffer_t out_buffer;
     trinamic_buffer_t in_buffer;
 
+    // Record if we're transmitting to prevent altering the buffers while they
+    // are being transmitted still.
     volatile bool transmitting = false;
 
+    // Record what register we just requested, so we know what register the
+    // the response is for (and to read the response.)
+    int16_t _register_thats_reading = -1;
+
+    // We need to have a flag for when we are doing a read *just* to get the
+    // data requested. Otherwise we'll loop forever.
+    bool _reading_only = false;
+
+    // Store a circular buffer of registers we need to read/write.
     Motate::Buffer<32> _registers_to_access;
 
+
+    // Create/copy/delete/move handling:
     Trinamic2130Base(SPIBusDeviceBase *device) : _device{device} {
-        msg_1.message_done_callback = [&] { this->_doneReadingCallback(); };
+//        _init();
     };
 
-    // Prevent copying, but support moving semeantics
+    // Prevent copying, but support moving semantics
     Trinamic2130Base(const Trinamic2130Base &) = delete;
     Trinamic2130Base(Trinamic2130Base && other) : _device{other._device} {
-        msg_1.message_done_callback = [&] { this->_doneReadingCallback(); };
+//        _init();
     };
 
+    // ############
+    // Actual Trinamic2130 protol functions follow
+
+    // Request reading a register
     void readRegister(uint8_t reg) {
         _registers_to_access.write(reg);
-        startNextRead();
+        _startNextRead();
     };
 
-    void startNextRead() {
-        if (_registers_to_access.isEmpty() || transmitting) {
-            return;
-        }
-
-        transmitting = true;
-
-        int16_t next_reg = _registers_to_access.read();
-
-        out_buffer.addr = (uint8_t) next_reg;
-        _device->queueMessage(msg_0.setup((uint8_t *)&out_buffer, (uint8_t *)&in_buffer, 5, SPIMessageDeassertAfter, SPIMessageKeepTransaction));
-        _device->queueMessage(msg_1.setup((uint8_t *)&out_buffer, (uint8_t *)&in_buffer, 5, SPIMessageDeassertAfter, SPIMessageEndTransaction));
+    // Request writing to a register
+    void writeRegister(uint8_t reg) {
+        _registers_to_access.write(reg | 0x80);
+        _startNextRead();
     };
 
 
-
+    // ###########
     // From here on we store actual values from the trinamic, and marshall data
-    // from the in_buffer buffer to them, or from the values to the out_buffer
+    // from the in_buffer buffer to them, or from the values to the out_buffer.
+
+    // Note that this includes _startNextRead() and _doneReadingCallback(),
+    // which are what calls the functions to put data into the out_buffer and
+    // read data from the in_buffer, respectively.
+
+    // Also, _init() is last, so it can setup a newly created Trinamic object.
+
+    enum {
+        GCONF_reg      = 0x00,
+        GSTAT_reg      = 0x01,
+        IOIN_reg       = 0x04,
+        IHOLD_IRUN_reg = 0x10,
+        TPOWERDOWN_reg = 0x11,
+        TSTEP_reg      = 0x12,
+        TPWMTHRS_reg   = 0x13,
+        TCOOLTHRS_reg  = 0x14,
+        THIGH_reg      = 0x15,
+        XDIRECT_reg    = 0x2D,
+        VDCMIN_reg     = 0x33,
+        CHOPCONF_reg   = 0x6C,
+        COOLCONF_reg   = 0x6D,
+        PWMCONF_reg    = 0x70,
+    };
 
     uint8_t status = 0;
     union {
         uint8_t raw[4];
         struct {
-            uint8_t I_scale_analog  : 1; // 0
-            uint8_t internal_Rsense : 1; // 1
-            uint8_t en_pwm_mode     : 1; // 2
-            uint8_t enc_commutation : 1; // 3
-            uint8_t shaft           : 1; // 4
-            uint8_t diag0_error     : 1; // 5
+            uint8_t unused_2            : 8; // 24..31
+            uint8_t unused_1            : 8; // 16..23
+
+            uint8_t unused_0            : 1; // 15
+            uint8_t small_hysteresis    : 1; // 14
+            uint8_t diag1_pushpull      : 1; // 13
+            uint8_t diag0_int_pushpull  : 1; // 12
+            uint8_t diag1_steps_skipped : 1; // 11
+            uint8_t diag1_onstate       : 1; // 10
+            uint8_t diag1_index         : 1; // 9
+            uint8_t diag1_stall         : 1; // 8
+
+            uint8_t diag0_stall         : 1; // 7
+            uint8_t diag0_otpw          : 1; // 6
+            uint8_t diag0_error         : 1; // 5
+            uint8_t shaft               : 1; // 4
+            uint8_t enc_commutation     : 1; // 3
+            uint8_t en_pwm_mode         : 1; // 2
+            uint8_t internal_Rsense     : 1; // 1
+            uint8_t i_scale_analog      : 1; // 0
         }  __attribute__ ((packed));
     } GCONF; // 0x00 - READ/WRITE
+    void _postReadGConf() {
+        GCONF.raw[0] = in_buffer.value[0];
+        GCONF.raw[1] = in_buffer.value[1];
+        GCONF.raw[2] = in_buffer.value[2];
+        GCONF.raw[3] = in_buffer.value[3];
+    };
+    void _prepWriteGConf() {
+        out_buffer.value[0] = GCONF.raw[0];
+        out_buffer.value[1] = GCONF.raw[1];
+        out_buffer.value[2] = GCONF.raw[2];
+        out_buffer.value[3] = GCONF.raw[3];
+    };
+
+
     union {
         uint8_t raw[4];
     } GSTAT; // 0x01 - CLEARS ON READ
+    void _postReadGStat() {
+        GSTAT.raw[0] = in_buffer.value[0];
+        GSTAT.raw[1] = in_buffer.value[1];
+        GSTAT.raw[2] = in_buffer.value[2];
+        GSTAT.raw[3] = in_buffer.value[3];
+    };
+
     union {
         uint8_t raw[4];
     } IOIN; // 0x04 - READ ONLY
-//    union {
-//        uint8_t raw[4];
-//    } IHOLD_IRUN; // 0x10 - WRITE ONLY
-//    union {
-//        uint8_t raw[4];
-//    } TPOWERDOWN; // 0x11 - WRITE ONLY
+    void _postReadIOIN() {
+        IOIN.raw[0] = in_buffer.value[0];
+        IOIN.raw[1] = in_buffer.value[1];
+        IOIN.raw[2] = in_buffer.value[2];
+        IOIN.raw[3] = in_buffer.value[3];
+    };
+
+    union {
+        uint8_t raw[4];
+    } IHOLD_IRUN; // 0x10 - WRITE ONLY
+    void _prepWriteIHoldIRun() {
+        out_buffer.value[0] = IHOLD_IRUN.raw[0];
+        out_buffer.value[1] = IHOLD_IRUN.raw[1];
+        out_buffer.value[2] = IHOLD_IRUN.raw[2];
+        out_buffer.value[3] = IHOLD_IRUN.raw[3];
+    };
+
+    union {
+        uint8_t raw[4];
+    } TPOWERDOWN; // 0x11 - WRITE ONLY
+    void _prepWriteTPowerDown() {
+        out_buffer.value[0] = TPOWERDOWN.raw[0];
+        out_buffer.value[1] = TPOWERDOWN.raw[1];
+        out_buffer.value[2] = TPOWERDOWN.raw[2];
+        out_buffer.value[3] = TPOWERDOWN.raw[3];
+    };
+
     union {
         uint8_t raw[4];
     } TSTEP; // 0x12 - READ ONLY
-//    union {
-//        uint8_t raw[4];
-//    } TPWMTHRS; // 0x13 - WRITE ONLY
-//    union {
-//        uint8_t raw[4];
-//    } TCOOLTHRS; // 0x14 - WRITE ONLY
-//    union {
-//        uint8_t raw[4];
-//    } THIGH; // 0x15 - WRITE ONLY
+    void _postReadTSep() {
+        TSTEP.raw[0] = in_buffer.value[0];
+        TSTEP.raw[1] = in_buffer.value[1];
+        TSTEP.raw[2] = in_buffer.value[2];
+        TSTEP.raw[3] = in_buffer.value[3];
+    };
+
+    union {
+        uint8_t raw[4];
+    } TPWMTHRS; // 0x13 - WRITE ONLY
+    void _prepWriteTPWMTHRS() {
+        out_buffer.value[0] = TPWMTHRS.raw[0];
+        out_buffer.value[1] = TPWMTHRS.raw[1];
+        out_buffer.value[2] = TPWMTHRS.raw[2];
+        out_buffer.value[3] = TPWMTHRS.raw[3];
+    };
+
+    union {
+        uint8_t raw[4];
+    } TCOOLTHRS; // 0x14 - WRITE ONLY
+    void _prepWriteTCOOLTHRS() {
+        out_buffer.value[0] = TCOOLTHRS.raw[0];
+        out_buffer.value[1] = TCOOLTHRS.raw[1];
+        out_buffer.value[2] = TCOOLTHRS.raw[2];
+        out_buffer.value[3] = TCOOLTHRS.raw[3];
+    };
+
+    union {
+        uint8_t raw[4];
+    } THIGH; // 0x15 - WRITE ONLY
+    void _prepWriteTHIGH() {
+        out_buffer.value[0] = THIGH.raw[0];
+        out_buffer.value[1] = THIGH.raw[1];
+        out_buffer.value[2] = THIGH.raw[2];
+        out_buffer.value[3] = THIGH.raw[3];
+    };
+
     union {
         uint8_t raw[4];
     } XDIRECT; // 0x2D - READ/WRITE
-//    union {
-//        uint8_t raw[4];
-//    } VDCMIN; // 0x33 - WRITE ONLY
+    void _postReadXDirect() {
+        XDIRECT.raw[0] = in_buffer.value[0];
+        XDIRECT.raw[1] = in_buffer.value[1];
+        XDIRECT.raw[2] = in_buffer.value[2];
+        XDIRECT.raw[3] = in_buffer.value[3];
+    };
+    void _prepWriteXDirect() {
+        out_buffer.value[0] = XDIRECT.raw[0];
+        out_buffer.value[1] = XDIRECT.raw[1];
+        out_buffer.value[2] = XDIRECT.raw[2];
+        out_buffer.value[3] = XDIRECT.raw[3];
+    };
+
     union {
         uint8_t raw[4];
-    } CHOPCONF; // 0x6C- READ?/RITE
+    } VDCMIN; // 0x33 - WRITE ONLY
+    void _prepWriteVDCMIN() {
+        out_buffer.value[0] = VDCMIN.raw[0];
+        out_buffer.value[1] = VDCMIN.raw[1];
+        out_buffer.value[2] = VDCMIN.raw[2];
+        out_buffer.value[3] = VDCMIN.raw[3];
+    };
+
+    union {
+        uint8_t raw[4];
+    } CHOPCONF; // 0x6C- READ/WRITE
+    void _postReadChopConf() {
+        CHOPCONF.raw[0] = in_buffer.value[0];
+        CHOPCONF.raw[1] = in_buffer.value[1];
+        CHOPCONF.raw[2] = in_buffer.value[2];
+        CHOPCONF.raw[3] = in_buffer.value[3];
+    };
+    void _prepWriteChopConf() {
+        out_buffer.value[0] = CHOPCONF.raw[0];
+        out_buffer.value[1] = CHOPCONF.raw[1];
+        out_buffer.value[2] = CHOPCONF.raw[2];
+        out_buffer.value[3] = CHOPCONF.raw[3];
+    };
+
     union {
         uint8_t raw[4];
     } COOLCONF; // 0x6D - READ ONLY
+    void _postReadCoolConf() {
+        COOLCONF.raw[0] = in_buffer.value[0];
+        COOLCONF.raw[1] = in_buffer.value[1];
+        COOLCONF.raw[2] = in_buffer.value[2];
+        COOLCONF.raw[3] = in_buffer.value[3];
+    };
+
+    union {
+        uint8_t raw[4];
+    } PWMCONF; // 0x70 - READ ONLY
+    void _prepWritePWMConf() {
+        out_buffer.value[0] = PWMCONF.raw[0];
+        out_buffer.value[1] = PWMCONF.raw[1];
+        out_buffer.value[2] = PWMCONF.raw[2];
+        out_buffer.value[3] = PWMCONF.raw[3];
+    };
 
 
-    void _doneReadingCallback() {
-        transmitting = false;
 
-        status = in_buffer.status;
-        switch(out_buffer.addr) {
-            case 0x00: // GCONF
-                GCONF.raw[0] = in_buffer.value[0];
-                GCONF.raw[1] = in_buffer.value[1];
-                GCONF.raw[2] = in_buffer.value[2];
-                GCONF.raw[3] = in_buffer.value[3];
-                break;
+    void _startNextRead() {
+        if (transmitting || (_registers_to_access.isEmpty() && (_register_thats_reading == -1))) {
+            return;
+        }
+        transmitting = true;
 
-            case 0x01: // GSTAT
-                GSTAT.raw[0] = in_buffer.value[0];
-                GSTAT.raw[1] = in_buffer.value[1];
-                GSTAT.raw[2] = in_buffer.value[2];
-                GSTAT.raw[3] = in_buffer.value[3];
-                break;
+        // We request the next register, or re-request that we're reading (and already requested) in order to get the response.
+        int16_t next_reg;
 
-            case 0x04: // IOIN
-                IOIN.raw[0] = in_buffer.value[0];
-                IOIN.raw[1] = in_buffer.value[1];
-                IOIN.raw[2] = in_buffer.value[2];
-                IOIN.raw[3] = in_buffer.value[3];
-                break;
+        if (!_registers_to_access.isEmpty()) {
+            next_reg = _registers_to_access.read();
+            // If we requested a write, we need to setup the out_buffer
+            if (next_reg & 0x80) {
+                switch(next_reg & ~0x80) {
+                    case GCONF_reg:      _prepWriteGConf(); break;
+                    case IHOLD_IRUN_reg: _prepWriteIHoldIRun(); break;
+                    case TPOWERDOWN_reg: _prepWriteTPowerDown(); break;
+                    case TPWMTHRS_reg:   _prepWriteTPWMTHRS(); break;
+                    case TCOOLTHRS_reg:  _prepWriteTCOOLTHRS(); break;
+                    case THIGH_reg:      _prepWriteTHIGH(); break;
+                    case XDIRECT_reg:    _prepWriteXDirect(); break;
+                    case VDCMIN_reg:     _prepWriteVDCMIN(); break;
+                    case CHOPCONF_reg:   _prepWriteChopConf(); break;
+                    case PWMCONF_reg:    _prepWritePWMConf(); break;
 
-            case 0x12: // TSTEP
-                TSTEP.raw[0] = in_buffer.value[0];
-                TSTEP.raw[1] = in_buffer.value[1];
-                TSTEP.raw[2] = in_buffer.value[2];
-                TSTEP.raw[3] = in_buffer.value[3];
-                break;
-
-            case 0x2D: // XDIRECT
-                XDIRECT.raw[0] = in_buffer.value[0];
-                XDIRECT.raw[1] = in_buffer.value[1];
-                XDIRECT.raw[2] = in_buffer.value[2];
-                XDIRECT.raw[3] = in_buffer.value[3];
-                break;
-
-            case 0x6C: // CHOPCONF
-                CHOPCONF.raw[0] = in_buffer.value[0];
-                CHOPCONF.raw[1] = in_buffer.value[1];
-                CHOPCONF.raw[2] = in_buffer.value[2];
-                CHOPCONF.raw[3] = in_buffer.value[3];
-                break;
-
-            case 0x6D: // COOLCONF
-                COOLCONF.raw[0] = in_buffer.value[0];
-                COOLCONF.raw[1] = in_buffer.value[1];
-                COOLCONF.raw[2] = in_buffer.value[2];
-                COOLCONF.raw[3] = in_buffer.value[3];
-                break;
-
-            default:
-                break;
+                    default:
+                        break;
+                }
+            }
+        } else {
+            next_reg = _register_thats_reading;
+            _reading_only = true;
         }
 
-        startNextRead();
+        out_buffer.addr = (uint8_t) next_reg;
+        _device->queueMessage(msg_0.setup((uint8_t *)&out_buffer, (uint8_t *)&in_buffer, 5, SPIMessageDeassertAfter, SPIMessageKeepTransaction));
+    };
+
+    void _doneReadingCallback() {
+        if (_register_thats_reading != -1) {
+            status = in_buffer.status;
+            switch(_register_thats_reading) {
+                case GCONF_reg:    _postReadGConf(); break;
+                case GSTAT_reg:    _postReadGStat(); break;
+                case IOIN_reg:     _postReadIOIN(); break;
+                case TSTEP_reg:    _postReadTSep(); break;
+                case XDIRECT_reg:  _postReadXDirect(); break;
+                case CHOPCONF_reg: _postReadChopConf(); break;
+                case COOLCONF_reg: _postReadCoolConf(); break;
+
+                default:
+                    break;
+            }
+
+            _register_thats_reading = -1;
+        }
+
+        // if we just requested a read, we should record it so we know to clock
+        // in the response
+        if (!_reading_only && (out_buffer.addr & 0x80) == 0) {
+            _register_thats_reading = out_buffer.addr;
+        }
+        _reading_only = false;
+
+        transmitting = false;
+        _startNextRead();
+    };
+
+    void init() {
+        msg_0.message_done_callback = [&] { this->_doneReadingCallback(); };
+
+        // Establish default values, and then prepare to read the registers we can to establish starting values
+        CHOPCONF   = {0x00, 0x01, 0x00, 0xC5};   writeRegister(CHOPCONF_reg);
+        IHOLD_IRUN = {0x00, 0x06, 0x1F, 0x0A};   writeRegister(IHOLD_IRUN_reg);
+        TPOWERDOWN = {0x00, 0x00, 0x00, 0x0A};   writeRegister(TPOWERDOWN_reg);
+        GCONF      = {0x00, 0x00, 0x00, 0x04};   writeRegister(GCONF_reg);
+        TPWMTHRS   = {0x00, 0x00, 0x01, 0xF4};   writeRegister(TPWMTHRS_reg);
+        PWMCONF    = {0x00, 0x04, 0x01, 0xC8};   writeRegister(PWMCONF_reg);
     }
 };
 
@@ -570,13 +755,19 @@ void stepper_init()
 //    trinamic1.queueMessage(read_message_pt1.setup(out_buffer, in_buffer, 5, SPIMessageDeassertAfter, SPIMessageKeepTransaction));
 //    trinamic1.queueMessage(read_message_pt2.setup(out_buffer, in_buffer, 5, SPIMessageDeassertAfter, SPIMessageEndTransaction));
 
-    trinamics[0].readRegister(0x00);
-    trinamics[0].readRegister(0x01);
-    trinamics[0].readRegister(0x04);
-    trinamics[0].readRegister(0x12);
-    trinamics[0].readRegister(0x2D);
-    trinamics[0].readRegister(0x6C);
-    trinamics[0].readRegister(0x6D);
+    trinamics[0].init();
+    trinamics[1].init();
+    trinamics[2].init();
+    trinamics[3].init();
+    trinamics[4].init();
+
+//    trinamics[0].readRegister(0x00);
+//    trinamics[0].readRegister(0x01);
+//    trinamics[0].readRegister(0x04);
+//    trinamics[0].readRegister(0x12);
+//    trinamics[0].readRegister(0x2D);
+//    trinamics[0].readRegister(0x6C);
+//    trinamics[0].readRegister(0x6D);
 //    trinamics[1].readRegister(0x10);
 //    trinamics[2].readRegister(0x10);
 //    trinamics[3].readRegister(0x10);
