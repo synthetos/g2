@@ -172,6 +172,7 @@ struct Trinamic2130Base {
         MSCNT_reg      = 0x6A,
         CHOPCONF_reg   = 0x6C,
         COOLCONF_reg   = 0x6D,
+        DRV_STATUS_reg = 0x6F,
         PWMCONF_reg    = 0x70,
     };
 
@@ -362,9 +363,40 @@ struct Trinamic2130Base {
         COOLCONF.value = fromBigEndian(in_buffer.value);
     };
 
-    struct {
+    union {
+        volatile uint32_t value;
+        //        uint8_t bytes[4];
+        volatile struct {
+            uint32_t SG_RESULT    :10; //  0- 9
+            uint32_t              : 5; // 10-14
+            uint32_t fsactive     : 1; // 15
+            uint32_t CS_ACTUAL    : 5; // 16-20
+            uint32_t              : 3; // 21-23
+            uint32_t stallGuard   : 1; // 24
+            uint32_t ot           : 1; // 25
+            uint32_t otpw         : 1; // 26
+            uint32_t s2ga         : 1; // 27
+            uint32_t s2gb         : 1; // 28
+            uint32_t ola          : 1; // 29
+            uint32_t olb          : 1; // 30
+            uint32_t stst         : 1; // 31
+        }  __attribute__ ((packed));
+    } DRV_STATUS; // 0x6F- READ ONLY
+    void _postReadDriverStatus() {
+        DRV_STATUS.value = fromBigEndian(in_buffer.value);
+    };
+
+    union {
         volatile uint32_t value;
 //        uint8_t bytes[4];
+        volatile struct {
+            uint32_t PWM_AMPL      : 8; //  0- 7
+            uint32_t PWM_GRAD      : 8; //  8-15
+            uint32_t pwm_freq      : 2; // 16-17
+            uint32_t pwm_autoscale : 1; // 18
+            uint32_t pwm_symmetric : 1; // 19
+            uint32_t freewheel     : 2; // 20-21
+        }  __attribute__ ((packed));
     } PWMCONF; // 0x70 - READ ONLY
     void _prepWritePWMConf() {
         out_buffer.value = toBigEndian(PWMCONF.value);
@@ -413,14 +445,15 @@ struct Trinamic2130Base {
         status = in_buffer.status;
         if (_register_thats_reading != -1) {
             switch(_register_thats_reading) {
-                case GCONF_reg:    _postReadGConf(); break;
-                case GSTAT_reg:    _postReadGStat(); break;
-                case IOIN_reg:     _postReadIOIN(); break;
-                case TSTEP_reg:    _postReadTSep(); break;
-                case XDIRECT_reg:  _postReadXDirect(); break;
-                case MSCNT_reg:    _postReadMSCount(); break;
-                case CHOPCONF_reg: _postReadChopConf(); break;
-                case COOLCONF_reg: _postReadCoolConf(); break;
+                case GCONF_reg:      _postReadGConf(); break;
+                case GSTAT_reg:      _postReadGStat(); break;
+                case IOIN_reg:       _postReadIOIN(); break;
+                case TSTEP_reg:      _postReadTSep(); break;
+                case XDIRECT_reg:    _postReadXDirect(); break;
+                case MSCNT_reg:      _postReadMSCount(); break;
+                case CHOPCONF_reg:   _postReadChopConf(); break;
+                case COOLCONF_reg:   _postReadCoolConf(); break;
+                case DRV_STATUS_reg: _postReadDriverStatus(); break;
 
                 default:
                     break;
@@ -449,37 +482,74 @@ struct Trinamic2130Base {
         // Establish default values, and then prepare to read the registers we can to establish starting values
         //        TPWMTHRS   = {0x000001F4};   writeRegister(TPWMTHRS_reg);
         //        PWMCONF    = {0x000401C8};   writeRegister(PWMCONF_reg);
-        //        XDIRECT    = {0x00000000};   writeRegister(XDIRECT_reg);
         //        TPOWERDOWN = {0x0000000A};   writeRegister(TPOWERDOWN_reg);
 
-        IHOLD_IRUN.IHOLD = 0x10;
-        IHOLD_IRUN.IRUN = 0x10;
+        IHOLD_IRUN.IHOLD = 7;
+        IHOLD_IRUN.IRUN = 30;
+        IHOLD_IRUN.IHOLDDELAY = 7;
         writeRegister(IHOLD_IRUN_reg);
 
-        GCONF      = {0x00000000};
+        TPOWERDOWN.value = 256;
+        writeRegister(TPOWERDOWN_reg);
+
+        XDIRECT.value = 0;
+        writeRegister(XDIRECT_reg);
+
+        VDCMIN.value = 0;
+        writeRegister(VDCMIN_reg);
+
+//        GCONF      = {0x00000000};
         GCONF.en_pwm_mode = 1;
         writeRegister(GCONF_reg);
 
-        CHOPCONF   = {0x040100C5};
-//        {
-//            TOFF = 0x5,
-//            HSTRT_TFD012 = 0x4,
-//            HEND_OFFSET = 0x1,
-//            TFD3 = 0x0,
-//            disfdcc = 0x0,
-//            rndtf = 0x0,
-//            chm = 0x0,
-//            TBL = 0x2,
-//            vsense = 0x0,
-//            vhighfs = 0x0,
-//            vhighchm = 0x0,
-//            SYNC = 0x0, 
-//            MRES = 0x4, 
-//            intpol = 0x0, 
-//            dedge = 0x0, 
-//            diss2g = 0x0
-//        }
+        CHOPCONF   = {0x030100C5};
+        CHOPCONF.TOFF = 0x5;
+        CHOPCONF.HSTRT_TFD012 = 0x4;
+        CHOPCONF.HEND_OFFSET = 0x1;
+        CHOPCONF.TFD3 = 0x0;
+        CHOPCONF.disfdcc = 0x0;
+        CHOPCONF.rndtf = 0x0;
+        CHOPCONF.chm = 0x0;
+        CHOPCONF.TBL = 0x2;
+        CHOPCONF.vsense = 0x1;
+        CHOPCONF.vhighfs = 0x0;
+        CHOPCONF.vhighchm = 0x0;
+        CHOPCONF.SYNC = 0x0;
+        CHOPCONF.MRES = 0x3;
+        CHOPCONF.intpol = 0x0;
+        CHOPCONF.dedge = 0x0;
+        CHOPCONF.diss2g = 0x0;
+//        CHOPCONF.TOFF = 8;
+//        CHOPCONF.HSTRT_TFD012 = 1;
+//        CHOPCONF.HEND_OFFSET = 14;
+//        CHOPCONF.TFD3 = 0x0;
+//        CHOPCONF.disfdcc = 0x0;
+//        CHOPCONF.rndtf = 0x0;
+//        CHOPCONF.chm = 0x0;
+//        CHOPCONF.TBL = 1;
+//        CHOPCONF.vsense = true;
+//        CHOPCONF.vhighfs = 0;
+//        CHOPCONF.vhighchm = 0;
+//        CHOPCONF.SYNC = 4;
+//        CHOPCONF.MRES = 3;
+//        CHOPCONF.intpol = false;
+//        CHOPCONF.dedge = false;
+//        CHOPCONF.diss2g = false;
         writeRegister(CHOPCONF_reg);
+
+        PWMCONF.PWM_AMPL = 200;
+        PWMCONF.PWM_GRAD = 1;
+        PWMCONF.pwm_freq = 0;
+        PWMCONF.pwm_autoscale = 1;
+        PWMCONF.pwm_symmetric = 0;
+        PWMCONF.freewheel = 0;
+//        PWMCONF.PWM_AMPL = 128;
+//        PWMCONF.PWM_GRAD = 4;
+//        PWMCONF.pwm_freq = 1;
+//        PWMCONF.pwm_autoscale = 1;
+//        PWMCONF.pwm_symmetric = 0;
+//        PWMCONF.freewheel = 0;
+        writeRegister(PWMCONF_reg);
 
         readRegister(IOIN_reg);
         readRegister(MSCNT_reg);
@@ -492,6 +562,7 @@ struct Trinamic2130Base {
             check_timer.set(100);
             readRegister(IOIN_reg);
             readRegister(MSCNT_reg);
+            readRegister(DRV_STATUS_reg);
         }
     };
 };
