@@ -43,7 +43,7 @@
 
 #include "MotateSPI.h"
 #include "MotateBuffer.h"
-
+#include "MotateUtilities.h" // for to/fromLittle/BigEndian
 
 /**** Allocate structures ****/
 
@@ -88,16 +88,19 @@ struct Trinamic2130Base {
 
     // Create the type of a buffer
     struct trinamic_buffer_t {
-        union {
+        volatile union {
             uint8_t addr;
             uint8_t status;
         };
-        uint8_t value[4];
+//        union {
+            volatile uint32_t value;
+//            uint8_t bytes[4];
+//        };
     } __attribute__ ((packed));
 
     // And make two statically allocated buffers
-    trinamic_buffer_t out_buffer;
-    trinamic_buffer_t in_buffer;
+    volatile trinamic_buffer_t out_buffer;
+    volatile trinamic_buffer_t in_buffer;
 
     // Record if we're transmitting to prevent altering the buffers while they
     // are being transmitted still.
@@ -105,7 +108,7 @@ struct Trinamic2130Base {
 
     // Record what register we just requested, so we know what register the
     // the response is for (and to read the response.)
-    int16_t _register_thats_reading = -1;
+    volatile int16_t _register_thats_reading = -1;
 
     // We need to have a flag for when we are doing a read *just* to get the
     // data requested. Otherwise we'll loop forever.
@@ -125,6 +128,8 @@ struct Trinamic2130Base {
     Trinamic2130Base(Trinamic2130Base && other) : _device{other._device} {
 //        _init();
     };
+
+    Motate::Timeout check_timer;
 
     // ############
     // Actual Trinamic2130 protol functions follow
@@ -164,194 +169,206 @@ struct Trinamic2130Base {
         THIGH_reg      = 0x15,
         XDIRECT_reg    = 0x2D,
         VDCMIN_reg     = 0x33,
+        MSCNT_reg      = 0x6A,
         CHOPCONF_reg   = 0x6C,
         COOLCONF_reg   = 0x6D,
         PWMCONF_reg    = 0x70,
     };
 
+    // IMPORTANT NOTE: The endianness of the ARM is little endian, but other processors
+    //  may be different.
+
     uint8_t status = 0;
     union {
-        uint8_t raw[4];
-        struct {
-            uint8_t unused_2            : 8; // 24..31
-            uint8_t unused_1            : 8; // 16..23
+        volatile uint32_t value;
+//        uint8_t bytes[4];
+        volatile struct {
+            uint32_t i_scale_analog      : 1; // 0
+            uint32_t internal_Rsense     : 1; // 1
+            uint32_t en_pwm_mode         : 1; // 2
+            uint32_t enc_commutation     : 1; // 3
+            uint32_t shaft               : 1; // 4
+            uint32_t diag0_error         : 1; // 5
+            uint32_t diag0_otpw          : 1; // 6
+            uint32_t diag0_stall         : 1; // 7
 
-            uint8_t unused_0            : 1; // 15
-            uint8_t small_hysteresis    : 1; // 14
-            uint8_t diag1_pushpull      : 1; // 13
-            uint8_t diag0_int_pushpull  : 1; // 12
-            uint8_t diag1_steps_skipped : 1; // 11
-            uint8_t diag1_onstate       : 1; // 10
-            uint8_t diag1_index         : 1; // 9
-            uint8_t diag1_stall         : 1; // 8
-
-            uint8_t diag0_stall         : 1; // 7
-            uint8_t diag0_otpw          : 1; // 6
-            uint8_t diag0_error         : 1; // 5
-            uint8_t shaft               : 1; // 4
-            uint8_t enc_commutation     : 1; // 3
-            uint8_t en_pwm_mode         : 1; // 2
-            uint8_t internal_Rsense     : 1; // 1
-            uint8_t i_scale_analog      : 1; // 0
+            uint32_t diag1_stall         : 1; // 8
+            uint32_t diag1_index         : 1; // 9
+            uint32_t diag1_onstate       : 1; // 10
+            uint32_t diag1_steps_skipped : 1; // 11
+            uint32_t diag0_int_pushpull  : 1; // 12
+            uint32_t diag1_pushpull      : 1; // 13
+            uint32_t small_hysteresis    : 1; // 14
         }  __attribute__ ((packed));
     } GCONF; // 0x00 - READ/WRITE
     void _postReadGConf() {
-        GCONF.raw[0] = in_buffer.value[0];
-        GCONF.raw[1] = in_buffer.value[1];
-        GCONF.raw[2] = in_buffer.value[2];
-        GCONF.raw[3] = in_buffer.value[3];
+        GCONF.value = fromBigEndian(in_buffer.value);
     };
     void _prepWriteGConf() {
-        out_buffer.value[0] = GCONF.raw[0];
-        out_buffer.value[1] = GCONF.raw[1];
-        out_buffer.value[2] = GCONF.raw[2];
-        out_buffer.value[3] = GCONF.raw[3];
+        out_buffer.value = toBigEndian(GCONF.value);
     };
 
-
-    union {
-        uint8_t raw[4];
+    struct {
+        volatile uint32_t value;
+//        uint8_t bytes[4];
+        volatile struct {
+            uint32_t reset      : 1; // 0
+            uint32_t drv_err    : 1; // 1
+            uint32_t uv_cp      : 1; // 2
+        }  __attribute__ ((packed));
     } GSTAT; // 0x01 - CLEARS ON READ
     void _postReadGStat() {
-        GSTAT.raw[0] = in_buffer.value[0];
-        GSTAT.raw[1] = in_buffer.value[1];
-        GSTAT.raw[2] = in_buffer.value[2];
-        GSTAT.raw[3] = in_buffer.value[3];
+        GSTAT.value = fromBigEndian(in_buffer.value);
     };
 
     union {
-        uint8_t raw[4];
+        volatile uint32_t value;
+//        uint8_t bytes[4];
+        volatile struct {
+            uint32_t STEP         : 1; // 0
+            uint32_t DIR          : 1; // 1
+            uint32_t DCEN_CFG4    : 1; // 2
+            uint32_t DCIN_CFG5    : 1; // 3
+            uint32_t DRV_ENN_CFG6 : 1; // 4
+            uint32_t DCO          : 1; // 5
+            uint32_t _always_1    : 1; // 6
+            uint32_t _dont_care   : 1; // 7
+
+            uint32_t _unused_0    : 8; //  8-15
+            uint32_t _unused_1    : 8; // 16-23
+            uint32_t CHIP_VERSION : 8; // 24-31 - should always read 0x11
+        }  __attribute__ ((packed));
     } IOIN; // 0x04 - READ ONLY
     void _postReadIOIN() {
-        IOIN.raw[0] = in_buffer.value[0];
-        IOIN.raw[1] = in_buffer.value[1];
-        IOIN.raw[2] = in_buffer.value[2];
-        IOIN.raw[3] = in_buffer.value[3];
+        IOIN.value = fromBigEndian(in_buffer.value);
     };
 
     union {
-        uint8_t raw[4];
+        volatile uint32_t value;
+//        uint8_t bytes[4];
+        volatile struct {
+            uint32_t IHOLD      : 5; //  0- 4
+            uint32_t _unused_0  : 3; //  5- 7
+            uint32_t IRUN       : 5; //  8-12
+            uint32_t _unused_1  : 3; // 13-15
+            uint32_t IHOLDDELAY : 4; // 16-19
+        }  __attribute__ ((packed));
     } IHOLD_IRUN; // 0x10 - WRITE ONLY
     void _prepWriteIHoldIRun() {
-        out_buffer.value[0] = IHOLD_IRUN.raw[0];
-        out_buffer.value[1] = IHOLD_IRUN.raw[1];
-        out_buffer.value[2] = IHOLD_IRUN.raw[2];
-        out_buffer.value[3] = IHOLD_IRUN.raw[3];
+        out_buffer.value = toBigEndian(IHOLD_IRUN.value);
     };
 
-    union {
-        uint8_t raw[4];
+    struct {
+        volatile uint32_t value;
+//        uint8_t bytes[4];
     } TPOWERDOWN; // 0x11 - WRITE ONLY
     void _prepWriteTPowerDown() {
-        out_buffer.value[0] = TPOWERDOWN.raw[0];
-        out_buffer.value[1] = TPOWERDOWN.raw[1];
-        out_buffer.value[2] = TPOWERDOWN.raw[2];
-        out_buffer.value[3] = TPOWERDOWN.raw[3];
+        out_buffer.value = toBigEndian(TPOWERDOWN.value);
     };
 
-    union {
-        uint8_t raw[4];
+    struct {
+        volatile uint32_t value;
+//        uint8_t bytes[4];
     } TSTEP; // 0x12 - READ ONLY
     void _postReadTSep() {
-        TSTEP.raw[0] = in_buffer.value[0];
-        TSTEP.raw[1] = in_buffer.value[1];
-        TSTEP.raw[2] = in_buffer.value[2];
-        TSTEP.raw[3] = in_buffer.value[3];
+        TSTEP.value = fromBigEndian(in_buffer.value);
     };
 
-    union {
-        uint8_t raw[4];
+    struct {
+        volatile uint32_t value;
+//        uint8_t bytes[4];
     } TPWMTHRS; // 0x13 - WRITE ONLY
     void _prepWriteTPWMTHRS() {
-        out_buffer.value[0] = TPWMTHRS.raw[0];
-        out_buffer.value[1] = TPWMTHRS.raw[1];
-        out_buffer.value[2] = TPWMTHRS.raw[2];
-        out_buffer.value[3] = TPWMTHRS.raw[3];
+        out_buffer.value = toBigEndian(TPWMTHRS.value);
     };
 
-    union {
-        uint8_t raw[4];
+    struct {
+        volatile uint32_t value;
+//        uint8_t bytes[4];
     } TCOOLTHRS; // 0x14 - WRITE ONLY
     void _prepWriteTCOOLTHRS() {
-        out_buffer.value[0] = TCOOLTHRS.raw[0];
-        out_buffer.value[1] = TCOOLTHRS.raw[1];
-        out_buffer.value[2] = TCOOLTHRS.raw[2];
-        out_buffer.value[3] = TCOOLTHRS.raw[3];
+        out_buffer.value = toBigEndian(TCOOLTHRS.value);
     };
 
-    union {
-        uint8_t raw[4];
+    struct {
+        volatile uint32_t value;
+//        uint8_t bytes[4];
     } THIGH; // 0x15 - WRITE ONLY
     void _prepWriteTHIGH() {
-        out_buffer.value[0] = THIGH.raw[0];
-        out_buffer.value[1] = THIGH.raw[1];
-        out_buffer.value[2] = THIGH.raw[2];
-        out_buffer.value[3] = THIGH.raw[3];
+        out_buffer.value = toBigEndian(THIGH.value);
     };
 
-    union {
-        uint8_t raw[4];
+    struct {
+        volatile uint32_t value;
+//        uint8_t bytes[4];
     } XDIRECT; // 0x2D - READ/WRITE
     void _postReadXDirect() {
-        XDIRECT.raw[0] = in_buffer.value[0];
-        XDIRECT.raw[1] = in_buffer.value[1];
-        XDIRECT.raw[2] = in_buffer.value[2];
-        XDIRECT.raw[3] = in_buffer.value[3];
+        XDIRECT.value = fromBigEndian(in_buffer.value);
     };
     void _prepWriteXDirect() {
-        out_buffer.value[0] = XDIRECT.raw[0];
-        out_buffer.value[1] = XDIRECT.raw[1];
-        out_buffer.value[2] = XDIRECT.raw[2];
-        out_buffer.value[3] = XDIRECT.raw[3];
+        out_buffer.value = toBigEndian(XDIRECT.value);
     };
 
-    union {
-        uint8_t raw[4];
+    struct {
+        volatile uint32_t value;
+//        uint8_t bytes[4];
     } VDCMIN; // 0x33 - WRITE ONLY
     void _prepWriteVDCMIN() {
-        out_buffer.value[0] = VDCMIN.raw[0];
-        out_buffer.value[1] = VDCMIN.raw[1];
-        out_buffer.value[2] = VDCMIN.raw[2];
-        out_buffer.value[3] = VDCMIN.raw[3];
+        out_buffer.value = toBigEndian(VDCMIN.value);
+    };
+
+    struct {
+        volatile uint32_t value;
+//        uint8_t bytes[4];
+    } MSCNT; // 0x6A - READ ONLY
+    void _postReadMSCount() {
+        MSCNT.value = fromBigEndian(in_buffer.value);
     };
 
     union {
-        uint8_t raw[4];
+        volatile uint32_t value;
+//        uint8_t bytes[4];
+        volatile struct {
+            uint32_t TOFF         : 4; //  0- 3
+            uint32_t HSTRT_TFD012 : 3; //  4- 6 - HSTRT when chm==0, TFD012 when chm==1
+            uint32_t HEND_OFFSET  : 4; //  7-10 - HEND when chm==0, OFFSET when chm==1
+            uint32_t TFD3         : 1; // 11
+            uint32_t disfdcc      : 1; // 12 -- when chm==1
+            uint32_t rndtf        : 1; // 13
+            uint32_t chm          : 1; // 14
+            uint32_t TBL          : 2; // 15-16
+            uint32_t vsense       : 1; // 17
+            uint32_t vhighfs      : 1; // 18
+            uint32_t vhighchm     : 1; // 19
+            uint32_t SYNC         : 4; // 20-23
+            uint32_t MRES         : 4; // 24-27
+            uint32_t intpol       : 1; // 28
+            uint32_t dedge        : 1; // 29
+            uint32_t diss2g       : 1; // 30
+        }  __attribute__ ((packed));
     } CHOPCONF; // 0x6C- READ/WRITE
     void _postReadChopConf() {
-        CHOPCONF.raw[0] = in_buffer.value[0];
-        CHOPCONF.raw[1] = in_buffer.value[1];
-        CHOPCONF.raw[2] = in_buffer.value[2];
-        CHOPCONF.raw[3] = in_buffer.value[3];
+        CHOPCONF.value = fromBigEndian(in_buffer.value);
     };
     void _prepWriteChopConf() {
-        out_buffer.value[0] = CHOPCONF.raw[0];
-        out_buffer.value[1] = CHOPCONF.raw[1];
-        out_buffer.value[2] = CHOPCONF.raw[2];
-        out_buffer.value[3] = CHOPCONF.raw[3];
+        out_buffer.value = toBigEndian(CHOPCONF.value);
     };
 
-    union {
-        uint8_t raw[4];
+    struct {
+        volatile uint32_t value;
+//        uint8_t bytes[4];
     } COOLCONF; // 0x6D - READ ONLY
     void _postReadCoolConf() {
-        COOLCONF.raw[0] = in_buffer.value[0];
-        COOLCONF.raw[1] = in_buffer.value[1];
-        COOLCONF.raw[2] = in_buffer.value[2];
-        COOLCONF.raw[3] = in_buffer.value[3];
+        COOLCONF.value = fromBigEndian(in_buffer.value);
     };
 
-    union {
-        uint8_t raw[4];
+    struct {
+        volatile uint32_t value;
+//        uint8_t bytes[4];
     } PWMCONF; // 0x70 - READ ONLY
     void _prepWritePWMConf() {
-        out_buffer.value[0] = PWMCONF.raw[0];
-        out_buffer.value[1] = PWMCONF.raw[1];
-        out_buffer.value[2] = PWMCONF.raw[2];
-        out_buffer.value[3] = PWMCONF.raw[3];
+        out_buffer.value = toBigEndian(PWMCONF.value);
     };
-
-
 
     void _startNextRead() {
         if (transmitting || (_registers_to_access.isEmpty() && (_register_thats_reading == -1))) {
@@ -392,14 +409,16 @@ struct Trinamic2130Base {
     };
 
     void _doneReadingCallback() {
+//        for (uint16_t i = 10; i>0; i--) { __NOP(); }
+        status = in_buffer.status;
         if (_register_thats_reading != -1) {
-            status = in_buffer.status;
             switch(_register_thats_reading) {
                 case GCONF_reg:    _postReadGConf(); break;
                 case GSTAT_reg:    _postReadGStat(); break;
                 case IOIN_reg:     _postReadIOIN(); break;
                 case TSTEP_reg:    _postReadTSep(); break;
                 case XDIRECT_reg:  _postReadXDirect(); break;
+                case MSCNT_reg:    _postReadMSCount(); break;
                 case CHOPCONF_reg: _postReadChopConf(); break;
                 case COOLCONF_reg: _postReadCoolConf(); break;
 
@@ -414,6 +433,9 @@ struct Trinamic2130Base {
         // in the response
         if (!_reading_only && (out_buffer.addr & 0x80) == 0) {
             _register_thats_reading = out_buffer.addr;
+        } else {
+            // we're not waiting for a read, let another device have a transaction
+            msg_0.immediate_ends_transaction = true;
         }
         _reading_only = false;
 
@@ -425,13 +447,53 @@ struct Trinamic2130Base {
         msg_0.message_done_callback = [&] { this->_doneReadingCallback(); };
 
         // Establish default values, and then prepare to read the registers we can to establish starting values
-        CHOPCONF   = {0x00, 0x01, 0x00, 0xC5};   writeRegister(CHOPCONF_reg);
-        IHOLD_IRUN = {0x00, 0x06, 0x1F, 0x0A};   writeRegister(IHOLD_IRUN_reg);
-        TPOWERDOWN = {0x00, 0x00, 0x00, 0x0A};   writeRegister(TPOWERDOWN_reg);
-        GCONF      = {0x00, 0x00, 0x00, 0x04};   writeRegister(GCONF_reg);
-        TPWMTHRS   = {0x00, 0x00, 0x01, 0xF4};   writeRegister(TPWMTHRS_reg);
-        PWMCONF    = {0x00, 0x04, 0x01, 0xC8};   writeRegister(PWMCONF_reg);
-    }
+        //        TPWMTHRS   = {0x000001F4};   writeRegister(TPWMTHRS_reg);
+        //        PWMCONF    = {0x000401C8};   writeRegister(PWMCONF_reg);
+        //        XDIRECT    = {0x00000000};   writeRegister(XDIRECT_reg);
+        //        TPOWERDOWN = {0x0000000A};   writeRegister(TPOWERDOWN_reg);
+
+        IHOLD_IRUN.IHOLD = 0x10;
+        IHOLD_IRUN.IRUN = 0x10;
+        writeRegister(IHOLD_IRUN_reg);
+
+        GCONF      = {0x00000000};
+        GCONF.en_pwm_mode = 1;
+        writeRegister(GCONF_reg);
+
+        CHOPCONF   = {0x040100C5};
+//        {
+//            TOFF = 0x5,
+//            HSTRT_TFD012 = 0x4,
+//            HEND_OFFSET = 0x1,
+//            TFD3 = 0x0,
+//            disfdcc = 0x0,
+//            rndtf = 0x0,
+//            chm = 0x0,
+//            TBL = 0x2,
+//            vsense = 0x0,
+//            vhighfs = 0x0,
+//            vhighchm = 0x0,
+//            SYNC = 0x0, 
+//            MRES = 0x4, 
+//            intpol = 0x0, 
+//            dedge = 0x0, 
+//            diss2g = 0x0
+//        }
+        writeRegister(CHOPCONF_reg);
+
+        readRegister(IOIN_reg);
+        readRegister(MSCNT_reg);
+
+        check_timer.set(100);
+    };
+
+    void check() {
+        if (check_timer.isPast()) {
+            check_timer.set(100);
+            readRegister(IOIN_reg);
+            readRegister(MSCNT_reg);
+        }
+    };
 };
 
 template <typename device_t>
@@ -456,11 +518,11 @@ struct Trinamic2130 : Trinamic2130Base {
 };
 
 Trinamic2130<decltype(spiBus)::SPIBusDevice> trinamics[] = {
-    {spiBus, spiCSPinMux.getCS(4)},
-    {spiBus, spiCSPinMux.getCS(3)},
-    {spiBus, spiCSPinMux.getCS(2)},
-    {spiBus, spiCSPinMux.getCS(1)},
     {spiBus, spiCSPinMux.getCS(0)},
+    {spiBus, spiCSPinMux.getCS(1)},
+    {spiBus, spiCSPinMux.getCS(2)},
+    {spiBus, spiCSPinMux.getCS(3)},
+    {spiBus, spiCSPinMux.getCS(4)},
 };
 
 // ############ SPI TESTING ###########
@@ -493,7 +555,8 @@ template<const uint8_t motor,
 struct Stepper {
 	/* stepper pin assignments */
 
-	OutputPin<step_num> step;
+	OutputPin<step_num> _step;
+    uint8_t _step_downcount;
 	OutputPin<dir_num> _dir;
     OutputPin<enable_num> _enable {kStartHigh};
 	OutputPin<ms0_num> ms0;
@@ -504,11 +567,16 @@ struct Stepper {
 	/* stepper default values */
 
 	// sets default pwm freq for all motor vrefs (commented line below also sets HiZ)
-    Stepper(const uint32_t frequency = 500000) : _vref {kPWMOn, frequency} {
+    Stepper(const uint32_t frequency = 500000) : _step_downcount{0}, _vref {kPWMOn, frequency} {
         setDirection(STEP_INITIAL_DIRECTION);
     };
 
 	/* functions bound to stepper structures */
+
+    constexpr bool canStep()
+    {
+        return !_step.isNull();
+    }
 
 	void setMicrosteps(const uint8_t microsteps)
 	{
@@ -540,6 +608,22 @@ struct Stepper {
         if (!_enable.isNull()) {
             _enable.set();
             st_run.mot[motor].power_state = MOTOR_IDLE;
+        }
+    };
+
+    void step_start()
+    {
+        _step.set();
+        _step_downcount = 5;
+    };
+
+    void step_end()
+    {
+        if (_step_downcount) {
+            _step_downcount--;
+            if (!_step_downcount) {
+                _step.clear();
+            }
         }
     };
 
@@ -1006,6 +1090,12 @@ stat_t st_motor_power_callback() 	// called by controller
 			}
 		}
 	}
+
+    for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
+        if (motor < 5) {
+            trinamics[motor].check();
+        }
+    }
 	return (STAT_OK);
 }
 
@@ -1080,13 +1170,12 @@ void dda_timer_type::interrupt()
 	dda_timer.getInterruptCause();	    // clear interrupt condition
 
     // clear all steps
-	if (!motor_1.step.isNull()) { motor_1.step.clear(); }
-//    debug_pin3=0;
-	if (!motor_2.step.isNull()) { motor_2.step.clear(); }
-	if (!motor_3.step.isNull()) { motor_3.step.clear(); }
-	if (!motor_4.step.isNull()) { motor_4.step.clear(); }
-	if (!motor_5.step.isNull()) { motor_5.step.clear(); }
-	if (!motor_6.step.isNull()) { motor_6.step.clear(); }
+	if (motor_1.canStep()) { motor_1.step_end(); }
+	if (motor_2.canStep()) { motor_2.step_end(); }
+	if (motor_3.canStep()) { motor_3.step_end(); }
+	if (motor_4.canStep()) { motor_4.step_end(); }
+	if (motor_5.canStep()) { motor_5.step_end(); }
+	if (motor_6.canStep()) { motor_6.step_end(); }
 
     // process last DDA tick after end of segment
     if (st_run.dda_ticks_downcount == 0) {
@@ -1095,45 +1184,44 @@ void dda_timer_type::interrupt()
 	}
 
     // process DDAs for each motor
-	if (!motor_1.step.isNull()) {
+	if (motor_1.canStep()) {
         if  ((st_run.mot[MOTOR_1].substep_accumulator += st_run.mot[MOTOR_1].substep_increment) > 0) {
-			motor_1.step.set();		// turn step bit on
-//            debug_pin3=1;
+			motor_1.step_start();		// turn step bit on
 			st_run.mot[MOTOR_1].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			INCREMENT_ENCODER(MOTOR_1);
         }
 	}
-	if (!motor_2.step.isNull()) {
+	if (motor_2.canStep()) {
         if ((st_run.mot[MOTOR_2].substep_accumulator += st_run.mot[MOTOR_2].substep_increment) > 0) {
-    		motor_2.step.set();
+    		motor_2.step_start();
     		st_run.mot[MOTOR_2].substep_accumulator -= st_run.dda_ticks_X_substeps;
     		INCREMENT_ENCODER(MOTOR_2);
         }
 	}
-	if (!motor_3.step.isNull()) {
+	if (motor_3.canStep()) {
         if ((st_run.mot[MOTOR_3].substep_accumulator += st_run.mot[MOTOR_3].substep_increment) > 0) {
-    		motor_3.step.set();
+    		motor_3.step_start();
     		st_run.mot[MOTOR_3].substep_accumulator -= st_run.dda_ticks_X_substeps;
     		INCREMENT_ENCODER(MOTOR_3);
         }
 	}
-	if (!motor_4.step.isNull()) {
+	if (motor_4.canStep()) {
         if ((st_run.mot[MOTOR_4].substep_accumulator += st_run.mot[MOTOR_4].substep_increment) > 0) {
-    		motor_4.step.set();
+    		motor_4.step_start();
     		st_run.mot[MOTOR_4].substep_accumulator -= st_run.dda_ticks_X_substeps;
     		INCREMENT_ENCODER(MOTOR_4);
         }
 	}
-	if (!motor_5.step.isNull()) {
+	if (motor_5.canStep()) {
         if ((st_run.mot[MOTOR_5].substep_accumulator += st_run.mot[MOTOR_5].substep_increment) > 0) {
-    		motor_5.step.set();
+    		motor_5.step_start();
     		st_run.mot[MOTOR_5].substep_accumulator -= st_run.dda_ticks_X_substeps;
     		INCREMENT_ENCODER(MOTOR_5);
         }
 	}
-	if (!motor_6.step.isNull()) {
+	if (motor_6.canStep()) {
         if ((st_run.mot[MOTOR_6].substep_accumulator += st_run.mot[MOTOR_6].substep_increment) > 0) {
-    		motor_6.step.set();
+    		motor_6.step_start();
     		st_run.mot[MOTOR_6].substep_accumulator -= st_run.dda_ticks_X_substeps;
     		INCREMENT_ENCODER(MOTOR_6);
         }
@@ -1165,7 +1253,7 @@ void dda_timer_type::interrupt()
 {
     uint32_t interrupt_cause = dda_timer.getInterruptCause();	// also clears interrupt condition
 
-	//  debug_pin2=1;           // example of use of debug pin for profiling with a logic analyser or scope
+    //  debug_pin2=1;           // example of use of debug pin for profiling with a logic analyser or scope
 
     if (interrupt_cause == kInterruptOnMatch) {
 
@@ -1200,7 +1288,7 @@ void dda_timer_type::interrupt()
             INCREMENT_ENCODER(MOTOR_6);
         }
 
-        } else if (interrupt_cause == kInterruptOnOverflow) {
+    } else if (interrupt_cause == kInterruptOnOverflow) {
         motor_1.step.clear();							// turn step bits off
         motor_2.step.clear();
         motor_3.step.clear();
