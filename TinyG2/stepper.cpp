@@ -54,14 +54,10 @@ static stRunSingleton_t st_run;
 /**** Static functions ****/
 
 static void _load_move(void);
-#ifdef __ARM
 static void _set_motor_power_level(const uint8_t motor, const float power_level);
-#endif
 
 // handy macro
 #define _f_to_period(f) (uint16_t)((float)F_CPU / (float)f)
-
-#define __NEW_DDA_ISR
 
 /**** Setup motate ****/
 
@@ -599,10 +595,6 @@ Trinamic2130<decltype(spiBus)::SPIBusDevice> trinamics[] = {
 // ############ SPI TESTING ###########
 
 
-
-
-#ifdef __ARM
-
 // Example with prefixed name::
 //Motate::Timer<dda_timer_num> dda_timer(kTimerUpToMatch, FREQUENCY_DDA);// stepper pulse generation
 dda_timer_type dda_timer(kTimerUpToMatch, FREQUENCY_DDA);			// stepper pulse generation
@@ -611,7 +603,6 @@ load_timer_type load_timer;		// triggers load of next stepper segment
 exec_timer_type exec_timer;		// triggers calculation of next+1 stepper segment
 fwd_plan_timer_type fwd_plan_timer;		// triggers plannning of next block
 
-#endif // __ARM
 
 /************************************************************************************
  **** CODE **************************************************************************
@@ -643,50 +634,11 @@ void stepper_init()
 	memset(&st_pre, 0, sizeof(st_pre));			// clear all values, pointers and status
 	stepper_init_assertions();
 
-#ifdef __AVR
-	// Configure virtual ports
-	PORTCFG.VPCTRLA = PORTCFG_VP0MAP_PORT_MOTOR_1_gc | PORTCFG_VP1MAP_PORT_MOTOR_2_gc;
-	PORTCFG.VPCTRLB = PORTCFG_VP2MAP_PORT_MOTOR_3_gc | PORTCFG_VP3MAP_PORT_MOTOR_4_gc;
-
-	// setup ports and data structures
-	for (uint8_t i=0; i<MOTORS; i++) {
-		hw.st_port[i]->DIR = MOTOR_PORT_DIR_gm;  // sets outputs for motors & GPIO1, and GPIO2 inputs
-		hw.st_port[i]->OUT = MOTOR_ENABLE_BIT_bm;// zero port bits AND disable motor
-	}
-	// setup DDA timer
-	TIMER_DDA.CTRLA = STEP_TIMER_DISABLE;		// turn timer off
-	TIMER_DDA.CTRLB = STEP_TIMER_WGMODE;		// waveform mode
-	TIMER_DDA.INTCTRLA = TIMER_DDA_INTLVL;		// interrupt mode
-
-	// setup DWELL timer
-	TIMER_DWELL.CTRLA = STEP_TIMER_DISABLE;		// turn timer off
-	TIMER_DWELL.CTRLB = STEP_TIMER_WGMODE;		// waveform mode
-	TIMER_DWELL.INTCTRLA = TIMER_DWELL_INTLVL;	// interrupt mode
-
-	// setup software interrupt load timer
-	TIMER_LOAD.CTRLA = LOAD_TIMER_DISABLE;		// turn timer off
-	TIMER_LOAD.CTRLB = LOAD_TIMER_WGMODE;		// waveform mode
-	TIMER_LOAD.INTCTRLA = TIMER_LOAD_INTLVL;	// interrupt mode
-	TIMER_LOAD.PER = LOAD_TIMER_PERIOD;			// set period
-
-	// setup software interrupt exec timer
-	TIMER_EXEC.CTRLA = EXEC_TIMER_DISABLE;		// turn timer off
-	TIMER_EXEC.CTRLB = EXEC_TIMER_WGMODE;		// waveform mode
-	TIMER_EXEC.INTCTRLA = TIMER_EXEC_INTLVL;	// interrupt mode
-	TIMER_EXEC.PER = EXEC_TIMER_PERIOD;			// set period
-#endif // __AVR
-
-#ifdef __ARM
 	// setup DDA timer
 	// Longer duty cycles stretch ON pulses but 75% is about the upper limit and about
 	// optimal for 200 KHz DDA clock before the time in the OFF cycle is too short.
 	// If you need more pulse width you need to drop the DDA clock rate
-#ifdef __NEW_DDA_ISR
 	dda_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
-#else
-	dda_timer.setInterrupts(kInterruptOnOverflow | kInterruptOnMatch | kInterruptPriorityHighest);
-	dda_timer.setDutyCycle(1.0 - 0.75);		// This is a 75% duty cycle on the ON step part
-#endif
 
 	// setup DWELL timer
 	dwell_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
@@ -708,50 +660,11 @@ void stepper_init()
 	}
 
     board_stepper_init();
-#endif // __ARM
-
 
 
     // ############ SPI TESTING ###########
 
     spiBus.init();
-//    spiBus._TMP_setChannel(spiCSTrinamic5.csValue);
-
-//    spiBus._TMP_setMsgDone([] {
-//
-//        // clear msg done
-//        spiBus._TMP_setMsgDone(nullptr);
-//
-//        
-//        spiBus._TMP_setChannel(spiCSTrinamic5.csValue);
-//        spiBus._TMP_startTransfer(
-//                                  out_buffer,
-//                                  in_buffer,
-//                                  5
-//                                  );
-//    });
-//
-//    spiBus._TMP_startTransfer(
-//                              out_buffer,
-//                              nullptr,
-//                              5
-//                              );
-
-//    int16_t toss;
-//    spiBus._TMP_write(0x6F, toss, false);
-//    spiBus._TMP_write(0, toss, false);
-//    spiBus._TMP_write(0, toss, false);
-//    spiBus._TMP_write(0, toss, false);
-//    spiBus._TMP_write(0, toss, true);
-//
-//    spiBus._TMP_write(0x6F, toss, false); in_buffer[0] = toss;
-//    spiBus._TMP_write(0, toss, false); in_buffer[0] = toss;
-//    spiBus._TMP_write(0, toss, false); in_buffer[0] = toss;
-//    spiBus._TMP_write(0, toss, false); in_buffer[0] = toss;
-//    spiBus._TMP_write(0, toss, true); in_buffer[0] = toss;
-
-//    trinamic1.queueMessage(read_message_pt1.setup(out_buffer, in_buffer, 5, SPIMessageDeassertAfter, SPIMessageKeepTransaction));
-//    trinamic1.queueMessage(read_message_pt2.setup(out_buffer, in_buffer, 5, SPIMessageDeassertAfter, SPIMessageEndTransaction));
 
     trinamics[0].init();
     trinamics[1].init();
@@ -759,21 +672,7 @@ void stepper_init()
     trinamics[3].init();
     trinamics[4].init();
 
-//    trinamics[0].readRegister(0x00);
-//    trinamics[0].readRegister(0x01);
-//    trinamics[0].readRegister(0x04);
-//    trinamics[0].readRegister(0x12);
-//    trinamics[0].readRegister(0x2D);
-//    trinamics[0].readRegister(0x6C);
-//    trinamics[0].readRegister(0x6D);
-//    trinamics[1].readRegister(0x10);
-//    trinamics[2].readRegister(0x10);
-//    trinamics[3].readRegister(0x10);
-//    trinamics[4].readRegister(0x10);
-
     // ############ SPI TESTING ###########
-
-
 
     stepper_reset();                            // reset steppers to known state
 }
@@ -861,21 +760,6 @@ static void _deenergize_motor(const uint8_t motor)
 {
 	// Motors that are not defined are not compiled. Saves some ugly #ifdef code
     if (motor < MOTORS) Steppers[motor]->disable();
-
-//    st_run.mot[motor].power_state = MOTOR_OFF;
-
-//    if (!common_enable.isNull()) {
-//        bool do_disable = true;
-//        for (uint8_t i = MOTOR_1; i < MOTORS; i++) {
-//            if (st_run.mot[i].power_state != MOTOR_OFF) {
-//                do_disable = false;
-//                break;
-//            }
-//        }
-//        if (do_disable) {
-//            common_enable.set(); // enables are inverted
-//        }
-//    }
 }
 
 static void _energize_motor(const uint8_t motor, float timeout_seconds)
@@ -889,9 +773,6 @@ static void _energize_motor(const uint8_t motor, float timeout_seconds)
     Steppers[motor]->enable();
 
 //    common_enable.clear(); // enables are inverted
-
-//	st_run.mot[motor].power_systick = SysTickTimer_getValue() + (timeout_seconds * 1000);
-//	st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_COUNTDOWN;
 }
 
 /*
@@ -914,9 +795,6 @@ void st_energize_motors(float timeout_seconds)
 	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
 		_energize_motor(motor, timeout_seconds);
 	}
-#ifdef __ARM
-//	common_enable.clear();			// enable gShield common enable
-#endif
 }
 
 void st_deenergize_motors()
@@ -924,9 +802,6 @@ void st_deenergize_motors()
 	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
 		_deenergize_motor(motor);
 	}
-#ifdef __ARM
-//	common_enable.set();			// disable gShield common enable
-#endif
 }
 
 /*
@@ -948,33 +823,16 @@ stat_t st_motor_power_callback() 	// called by controller
 	// manage power for each motor individually
 	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
         Steppers[motor]->periodicCheck(have_actually_stopped);
-//        if (have_actually_stopped && st_run.mot[motor].power_state == MOTOR_RUNNING)
-//            st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_START;	// ...start motor power timeouts
-//
-//		// start timeouts initiated during a load so the loader does not need to burn these cycles
-//		if (st_run.mot[motor].power_state == MOTOR_POWER_TIMEOUT_START && st_cfg.mot[motor].power_mode != MOTOR_ALWAYS_POWERED) {
-//			st_run.mot[motor].power_state = MOTOR_POWER_TIMEOUT_COUNTDOWN;
-//			if (st_cfg.mot[motor].power_mode == MOTOR_POWERED_IN_CYCLE) {
-//				st_run.mot[motor].power_systick = SysTickTimer_getValue() + (uint32_t)(st_cfg.motor_power_timeout * 1000);
-//			} else if (st_cfg.mot[motor].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
-//				st_run.mot[motor].power_systick = SysTickTimer_getValue() + (uint32_t)(MOTOR_TIMEOUT_SECONDS * 1000);
-//			}
-//		}
-//
-//		// count down and time out the motor
-//		if (st_run.mot[motor].power_state == MOTOR_POWER_TIMEOUT_COUNTDOWN) {
-//			if (SysTickTimer_getValue() > st_run.mot[motor].power_systick ) {
-//				st_run.mot[motor].power_state = MOTOR_IDLE;
-//				_deenergize_motor(motor);
-//			}
-//		}
 	}
 
+    // ############ SPI TESTING ###########
     for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
         if (motor < 5) {
             trinamics[motor].check();
         }
     }
+    // ############ SPI TESTING ###########
+
 	return (STAT_OK);
 }
 
@@ -986,48 +844,6 @@ stat_t st_motor_power_callback() 	// called by controller
  * ISR - DDA timer interrupt routine - service ticks from DDA timer
  */
 
-#ifdef __AVR
-/*
- *	Uses direct struct addresses and literal values for hardware devices - it's faster than
- *	using indexed timer and port accesses. I checked. Even when -0s or -03 is used.
- */
-ISR(TIMER_DDA_ISR_vect)
-{
-	if ((st_run.mot[MOTOR_1].substep_accumulator += st_run.mot[MOTOR_1].substep_increment) > 0) {
-		PORT_MOTOR_1_VPORT.OUT |= STEP_BIT_bm;		// turn step bit on
-		st_run.mot[MOTOR_1].substep_accumulator -= st_run.dda_ticks_X_substeps;
-		INCREMENT_ENCODER(MOTOR_1);
-	}
-	if ((st_run.mot[MOTOR_2].substep_accumulator += st_run.mot[MOTOR_2].substep_increment) > 0) {
-		PORT_MOTOR_2_VPORT.OUT |= STEP_BIT_bm;
-		st_run.mot[MOTOR_2].substep_accumulator -= st_run.dda_ticks_X_substeps;
-		INCREMENT_ENCODER(MOTOR_2);
-	}
-	if ((st_run.mot[MOTOR_3].substep_accumulator += st_run.mot[MOTOR_3].substep_increment) > 0) {
-		PORT_MOTOR_3_VPORT.OUT |= STEP_BIT_bm;
-		st_run.mot[MOTOR_3].substep_accumulator -= st_run.dda_ticks_X_substeps;
-		INCREMENT_ENCODER(MOTOR_3);
-	}
-	if ((st_run.mot[MOTOR_4].substep_accumulator += st_run.mot[MOTOR_4].substep_increment) > 0) {
-		PORT_MOTOR_4_VPORT.OUT |= STEP_BIT_bm;
-		st_run.mot[MOTOR_4].substep_accumulator -= st_run.dda_ticks_X_substeps;
-		INCREMENT_ENCODER(MOTOR_4);
-	}
-
-	// pulse stretching for using external drivers.- turn step bits off
-	PORT_MOTOR_1_VPORT.OUT &= ~STEP_BIT_bm;				// ~ 5 uSec pulse width
-	PORT_MOTOR_2_VPORT.OUT &= ~STEP_BIT_bm;				// ~ 4 uSec
-	PORT_MOTOR_3_VPORT.OUT &= ~STEP_BIT_bm;				// ~ 3 uSec
-	PORT_MOTOR_4_VPORT.OUT &= ~STEP_BIT_bm;				// ~ 2 uSec
-
-	if (--st_run.dda_ticks_downcount != 0) return;
-
-	TIMER_DDA.CTRLA = STEP_TIMER_DISABLE;				// disable DDA timer
-	_load_move();										// load the next move
-}
-#endif // __AVR
-
-#ifdef __ARM
 /*
  *	The DDA timer interrupt does this:
  *    - fire on overflow
@@ -1130,21 +946,10 @@ void dda_timer_type::interrupt()
 } // MOTATE_TIMER_INTERRUPT
 } // namespace Motate
 
-#endif // __ARM
-
 /***** Dwell Interrupt Service Routine **************************************************
  * ISR - DDA timer interrupt routine - service ticks from DDA timer
  */
 
-#ifdef __AVR
-ISR(TIMER_DWELL_ISR_vect) {								// DWELL timer interrupt
-	if (--st_run.dda_ticks_downcount == 0) {
-		TIMER_DWELL.CTRLA = STEP_TIMER_DISABLE;			// disable DWELL timer
-		_load_move();
-	}
-}
-#endif
-#ifdef __ARM
 namespace Motate {			// Must define timer interrupts inside the Motate namespace
     template<>
     void dwell_timer_type::interrupt()
@@ -1156,7 +961,6 @@ namespace Motate {			// Must define timer interrupts inside the Motate namespace
 	}
 }
 } // namespace Motate
-#endif
 
 /****************************************************************************************
  * Exec sequencing code		- computes and prepares next load segment
@@ -1164,29 +968,6 @@ namespace Motate {			// Must define timer interrupts inside the Motate namespace
  * exec_timer interrupt		- interrupt handler for calling exec function
  */
 
-#ifdef __AVR
-void st_request_exec_move()
-{
-	if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_EXEC) {// bother interrupting
-		TIMER_EXEC.PER = EXEC_TIMER_PERIOD;
-		TIMER_EXEC.CTRLA = EXEC_TIMER_ENABLE;           // trigger a LO interrupt
-	}
-}
-
-ISR(TIMER_EXEC_ISR_vect) {								// exec move SW interrupt
-	TIMER_EXEC.CTRLA = EXEC_TIMER_DISABLE;				// disable SW interrupt timer
-
-	// exec_move
-	if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_EXEC) {
-		if (mp_exec_move() != STAT_NOOP) {
-			st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER; // flip it back
-			st_request_load_move();
-		}
-	}
-}
-#endif // __AVR
-
-#ifdef __ARM
 void st_request_exec_move()
 {
 	if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_EXEC) {// bother interrupting
@@ -1224,8 +1005,6 @@ namespace Motate {	// Define timer inside Motate namespace
     }
 } // namespace Motate
 
-#endif // __ARM
-
 /****************************************************************************************
  * Loader sequencing code
  * st_request_load_move() - fires a software interrupt (timer) to request to load a move
@@ -1236,25 +1015,6 @@ namespace Motate {	// Define timer inside Motate namespace
  *	request a load (see st_request_load_move())
  */
 
-#ifdef __AVR
-void st_request_load_move()
-{
-	if (st_runtime_isbusy()) {
-		return;													// don't request a load if the runtime is busy
-	}
-	if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_LOADER) {	// bother interrupting
-		TIMER_LOAD.PER = LOAD_TIMER_PERIOD;
-		TIMER_LOAD.CTRLA = LOAD_TIMER_ENABLE;					// trigger a HI interrupt
-	}
-}
-
-ISR(TIMER_LOAD_ISR_vect) {										// load steppers SW interrupt
-	TIMER_LOAD.CTRLA = LOAD_TIMER_DISABLE;						// disable SW interrupt timer
-	_load_move();
-}
-#endif // __AVR
-
-#ifdef __ARM
 void st_request_load_move()
 {
 	if (st_runtime_isbusy()) {                                  // don't request a load if the runtime is busy
@@ -1273,7 +1033,6 @@ namespace Motate {	// Define timer inside Motate namespace
 		_load_move();
 	}
 } // namespace Motate
-#endif // __ARM
 
 /****************************************************************************************
  * _load_move() - Dequeue move and load into stepper runtime structure
@@ -1289,7 +1048,6 @@ namespace Motate {	// Define timer inside Motate namespace
  */
 /****** WARNING - THIS CODE IS SPECIFIC TO ARM. SEE TINYG FOR AVR CODE ******/
 
-#ifdef __ARM
 static void _load_move()
 {
 	// Be aware that dda_ticks_downcount must equal zero for the loader to run.
@@ -1502,7 +1260,6 @@ static void _load_move()
 	st_pre.buffer_state = PREP_BUFFER_OWNED_BY_EXEC;	// we are done with the prep buffer - flip the flag back
 	st_request_exec_move();								// exec and prep next move
 }
-#endif // __ARM
 
 /***********************************************************************************
  * st_prep_line() - Prepare the next move for the loader
@@ -1727,11 +1484,7 @@ stat_t st_set_mi(nvObj_t *nv)			// motor microsteps
 {
 	uint8_t mi = (uint8_t)nv->value;
 
-#ifdef __ARM
 	if ((mi != 1) && (mi != 2) && (mi != 4) && (mi != 8) && (mi != 16) && (mi != 32)) {
-#else
-	if ((mi != 1) && (mi != 2) && (mi != 4) && (mi != 8)) {
-#endif
 		nv_add_conditional_message((const char *)"*** WARNING *** Setting non-standard microstep value");
 	}
 	set_ui8(nv);						// set it anyway, even if it's unsupported
@@ -1763,7 +1516,6 @@ stat_t st_set_pm(nvObj_t *nv)			// motor power mode
  */
 stat_t st_set_pl(nvObj_t *nv)	// motor power level
 {
-#ifdef __ARM
 	if ((nv->value < (float)0.0) || (nv->value > (float)1.0)) {
         return (STAT_INPUT_VALUE_RANGE_ERROR);
 	}
@@ -1773,8 +1525,8 @@ stat_t st_set_pl(nvObj_t *nv)	// motor power level
 	st_cfg.mot[motor].power_level_scaled = (nv->value * POWER_LEVEL_SCALE_FACTOR);
 	st_run.mot[motor].power_level_dynamic = (st_cfg.mot[motor].power_level_scaled);
 	Steppers[motor]->setPowerLevel(st_cfg.mot[motor].power_level_scaled);
-#endif
-	return(STAT_OK);
+
+    return(STAT_OK);
 }
 
 /* GLOBAL FUNCTIONS (SYSTEM LEVEL)
@@ -1832,11 +1584,7 @@ static const char fmt_0tr[] PROGMEM = "[%s%s] m%s travel per revolution%10.4f%s\
 static const char fmt_0po[] PROGMEM = "[%s%s] m%s polarity%18d [0=normal,1=reverse]\n";
 static const char fmt_0pm[] PROGMEM = "[%s%s] m%s power management%10d [0=disabled,1=always on,2=in cycle,3=when moving]\n";
 static const char fmt_0pl[] PROGMEM = "[%s%s] m%s motor power level%13.3f [0.000=minimum, 1.000=maximum]\n";
-#ifdef __AVR
-    static const char fmt_0mi[] PROGMEM = "[%s%s] m%s microsteps%16d [1,2,4,8]\n";
-#else
-    static const char fmt_0mi[] PROGMEM = "[%s%s] m%s microsteps%16d [1,2,4,8,16,32]\n";
-#endif
+static const char fmt_0mi[] PROGMEM = "[%s%s] m%s microsteps%16d [1,2,4,8,16,32]\n";
 
 void st_print_me(nvObj_t *nv) { text_print(nv, fmt_me);}    // TYPE_NULL - message only
 void st_print_md(nvObj_t *nv) { text_print(nv, fmt_md);}    // TYPE_NULL - message only
