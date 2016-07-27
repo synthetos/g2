@@ -33,6 +33,7 @@
 #define CANONICAL_MACHINE_H_ONCE
 
 #include "config.h"
+#include "hardware.h"
 
 /* Defines, Macros, and  Assorted Parameters */
 

@@ -85,6 +85,9 @@
  *	correction will be applied to moveC. (It's possible to recompute the body of moveB, but it may
  *	not be worth the trouble).
  */
+
+#include "hardware.h" // for MOTORS
+
 #ifndef ENCODER_H_ONCE
 #define ENCODER_H_ONCE
 

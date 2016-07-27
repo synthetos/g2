@@ -246,12 +246,16 @@
  *  be thought of as a phase angle value for the DDA accumulation. Each 360
  *  degrees of phase angle results in a step being generated.
  */
+
+// These includes must be BEFORE the STEPPER_H_ONCE is defined
+#include "tinyg2.h"
+#include "board_stepper.h" // include board specific stuff, in particular the Stepper objects
+
+// NOW we can do this:
 #ifndef STEPPER_H_ONCE
 #define STEPPER_H_ONCE
 
-#ifndef PLANNER_H_ONCE
 #include "planner.h"    // planner.h must precede stepper.h for moveType typedef
-#endif
 
 /*********************************
  * Stepper configs and constants *
@@ -267,21 +271,21 @@ typedef enum {
 // In the future IDLE will be powered at a low, torque-maintaining current
 
 typedef enum {					        // used w/start and stop flags to sequence motor power
-	MOTOR_OFF = 0,						// motor is stopped and deenergized
-	MOTOR_IDLE,							// motor is stopped and may be partially energized for torque maintenance
-	MOTOR_RUNNING,						// motor is running (and fully energized)
-	MOTOR_POWER_TIMEOUT_START,			// transitional state to start power-down timeout
-	MOTOR_POWER_TIMEOUT_COUNTDOWN		// count down the time to de-energizing motor
+    MOTOR_OFF = 0,						// motor is stopped and deenergized
+    MOTOR_IDLE,							// motor is stopped and may be partially energized for torque maintenance
+    MOTOR_RUNNING,						// motor is running (and fully energized)
+    MOTOR_POWER_TIMEOUT_START,			// transitional state to start power-down timeout
+    MOTOR_POWER_TIMEOUT_COUNTDOWN		// count down the time to de-energizing motor
 } stPowerState;
 
 typedef enum {
-	MOTOR_DISABLED = 0,					// motor enable is deactivated
-	MOTOR_ALWAYS_POWERED,				// motor is always powered while machine is ON
-	MOTOR_POWERED_IN_CYCLE,				// motor fully powered during cycles, de-powered out of cycle
-	MOTOR_POWERED_ONLY_WHEN_MOVING,		// motor only powered while moving - idles shortly after it's stopped - even in cycle
-//	MOTOR_POWER_REDUCED_WHEN_IDLE,		// enable Vref current reduction for idle (FUTURE)
-//	MOTOR_ADAPTIVE_POWER				// adjust motor current with velocity (FUTURE)
-	MOTOR_POWER_MODE_MAX_VALUE			// for input range checking
+    MOTOR_DISABLED = 0,					// motor enable is deactivated
+    MOTOR_ALWAYS_POWERED,				// motor is always powered while machine is ON
+    MOTOR_POWERED_IN_CYCLE,				// motor fully powered during cycles, de-powered out of cycle
+    MOTOR_POWERED_ONLY_WHEN_MOVING,		// motor only powered while moving - idles shortly after it's stopped - even in cycle
+    //	MOTOR_POWER_REDUCED_WHEN_IDLE,		// enable Vref current reduction for idle (FUTURE)
+    //	MOTOR_ADAPTIVE_POWER				// adjust motor current with velocity (FUTURE)
+    MOTOR_POWER_MODE_MAX_VALUE			// for input range checking
 } stPowerMode;
 
 // Stepper power management settings (applicable to ARM only)
@@ -357,7 +361,7 @@ typedef struct cfgMotor {               // per-motor configs
     uint8_t	motor_map;                  // map motor to axis
     uint8_t microsteps;                 // microsteps to apply for each axis (ex: 8)
     uint8_t polarity;                   // 0=normal polarity, 1=reverse motor direction
-    stPowerMode power_mode;             // See stPowerMode for values
+//    stPowerMode power_mode;             // See stPowerMode for values
     float power_level;                  // set 0.000 to 1.000 for PMW vref setting
     float step_angle;                   // degrees per whole step (ex: 1.8)
     float travel_rev;                   // mm or deg of travel per motor revolution
@@ -379,7 +383,7 @@ typedef struct stRunMotor {             // one per controlled motor
     uint32_t substep_increment;         // total steps in axis times substeps factor
     int32_t substep_accumulator;        // DDA phase angle accumulator
     bool motor_flag;                    // true if motor is participating in this move
-    stPowerState power_state;           // state machine for managing motor power
+//    stPowerState power_state;           // state machine for managing motor power
     uint32_t power_systick;             // sys_tick for next motor power state transition
     float power_level_dynamic;          // power level for this segment of idle (ARM only)
 } stRunMotor_t;
@@ -429,6 +433,108 @@ typedef struct stPrepSingleton {
 
 extern stConfig_t st_cfg;                   // config struct is exposed. The rest are private
 extern stPrepSingleton_t st_pre;            // only used by config_app diagnostics
+
+
+/**** Stepper (base object) ****/
+
+struct Stepper {
+    Timeout _motor_disable_timeout;      // this is the timout object that will let us know when time is u
+    uint32_t _motor_disable_timeout_ms;  // the number of ms that the timout is reset to
+    stPowerState _power_state;           // state machine for managing motor power
+    stPowerMode _power_mode;             // See stPowerMode for values
+    uint8_t _step_downcount;
+
+    /* stepper default values */
+
+    // sets default pwm freq for all motor vrefs (commented line below also sets HiZ)
+    Stepper(const uint32_t frequency = 500000) : _step_downcount{0}
+    {
+    };
+
+    /* Functions that handle all motor functions (calls virtuals if needed) */
+
+    virtual void init() // can be overridden
+    {
+        this->setDirection(STEP_INITIAL_DIRECTION);
+    };
+
+    virtual void setPowerMode(stPowerMode new_pm)
+    {
+        _power_mode = new_pm;
+    };
+
+    bool isDisabled()
+    {
+        return (_power_mode == MOTOR_DISABLED);
+    };
+    void enable()
+    {
+        if (_power_mode != MOTOR_DISABLED) {
+            this->_enableImpl();
+            _power_state = MOTOR_RUNNING;
+        }
+    };
+    void disable()
+    {
+        this->_disableImpl();
+        _motor_disable_timeout.clear();
+        _power_state = MOTOR_IDLE; // or MOTOR_OFF
+    };
+    void stepStart()
+    {
+        this->_stepStartImpl();
+//        _step_downcount = 1;
+    };
+    void stepEnd()
+    {
+//        if (_step_downcount) {
+//            _step_downcount--;
+//            if (!_step_downcount) {
+                this->_stepEndImpl();
+//            }
+//        }
+    };
+    void motionStopped() {
+        _power_state = MOTOR_POWER_TIMEOUT_START;
+    };
+    virtual void periodicCheck(bool have_actually_stopped) // can be overridden
+    {
+        if (have_actually_stopped && _power_state == MOTOR_RUNNING) {
+            _power_state = MOTOR_POWER_TIMEOUT_START;	// ...start motor power timeouts
+        }
+
+        // start timeouts initiated during a load so the loader does not need to burn these cycles
+        if (_power_state == MOTOR_POWER_TIMEOUT_START && _power_mode != MOTOR_ALWAYS_POWERED) {
+            _power_state = MOTOR_POWER_TIMEOUT_COUNTDOWN;
+            if (_power_mode == MOTOR_POWERED_IN_CYCLE) {
+//                st_run.mot[motor].power_systick = SysTickTimer_getValue() + (uint32_t)(st_cfg.motor_power_timeout * 1000);
+                _motor_disable_timeout.set(_motor_disable_timeout_ms);
+            } else if (_power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
+//                st_run.mot[motor].power_systick = SysTickTimer_getValue() + (uint32_t)(MOTOR_TIMEOUT_SECONDS * 1000);
+                _motor_disable_timeout.set(_motor_disable_timeout_ms);
+          }
+        }
+
+        // count down and time out the motor
+        if (_power_state == MOTOR_POWER_TIMEOUT_COUNTDOWN) {
+            if (_motor_disable_timeout.isPast()) {
+                disable();
+            }
+        }
+    };
+
+    /* Functions that must be implemented in subclasses */
+
+    virtual bool canStep() { return true; };
+    virtual void _enableImpl() { /* must override */ };
+    virtual void _disableImpl() { /* must override */ };
+    virtual void _stepStartImpl() { /* must override */ };
+    virtual void _stepEndImpl() { /* must override */ };
+    virtual void setDirection(uint8_t new_direction) { /* must override */ };
+    virtual void setMicrosteps(const uint8_t microsteps) { /* must override */ };
+    virtual void setPowerLevel(float new_pl) { /* must override */ };
+};
+
 
 /**** FUNCTION PROTOTYPES ****/
 

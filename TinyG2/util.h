@@ -32,6 +32,8 @@
  *	  - support for debugging routines
  */
 
+#include "hardware.h" // for AXES
+
 #ifndef UTIL_H_ONCE
 #define UTIL_H_ONCE
 

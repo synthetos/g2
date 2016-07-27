@@ -27,8 +27,13 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
+#include "config.h"
+#include "error.h"
+
 #ifndef HARDWARE_H_ONCE
 #define HARDWARE_H_ONCE
+
 
 /*--- Hardware platform enumerations ---*/
 
@@ -59,6 +64,18 @@ enum hwPlatform {
 #define HW_VERSION_TINYGV9H		3
 #define HW_VERSION_TINYGV9I		4
 #define HW_VERSION_TINYGV9K		5
+
+
+/***** Axes, motors & PWM channels used by the application *****/
+// Axes, motors & PWM channels must be defines (not enums) so expressions like this:
+//  #if (MOTORS >= 6)  will work
+
+#define AXES        6           // number of axes supported in this version
+#define HOMING_AXES 4           // number of axes that can be homed (assumes Zxyabc sequence)
+#define MOTORS      5           // number of motors on the board
+#define COORDS      6           // number of supported coordinate systems (1-6)
+#define PWMS        2           // number of supported PWM channels
+
 
 ////////////////////////////
 /////// ARM VERSION ////////

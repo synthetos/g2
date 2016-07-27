@@ -63,6 +63,7 @@
 		D4522DC71C455F660086AAE6 /* pboard.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = pboard.mk; sourceTree = "<group>"; };
 		D4522DC91C45F41D0086AAE6 /* tinyg2_info.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tinyg2_info.h; sourceTree = "<group>"; };
 		D457117B17053EFA00EA19A8 /* Makefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makefile; sourceTree = "<group>"; usesTabs = 1; xcLanguageSpecificationIdentifier = xcode.lang.sh; };
+		D47B744C1D4925B4004FAB53 /* device */ = {isa = PBXFileReference; lastKnownFileType = folder; path = device; sourceTree = "<group>"; };
 		D48F5A40172CB1F900D0E055 /* canonical_machine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = canonical_machine.cpp; sourceTree = "<group>"; };
 		D48F5A41172CB1F900D0E055 /* config_app.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = config_app.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D48F5A42172CB1F900D0E055 /* config.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = config.cpp; sourceTree = "<group>"; };
@@ -264,6 +265,7 @@
 				D48F5A81172CB21100D0E055 /* xio.h */,
 				D4922F3F1CB8361B00A565FF /* boards.mk */,
 				D40A240D1AD5B7C200406A3A /* board */,
+				D47B744C1D4925B4004FAB53 /* device */,
 				D41D13F617374B7D00D522D9 /* settings */,
 				D4FEBFF81B0A65E30042EA32 /* index */,
 			);

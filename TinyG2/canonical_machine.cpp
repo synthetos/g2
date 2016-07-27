@@ -89,6 +89,7 @@
 #include "tinyg2.h"			// #1
 #include "config.h"			// #2
 #include "canonical_machine.h"
+#include "hardware.h"
 #include "controller.h"
 #include "json_parser.h"
 #include "text_parser.h"

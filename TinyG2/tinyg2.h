@@ -75,16 +75,6 @@ typedef uint16_t magic_t;		        // magic number size
 #define MAGICNUM 0x12EF			        // used for memory integrity assertions
 #define BAD_MAGIC(a) (a != MAGICNUM)    // simple assertion test
 
-/***** Axes, motors & PWM channels used by the application *****/
-// Axes, motors & PWM channels must be defines (not enums) so expressions like this:
-//  #if (MOTORS >= 6)  will work
-
-#define AXES        6           // number of axes supported in this version
-#define HOMING_AXES 4           // number of axes that can be homed (assumes Zxyabc sequence)
-#define MOTORS      6           // number of motors on the board
-#define COORDS      6           // number of supported coordinate systems (1-6)
-#define PWMS        2           // number of supported PWM channels
-
 // Note: If you change COORDS you must adjust the entries in cfgArray table in config.c
 
 typedef enum {
@@ -122,6 +112,7 @@ typedef enum {
 /************************************************************************************
  ***** PLATFORM COMPATIBILITY *******************************************************
  ************************************************************************************/
+
 //#undef __AVR
 //#define __AVR
 #undef __ARM
