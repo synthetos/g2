@@ -103,12 +103,12 @@ struct StepDirStepper : Stepper {
         }
     };
 
-    void _stepStartImpl() override
+    void stepStart() override
     {
         _step.set();
     };
 
-    void _stepEndImpl() override
+    void stepEnd() override
     {
         _step.clear();
     };

@@ -442,12 +442,11 @@ struct Stepper {
     uint32_t _motor_disable_timeout_ms;  // the number of ms that the timout is reset to
     stPowerState _power_state;           // state machine for managing motor power
     stPowerMode _power_mode;             // See stPowerMode for values
-    uint8_t _step_downcount;
 
     /* stepper default values */
 
     // sets default pwm freq for all motor vrefs (commented line below also sets HiZ)
-    Stepper(const uint32_t frequency = 500000) : _step_downcount{0}
+    Stepper(const uint32_t frequency = 500000)
     {
     };
 
@@ -461,17 +460,23 @@ struct Stepper {
     virtual void setPowerMode(stPowerMode new_pm)
     {
         _power_mode = new_pm;
+        if (_power_mode == MOTOR_ALWAYS_POWERED) {
+            enable();
+        } else if (_power_mode == MOTOR_DISABLED) {
+            disable();
+        }
     };
 
     bool isDisabled()
     {
         return (_power_mode == MOTOR_DISABLED);
     };
-    void enable()
+    void enable(float timeout = MOTOR_TIMEOUT_SECONDS)
     {
         if (_power_mode != MOTOR_DISABLED) {
             this->_enableImpl();
             _power_state = MOTOR_RUNNING;
+            _motor_disable_timeout_ms = timeout * 1000;
         }
     };
     void disable()
@@ -479,20 +484,6 @@ struct Stepper {
         this->_disableImpl();
         _motor_disable_timeout.clear();
         _power_state = MOTOR_IDLE; // or MOTOR_OFF
-    };
-    void stepStart()
-    {
-        this->_stepStartImpl();
-//        _step_downcount = 1;
-    };
-    void stepEnd()
-    {
-//        if (_step_downcount) {
-//            _step_downcount--;
-//            if (!_step_downcount) {
-                this->_stepEndImpl();
-//            }
-//        }
     };
     void motionStopped() {
         _power_state = MOTOR_POWER_TIMEOUT_START;
@@ -511,7 +502,7 @@ struct Stepper {
                 _motor_disable_timeout.set(_motor_disable_timeout_ms);
             } else if (_power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
 //                st_run.mot[motor].power_systick = SysTickTimer_getValue() + (uint32_t)(MOTOR_TIMEOUT_SECONDS * 1000);
-                _motor_disable_timeout.set(_motor_disable_timeout_ms);
+                _motor_disable_timeout.set(MOTOR_TIMEOUT_SECONDS * 1000);
           }
         }
 
@@ -528,8 +519,8 @@ struct Stepper {
     virtual bool canStep() { return true; };
     virtual void _enableImpl() { /* must override */ };
     virtual void _disableImpl() { /* must override */ };
-    virtual void _stepStartImpl() { /* must override */ };
-    virtual void _stepEndImpl() { /* must override */ };
+    virtual void stepStart() { /* must override */ };
+    virtual void stepEnd() { /* must override */ };
     virtual void setDirection(uint8_t new_direction) { /* must override */ };
     virtual void setMicrosteps(const uint8_t microsteps) { /* must override */ };
     virtual void setPowerLevel(float new_pl) { /* must override */ };
