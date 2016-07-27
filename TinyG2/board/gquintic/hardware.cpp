@@ -47,7 +47,8 @@
 #include "xmega/xmega_rtc.h"
 #endif
 
-OutputPin<Motate::kExternalClock1_PinNumber> external_clk_pin {};
+//Motate::ClockOutputPin<Motate::kExternalClock1_PinNumber> external_clk_pin {16000000}; // 16MHz optimally
+Motate::OutputPin<Motate::kExternalClock1_PinNumber> external_clk_pin {Motate::kStartLow};
 
 /*
  * hardware_init() - lowest level hardware init
@@ -56,7 +57,7 @@ OutputPin<Motate::kExternalClock1_PinNumber> external_clk_pin {};
 void hardware_init()
 {
     board_hardware_init();
-    external_clk_pin = 0; // Force external clock to 0 from now.
+    external_clk_pin = 0; // Force external clock to 0 for now.
 }
 
 /*
