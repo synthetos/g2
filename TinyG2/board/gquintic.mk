@@ -34,7 +34,7 @@ ifeq ("$(BASE_BOARD)","gquintic")
     CHIP_LOWERCASE = sam4e8c
 
     BOARD_PATH = ./board/gquintic
-    SOURCE_DIRS += ${BOARD_PATH} device/step_dir_driver
+    SOURCE_DIRS += ${BOARD_PATH} device/trinamic
 
     PLATFORM_BASE = ${MOTATE_PATH}/platform/atmel_sam
     include $(PLATFORM_BASE).mk

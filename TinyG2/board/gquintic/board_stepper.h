@@ -29,63 +29,18 @@
 #define BOARD_STEPPER_H_ONCE
 
 #include "hardware.h" // for MOTORS
-#include "step_dir_driver.h"
+#include "tmc2130.h"
 
-extern StepDirStepper<
-    Motate::kSocket1_StepPinNumber,
-    Motate::kSocket1_DirPinNumber,
-    Motate::kSocket1_EnablePinNumber,
-    Motate::kSocket1_Microstep_0PinNumber,
-    Motate::kSocket1_Microstep_1PinNumber,
-    Motate::kSocket1_Microstep_2PinNumber,
-    Motate::kSocket1_VrefPinNumber> motor_1;
+typedef Motate::SPIBus<Motate::kSPI_MISOPinNumber, Motate::kSPI_MOSIPinNumber, Motate::kSPI_SCKPinNumber> SPIBus_used_t;
 
-extern StepDirStepper<
-    Motate::kSocket2_StepPinNumber,
-    Motate::kSocket2_DirPinNumber,
-    Motate::kSocket2_EnablePinNumber,
-    Motate::kSocket2_Microstep_0PinNumber,
-    Motate::kSocket2_Microstep_1PinNumber,
-    Motate::kSocket2_Microstep_2PinNumber,
-    Motate::kSocket2_VrefPinNumber> motor_2;
+// These are identical to board_stepper.h, except for the word "extern" and the initialization
+extern Trinamic2130<SPIBus_used_t::SPIBusDevice, Motate::kSocket1_StepPinNumber, Motate::kSocket1_DirPinNumber, Motate::kSocket1_EnablePinNumber > motor_1;
+extern Trinamic2130<SPIBus_used_t::SPIBusDevice, Motate::kSocket2_StepPinNumber, Motate::kSocket2_DirPinNumber, Motate::kSocket2_EnablePinNumber > motor_2;
+extern Trinamic2130<SPIBus_used_t::SPIBusDevice, Motate::kSocket3_StepPinNumber, Motate::kSocket3_DirPinNumber, Motate::kSocket3_EnablePinNumber > motor_3;
+extern Trinamic2130<SPIBus_used_t::SPIBusDevice, Motate::kSocket4_StepPinNumber, Motate::kSocket4_DirPinNumber, Motate::kSocket4_EnablePinNumber > motor_4;
+extern Trinamic2130<SPIBus_used_t::SPIBusDevice, Motate::kSocket5_StepPinNumber, Motate::kSocket5_DirPinNumber, Motate::kSocket5_EnablePinNumber > motor_5;
 
-extern StepDirStepper<
-    Motate::kSocket3_StepPinNumber,
-    Motate::kSocket3_DirPinNumber,
-    Motate::kSocket3_EnablePinNumber,
-    Motate::kSocket3_Microstep_0PinNumber,
-    Motate::kSocket3_Microstep_1PinNumber,
-    Motate::kSocket3_Microstep_2PinNumber,
-    Motate::kSocket3_VrefPinNumber> motor_3;
-
-extern StepDirStepper<
-    Motate::kSocket4_StepPinNumber,
-    Motate::kSocket4_DirPinNumber,
-    Motate::kSocket4_EnablePinNumber,
-    Motate::kSocket4_Microstep_0PinNumber,
-    Motate::kSocket4_Microstep_1PinNumber,
-    Motate::kSocket4_Microstep_2PinNumber,
-    Motate::kSocket4_VrefPinNumber> motor_4;
-
-extern StepDirStepper<
-    Motate::kSocket5_StepPinNumber,
-    Motate::kSocket5_DirPinNumber,
-    Motate::kSocket5_EnablePinNumber,
-    Motate::kSocket5_Microstep_0PinNumber,
-    Motate::kSocket5_Microstep_1PinNumber,
-    Motate::kSocket5_Microstep_2PinNumber,
-    Motate::kSocket5_VrefPinNumber> motor_5;
-
-//extern StepDirStepper<
-//    Motate::kSocket6_StepPinNumber,
-//    Motate::kSocket6_DirPinNumber,
-//    Motate::kSocket6_EnablePinNumber,
-//    Motate::kSocket6_Microstep_0PinNumber,
-//    Motate::kSocket6_Microstep_1PinNumber,
-//    Motate::kSocket6_Microstep_2PinNumber,
-//    Motate::kSocket6_VrefPinNumber> motor_6 {};
-
-extern Stepper *Steppers[MOTORS];
+extern Stepper *Motors[MOTORS];
 
 void board_stepper_init();
 

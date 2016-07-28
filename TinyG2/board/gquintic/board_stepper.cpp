@@ -28,66 +28,24 @@
 
 #include "board_stepper.h"
 
-// These are identical to board_stepper.h, except for the word "extern"
-StepDirStepper<
-    Motate::kSocket1_StepPinNumber,
-    Motate::kSocket1_DirPinNumber,
-    Motate::kSocket1_EnablePinNumber,
-    Motate::kSocket1_Microstep_0PinNumber,
-    Motate::kSocket1_Microstep_1PinNumber,
-    Motate::kSocket1_Microstep_2PinNumber,
-    Motate::kSocket1_VrefPinNumber> motor_1 {};
 
-StepDirStepper<
-    Motate::kSocket2_StepPinNumber,
-    Motate::kSocket2_DirPinNumber,
-    Motate::kSocket2_EnablePinNumber,
-    Motate::kSocket2_Microstep_0PinNumber,
-    Motate::kSocket2_Microstep_1PinNumber,
-    Motate::kSocket2_Microstep_2PinNumber,
-    Motate::kSocket2_VrefPinNumber> motor_2 {};
+Motate::SPIChipSelectPinMux<Motate::kSocket1_SPISlaveSelectPinNumber, Motate::kSocket2_SPISlaveSelectPinNumber, Motate::kSocket3_SPISlaveSelectPinNumber, -1> spiCSPinMux;
+SPIBus_used_t spiBus;
 
-StepDirStepper<
-    Motate::kSocket3_StepPinNumber,
-    Motate::kSocket3_DirPinNumber,
-    Motate::kSocket3_EnablePinNumber,
-    Motate::kSocket3_Microstep_0PinNumber,
-    Motate::kSocket3_Microstep_1PinNumber,
-    Motate::kSocket3_Microstep_2PinNumber,
-    Motate::kSocket3_VrefPinNumber> motor_3 {};
+// These are identical to board_stepper.h, except for the word "extern" and the initialization
+Trinamic2130<SPIBus_used_t::SPIBusDevice, Motate::kSocket1_StepPinNumber, Motate::kSocket1_DirPinNumber, Motate::kSocket1_EnablePinNumber > motor_1 {spiBus, spiCSPinMux.getCS(4)};
+Trinamic2130<SPIBus_used_t::SPIBusDevice, Motate::kSocket2_StepPinNumber, Motate::kSocket2_DirPinNumber, Motate::kSocket2_EnablePinNumber > motor_2 {spiBus, spiCSPinMux.getCS(3)};
+Trinamic2130<SPIBus_used_t::SPIBusDevice, Motate::kSocket3_StepPinNumber, Motate::kSocket3_DirPinNumber, Motate::kSocket3_EnablePinNumber > motor_3 {spiBus, spiCSPinMux.getCS(2)};
+Trinamic2130<SPIBus_used_t::SPIBusDevice, Motate::kSocket4_StepPinNumber, Motate::kSocket4_DirPinNumber, Motate::kSocket4_EnablePinNumber > motor_4 {spiBus, spiCSPinMux.getCS(1)};
+Trinamic2130<SPIBus_used_t::SPIBusDevice, Motate::kSocket5_StepPinNumber, Motate::kSocket5_DirPinNumber, Motate::kSocket5_EnablePinNumber > motor_5 {spiBus, spiCSPinMux.getCS(0)};
 
-StepDirStepper<
-    Motate::kSocket4_StepPinNumber,
-    Motate::kSocket4_DirPinNumber,
-    Motate::kSocket4_EnablePinNumber,
-    Motate::kSocket4_Microstep_0PinNumber,
-    Motate::kSocket4_Microstep_1PinNumber,
-    Motate::kSocket4_Microstep_2PinNumber,
-    Motate::kSocket4_VrefPinNumber> motor_4 {};
-
-StepDirStepper<
-    Motate::kSocket5_StepPinNumber,
-    Motate::kSocket5_DirPinNumber,
-    Motate::kSocket5_EnablePinNumber,
-    Motate::kSocket5_Microstep_0PinNumber,
-    Motate::kSocket5_Microstep_1PinNumber,
-    Motate::kSocket5_Microstep_2PinNumber,
-    Motate::kSocket5_VrefPinNumber> motor_5 {};
-
-//StepDirStepper<
-//    Motate::kSocket6_StepPinNumber,
-//    Motate::kSocket6_DirPinNumber,
-//    Motate::kSocket6_EnablePinNumber,
-//    Motate::kSocket6_Microstep_0PinNumber,
-//    Motate::kSocket6_Microstep_1PinNumber,
-//    Motate::kSocket6_Microstep_2PinNumber,
-//    Motate::kSocket6_VrefPinNumber> motor_6 {};
-
-Stepper *Steppers[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5};
+Stepper *Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5};
 
 void board_stepper_init()
 {
+    spiBus.init();
+
     for (uint8_t motor=0; motor<MOTORS; motor++) {
-        Steppers[motor]->init();
+        Motors[motor]->init();
     }
 }
