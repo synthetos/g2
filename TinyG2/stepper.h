@@ -498,10 +498,8 @@ struct Stepper {
         if (_power_state == MOTOR_POWER_TIMEOUT_START && _power_mode != MOTOR_ALWAYS_POWERED) {
             _power_state = MOTOR_POWER_TIMEOUT_COUNTDOWN;
             if (_power_mode == MOTOR_POWERED_IN_CYCLE) {
-//                st_run.mot[motor].power_systick = SysTickTimer_getValue() + (uint32_t)(st_cfg.motor_power_timeout * 1000);
                 _motor_disable_timeout.set(_motor_disable_timeout_ms);
             } else if (_power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
-//                st_run.mot[motor].power_systick = SysTickTimer_getValue() + (uint32_t)(MOTOR_TIMEOUT_SECONDS * 1000);
                 _motor_disable_timeout.set(MOTOR_TIMEOUT_SECONDS * 1000);
           }
         }
