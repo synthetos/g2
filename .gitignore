@@ -50,3 +50,4 @@ openocd.cfg
 openocd.log
 TinyG2/mb.txt
 Tools/gcc-arm-none-eabi-*.tar.bz2
+TinyG2/TinyG2.componentinfo.xml
