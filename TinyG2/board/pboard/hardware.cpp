@@ -48,6 +48,39 @@
 #include "xmega/xmega_rtc.h"
 #endif
 
+
+
+//###################   LED  TESTING    ##################
+
+Motate::PWMOutputPin<Motate::kLED_RGBWPixelPinNumber> rgbw_led {Motate::kNormal, 800000};
+
+// Note: 0 = 1/4 on-time
+//       1 = 1/2 on-time
+uint16_t led_ON  = rgbw_led.getTopValue() >> 1;
+uint16_t led_OFF = rgbw_led.getTopValue() >> 2;
+
+
+uint16_t rgbw_periods[8+8*4*3+1]  = {
+    0, 0, 0, 0, 0, 0, 0, 0,
+  /* green */ led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF,
+    /* red */ led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF,
+   /* blue */ led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF,
+  /* white */ led_ON , led_ON , led_ON , led_ON , led_ON , led_ON , led_ON , led_ON ,
+
+  /* green */ led_ON , led_ON , led_ON , led_ON , led_ON , led_ON , led_ON , led_ON ,
+    /* red */ led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF,
+   /* blue */ led_ON , led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF ,
+  /* white */ led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF,
+
+  /* green */ led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF,
+    /* red */ led_ON , led_ON , led_ON , led_ON , led_ON , led_ON , led_ON , led_ON ,
+   /* blue */ led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF,
+  /* white */ led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF,
+
+   /* reset*/ 0
+};
+
+
 /*
  * hardware_init() - lowest level hardware init
  */
@@ -55,6 +88,19 @@
 void hardware_init()
 {
     board_hardware_init();
+
+    rgbw_led.setExactDutyCycle(0);
+
+    // Make the channel (0) syncronous
+    rgbw_led.pwm()->PWM_SCM = PWM_SCM_UPDM_MODE2 | PWM_SCM_SYNC0 ; // Without PWM_SCM_PTRM
+    // Make it update EVERY period
+    rgbw_led.pwm()->PWM_SCUP = PWM_SCUP_UPR(0);
+
+    rgbw_led.start();
+
+    rgbw_led.pwm()->PWM_TPR = (uint32_t)&rgbw_periods;
+    rgbw_led.pwm()->PWM_TCR = 8+8*4*3 + 1;
+    rgbw_led.pwm()->PWM_PTCR = PWM_PTCR_TXTEN;
 }
 
 /*

@@ -165,8 +165,8 @@ namespace Motate {
     _MAKE_MOTATE_PIN(kUnassigned15                      , B, 'B',  9);  // nc
     _MAKE_MOTATE_PIN(kSocket4_Microstep_2PinNumber      , B, 'B', 10);  // M4_MS2
     _MAKE_MOTATE_PIN(kSocket4_Microstep_0PinNumber      , B, 'B', 11);  // M4_MS0 (M4_MS1 is slaved to this signal also)
-    _MAKE_MOTATE_PIN(kI2C1_SDAPinNumber                 , B, 'B', 12);  // <reserved for filament sensor digital in or I2C>
-    _MAKE_MOTATE_PIN(kI2C1_SCLPinNumber                 , B, 'B', 13);  // <reserved for filament sensor digital in or I2C>
+    _MAKE_MOTATE_PIN(kLED_RGBWPixelPinNumber            , B, 'B', 12);  // <reserved for filament sensor digital in or I2C>
+    _MAKE_MOTATE_PIN(kUnassigned16                      , B, 'B', 13);  // <reserved for filament sensor digital in or I2C>
     _MAKE_MOTATE_PIN(kSocket4_StepPinNumber             , B, 'B', 14);  // M4_STEP
     _MAKE_MOTATE_PIN(kSocket1_StepPinNumber             , B, 'B', 15);  // M1_STEP
     _MAKE_MOTATE_PIN(kSocket1_EnablePinNumber           , B, 'B', 16);  // M1_ENABLE
@@ -181,10 +181,10 @@ namespace Motate {
     _MAKE_MOTATE_PIN(kOutput5_PinNumber                 , B, 'B', 25);  // DO_5 (Fan2A_PWM)
     _MAKE_MOTATE_PIN(kInput1_PinNumber                  , B, 'B', 26);  // DI_1 (XMin)
     _MAKE_MOTATE_PIN(kOutput4_PinNumber                 , B, 'B', 27);  // DO_4 (Fan1A_PWM)
-    _MAKE_MOTATE_PIN(kUnassigned16                      , B, 'B', 28);	// JTAG_CLK / SWD_CLK (unassigned)
-    _MAKE_MOTATE_PIN(kUnassigned17                      , B, 'B', 29);	// JTAG_TDI (unassigned)
-    _MAKE_MOTATE_PIN(kUnassigned18                      , B, 'B', 30);	// JTAG_TDO (unassigned)
-    _MAKE_MOTATE_PIN(kUnassigned19                      , B, 'B', 31);	// JTAG_TMS / SWD_DIO (unassigned)
+    _MAKE_MOTATE_PIN(kUnassigned17                      , B, 'B', 28);	// JTAG_CLK / SWD_CLK (unassigned)
+    _MAKE_MOTATE_PIN(kUnassigned18                      , B, 'B', 29);	// JTAG_TDI (unassigned)
+    _MAKE_MOTATE_PIN(kUnassigned19                      , B, 'B', 30);	// JTAG_TDO (unassigned)
+    _MAKE_MOTATE_PIN(kUnassigned20                      , B, 'B', 31);	// JTAG_TMS / SWD_DIO (unassigned)
 
 } // namespace Motate
 
