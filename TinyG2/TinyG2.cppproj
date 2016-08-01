@@ -1414,24 +1414,6 @@
     <Compile Include="board\ArduinoDue\shopbotShield-pinout.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="board\g2ref\board_xio.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="board\g2ref\board_xio.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="board\g2ref\g2ref-a-pinout.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="board\g2ref\hardware.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="board\g2ref\hardware.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="board\g2ref\motate_pin_assignments.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="board\g2v9\board_xio.cpp">
       <SubType>compile</SubType>
     </Compile>
@@ -1474,28 +1456,28 @@
     <Compile Include="board\gquintic\motate_pin_assignments.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="board\pboard\board_xio.cpp">
+    <Compile Include="board\printrboardg2\board_stepper.cpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="board\pboard\board_xio.h">
+    <Compile Include="board\printrboardg2\board_stepper.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="board\pboard\hardware.cpp">
+    <Compile Include="board\printrboardg2\board_xio.cpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="board\pboard\hardware.h">
+    <Compile Include="board\printrboardg2\board_xio.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="board\pboard\motate_pin_assignments.h">
+    <Compile Include="board\printrboardg2\hardware.cpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="board\pboard\pboard-a-pinout.h">
+    <Compile Include="board\printrboardg2\hardware.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="board\pboard\pboard-c-pinout.h">
+    <Compile Include="board\printrboardg2\motate_pin_assignments.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="board\pboard\printrboardG2v3-pinout.h">
+    <Compile Include="board\printrboardg2\printrboardG2v3-pinout.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="board\sbv300\board_xio.cpp">
@@ -1800,10 +1782,9 @@
     <Folder Include="board\" />
     <Folder Include="board\Archim\" />
     <Folder Include="board\ArduinoDue\" />
-    <Folder Include="board\g2ref\" />
     <Folder Include="board\g2v9" />
     <Folder Include="board\gquintic\" />
-    <Folder Include="board\pboard" />
+    <Folder Include="board\printrboardg2\" />
     <Folder Include="board\sbv300\" />
     <Folder Include="device\" />
     <Folder Include="device\step_dir_driver\" />
@@ -1854,10 +1835,13 @@
     <None Include="board\gquintic.mk">
       <SubType>compile</SubType>
     </None>
-    <None Include="board\pboard.gdb">
+    <None Include="board\printrboardg2.gdb">
       <SubType>compile</SubType>
     </None>
-    <None Include="board\pboard.mk">
+    <None Include="board\printrboardg2.mk">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="board\printrboardg2\.DS_Store">
       <SubType>compile</SubType>
     </None>
     <None Include="board\sbv300.gdb">

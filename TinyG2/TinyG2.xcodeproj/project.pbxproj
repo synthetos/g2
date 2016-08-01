@@ -55,12 +55,12 @@
 		D4037C051CD920A800BC72AD /* ArduinoDue */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ArduinoDue; sourceTree = "<group>"; };
 		D4037C061CD920B700BC72AD /* sbv300 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = sbv300; sourceTree = "<group>"; };
 		D4037C071CD920CA00BC72AD /* g2ref */ = {isa = PBXFileReference; lastKnownFileType = folder; path = g2ref; sourceTree = "<group>"; };
-		D4037C081CD920DB00BC72AD /* pboard */ = {isa = PBXFileReference; lastKnownFileType = folder; path = pboard; sourceTree = "<group>"; };
+		D4037C081CD920DB00BC72AD /* printrboardg2 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = printrboardg2; sourceTree = "<group>"; };
 		D40A24201AD5B9A600406A3A /* ArduinoDue.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ArduinoDue.gdb; sourceTree = "<group>"; };
 		D40A24211AD5B9A600406A3A /* ArduinoDue.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ArduinoDue.mk; sourceTree = "<group>"; };
 		D43C7AE71B155D0A007440D6 /* G2v9 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = G2v9; sourceTree = "<group>"; };
-		D4522DC61C455F660086AAE6 /* pboard.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = pboard.gdb; sourceTree = "<group>"; };
-		D4522DC71C455F660086AAE6 /* pboard.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = pboard.mk; sourceTree = "<group>"; };
+		D4522DC61C455F660086AAE6 /* printrboardg2.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = printrboardg2.gdb; sourceTree = "<group>"; };
+		D4522DC71C455F660086AAE6 /* printrboardg2.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = printrboardg2.mk; sourceTree = "<group>"; };
 		D4522DC91C45F41D0086AAE6 /* tinyg2_info.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tinyg2_info.h; sourceTree = "<group>"; };
 		D457117B17053EFA00EA19A8 /* Makefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makefile; sourceTree = "<group>"; usesTabs = 1; xcLanguageSpecificationIdentifier = xcode.lang.sh; };
 		D47B744C1D4925B4004FAB53 /* device */ = {isa = PBXFileReference; lastKnownFileType = folder; path = device; sourceTree = "<group>"; };
@@ -173,9 +173,9 @@
 				D4F226F01D088860008ED57C /* gquintic */,
 				D4F226F11D088860008ED57C /* gquintic.gdb */,
 				D4F226F21D088860008ED57C /* gquintic.mk */,
-				D4037C081CD920DB00BC72AD /* pboard */,
-				D4522DC61C455F660086AAE6 /* pboard.gdb */,
-				D4522DC71C455F660086AAE6 /* pboard.mk */,
+				D4037C081CD920DB00BC72AD /* printrboardg2 */,
+				D4522DC61C455F660086AAE6 /* printrboardg2.gdb */,
+				D4522DC71C455F660086AAE6 /* printrboardg2.mk */,
 				D43C7AE71B155D0A007440D6 /* G2v9 */,
 				D4EB789B1B7BF2F70001B355 /* G2v9.gdb */,
 				D49367D21B82C990000BB759 /* G2v9.mk */,
