@@ -3,10 +3,10 @@
 
 
 # To compile:
-#   make BOARD=pboard-a
+#   make BOARD=printrboardG2v3
 
 # You can also choose a CONFIG from boards.mk:
-#   make CONFIG=PrintrbotPlus BOARD=pboard-a
+#   make CONFIG=PrintrbotPlus BOARD=printrboardG2v3
 
 
 ##########
@@ -32,7 +32,7 @@ ifeq ("$(BASE_BOARD)","printrboardg2")
     export CHIP
     CHIP_LOWERCASE = sam3x8c
 
-    BOARD_PATH = ./board/pboard
+    BOARD_PATH = ./board/printrboardg2
     SOURCE_DIRS += ${BOARD_PATH} device/step_dir_driver
 
     PLATFORM_BASE = ${MOTATE_PATH}/platform/atmel_sam
