@@ -125,7 +125,7 @@ endif
 
 ifeq ("$(CONFIG)","Ultimakerv9k")
     ifeq ("$(BOARD)","NONE")
-        BOARD=g2ref-a
+        BOARD=g2v9k
     endif
     SETTINGS_FILE="settings_ultimaker.h"
 endif
