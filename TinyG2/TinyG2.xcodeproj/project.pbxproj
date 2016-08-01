@@ -54,7 +54,6 @@
 /* Begin PBXFileReference section */
 		D4037C051CD920A800BC72AD /* ArduinoDue */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ArduinoDue; sourceTree = "<group>"; };
 		D4037C061CD920B700BC72AD /* sbv300 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = sbv300; sourceTree = "<group>"; };
-		D4037C071CD920CA00BC72AD /* g2ref */ = {isa = PBXFileReference; lastKnownFileType = folder; path = g2ref; sourceTree = "<group>"; };
 		D4037C081CD920DB00BC72AD /* printrboardg2 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = printrboardg2; sourceTree = "<group>"; };
 		D40A24201AD5B9A600406A3A /* ArduinoDue.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ArduinoDue.gdb; sourceTree = "<group>"; };
 		D40A24211AD5B9A600406A3A /* ArduinoDue.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ArduinoDue.mk; sourceTree = "<group>"; };
@@ -106,8 +105,6 @@
 		D49177A11D21CFC50029CDEB /* settings_Printrbot_Simple_1403.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Printrbot_Simple_1403.h; sourceTree = "<group>"; };
 		D49177A21D21CFDB0029CDEB /* settings_Printrbot_Simple_1608.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Printrbot_Simple_1608.h; sourceTree = "<group>"; };
 		D4922F3F1CB8361B00A565FF /* boards.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = boards.mk; sourceTree = "<group>"; };
-		D49367CA1B827706000BB759 /* g2ref.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = g2ref.gdb; sourceTree = "<group>"; };
-		D49367CB1B827706000BB759 /* g2ref.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = g2ref.mk; sourceTree = "<group>"; };
 		D49367D21B82C990000BB759 /* G2v9.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = G2v9.mk; sourceTree = "<group>"; };
 		D49367D71B87CA8A000BB759 /* temperature.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = temperature.cpp; sourceTree = "<group>"; };
 		D49367D81B87CA8A000BB759 /* temperature.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = temperature.h; sourceTree = "<group>"; };
@@ -167,9 +164,6 @@
 				D4037C061CD920B700BC72AD /* sbv300 */,
 				D4AC39191C7BA9240098D685 /* sbv300.gdb */,
 				D4AC39161C7BA71B0098D685 /* sbv300.mk */,
-				D4037C071CD920CA00BC72AD /* g2ref */,
-				D49367CA1B827706000BB759 /* g2ref.gdb */,
-				D49367CB1B827706000BB759 /* g2ref.mk */,
 				D4F226F01D088860008ED57C /* gquintic */,
 				D4F226F11D088860008ED57C /* gquintic.gdb */,
 				D4F226F21D088860008ED57C /* gquintic.mk */,
@@ -330,20 +324,6 @@
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
-		D49367CE1B82C8D2000BB759 /* TinyG G2Ref PrintrbotPlus */ = {
-			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 BOARD=g2ref-a CONFIG=PrintrbotPlus DEBUG=2";
-			buildConfigurationList = D49367CF1B82C8D2000BB759 /* Build configuration list for PBXLegacyTarget "TinyG G2Ref PrintrbotPlus" */;
-			buildPhases = (
-			);
-			buildToolPath = /usr/bin/make;
-			buildWorkingDirectory = .;
-			dependencies = (
-			);
-			name = "TinyG G2Ref PrintrbotPlus";
-			passBuildSettingsInEnvironment = 1;
-			productName = g3_due;
-		};
 		D4AC391A1C7BAB8E0098D685 /* TinyG sbv300 */ = {
 			isa = PBXLegacyTarget;
 			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=sbv300 DEBUG=2";
@@ -461,7 +441,6 @@
 				D4522DCF1C5FC8ED0086AAE6 /* TinyG2 G2Ref Ultimaker */,
 				D4CBBAD01A0D51FE00150DE2 /* TinyG2 G2V9k Ultimaker */,
 				D4B485B21AB1F3CB00C6614F /* TinyG2 V9 Shapeoko Dual-Y */,
-				D49367CE1B82C8D2000BB759 /* TinyG G2Ref PrintrbotPlus */,
 				D4037C091CDA42F300BC72AD /* TinyG printrboardG2v3 PrintrbotPlus */,
 				D4AC391A1C7BAB8E0098D685 /* TinyG sbv300 */,
 				D4F226F31D088A48008ED57C /* TinyG gQuintic PrintrbotPlus */,
@@ -672,22 +651,6 @@
 			};
 			name = Release;
 		};
-		D49367D01B82C8D2000BB759 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
-				PRODUCT_NAME = "TinyG G2Ref PrintrbotPlus";
-			};
-			name = Debug;
-		};
-		D49367D11B82C8D2000BB759 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
-				PRODUCT_NAME = "TinyG G2Ref PrintrbotPlus";
-			};
-			name = Release;
-		};
 		D4AC391C1C7BAB8E0098D685 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -821,15 +784,6 @@
 			buildConfigurations = (
 				D457112B17053BFB00EA19A8 /* Debug */,
 				D457112C17053BFB00EA19A8 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		D49367CF1B82C8D2000BB759 /* Build configuration list for PBXLegacyTarget "TinyG G2Ref PrintrbotPlus" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				D49367D01B82C8D2000BB759 /* Debug */,
-				D49367D11B82C8D2000BB759 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

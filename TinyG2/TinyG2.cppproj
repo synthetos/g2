@@ -1814,12 +1814,6 @@
     <None Include="board\ArduinoDue.mk">
       <SubType>compile</SubType>
     </None>
-    <None Include="board\g2ref.gdb">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="board\g2ref.mk">
-      <SubType>compile</SubType>
-    </None>
     <None Include="board\g2v9.gdb">
       <SubType>compile</SubType>
     </None>
