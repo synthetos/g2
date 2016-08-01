@@ -34,6 +34,11 @@
 
 #include <MotatePins.h>
 
+// NOTE: This is a terrible example of a *-pinout.h file!
+// This one is assigned backward in order to match the numbering on the Due.
+// When making your own board, please use one of the other boards as an example
+// of how to assign names to the pins.
+
 // We don't have all of the inputs, so we don't define them.
 #define INPUT1_AVAILABLE 1
 #define INPUT2_AVAILABLE 1
@@ -254,7 +259,7 @@ namespace Motate {
     pin_number kGRBL_CycleStartPinNumber        =  56;
 
     pin_number kGRBL_CommonEnablePinNumber      =   8;
-    
+
     /** NOTE: When adding pin definitions here, they must be
      *        added to ALL board pin assignment files, even if
      *        they are defined as -1.

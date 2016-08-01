@@ -27,7 +27,7 @@ ifeq ("$(BASE_BOARD)","gquintic")
 
     DEVICE_DEFINES += MOTATE_CONFIG_HAS_USBSERIAL=1
 
-    FIRST_LINK_SOURCES += $(wildcard ${MOTATE_PATH}/Atmel_sam4e/*.cpp)
+    FIRST_LINK_SOURCES += $(wildcard ${MOTATE_PATH}/Atmel_sam_common/*.cpp) $(wildcard ${MOTATE_PATH}/Atmel_sam4e/*.cpp)
 
     CHIP = SAM4E8C
     export CHIP

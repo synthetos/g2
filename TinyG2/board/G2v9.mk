@@ -32,7 +32,7 @@ endif
 ifeq ("$(BASE_BOARD)","g2v9")
     _BOARD_FOUND = 1
 
-    FIRST_LINK_SOURCES += $(wildcard ${MOTATE_PATH}/Atmel_sam3x/*.cpp)
+    FIRST_LINK_SOURCES += $(wildcard ${MOTATE_PATH}/Atmel_sam_common/*.cpp) $(wildcard ${MOTATE_PATH}/Atmel_sam3x/*.cpp)
 
     # Set CHIP and export it for GDB to see
     CHIP = SAM3X8C
