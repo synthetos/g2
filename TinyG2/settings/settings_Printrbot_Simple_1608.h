@@ -111,7 +111,7 @@
 #define M1_MICROSTEPS               32                      // 1mi		1,2,4,8,16,32
 #define M1_POLARITY                 1                       // 1po		0=normal, 1=reversed
 #define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm		standard
-#define M1_POWER_LEVEL              0.4                    // 1mp
+#define M1_POWER_LEVEL              0.5                    // 1mp
 
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
 #define M3_MOTOR_MAP                AXIS_Y
@@ -120,7 +120,7 @@
 #define M3_MICROSTEPS               32
 #define M3_POLARITY                 0
 #define M3_POWER_MODE               MOTOR_POWER_MODE
-#define M3_POWER_LEVEL              0.4
+#define M3_POWER_LEVEL              0.5
 
 // 2020 steps/mm at 1/16 microstepping = 1.58416 mm/rev
 #define M2_MOTOR_MAP                AXIS_Z
@@ -152,11 +152,11 @@
 // *** axis settings **********************************************************************************
 
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX              20000 				    // xvm  G0 max velocity in mm/min
+#define X_VELOCITY_MAX              14000 				    // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX                200                     // xtm  travel between switches or crashes
-#define X_JERK_MAX                  8000                    // xjm  yes, that's "100 billion" mm/(min^3)
+#define X_JERK_MAX                  6000                    // xjm  yes, that's "100 billion" mm/(min^3)
 #define X_JERK_HIGH_SPEED			8000                   // xjh
 #define X_HOMING_INPUT              4                       // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIRECTION          0                       // xhd  0=search moves negative, 1= search moves positive
@@ -166,11 +166,11 @@
 #define X_ZERO_BACKOFF              0.5                       // xzb  mm
 
 #define Y_AXIS_MODE                 AXIS_STANDARD
-#define Y_VELOCITY_MAX              20000
+#define Y_VELOCITY_MAX              14000
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                150
-#define Y_JERK_MAX                  8000 // {yjm:15000} {xjm:15000}   {yjm:10000} {xjm:10000}
+#define Y_JERK_MAX                  6000 // {yjm:15000} {xjm:15000}   {yjm:10000} {xjm:10000}
 #define Y_JERK_HIGH_SPEED			30000
 #define Y_HOMING_INPUT              1
 #define Y_HOMING_DIRECTION          1
