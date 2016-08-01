@@ -12,20 +12,8 @@
 ##########
 # BOARDs for use directly from the make command line (with default settings) or by CONFIGs.
 
-ifeq ("$(BOARD)","pboard-a")
-    BASE_BOARD=pboard
-    DEVICE_DEFINES += MOTATE_BOARD="pboard-a"
-    DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
-endif
-
-#ifeq ("$(BOARD)","pboard-c")
-#    BASE_BOARD=pboard
-#    DEVICE_DEFINES += MOTATE_BOARD="pboard-c"
-#    DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
-#endif
-
 ifeq ("$(BOARD)","printrboardG2v3")
-    BASE_BOARD=pboard
+    BASE_BOARD=printrboardg2
     DEVICE_DEFINES += MOTATE_BOARD="printrboardG2v3"
     DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
 endif
@@ -33,12 +21,12 @@ endif
 ##########
 # The general pboard-a BASE_BOARD.
 
-ifeq ("$(BASE_BOARD)","pboard")
+ifeq ("$(BASE_BOARD)","printrboardg2")
     _BOARD_FOUND = 1
 
     DEVICE_DEFINES += MOTATE_CONFIG_HAS_USBSERIAL=1
 
-    FIRST_LINK_SOURCES += $(wildcard ${MOTATE_PATH}/Atmel_sam3x/*.cpp)
+    FIRST_LINK_SOURCES += $(wildcard ${MOTATE_PATH}/Atmel_sam_common/*.cpp) $(wildcard ${MOTATE_PATH}/Atmel_sam3x/*.cpp)
 
     CHIP = SAM3X8C
     export CHIP

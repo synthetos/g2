@@ -94,7 +94,7 @@ endif
 
 ifeq ("$(CONFIG)","PrintrbotPlus")
     ifeq ("$(BOARD)","NONE")
-        BOARD=pboard-a
+        BOARD=printrboardG2v3
     endif
     SETTINGS_FILE="settings_printrbot_plus.h"
 endif
@@ -115,18 +115,10 @@ endif
 
 ifeq ("$(CONFIG)","PrintrbotPlay")
     ifeq ("$(BOARD)","NONE")
-        BOARD=pboard-a
-    endif
-    SETTINGS_FILE="settings_printrbot_play.h"
-endif
-
-ifeq ("$(CONFIG)","PrintrbotPlay-v3")
-    ifeq ("$(BOARD)","NONE")
         BOARD=printrboardG2v3
     endif
     SETTINGS_FILE="settings_printrbot_play.h"
 endif
-
 
 ##########
 # Ultimaker configs:
