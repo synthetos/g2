@@ -34,52 +34,28 @@
 #include "config.h"		// #2
 #include "hardware.h"
 #include "controller.h"
+#include "planner.h"
 #include "text_parser.h"
 #include "board_xio.h"
 
 
-#ifdef __ARM
 #include "MotateUtilities.h"
 #include "MotateUniqueID.h"
 #include "MotatePower.h"
-#endif
-#ifdef __AVR
-#include "xmega/xmega_init.h"
-#include "xmega/xmega_rtc.h"
-#endif
+
+#include "neopixel.h"
 
 
 
-//###################   LED  TESTING    ##################
+namespace LEDs {
+    NeoPixel<Motate::kLED_RGBWPixelPinNumber, 3> rgbw_leds {NeoPixelOrder::GRBW};
 
-Motate::PWMOutputPin<Motate::kLED_RGBWPixelPinNumber> rgbw_led {Motate::kNormal, 800000};
+    RGB_Color_t display_color[3] {{0, 0, 0, 10}, {0, 0, 0, 10}, {0, 0, 0, 10}};
 
-// Note: 0 = 1/4 on-time
-//       1 = 1/2 on-time
-uint16_t led_ON  = rgbw_led.getTopValue() >> 1;
-uint16_t led_OFF = rgbw_led.getTopValue() >> 2;
-
-
-uint16_t rgbw_periods[8+8*4*3+1]  = {
-    0, 0, 0, 0, 0, 0, 0, 0,
-  /* green */ led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF,
-    /* red */ led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF,
-   /* blue */ led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF,
-  /* white */ led_ON , led_ON , led_ON , led_ON , led_ON , led_ON , led_ON , led_ON ,
-
-  /* green */ led_ON , led_ON , led_ON , led_ON , led_ON , led_ON , led_ON , led_ON ,
-    /* red */ led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF,
-   /* blue */ led_ON , led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF ,
-  /* white */ led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF,
-
-  /* green */ led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF,
-    /* red */ led_ON , led_ON , led_ON , led_ON , led_ON , led_ON , led_ON , led_ON ,
-   /* blue */ led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF,
-  /* white */ led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF, led_OFF,
-
-   /* reset*/ 0
-};
-
+    bool alarm_red = false; // if we are in alarm, the tells us if we're going to red (pulsing)
+    bool shutdown_white = false; // if we are in shutdown, the tells us if we're going to red (pulsing)
+    cmMachineState last_see_machine_state;
+}
 
 /*
  * hardware_init() - lowest level hardware init
@@ -88,19 +64,95 @@ uint16_t rgbw_periods[8+8*4*3+1]  = {
 void hardware_init()
 {
     board_hardware_init();
+    LEDs::last_see_machine_state = cm_get_machine_state();
 
-    rgbw_led.setExactDutyCycle(0);
+    for (uint8_t pixel = 0; pixel < LEDs::rgbw_leds.count; pixel++) {
+        LEDs::display_color[pixel].startTransition(0, 0, 0, 0);
+        LEDs::rgbw_leds.setPixel(pixel, LEDs::display_color[pixel]);
+    }
+    LEDs::rgbw_leds.update();
+}
 
-    // Make the channel (0) syncronous
-    rgbw_led.pwm()->PWM_SCM = PWM_SCM_UPDM_MODE2 | PWM_SCM_SYNC0 ; // Without PWM_SCM_PTRM
-    // Make it update EVERY period
-    rgbw_led.pwm()->PWM_SCUP = PWM_SCUP_UPR(0);
+/*
+ * hardware_periodic() - callback from the controller loop - TIME CRITICAL.
+ */
 
-    rgbw_led.start();
+stat_t hardware_periodic()
+{
+    // If we're very time constrained, get out. This isn't critical
+    if (!mp_is_phat_city_time()) { return STAT_OK; }
 
-    rgbw_led.pwm()->PWM_TPR = (uint32_t)&rgbw_periods;
-    rgbw_led.pwm()->PWM_TCR = 8+8*4*3 + 1;
-    rgbw_led.pwm()->PWM_PTCR = PWM_PTCR_TXTEN;
+    auto new_machine_state = cm_get_machine_state();
+
+    // Handle machines states from most important to least
+    if (new_machine_state == MACHINE_PANIC) {
+        if ((LEDs::last_see_machine_state != new_machine_state))
+        {
+            for (uint8_t pixel = 0; pixel < LEDs::rgbw_leds.count; pixel++) {
+                LEDs::display_color[pixel].startTransition(5000, 1, 0, 0);
+            }
+        }
+    } else if (new_machine_state == MACHINE_SHUTDOWN) {
+        if ((LEDs::last_see_machine_state != new_machine_state) || LEDs::display_color[0].isTransitionDone())
+        {
+            if (LEDs::shutdown_white) {
+                // set to black
+                for (uint8_t pixel = 0; pixel < LEDs::rgbw_leds.count; pixel++) {
+                    LEDs::display_color[pixel].startTransition(2000, 0, 0, 0);
+                }
+            } else {
+                // set to shutdown white
+                for (uint8_t pixel = 0; pixel < LEDs::rgbw_leds.count; pixel++) {
+                    LEDs::display_color[pixel].startTransition(2000, 0.5, 0.5, 0.5);
+                }
+            }
+            LEDs::shutdown_white = !LEDs::shutdown_white;
+        }
+    } else if (new_machine_state == MACHINE_ALARM) {
+        if ((LEDs::last_see_machine_state != new_machine_state) || LEDs::display_color[0].isTransitionDone())
+        {
+            if (LEDs::alarm_red) {
+                // set to black
+                for (uint8_t pixel = 0; pixel < LEDs::rgbw_leds.count; pixel++) {
+                    LEDs::display_color[pixel].startTransition(500, 0, 0, 0);
+                }
+            } else {
+                // set to red
+                for (uint8_t pixel = 0; pixel < LEDs::rgbw_leds.count; pixel++) {
+                    LEDs::display_color[pixel].startTransition(500, 1, 0, 0);
+                }
+            }
+            LEDs::alarm_red = !LEDs::alarm_red;
+        }
+
+    // catch transition from alarm to reset to black
+    } else if ((LEDs::last_see_machine_state == MACHINE_ALARM) && (new_machine_state != MACHINE_ALARM)) {
+        // set to black
+        for (uint8_t pixel = 0; pixel < LEDs::rgbw_leds.count; pixel++) {
+            LEDs::display_color[pixel].startTransition(2000, 0, 0, 0);
+        }
+        LEDs::alarm_red = false;
+
+    } else if ((LEDs::last_see_machine_state == MACHINE_READY) && (new_machine_state != MACHINE_READY)) {
+        // set to black
+        for (uint8_t pixel = 0; pixel < LEDs::rgbw_leds.count; pixel++) {
+            LEDs::display_color[pixel].startTransition(0, 0, 0, 0);
+        }
+    }
+
+    LEDs::last_see_machine_state = new_machine_state;
+
+    bool updated = false;
+    for (uint8_t pixel = 0; pixel < LEDs::rgbw_leds.count; pixel++) {
+        if (LEDs::display_color[pixel].update()) {
+            LEDs::rgbw_leds.setPixel(pixel, LEDs::display_color[pixel]);
+            updated = true;
+        }
+    }
+
+    LEDs::rgbw_leds.update();
+
+    return STAT_OK;
 }
 
 /*

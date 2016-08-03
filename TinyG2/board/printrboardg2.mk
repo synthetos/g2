@@ -33,7 +33,7 @@ ifeq ("$(BASE_BOARD)","printrboardg2")
     CHIP_LOWERCASE = sam3x8c
 
     BOARD_PATH = ./board/printrboardg2
-    SOURCE_DIRS += ${BOARD_PATH} device/step_dir_driver
+    SOURCE_DIRS += ${BOARD_PATH} device/step_dir_driver device/neopixel
 
     PLATFORM_BASE = ${MOTATE_PATH}/platform/atmel_sam
     include $(PLATFORM_BASE).mk

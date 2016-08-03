@@ -57,6 +57,15 @@ void hardware_init()
 }
 
 /*
+ * hardware_periodic() - callback from the controller loop - TIME CRITICAL.
+ */
+
+stat_t hardware_periodic()
+{
+    return STAT_OK;
+}
+
+/*
  * hw_hard_reset() - reset system now
  * hw_flash_loader() - enter flash loader to reflash board
  */

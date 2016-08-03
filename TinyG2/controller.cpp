@@ -158,6 +158,7 @@ static void _controller_HSM()
 //
 //----- kernel level ISR handlers ----(flags are set in ISRs)------------------------//
                                                 // Order is important:
+    DISPATCH(hardware_periodic());				// give the hardware a chance to do stuff
     DISPATCH(_led_indicator());				    // blink LEDs at the current rate
     DISPATCH(_shutdown_handler());              // invoke shutdown
     DISPATCH(_interlock_handler());             // invoke / remove safety interlock

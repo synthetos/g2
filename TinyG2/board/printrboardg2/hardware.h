@@ -189,6 +189,7 @@ static OutputPin<Motate::kCoolant_EnablePinNumber> mist_enable_pin;
  ********************************/
 
 void hardware_init(void);			// master hardware init
+stat_t hardware_periodic();  // callback from the main loop (time sensitive)
 void hw_hard_reset(void);
 stat_t hw_flash(nvObj_t *nv);
 
