@@ -275,8 +275,12 @@ void dda_timer_type::interrupt()
     // clear all steps
     motor_1.stepEnd();
     motor_2.stepEnd();
+#if MOTORS > 2
     motor_3.stepEnd();
+#endif
+#if MOTORS > 3
     motor_4.stepEnd();
+#endif
 #if MOTORS > 4
         motor_5.stepEnd();
 #endif
@@ -309,16 +313,20 @@ void dda_timer_type::interrupt()
         st_run.mot[MOTOR_2].substep_accumulator -= st_run.dda_ticks_X_substeps;
         INCREMENT_ENCODER(MOTOR_2);
     }
+#if MOTORS > 2
     if ((st_run.mot[MOTOR_3].substep_accumulator += st_run.mot[MOTOR_3].substep_increment) > 0) {
         motor_3.stepStart();		// turn step bit on
         st_run.mot[MOTOR_3].substep_accumulator -= st_run.dda_ticks_X_substeps;
         INCREMENT_ENCODER(MOTOR_3);
     }
+#endif
+#if MOTORS > 3
     if ((st_run.mot[MOTOR_4].substep_accumulator += st_run.mot[MOTOR_4].substep_increment) > 0) {
         motor_4.stepStart();		// turn step bit on
         st_run.mot[MOTOR_4].substep_accumulator -= st_run.dda_ticks_X_substeps;
         INCREMENT_ENCODER(MOTOR_4);
     }
+#endif
 #if MOTORS > 4
     if ((st_run.mot[MOTOR_5].substep_accumulator += st_run.mot[MOTOR_5].substep_increment) > 0) {
         motor_5.stepStart();		// turn step bit on
@@ -456,8 +464,12 @@ static void _load_move()
 //		}
         motor_1.motionStopped();	// ...start motor power timeouts
         motor_2.motionStopped();	// ...start motor power timeouts
+#if (MOTORS >= 3)
         motor_3.motionStopped();	// ...start motor power timeouts
+#endif
+#if (MOTORS >= 4)
         motor_4.motionStopped();	// ...start motor power timeouts
+#endif
 #if (MOTORS >= 5)
         motor_5.motionStopped();	// ...start motor power timeouts
 #endif
