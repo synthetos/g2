@@ -78,6 +78,14 @@ ifeq ("$(CONFIG)","TestQuintic")
 endif
 
 
+ifeq ("$(CONFIG)","TestQuadratic")
+    ifeq ("$(BOARD)","NONE")
+        BOARD=gquadratic-a
+    endif
+    SETTINGS_FILE="settings_test.h"
+endif
+
+
 ##########
 # Shopbot configs:
 
