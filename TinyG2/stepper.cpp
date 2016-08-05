@@ -604,43 +604,43 @@ MOTATE_TIMER_INTERRUPT(dda_timer_num)
 	if (interrupt_cause == kInterruptOnMatchA) {
 
 		if (!motor_1.step.isNull() && (st_run.mot[MOTOR_1].substep_accumulator += st_run.mot[MOTOR_1].substep_increment) > 0) {
-			motor_1.step.set();		// turn step bit on
+			motor_1.step.toggle();		// turn step bit on
 			st_run.mot[MOTOR_1].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			INCREMENT_ENCODER(MOTOR_1);
 		}
 		if (!motor_2.step.isNull() && (st_run.mot[MOTOR_2].substep_accumulator += st_run.mot[MOTOR_2].substep_increment) > 0) {
-			motor_2.step.set();
+			motor_2.step.toggle();
 			st_run.mot[MOTOR_2].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			INCREMENT_ENCODER(MOTOR_2);
 		}
 		if (!motor_3.step.isNull() && (st_run.mot[MOTOR_3].substep_accumulator += st_run.mot[MOTOR_3].substep_increment) > 0) {
-			motor_3.step.set();
+			motor_3.step.toggle();
 			st_run.mot[MOTOR_3].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			INCREMENT_ENCODER(MOTOR_3);
 		}
 		if (!motor_4.step.isNull() && (st_run.mot[MOTOR_4].substep_accumulator += st_run.mot[MOTOR_4].substep_increment) > 0) {
-			motor_4.step.set();
+			motor_4.step.toggle();
 			st_run.mot[MOTOR_4].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			INCREMENT_ENCODER(MOTOR_4);
 		}
 		if (!motor_5.step.isNull() && (st_run.mot[MOTOR_5].substep_accumulator += st_run.mot[MOTOR_5].substep_increment) > 0) {
-			motor_5.step.set();
+			motor_5.step.toggle();
 			st_run.mot[MOTOR_5].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			INCREMENT_ENCODER(MOTOR_5);
 		}
 		if (!motor_6.step.isNull() && (st_run.mot[MOTOR_6].substep_accumulator += st_run.mot[MOTOR_6].substep_increment) > 0) {
-			motor_6.step.set();
+			motor_6.step.toggle();
 			st_run.mot[MOTOR_6].substep_accumulator -= st_run.dda_ticks_X_substeps;
 			INCREMENT_ENCODER(MOTOR_6);
 		}
 
 	} else if (interrupt_cause == kInterruptOnOverflow) {
-		motor_1.step.clear();							// turn step bits off
-		motor_2.step.clear();
-		motor_3.step.clear();
-		motor_4.step.clear();
-		motor_5.step.clear();
-		motor_6.step.clear();
+	//	motor_1.step.clear();							// turn step bits off
+	//	motor_2.step.clear();
+	//	motor_3.step.clear();
+	//	motor_4.step.clear();
+	//	motor_5.step.clear();
+	//	motor_6.step.clear();
 
 		if (--st_run.dda_ticks_downcount != 0) return;
 
