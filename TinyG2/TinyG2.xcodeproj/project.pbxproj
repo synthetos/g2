@@ -52,14 +52,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		D4037C051CD920A800BC72AD /* ArduinoDue */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ArduinoDue; sourceTree = "<group>"; };
-		D4037C061CD920B700BC72AD /* sbv300 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = sbv300; sourceTree = "<group>"; };
-		D4037C081CD920DB00BC72AD /* printrboardg2 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = printrboardg2; sourceTree = "<group>"; };
-		D40A24201AD5B9A600406A3A /* ArduinoDue.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ArduinoDue.gdb; sourceTree = "<group>"; };
-		D40A24211AD5B9A600406A3A /* ArduinoDue.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ArduinoDue.mk; sourceTree = "<group>"; };
-		D43C7AE71B155D0A007440D6 /* G2v9 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = G2v9; sourceTree = "<group>"; };
-		D4522DC61C455F660086AAE6 /* printrboardg2.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = printrboardg2.gdb; sourceTree = "<group>"; };
-		D4522DC71C455F660086AAE6 /* printrboardg2.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = printrboardg2.mk; sourceTree = "<group>"; };
+		D43FF6F51D52C8AF00FB5B53 /* board */ = {isa = PBXFileReference; lastKnownFileType = folder; path = board; sourceTree = "<group>"; };
 		D4522DC91C45F41D0086AAE6 /* tinyg2_info.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tinyg2_info.h; sourceTree = "<group>"; };
 		D457117B17053EFA00EA19A8 /* Makefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makefile; sourceTree = "<group>"; usesTabs = 1; xcLanguageSpecificationIdentifier = xcode.lang.sh; };
 		D47B744C1D4925B4004FAB53 /* device */ = {isa = PBXFileReference; lastKnownFileType = folder; path = device; sourceTree = "<group>"; };
@@ -105,7 +98,6 @@
 		D49177A11D21CFC50029CDEB /* settings_Printrbot_Simple_1403.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Printrbot_Simple_1403.h; sourceTree = "<group>"; };
 		D49177A21D21CFDB0029CDEB /* settings_Printrbot_Simple_1608.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Printrbot_Simple_1608.h; sourceTree = "<group>"; };
 		D4922F3F1CB8361B00A565FF /* boards.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = boards.mk; sourceTree = "<group>"; };
-		D49367D21B82C990000BB759 /* G2v9.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = G2v9.mk; sourceTree = "<group>"; };
 		D49367D71B87CA8A000BB759 /* temperature.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = temperature.cpp; sourceTree = "<group>"; };
 		D49367D81B87CA8A000BB759 /* temperature.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = temperature.h; sourceTree = "<group>"; };
 		D49367DB1B8E0AF1000BB759 /* error.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = error.h; sourceTree = "<group>"; };
@@ -122,9 +114,6 @@
 		D4AC39131C77C1F20098D685 /* settings_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_test.h; sourceTree = "<group>"; };
 		D4AC39141C77C1F20098D685 /* settings_Ultimaker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = settings_Ultimaker.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D4AC39151C77C1F20098D685 /* settings_zen7x12.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_zen7x12.h; sourceTree = "<group>"; };
-		D4AC39161C7BA71B0098D685 /* sbv300.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sbv300.mk; sourceTree = "<group>"; };
-		D4AC39181C7BA84D0098D685 /* g2_default.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = g2_default.gdb; sourceTree = "<group>"; };
-		D4AC39191C7BA9240098D685 /* sbv300.gdb */ = {isa = PBXFileReference; lastKnownFileType = text; path = sbv300.gdb; sourceTree = "<group>"; };
 		D4B6579C18B5C1DE00F8616C /* plan_exec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = plan_exec.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D4B6579E18B5C21500F8616C /* cycle_jogging.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cycle_jogging.cpp; sourceTree = "<group>"; };
 		D4B6579F18B5C21500F8616C /* cycle_probing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cycle_probing.cpp; sourceTree = "<group>"; };
@@ -136,10 +125,6 @@
 		D4B93DF01AAA9DFE00632FAB /* gpio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gpio.h; sourceTree = "<group>"; };
 		D4C10A501A4397AD00B3F2EA /* openocd.cfg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = openocd.cfg; sourceTree = "<group>"; };
 		D4D6453819BCAE3F0053705B /* plan_zoid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = plan_zoid.cpp; sourceTree = "<group>"; };
-		D4EB789B1B7BF2F70001B355 /* G2v9.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = G2v9.gdb; sourceTree = "<group>"; };
-		D4F226F01D088860008ED57C /* gquintic */ = {isa = PBXFileReference; lastKnownFileType = folder; path = gquintic; sourceTree = "<group>"; };
-		D4F226F11D088860008ED57C /* gquintic.gdb */ = {isa = PBXFileReference; lastKnownFileType = text; path = gquintic.gdb; sourceTree = "<group>"; };
-		D4F226F21D088860008ED57C /* gquintic.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = gquintic.mk; sourceTree = "<group>"; };
 		D4FEBFF81B0A65E30042EA32 /* index */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = index; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -154,29 +139,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		D40A240D1AD5B7C200406A3A /* board */ = {
-			isa = PBXGroup;
-			children = (
-				D4AC39181C7BA84D0098D685 /* g2_default.gdb */,
-				D4037C051CD920A800BC72AD /* ArduinoDue */,
-				D40A24201AD5B9A600406A3A /* ArduinoDue.gdb */,
-				D40A24211AD5B9A600406A3A /* ArduinoDue.mk */,
-				D4037C061CD920B700BC72AD /* sbv300 */,
-				D4AC39191C7BA9240098D685 /* sbv300.gdb */,
-				D4AC39161C7BA71B0098D685 /* sbv300.mk */,
-				D4F226F01D088860008ED57C /* gquintic */,
-				D4F226F11D088860008ED57C /* gquintic.gdb */,
-				D4F226F21D088860008ED57C /* gquintic.mk */,
-				D4037C081CD920DB00BC72AD /* printrboardg2 */,
-				D4522DC61C455F660086AAE6 /* printrboardg2.gdb */,
-				D4522DC71C455F660086AAE6 /* printrboardg2.mk */,
-				D43C7AE71B155D0A007440D6 /* G2v9 */,
-				D4EB789B1B7BF2F70001B355 /* G2v9.gdb */,
-				D49367D21B82C990000BB759 /* G2v9.mk */,
-			);
-			path = board;
-			sourceTree = "<group>";
-		};
 		D41D13F617374B7D00D522D9 /* settings */ = {
 			isa = PBXGroup;
 			children = (
@@ -258,7 +220,7 @@
 				D48F5A55172CB1FA00D0E055 /* xio.cpp */,
 				D48F5A81172CB21100D0E055 /* xio.h */,
 				D4922F3F1CB8361B00A565FF /* boards.mk */,
-				D40A240D1AD5B7C200406A3A /* board */,
+				D43FF6F51D52C8AF00FB5B53 /* board */,
 				D47B744C1D4925B4004FAB53 /* device */,
 				D41D13F617374B7D00D522D9 /* settings */,
 				D4FEBFF81B0A65E30042EA32 /* index */,
@@ -293,6 +255,20 @@
 			dependencies = (
 			);
 			name = "TinyG2 G2V9k";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
+		D43FF7141D537A5C00FB5B53 /* TinyG2 gQuadratic Test */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=TestQuadratic DEBUG=2";
+			buildConfigurationList = D43FF7151D537A5C00FB5B53 /* Build configuration list for PBXLegacyTarget "TinyG2 gQuadratic Test" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "TinyG2 gQuadratic Test";
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
@@ -380,17 +356,17 @@
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
-		D4F226F31D088A48008ED57C /* TinyG gQuintic PrintrbotPlus */ = {
+		D4F226F31D088A48008ED57C /* TinyG2 gQuintic PrintrbotPlus */ = {
 			isa = PBXLegacyTarget;
 			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=PrintrbotPlus BOARD=gquintic-a DEBUG=2";
-			buildConfigurationList = D4F226F41D088A48008ED57C /* Build configuration list for PBXLegacyTarget "TinyG gQuintic PrintrbotPlus" */;
+			buildConfigurationList = D4F226F41D088A48008ED57C /* Build configuration list for PBXLegacyTarget "TinyG2 gQuintic PrintrbotPlus" */;
 			buildPhases = (
 			);
 			buildToolPath = /usr/bin/make;
 			buildWorkingDirectory = .;
 			dependencies = (
 			);
-			name = "TinyG gQuintic PrintrbotPlus";
+			name = "TinyG2 gQuintic PrintrbotPlus";
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
@@ -443,7 +419,8 @@
 				D4B485B21AB1F3CB00C6614F /* TinyG2 V9 Shapeoko Dual-Y */,
 				D4037C091CDA42F300BC72AD /* TinyG printrboardG2v3 PrintrbotPlus */,
 				D4AC391A1C7BAB8E0098D685 /* TinyG sbv300 */,
-				D4F226F31D088A48008ED57C /* TinyG gQuintic PrintrbotPlus */,
+				D4F226F31D088A48008ED57C /* TinyG2 gQuintic PrintrbotPlus */,
+				D43FF7141D537A5C00FB5B53 /* TinyG2 gQuadratic Test */,
 				D457112317053BFB00EA19A8 /* index */,
 			);
 		};
@@ -519,6 +496,22 @@
 			buildSettings = {
 				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
 				PRODUCT_NAME = "TinyG2 G2V9k";
+			};
+			name = Release;
+		};
+		D43FF7161D537A5C00FB5B53 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		D43FF7171D537A5C00FB5B53 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
@@ -752,6 +745,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		D43FF7151D537A5C00FB5B53 /* Build configuration list for PBXLegacyTarget "TinyG2 gQuadratic Test" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D43FF7161D537A5C00FB5B53 /* Debug */,
+				D43FF7171D537A5C00FB5B53 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		D4522DD01C5FC8ED0086AAE6 /* Build configuration list for PBXLegacyTarget "TinyG2 G2Ref Ultimaker" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -824,7 +826,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		D4F226F41D088A48008ED57C /* Build configuration list for PBXLegacyTarget "TinyG gQuintic PrintrbotPlus" */ = {
+		D4F226F41D088A48008ED57C /* Build configuration list for PBXLegacyTarget "TinyG2 gQuintic PrintrbotPlus" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D4F226F51D088A48008ED57C /* Debug */,

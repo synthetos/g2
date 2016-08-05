@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "D4F226F31D088A48008ED57C"
-               BuildableName = "TinyG gQuintic PrintrbotPlus"
-               BlueprintName = "TinyG gQuintic PrintrbotPlus"
+               BuildableName = "TinyG2 gQuintic PrintrbotPlus"
+               BlueprintName = "TinyG2 gQuintic PrintrbotPlus"
                ReferencedContainer = "container:TinyG2.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -46,8 +46,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D4F226F31D088A48008ED57C"
-            BuildableName = "TinyG gQuintic PrintrbotPlus"
-            BlueprintName = "TinyG gQuintic PrintrbotPlus"
+            BuildableName = "TinyG2 gQuintic PrintrbotPlus"
+            BlueprintName = "TinyG2 gQuintic PrintrbotPlus"
             ReferencedContainer = "container:TinyG2.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -64,8 +64,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D4F226F31D088A48008ED57C"
-            BuildableName = "TinyG gQuintic PrintrbotPlus"
-            BlueprintName = "TinyG gQuintic PrintrbotPlus"
+            BuildableName = "TinyG2 gQuintic PrintrbotPlus"
+            BlueprintName = "TinyG2 gQuintic PrintrbotPlus"
             ReferencedContainer = "container:TinyG2.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
