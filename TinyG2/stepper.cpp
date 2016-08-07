@@ -593,7 +593,7 @@ static void _load_move()
 			if (st_pre.mot[MOTOR_3].direction != st_pre.mot[MOTOR_3].prev_direction) {
 				st_pre.mot[MOTOR_3].prev_direction = st_pre.mot[MOTOR_3].direction;
 				st_run.mot[MOTOR_3].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_3].substep_accumulator);
-                motor_3.setDirection(st_pre.mot[MOTOR_2].direction);
+                motor_3.setDirection(st_pre.mot[MOTOR_3].direction);
 			}
             motor_3.enable();
 			SET_ENCODER_STEP_SIGN(MOTOR_3, st_pre.mot[MOTOR_3].step_sign);
@@ -611,7 +611,7 @@ static void _load_move()
 			if (st_pre.mot[MOTOR_4].direction != st_pre.mot[MOTOR_4].prev_direction) {
 				st_pre.mot[MOTOR_4].prev_direction = st_pre.mot[MOTOR_4].direction;
 				st_run.mot[MOTOR_4].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_4].substep_accumulator);
-                motor_4.setDirection(st_pre.mot[MOTOR_2].direction);
+                motor_4.setDirection(st_pre.mot[MOTOR_4].direction);
 			}
             motor_4.enable();
 			SET_ENCODER_STEP_SIGN(MOTOR_4, st_pre.mot[MOTOR_4].step_sign);
@@ -629,7 +629,7 @@ static void _load_move()
 			if (st_pre.mot[MOTOR_5].direction != st_pre.mot[MOTOR_5].prev_direction) {
 				st_pre.mot[MOTOR_5].prev_direction = st_pre.mot[MOTOR_5].direction;
 				st_run.mot[MOTOR_5].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_5].substep_accumulator);
-                motor_5.setDirection(st_pre.mot[MOTOR_2].direction);
+                motor_5.setDirection(st_pre.mot[MOTOR_5].direction);
 			}
             motor_5.enable();
 			SET_ENCODER_STEP_SIGN(MOTOR_5, st_pre.mot[MOTOR_5].step_sign);
@@ -647,7 +647,7 @@ static void _load_move()
 			if (st_pre.mot[MOTOR_6].direction != st_pre.mot[MOTOR_6].prev_direction) {
 				st_pre.mot[MOTOR_6].prev_direction = st_pre.mot[MOTOR_6].direction;
 				st_run.mot[MOTOR_6].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_6].substep_accumulator);
-                motor_6.setDirection(st_pre.mot[MOTOR_2].direction);
+                motor_6.setDirection(st_pre.mot[MOTOR_6].direction);
 			}
             motor_6.enable();
 			SET_ENCODER_STEP_SIGN(MOTOR_6, st_pre.mot[MOTOR_6].step_sign);
