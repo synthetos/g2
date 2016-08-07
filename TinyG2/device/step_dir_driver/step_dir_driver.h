@@ -37,7 +37,7 @@ using Motate::pin_number;
 using Motate::OutputPin;
 using Motate::PWMOutputPin;
 using Motate::kStartHigh;
-using Motate::kPWMOn;
+using Motate::kNormal;
 using Motate::Timeout;
 
 
@@ -62,7 +62,7 @@ struct StepDirStepper : Stepper {
 	PWMOutputPin<vref_num> _vref;
 
 	// sets default pwm freq for all motor vrefs (commented line below also sets HiZ)
-    StepDirStepper(const uint32_t frequency = 500000) : Stepper{}, _vref{kPWMOn, frequency}
+    StepDirStepper(const uint32_t frequency = 500000) : Stepper{}, _vref{kNormal, frequency}
     {
     };
 
