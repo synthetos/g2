@@ -50,7 +50,7 @@
 namespace LEDs {
     NeoPixel<Motate::kLED_RGBWPixelPinNumber, 3> rgbw_leds {NeoPixelOrder::GRBW};
 
-    RGB_Color_t display_color[3] {{0, 0, 0, 10}, {0, 0, 0, 10}, {0, 0, 0, 10}};
+    RGB_Color_t display_color[3] {{0, 0, 0, 5}, {0, 0, 0, 5}, {0, 0, 0, 5}};
 
     bool alarm_red = false; // if we are in alarm, the tells us if we're going to red (pulsing)
     bool shutdown_white = false; // if we are in shutdown, the tells us if we're going to red (pulsing)
@@ -125,6 +125,12 @@ stat_t hardware_periodic()
             LEDs::alarm_red = !LEDs::alarm_red;
         }
 
+    // Transistion to HOMING state, fade to white
+    } else if ((LEDs::last_see_machine_state != MACHINE_CYCLE) && (new_machine_state == MACHINE_CYCLE)) {
+        // set to white
+        for (uint8_t pixel = 0; pixel < LEDs::rgbw_leds.count; pixel++) {
+            LEDs::display_color[pixel].startTransition(5000, 1, 1, 1);
+        }
     // catch transition from alarm to reset to black
     } else if ((LEDs::last_see_machine_state == MACHINE_ALARM) && (new_machine_state != MACHINE_ALARM)) {
         // set to black
@@ -142,11 +148,9 @@ stat_t hardware_periodic()
 
     LEDs::last_see_machine_state = new_machine_state;
 
-    bool updated = false;
     for (uint8_t pixel = 0; pixel < LEDs::rgbw_leds.count; pixel++) {
         if (LEDs::display_color[pixel].update()) {
             LEDs::rgbw_leds.setPixel(pixel, LEDs::display_color[pixel]);
-            updated = true;
         }
     }
 

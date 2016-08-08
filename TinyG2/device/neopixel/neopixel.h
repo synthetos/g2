@@ -276,10 +276,15 @@ struct RGB_Color_t : NeopixelColorTag {
     void getRGBW(uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &w) {
         float white = std::min(red, std::min(green, blue));
 
-        r = (red-white) * 255;
-        g = (green-white) * 255;
-        b = (blue-white) * 255;
+        r = (red) * 255;
+        g = (green) * 255;
+        b = (blue) * 255;
         w = white * 255;
+
+//        r = (red-white) * 255;
+//        g = (green-white) * 255;
+//        b = (blue-white) * 255;
+//        w = white * 255;
     };
     
 };
@@ -361,9 +366,9 @@ struct NeoPixel {
 
     Motate::Timeout _update_timeout;
     const uint32_t _update_timeout_ms;
-    bool _pixels_changed = false;
+    bool _pixels_changed = true;
 
-    constexpr NeoPixel(NeoPixelOrder new_order, uint32_t update_ms = 10) :
+    constexpr NeoPixel(NeoPixelOrder new_order, uint32_t update_ms = 1) :
     _pixel_order  {new_order},
     _white_offset {(((uint32_t)_pixel_order >> 6) & 0b11) << 3},
     _red_offset   {(((uint32_t)_pixel_order >> 4) & 0b11) << 3},
@@ -449,6 +454,8 @@ struct NeoPixel {
     void update()
     {
         if (!_pixel_pin.isTransferDone()) { return; }
+//        if (!_pixels_changed) { return; }
+//        _pixels_changed = false;
 
         if (_update_timeout.isPast())
         {

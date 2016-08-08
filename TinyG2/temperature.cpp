@@ -201,8 +201,8 @@ struct Thermistor {
 
 // Extruder 1
 Thermistor<kADC1_PinNumber> thermistor1 {
-    /*T1:*/     20.0, /*T2:*/  165.0, /*T3:*/ 255.0,
-    /*R1:*/ 140000.0, /*R2:*/  725.0, /*R3:*/ 170.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
+    /*T1:*/     20.0, /*T2:*/  190.0, /*T3:*/ 255.0,
+    /*R1:*/ 140000.0, /*R2:*/  490.0, /*R3:*/ 109.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
     };
 
 #if ADC1_AVAILABLE == 1
@@ -216,8 +216,8 @@ void ADCPin<kADC1_PinNumber>::interrupt() {
 
 // Extruder 2
 Thermistor<kADC2_PinNumber> thermistor2 {
-    /*T1:*/     20.0, /*T2:*/  165.0, /*T3:*/ 255.0,
-    /*R1:*/ 140000.0, /*R2:*/  725.0, /*R3:*/ 170.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
+    /*T1:*/     20.0, /*T2:*/  190.0, /*T3:*/ 255.0,
+    /*R1:*/ 140000.0, /*R2:*/  490.0, /*R3:*/ 109.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
     };
 #if ADC2_AVAILABLE == 1
 namespace Motate {
@@ -230,8 +230,8 @@ void ADCPin<kADC2_PinNumber>::interrupt() {
 
 // Heated bed
 Thermistor<kADC0_PinNumber> thermistor3 {
-    /*T1:*/     20.0, /*T2:*/  165.0, /*T3:*/ 255.0,
-    /*R1:*/ 140000.0, /*R2:*/  725.0, /*R3:*/ 170.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
+    /*T1:*/     20.0, /*T2:*/  190.0, /*T3:*/ 255.0,
+    /*R1:*/ 140000.0, /*R2:*/  490.0, /*R3:*/ 109.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
     };
 #if ADC0_AVAILABLE == 1
 namespace Motate {
@@ -263,7 +263,7 @@ PWMOutputPin<kOutput11_PinNumber> fet_pin3;// {kPWMPinInverted};
 
 
 // DO_3: Fan1A_PWM
-PWMOutputPin<kOutput3_PinNumber> fan_pin1;
+//PWMOutputPin<kOutput3_PinNumber> fan_pin1;
 // DO_4: Fan1B_PWM
 //PWMOutputPin<kOutput4_PinNumber> fan_pin2;
 // DO_5: Fan2A_PWM
@@ -427,6 +427,33 @@ PID pid2 { 7.5, 0.12, 400.0 }; // default values
 PID pid3 { 7.5, 0.12, 400.0 }; // default values
 Timeout pid_timeout;
 
+
+template<pin_number heater_fan_pinnum>
+struct HeaterFan {
+    PWMOutputPin<heater_fan_pinnum> heater_fan_pin;
+    float min_value = MIN_FAN_VALUE;
+    float max_value = MAX_FAN_VALUE;
+    float low_temp = MIN_FAN_TEMP;
+    float high_temp = MIN_FAN_TEMP;
+
+    HeaterFan() {
+        heater_fan_pin.setFrequency(200000);
+        heater_fan_pin = 0;
+    }
+
+    void newTemp(float temp) {
+        if ((temp > low_temp) && (temp < high_temp)) {
+            heater_fan_pin = max_value * (((temp - low_temp)/(high_temp - low_temp))*(1.0 - min_value) + min_value);
+        } else if (temp > high_temp) {
+            heater_fan_pin = max_value;
+        } else {
+            heater_fan_pin = 0.0;
+        }
+    }
+};
+
+HeaterFan<kOutput3_PinNumber> heater_fan1;
+
 /**** Static functions ****/
 
 
@@ -443,8 +470,8 @@ void temperature_init()
     fet_pin2.setFrequency(fet_pin2_freq);
     fet_pin3.setFrequency(fet_pin3_freq);
 
-    fan_pin1 = 0;
-    fan_pin1.setFrequency(200000);
+//    fan_pin1 = 0;
+//    fan_pin1.setFrequency(200000);
 //    fan_pin2 = 0;
 //    fan_pin2.setFrequency(50000);
 //    fan_pin3 = 1;
@@ -508,13 +535,7 @@ stat_t temperature_callback()
             }
         }
 
-        if ((temp > MIN_FAN_TEMP) && (temp < MAX_FAN_TEMP)) {
-            fan_pin1 = ((temp - MIN_FAN_TEMP)/(MAX_FAN_TEMP - MIN_FAN_TEMP))*(1.0 - MIN_FAN_VALUE) + MIN_FAN_VALUE;
-        } else if (temp > MAX_FAN_TEMP) {
-            fan_pin1 = 1.0;
-        } else {
-            fan_pin1 = 0.0;
-        }
+        heater_fan1.newTemp(temp);
 
         if (pid2._enable) {
             temp = thermistor2.temperature_exact();
@@ -728,6 +749,139 @@ stat_t cm_set_set_temperature(nvObj_t *nv)
 
     return (STAT_OK);
 }
+
+/*
+ * cm_get_fan_power()/cm_set_fan_power() - get/set the set high-value setting of the heater fan
+ */
+stat_t cm_get_fan_power(nvObj_t *nv)
+{
+    switch(_get_heater_number(nv)) {
+        case '1': { nv->value = min(1.0f, heater_fan1.max_value); break; }
+//        case '2': { nv->value = min(1.0f, heater_fan2.max_value); break; }
+//        case '3': { nv->value = min(1.0f, heater_fan3.max_value); break; }
+
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { nv->value = 0.0; break; }
+    }
+
+    nv->precision = GET_TABLE_WORD(precision);
+    nv->valuetype = TYPE_FLOAT;
+
+    return (STAT_OK);
+}
+stat_t cm_set_fan_power(nvObj_t *nv)
+{
+    switch(_get_heater_number(nv)) {
+        case '1': { heater_fan1.max_value = max(0.0f, nv->value); break; }
+//        case '2': { heater_fan2.max_value = max(0.0, nv->value); break; }
+//        case '3': { heater_fan3.max_value = max(0.0, nv->value); break; }
+
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { break; }
+    }
+    
+    return (STAT_OK);
+}
+
+/*
+ * cm_get_fan_min_power()/cm_set_fan_min_power() - get/set the set high-value setting of the heater fan
+ */
+stat_t cm_get_fan_min_power(nvObj_t *nv)
+{
+    switch(_get_heater_number(nv)) {
+        case '1': { nv->value = heater_fan1.min_value; break; }
+//        case '2': { nv->value = heater_fan2.min_value; break; }
+//        case '3': { nv->value = heater_fan3.min_value; break; }
+
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { nv->value = 0.0; break; }
+    }
+
+    nv->precision = GET_TABLE_WORD(precision);
+    nv->valuetype = TYPE_FLOAT;
+
+    return (STAT_OK);
+}
+stat_t cm_set_fan_min_power(nvObj_t *nv)
+{
+    switch(_get_heater_number(nv)) {
+        case '1': { heater_fan1.max_value = min(0.0f, nv->value); break; }
+//        case '2': { heater_fan2.min_value = min(0.0, nv->value); break; }
+//        case '3': { heater_fan3.min_value = min(0.0, nv->value); break; }
+
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { break; }
+    }
+    
+    return (STAT_OK);
+}
+
+/*
+ * cm_get_fan_low_temp()/cm_set_fan_low_temp() - get/set the set high-value setting of the heater fan
+ */
+stat_t cm_get_fan_low_temp(nvObj_t *nv)
+{
+    switch(_get_heater_number(nv)) {
+        case '1': { nv->value = heater_fan1.low_temp; break; }
+//        case '2': { nv->value = heater_fan2.low_temp; break; }
+//        case '3': { nv->value = heater_fan3.low_temp; break; }
+
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { nv->value = 0.0; break; }
+    }
+
+    nv->precision = GET_TABLE_WORD(precision);
+    nv->valuetype = TYPE_FLOAT;
+
+    return (STAT_OK);
+}
+stat_t cm_set_fan_low_temp(nvObj_t *nv)
+{
+    switch(_get_heater_number(nv)) {
+        case '1': { heater_fan1.low_temp = min(0.0f, nv->value); break; }
+//        case '2': { heater_fan2.low_temp = min(0.0f, nv->value); break; }
+//        case '3': { heater_fan3.low_temp = min(0.0f, nv->value); break; }
+
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { break; }
+    }
+    
+    return (STAT_OK);
+}
+
+/*
+ * cm_get_fan_high_temp()/cm_set_fan_high_temp() - get/set the set high-value setting of the heater fan
+ */
+stat_t cm_get_fan_high_temp(nvObj_t *nv)
+{
+    switch(_get_heater_number(nv)) {
+        case '1': { nv->value = heater_fan1.high_temp; break; }
+//        case '2': { nv->value = heater_fan2.high_temp; break; }
+//        case '3': { nv->value = heater_fan3.high_temp; break; }
+
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { nv->value = 0.0; break; }
+    }
+
+    nv->precision = GET_TABLE_WORD(precision);
+    nv->valuetype = TYPE_FLOAT;
+
+    return (STAT_OK);
+}
+stat_t cm_set_fan_high_temp(nvObj_t *nv)
+{
+    switch(_get_heater_number(nv)) {
+        case '1': { heater_fan1.high_temp = min(0.0f, nv->value); break; }
+//        case '2': { heater_fan2.high_temp = min(0.0f, nv->value); break; }
+//        case '3': { heater_fan3.high_temp = min(0.0f, nv->value); break; }
+
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { break; }
+    }
+    
+    return (STAT_OK);
+}
+
 /*
  * cm_get_at_temperature() - get a boolean if the heater has reaced the set value of the PID
  */

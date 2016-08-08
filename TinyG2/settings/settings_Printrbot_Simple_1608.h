@@ -74,7 +74,7 @@
 #define XIO_ENABLE_ECHO             false
 #define XIO_ENABLE_FLOW_CONTROL     FLOW_CONTROL_XON        // FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
 
-#define JSON_VERBOSITY              JV_MESSAGES             // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
+#define JSON_VERBOSITY              JV_LINENUM             // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
 #define JSON_SYNTAX_MODE            JSON_SYNTAX_STRICT      // one of JSON_SYNTAX_RELAXED, JSON_SYNTAX_STRICT
 
 #define QUEUE_REPORT_VERBOSITY		QR_OFF		            // one of: QR_OFF, QR_SINGLE, QR_TRIPLE
@@ -348,8 +348,10 @@
 
 /*** Extruders / Heaters ***/
 
-#define MIN_FAN_TEMP                50.0
-#define MAX_FAN_TEMP                100.0
+#define MIX_FAN_VALUE               0.4   // (he1fm) at MIN_FAN_TEMP the fan comes on at this spped (0.0-1.0)
+#define MAX_FAN_VALUE               0.75  // (he1fp) at MAX_FAN_TEMP the fan is at this spped (0.0-1.0)
+#define MIN_FAN_TEMP                50.0  // (he1fl) at this temp the fan starts to ramp up linearly
+#define MAX_FAN_TEMP                100.0 // (he1fh) at this temperature the fan is at "full speed" (MAX_FAN_VALUE)
 
 #define H1_DEFAULT_ENABLE           true
 #define H1_DEFAULT_P                7.0

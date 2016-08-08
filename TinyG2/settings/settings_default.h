@@ -842,7 +842,10 @@
 #define MIN_FAN_TEMP                40.0     // Temperature that the upper-extruder fan starts
 #endif
 #ifndef MIN_FAN_VALUE
-#define MIN_FAN_VALUE               0.4      // Minimum output value (0.0-1.0) of the upper-extrruder fan
+#define MIN_FAN_VALUE               0.4      // Minimum output value (0.0-1.0) of the upper-extruder fan
+#endif
+#ifndef MAX_FAN_VALUE
+#define MAX_FAN_VALUE               1.0      // Maximum output value (0.0-1.0) of the upper-extruder fan
 #endif
 #ifndef MAX_FAN_TEMP
 #define MAX_FAN_TEMP                150.0    // Temperature at and above which the upper-extruder fan is at 1.0
