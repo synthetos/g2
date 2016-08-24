@@ -78,6 +78,7 @@ typedef uint16_t magic_t;		        // magic number size
 #define HOMING_AXES 4           // number of axes that can be homed (assumes Zxyabc sequence)
 #define MOTORS      6           // number of motors on the board
 #define COORDS      6           // number of supported coordinate systems (1-6)
+#define TOOLS       6           // number of entries in tool table (1-6)
 #define PWMS        2           // number of supported PWM channels
 
 // Note: If you change COORDS you must adjust the entries in cfgArray table in config.c

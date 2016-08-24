@@ -414,6 +414,50 @@
 #define G59_B_OFFSET 0
 #define G59_C_OFFSET 0
 
+// *** DEFAULT TOOL TABLE OFFSETS ***
+
+#define TT1_X_OFFSET 0
+#define TT1_Y_OFFSET 0
+#define TT1_Z_OFFSET 0
+#define TT1_A_OFFSET 0
+#define TT1_B_OFFSET 0
+#define TT1_C_OFFSET 0
+
+#define TT2_X_OFFSET 0
+#define TT2_Y_OFFSET 0
+#define TT2_Z_OFFSET 0
+#define TT2_A_OFFSET 0
+#define TT2_B_OFFSET 0
+#define TT2_C_OFFSET 0
+
+#define TT3_X_OFFSET 0
+#define TT3_Y_OFFSET 0
+#define TT3_Z_OFFSET 0
+#define TT3_A_OFFSET 0
+#define TT3_B_OFFSET 0
+#define TT3_C_OFFSET 0
+
+#define TT4_X_OFFSET 0
+#define TT4_Y_OFFSET 0
+#define TT4_Z_OFFSET 0
+#define TT4_A_OFFSET 0
+#define TT4_B_OFFSET 0
+#define TT4_C_OFFSET 0
+
+#define TT5_X_OFFSET 0
+#define TT5_Y_OFFSET 0
+#define TT5_Z_OFFSET 0
+#define TT5_A_OFFSET 0
+#define TT5_B_OFFSET 0
+#define TT5_C_OFFSET 0
+
+#define TT6_X_OFFSET 0
+#define TT6_Y_OFFSET 0
+#define TT6_Z_OFFSET 0
+#define TT6_A_OFFSET 0
+#define TT6_B_OFFSET 0
+#define TT6_C_OFFSET 0
+
 /*** User-Defined Data Defaults ***/
 
 #define USER_DATA_A0 0

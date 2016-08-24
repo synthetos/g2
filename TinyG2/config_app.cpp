@@ -153,6 +153,13 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "ofs","ofsb",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul,(float *)&cs.null, 0 },			// B work offset
 	{ "ofs","ofsc",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul,(float *)&cs.null, 0 },			// C work offset
 
+	{ "tof","tofx",_f0, 3, cm_print_tof, cm_get_tof, set_nul,(float *)&cs.null, 0 },			// X tool offset
+	{ "tof","tofy",_f0, 3, cm_print_tof, cm_get_tof, set_nul,(float *)&cs.null, 0 },			// Y tool offset
+	{ "tof","tofz",_f0, 3, cm_print_tof, cm_get_tof, set_nul,(float *)&cs.null, 0 },			// Z tool offset
+	{ "tof","tofa",_f0, 3, cm_print_tof, cm_get_tof, set_nul,(float *)&cs.null, 0 },			// A tool offset
+	{ "tof","tofb",_f0, 3, cm_print_tof, cm_get_tof, set_nul,(float *)&cs.null, 0 },			// B tool offset
+	{ "tof","tofc",_f0, 3, cm_print_tof, cm_get_tof, set_nul,(float *)&cs.null, 0 },			// C tool offset
+
 	{ "hom","home",_f0, 0, cm_print_home,cm_get_home,set_01,(float *)&cm.homing_state, 0 },	    // homing state, invoke homing cycle
 	{ "hom","homx",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_X], false },	// X homed - Homing status group
 	{ "hom","homy",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_Y], false },	// Y homed
@@ -447,6 +454,57 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "g59","g59b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.offset[G59][AXIS_B], G59_B_OFFSET },
 	{ "g59","g59c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.offset[G59][AXIS_C], G59_C_OFFSET },
 
+	// Default values for current tool length offsets (not configurable, set to zero)
+	{ "tl","tlx",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tl_offset[AXIS_X], 0 },
+	{ "tl","tly",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tl_offset[AXIS_Y], 0 },
+	{ "tl","tlz",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tl_offset[AXIS_Z], 0 },
+	{ "tl","tla",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tl_offset[AXIS_A], 0 },
+	{ "tl","tlb",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tl_offset[AXIS_B], 0 },
+	{ "tl","tlc",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tl_offset[AXIS_C], 0 },
+
+	// Tool table offsets
+	{ "tt1","tt1x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[1][AXIS_X], TT1_X_OFFSET },
+	{ "tt1","tt1y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[1][AXIS_Y], TT1_Y_OFFSET },
+	{ "tt1","tt1z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[1][AXIS_Z], TT1_Z_OFFSET },
+	{ "tt1","tt1a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[1][AXIS_A], TT1_A_OFFSET },
+	{ "tt1","tt1b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[1][AXIS_B], TT1_B_OFFSET },
+	{ "tt1","tt1c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[1][AXIS_C], TT1_C_OFFSET },
+
+	{ "tt2","tt2x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[2][AXIS_X], TT2_X_OFFSET },
+	{ "tt2","tt2y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[2][AXIS_Y], TT2_Y_OFFSET },
+	{ "tt2","tt2z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[2][AXIS_Z], TT2_Z_OFFSET },
+	{ "tt2","tt2a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[2][AXIS_A], TT2_A_OFFSET },
+	{ "tt2","tt2b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[2][AXIS_B], TT2_B_OFFSET },
+	{ "tt2","tt2c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[2][AXIS_C], TT2_C_OFFSET },
+
+	{ "tt3","tt3x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[3][AXIS_X], TT3_X_OFFSET },
+	{ "tt3","tt3y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[3][AXIS_Y], TT3_Y_OFFSET },
+	{ "tt3","tt3z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[3][AXIS_Z], TT3_Z_OFFSET },
+	{ "tt3","tt3a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[3][AXIS_A], TT3_A_OFFSET },
+	{ "tt3","tt3b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[3][AXIS_B], TT3_B_OFFSET },
+	{ "tt3","tt3c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[3][AXIS_C], TT1_C_OFFSET },
+
+	{ "tt4","tt4x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[4][AXIS_X], TT4_X_OFFSET },
+	{ "tt4","tt4y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[4][AXIS_Y], TT4_Y_OFFSET },
+	{ "tt4","tt4z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[4][AXIS_Z], TT4_Z_OFFSET },
+	{ "tt4","tt4a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[4][AXIS_A], TT4_A_OFFSET },
+	{ "tt4","tt4b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[4][AXIS_B], TT4_B_OFFSET },
+	{ "tt4","tt4c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[4][AXIS_C], TT4_C_OFFSET },
+
+	{ "tt5","tt5x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[5][AXIS_X], TT5_X_OFFSET },
+	{ "tt5","tt5y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[5][AXIS_Y], TT5_Y_OFFSET },
+	{ "tt5","tt5z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[5][AXIS_Z], TT5_Z_OFFSET },
+	{ "tt5","tt5a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[5][AXIS_A], TT5_A_OFFSET },
+	{ "tt5","tt5b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[5][AXIS_B], TT5_B_OFFSET },
+	{ "tt5","tt5c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[5][AXIS_C], TT5_C_OFFSET },
+
+	{ "tt6","tt6x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[6][AXIS_X], TT6_X_OFFSET },
+	{ "tt6","tt6y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[6][AXIS_Y], TT6_Y_OFFSET },
+	{ "tt6","tt6z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[6][AXIS_Z], TT6_Z_OFFSET },
+	{ "tt6","tt6a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[6][AXIS_A], TT6_A_OFFSET },
+	{ "tt6","tt6b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[6][AXIS_B], TT6_B_OFFSET },
+	{ "tt6","tt6c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[6][AXIS_C], TT6_C_OFFSET },
+
 	{ "g92","g92x",_fic, 3, cm_print_cofs, get_flt, set_nul,(float *)&cm.gmx.origin_offset[AXIS_X], 0 },// G92 handled differently
 	{ "g92","g92y",_fic, 3, cm_print_cofs, get_flt, set_nul,(float *)&cm.gmx.origin_offset[AXIS_Y], 0 },
 	{ "g92","g92z",_fic, 3, cm_print_cofs, get_flt, set_nul,(float *)&cm.gmx.origin_offset[AXIS_Z], 0 },
@@ -739,6 +797,13 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","g57",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 	{ "","g58",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
 	{ "","g59",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+	{ "","tl",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// tl offsets
+	{ "","tt1",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// tt offsets
+	{ "","tt2",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// tt offsets
+	{ "","tt3",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// tt offsets
+	{ "","tt4",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// tt offsets
+	{ "","tt5",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// tt offsets
+	{ "","tt6",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// tt offsets
 	{ "","g92",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// origin offsets
 	{ "","g28",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// g28 home position
 	{ "","g30",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// g30 home position
@@ -746,6 +811,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 	{ "","mpo",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// machine position group
 	{ "","pos",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// work position group
 	{ "","ofs",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// work offset group
+	{ "","tof",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// tool length offset group
 	{ "","hom",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// axis homing state group
 	{ "","prb",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// probing state group
 	{ "","jog",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },	// axis jogging state group
@@ -780,7 +846,7 @@ const cfgItem_t cfgArray[] PROGMEM = {
 /***** Make sure these defines line up with any changes in the above table *****/
 
 #define NV_COUNT_UBER_GROUPS 	5 		// count of uber-groups, above
-#define STANDARD_GROUPS 		38		// count of standard groups, excluding diagnostic and user data groups
+#define STANDARD_GROUPS 		45		// count of standard groups, excluding diagnostic and user data groups
 
 #if (MOTORS >= 5)
 #define MOTOR_GROUP_5			1
@@ -929,7 +995,7 @@ static stat_t _do_axes(nvObj_t *nv)	// print parameters for all axis groups
 
 static stat_t _do_offsets(nvObj_t *nv)	// print offset parameters for G54-G59,G92, G28, G30
 {
-	char list[][TOKEN_LEN+1] = {"g54","g55","g56","g57","g58","g59","g92","g28","g30",""}; // must have a terminating element
+    char list[][TOKEN_LEN+1] = {"g54","g55","g56","g57","g58","g59","g92","g28","g30","tl","tt1","tt2","tt3","tt4","tt5","tt6",""}; // must have a terminating element
 	return (_do_group_list(nv, list));
 }
 
