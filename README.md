@@ -1,19 +1,19 @@
 [Waffle.io](http://waffle.io/synthetos/g2): [![Issues in Ready](https://badge.waffle.io/synthetos/g2.svg?label=ready&title=Ready)](http://waffle.io/synthetos/g2) [![Issues in Progress](https://badge.waffle.io/synthetos/g2.svg?label=in%20progress&title=In%20Progress)](http://waffle.io/synthetos/g2)
 
-# G2Core - Edge Branch
+# g2core - Edge Branch
 
-This branch (`edge`) is for the adventurous. It is not guaranteed to be stable. It's not guaranteed AT ALL.
+The g2core code base is still under development. This branch (`edge`) is currently the main branch, and the best branch for testing and development, as Master is way out of date.
 
-### Notes
+That said, Edge is for the adventurous. It is not guaranteed to be stable, but we do our best to achieve this. Once this branch has settled out a bit it will be pushed to Master.
 
+Notes (to be removed from this readme):
 - Get rid of the build instructions and point people at the correct wiki pages
 - Take a pass through those same wiki pages to make sure they are up to date
 - Add a Line Transmission Protocol wiki page - perhaps combined with the G sender information
-
 - Update Status Codes page - changes to some error responses as well
+- Remove _debug_trap()s_
 - Document Tram command
 - Document temerature control commands (and M100's)
-- Remove _debug_trap()s_
 - Changed JA to JT (removed JA and XJD)
 - Changed EJ to sticky
 - Incorporate Ryan's calibration setting functions
@@ -29,19 +29,41 @@ This branch (`edge`) is for the adventurous. It is not guaranteed to be stable. 
 - Hardware platform and version have been changed from numbers to strings
 
 - Need an overview of the MAJOR changes in edge 101, including:
-  - Multiple processor support (M3, M4, M7)
   - Multiple board (target) support; Device tree
   - Motate submodule
-  - 3d printer support / g2dialect
   - Beginnings of new IO system - make the new GPIO design public and invite comment
   - g2core is official split from TinyG code base
     - description of g2core project
     - include NodeJS g2core-api component, but not much more than that
 
+# Firmware Build 100 ``{fb:100.00}``
+### Feature Enhancements
+The fb:100 release is a major change from the fb:089 and earlier branches. It represents about a year of development and has many major feature enhancements summarized below . These are described in more detail in the rest of this readme and the linked wiki pages.
+- Support for 3d printing
+- Broader Gcode support and CNC features
+- Revamped and generalized GPIO system
+- Planner and other operating improvements for high-speed operation
+
+### Project Changes
+The project is now called g2core (even if the repo remains g2). As of this release the g2core code base is split from the TinyG code base. TinyG will continue to be supported for the Xmega 8-bit platform, and some new features will be added, specifically as relates to continued support for CNC milling applications. The g2core project will focus on various ARM platforms, as it currently does.
+
+In the fb:100 release the Motate hardware abstraction layer has been split into a separate project, and is included in g2core as a git submodule. This release also provides better support for cross platform / cross target compilation. A summary of project changes is provided below, with details in this readme and linked wiki pages.
+- Motate submodule
+- Cross platform / cross target support
+- Multiple processor support - ARM M3, M4, M7
+- Device tree / multiple motor types
+- Simplified host-to-board communication protocol
+- NodeJS host module for host-to-board communications
+
+### More To Come
+The fb:100 is the base for  number of other enhacements in the works or planned, including:
+- Enhancements to GPIO system (fb:100 is the first step in this)
+- Enhanced JSON processing and UI support
+- Enhancements to 3d printer support, including a simplified g2 printer dialect
 
 ## Changelog for Edge Branch
 
-### Edge branch, Build 100.06
+### Edge branch, Build 100.00
 
 Build 100.xx has a number of changes, mostly related to supporting 3D printing using G2. These include temperature controls, auto-bed leveling, planner performance improvements and active JSON comments in Gcode.
 
@@ -52,11 +74,15 @@ Build 100.xx also significantly advances the project structure to support multip
 #### Functional Changes:
 - Planner improvements to handle extreme cases found in some 3DP slicer outputs
 
-- `{ja:n}` Junction Aggression replaces Junction Acceleration. Cornering now obeys full jerk limitation instead of the centripetal acceleration heuristic. JA is now a scaled value that is nominally set to 1.000. Set to less than 1 for slower cornering (less aggressive), greater than 1 (but probably less than 2) for more aggressive cornering.
+- `{jt:...}` Junction Integration Time is now the way to set cornering speeds. Cornering now obeys full jerk limitation instead of the centripetal acceleration heuristic, making it much more accurate and more true to the jerk limits set for the machine. JT is a normalized scaled factor that is nominally set to 1.000. Set to less than 1 for slower cornering (less aggressive), greater than 1 (but probably less than 2) for more aggressive cornering. This command replaces Junction Acceleration `{ja:...}` and the axis Junction Deviation commands - e.g. `{xjd:0.01}`. Attempting to set JA or xJD will return an error.
 
-- Deprecated `{_jd:n}` as it was in support of the Junction Acceleration scheme.
+- Deprecated `{ja:...}` as it was in support of the Junction Acceleration scheme.
 
-- Added `{fbc:n}` to report configuration file used during compilation
+- Deprecated `{_jd:...}` as it was in support of the Junction Acceleration scheme.
+
+- Added `{fbs:n}` as a read-only parameter to report the git commit used during compilation
+
+- Added `{fbc:n}` as a read-only parameter to report the configuration file used during compilation
 
 - Added `G38.3`, `G38.4`, `G38.5` Gcodes to complete the G38.2 probing suite
 
@@ -66,7 +92,7 @@ Build 100.xx also significantly advances the project structure to support multip
 
 - Added `{pid1:n}`, `{pid2:n}`, `{pid3:n}` ADC PID groups. These codes are experimental and may change.
 
-- Added `{do1:n}` ... `{do12:n}` digital output controls for controlling fans. These are experimental and will change.
+- Added `{do1:n}` ... `{do12:n}` digital output controls for controlling general purpose IO such as fans. These are experimental and will change.
 
 - Added `{out1:n}` ... `{out12:n}` digital output state readers for reading the condition of do's. These are experimental and may change.
 
@@ -76,21 +102,17 @@ Build 100.xx also significantly advances the project structure to support multip
 
 - Added `Linemode` communication protocol, and provide guidance to use linemode for much simpler and more reliable application-level flow control
 
-- Footer format has changed. Checksum is no longer supported and has been removed `(CONFIRM THAT THIS IS A build 100 change and not earlier)`
+- Footer format has changed. Checksum is no longer supported and has been removed
 
 - Added `ENQ/ACK handshake`. If the host sends an ASCII ENQ (0x05) the board should respond with an ACK (0x06). This is provided to facilitate automated testing (See Github/Synthetos/tg_pytest)
 
-- Added `setpoint` to homing to accommodate setting home position for non-zero switches.
+- Homing will now set to the travel value of the positive or negative switch, as determined by the search direction. This allows homing to home to a maximum - for example - and set the homed location to the non-zero switche.
 
 - Exception reports now provide more information about the nature and location of the exception.
 
 - Made changes to the Status Codes. See Status Codes wiki page
 
 - Removed `{cv:n}` configuration version tag
-
-- Code level changes are numerous. Here are a few:
-  - Added `tinyg_info.h` to isolate revision info from tinyg.h
-  - Removed char_t casts
 
 #### G sender
 - Provide links to Node G Sender and instruction how to install and use
