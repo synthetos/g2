@@ -78,6 +78,7 @@ Build 100.xx also significantly advances the project structure to support multip
   - Added `Linemode` communication protocol, and provide guidance to use linemode for much simpler and more reliable application-level flow control
   - Footer format has changed. Checksum is no longer supported and has been removed
   - Added `ENQ/ACK handshake`. If the host sends an ASCII `ENQ (0x05)` the board should respond with an `ACK (0x06)`. This is provided to facilitate low-level communications startup and automated testing
+  - Added `{su:..}` to directly set a motor's [steps-per-unit](https://github.com/synthetos/g2/wiki/Configuration-for-Firmware-Version-0.99#motor-settings) value
   - Added `{fbs:n}` as a read-only parameter to report the git commit used during compilation
   - Added `{fbc:n}` as a read-only parameter to report the configuration file used during compilation
   - Removed `{cv:n}` configuration version tag
