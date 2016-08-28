@@ -4,10 +4,11 @@ before_install:
 install:
 - sudo apt-get install -qq lib32z1
 script:
-- cd g2core && make VERBOSE=1 COLOR=0 CONFIG=TestV9
-- cd g2core && make VERBOSE=1 COLOR=0 CONFIG=Othermill
-- cd g2core && make VERBOSE=1 COLOR=0 CONFIG=PrintrbotSimple1608
-- cd g2core && make VERBOSE=1 COLOR=0 CONFIG=sbv300
+  - cd g2core
+  - make VERBOSE=1 COLOR=0 CONFIG=TestV9
+  - make VERBOSE=1 COLOR=0 CONFIG=Othermill
+  - make VERBOSE=1 COLOR=0 CONFIG=PrintrbotSimple1608
+  - make VERBOSE=1 COLOR=0 CONFIG=sbv300
 deploy:
   provider: releases
   api_key:
