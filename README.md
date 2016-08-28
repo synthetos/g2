@@ -82,7 +82,8 @@ Build 100.xx also significantly advances the project structure to support multip
   - Added `{fbc:n}` as a read-only parameter to report the configuration file used during compilation
   - Removed `{cv:n}` configuration version tag
   - Exception reports now provide more information about the nature and location of the exception
-  - Changes to the Status Codes. See Status Codes wiki page or error.h
+  - Changes to [Status Codes](Status-Codes) (...or see error.h for source)
+  - Additional [`stat` machine states](Status-Reports#stat-values)
   - Removed code for embedded tests. These were a holdover from the TinyGv8 codebase and were not functional in g2. The code is now removed from the project.
 
 
