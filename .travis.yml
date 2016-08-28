@@ -1,10 +1,27 @@
----
 language: c
-
 before_install:
-  - sudo apt-get update -q
-
+- sudo apt-get update -q
 install:
-  - sudo apt-get install -qq lib32z1
-
-script: "cd Tools && make && cd ../TinyG2 && make"
+- sudo apt-get install -qq lib32z1
+script:
+- cd g2core && make VERBOSE=1 COLOR=0 CONFIG=TestV9
+- cd g2core && make VERBOSE=1 COLOR=0 CONFIG=Othermill
+- cd g2core && make VERBOSE=1 COLOR=0 CONFIG=PrintrbotSimple1608
+- cd g2core && make VERBOSE=1 COLOR=0 CONFIG=sbv300
+deploy:
+  provider: releases
+  api_key:
+    secure: hBB3dHzLM97onnpneoxpewDFYfmcDmeE6FPFRxplaGYROO7SjML8orFCGMLX1cEIlvn4lwzAB+NlE2kreujxiB/gEdZy5DNk8ts+QrbfRXax/VmCNgZYp0tOVn037UFi39rKzx8olbFTImdQypMVf5mdbusY64hTpWrrsZ4uBoU=
+  file:
+    - bin/Othermill-g2v9k/g2core.elf
+    - bin/Othermill-g2v9k/g2core.bin
+    - bin/PrintrbotSimple1608-printrboardG2v3/g2core.elf
+    - bin/PrintrbotSimple1608-printrboardG2v3/g2core.bin
+    - bin/TestV9-g2v9k/g2core.elf
+    - bin/TestV9-g2v9k/g2core.bin
+    - bin/sbv300-sbv300/g2core.elf
+    - bin/sbv300-sbv300/g2core.bin
+  skip_cleanup: true
+  on:
+    repo: synthetos/g2
+    #tags: true
