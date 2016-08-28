@@ -9,13 +9,13 @@ That said, Edge is for the adventurous. It is not guaranteed to be stable, but w
 ## Firmware Build 100 `{fb:100.00}`
 ### Feature Enhancements
 The fb:100 release is a major change from the fb:089 and earlier branches. It represents about a year of development and has many major feature enhancements summarized below. These are described in more detail in the rest of this readme and the linked wiki pages.
-- Broader Gcode support and CNC features
-- Support for 3d printing
-- Revamped and generalized GPIO system
+- New Gcode and CNC features
+- 3d printing support
+- GPIO system enhancements
 - Planner enhancements and other operating improvements for high-speed operation
 
 ### Project Changes
-The project is now called g2core (even if the repo remains g2). As of this release the g2core code base is split from the TinyG code base. TinyG will continue to be supported for the Xmega 8-bit platform, and new features will be added, specifically as relates to continued support for CNC milling applications. The g2core project will focus on various ARM platforms, as it currently does, and add functions that are not possible in the 8-bit platform.
+The project is now called g2core (even if the repo remains g2). As of this release the g2core code base is split from the TinyG code base. TinyG will continue to be supported for the Xmega 8-bit platform, and new features will be added, specifically as related to continued support for CNC milling applications. The g2core project will focus on various ARM platforms, as it currently does, and add functions that are not possible in the 8-bit platform.
 
 In this release the Motate hardware abstraction layer has been split into a separate project, and is included in g2core as a git submodule. This release also provides better support for cross platform / cross target compilation. A summary of project changes is provided below, with details in this readme and linked wiki pages.
 - Motate submodule
@@ -27,8 +27,8 @@ In this release the Motate hardware abstraction layer has been split into a sepa
 
 ### More To Come
 The fb:100 release is the base for  number of other enhancements in the works and planned, including:
-- Enhancements to GPIO system (fb:100 is the first step in this)
-- Enhanced JSON processing and UI support
+- Further enhancements to GPIO system
+- Additional JSON processing and UI support
 - Enhancements to 3d printer support, including a simplified g2 printer dialect
 
 ## Changelog for Edge Branch
@@ -37,22 +37,22 @@ The fb:100 release is the base for  number of other enhancements in the works an
 
 Build 100.xx has a number of changes, mostly related to extending Gcode support and supporting 3D printing using g2core. These include temperature controls, auto-bed leveling, planner performance improvements and active JSON comments in Gcode.
 
-Communications has been advanced to support a linemode protocol to greatly simplify host communications and flow control for very rapid Gcode streams. Please read the Communications pages for details. Also see the NodeJS G Sender docs if you are building a UI or host controller.
+Communications has advanced to support a linemode protocol to greatly simplify host communications and flow control for very rapid Gcode streams. Please read the Communications pages for details. Also see the NodeJS communications module docs if you are building a UI or host controller.
 
 Build 100.xx also significantly advances the project structure to support multiple processor architectures, hardware configurations and machine configurations in the same code base. Motate has been cleaved off into its own subproject. We recommend carefully reading the Dev pages if you are coding or compiling.
 
 #### Functional Changes:
 - **Gcode and CNC Changes**
-  - Included `G10 L10`, `G43`, `G49` tool length offset and added 32 slot tool table
+  - Included `G10 L1`, `G10 L10`, `G43`, `G49` tool length offset and added 32 slot tool table
   - Included `G10 L20` offset mode
   - Extended `G38.2` probing to also include `G38.3`, `G38.4`, `G38.5`
   - Homing can now be set to a non-zero switch. Homing will set to the travel value of the positive or negative switch, as determined by the search direction. This allows homing to home to a maximum - for example - and set the homed location to the non-zero switch.
 
 
 - **Planner and Motion Changes**
-  - Junction Integration Time `{jt:...}` is now the way to set cornering speeds. Cornering now obeys full jerk limitation instead of the centripetal acceleration heuristic, making it much more accurate and more true to the jerk limits set for the machine. JT is a normalized scaled factor that is nominally set to 1.000. Set to less than 1 for slower cornering (less aggressive), greater than 1 (but probably less than 2) for more aggressive cornering. This command replaces Junction Acceleration `{ja:...}` and the axis Junction Deviation commands - e.g. `{xjd:0.01}`. Attempting to set JA or xJD will return an error.
-  - Deprecated `{ja:...}` as it was in support of the Junction Acceleration scheme.
-  - Deprecated `{_jd:...}` as it was in support of the Junction Acceleration scheme.
+  - Junction Integration Time - the `{jt:...}` parameter is now the way to set cornering velocity limits. Cornering now obeys full jerk limitation instead of the centripetal acceleration heuristic, making it much more accurate and more true to the jerk limits set for the machine. JT is a normalized scaled factor that is nominally set to 1.000. Set to less than 1 for slower cornering (less aggressive), greater than 1 (but probably less than 2) for more aggressive cornering. This command replaces Junction Acceleration `{ja:...}` and the axis Junction Deviation commands - e.g. `{xjd:0.01}`.
+  - Deprecated `{ja:...}` global parameter. Will return error.
+  - Deprecated `{_jd:...}` per-axis parameter. Will return error.
 
 
 - **3D Printing Support**
@@ -70,26 +70,32 @@ Build 100.xx also significantly advances the project structure to support multip
 
 
 - **Active JSON comments** - i.e. JSON called from Gcode
-  - Added `M100 ({...})` active comment. Currently only supports temperature setting command. The semantics of the temperature commands are experimental and will be changed in later releases.
-  - Added `M101 ({...})` "wait-on-event" active comment. Currently only supports temperature wait command. The semantics of the temperature commands are experimental and will be changed in later releases.
+  - Added `M100 ({...})` active comment. Currently only supports temperature setting command.
+  - Added `M101 ({...})` "wait-on-event" active comment. Currently only supports temperature wait command.
 
 
 - **System and Communications**
   - Added `Linemode` communication protocol, and provide guidance to use linemode for much simpler and more reliable application-level flow control
   - Footer format has changed. Checksum is no longer supported and has been removed
-  - Added `ENQ/ACK handshake`. If the host sends an ASCII ENQ (0x05) the board should respond with an ACK (0x06). This is provided to facilitate automated testing (See Github/Synthetos/tg_pytest)
+  - Added `ENQ/ACK handshake`. If the host sends an ASCII `ENQ (0x05)` the board should respond with an `ACK (0x06)`. This is provided to facilitate low-level communications startup and automated testing
   - Added `{fbs:n}` as a read-only parameter to report the git commit used during compilation
   - Added `{fbc:n}` as a read-only parameter to report the configuration file used during compilation
-  - Exception reports now provide more information about the nature and location of the exception.
-  - Changes to the Status Codes. See Status Codes wiki page or error.h
   - Removed `{cv:n}` configuration version tag
+  - Exception reports now provide more information about the nature and location of the exception
+  - Changes to the Status Codes. See Status Codes wiki page or error.h
   - Removed code for embedded tests. These were a holdover from the TinyGv8 codebase and were not functional in g2. The code is now removed from the project.
+
 
 - **Project Structure and Motate**
   - Motate underpinnings and project structure have changed significantly to support multiple processor architectures, boards, and machine configurations cleanly in the same project. If this affects you please read up on the wiki.
 
+
 - **NodeJS g2core Communcications Module**
   - A pre-release of the NodeJS g2core communications module that uses Linemode protocol is available here. This will be superseded with the official release
+
+
+- **Automated Regression Testing**
+  - A simple Python functional and regression test suite is available in Githup/Synthetos/tg_pytest. Please feel free to use and extend, but be aware that we are not offering much support for this. If you are familiar with Python and JSON the Readme should have everything you need.
 
 
 #### Known Issues
