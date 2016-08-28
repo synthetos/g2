@@ -4,59 +4,29 @@
 
 The g2core code base is still under development. This branch (`edge`) is currently the main branch, and the best branch for testing and development, as Master is way out of date.
 
-That said, Edge is for the adventurous. It is not guaranteed to be stable, but we do our best to achieve this. Once this branch has settled out a bit it will be pushed to Master.
+That said, Edge is for the adventurous. It is not guaranteed to be stable, but we do our best to achieve this. Once edge build 100 has settled out a bit it will be pushed to Master.
 
-Notes (to be removed from this readme):
-- Get rid of the build instructions and point people at the correct wiki pages
-- Take a pass through those same wiki pages to make sure they are up to date
-- Add a Line Transmission Protocol wiki page - perhaps combined with the G sender information
-- Update Status Codes page - changes to some error responses as well
-- Remove _debug_trap()s_
-- Document Tram command
-- Document temerature control commands (and M100's)
-- Changed JA to JT (removed JA and XJD)
-- Changed EJ to sticky
-- Incorporate Ryan's calibration setting functions
-- edit readme and wiki pages for tinyg --> g2core
-- tg_pytest- ENQ function
-- removed embedded tests (had been disabled for some time)
-- All 4 g38 probes
-- G10 L20 mode
-- Changes to DIs and DOs
-  - mo and po
-  - in, out, adc
-  - fn will change in future releases
-- Hardware platform and version have been changed from numbers to strings
-
-- Need an overview of the MAJOR changes in edge 101, including:
-  - Multiple board (target) support; Device tree
-  - Motate submodule
-  - Beginnings of new IO system - make the new GPIO design public and invite comment
-  - g2core is official split from TinyG code base
-    - description of g2core project
-    - include NodeJS g2core-api component, but not much more than that
-
-# Firmware Build 100 ``{fb:100.00}``
+## Firmware Build 100 `{fb:100.00}`
 ### Feature Enhancements
-The fb:100 release is a major change from the fb:089 and earlier branches. It represents about a year of development and has many major feature enhancements summarized below . These are described in more detail in the rest of this readme and the linked wiki pages.
-- Support for 3d printing
+The fb:100 release is a major change from the fb:089 and earlier branches. It represents about a year of development and has many major feature enhancements summarized below. These are described in more detail in the rest of this readme and the linked wiki pages.
 - Broader Gcode support and CNC features
+- Support for 3d printing
 - Revamped and generalized GPIO system
-- Planner and other operating improvements for high-speed operation
+- Planner enhancements and other operating improvements for high-speed operation
 
 ### Project Changes
-The project is now called g2core (even if the repo remains g2). As of this release the g2core code base is split from the TinyG code base. TinyG will continue to be supported for the Xmega 8-bit platform, and some new features will be added, specifically as relates to continued support for CNC milling applications. The g2core project will focus on various ARM platforms, as it currently does.
+The project is now called g2core (even if the repo remains g2). As of this release the g2core code base is split from the TinyG code base. TinyG will continue to be supported for the Xmega 8-bit platform, and new features will be added, specifically as relates to continued support for CNC milling applications. The g2core project will focus on various ARM platforms, as it currently does, and add functions that are not possible in the 8-bit platform.
 
-In the fb:100 release the Motate hardware abstraction layer has been split into a separate project, and is included in g2core as a git submodule. This release also provides better support for cross platform / cross target compilation. A summary of project changes is provided below, with details in this readme and linked wiki pages.
+In this release the Motate hardware abstraction layer has been split into a separate project, and is included in g2core as a git submodule. This release also provides better support for cross platform / cross target compilation. A summary of project changes is provided below, with details in this readme and linked wiki pages.
 - Motate submodule
 - Cross platform / cross target support
-- Multiple processor support - ARM M3, M4, M7
+- Multiple processor support - ARM M3, M4, M7 cores
 - Device tree / multiple motor types
-- Simplified host-to-board communication protocol
+- Simplified host-to-board communication protocol (line mode)
 - NodeJS host module for host-to-board communications
 
 ### More To Come
-The fb:100 is the base for  number of other enhacements in the works or planned, including:
+The fb:100 release is the base for  number of other enhancements in the works and planned, including:
 - Enhancements to GPIO system (fb:100 is the first step in this)
 - Enhanced JSON processing and UI support
 - Enhancements to 3d printer support, including a simplified g2 printer dialect
@@ -65,65 +35,65 @@ The fb:100 is the base for  number of other enhacements in the works or planned,
 
 ### Edge branch, Build 100.00
 
-Build 100.xx has a number of changes, mostly related to supporting 3D printing using G2. These include temperature controls, auto-bed leveling, planner performance improvements and active JSON comments in Gcode.
+Build 100.xx has a number of changes, mostly related to extending Gcode support and supporting 3D printing using g2core. These include temperature controls, auto-bed leveling, planner performance improvements and active JSON comments in Gcode.
 
 Communications has been advanced to support a linemode protocol to greatly simplify host communications and flow control for very rapid Gcode streams. Please read the Communications pages for details. Also see the NodeJS G Sender docs if you are building a UI or host controller.
 
 Build 100.xx also significantly advances the project structure to support multiple processor architectures, hardware configurations and machine configurations in the same code base. Motate has been cleaved off into its own subproject. We recommend carefully reading the Dev pages if you are coding or compiling.
 
 #### Functional Changes:
-- Planner improvements to handle extreme cases found in some 3DP slicer outputs
+- **Gcode and CNC Changes**
+  - Included `G10 L10`, `G43`, `G49` tool length offset and added 32 slot tool table
+  - Included `G10 L20` offset mode
+  - Extended `G38.2` probing to also include `G38.3`, `G38.4`, `G38.5`
+  - Homing can now be set to a non-zero switch. Homing will set to the travel value of the positive or negative switch, as determined by the search direction. This allows homing to home to a maximum - for example - and set the homed location to the non-zero switch.
 
-- `{jt:...}` Junction Integration Time is now the way to set cornering speeds. Cornering now obeys full jerk limitation instead of the centripetal acceleration heuristic, making it much more accurate and more true to the jerk limits set for the machine. JT is a normalized scaled factor that is nominally set to 1.000. Set to less than 1 for slower cornering (less aggressive), greater than 1 (but probably less than 2) for more aggressive cornering. This command replaces Junction Acceleration `{ja:...}` and the axis Junction Deviation commands - e.g. `{xjd:0.01}`. Attempting to set JA or xJD will return an error.
 
-- Deprecated `{ja:...}` as it was in support of the Junction Acceleration scheme.
+- **Planner and Motion Changes**
+  - Junction Integration Time `{jt:...}` is now the way to set cornering speeds. Cornering now obeys full jerk limitation instead of the centripetal acceleration heuristic, making it much more accurate and more true to the jerk limits set for the machine. JT is a normalized scaled factor that is nominally set to 1.000. Set to less than 1 for slower cornering (less aggressive), greater than 1 (but probably less than 2) for more aggressive cornering. This command replaces Junction Acceleration `{ja:...}` and the axis Junction Deviation commands - e.g. `{xjd:0.01}`. Attempting to set JA or xJD will return an error.
+  - Deprecated `{ja:...}` as it was in support of the Junction Acceleration scheme.
+  - Deprecated `{_jd:...}` as it was in support of the Junction Acceleration scheme.
 
-- Deprecated `{_jd:...}` as it was in support of the Junction Acceleration scheme.
 
-- Added `{fbs:n}` as a read-only parameter to report the git commit used during compilation
+- **3D Printing Support**
+  - Planner improvements to handle extreme cases found in some 3DP slicer outputs
+  - Added automatic bed leveling (tramming) using 3 point probe and coordinate rotation
+  - Added `{he1:n}`, `{he2:n}`, `{he3:n}` heater control groups
+  - Added `{pid1:n}`, `{pid2:n}`, `{pid3:n}` ADC PID groups
+  - Note: The semantics of `{he:...}` and `{pid:...}` are still in development and may change.
 
-- Added `{fbc:n}` as a read-only parameter to report the configuration file used during compilation
 
-- Added `G38.3`, `G38.4`, `G38.5` Gcodes to complete the G38.2 probing suite
+- **GPIO Changes**
+  - Changed configuration for `{di1:n}` ... `{di12:n}` somewhat
+  - Added `{do1:n}` ... `{do12:n}` digital output controls for controlling general outputs such as fans
+  - Added `{out1:n}` ... `{out12:n}` digital output state readers for reading the condition of do's
 
-- Added automatic bed leveling (tramming) using 3 point probe and coordinate rotation
 
-- Added `{he1:n}`, `{he2:n}`, `{he3:n}` heater control groups. These codes are experimental and will change.
+- **Active JSON comments** - i.e. JSON called from Gcode
+  - Added `M100 ({...})` active comment. Currently only supports temperature setting command. The semantics of the temperature commands are experimental and will be changed in later releases.
+  - Added `M101 ({...})` "wait-on-event" active comment. Currently only supports temperature wait command. The semantics of the temperature commands are experimental and will be changed in later releases.
 
-- Added `{pid1:n}`, `{pid2:n}`, `{pid3:n}` ADC PID groups. These codes are experimental and may change.
 
-- Added `{do1:n}` ... `{do12:n}` digital output controls for controlling general purpose IO such as fans. These are experimental and will change.
+- **System and Communications**
+  - Added `Linemode` communication protocol, and provide guidance to use linemode for much simpler and more reliable application-level flow control
+  - Footer format has changed. Checksum is no longer supported and has been removed
+  - Added `ENQ/ACK handshake`. If the host sends an ASCII ENQ (0x05) the board should respond with an ACK (0x06). This is provided to facilitate automated testing (See Github/Synthetos/tg_pytest)
+  - Added `{fbs:n}` as a read-only parameter to report the git commit used during compilation
+  - Added `{fbc:n}` as a read-only parameter to report the configuration file used during compilation
+  - Exception reports now provide more information about the nature and location of the exception.
+  - Changes to the Status Codes. See Status Codes wiki page or error.h
+  - Removed `{cv:n}` configuration version tag
+  - Removed code for embedded tests. These were a holdover from the TinyGv8 codebase and were not functional in g2. The code is now removed from the project.
 
-- Added `{out1:n}` ... `{out12:n}` digital output state readers for reading the condition of do's. These are experimental and may change.
+- **Project Structure and Motate**
+  - Motate underpinnings and project structure have changed significantly to support multiple processor architectures, boards, and machine configurations cleanly in the same project. If this affects you please read up on the wiki.
 
-- Added `M100 ({...})` active comment. Currently only supports temperature setting command. The semantics of the temperature commands are experimental and will be changed in later releases.
+- **NodeJS g2core Communcications Module**
+  - A pre-release of the NodeJS g2core communications module that uses Linemode protocol is available here. This will be superseded with the official release
 
-- Added `M101 ({...})` "wait-on-event" active comment. Currently only supports temperature wait command. The semantics of the temperature commands are experimental and will be changed in later releases.
-
-- Added `Linemode` communication protocol, and provide guidance to use linemode for much simpler and more reliable application-level flow control
-
-- Footer format has changed. Checksum is no longer supported and has been removed
-
-- Added `ENQ/ACK handshake`. If the host sends an ASCII ENQ (0x05) the board should respond with an ACK (0x06). This is provided to facilitate automated testing (See Github/Synthetos/tg_pytest)
-
-- Homing will now set to the travel value of the positive or negative switch, as determined by the search direction. This allows homing to home to a maximum - for example - and set the homed location to the non-zero switche.
-
-- Exception reports now provide more information about the nature and location of the exception.
-
-- Made changes to the Status Codes. See Status Codes wiki page
-
-- Removed `{cv:n}` configuration version tag
-
-#### G sender
-- Provide links to Node G Sender and instruction how to install and use
-
-#### Project Structure and Motate Changes
-- Motate underpinnings and project structure have changed significantly to support multiple processor architectures, boards, and machine configurations cleanly in the same project. If this affects you please read up on the wiki.
 
 #### Known Issues
 - Communications bug for high-speed transmission
-- sbv300 configuration does not compile
-- Three compile warnings: `Changing start of section by 8 bytes` in ld.exe are thrown. These should be ignored (and if you know how to turn them off please let us know).
 
 
 ## Earlier Edges
@@ -132,11 +102,9 @@ Build 100.xx also significantly advances the project structure to support multip
 These changes are primarily fixes applied after testing
 - Fixes to spindle speed settings (082.11)
 - Fixes to build environments for Linux and other platforms
-- Fixes to planner operation from edge-replan-replan
 - Fixes for reporting error in inches mode
 
 ### Edge branch, build 082.10
-These changes are still under test. If you find bugs or other issues please log to Issues.
 - **[Digital IO (GPIO)](Digital-IO-(GPIO))** introduces major changes to the way switches and other inputs are handled. The digital inputs are completed, the digital outputs have not been. In short, inputs are now just numbered inputs that are mapped to axes, functions, and motion behaviors (feedholds).
   - **Your configurations will need to change to accommodate these changes.** See settings/settings_shapeoko2.h for an example of setup and use - pay particular attention to `axis settings` and the new `inputs` section.
   - Typing `$`, `$x`, `$di`, `$in` at the command line is also informative. Of course, all these commands are available as JSON, but in text mode you get the human readable annotations.
@@ -159,7 +127,7 @@ These changes are still under test. If you find bugs or other issues please log 
     - {xhi:N} - homing input - 0=disable axis for homing, 1-N=enable homing for this input (switch)
   - Note that setting the homing input to a non-zero value (1) enables homing for this axis, and (2) overrides whatever settings for that input for the duration of homing. So it's possible to set di1 (Xmin) as a limit switch and a homing switch. When not in homing it will be used as a limit switch.
 
-- **Safety Interlock** added.
+- **Safety Interlock** added
   - An input configured for interlock will invoke a feedhold when the interlock becomes diseangaged and restart movement when re-engaged.
   - {saf:0}, {saf:1} was added to enable or disable the interlock system.
   - There are optional settings for spindle and coolant actions on feedhold. See below
@@ -204,201 +172,6 @@ These changes are still under test. If you find bugs or other issues please log 
 
 * **Different Behaviors**. There are some behaviors that are different.
   * Feedhold / queue flush on v8 works with !%~ in one line. In g2 it requires a newline. Use !\n%\n  This is due to using a USB stack that is partly on the chip and not being able to get at the individual characters that far upstream. This will probably not change in v9.
-
-
-# Git Repo Notes
-
-We have standardized on `clang-format` for pre-commit hook to ensure formatting.
-
-To install the hooks:
-
-1. Install `clang-format` which should also install the `git-clang-format` utility.
-  - On OS X, it's in homebrew: `brew install clang-format`
-  - On Linux it should be in the appropriate repo
-  - On Windows -- *Please contribute these instructions*
-1. Now install the hook:
-  - On OSX or linx with a BASH-like shell:
-  ```bash
-  ln -s ${PWD}/git-hooks/pre-commit .git/hooks/pre-commit
-  ```
-
-
-# ---- DEPRECATED ----
-
-# Build Instructions
-
-### Prerequisites
-
-* You must have at least a valid POSIX-style shell environment with building utilities such as `make`, `mkdir`, and `bash`.
-    * On OS X this easily achieved by installing the XCode Command-Line Tools. The easiest method of installing the command-line tools is to run `xcode-select --install` from the Terminal. Full official instructions for installing them are [here](https://developer.apple.com/library/ios/technotes/tn2339/_index.html).
-    * On Linux you need to ensure that you have `make` installed, or use the package manager for you're flaovr of linux to obtain it. Something like this should work:
-    `sudo apt-get install git-core make`
-    * Command-line compiling on Windows is not currently supported. It's probably not difficult, we just don't have the instructions in place yet. (We're more than happy to accept pull requests! Thank you!) Please see [this wiki page](https://github.com/synthetos/g2/wiki/Compiling-G2-on-Windows-(Atmel-Studio-6.2)) for instructions on building using Atmel Studio 6.2.
-* You need to have this repo cloned via git or downloaded from GitHub as a zip.
-
-## Compiling
-
-First we need to decide what values we need for the following variables:
-
-* `PLATFORM` - To build TinyG2 to run on a Due and using the gShield pinout, you want the `PLATFORM` to be `gShield`. Luckily, that's the default. For other boards (most likely experimental or custom) please consult the `Makefile` for available options.
-* `SETTINGS_FILE` - You can use the default settings found in `settings/settings_default.h`, or you can create a new file in the settings directory, preferrably by copying one of the existing settings files, and then specify the name of the file (**not** including `settings/`) in the `SETTINGS_FILE` variable. The contents of this file effects the default parameters when the hardware is powered up or rest, since there isn't an EEPROM on some of these boards to store settings to. Almost all of these values can all be overriden from the serial interface, however.
-
-To specify one of the above variables, either set that variable name in the environment, or pass in the make command line:
-
-```bash
-# In the environment:
-export PLATFORM=gShield
-export SETTINGS_FILE=settings_default.h
-make
-
-# Or, on the make command line directly:
-make PLATFORM=gShield SETTINGS_FILE=settings_default.h
-
-#You can mix and match the above. The command line will trump the environment.
-export PLATFORM=gShield
-make SETTINGS_FILE=settings_default.h
-```
-
-The first time you call make, it will attempt to download and decompress the correct build tools (currently we only use the ARM gcc found [here](https://launchpad.net/gcc-arm-embedded)) into the Tools subdirectory, which may take a few minutes depending on your connection speed. (Note: This is the part we haven't complete for Windows currently.) Once that has been completed, it won't need to happen again.
-
-Each platform has it's own build subdirectory, and the resulting files can be found in `bin/${PLATFORM}`.
-
-## Debugging and loading
-
-In order to debug you need a debugger capable of debugging the chip you use. For the Due and V9 we use either a Atmel SAM-ICE (which is a OEM Segger J-Link locked to Atmel ARMs) or the cheaper and more recently released Atmel ICE. Either can be found at Mouser.com.
-
-You choose which debug adapter you wish to use by *copying* the `openocd.cfg.example` file to `openocd.cfg` and then editing the `openocd.cfg` file. Simply follow the instructions in that file. Hint: It's just uncommenting the correct lines.
-
-Once that is configured, you'll need to make sure the debugger is correctly connected to the hardware and plugged into the computer, and all of the hardware is powered properly.
-
-Then call `make debug` - don't forget to include any of the additional variables on your make command line, or it may build for the wrong platform. A few eaxmples:
-
-```bash
-# If you normally call this to build:
-make PLATFORM=UltimakerTests SETTINGS_FILE=my_settings.h
-
-# Then just add the "debug" to the end
-make PLATFORM=UltimakerTests SETTINGS_FILE=my_settings.h debug
-```
-
-This will build the code (if it needs it) and then open `gdb` connected to the hardware and reset and halt the TinyG2 system.
-
-### A very brief Embedded GDB primer
-
-Even if you are familiar with GDB, you may find a few important differences when using it with an embedded project. This will not be a thorough how-to on this topic, but will hopefully serve enough to get you started.
-
-Using `make debug` will call `gdb` (technically it's `arm-none-eabi-gdb` or whatever variant is specified in the makefile for your board, but we'll just call it `gdb` from now on) with parameters and configuration to:
-* Know which binary/elf file to use for this debug session.
-* Connect to the board using `openocd`.
-* And halt the board, and leave you at a command line prompt.
-
-Now for a few commands to get you started:
-
-#### Flashing the firmware onto the board
-
-`load` - Since `gdb` already knows what bianry/elf file to use, you simple have to type `load` at the `(gdb)` prompt. Here's an example of a succesful flash session:
-
-```bash
-(gdb) load
-Loading section .text, size 0x1da10 lma 0x80000
-Loading section .relocate, size 0x164 lma 0x9da10
-Start address 0x82c88, load size 121716
-Transfer rate: 14 KB/sec, 13524 bytes/write.
-(gdb)
-```
-
-#### Resetting the processor
-
-`monitor reset halt` - Once we flash new code, or if we just want the "program" to start over, we call `monitor reset halt` to reset and halt the processor. This will freeze the processor at the reset state, before any code has executed.
-
-You *must* call `monitor reset halt` after (or *immediately* before) a `load` command so that the processor starts from the new code. Otherwise, the processor will likely crash, sometimes after appearing to work for some time. **To avoid nightmare debug sessions, be sure you always follow `load` with `monitor reset halt`!**
-
-#### Quitting the debugger
-
-`q` or `quit` will exit GDB. If the processor is running, you may need to type `CTRL-C` to get the prompt first.
-
-You will often need to reset or power-cycle the board after quitting GDB, since it will likely leave it in a halt state.
-
-#### Running the code
-
-Full docs are [here](https://sourceware.org/gdb/current/onlinedocs/gdb/Continuing-and-Stepping.html#Continuing-and-Stepping) for `continue`, `step`, and `next`.
-
-`c` or `continue` - To resume the processor operating normally, you type `c` (or the full word `continue`) and hit return.
-
-Once it's running, gdb will not show a prompt, and you cannot see any output from the processor. To pause the processor again, hit `CTRL-C`.
-
-NOTE: If you are used to using gdb in a desktop OS, you will notice that we didn't call `run` -- in fact, it won't work. In embedding programming, you're driving the whole OS on the processor, not just running a single program.
-
-#### Step to the next line (into or over functions)
-
-`s` or `step` - Continue running your program until control reaches a different source line, then stop it and return control to GDB. This will step *into* functions, since that would change which line is being executed.
-
-`n` or `next` - Continue to the next source line in the current (innermost) stack frame. This will skip over function calls, since that would change which stack frame is executing.
-
-`fin` or `finish` - Continue running until just after function in the selected stack frame returns. Print the returned value (if any).
-
-#### Getting a backtrace (listing the function call stack)
-
-Full documentation is [here](https://sourceware.org/gdb/current/onlinedocs/gdb/Backtrace.html#Backtrace) for `bt` and related.
-
-`bt` or `backtrace` - Print a backtrace of the entire stack: one line per frame for all frames in the stack. (Note that this may get LONG, and you can make it stop with `CTRL-C`.)
-
-Example:
-```gdb
-(gdb) bt
-#0  0x00085df2 in _controller_HSM () at ./controller.cpp:172
-#1  controller_run () at ./controller.cpp:150
-#2  0x000889fc in main () at ./main.cpp:169
-```
-
-Note that the current execution frame is on the top, and `main()` is on the bottom.
-
-Interpretation: `main()` called `controller_run()`, which called `_controller_HSM()`, which is where we are "currently." It also tells us that that is specifically at line 172 of `./controller.cpp`.
-
-These are more advanced topics covered very well all over the internet, so I won't go into detail here. I will list a few usefull commands to start of your research, however:
-
-#### Breakpoints
-
-Documented [here](https://sourceware.org/gdb/current/onlinedocs/gdb/Set-Breaks.html#Set-Breaks).
-
-* `b` -- set a breakpoint. Will default to "here" but you can pass it a function name or a `filename:line` to break on a specific line.
-* `info b` -- show breakpoints.
-
-#### Showing Variables
-
-Documented [here](https://sourceware.org/gdb/current/onlinedocs/gdb/Variables.html#Variables)
-* `p expression` - execute the given expression and print the results. Takes most C syntax (but not all) in the expression. **Warning!** It is a common mistake to accidentally change the state or variables when trying to display them. For example, this is a terrible way to test if the `should_blow_up` variable is true:
-  ```gdb
-    (gdb) p should_blow_up=1
-    $1 = 1 '\001'
-    ```
-    It will actually *set* `should_blow_up` to true!! A check, like normal C, would be with the double equals:
-    ```gdb
-    (gdb) p should_blow_up==1
-    $2 = false
-    ```
-    `p` will also nicely print out entire structures. You may have to dereference pointers, however:
-    ```gdb
-    (gdb) p mb.r
-    $4 = (mpBuf_t *) 0x20071434 <mb+220>
-    (gdb) p *mb.r
-    $5 = {
-        pv = 0x20071368 <mb+16>,
-        nx = 0x20071500 <mb+424>,
-        # ... clipped some for brevity ...
-        jerk = 0,
-        recip_jerk = 0,
-        cbrt_jerk = 0,
-        gm = {
-            linenum = 0,
-            motion_mode = 0 '\000',
-            # ... clipped some for brevity ...
-            spindle_mode = 0 '\000'
-        }
-    }
-    (gdb)
-
-    ```
 
 ---
 
