@@ -27,8 +27,7 @@
 #else
 #define G2CORE_FIRMWARE_BUILD_STRING	"unknown"
 #endif
-#define G2CORE_FIRMWARE_VERSION			0.98						// firmware major version
-#define G2CORE_CONFIG_VERSION		    7							// CV values started at 5 to provide backwards compatibility
+#define G2CORE_FIRMWARE_VERSION			0.99						// firmware major version
 #define G2CORE_HARDWARE_PLATFORM		HW_PLATFORM_V9		        // hardware platform indicator (2 = Native Arduino Due)
 #define G2CORE_HARDWARE_VERSION		    HW_VERSION_TINYGV9K			// hardware platform revision number
 #define G2CORE_HARDWARE_VERSION_MAX     (G2CORE_HARDWARE_VERSION)
