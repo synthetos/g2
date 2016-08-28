@@ -291,20 +291,6 @@
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
-		D4A590981D6BA607004BF232 /* G2 gShield copy */ = {
-			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s BOARD=gShield";
-			buildConfigurationList = D4A590991D6BA607004BF232 /* Build configuration list for PBXLegacyTarget "G2 gShield copy" */;
-			buildPhases = (
-			);
-			buildToolPath = /usr/bin/make;
-			buildWorkingDirectory = .;
-			dependencies = (
-			);
-			name = "G2 gShield copy";
-			passBuildSettingsInEnvironment = 1;
-			productName = g3_due;
-		};
 		D4AC391A1C7BAB8E0098D685 /* G2 sbv300 */ = {
 			isa = PBXLegacyTarget;
 			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=sbv300 DEBUG=2";
@@ -426,7 +412,6 @@
 				D4F226F31D088A48008ED57C /* G2 gQuintic PrintrbotPlus */,
 				D43FF7141D537A5C00FB5B53 /* G2 gQuadratic Test */,
 				D457112317053BFB00EA19A8 /* index */,
-				D4A590981D6BA607004BF232 /* G2 gShield copy */,
 			);
 		};
 /* End PBXProject section */
@@ -634,26 +619,6 @@
 			};
 			name = Release;
 		};
-		D4A5909A1D6BA607004BF232 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BOARD = ArduinoDue;
-				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
-				PLATFORM = atmel_sam;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Debug;
-		};
-		D4A5909B1D6BA607004BF232 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BOARD = ArduinoDue;
-				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
-				PLATFORM = atmel_sam;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Release;
-		};
 		D4AC391C1C7BAB8E0098D685 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -787,15 +752,6 @@
 			buildConfigurations = (
 				D457112B17053BFB00EA19A8 /* Debug */,
 				D457112C17053BFB00EA19A8 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		D4A590991D6BA607004BF232 /* Build configuration list for PBXLegacyTarget "G2 gShield copy" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				D4A5909A1D6BA607004BF232 /* Debug */,
-				D4A5909B1D6BA607004BF232 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

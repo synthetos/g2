@@ -39,7 +39,7 @@ ifeq ("$(BASE_BOARD)","g2v9")
     export CHIP
     CHIP_LOWERCASE = sam3x8c
 
-    BOARD_PATH = ./board/g2v9
+    BOARD_PATH = ./board/G2v9
     SOURCE_DIRS += ${BOARD_PATH} device/step_dir_driver
 
     PLATFORM_BASE = ${MOTATE_PATH}/platform/atmel_sam
