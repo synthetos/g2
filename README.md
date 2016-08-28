@@ -79,8 +79,8 @@ Build 100.xx also significantly advances the project structure to support multip
   - Footer format has changed. Checksum is no longer supported and has been removed
   - Added `ENQ/ACK handshake`. If the host sends an ASCII `ENQ (0x05)` the board should respond with an `ACK (0x06)`. This is provided to facilitate low-level communications startup and automated testing
   - Added `{su:..}` to directly set a motor's [steps-per-unit](https://github.com/synthetos/g2/wiki/Configuration-for-Firmware-Version-0.99#motor-settings) value
-  - Added `{fbs:n}` as a read-only parameter to report the git commit used during compilation
-  - Added `{fbc:n}` as a read-only parameter to report the configuration file used during compilation
+  - Added [`{fbs:n}`](https://github.com/synthetos/g2/wiki/Configuration-for-Firmware-Version-0.99#fbs---firmware-build-string) as a read-only parameter to report the git commit used during compilation
+  - Added []`{fbc:n}`](https://github.com/synthetos/g2/wiki/Configuration-for-Firmware-Version-0.99#fbc---firmware-build-config) as a read-only parameter to report the configuration file used during compilation
   - Removed `{cv:n}` configuration version tag
   - Exception reports now provide more information about the nature and location of the exception
   - Changes to [Status Codes](https://github.com/synthetos/g2/wiki/Status-Codes) (...or see error.h for source)
