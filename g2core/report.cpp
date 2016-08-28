@@ -91,6 +91,8 @@ void _startup_helper(stat_t status, const char *msg)
     nv_reset_nv_list();
     nv_add_object("fv");        // firmware version
     nv_add_object("fb");        // firmware build
+    nv_add_object("fbs");       // firmware build string
+    nv_add_object("fbc");       // settings configuration file used
     nv_add_object("hp");        // hardware platform
     nv_add_object("hv");        // hardware version
     nv_add_object("id");        // hardware ID
