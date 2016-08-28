@@ -78,13 +78,20 @@ Build 100.xx also significantly advances the project structure to support multip
   - Added `Linemode` communication protocol, and provide guidance to use linemode for much simpler and more reliable application-level flow control
   - Footer format has changed. Checksum is no longer supported and has been removed
   - Added `ENQ/ACK handshake`. If the host sends an ASCII `ENQ (0x05)` the board should respond with an `ACK (0x06)`. This is provided to facilitate low-level communications startup and automated testing
-  - Added `{su:..}` to directly set a motor's [steps-per-unit](https://github.com/synthetos/g2/wiki/Configuration-for-Firmware-Version-0.99#motor-settings) value
+  - Added [`{su:..}`](https://github.com/synthetos/g2/wiki/Configuration-for-Firmware-Version-0.99#motor-settings) to directly set a motor's steps-per-unit value
   - Added [`{fbs:n}`](https://github.com/synthetos/g2/wiki/Configuration-for-Firmware-Version-0.99#fbs---firmware-build-string) as a read-only parameter to report the git commit used during compilation
   - Added [`{fbc:n}`](https://github.com/synthetos/g2/wiki/Configuration-for-Firmware-Version-0.99#fbc---firmware-build-config) as a read-only parameter to report the configuration file used during compilation
   - Removed `{cv:n}` configuration version tag
   - Exception reports now provide more information about the nature and location of the exception
   - Changes to [Status Codes](https://github.com/synthetos/g2/wiki/Status-Codes) (...or see error.h for source)
-  - Additional [`stat` machine states](https://github.com/synthetos/g2/wiki/Status-Reports#stat-values)
+  - Additional [`stat`](https://github.com/synthetos/g2/wiki/Status-Reports#stat-values) machine states
+  - Removed `{js:...}` JSON syntax. Responses are now always Strict. Accepts Strict or Relaxed on input
+  - Removed `{ec:...}` Expand CR to CRLF
+  - Removed `{ee:...}` Echo command
+  - Removed `{ml:...}` Minimum line segment hidden parameter
+  - Removed `{ma:...}` Minimum arc segment hidden parameter
+  - Removed `{ms:...}` Minimum segment time hidden parameter
+  
   - Removed code for embedded tests. These were a holdover from the TinyGv8 codebase and were not functional in g2. The code is now removed from the project.
 
 
