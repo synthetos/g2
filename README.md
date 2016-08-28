@@ -50,7 +50,7 @@ Build 100.xx also significantly advances the project structure to support multip
 
 
 - **Planner and Motion Changes**
-  - Junction Integration Time - the `{jt:...}` parameter is now the way to set cornering velocity limits. Cornering now obeys full jerk limitation instead of the centripetal acceleration heuristic, making it much more accurate and more true to the jerk limits set for the machine. JT is a normalized scaled factor that is nominally set to 1.000. Set to less than 1 for slower cornering (less aggressive), greater than 1 (but probably less than 2) for more aggressive cornering. This command replaces Junction Acceleration `{ja:...}` and the axis Junction Deviation commands - e.g. `{xjd:0.01}`.
+  - Junction Integration Time - the `{jt:...}` parameter is now the way to set cornering velocity limits. Cornering now obeys full jerk limitation instead of the centripetal acceleration heuristic, making it much more accurate and more true to the jerk limits set for the machine. JT is a normalized scaled factor that is nominally set to 1.000. Set to less than 1 for slower cornering (less aggressive), greater than 1 (but probably less than 2) for more aggressive cornering. This parameter replaces Junction Acceleration `{ja:...}` and the axis Junction Deviation commands - e.g. `{xjd:0.01}`.
   - Deprecated `{ja:...}` global parameter. Will return error.
   - Deprecated `{_jd:...}` per-axis parameter. Will return error.
 
@@ -91,7 +91,7 @@ Build 100.xx also significantly advances the project structure to support multip
   - Removed `{ml:...}` Minimum line segment hidden parameter
   - Removed `{ma:...}` Minimum arc segment hidden parameter
   - Removed `{ms:...}` Minimum segment time hidden parameter
-  
+
   - Removed code for embedded tests. These were a holdover from the TinyGv8 codebase and were not functional in g2. The code is now removed from the project.
 
 
