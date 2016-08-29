@@ -88,6 +88,7 @@ Build 100.xx also significantly advances the project structure to support multip
   - Removed `{js:...}` JSON syntax. Responses are now always Strict. Accepts Strict or Relaxed on input
   - Removed `{ec:...}` Expand CR to CRLF
   - Removed `{ee:...}` Echo command
+  - Removed `{baud:...}` Set baud rate command
   - Removed `{ml:...}` Minimum line segment hidden parameter
   - Removed `{ma:...}` Minimum arc segment hidden parameter
   - Removed `{ms:...}` Minimum segment time hidden parameter
