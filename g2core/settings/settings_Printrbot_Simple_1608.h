@@ -92,6 +92,8 @@
 
 // *** motor settings ************************************************************************************
 
+#define MOTOR_POWER_TIMEOUT         30 // don't disable motors (without an explicit {md:0}) for 30 seconds
+
 #define MOTOR_POWER_MODE            MOTOR_POWERED_IN_CYCLE  // default motor power mode (see cmMotorPowerMode in stepper.h)
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
 #define M1_MOTOR_MAP                AXIS_X                  // 1ma
@@ -117,7 +119,7 @@
 #define M2_TRAVEL_PER_REV           8
 #define M2_MICROSTEPS               32
 #define M2_POLARITY                 1
-#define M2_POWER_MODE               MOTOR_ALWAYS_POWERED
+#define M2_POWER_MODE               MOTOR_POWER_MODE
 #define M2_POWER_LEVEL              0.4
 
 // 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev

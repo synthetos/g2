@@ -25,4 +25,4 @@ deploy:
   skip_cleanup: true
   on:
     repo: synthetos/g2
-    #tags: true
+    tags: true
