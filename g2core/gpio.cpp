@@ -82,9 +82,14 @@ struct ioDigitalInputExt {
      * Note that it may cause an interrupt to fire *immediately*!
      * intValue defaults to kPinInterruptOnChange|kPinInterruptPriorityMedium if not specified.
      */
-    IRQPin<input_pin_num>  input_pin  {kPullUp|kDebounce, [&](){this->pin_changed();}};
+    d_in_t *in;  // array index is one less than input number
+    IRQPin<input_pin_num>  input_pin;
 
-    d_in_t *in {&d_in[ext_pin_number-1]};  // array index is one less than input number
+    ioDigitalInputExt() : in {&d_in[ext_pin_number-1]}, input_pin {kPullUp|kDebounce, [&]{this->pin_changed();}} {
+    };
+
+    ioDigitalInputExt(const ioDigitalInputExt&) = delete; // delete copy
+    ioDigitalInputExt(ioDigitalInputExt&&) = delete;      // delete move
 
     void reset() {
         if (in->mode == IO_MODE_DISABLED) {
