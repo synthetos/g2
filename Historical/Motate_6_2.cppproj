@@ -1,0 +1,500 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectVersion>6.2</ProjectVersion>
+    <ToolchainName>com.Atmel.ARMGCC.CPP</ToolchainName>
+    <ProjectGuid>{d7779b24-5cd6-4a1b-893c-2cae8cf7a3a0}</ProjectGuid>
+    <avrdevice>ATSAM3X8C</avrdevice>
+    <avrdeviceseries>none</avrdeviceseries>
+    <OutputType>Executable</OutputType>
+    <Language>CPP</Language>
+    <OutputFileName>$(MSBuildProjectName)</OutputFileName>
+    <OutputFileExtension>.elf</OutputFileExtension>
+    <OutputDirectory>$(MSBuildProjectDirectory)\$(Configuration)</OutputDirectory>
+    <AssemblyName>Motate</AssemblyName>
+    <Name>Motate</Name>
+    <RootNamespace>Motate</RootNamespace>
+    <ToolchainFlavour>Native</ToolchainFlavour>
+    <KeepTimersRunning>true</KeepTimersRunning>
+    <OverrideVtor>false</OverrideVtor>
+    <CacheFlash>true</CacheFlash>
+    <ProgFlashFromRam>true</ProgFlashFromRam>
+    <RamSnippetAddress>0x20000000</RamSnippetAddress>
+    <UncachedRange />
+    <preserveEEPROM>true</preserveEEPROM>
+    <OverrideVtorValue>exception_table</OverrideVtorValue>
+    <BootSegment>2</BootSegment>
+    <eraseonlaunchrule>0</eraseonlaunchrule>
+    <AsfFrameworkConfig>
+      <framework-data xmlns="">
+        <options />
+        <configurations />
+        <files />
+        <documentation help="" />
+        <offline-documentation help="" />
+        <dependencies>
+          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.21.0" />
+        </dependencies>
+      </framework-data>
+    </AsfFrameworkConfig>
+    <avrtool>com.atmel.avrdbg.tool.atmelice</avrtool>
+    <com_atmel_avrdbg_tool_atmelice>
+      <ToolOptions>
+        <InterfaceProperties>
+          <SwdClock>2000000</SwdClock>
+        </InterfaceProperties>
+        <InterfaceName>SWD</InterfaceName>
+      </ToolOptions>
+      <ToolType>com.atmel.avrdbg.tool.atmelice</ToolType>
+      <ToolNumber>J41800021206</ToolNumber>
+      <ToolName>Atmel-ICE</ToolName>
+    </com_atmel_avrdbg_tool_atmelice>
+    <avrtoolinterface>SWD</avrtoolinterface>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Stub' ">
+    <ToolchainSettings>
+      <ArmGccCpp>
+        <armgcc.common.outputfiles.hex>True</armgcc.common.outputfiles.hex>
+        <armgcc.common.outputfiles.lss>True</armgcc.common.outputfiles.lss>
+        <armgcc.common.outputfiles.eep>True</armgcc.common.outputfiles.eep>
+        <armgcc.common.outputfiles.bin>True</armgcc.common.outputfiles.bin>
+        <armgcc.common.outputfiles.srec>True</armgcc.common.outputfiles.srec>
+        <armgcc.compiler.symbols.DefSymbols>
+          <ListValues>
+            <Value>NDEBUG</Value>
+          </ListValues>
+        </armgcc.compiler.symbols.DefSymbols>
+        <armgcc.compiler.directories.IncludePaths>
+          <ListValues>
+            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel\Device\ATMEL\sam3xa\include</Value>
+            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel</Value>
+            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel\CMSIS\Include</Value>
+            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel\Device\ATMEL</Value>
+          </ListValues>
+        </armgcc.compiler.directories.IncludePaths>
+        <armgcc.compiler.optimization.level>Optimize for size (-Os)</armgcc.compiler.optimization.level>
+        <armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection>True</armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection>
+        <armgcc.compiler.warnings.AllWarnings>True</armgcc.compiler.warnings.AllWarnings>
+        <armgcccpp.compiler.symbols.DefSymbols>
+          <ListValues>
+            <Value>NDEBUG</Value>
+          </ListValues>
+        </armgcccpp.compiler.symbols.DefSymbols>
+        <armgcccpp.compiler.directories.IncludePaths>
+          <ListValues>
+            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel\Device\ATMEL\sam3xa\include</Value>
+            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel</Value>
+            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel\CMSIS\Include</Value>
+            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel\Device\ATMEL</Value>
+          </ListValues>
+        </armgcccpp.compiler.directories.IncludePaths>
+        <armgcccpp.compiler.optimization.level>Optimize for size (-Os)</armgcccpp.compiler.optimization.level>
+        <armgcccpp.compiler.optimization.PrepareFunctionsForGarbageCollection>True</armgcccpp.compiler.optimization.PrepareFunctionsForGarbageCollection>
+        <armgcccpp.compiler.warnings.AllWarnings>True</armgcccpp.compiler.warnings.AllWarnings>
+        <armgcccpp.linker.libraries.Libraries>
+          <ListValues>
+            <Value>libm</Value>
+          </ListValues>
+        </armgcccpp.linker.libraries.Libraries>
+        <armgcccpp.linker.libraries.LibrarySearchPaths>
+          <ListValues>
+            <Value>../cmsis/linkerScripts</Value>
+          </ListValues>
+        </armgcccpp.linker.libraries.LibrarySearchPaths>
+        <armgcccpp.linker.optimization.GarbageCollectUnusedSections>True</armgcccpp.linker.optimization.GarbageCollectUnusedSections>
+        <armgcccpp.linker.miscellaneous.LinkerFlags>-Tsam3x8c_flash.ld</armgcccpp.linker.miscellaneous.LinkerFlags>
+        <armgcccpp.preprocessingassembler.general.IncludePaths>
+          <ListValues>
+            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel\Device\ATMEL\sam3xa\include</Value>
+            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel</Value>
+            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel\CMSIS\Include</Value>
+            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel\Device\ATMEL</Value>
+          </ListValues>
+        </armgcccpp.preprocessingassembler.general.IncludePaths>
+      </ArmGccCpp>
+    </ToolchainSettings>
+    <UsesExternalMakeFile>True</UsesExternalMakeFile>
+    <OutputDirectory />
+    <BuildTarget>all</BuildTarget>
+    <CleanTarget>clean</CleanTarget>
+    <ExternalMakeFilePath>Makefile-Atmel-Studio-Stub</ExternalMakeFilePath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'PrintrbotPlay-v3' ">
+    <ToolchainSettings>
+      <ArmGccCpp xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+        <armgcc.common.outputfiles.hex>True</armgcc.common.outputfiles.hex>
+        <armgcc.common.outputfiles.lss>True</armgcc.common.outputfiles.lss>
+        <armgcc.common.outputfiles.eep>True</armgcc.common.outputfiles.eep>
+        <armgcc.common.outputfiles.bin>True</armgcc.common.outputfiles.bin>
+        <armgcc.common.outputfiles.srec>True</armgcc.common.outputfiles.srec>
+        <armgcc.compiler.symbols.DefSymbols>
+          <ListValues>
+            <Value>NDEBUG</Value>
+          </ListValues>
+        </armgcc.compiler.symbols.DefSymbols>
+        <armgcc.compiler.directories.IncludePaths>
+          <ListValues>
+            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel\Device\ATMEL\sam3xa\include</Value>
+            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel</Value>
+            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel\CMSIS\Include</Value>
+            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel\Device\ATMEL</Value>
+          </ListValues>
+        </armgcc.compiler.directories.IncludePaths>
+        <armgcc.compiler.optimization.level>Optimize for size (-Os)</armgcc.compiler.optimization.level>
+        <armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection>True</armgcc.compiler.optimization.PrepareFunctionsForGarbageCollection>
+        <armgcc.compiler.warnings.AllWarnings>True</armgcc.compiler.warnings.AllWarnings>
+        <armgcccpp.compiler.symbols.DefSymbols>
+          <ListValues>
+            <Value>NDEBUG</Value>
+          </ListValues>
+        </armgcccpp.compiler.symbols.DefSymbols>
+        <armgcccpp.compiler.directories.IncludePaths>
+          <ListValues>
+            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel\Device\ATMEL\sam3xa\include</Value>
+            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel</Value>
+            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel\CMSIS\Include</Value>
+            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel\Device\ATMEL</Value>
+          </ListValues>
+        </armgcccpp.compiler.directories.IncludePaths>
+        <armgcccpp.compiler.optimization.level>Optimize for size (-Os)</armgcccpp.compiler.optimization.level>
+        <armgcccpp.compiler.optimization.PrepareFunctionsForGarbageCollection>True</armgcccpp.compiler.optimization.PrepareFunctionsForGarbageCollection>
+        <armgcccpp.compiler.warnings.AllWarnings>True</armgcccpp.compiler.warnings.AllWarnings>
+        <armgcccpp.linker.libraries.Libraries>
+          <ListValues>
+            <Value>libm</Value>
+          </ListValues>
+        </armgcccpp.linker.libraries.Libraries>
+        <armgcccpp.linker.libraries.LibrarySearchPaths>
+          <ListValues>
+            <Value>../cmsis/linkerScripts</Value>
+          </ListValues>
+        </armgcccpp.linker.libraries.LibrarySearchPaths>
+        <armgcccpp.linker.optimization.GarbageCollectUnusedSections>True</armgcccpp.linker.optimization.GarbageCollectUnusedSections>
+        <armgcccpp.linker.miscellaneous.LinkerFlags>-Tsam3x8c_flash.ld</armgcccpp.linker.miscellaneous.LinkerFlags>
+        <armgcccpp.preprocessingassembler.general.IncludePaths>
+          <ListValues>
+            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel\Device\ATMEL\sam3xa\include</Value>
+            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel</Value>
+            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel\CMSIS\Include</Value>
+            <Value>%24(ToolchainDir)\..\..\CMSIS_Atmel\Device\ATMEL</Value>
+          </ListValues>
+        </armgcccpp.preprocessingassembler.general.IncludePaths>
+      </ArmGccCpp>
+    </ToolchainSettings>
+    <UsesExternalMakeFile>True</UsesExternalMakeFile>
+    <OutputDirectory />
+    <BuildTarget>all</BuildTarget>
+    <CleanTarget>clean</CleanTarget>
+    <ExternalMakeFilePath>Makefile-Atmel-Studio-Stub</ExternalMakeFilePath>
+    <OutputPath>bin\PrintrbotPlay-v3\</OutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="MotateProject\motate\Atmel_avr\AvrPins.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_avr\AvrTimers.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_avr\AvrUSB.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_avr\AvrUSB.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam3xa\SamCommon.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam3xa\SamPins.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam3xa\SamPins.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam3xa\SamPower.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam3xa\SamPower.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam3xa\SamServiceCall.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam3xa\SamServiceCall.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam3xa\SamSPI.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam3xa\SamSPI.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam3xa\SamTimers.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam3xa\SamTimers.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam3xa\SamUniqueID.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam3xa\SamUniqueID.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam3xa\SamUSB.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam3xa\SamUSB.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_XMega\XMegaPins.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_XMega\XMegaPins.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_XMega\XMegaTimers.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_XMega\XMegaTimers.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_XMega\XMegaUART.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_XMega\XMegaUART.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\board\ArduinoDue\Due-pinout.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\board\ArduinoDue\motate_pin_assignments.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\board\FRDM-KLxx\FRDM-KL05Z-pinout.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\board\FRDM-KLxx\motate_pin_assignments.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\board\g2ref\g2Ref-pinout.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\board\g2ref\motate_pin_assignments.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\board\TinyGv8\motate_pin_assignments.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\board\TinyGv8\TinyGv8-pinout.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Freescale_klxx\KL05ZPins.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Freescale_klxx\KL05ZPins.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Freescale_klxx\KL05ZSPI.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Freescale_klxx\KL05ZTimers.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Freescale_klxx\KL05ZTimers.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Freescale_klxx\KL05ZUART.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Freescale_klxx\KL05ZUART.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\main.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\MotateBuffer.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\MotatePins.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\MotatePower.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\MotateSerial.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\MotateServiceCall.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\MotateSPI.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\MotateTimers.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\MotateUART.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\MotateUniqueID.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\MotateUSB.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\MotateUSBCDC.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\MotateUSBHelpers.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\MotateUtilities.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\MotateUtilities.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\platform\atmel_sam\cortex_handlers.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\platform\atmel_sam\hooks.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\platform\atmel_sam\motate_chip_pin_functions.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\platform\atmel_sam\syscalls.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\platform\atmel_sam\syscalls_sam3.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\platform\atmel_xmega\syscalls.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\platform\atmel_xmega\syscalls.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\platform\atmel_xmega\xmega.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\platform\atmel_xmega\xmega.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\platform\atmel_xmega\xmega_interrupts.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\platform\atmel_xmega\xmega_interrupts.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\platform\atmel_xmega\xmega_stdcpp_stubs.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\platform\freescale_klxx\syscalls.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\platform\freescale_klxx\syscalls.h">
+      <SubType>compile</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="MotateProject" />
+    <Folder Include="MotateProject\motate" />
+    <Folder Include="MotateProject\demos" />
+    <Folder Include="MotateProject\motate\arch" />
+    <Folder Include="MotateProject\motate\Atmel_avr" />
+    <Folder Include="MotateProject\motate\Atmel_sam3xa" />
+    <Folder Include="MotateProject\motate\Atmel_XMega" />
+    <Folder Include="MotateProject\motate\board" />
+    <Folder Include="MotateProject\motate\board\ArduinoDue" />
+    <Folder Include="MotateProject\motate\board\FRDM-KLxx" />
+    <Folder Include="MotateProject\motate\board\g2ref" />
+    <Folder Include="MotateProject\motate\board\TinyGv8" />
+    <Folder Include="MotateProject\motate\cmsis" />
+    <Folder Include="MotateProject\motate\Freescale_klxx" />
+    <Folder Include="MotateProject\motate\platform" />
+    <Folder Include="MotateProject\motate\platform\atmel_sam" />
+    <Folder Include="MotateProject\motate\platform\atmel_xmega" />
+    <Folder Include="MotateProject\motate\platform\freescale_klxx" />
+    <Folder Include="Tools" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".git">
+      <SubType>compile</SubType>
+    </None>
+    <None Include=".gitignore">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Makefile-Atmel-Studio-Stub">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="MotateProject\.gitignore">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="MotateProject\Makefile">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="MotateProject\motate\arch\arm.mk">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="MotateProject\motate\arch\avr.mk">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="MotateProject\motate\board\ArduinoDue.gdb">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="MotateProject\motate\board\ArduinoDue.mk">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="MotateProject\motate\board\frdm-kl05z.cfg">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="MotateProject\motate\board\FRDM-KLxx.gdb">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="MotateProject\motate\board\FRDM-KLxx.mk">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="MotateProject\motate\board\g2Ref.gdb">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="MotateProject\motate\board\g2Ref.mk">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="MotateProject\motate\board\TinyGv8.mk">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="MotateProject\motate\Motate.mk">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="MotateProject\motate\MotateUtilities.mk">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="MotateProject\motate\platform\atmel_sam.mk">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="MotateProject\motate\platform\atmel_sam\atmel_sam.cfg">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="MotateProject\motate\platform\atmel_sam\atmel_sam_series.mk">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="MotateProject\motate\platform\atmel_sam\make_utilities.mk">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="MotateProject\motate\platform\atmel_sam\motate_additions.ld">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="MotateProject\motate\platform\atmel_xmega.mk">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="MotateProject\motate\platform\freescale_klxx.mk">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="README.md">
+      <SubType>compile</SubType>
+    </None>
+  </ItemGroup>
+  <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\Compiler.targets" />
+</Project>
