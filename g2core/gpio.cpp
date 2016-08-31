@@ -72,6 +72,8 @@ a_out_t  a_out[A_OUT_CHANNELS];
 // ext_pin_number is the JSON ("external") pin number, as in "di1".
 template <pin_number input_pin_num, uint8_t ext_pin_number>
 struct ioDigitalInputExt {
+    IRQPin<input_pin_num>  input_pin;
+
     /* Priority only needs set once in the system during startup.
      * However, if we wish to switch the interrupt trigger, here are other options:
      *  kPinInterruptOnRisingEdge
@@ -82,16 +84,17 @@ struct ioDigitalInputExt {
      * Note that it may cause an interrupt to fire *immediately*!
      * intValue defaults to kPinInterruptOnChange|kPinInterruptPriorityMedium if not specified.
      */
-    d_in_t *in;  // array index is one less than input number
-    IRQPin<input_pin_num>  input_pin;
-
-    ioDigitalInputExt() : in {&d_in[ext_pin_number-1]}, input_pin {kPullUp|kDebounce, [&]{this->pin_changed();}} {
+    ioDigitalInputExt() : input_pin {kPullUp|kDebounce, [&]{this->pin_changed();}} {
     };
 
     ioDigitalInputExt(const ioDigitalInputExt&) = delete; // delete copy
     ioDigitalInputExt(ioDigitalInputExt&&) = delete;      // delete move
 
     void reset() {
+        if (D_IN_CHANNELS < ext_pin_number) { return; }
+
+        d_in_t *in = &d_in[ext_pin_number-1];
+
         if (in->mode == IO_MODE_DISABLED) {
             in->state = INPUT_DISABLED;
             return;
@@ -103,6 +106,10 @@ struct ioDigitalInputExt {
     }
 
     void pin_changed() {
+        if (D_IN_CHANNELS < ext_pin_number) { return; }
+
+        d_in_t *in = &d_in[ext_pin_number-1];
+
         // return if input is disabled (not supposed to happen)
         if (in->mode == IO_MODE_DISABLED) {
             in->state = INPUT_DISABLED;
