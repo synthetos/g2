@@ -21,7 +21,7 @@
 #ifndef G2CORE_INFO_H_ONCE
 #define G2CORE_INFO_H_ONCE
 
-#define G2CORE_FIRMWARE_BUILD			100.03  // Fix for inputs causing a crash (again).
+#define G2CORE_FIRMWARE_BUILD			100.04  // Fix for NeoPixel output frequency being doubled.
 #ifdef GIT_VERSION
 #define G2CORE_FIRMWARE_BUILD_STRING	GIT_VERSION
 #else
