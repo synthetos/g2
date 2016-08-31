@@ -373,7 +373,7 @@ struct NeoPixel {
     const uint32_t _blue_offset;
     const bool     _has_white;
 
-    Motate::PWMOutputPin<pixel_pin_pumber> _pixel_pin{Motate::kNormal, base_frequency};
+    Motate::PWMOutputPin<pixel_pin_pumber> _pixel_pin;
 
     // Note: 0 = 1/4 on-time
     //       1 = 1/2 on-time
@@ -397,7 +397,9 @@ struct NeoPixel {
           _green_offset{(((uint32_t)_pixel_order >> 2) & 0b11) << 3},
           _blue_offset{((uint32_t)_pixel_order & 0b11) << 3},
           _has_white{(_white_offset != _red_offset)},
+          _pixel_pin{Motate::kNormal, base_frequency},
           _update_timeout_ms{update_ms} {
+
         _pixel_pin = 0.0;  // start at 0
         _pixel_pin.stop();
 
