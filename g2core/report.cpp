@@ -59,8 +59,6 @@ stat_t rpt_exception(stat_t status, const char *msg)
 
         // you cannot send an exception report if the USB has not been set up. Causes a processor exception.
         if (cs.controller_state >= CONTROLLER_READY) {
-
-            // always sends a strict string regardless of JS setting
            sprintf(global_string_buf, "{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s - %s\"}}\n",
                                         G2CORE_FIRMWARE_BUILD, status, get_status_message(status), msg);
            xio_writeline(global_string_buf);
@@ -261,10 +259,10 @@ stat_t sr_request_status_report(cmStatusReportRequest request_type)
 
     sr.status_report_systick = SysTickTimer_getValue();
     if (request_type == SR_REQUEST_IMMEDIATE) {
-        sr.status_report_request = SR_FILTERED;         // will trigger a filtered or verbose report depending on verbosity setting
+        sr.status_report_request = SR_FILTERED;     // will trigger a filtered or verbose report depending on verbosity setting
 
     } else if (request_type == SR_REQUEST_IMMEDIATE_FULL) {
-        sr.status_report_request = SR_VERBOSE;        // will always trigger verbose report, regardless of verbosity setting
+        sr.status_report_request = SR_VERBOSE;      // will always trigger verbose report, regardless of verbosity setting
 
     } else if (request_type == SR_REQUEST_TIMED) {
         sr.status_report_request = sr.status_report_verbosity;
@@ -301,7 +299,7 @@ stat_t sr_status_report_callback()         // called by controller dispatcher
     if (sr.status_report_request == SR_VERBOSE) {
         _populate_unfiltered_status_report();
     } else {
-        if (_populate_filtered_status_report() == false) {    // no new data
+        if (_populate_filtered_status_report() == false) {  // no new data
             return (STAT_OK);
         }
     }
@@ -328,9 +326,9 @@ static stat_t _populate_unfiltered_status_report()
 {
     const char sr_str[] = "sr";
     char tmp[TOKEN_LEN+1];
-    nvObj_t *nv = nv_reset_nv_list();        // sets *nv to the start of the body
+    nvObj_t *nv = nv_reset_nv_list();       // sets *nv to the start of the body
 
-    nv->valuetype = TYPE_PARENT;             // setup the parent object (no length checking required)
+    nv->valuetype = TYPE_PARENT;            // setup the parent object (no length checking required)
     strcpy(nv->token, sr_str);
     nv->index = nv_get_index((const char *)"", sr_str);// set the index - may be needed by calling function
     nv = nv->nx;                            // no need to check for NULL as list has just been reset
@@ -339,9 +337,9 @@ static stat_t _populate_unfiltered_status_report()
         if ((nv->index = sr.status_report_list[i]) == 0) { break;}
         nv_get_nvObj(nv);
 
-        strcpy(tmp, nv->group);            // flatten out groups - WARNING - you cannot use strncpy here...
+        strcpy(tmp, nv->group);             // flatten out groups - WARNING - you cannot use strncpy here...
         strcat(tmp, nv->token);
-        strcpy(nv->token, tmp);            //...or here.
+        strcpy(nv->token, tmp);             //...or here.
 
         if ((nv = nv->nx) == NULL) {
             return (cm_panic(STAT_BUFFER_FULL_FATAL, "_populate_unfiltered_status_report() sr link NULL"));    // should never be NULL unless SR length exceeds available buffer array
@@ -538,14 +536,6 @@ stat_t qr_queue_report_callback()         // called by controller dispatcher
         } else  {
             sprintf(report, "qr:%d, qi:%d, qo:%d\n", qr.buffers_available,qr.buffers_added,qr.buffers_removed);
         }
-
-    } else if (js.json_syntax == JSON_SYNTAX_RELAXED) {
-        if (qr.queue_report_verbosity == QR_SINGLE) {
-            sprintf(report, "{qr:%d}\n", qr.buffers_available);
-        } else {
-            sprintf(report, "{qr:%d,qi:%d,qo:%d}\n", qr.buffers_available, qr.buffers_added,qr.buffers_removed);
-        }
-
     } else {
         if (qr.queue_report_verbosity == QR_SINGLE) {
             sprintf(report, "{\"qr\":%d}\n", qr.buffers_available);
@@ -666,15 +656,8 @@ uint8_t job_report_callback()
         // no-op, job_ids are client app state
         return (STAT_OK);
     }
-
-    if (js.json_syntax == JSON_SYNTAX_RELAXED) {
-        sprintf(cs.out_buf, "{job:[%lu,%lu,%lu,%lu]}\n", cfg.job_id[0], cfg.job_id[1], cfg.job_id[2], cfg.job_id[3] );
-        xio_writeline(cs.out_buf);
-    } else {
-        sprintf(cs.out_buf, "{\"job\":[%lu,%lu,%lu,%lu]}\n", cfg.job_id[0], cfg.job_id[1], cfg.job_id[2], cfg.job_id[3] );
-        xio_writeline(cs.out_buf);
-        //job_clear_report();
-    }
+    sprintf(cs.out_buf, "{\"job\":[%lu,%lu,%lu,%lu]}\n", cfg.job_id[0], cfg.job_id[1], cfg.job_id[2], cfg.job_id[3] );
+    xio_writeline(cs.out_buf);
     return (STAT_OK);
 }
 

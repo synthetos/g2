@@ -105,7 +105,7 @@ void json_parser(char *str)
 // This is almost the same as json_parser, except it doesn't *always* execute the parsed out list, and it never returns a reponse
 void json_parse_for_exec(char *str, bool execute)
 {
-    nvObj_t *nv = nv_reset_exec_nv_list();               // get a fresh nvObj list
+    nvObj_t *nv = nv_reset_exec_nv_list();          // get a fresh nvObj list
     stat_t status = _json_parser_kernal(nv, str);
     if ((status == STAT_OK) && (execute)) {
         // execute the command
@@ -129,11 +129,11 @@ static stat_t _json_parser_execute(nvObj_t *nv) {
             nv_persist(nv);
         }
         if ((nv = nv->nx) == NULL) {
-            return (STAT_JSON_TOO_MANY_PAIRS);          // Not supposed to encounter a NULL
+            return (STAT_JSON_TOO_MANY_PAIRS);      // Not supposed to encounter a NULL
         }
     } while (nv->valuetype != TYPE_EMPTY);
 
-    return (STAT_OK);                                // only successful commands exit through this point
+    return (STAT_OK);                               // only successful commands exit through this point
 }
 
 static stat_t _json_parser_kernal(nvObj_t *nv, char *str)
@@ -162,7 +162,7 @@ static stat_t _json_parser_kernal(nvObj_t *nv, char *str)
         }
         // propagate the group from previous NV pair (if relevant)
         if (group[0] != NUL) {
-            strncpy(nv->group, group, GROUP_LEN);    // copy the parent's group to this child
+            strncpy(nv->group, group, GROUP_LEN);   // copy the parent's group to this child
         }
         // validate the token and get the index
         if ((nv->index = nv_get_index(nv->group, nv->token)) == NO_MATCH) {
@@ -170,14 +170,14 @@ static stat_t _json_parser_kernal(nvObj_t *nv, char *str)
             return (STAT_UNRECOGNIZED_NAME);
         }
         if ((nv_index_is_group(nv->index)) && (nv_group_is_prefixed(nv->token))) {
-            strncpy(group, nv->token, GROUP_LEN);    // record the group ID
+            strncpy(group, nv->token, GROUP_LEN);   // record the group ID
         }
         if ((nv = nv->nx) == NULL) {
             return (STAT_JSON_TOO_MANY_PAIRS);      // Not supposed to encounter a NULL
         }
     } while (status != STAT_OK);                    // breaks when parsing is complete
 
-    return (STAT_OK);                                // only successful commands exit through this point
+    return (STAT_OK);                               // only successful commands exit through this point
 }
 
 /*
@@ -189,18 +189,18 @@ static stat_t _json_parser_kernal(nvObj_t *nv, char *str)
 
 static stat_t _normalize_json_string(char *str, uint16_t size)
 {
-    char *wr;                                // write pointer
+    char *wr;                                       // write pointer
     uint8_t in_comment = false;
 
     if (strlen(str) > size) {
         return (STAT_INPUT_EXCEEDS_MAX_LENGTH);
     }
     for (wr = str; *str != NUL; str++) {
-        if (!in_comment) {                    // normal processing
+        if (!in_comment) {                          // normal processing
             if (*str == '(') in_comment = true;
             if ((*str <= ' ') || (*str == DEL)) continue; // toss ctrls, WS & DEL
             *wr++ = tolower(*str);
-        } else {                            // Gcode comment processing
+        } else {                                    // Gcode comment processing
             if (*str == ')') in_comment = false;
             *wr++ = *str;
         }
@@ -252,7 +252,7 @@ static stat_t _get_nv_pair(nvObj_t *nv, char **pstr, int8_t *depth)
     // Find, terminate and set pointers for the name. Allow for leading and trailing name quotes.
     char * name = *pstr;
     for (i=0; true; i++, (*pstr)++) {
-        if (strchr(leaders, (int)**pstr) == NULL) {         // find leading character of name
+        if (strchr(leaders, (int)**pstr) == NULL) {     // find leading character of name
             name = (*pstr)++;
             break;
         }
@@ -265,7 +265,7 @@ static stat_t _get_nv_pair(nvObj_t *nv, char **pstr, int8_t *depth)
     for (i=0; true; i++, (*pstr)++) {
         if (strchr(separators, (int)**pstr) != NULL) {
             *(*pstr)++ = NUL;
-            strncpy(nv->token, name, TOKEN_LEN+1);            // copy the string to the token
+            strncpy(nv->token, name, TOKEN_LEN+1);      // copy the string to the token
             break;
         }
         if (i == TOKEN_LEN) {
@@ -290,12 +290,12 @@ static stat_t _get_nv_pair(nvObj_t *nv, char **pstr, int8_t *depth)
         nv->value = TYPE_NULL;
 
     // numbers
-    } else if (isdigit(**pstr) || (**pstr == '-')) {// value is a number
-        nv->value = (float)strtod(*pstr, &tmp);        // tmp is the end pointer
+    } else if (isdigit(**pstr) || (**pstr == '-')) {    // value is a number
+        nv->value = (float)strtod(*pstr, &tmp);         // tmp is the end pointer
 
-        if ((tmp == *pstr) ||                       // if start pointer equals end the conversion failed
-            (strchr(terminators, *tmp) == NULL)) {  // terminators are the only legal chars at the end of a number
-            nv->valuetype = TYPE_NULL;              // report back an error
+        if ((tmp == *pstr) ||                           // if start pointer equals end the conversion failed
+            (strchr(terminators, *tmp) == NULL)) {      // terminators are the only legal chars at the end of a number
+            nv->valuetype = TYPE_NULL;                  // report back an error
             return (STAT_BAD_NUMBER_FORMAT);
         }
         nv->valuetype = TYPE_FLOAT;
@@ -303,16 +303,16 @@ static stat_t _get_nv_pair(nvObj_t *nv, char **pstr, int8_t *depth)
     // object parent
     } else if (**pstr == '{') {
         nv->valuetype = TYPE_PARENT;
-//        *depth += 1;                            // nv_reset_nv() sets the next object's level so this is redundant
+//        *depth += 1;                                  // nv_reset_nv() sets the next object's level so this is redundant
         (*pstr)++;
-        return(STAT_EAGAIN);                    // signal that there is more to parse
+        return(STAT_EAGAIN);                            // signal that there is more to parse
 
     // strings
-    } else if (**pstr == '\"') {                 // value is a string
+    } else if (**pstr == '\"') {                        // value is a string
         (*pstr)++;
         nv->valuetype = TYPE_STRING;
         if ((tmp = strchr(*pstr, '\"')) == NULL) {
-            return (STAT_JSON_SYNTAX_ERROR);    // find the end of the string
+            return (STAT_JSON_SYNTAX_ERROR);            // find the end of the string
         }
         *tmp = NUL;
 
@@ -352,13 +352,13 @@ static stat_t _get_nv_pair(nvObj_t *nv, char **pstr, int8_t *depth)
     }
     if (**pstr == '}') {
         *depth -= 1;                            // pop up a nesting level
-        (*pstr)++;                                // advance to comma or whatever follows
+        (*pstr)++;                              // advance to comma or whatever follows
     }
     if (**pstr == ',') {
         return (STAT_EAGAIN);                   // signal that there is more to parse
     }
     (*pstr)++;
-    return (STAT_OK);                            // signal that parsing is complete
+    return (STAT_OK);                           // signal that parsing is complete
 }
 
 /****************************************************************************
@@ -456,10 +456,10 @@ uint16_t json_serialize(nvObj_t *nv, char *out_buf, uint16_t size)
                                     }
             }
         }
-        if (str >= str_max) { return (-1);}        // signal buffer overrun
+        if (str >= str_max) { return (-1);}     // signal buffer overrun
         if ((nv = nv->nx) == NULL) { break;}    // end of the list
 
-        while (nv->depth < prev_depth--) {        // iterate the closing curlies
+        while (nv->depth < prev_depth--) {      // iterate the closing curlies
             need_a_comma = true;
             *str++ = '}';
         }
@@ -470,7 +470,7 @@ uint16_t json_serialize(nvObj_t *nv, char *out_buf, uint16_t size)
     while (prev_depth-- > initial_depth) {
         *str++ = '}';
     }
-    str += sprintf((char *)str, "}\n");    // using sprintf for this last one ensures a NUL termination
+    str += sprintf((char *)str, "}\n");         // using sprintf for this last one ensures a NUL termination
     if (str > out_buf + size) {
         return (-1);
     }
@@ -524,12 +524,12 @@ void json_print_list(stat_t status, uint8_t flags)
 
 void json_print_response(uint8_t status)
 {
-    if (js.json_verbosity == JV_SILENT) {                    // silent means no responses
+    if (js.json_verbosity == JV_SILENT) {                   // silent means no responses
         return;
     }
-    if (js.json_verbosity == JV_EXCEPTIONS)    {                // cutout for JV_EXCEPTIONS mode
+    if (js.json_verbosity == JV_EXCEPTIONS)    {            // cutout for JV_EXCEPTIONS mode
         if (status == STAT_OK) {
-            if (cm.machine_state != MACHINE_INITIALIZING) {    // always do full echo during startup
+            if (cm.machine_state != MACHINE_INITIALIZING) { // always do full echo during startup
                 return;
             }
         }
@@ -541,7 +541,7 @@ void json_print_response(uint8_t status)
         nv_reset_nv_list();
         nv_add_string((const char *)"err", escape_string(cs.bufp, cs.saved_buf));
 
-    } else if ((cm.machine_state != MACHINE_INITIALIZING) || (status == STAT_INITIALIZING)) {    // always do full echo during startup
+    } else if ((cm.machine_state != MACHINE_INITIALIZING) || (status == STAT_INITIALIZING)) { // always do full echo during startup
         uint8_t nv_type;
         do {
             if ((nv_type = nv_get_type(nv)) == NV_TYPE_NULL) break;
@@ -551,7 +551,7 @@ void json_print_response(uint8_t status)
                     nv->valuetype = TYPE_EMPTY;
                 }
 
-//++++        } else if (nv_type == NV_TYPE_CONFIG) {            // kill config echo if not enabled
+//++++        } else if (nv_type == NV_TYPE_CONFIG) {       // kill config echo if not enabled
 //fix me        if (js.echo_json_configs == false) {
 //                    nv->valuetype = TYPE_EMPTY;
 //                }
@@ -628,8 +628,8 @@ stat_t json_set_jv(nvObj_t *nv)
         js.echo_json_messages = true;
         js.echo_json_configs = true;
     } else {
-        if (nv->value >= JV_FOOTER)        js.echo_json_footer = true;
-        if (nv->value >= JV_MESSAGES)    js.echo_json_messages = true;
+        if (nv->value >= JV_FOOTER)     js.echo_json_footer = true;
+        if (nv->value >= JV_MESSAGES)   js.echo_json_messages = true;
         if (nv->value >= JV_CONFIGS)    js.echo_json_configs = true;
         if (nv->value >= JV_LINENUM)    js.echo_json_linenum = true;
         if (nv->value >= JV_VERBOSE)    js.echo_json_gcode_block = true;

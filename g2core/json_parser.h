@@ -60,18 +60,11 @@ typedef enum {                      // json output print modes
     JSON_RESPONSE_FORMAT            // print the header/body/footer as a response object
 } jsonFormats;
 
-typedef enum {
-    JSON_SYNTAX_RELAXED = 0,        // Does not require quotes on names
-    JSON_SYNTAX_STRICT              // requires quotes on names
-} jsonSyntaxMode;
-
 typedef struct jsSingleton {
 
     /*** config values (PUBLIC) ***/
     uint8_t json_verbosity;         // see enum in this file for settings
-    uint8_t json_syntax;            // 0=relaxed syntax, 1=strict syntax
-
-    uint8_t echo_json_footer;        // flags for JSON responses serialization
+    uint8_t echo_json_footer;       // flags for JSON responses serialization
     uint8_t echo_json_messages;
     uint8_t echo_json_configs;
     uint8_t echo_json_linenum;
