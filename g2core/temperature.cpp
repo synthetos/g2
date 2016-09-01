@@ -67,7 +67,7 @@
 #endif
 
 // If the temp is more than TEMP_MAX_SETPOINT, just turn the heater off,
-// reguardless of set temp.
+// regardless of set temp.
 #ifndef TEMP_MAX_SETPOINT
 #define TEMP_MAX_SETPOINT (float)300.0
 #endif
@@ -264,7 +264,7 @@ PWMOutputPin<kOutput2_PinNumber> fet_pin2;// {kPWMPinInverted};
 PWMOutputPin<-1> fet_pin2;// {kPWMPinInverted};
 #endif
 
-// DO_11: Heted Bed FET
+// DO_11: Heated Bed FET
 // Warning, HeatBED is likely NOT a PWM pin, so it'll be binary output (duty cucle >= 50%).
 const int16_t fet_pin3_freq = 100;
 #if TEMPERATURE_OUTPUT_ON == 1
@@ -420,7 +420,7 @@ struct PID {
         return _at_set_point;
     }
 
-// //New-style JSON bindins. DISABLED FOR NOW.
+// //New-style JSON bindings. DISABLED FOR NOW.
 //    auto json_bindings(const char *object_name) {
 //        return JSON::bind_object(object_name,
 //                                 JSON::bind("set", _set_point,    /*print precision:*/2),
