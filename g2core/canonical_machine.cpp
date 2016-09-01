@@ -103,6 +103,7 @@
 #include "pwm.h"
 #include "report.h"
 #include "gpio.h"
+#include "temperature.h"
 #include "hardware.h"
 #include "util.h"
 #include "xio.h"            // for serial queue flush
@@ -195,7 +196,7 @@ cmCombinedState cm_get_combined_state()
                         case MOTION_RUN:      { return (COMBINED_RUN); }
                         case MOTION_HOLD:     { return (COMBINED_HOLD); }
                         default: {
-                            cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "cm_get_combined_state() mots bad");    // "mots has impossible value"
+                            cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "cm_get_combined_state() mots bad");// "mots has impossible value"
                             return (COMBINED_PANIC);
                         }
                     }
@@ -406,7 +407,7 @@ float cm_get_work_position(const GCodeState_t *gcode_state, const uint8_t axis)
 
 void cm_finalize_move()
 {
-    copy_vector(cm.gmx.position, cm.gm.target);        // update model position
+    copy_vector(cm.gmx.position, cm.gm.target);     // update model position
 }
 
 void cm_update_model_position_from_runtime()
@@ -697,13 +698,13 @@ stat_t cm_test_soft_limits(const float target[])
 void canonical_machine_init()
 {
 // If you can assume all memory has been zeroed by a hard reset you don't need this code:
-    memset(&cm, 0, sizeof(cm));                    // do not reset canonicalMachineSingleton once it's been initialized
+    memset(&cm, 0, sizeof(cm));                 // do not reset canonicalMachineSingleton once it's been initialized
     memset(&cm.gm, 0, sizeof(GCodeState_t));    // clear all values, pointers and status
     memset(&cm.gn, 0, sizeof(GCodeInput_t));
     memset(&cm.gf, 0, sizeof(GCodeFlags_t));
 
     canonical_machine_init_assertions();        // establish assertions
-    ACTIVE_MODEL = MODEL;                        // setup initial Gcode model pointer
+    ACTIVE_MODEL = MODEL;                       // setup initial Gcode model pointer
     cm_arc_init();                              // Note: spindle and coolant inits are independent
 }
 
@@ -950,6 +951,7 @@ stat_t cm_shutdown(const stat_t status, const char *msg)
     cm_halt_motion();                           // halt motors (may have already been done from GPIO)
     spindle_reset();                            // stop spindle immediately and set speed to 0 RPM
     coolant_reset();                            // stop coolant immediately
+    temperature_reset();                        // turn off heaters and fans
     cm_queue_flush();                           // flush all queues and reset positions
 
     for (uint8_t i = 0; i < HOMING_AXES; i++) { // unhome axes and the machine
@@ -982,6 +984,7 @@ stat_t cm_panic(const stat_t status, const char *msg)
     cm_halt_motion();                           // halt motors (may have already been done from GPIO)
     spindle_reset();                            // stop spindle immediately and set speed to 0 RPM
     coolant_reset();                            // stop coolant immediately
+    temperature_reset();                        // turn off heaters and fans
     cm_queue_flush();                           // flush all queues and reset positions
 
     cm.machine_state = MACHINE_PANIC;           // don't reset anything. Panics are not recoverable
@@ -1077,21 +1080,21 @@ stat_t cm_set_coord_system(const uint8_t coord_system)
 {
     cm.gm.coord_system = (cmCoordSystem)coord_system;
 
-    float value[] = { (float)coord_system,0,0,0,0,0 };        // pass coordinate system in value[0] element
+    float value[] = { (float)coord_system,0,0,0,0,0 };      // pass coordinate system in value[0] element
     bool flags[]  = { 1,0,0,0,0,0 };
-    mp_queue_command(_exec_offset, value, flags);            // second vector (flags) is not used, so fake it
+    mp_queue_command(_exec_offset, value, flags);           // second vector (flags) is not used, so fake it
     return (STAT_OK);
 }
 
 static void _exec_offset(float *value, bool *flag)
 {
-    uint8_t coord_system = ((uint8_t)value[0]);                // coordinate system is passed in value[0] element
+    uint8_t coord_system = ((uint8_t)value[0]);             // coordinate system is passed in value[0] element
     float offsets[AXES];
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         offsets[axis] = cm.offset[coord_system][axis] + (cm.gmx.origin_offset[axis] * cm.gmx.origin_offset_enable);
     }
     mp_set_runtime_work_offset(offsets);
-    cm_set_work_offsets(MODEL);                                // set work offsets in the Gcode model
+    cm_set_work_offsets(MODEL);                             // set work offsets in the Gcode model
 }
 
 /*
@@ -1146,8 +1149,8 @@ stat_t cm_set_absolute_origin(const float origin[], bool flag[])
 // REMOVED  value[axis] = cm.offset[cm.gm.coord_system][axis] + _to_millimeters(origin[axis]);    // G2 Issue #26
             value[axis] = _to_millimeters(origin[axis]);
             cm.gmx.position[axis] = value[axis];        // set model position
-            cm.gm.target[axis] = value[axis];            // reset model target
-            mp_set_planner_position(axis, value[axis]);    // set mm position
+            cm.gm.target[axis] = value[axis];           // reset model target
+            mp_set_planner_position(axis, value[axis]); // set mm position
         }
     }
     mp_queue_command(_exec_absolute_origin, value, flag);
@@ -1166,10 +1169,10 @@ static void _exec_absolute_origin(float *value, bool *flag)
 }
 
 /*
- * cm_set_origin_offsets()         - G92
- * cm_reset_origin_offsets()     - G92.1
- * cm_suspend_origin_offsets()     - G92.2
- * cm_resume_origin_offsets()     - G92.3
+ * cm_set_origin_offsets()     - G92
+ * cm_reset_origin_offsets()   - G92.1
+ * cm_suspend_origin_offsets() - G92.2
+ * cm_resume_origin_offsets()  - G92.3
  *
  * G92's behave according to NIST 3.5.18 & LinuxCNC G92
  * http://linuxcnc.org/docs/html/gcode/gcode.html#sec:G92-G92.1-G92.2-G92.3
@@ -1385,10 +1388,10 @@ stat_t cm_straight_feed(const float target[], const bool flags[])
     }
 
     cm_set_model_target(target, flags);
-    ritorno (cm_test_soft_limits(cm.gm.target));     // test soft limits; exit if thrown
+    ritorno (cm_test_soft_limits(cm.gm.target));    // test soft limits; exit if thrown
     cm_set_work_offsets(&cm.gm);                    // capture the fully resolved offsets to the state
-    cm_cycle_start();                                // required for homing & other cycles
-    stat_t status = mp_aline(&cm.gm);                // send the move to the planner
+    cm_cycle_start();                               // required for homing & other cycles
+    stat_t status = mp_aline(&cm.gm);               // send the move to the planner
 
     cm_finalize_move(); // <-- ONLY safe because we don't care about status...
 
@@ -1485,24 +1488,24 @@ static void _exec_feed_override(const bool m48_enable, const bool m50_enable, co
  *
  * See http://linuxcnc.org/docs/html/gcode/m-code.html#sec:M48,-M49-Speed-and-Feed-Override-Control
  */
-/*  M48state    M48new      M50state                action (notes):
- *  disable     disable     disable                 no action, no state change
- *  disable     disable     ENABLE                  no action, no state change
+/*  M48state    M48new      M50state    action (notes):
+ *  disable     disable     disable     no action, no state change
+ *  disable     disable     ENABLE      no action, no state change
  *
- *  disable     ENABLE      disable                 no action, no state change
- *  disable     ENABLE      ENABLE                  start ramp w/stored P value
+ *  disable     ENABLE      disable     no action, no state change
+ *  disable     ENABLE      ENABLE      start ramp w/stored P value
  *
- *  ENABLE      disable     disable                 no action, no state change
- *  ENABLE      disable     ENABLE                  end ramp
+ *  ENABLE      disable     disable     no action, no state change
+ *  ENABLE      disable     ENABLE      end ramp
  *
- *  ENABLE      ENABLE      disable                 no action, no state change
- *  ENABLE      ENABLE      ENABLE                  no action, no state change
+ *  ENABLE      ENABLE      disable     no action, no state change
+ *  ENABLE      ENABLE      ENABLE      no action, no state change
  */
-stat_t cm_m48_enable(uint8_t enable)            // M48, M49
+stat_t cm_m48_enable(uint8_t enable)        // M48, M49
 {
     // handle changes to feed override given new state of m48/m49
 
-    cm.gmx.m48_enable = enable;                 // update state
+    cm.gmx.m48_enable = enable;             // update state
     return (STAT_OK);
 }
 
@@ -1823,40 +1826,41 @@ static void _exec_program_finalize(float *value, bool *flag)
 
     // Allow update in the alarm state, to accommodate queue flush (RAS)
     if ((cm.cycle_state == CYCLE_MACHINING || cm.cycle_state == CYCLE_OFF) &&
-//      (cm.machine_state != MACHINE_ALARM) &&        // omitted by OMC (RAS)
+//      (cm.machine_state != MACHINE_ALARM) &&          // omitted by OMC (RAS)
         (cm.machine_state != MACHINE_SHUTDOWN)) {
         cm.machine_state = (cmMachineState)value[0];    // don't update macs/cycs if we're in the middle of a canned cycle,
-        cm.cycle_state = CYCLE_OFF;                        // or if we're in machine alarm/shutdown mode
+        cm.cycle_state = CYCLE_OFF;                     // or if we're in machine alarm/shutdown mode
     }
 
     // reset the rest of the states
     cm.cycle_state = CYCLE_OFF;
     cm.hold_state = FEEDHOLD_OFF;
-    mp_zero_segment_velocity();                            // for reporting purposes
+    mp_zero_segment_velocity();                         // for reporting purposes
 
     // perform the following resets if it's a program END
     if (((uint8_t)value[0]) == MACHINE_PROGRAM_END) {
         cm_suspend_origin_offsets();                    // G92.2 - as per NIST
-//      cm_reset_origin_offsets();                        // G92.1 - alternative to above
+//      cm_reset_origin_offsets();                      // G92.1 - alternative to above
         cm_set_coord_system(cm.default_coord_system);   // reset to default coordinate system
         cm_select_plane(cm.default_select_plane);       // reset to default arc plane
         cm_set_distance_mode(cm.default_distance_mode);
         cm_set_arc_distance_mode(INCREMENTAL_MODE);     // always the default
         cm_spindle_off_immediate();                     // M5
         cm_coolant_off_immediate();                     // M9
-        cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);    // G94
+        cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);   // G94
         cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);// NIST specifies G1 (MOTION_MODE_STRAIGHT_FEED), but we cancel motion mode. Safer.
         cm_reset_overrides();                           // reset feedrate the spindle overrides
+        temperature_reset();                            // turn off all heaters and fans
     }
-    sr_request_status_report(SR_REQUEST_IMMEDIATE);        // request a final and full status report (not filtered)
+    sr_request_status_report(SR_REQUEST_IMMEDIATE);     // request a final and full status report (not filtered)
 }
 
 void cm_cycle_start()
 {
-    if (cm.cycle_state == CYCLE_OFF) {                    // don't (re)start homing, probe or other canned cycles
+    if (cm.cycle_state == CYCLE_OFF) {                  // don't (re)start homing, probe or other canned cycles
         cm.machine_state = MACHINE_CYCLE;
         cm.cycle_state = CYCLE_MACHINING;
-        qr_init_queue_report();                            // clear queue reporting buffer counts
+        qr_init_queue_report();                         // clear queue reporting buffer counts
     }
 }
 
