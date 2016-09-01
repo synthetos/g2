@@ -34,7 +34,6 @@
 
 #define JERK_MAX_LINEAR         500         // 500,000,000 mm/(min^3)
 #define JERK_MAX_ROTARY         10000       // 10 billion mm/(min^3)
-#define JUNCTION_DEVIATION      0.05        // default value, in mm
 #define JUNCTION_ACCELERATION   100000      // centripetal acceleration around corners
 
 // *** settings.h overrides ***
@@ -80,7 +79,6 @@
 #define X_TRAVEL_MAX            475                     // xtm        maximum travel - used by soft limits and homing
 #define X_JERK_MAX              JERK_MAX_LINEAR         // xjm
 #define X_JERK_HIGH_SPEED       X_JERK_MAX              // xjh
-#define X_JUNCTION_DEVIATION    JUNCTION_DEVIATION      // xjd
 #define X_SWITCH_MODE_MIN       SW_MODE_HOMING          // xsn        SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
 #define X_SWITCH_MODE_MAX       SW_MODE_LIMIT           // xsx        SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
 //#define X_SWITCH_MODE_MAX         SW_MODE_DISABLED    // xsx        SW_MODE_DISABLED, SW_MODE_HOMING, SW_MODE_LIMIT, SW_MODE_HOMING_LIMIT
@@ -98,7 +96,6 @@
 #define Y_TRAVEL_MAX            200
 #define Y_JERK_MAX              JERK_MAX_LINEAR
 #define Y_JERK_HIGH_SPEED       Y_JERK_MAX
-#define Y_JUNCTION_DEVIATION    JUNCTION_DEVIATION
 #define Y_SWITCH_MODE_MIN       SW_MODE_HOMING
 #define Y_SWITCH_MODE_MAX       SW_MODE_LIMIT
 #define Y_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN
@@ -115,7 +112,6 @@
 #define Z_TRAVEL_MAX            75
 #define Z_JERK_MAX              JERK_MAX_LINEAR
 #define Z_JERK_HIGH_SPEED       Z_JERK_MAX
-#define Z_JUNCTION_DEVIATION    JUNCTION_DEVIATION
 #define Z_SWITCH_MODE_MIN       SW_MODE_DISABLED
 #define Z_SWITCH_MODE_MAX       SW_MODE_HOMING
 #define Z_SWITCH_TYPE_MIN       SW_TYPE_NORMALLY_OPEN

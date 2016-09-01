@@ -2616,7 +2616,6 @@ static const char fmt_Xtm[] = "[%s%s] %s travel maximum%17.3f%s\n";
 static const char fmt_Xtn[] = "[%s%s] %s travel minimum%17.3f%s\n";
 static const char fmt_Xjm[] = "[%s%s] %s jerk maximum%15.0f%s/min^3 * 1 million\n";
 static const char fmt_Xjh[] = "[%s%s] %s jerk homing%16.0f%s/min^3 * 1 million\n";
-//static const char fmt_Xjd[] = "[%s%s] %s junction deviation%14.4f%s (larger is faster)\n";
 static const char fmt_Xra[] = "[%s%s] %s radius value%20.4f%s\n";
 static const char fmt_Xhi[] = "[%s%s] %s homing input%15d [input 1-N or 0 to disable homing this axis]\n";
 static const char fmt_Xhd[] = "[%s%s] %s homing direction%11d [0=search-to-negative, 1=search-to-positive]\n";

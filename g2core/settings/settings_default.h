@@ -499,7 +499,6 @@
 #define A_TRAVEL_MAX                -1.0
 #define A_JERK_MAX                  (X_JERK_MAX*(360/M1_TRAVEL_PER_REV))
 #define A_JERK_HIGH_SPEED           A_JERK_MAX
-#define A_JUNCTION_DEVIATION        JUNCTION_DEVIATION_ABC
 #define A_HOMING_INPUT              0
 #define A_HOMING_DIRECTION                0
 #define A_SEARCH_VELOCITY           (A_VELOCITY_MAX * 0.500)

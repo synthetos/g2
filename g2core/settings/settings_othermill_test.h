@@ -180,10 +180,6 @@ constexpr float H3_DEFAULT_D = 100.0;
 #define JERK_HIGH_SPEED 1000  // 1000 million mm/(min^3)		// Jerk during homing needs to stop *fast*
 #define LATCH_VELOCITY 25     // reeeeally slow for accuracy
 
-#define JUNCTION_DEVIATION_XY 0.01   // larger is faster
-#define JUNCTION_DEVIATION_Z 0.01    // larger is faster
-#define JUNCTION_DEVIATION_ABC 0.01  // larger is faster
-
 #define X_AXIS_MODE AXIS_STANDARD                   // xam  see canonical_machine.h cmAxisMode for valid values
 #define X_VELOCITY_MAX 1500                         // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX X_VELOCITY_MAX               // xfr  G1 max feed rate in mm/min
@@ -191,7 +187,6 @@ constexpr float H3_DEFAULT_D = 100.0;
 #define X_TRAVEL_MAX 145.6                          // xtr  travel between switches or crashes
 #define X_JERK_MAX JERK_MAX                         // xjm
 #define X_JERK_HIGH_SPEED JERK_HIGH_SPEED           // xjh
-#define X_JUNCTION_DEVIATION JUNCTION_DEVIATION_XY  // xjd
 #define X_HOMING_INPUT 1                            // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIRECTION 0                        // xhd  0=search moves negative, 1= search moves positive
 #define X_SEARCH_VELOCITY (X_FEEDRATE_MAX / 3)      // xsv
@@ -206,7 +201,6 @@ constexpr float H3_DEFAULT_D = 100.0;
 #define Y_TRAVEL_MAX 119.1
 #define Y_JERK_MAX JERK_MAX
 #define Y_JERK_HIGH_SPEED JERK_HIGH_SPEED
-#define Y_JUNCTION_DEVIATION JUNCTION_DEVIATION_XY
 #define Y_HOMING_INPUT 3
 #define Y_HOMING_DIRECTION 0
 #define Y_SEARCH_VELOCITY (Y_FEEDRATE_MAX / 3)
@@ -225,7 +219,6 @@ constexpr float H3_DEFAULT_D = 100.0;
 #define Z_TRAVEL_MAX 0
 #define Z_JERK_MAX JERK_MAX
 #define Z_JERK_HIGH_SPEED JERK_HIGH_SPEED
-#define Z_JUNCTION_DEVIATION JUNCTION_DEVIATION_Z
 #define Z_HOMING_INPUT 6
 #define Z_HOMING_DIRECTION 1
 #define Z_SEARCH_VELOCITY (Z_FEEDRATE_MAX / 3)
@@ -241,7 +234,6 @@ constexpr float H3_DEFAULT_D = 100.0;
 #define A_TRAVEL_MAX -1
 #define A_JERK_MAX (X_JERK_MAX * (360 / M1_TRAVEL_PER_REV))
 #define A_JERK_HIGH_SPEED A_JERK_MAX
-#define A_JUNCTION_DEVIATION JUNCTION_DEVIATION_ABC
 #define A_RADIUS (M1_TRAVEL_PER_REV / (2 * 3.14159628))
 #define A_HOMING_INPUT 0
 #define A_HOMING_DIRECTION 0
@@ -257,7 +249,6 @@ constexpr float H3_DEFAULT_D = 100.0;
 #define B_TRAVEL_MAX -1
 #define B_JERK_MAX (X_JERK_MAX * (360 / M1_TRAVEL_PER_REV))
 #define B_JERK_HIGH_SPEED B_JERK_MAX
-#define B_JUNCTION_DEVIATION JUNCTION_DEVIATION_ABC
 #define B_RADIUS (M1_TRAVEL_PER_REV / (2 * 3.14159628))
 #define B_HOMING_INPUT 0
 #define B_HOMING_DIRECTION 0
@@ -273,7 +264,6 @@ constexpr float H3_DEFAULT_D = 100.0;
 #define C_TRAVEL_MAX -1
 #define C_JERK_MAX (X_JERK_MAX * (360 / M1_TRAVEL_PER_REV))
 #define C_JERK_HIGH_SPEED C_JERK_MAX
-#define C_JUNCTION_DEVIATION JUNCTION_DEVIATION_ABC
 #define C_RADIUS (M1_TRAVEL_PER_REV / (2 * 3.14159628))
 #define C_HOMING_INPUT 0
 #define C_HOMING_DIRECTION 0
