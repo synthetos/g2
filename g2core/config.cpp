@@ -88,14 +88,12 @@ void nv_print(nvObj_t *nv)
 
 stat_t nv_persist(nvObj_t *nv)
 {
-#ifndef __DISABLE_PERSISTENCE   // cutout for faster simulation in test
     if (nv_index_lt_groups(nv->index) == false) {
         return(STAT_INTERNAL_RANGE_ERROR);
     }
     if (GET_TABLE_BYTE(flags) & F_PERSIST) {
         return(write_persistent_value(nv));
     }
-#endif
     return (STAT_OK);
 }
 
@@ -115,7 +113,7 @@ void config_init()
 {
     nvObj_t *nv = nv_reset_nv_list();
     config_init_assertions();
-    cs.comm_mode = JSON_MODE;                    // initial value until persistence is read
+    js.json_mode = JSON_MODE;                    // initial value until persistence is read
     _set_defa(nv, false);
     rpt_print_loading_configs_message();
 }
@@ -384,7 +382,7 @@ stat_t get_grp(nvObj_t *nv)
 
 stat_t set_grp(nvObj_t *nv)
 {
-    if (cs.comm_mode == TEXT_MODE) {
+    if (js.json_mode == TEXT_MODE) {
         return (STAT_UNRECOGNIZED_NAME);
     }
     for (uint8_t i=0; i<NV_MAX_OBJECTS; i++) {
@@ -669,7 +667,7 @@ nvObj_t *nv_add_string(const char *token, const char *string) // add a string ob
 
 nvObj_t *nv_add_conditional_message(const char *string)    // conditionally add a message object to the body
 {
-    if ((cs.comm_mode == JSON_MODE) && (js.echo_json_messages != true)) { return (NULL);}
+    if ((js.json_mode == JSON_MODE) && (js.echo_json_messages != true)) { return (NULL);}
     return(nv_add_string((const char *)"msg", string));
 }
 
@@ -690,7 +688,7 @@ nvObj_t *nv_add_conditional_message(const char *string)    // conditionally add 
 
 void nv_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags)
 {
-    if (cs.comm_mode == JSON_MODE) {
+    if (js.json_mode == JSON_MODE) {
         json_print_list(status, json_flags);
     } else {
         text_print_list(status, text_flags);

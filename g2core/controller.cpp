@@ -87,13 +87,12 @@ static Motate::OutputPin<Motate::kOutputSAFE_PinNumber> safe_pin;
 void controller_init()
 {
     // preserve settable parameters that may have already been set up
-    uint8_t comm_mode = cs.comm_mode;
+    commMode comm_mode = cs.comm_mode;
 
     memset(&cs, 0, sizeof(controller_t));           // clear all values, job_id's, pointers and status
     _init_assertions();
 
     cs.comm_mode = comm_mode;                       // restore parameters
-
     cs.fw_build = G2CORE_FIRMWARE_BUILD;            // set up identification
     cs.fw_version = G2CORE_FIRMWARE_VERSION;
     cs.hw_platform = G2CORE_HARDWARE_PLATFORM;      // NB: HW version is set from EEPROM
@@ -211,13 +210,15 @@ static stat_t _dispatch_command()
 
 static void _dispatch_kernel()
 {
+    stat_t status;
+    
     while ((*cs.bufp == SPC) || (*cs.bufp == TAB)) {        // position past any leading whitespace
         cs.bufp++;
     }
-    strncpy(cs.saved_buf, cs.bufp, SAVED_BUFFER_LEN-1);        // save input buffer for reporting
+    strncpy(cs.saved_buf, cs.bufp, SAVED_BUFFER_LEN-1);     // save input buffer for reporting
 
-    if (*cs.bufp == NUL) {                                    // blank line - just a CR or the 2nd termination in a CRLF
-        if (cs.comm_mode == TEXT_MODE) {
+    if (*cs.bufp == NUL) {                                  // blank line - just a CR or the 2nd termination in a CRLF
+        if (js.json_mode == TEXT_MODE) {
             text_response(STAT_OK, cs.saved_buf);
             return;
         }
@@ -232,15 +233,22 @@ static void _dispatch_kernel()
     else if (*cs.bufp == CAN) { hw_hard_reset(); }          // reset immediately
 
     else if (*cs.bufp == '{') {                             // process as JSON mode
-        cs.comm_mode = JSON_MODE;                           // switch to JSON mode
+        if (cs.comm_mode == AUTO_MODE) {
+            js.json_mode = JSON_MODE;                       // switch to JSON mode
+        }
         json_parser(cs.bufp);
     }
 #ifdef __TEXT_MODE
     else if (strchr("$?Hh", *cs.bufp) != NULL) {            // process as text mode
-        cs.comm_mode = TEXT_MODE;                           // switch to text mode
-        text_response(text_parser(cs.bufp), cs.saved_buf);
+        if (cs.comm_mode == AUTO_MODE) {
+            js.json_mode = TEXT_MODE;                       // switch to text mode
+        }
+        status = text_parser(cs.bufp);
+        if (js.json_mode == TEXT_MODE) {                    // needed in case mode was changed by $EJ=1
+            text_response(status, cs.saved_buf);
+        }
     }
-    else if (cs.comm_mode == TEXT_MODE) {                   // anything else is interpreted as Gcode
+    else if (js.json_mode == TEXT_MODE) {                   // anything else is interpreted as Gcode
         text_response(gcode_parser(cs.bufp), cs.saved_buf);
     }
 #endif
@@ -251,7 +259,7 @@ static void _dispatch_kernel()
         strcpy(nv->token, "gc");                            // label is as a Gcode block (do not get an index - not necessary)
         nv_copy_string(nv, cs.bufp);                        // copy the Gcode line
         nv->valuetype = TYPE_STRING;
-        float status = gcode_parser(cs.bufp);
+        status = gcode_parser(cs.bufp);
         nv_print_list(status, TEXT_NO_PRINT, JSON_RESPONSE_FORMAT);
         sr_request_status_report(SR_REQUEST_TIMED);         // generate incremental status report to show any changes
     }
@@ -445,3 +453,5 @@ stat_t _test_system_assertions()
     xio_test_assertions();
     return (STAT_OK);
 }
+
+    

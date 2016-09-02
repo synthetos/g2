@@ -94,7 +94,7 @@ void json_parser(char *str)
         nv = nv_body;
         status = _json_parser_execute(nv);
     }
-    if (status == STAT_COMPLETE) {  // skip the print if returning from something that already did it.
+    if (status == STAT_COMPLETE) {                  // skip the print if returning from something that already did it.
         return;
     }
     nv_print_list(status, TEXT_NO_PRINT, JSON_RESPONSE_FORMAT);
@@ -615,7 +615,7 @@ void json_print_response(uint8_t status)
 stat_t json_set_jv(nvObj_t *nv)
 {
     if ((uint8_t)nv->value >= JV_MAX_VALUE) { return (STAT_INPUT_EXCEEDS_MAX_VALUE);}
-    js.json_verbosity = nv->value;
+    js.json_verbosity = (jsonVerbosity)nv->value;
 
     js.echo_json_footer = false;
     js.echo_json_messages = false;
@@ -637,6 +637,24 @@ stat_t json_set_jv(nvObj_t *nv)
     return(STAT_OK);
 }
 
+/*
+ * json_set_ej() - set JSON communications mode
+ */
+
+stat_t json_set_ej(nvObj_t *nv)
+{
+    if ((nv->value < TEXT_MODE) || (nv->value > AUTO_MODE)) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_VALUE_RANGE_ERROR);
+    }
+    if (uint8_t(nv->value) == TEXT_MODE) {
+        js.json_mode = TEXT_MODE;
+    } else {
+        js.json_mode = JSON_MODE;
+    }
+    return (set_ui8(nv));
+}
+
 /***********************************************************************************
  * TEXT MODE SUPPORT
  * Functions to print variables from the cfgArray table
@@ -651,7 +669,7 @@ stat_t json_set_jv(nvObj_t *nv)
  * js_print_jf()
  */
 
-static const char fmt_ej[] = "[ej]  enable json mode%13d [0=text,1=JSON]\n";
+static const char fmt_ej[] = "[ej]  enable json mode%13d [0=text,1=JSON,2=auto]\n";
 static const char fmt_jv[] = "[jv]  json verbosity%15d [0=silent,1=footer,2=messages,3=configs,4=linenum,5=verbose]\n";
 static const char fmt_js[] = "[js]  json serialize style%9d [0=relaxed,1=strict]\n";
 static const char fmt_jf[] = "[jf]  json footer style%12d [1=checksum,2=window report]\n";

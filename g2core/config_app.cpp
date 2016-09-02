@@ -619,7 +619,7 @@ const cfgItem_t cfgArray[] = {
 #ifdef __TEXT_MODE
     { "sys","tv", _fipn, 0, tx_print_tv,  get_ui8, set_01,     (float *)&txt.text_verbosity,        TEXT_VERBOSITY },
 #endif
-    { "sys","ej", _fipn, 0, js_print_ej,  get_ui8, set_01,     (float *)&cs.comm_mode,              COMM_MODE },
+    { "sys","ej", _fipn, 0, js_print_ej,  get_ui8, json_set_ej,(float *)&cs.comm_mode,              COMM_MODE },
     { "sys","jv", _fipn, 0, js_print_jv,  get_ui8, json_set_jv,(float *)&js.json_verbosity,         JSON_VERBOSITY },
     { "sys","qv", _fipn, 0, qr_print_qv,  get_ui8, set_0123,   (float *)&qr.queue_report_verbosity, QUEUE_REPORT_VERBOSITY },
     { "sys","sv", _fipn, 0, sr_print_sv,  get_ui8, set_012,    (float *)&sr.status_report_verbosity,STATUS_REPORT_VERBOSITY },
@@ -945,10 +945,10 @@ const cfgItem_t cfgArray[] = {
 #define NV_INDEX_START_UBER_GROUPS (NV_INDEX_MAX - NV_COUNT_UBER_GROUPS)
 /* </DO NOT MESS WITH THESE DEFINES> */
 
-index_t  nv_index_max() { return ( NV_INDEX_MAX );}
-uint8_t nv_index_is_single(index_t index) { return ((index <= NV_INDEX_END_SINGLES) ? true : false);}
-uint8_t nv_index_is_group(index_t index) { return (((index >= NV_INDEX_START_GROUPS) && (index < NV_INDEX_START_UBER_GROUPS)) ? true : false);}
-uint8_t nv_index_lt_groups(index_t index) { return ((index <= NV_INDEX_START_GROUPS) ? true : false);}
+index_t nv_index_max() { return ( NV_INDEX_MAX );}
+bool nv_index_is_single(index_t index) { return ((index <= NV_INDEX_END_SINGLES) ? true : false);}
+bool nv_index_is_group(index_t index) { return (((index >= NV_INDEX_START_GROUPS) && (index < NV_INDEX_START_UBER_GROUPS)) ? true : false);}
+bool nv_index_lt_groups(index_t index) { return ((index <= NV_INDEX_START_GROUPS) ? true : false);}
 
 /***** APPLICATION SPECIFIC CONFIGS AND EXTENSIONS TO GENERIC FUNCTIONS *****/
 
@@ -1008,12 +1008,16 @@ void preprocess_float(nvObj_t *nv)
  * nv_group_is_prefixed() - hack
  *
  *  This little function deals with the exception cases that some groups don't use
- *  the parent token as a prefix to the child elements; SR being a good example.
+ *  the parent token as a prefix to the child elements; SYS being a good example.
  */
-uint8_t nv_group_is_prefixed(char *group)
+bool nv_group_is_prefixed(char *group)
 {
-    if (strcmp("sr", group) == 0) return (false);
-    if (strcmp("sys", group) == 0) return (false);
+    if (strcmp("sys", group) == 0) {
+        return (false);
+    }
+    if (strcmp("sr", group) == 0) {
+        return (false);
+    }
     return (true);
 }
 

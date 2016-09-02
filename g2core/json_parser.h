@@ -63,12 +63,13 @@ typedef enum {                      // json output print modes
 typedef struct jsSingleton {
 
     /*** config values (PUBLIC) ***/
-    uint8_t json_verbosity;         // see enum in this file for settings
-    uint8_t echo_json_footer;       // flags for JSON responses serialization
-    uint8_t echo_json_messages;
-    uint8_t echo_json_configs;
-    uint8_t echo_json_linenum;
-    uint8_t echo_json_gcode_block;
+    commMode json_mode;             // 0=text mode, 1=JSON mode (loaded from cs.comm_mode)
+    jsonVerbosity json_verbosity;   // see enum in this file for settings
+    bool echo_json_footer;          // flags for JSON responses serialization
+    bool echo_json_messages;
+    bool echo_json_configs;
+    bool echo_json_linenum;
+    bool echo_json_gcode_block;
 
     /*** runtime values (PRIVATE) ***/
 
@@ -88,6 +89,7 @@ void json_print_response(uint8_t status);
 void json_print_list(stat_t status, uint8_t flags);
 
 stat_t json_set_jv(nvObj_t *nv);
+stat_t json_set_ej(nvObj_t *nv);
 
 #ifdef __TEXT_MODE
 

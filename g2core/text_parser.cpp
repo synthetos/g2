@@ -133,8 +133,8 @@ static stat_t _text_parser_kernal(char *str, nvObj_t *nv)
     }
     strcpy(nv->group, cfgArray[nv->index].group); // capture the group string if there is one
 
-    // see if you need to strip the token
-    if (nv->group[0] != NUL) {
+    // see if you need to strip the token - but only if in text mode
+    if ((js.json_mode == TEXT_MODE) && (nv_group_is_prefixed(nv->group))) {
         wr = nv->token;
         rd = nv->token + strlen(nv->group);
         while (*rd != NUL) { *(wr)++ = *(rd)++;}
@@ -146,8 +146,8 @@ static stat_t _text_parser_kernal(char *str, nvObj_t *nv)
 /************************************************************************************
  * text_response() - text mode responses
  */
-static const char prompt_ok[] = "g2 [%s] ok> ";
-static const char prompt_err[] = "g2 [%s] err[%d]: %s: %s ";
+static const char prompt_ok[] = "g2core[%s] ok> ";
+static const char prompt_err[] = "g2core[%s] err[%d]: %s: %s ";
 
 void text_response(const stat_t status, char *buf)
 {

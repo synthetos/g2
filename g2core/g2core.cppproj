@@ -76,7 +76,7 @@
       <ToolNumber>J41800030015</ToolNumber>
       <ToolName>Atmel-ICE</ToolName>
     </com_atmel_avrdbg_tool_atmelice>
-    <UseGdb>False</UseGdb>
+    <UseGdb>True</UseGdb>
     <PercepioTrace>
       <TargetOS />
       <Frequency>84000000</Frequency>
@@ -115,7 +115,8 @@
       <ToolName xmlns="">Custom Programming Tool</ToolName>
     </custom>
     <UseGdbCustomPath>False</UseGdbCustomPath>
-    <GdbCustomPath>Z:\PersonalProjects\TinyG2\Motate\Tools\win32\gcc-arm-none-eabi\bin\arm-none-eabi-gdb.exe</GdbCustomPath>
+    <GdbCustomPath>
+    </GdbCustomPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'gShield' ">
     <ToolchainSettings>

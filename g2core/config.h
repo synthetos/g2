@@ -193,10 +193,10 @@ typedef uint16_t index_t;               // use this if there are > 255 indexed o
 #define NO_MATCH (index_t)0xFFFF
 
 typedef enum {
-    TEXT_MODE = 0,                      // text command line mode
-    JSON_MODE,                          // strict JSON construction
-    JSON_MODE_RELAXED                   // relaxed JSON construction (future)
-} tgCommunicationsMode;
+    TEXT_MODE = 0,                      // sticky text mode
+    JSON_MODE,                          // sticky JSON mode
+    AUTO_MODE                           // auto-configure communications mode
+} commMode;
 
 typedef enum {
     FLOW_CONTROL_OFF = 0,               // flow control disabled
@@ -310,11 +310,11 @@ stat_t nv_persist(nvObj_t *nv);         // main entry point for persistence
 // helpers
 uint8_t nv_get_type(nvObj_t *nv);
 index_t nv_get_index(const char *group, const char *token);
-index_t nv_index_max(void);                 // (see config_app.c)
-uint8_t nv_index_is_single(index_t index);  // (see config_app.c)
-uint8_t nv_index_is_group(index_t index);   // (see config_app.c)
-uint8_t nv_index_lt_groups(index_t index);  // (see config_app.c)
-uint8_t nv_group_is_prefixed(char *group);
+index_t nv_index_max(void);             // (see config_app.c)
+bool nv_index_is_single(index_t index); // (see config_app.c)
+bool nv_index_is_group(index_t index);  // (see config_app.c)
+bool nv_index_lt_groups(index_t index); // (see config_app.c)
+bool nv_group_is_prefixed(char *group);
 
 // generic internal functions and accessors
 stat_t set_nul(nvObj_t *nv);            // set nothing
