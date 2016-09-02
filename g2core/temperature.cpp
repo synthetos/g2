@@ -57,7 +57,7 @@
 // With a set temp of < TEMP_OFF_BELOW, and a measured temp of < TEMP_OFF_BELOW,
 // we are "at temp".
 #ifndef TEMP_OFF_BELOW
-#define TEMP_OFF_BELOW (float)30.0 // "room temperature"
+#define TEMP_OFF_BELOW (float)45.0 // "safe to touch and hold for metal" with 5º margin
 #endif
 
 // If the read temp is more than TEMP_FULL_ON_DIFFERENCE less than set temp,
