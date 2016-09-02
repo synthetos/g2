@@ -647,10 +647,10 @@ stat_t json_set_ej(nvObj_t *nv)
         nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_VALUE_RANGE_ERROR);
     }
-    if (uint8_t(nv->value) == TEXT_MODE) {
-        js.json_mode = TEXT_MODE;
-    } else {
-        js.json_mode = JSON_MODE;
+    
+    // set json_mode to 0 or 1, but don't change it if comm_mode == 2
+    if (commMode(nv->value) < AUTO_MODE) {
+        js.json_mode = commMode(nv->value);
     }
     return (set_ui8(nv));
 }
