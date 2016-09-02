@@ -33,6 +33,7 @@
 #include "planner.h"
 #include "text_parser.h"
 #include "board_xio.h"
+#include "util.h"
 
 
 #include "MotateUtilities.h"
@@ -135,16 +136,16 @@ stat_t hardware_periodic()
         }
         LEDs::alarm_red = false;
 
-//    } else if ((LEDs::last_see_machine_state == MACHINE_READY) && (new_machine_state != MACHINE_READY)) {
-//        // set to black
-//        for (uint8_t pixel = 0; pixel < LEDs::rgbw_leds.count; pixel++) {
-//            LEDs::display_color[pixel].startTransition(0, 0, 0, 0);
-//        }
-    } else if ((LEDs::last_see_machine_state == MACHINE_READY)) {
-        // set to white
+    } else if ((LEDs::last_see_machine_state == MACHINE_READY) && (new_machine_state != MACHINE_READY)) {
+        // set to black
         for (uint8_t pixel = 0; pixel < LEDs::rgbw_leds.count; pixel++) {
-            LEDs::display_color[pixel].startTransition(0, 1, 1, 1);
+            LEDs::display_color[pixel].startTransition(0, 0, 0, 0);
         }
+//    } else if ((LEDs::last_see_machine_state == MACHINE_READY)) {
+//        // set to white
+//        for (uint8_t pixel = 0; pixel < LEDs::rgbw_leds.count; pixel++) {
+//            LEDs::display_color[pixel].startTransition(0, 1, 1, 1);
+//        }
     }
 
     LEDs::last_see_machine_state = new_machine_state;
@@ -256,6 +257,87 @@ stat_t hw_flash(nvObj_t *nv)
 stat_t hw_set_hv(nvObj_t *nv)
 {
 	return (STAT_OK);
+}
+
+stat_t _get_leds(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_INT;
+
+    float red, green, blue;
+
+    LEDs::display_color[0].getRGB(red, green, blue);
+
+    // black
+    if (fp_EQ(red, 0.0) && fp_EQ(green, 0.0) && fp_EQ(blue, 0.0)) {
+        nv->value = 0;
+    // white
+    } else if (fp_EQ(red, 1.0) && fp_EQ(green, 1.0) && fp_EQ(blue, 1.0)) {
+        nv->value = 1;
+    // red
+    } else if (fp_EQ(red, 1.0) && fp_EQ(green, 0.0) && fp_EQ(blue, 0.0)) {
+        nv->value = 2;
+    // green
+    } else if (fp_EQ(red, 0.0) && fp_EQ(green, 1.0) && fp_EQ(blue, 0.0)) {
+        nv->value = 3;
+    // blue
+    } else if (fp_EQ(red, 0.0) && fp_EQ(green, 0.0) && fp_EQ(blue, 1.0)) {
+        nv->value = 4;
+    // orange
+    } else if (fp_EQ(red, 1.0) && fp_EQ(green, 0.5) && fp_EQ(blue, 0.0)) {
+        nv->value = 5;
+    // yellow
+    } else if (fp_EQ(red, 1.0) && fp_EQ(green, 1.0) && fp_EQ(blue, 0.0)) {
+        nv->value = 6;
+    }
+
+    return (STAT_OK);
+}
+
+stat_t _set_leds(nvObj_t *nv)
+{
+    uint32_t value = nv->value;
+    if ((nv->value < 0) || (nv->value > 6)) {
+        return (STAT_INPUT_VALUE_RANGE_ERROR);
+    }
+
+    // black
+    if (value == 0) {
+        for (uint8_t pixel = 0; pixel < LEDs::rgbw_leds.count; pixel++) {
+            LEDs::display_color[pixel].startTransition(100, 0, 0, 0);
+        }
+    // white
+    } else if (value == 1) {
+        for (uint8_t pixel = 0; pixel < LEDs::rgbw_leds.count; pixel++) {
+            LEDs::display_color[pixel].startTransition(100, 1.0, 1.0, 1.0);
+        }
+    // red
+    } else if (value == 2) {
+        for (uint8_t pixel = 0; pixel < LEDs::rgbw_leds.count; pixel++) {
+            LEDs::display_color[pixel].startTransition(100, 1.0, 0.0, 0.0);
+        }
+    // green
+    } else if (value == 3) {
+        for (uint8_t pixel = 0; pixel < LEDs::rgbw_leds.count; pixel++) {
+            LEDs::display_color[pixel].startTransition(100, 0.0, 1.0, 0.0);
+        }
+    // blue
+    } else if (value == 4) {
+        for (uint8_t pixel = 0; pixel < LEDs::rgbw_leds.count; pixel++) {
+            LEDs::display_color[pixel].startTransition(100, 0.0, 0.0, 1.0);
+        }
+    // orange
+    } else if (value == 5) {
+        for (uint8_t pixel = 0; pixel < LEDs::rgbw_leds.count; pixel++) {
+            LEDs::display_color[pixel].startTransition(100, 1.0, 0.5, 0.0);
+        }
+    // yellow
+    } else if (value == 6) {
+        for (uint8_t pixel = 0; pixel < LEDs::rgbw_leds.count; pixel++) {
+            LEDs::display_color[pixel].startTransition(100, 1.0, 1.0, 0.0);
+        }
+    }
+
+    return (STAT_OK);
 }
 
 

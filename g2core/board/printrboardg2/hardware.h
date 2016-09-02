@@ -182,6 +182,10 @@ stat_t hw_get_fbc(nvObj_t *nv);
 stat_t hw_set_hv(nvObj_t *nv);
 stat_t hw_get_id(nvObj_t *nv);
 
+#define TEMPORARY_HAS_LEDS 1
+stat_t _get_leds(nvObj_t *nv);
+stat_t _set_leds(nvObj_t *nv);
+
 #ifdef __TEXT_MODE
 
 	void hw_print_fb(nvObj_t *nv);

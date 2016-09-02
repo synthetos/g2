@@ -290,6 +290,12 @@ struct RGB_Color_t : NeopixelColorTag {
 
     bool isTransitionDone() { return _transition_steps_left == 0; };
 
+    void getRGB(float& r, float& g, float& b) {
+        r = red;
+        g = green;
+        b = blue;
+    };
+
     void getRGB(uint8_t& r, uint8_t& g, uint8_t& b) {
         r = red * 255;
         g = green * 255;
