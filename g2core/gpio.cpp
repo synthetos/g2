@@ -667,12 +667,12 @@ stat_t io_set_output(nvObj_t *nv)
 
 #ifdef __TEXT_MODE
 
-    static const char fmt_gpio_mo[] = "[%smo] input mode%15d [0=NO,1=NC,2=disabled]\n";
-    static const char fmt_gpio_ac[] = "[%sac] input action%13d [0=none,1=stop,2=fast_stop,3=halt,4=alarm,5=shutdown,6=panic,7=reset]\n";
-    static const char fmt_gpio_fn[] = "[%sfn] input function%11d [0=none,1=limit,2=interlock,3=shutdown]\n";
+    static const char fmt_gpio_mo[] = "[%smo] input mode%17d [0=NO,1=NC,2=disabled]\n";
+    static const char fmt_gpio_ac[] = "[%sac] input action%15d [0=none,1=stop,2=fast_stop,3=halt,4=alarm,5=shutdown,6=panic,7=reset]\n";
+    static const char fmt_gpio_fn[] = "[%sfn] input function%13d [0=none,1=limit,2=interlock,3=shutdown]\n";
     static const char fmt_gpio_in[] = "Input %s state: %5d\n";
 
-    static const char fmt_gpio_domode[] = "[%smo] output mode%15d [0=active low,1=active high,2=disabled]\n";
+    static const char fmt_gpio_domode[] = "[%smo] output mode%16d [0=active low,1=active high,2=disabled]\n";
     static const char fmt_gpio_out[] = "Output %s state: %5d\n";
 
     static void _print_di(nvObj_t *nv, const char *format)

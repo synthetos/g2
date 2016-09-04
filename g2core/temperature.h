@@ -29,12 +29,6 @@
 #ifndef TEMPERATURE_H_ONCE
 #define TEMPERATURE_H_ONCE
 
-
-/*
- * Spindle control structure
- */
-
-
 /*
  * Global Scope Functions
  */

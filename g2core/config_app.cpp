@@ -1094,7 +1094,7 @@ static stat_t _do_inputs(nvObj_t *nv)  // print parameters for all input groups
     return (STAT_COMPLETE);
 }
 
-static stat_t _do_outputs(nvObj_t *nv)  // print parameters for all input groups
+static stat_t _do_outputs(nvObj_t *nv)  // print parameters for all output groups
 {
     char group[GROUP_LEN];
     for (uint8_t i=1; i < D_OUT_CHANNELS+1; i++) {
@@ -1103,21 +1103,28 @@ static stat_t _do_outputs(nvObj_t *nv)  // print parameters for all input groups
     }
     return (STAT_COMPLETE);
 }
-
+/*
+static stat_t _do_heaters(nvObj_t *nv)  // print parameters for all heater groups
+{
+    char group[GROUP_LEN];
+    for (uint8_t i=1; i < 4; i++) {
+        sprintf(group, "he%d", i);
+        _do_group(nv, group);
+    }
+    return (STAT_COMPLETE);
+}
+*/
 static stat_t _do_all(nvObj_t *nv)  // print all parameters
 {
-    strcpy(nv->token,"sys");        // print system group
-    get_grp(nv);
-    nv_print_list(STAT_OK, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT);
-
-    _do_motors(nv);                 // print all motor groups
-    _do_axes(nv);                   // print all axis groups
-
-    strcpy(nv->token,"p1");         // print PWM group
-    get_grp(nv);
-    nv_print_list(STAT_OK, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT);
-
-    return (_do_offsets(nv));       // print all offsets
+    _do_group(nv, (char *)"sys");   // System group
+    _do_motors(nv);
+    _do_axes(nv);
+    _do_inputs(nv);
+    _do_outputs(nv);
+//    _do_heaters(nv);              // there are no text mode prints for heaters
+    _do_group(nv, (char *)"p1");    // PWM group
+    _do_offsets(nv);                // coordinate system offsets
+    return (STAT_OK);
 }
 
 /***********************************************************************************
