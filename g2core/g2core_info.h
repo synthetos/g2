@@ -21,7 +21,7 @@
 #ifndef G2CORE_INFO_H_ONCE
 #define G2CORE_INFO_H_ONCE
 
-#define G2CORE_FIRMWARE_BUILD			100.08  // Added _leds to drive the neopixels
+#define G2CORE_FIRMWARE_BUILD			100.09  // Fixed $out1=1; updated text mode $$ displays
 #ifdef GIT_VERSION
 #define G2CORE_FIRMWARE_BUILD_STRING	GIT_VERSION
 #else
