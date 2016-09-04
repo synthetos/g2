@@ -134,7 +134,7 @@ static stat_t _text_parser_kernal(char *str, nvObj_t *nv)
     strcpy(nv->group, cfgArray[nv->index].group); // capture the group string if there is one
 
     // see if you need to strip the token - but only if in text mode
-    if ((js.json_mode == TEXT_MODE) && (nv_group_is_prefixed(nv->group))) {
+    if ((cs.comm_request_mode == TEXT_MODE) && (nv_group_is_prefixed(nv->group))) {
         wr = nv->token;
         rd = nv->token + strlen(nv->group);
         while (*rd != NUL) { *(wr)++ = *(rd)++;}

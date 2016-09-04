@@ -2577,7 +2577,7 @@ static const char fmt_m48e[] = "[m48e] overrides enabled%11d [0=disable,1=enable
 static const char fmt_mfoe[] = "[mfoe] manual feed override enab%3d [0=disable,1=enable]\n";
 static const char fmt_mfo[]  = "[mfo]  manual feedrate override%8.3f [0.05 < mfo < 2.00]\n";
 static const char fmt_mtoe[] = "[mtoe] manual traverse over enab%3d [0=disable,1=enable]\n";
-static const char fmt_mto[]  = "[mto]  manual traverse override%8.3f [0.05 < mto < 2.00]\n";
+static const char fmt_mto[]  = "[mto]  manual traverse override%8.3f [0.05 < mto < 1.00]\n";
 static const char fmt_tram[] = "[tram]  is coordinate space rotated to be tram %s\n";
 
 void cm_print_m48e(nvObj_t *nv) { text_print(nv, fmt_m48e);}    // TYPE_INT

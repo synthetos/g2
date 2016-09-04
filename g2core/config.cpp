@@ -358,12 +358,14 @@ stat_t set_flt(nvObj_t *nv)
 
 stat_t get_grp(nvObj_t *nv)
 {
-    char *parent_group = nv->token;                 // token in the parent nv object is the group
-    char group[GROUP_LEN+1];                        // group string retrieved from cfgArray child
+    char group[GROUP_LEN+1];
+
+    strcpy(group, nv->token);                       // save the group string
+    nv_reset_nv_list();                             // start with a clean list
+    strcpy(nv->token, group);                       // re-write the group string
     nv->valuetype = TYPE_PARENT;                    // make first object the parent
     for (index_t i=0; nv_index_is_single(i); i++) {
-        strcpy(group, cfgArray[i].group);           // don't need strncpy as it's always terminated
-        if (strcmp(parent_group, group) != 0) continue;
+        if (strcmp(group, cfgArray[i].group) != 0) { continue; }
         (++nv)->index = i;
         nv_get_nvObj(nv);
     }
@@ -499,12 +501,12 @@ void nv_get_nvObj(nvObj_t *nv)
             strcpy(nv->token, &nv->token[strlen(nv->group)]); // strip group from the token
         }
     }
-    ((fptrCmd)GET_TABLE_WORD(get))(nv);        // populate the value
+    ((fptrCmd)GET_TABLE_WORD(get))(nv);         // populate the value
 }
 
-nvObj_t *nv_reset_nv(nvObj_t *nv)            // clear a single nvObj structure
+nvObj_t *nv_reset_nv(nvObj_t *nv)               // clear a single nvObj structure
 {
-    nv->valuetype = TYPE_EMPTY;                // selective clear is much faster than calling memset
+    nv->valuetype = TYPE_EMPTY;                 // selective clear is much faster than calling memset
     nv->index = 0;
     nv->value = 0;
     nv->precision = 0;
@@ -512,7 +514,7 @@ nvObj_t *nv_reset_nv(nvObj_t *nv)            // clear a single nvObj structure
     nv->group[0] = NUL;
     nv->stringp = NULL;
 
-    if (nv->pv == NULL) {                     // set depth correctly
+    if (nv->pv == NULL) {                       // set depth correctly
         nv->depth = 0;
     } else {
         if (nv->pv->valuetype == TYPE_PARENT) {
@@ -521,16 +523,16 @@ nvObj_t *nv_reset_nv(nvObj_t *nv)            // clear a single nvObj structure
             nv->depth = nv->pv->depth;
         }
     }
-    return (nv);                            // return pointer to nv as a convenience to callers
+    return (nv);                                // return pointer to nv as a convenience to callers
 }
 
-void _nv_reset_a_list(nvObj_t *nv, uint8_t length)    // clear some nv list (called from below)
+void _nv_reset_a_list(nvObj_t *nv, uint8_t length) // clear some nv list (called from below)
 {
     for (uint8_t i=0; i<length; i++, nv++) {
-        nv->pv = (nv-1);                    // the ends are bogus & corrected later
+        nv->pv = (nv-1);                        // the ends are bogus & corrected later
         nv->nx = (nv+1);
         nv->index = 0;
-        nv->depth = 1;                        // header and footer are corrected later
+        nv->depth = 1;                          // header and footer are corrected later
         nv->precision = 0;
         nv->valuetype = TYPE_EMPTY;
         nv->token[0] = NUL;
@@ -538,20 +540,20 @@ void _nv_reset_a_list(nvObj_t *nv, uint8_t length)    // clear some nv list (cal
     (--nv)->nx = NULL;
 }
 
-nvObj_t *nv_reset_nv_list()                    // clear the header and response body
+nvObj_t *nv_reset_nv_list()                     // clear the header and response body
 {
-    nvStr.wp = 0;                            // reset the shared string
-    nvObj_t *nv = nvl.list;                    // set up linked list and initialize elements
+    nvStr.wp = 0;                               // reset the shared string
+    nvObj_t *nv = nvl.list;                     // set up linked list and initialize elements
 
     _nv_reset_a_list(nv, NV_LIST_LEN);
 
-    nv = nvl.list;                            // setup response header element ('r')
+    nv = nvl.list;                              // setup response header element ('r')
     nv->pv = NULL;
     nv->depth = 0;
     nv->valuetype = TYPE_PARENT;
     strcpy(nv->token, "r");
 
-    return (nv_body);                        // this is a convenience for calling routines
+    return (nv_body);                           // this is a convenience for calling routines
 }
 
 
@@ -570,14 +572,14 @@ stat_t nv_copy_string(nvObj_t *nv, const char *src)
         return (STAT_BUFFER_FULL);
     }
     char *dst = &nvStr.string[nvStr.wp];
-    strcpy(dst, src);                        // copy string to current head position
-                                            // string has already been tested for overflow, above
-    nvStr.wp += strlen(src)+1;                // advance head for next string
+    strcpy(dst, src);                           // copy string to current head position
+                                                // string has already been tested for overflow, above
+    nvStr.wp += strlen(src)+1;                  // advance head for next string
     nv->stringp = (char (*)[])dst;
     return (STAT_OK);
 }
 
-nvObj_t *nv_add_object(const char *token)  // add an object to the body using a token
+nvObj_t *nv_add_object(const char *token)       // add an object to the body using a token
 {
     nvObj_t *nv = nv_body;
     for (uint8_t i=0; i<NV_BODY_LEN; i++) {
@@ -587,7 +589,7 @@ nvObj_t *nv_add_object(const char *token)  // add an object to the body using a 
         }
         // load the index from the token or die trying
         if ((nv->index = nv_get_index((const char *)"",token)) == NO_MATCH) { return (NULL);}
-        nv_get_nvObj(nv);                // populate the object from the index
+        nv_get_nvObj(nv);                       // populate the object from the index
         return (nv);
     }
     return (NULL);

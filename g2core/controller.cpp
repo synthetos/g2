@@ -236,23 +236,25 @@ static void _dispatch_kernel()
         if (cs.comm_mode == AUTO_MODE) {
             js.json_mode = JSON_MODE;                       // switch to JSON mode
         }
+        cs.comm_request_mode = JSON_MODE;                   // mode of this command
         json_parser(cs.bufp);
     }
 #ifdef __TEXT_MODE
     else if (strchr("$?Hh", *cs.bufp) != NULL) {            // process as text mode
-        if (cs.comm_mode == AUTO_MODE) {
-            js.json_mode = TEXT_MODE;                       // switch to text mode
-        }
+        if (cs.comm_mode == AUTO_MODE) { js.json_mode = TEXT_MODE; } // switch to text mode
+        cs.comm_request_mode = TEXT_MODE;                   // mode of this command
         status = text_parser(cs.bufp);
         if (js.json_mode == TEXT_MODE) {                    // needed in case mode was changed by $EJ=1
             text_response(status, cs.saved_buf);
         }
     }
     else if (js.json_mode == TEXT_MODE) {                   // anything else is interpreted as Gcode
+        cs.comm_request_mode = TEXT_MODE;                   // mode of this command
         text_response(gcode_parser(cs.bufp), cs.saved_buf);
     }
 #endif
     else {  // anything else is interpreted as Gcode
+        cs.comm_request_mode = JSON_MODE;                   // mode of this command
 
         // this optimization bypasses the standard JSON parser and does what it needs directly
         nvObj_t *nv = nv_reset_nv_list();                   // get a fresh nvObj list

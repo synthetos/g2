@@ -66,7 +66,8 @@ typedef struct controllerSingleton {    // main TG controller struct
     // cs.comm_mode is the setting for the communications more
     // js.json_mode is the actual current mode (see also js.json_now)
     commMode comm_mode;                 // ej: 0=text mode sticky, 1=JSON mode sticky, 2=auto mode
-
+    commMode comm_request_mode;         // mode of request (may be different thatn the setting)
+    
     // controller serial buffers
     char *bufp;                         // pointer to primary or secondary in buffer
     uint16_t linelen;                   // length of currently processing line
