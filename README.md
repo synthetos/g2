@@ -80,10 +80,11 @@ Build 100.xx also significantly advances the project structure to support multip
   - Added `ENQ/ACK handshake`. If the host sends an ASCII `ENQ (0x05)` the board should respond with an `ACK (0x06)`. This is provided to facilitate low-level communications startup and automated testing
   - Added [`{fbs:n}`](https://github.com/synthetos/g2/wiki/Configuring-0.99-System-Groups#fbsn-firmware-build-string) as a read-only parameter to report the git commit used during compilation
   - Added [`{fbc:n}`](https://github.com/synthetos/g2/wiki/Configuring-0.99-System-Groups#fbcn-firmware-build-config-file) as a read-only parameter to report the configuration file used during compilation
-  - Added [`{su:..}`](https://github.com/synthetos/g2/wiki/Configuring-0.99-Motors#1su-steps-per-unit) to directly set a motor's steps-per-unit value- Removed `{cv:n}` configuration version tag
-  - Exception reports now provide more information about the nature and location of the exception
+  - Changes to [`{ej:1}`](https://github.com/synthetos/g2/wiki/Configuring-0.99-System-Groups#ej-enable-json-mode) Enable JSON parameter. JSON and text mode are now "sticky". Auto mode (olsd style) is also available
+  - Added [`{Nsu:..}`](https://github.com/synthetos/g2/wiki/Configuring-0.99-Motors#1su-steps-per-unit) to directly set motor N's steps-per-unit value
   - Changes to [Status Codes](https://github.com/synthetos/g2/wiki/Status-Codes) (...or see error.h for source)
   - Additional [`stat`](https://github.com/synthetos/g2/wiki/Status-Reports#stat-values) machine states
+  - Removed `{cv:n}` configuration version tag
   - Removed `{js:...}` JSON syntax. Responses are now always Strict. Accepts Strict or Relaxed on input
   - Removed `{ec:...}` Expand CR to CRLF
   - Removed `{ee:...}` Echo command
@@ -91,7 +92,7 @@ Build 100.xx also significantly advances the project structure to support multip
   - Removed `{ml:...}` Minimum line segment hidden parameter
   - Removed `{ma:...}` Minimum arc segment hidden parameter
   - Removed `{ms:...}` Minimum segment time hidden parameter
-
+  - Exception reports now provide more information about the nature and location of the exception
   - Removed code for embedded tests. These were a holdover from the TinyGv8 codebase and were not functional in g2. The code is now removed from the project.
 
 
