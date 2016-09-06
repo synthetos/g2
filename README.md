@@ -17,7 +17,7 @@ The fb:100 release is a major change from the fb:089 and earlier branches. It re
 ### Project Changes
 The project is now called g2core (even if the repo remains g2). As of this release the g2core code base is split from the TinyG code base. TinyG will continue to be supported for the Xmega 8-bit platform, and new features will be added, specifically as related to continued support for CNC milling applications. The g2core project will focus on various ARM platforms, as it currently does, and add functions that are not possible in the 8-bit platform.
 
-In this release the Motate hardware abstraction layer has been split into a separate project, and is included in g2core as a git submodule. This release also provides better support for cross platform / cross target compilation. A summary of project changes is provided below, with details in this readme and linked wiki pages.
+In this release the Motate hardware abstraction layer has been split into a separate project and is included in g2core as a git submodule. This release also provides better support for cross platform / cross target compilation. A summary of project changes is provided below, with details in this readme and linked wiki pages.
 - Motate submodule
 - Cross platform / cross target support
 - Multiple processor support - ARM M3, M4, M7 cores
@@ -50,7 +50,7 @@ Build 100.xx also significantly advances the project structure to support multip
 
 
 - **Planner and Motion Changes**
-  - Junction Integration Time - the `{jt:...}` parameter is now the way to set cornering velocity limits. Cornering now obeys full jerk limitation instead of the centripetal acceleration heuristic, making it much more accurate and more true to the jerk limits set for the machine. JT is a normalized scaled factor that is nominally set to 1.000. Set to less than 1 for slower cornering (less aggressive), greater than 1 (but probably less than 2) for more aggressive cornering. This parameter replaces Junction Acceleration `{ja:...}` and the axis Junction Deviation commands - e.g. `{xjd:0.01}`.
+  - Junction Integration Time - the [`{jt:...}`](https://github.com/synthetos/g2/wiki/Configuring-0.99-System-Groups#jt-junction-integration-time) parameter is now the way to set cornering velocity limits. Cornering now obeys full jerk limitation instead of the centripetal acceleration heuristic, making it much more accurate and more true to the jerk limits set for the machine. JT is a normalized scaled factor that is nominally set to 1.000. Set to less than 1 for slower cornering (less aggressive), greater than 1 (but probably less than 2) for more aggressive cornering. This parameter replaces Junction Acceleration `{ja:...}` and the axis Junction Deviation commands - e.g. `{xjd:0.01}`.
   - Deprecated `{ja:...}` global parameter. Will return error.
   - Deprecated `{_jd:...}` per-axis parameter. Will return error.
 
