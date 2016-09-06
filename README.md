@@ -57,16 +57,16 @@ Build 100.xx also significantly advances the project structure to support multip
 
 - **3D Printing Support**
   - Planner improvements to handle extreme cases found in some 3DP slicer outputs
-  - Added automatic bed leveling (tramming) using 3 point probe and coordinate rotation
-  - Added `{he1:n}`, `{he2:n}`, `{he3:n}` heater control groups
+  - Added automatic bed leveling [{tram:t}](https://github.com/synthetos/g2/wiki/Configuring-0.99-3D-Printing-Extensions#tramt-tram-command) using 3 point probe and coordinate rotation
+  - Added [`{he1:n}`, `{he2:n}`, `{he3:n}`](https://github.com/synthetos/g2/wiki/Configuring-0.99-3D-Printing-Extensions#heater-groups) heater control groups
   - Added `{pid1:n}`, `{pid2:n}`, `{pid3:n}` ADC PID groups
   - Note: The semantics of `{he:...}` and `{pid:...}` are still in development and may change.
 
 
-- **GPIO Changes**
-  - Changed configuration for `{di1:n}` ... `{di12:n}` somewhat
-  - Added `{do1:n}` ... `{do12:n}` digital output controls for controlling general outputs such as fans
-  - Added `{out1:n}` ... `{out12:n}` digital output state readers for reading the condition of do's
+- **[GPIO Changes](https://github.com/synthetos/g2/wiki/Digital-IO)**
+  - Changed configuration for [`{di1:n}` ... `{di12:n}`](https://github.com/synthetos/g2/wiki/Digital-IO#digital-inputs) somewhat
+  - Added [`{do1:n}` ... `{do12:n}`](https://github.com/synthetos/g2/wiki/Digital-IO#digital-outputs) digital output controls for controlling general outputs such as fans
+  - Added [`{out1:n}` ... `{out12:n}`](https://github.com/synthetos/g2/wiki/Digital-IO#digital-outputs) digital output state readers for reading the condition of do's
 
 
 - **Active JSON comments** - i.e. JSON called from Gcode
