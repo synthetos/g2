@@ -78,10 +78,9 @@ Build 100.xx also significantly advances the project structure to support multip
   - Added `Linemode` communication protocol, and provide guidance to use linemode for much simpler and more reliable application-level flow control
   - Footer format has changed. Checksum is no longer supported and has been removed
   - Added `ENQ/ACK handshake`. If the host sends an ASCII `ENQ (0x05)` the board should respond with an `ACK (0x06)`. This is provided to facilitate low-level communications startup and automated testing
-  - Added [`{su:..}`](https://github.com/synthetos/g2/wiki/Configuration-for-Firmware-Version-0.99#motor-settings) to directly set a motor's steps-per-unit value
-  - Added [`{fbs:n}`](https://github.com/synthetos/g2/wiki/Configuration-for-Firmware-Version-0.99#fbs---firmware-build-string) as a read-only parameter to report the git commit used during compilation
-  - Added [`{fbc:n}`](https://github.com/synthetos/g2/wiki/Configuration-for-Firmware-Version-0.99#fbc---firmware-build-config) as a read-only parameter to report the configuration file used during compilation
-  - Removed `{cv:n}` configuration version tag
+  - Added [`{fbs:n}`](https://github.com/synthetos/g2/wiki/Configuring-0.99-System-Groups#fbsn-firmware-build-string) as a read-only parameter to report the git commit used during compilation
+  - Added [`{fbc:n}`](https://github.com/synthetos/g2/wiki/Configuring-0.99-System-Groups#fbcn-firmware-build-config-file) as a read-only parameter to report the configuration file used during compilation
+  - Added [`{su:..}`](https://github.com/synthetos/g2/wiki/Configuring-0.99-Motors#1su-steps-per-unit) to directly set a motor's steps-per-unit value- Removed `{cv:n}` configuration version tag
   - Exception reports now provide more information about the nature and location of the exception
   - Changes to [Status Codes](https://github.com/synthetos/g2/wiki/Status-Codes) (...or see error.h for source)
   - Additional [`stat`](https://github.com/synthetos/g2/wiki/Status-Reports#stat-values) machine states
@@ -96,7 +95,7 @@ Build 100.xx also significantly advances the project structure to support multip
   - Removed code for embedded tests. These were a holdover from the TinyGv8 codebase and were not functional in g2. The code is now removed from the project.
 
 
-- **Project Structure and Motate**
+- **[Project Structure and Motate](https://github.com/synthetos/g2/wiki/Project-Structure-and-Motate)**
   - Motate underpinnings and project structure have changed significantly to support multiple processor architectures, boards, and machine configurations cleanly in the same project. If this affects you please read up on the wiki.
 
 
@@ -105,7 +104,7 @@ Build 100.xx also significantly advances the project structure to support multip
 
 
 - **Automated Regression Testing**
-  - A simple Python functional and regression test suite is available in Githup/Synthetos/tg_pytest. Please feel free to use and extend, but be aware that we are not offering much support for this. If you are familiar with Python and JSON the Readme should have everything you need.
+  - A simple Python functional and regression test suite is available in [Githup/Synthetos/tg_pytest](https://github.com/synthetos/tg_pytest). Please feel free to use and extend, but be aware that we are not offering much support for this. If you are familiar with Python and JSON the Readme should have everything you need.
 
 
 #### Known Issues
