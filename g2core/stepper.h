@@ -467,7 +467,7 @@ struct Stepper {
         if (_power_mode != MOTOR_DISABLED) {
             this->_enableImpl();
             _power_state = MOTOR_RUNNING;
-            _motor_disable_timeout_ms = timeout * 1000;
+            _motor_disable_timeout_ms = timeout * 1000.0;
         }
     };
     void disable()
@@ -491,7 +491,7 @@ struct Stepper {
             if (_power_mode == MOTOR_POWERED_IN_CYCLE) {
                 _motor_disable_timeout.set(_motor_disable_timeout_ms);
             } else if (_power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
-                _motor_disable_timeout.set(MOTOR_TIMEOUT_SECONDS * 1000);
+                _motor_disable_timeout.set(MOTOR_TIMEOUT_SECONDS * 1000.0);
           }
         }
 
