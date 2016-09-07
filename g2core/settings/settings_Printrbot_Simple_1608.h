@@ -199,7 +199,8 @@
  ***************************************************************************************/
 
 #define A_AXIS_MODE             AXIS_RADIUS
-#define A_RADIUS                5.30516476972984
+//#define A_RADIUS                4.30964
+#define A_RADIUS                4.28394
 //#define A_VELOCITY_MAX        25920.0 // ~40 mm/s, 2,400 mm/min
 //#define A_FEEDRATE_MAX        25920.0/2.0 // ~20 mm/s, 1,200 mm/min
 #define A_VELOCITY_MAX          77760.0 // G0 rate ~120 mm/s, 2,400 mm/min
