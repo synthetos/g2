@@ -201,8 +201,8 @@ struct Thermistor {
 
 // Extruder 1
 Thermistor<kADC1_PinNumber> thermistor1 {
-    /*T1:*/     20.0, /*T2:*/  190.0, /*T3:*/ 255.0,
-    /*R1:*/ 140000.0, /*R2:*/  490.0, /*R3:*/ 109.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
+    /*T1:*/     20.0, /*T2:*/  195.0, /*T3:*/ 255.0,
+    /*R1:*/ 140000.0, /*R2:*/  593.0, /*R3:*/ 189.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
     };
 
 #if ADC1_AVAILABLE == 1
