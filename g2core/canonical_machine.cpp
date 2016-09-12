@@ -1042,33 +1042,8 @@ stat_t cm_set_arc_distance_mode(const uint8_t mode)
  *  It also does not reset the work_offsets which may be accomplished by calling
  *  cm_set_work_offsets() immediately afterwards.
  */
-/*
-stat_t cm_set_coord_offsets(const uint8_t coord_system,
-                            const uint8_t L_word,
-                            const float offset[], const bool flag[])
-{
-    if ((coord_system < G54) || (coord_system > COORD_SYSTEM_MAX)) {    // you can't set G53
-        return (STAT_P_WORD_IS_INVALID);
-    }
-    if (!cm.gf.L_word) {
-        return (STAT_L_WORD_IS_MISSING);
-    }
-    if ((L_word != 2) && (L_word != 20)) {
-        return (STAT_L_WORD_IS_INVALID);
-    }
-    for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-        if (flag[axis]) {
-            if (L_word == 2) {
-                cm.offset[coord_system][axis] = _to_millimeters(offset[axis]);
-            } else {
-                cm.offset[coord_system][axis] = cm.gmx.position[axis] - _to_millimeters(offset[axis]);
-            }
-            cm.deferred_write_flag = true;                  // persist offsets once machining cycle is over
-        }
-    }
-    return (STAT_OK);
-}
-*/
+
+#ifdef __TOOL_LENGTH_OFFSET
 stat_t cm_set_coord_offsets(const uint8_t coord_system,
                             const uint8_t L_word,
                             const float offset[], const bool flag[])
@@ -1124,7 +1099,33 @@ stat_t cm_set_coord_offsets(const uint8_t coord_system,
     }
     return (STAT_OK);
 }
-
+#else   // Not __TOOL_LENGTH_OFFSET
+stat_t cm_set_coord_offsets(const uint8_t coord_system,
+                            const uint8_t L_word,
+                            const float offset[], const bool flag[])
+{
+    if ((coord_system < G54) || (coord_system > COORD_SYSTEM_MAX)) {    // you can't set G53
+        return (STAT_P_WORD_IS_INVALID);
+    }
+    if (!cm.gf.L_word) {
+        return (STAT_L_WORD_IS_MISSING);
+    }
+    if ((L_word != 2) && (L_word != 20)) {
+        return (STAT_L_WORD_IS_INVALID);
+    }
+    for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+        if (flag[axis]) {
+            if (L_word == 2) {
+                cm.offset[coord_system][axis] = _to_millimeters(offset[axis]);
+            } else {
+                cm.offset[coord_system][axis] = cm.gmx.position[axis] - _to_millimeters(offset[axis]);
+            }
+            cm.deferred_write_flag = true;                  // persist offsets once machining cycle is over
+        }
+    }
+    return (STAT_OK);
+}
+#endif
 
 /******************************************************************************************
  * Representation functions that affect gcode model and are queued to planner (synchronous)
@@ -1137,6 +1138,7 @@ stat_t cm_set_coord_offsets(const uint8_t coord_system,
  */
 stat_t cm_set_tl_offset(const uint8_t H_word, bool apply_additional)
 {
+#ifdef __TOOL_LENGTH_OFFSET
     uint8_t tool;
     if (cm.gf.H_word)
     {
@@ -1175,11 +1177,13 @@ stat_t cm_set_tl_offset(const uint8_t H_word, bool apply_additional)
     float value[] = { (float)cm.gm.coord_system,0,0,0,0,0 };// pass coordinate system in value[0] element
     bool flags[]  = { 1,0,0,0,0,0 };
     mp_queue_command(_exec_offset, value, flags);			// second vector (flags) is not used, so fake it
+#endif
     return (STAT_OK);
 }
 
 stat_t cm_cancel_tl_offset()
 {
+#ifdef __TOOL_LENGTH_OFFSET
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         cm.tl_offset[axis] = 0;
     }
@@ -1187,6 +1191,7 @@ stat_t cm_cancel_tl_offset()
     float value[] = { (float)cm.gm.coord_system,0,0,0,0,0 };// pass coordinate system in value[0] element
     bool flags[]  = { 1,0,0,0,0,0 };
     mp_queue_command(_exec_offset, value, flags);			// second vector (flags) is not used, so fake it
+#endif
     return (STAT_OK);
 }
 

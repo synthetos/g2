@@ -44,6 +44,7 @@
 #define __HELP_SCREENS              // enable help screens      (~3.5Kb)
 #define __USER_DATA                 // enable user defined data groups
 #define __STEP_CORRECTION           // enable virtual encoder step correction
+//#define __TOOL_LENGTH_OFFSET
 
 /****** DEVELOPMENT SETTINGS ******/
 

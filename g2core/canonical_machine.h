@@ -35,7 +35,7 @@
 #include "config.h"
 #include "hardware.h"                       // Note: hardware.h is specific to the hardware target selected
 
-/* Defines, Macros, and  Assorted Parameters */
+/* Defines, Macros, and Assorted Parameters */
 
 #define MODEL   (GCodeState_t *)&cm.gm      // absolute pointer from canonical machine gm model
 #define PLANNER (GCodeState_t *)&bf->gm     // relative to buffer *bf is currently pointing to
@@ -413,11 +413,10 @@ typedef struct GCodeInput {             // Gcode model inputs - meaning depends 
     uint8_t spindle_control;            // 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
     float spindle_speed;                // in RPM
     float spindle_override_factor;      // 1.0000 x S spindle speed. Go up or down from there
-    uint8_t  spindle_override_enable;   // TRUE = override enabled
+    uint8_t spindle_override_enable;    // TRUE = override enabled
 
 // unimplemented gcode parameters
 //  float cutter_radius;                // D - cutter radius compensation (0 is off)
-//  float cutter_length;                // H - cutter length compensation (0 is off)
 
 } GCodeInput_t;
 
@@ -512,7 +511,9 @@ typedef struct cmSingleton {                // struct to manage cm globals and c
     // coordinate systems and offsets
     float offset[COORDS+1][AXES];           // persistent coordinate offsets: absolute (G53) + G54,G55,G56,G57,G58,G59
     float tl_offset[AXES];                  // current tool length offset
+#ifdef __TOOL_LENGTH_OFFSET
     float tt_offset[TOOLS+1][AXES];         // persistent tool table offsets
+#endif
 
     // settings for axes X,Y,Z,A B,C
     cfgAxis_t a[AXES];
