@@ -551,7 +551,6 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
                 case 51: SET_MODAL (MODAL_GROUP_M9, sso_enable, true);
                 case 100: SET_NON_MODAL (next_action, NEXT_ACTION_JSON_COMMAND_SYNC);
                 case 101: SET_NON_MODAL (next_action, NEXT_ACTION_JSON_WAIT);
-//              case 102: SET_NON_MODAL (next_action, NEXT_ACTION_JSON_COMMAND_IMMEDIATE);
                 default: status = STAT_MCODE_COMMAND_UNSUPPORTED;
             }
             break;
