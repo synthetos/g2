@@ -300,7 +300,7 @@ float cm_get_active_coord_offset(const uint8_t axis)
     if (cm.gm.absolute_override == ABSOLUTE_OVERRIDE_ON) {  // no offset if in absolute override mode
         return (0.0);
     }
-    float offset = cm.offset[cm.gm.coord_system][axis];
+    float offset = cm.offset[cm.gm.coord_system][axis] + cm.tl_offset[axis];
     if (cm.gmx.origin_offset_enable == true) {
         offset += cm.gmx.origin_offset[axis];               // includes G5x and G92 components
     }
@@ -1042,7 +1042,7 @@ stat_t cm_set_arc_distance_mode(const uint8_t mode)
  *  It also does not reset the work_offsets which may be accomplished by calling
  *  cm_set_work_offsets() immediately afterwards.
  */
-
+/*
 stat_t cm_set_coord_offsets(const uint8_t coord_system,
                             const uint8_t L_word,
                             const float offset[], const bool flag[])
@@ -1068,14 +1068,128 @@ stat_t cm_set_coord_offsets(const uint8_t coord_system,
     }
     return (STAT_OK);
 }
+*/
+stat_t cm_set_coord_offsets(const uint8_t coord_system,
+                            const uint8_t L_word,
+                            const float offset[], const bool flag[])
+{
+    if (!cm.gf.L_word) {
+        return (STAT_L_WORD_IS_MISSING);
+    }
+
+    if ((L_word == 2) || (L_word == 20)) {
+        // coordinate system offset command
+        if ((coord_system < G54) || (coord_system > COORD_SYSTEM_MAX)) {
+            // you can't set G53
+            return (STAT_P_WORD_IS_INVALID);
+        }
+        for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+            if (flag[axis]) {
+                if (L_word == 2) {
+                    cm.offset[coord_system][axis] = _to_millimeters(offset[axis]);
+                } else {
+                    // Should L20 take into account G92 offsets?
+                    cm.offset[coord_system][axis] =
+                        cm.gmx.position[axis] - _to_millimeters(offset[axis]) - 
+                        cm.tl_offset[axis];
+                }
+                // persist offsets once machining cycle is over
+                cm.deferred_write_flag = true;
+            }
+        }
+    }
+    else if ((L_word == 1) || (L_word == 10)) {
+        // tool table offset command. L11 not supported atm.
+        if ((coord_system < 1) || (coord_system > TOOLS)) {
+            return (STAT_P_WORD_IS_INVALID);
+        }
+        for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+            if (flag[axis]) {
+                if (L_word == 1) {
+                    cm.tt_offset[coord_system][axis] = _to_millimeters(offset[axis]);
+                } else {
+                    // L10 should also take into account G92 offset
+                    cm.tt_offset[coord_system][axis] =
+                        cm.gmx.position[axis] - _to_millimeters(offset[axis]) - 
+                        cm.offset[cm.gm.coord_system][axis] - 
+                        (cm.gmx.origin_offset[axis] * cm.gmx.origin_offset_enable);
+                }
+                // persist offsets once machining cycle is over
+                cm.deferred_write_flag = true;
+            }
+        }
+    }
+    else {
+        return (STAT_L_WORD_IS_INVALID);
+    }
+    return (STAT_OK);
+}
+
 
 /******************************************************************************************
  * Representation functions that affect gcode model and are queued to planner (synchronous)
  */
 /*
+ * cm_set_tl_offset()    - G43
+ * cm_cancel_tl_offset() - G49
  * cm_set_coord_system() - G54-G59
  * _exec_offset() - callback from planner
  */
+stat_t cm_set_tl_offset(const uint8_t H_word, bool apply_additional)
+{
+    uint8_t tool;
+    if (cm.gf.H_word)
+    {
+        if (cm.gn.H_word > TOOLS)
+        {
+            return (STAT_H_WORD_IS_INVALID);
+        }
+        if (cm.gn.H_word == 0)
+        {
+            // interpret H0 as "current tool", just like no H at all.
+            tool = cm.gm.tool;
+        }
+        else
+        {
+            tool = cm.gn.H_word;
+        }
+    }
+    else
+    {
+        tool = cm.gm.tool;
+    }
+
+    if (apply_additional)
+    {
+        for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+            cm.tl_offset[axis] += cm.tt_offset[tool][axis];
+        }
+    }
+    else
+    {
+        for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+            cm.tl_offset[axis] = cm.tt_offset[tool][axis];
+        }
+    }
+
+    float value[] = { (float)cm.gm.coord_system,0,0,0,0,0 };// pass coordinate system in value[0] element
+    bool flags[]  = { 1,0,0,0,0,0 };
+    mp_queue_command(_exec_offset, value, flags);			// second vector (flags) is not used, so fake it
+    return (STAT_OK);
+}
+
+stat_t cm_cancel_tl_offset()
+{
+    for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+        cm.tl_offset[axis] = 0;
+    }
+
+    float value[] = { (float)cm.gm.coord_system,0,0,0,0,0 };// pass coordinate system in value[0] element
+    bool flags[]  = { 1,0,0,0,0,0 };
+    mp_queue_command(_exec_offset, value, flags);			// second vector (flags) is not used, so fake it
+    return (STAT_OK);
+}
+
 stat_t cm_set_coord_system(const uint8_t coord_system)
 {
     cm.gm.coord_system = (cmCoordSystem)coord_system;
@@ -1091,7 +1205,8 @@ static void _exec_offset(float *value, bool *flag)
     uint8_t coord_system = ((uint8_t)value[0]);             // coordinate system is passed in value[0] element
     float offsets[AXES];
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-        offsets[axis] = cm.offset[coord_system][axis] + (cm.gmx.origin_offset[axis] * cm.gmx.origin_offset_enable);
+        offsets[axis] = cm.offset[coord_system][axis] + cm.tl_offset[axis] + 
+                        (cm.gmx.origin_offset[axis] * cm.gmx.origin_offset_enable);
     }
     mp_set_runtime_work_offset(offsets);
     cm_set_work_offsets(MODEL);                             // set work offsets in the Gcode model
@@ -1185,7 +1300,9 @@ stat_t cm_set_origin_offsets(const float offset[], const bool flag[])
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         if (flag[axis]) {
             cm.gmx.origin_offset[axis] = cm.gmx.position[axis] -
-                                         cm.offset[cm.gm.coord_system][axis] - _to_millimeters(offset[axis]);
+                                         cm.offset[cm.gm.coord_system][axis] - 
+                                         cm.tl_offset[axis] -
+                                         _to_millimeters(offset[axis]);
         }
     }
     // now pass the offset to the callback - setting the coordinate system also applies the offsets
@@ -2237,6 +2354,14 @@ stat_t cm_get_ofs(nvObj_t *nv)
     return (STAT_OK);
 }
 
+stat_t cm_get_tof(nvObj_t *nv)
+{
+    nv->value = cm.tl_offset[_get_axis(nv->index)];
+    nv->precision = GET_TABLE_WORD(precision);
+    nv->valuetype = TYPE_FLOAT;
+    return (STAT_OK);
+}
+
 /*
  * AXIS GET AND SET FUNCTIONS
  *
@@ -2633,6 +2758,7 @@ static const char fmt_cpos[] = "[%s%s] %s %s position%18.3f%s\n";
 static const char fmt_pos[] = "%c position:%15.3f%s\n";
 static const char fmt_mpo[] = "%c machine posn:%11.3f%s\n";
 static const char fmt_ofs[] = "%c work offset:%12.3f%s\n";
+static const char fmt_tof[] = "%c tool length offset:%12.3f%s\n";
 static const char fmt_hom[] = "%c axis homing state:%2.0f\n";
 
 static void _print_axis_ui8(nvObj_t *nv, const char *format)
@@ -2710,6 +2836,7 @@ void cm_print_cpos(nvObj_t *nv) { _print_axis_coord_flt(nv, fmt_cpos);}
 void cm_print_pos(nvObj_t *nv) { _print_pos(nv, fmt_pos, cm_get_units_mode(MODEL));}
 void cm_print_mpo(nvObj_t *nv) { _print_pos(nv, fmt_mpo, MILLIMETERS);}
 void cm_print_ofs(nvObj_t *nv) { _print_pos(nv, fmt_ofs, MILLIMETERS);}
+void cm_print_tof(nvObj_t *nv) { _print_pos(nv, fmt_tof, MILLIMETERS);}
 void cm_print_hom(nvObj_t *nv) { _print_hom(nv, fmt_hom);}
 
 #endif // __TEXT_MODE

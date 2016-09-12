@@ -55,11 +55,12 @@ enum hwPlatform {
 // Axes, motors & PWM channels must be defines (not enums) so expressions like this:
 //  #if (MOTORS >= 6)  will work
 
-#define AXES 6         // number of axes supported in this version
-#define HOMING_AXES 4  // number of axes that can be homed (assumes Zxyabc sequence)
-#define MOTORS 4       // number of motors on the board
-#define COORDS 6       // number of supported coordinate systems (1-6)
-#define PWMS 2         // number of supported PWM channels
+#define AXES 6          // number of axes supported in this version
+#define HOMING_AXES 4   // number of axes that can be homed (assumes Zxyabc sequence)
+#define MOTORS 4        // number of motors on the board
+#define COORDS 6        // number of supported coordinate systems (1-6)
+#define PWMS 2          // number of supported PWM channels
+#define TOOLS 6         // number of entries in tool table (1-6)
 
 
 ////////////////////////////
