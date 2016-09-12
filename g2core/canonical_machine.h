@@ -174,7 +174,6 @@ typedef enum {                          // these are in order to optimized CASE 
     NEXT_ACTION_RESUME_ORIGIN_OFFSETS,  // G92.3
     NEXT_ACTION_JSON_COMMAND_SYNC,      // M100
     NEXT_ACTION_JSON_WAIT               // M101
-//    NEXT_ACTION_JSON_COMMAND_IMMEDIATE, // M102
 } cmNextAction;
 
 typedef enum {                          // G Modal Group 1
@@ -509,8 +508,8 @@ typedef struct cmSingleton {                // struct to manage cm globals and c
 
     // coordinate systems and offsets
     float offset[COORDS+1][AXES];           // persistent coordinate offsets: absolute (G53) + G54,G55,G56,G57,G58,G59
-    float tl_offset[AXES];                  // current tool length offset
 #ifdef __TOOL_LENGTH_OFFSET
+    float tl_offset[AXES];                  // current tool length offset
     float tt_offset[TOOLS+1][AXES];         // persistent tool table offsets
 #endif
 

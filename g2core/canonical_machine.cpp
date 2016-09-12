@@ -300,7 +300,11 @@ float cm_get_active_coord_offset(const uint8_t axis)
     if (cm.gm.absolute_override == ABSOLUTE_OVERRIDE_ON) {  // no offset if in absolute override mode
         return (0.0);
     }
+#ifdef __TOOL_LENGTH_OFFSET
     float offset = cm.offset[cm.gm.coord_system][axis] + cm.tl_offset[axis];
+#else
+    float offset = cm.offset[cm.gm.coord_system][axis];
+#endif
     if (cm.gmx.origin_offset_enable == true) {
         offset += cm.gmx.origin_offset[axis];               // includes G5x and G92 components
     }
@@ -1210,8 +1214,13 @@ static void _exec_offset(float *value, bool *flag)
     uint8_t coord_system = ((uint8_t)value[0]);             // coordinate system is passed in value[0] element
     float offsets[AXES];
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+
+#ifdef __TOOL_LENGTH_OFFSET
         offsets[axis] = cm.offset[coord_system][axis] + cm.tl_offset[axis] + 
                         (cm.gmx.origin_offset[axis] * cm.gmx.origin_offset_enable);
+#else 
+        offsets[axis] = cm.offset[coord_system][axis] + (cm.gmx.origin_offset[axis] * cm.gmx.origin_offset_enable);
+#endif
     }
     mp_set_runtime_work_offset(offsets);
     cm_set_work_offsets(MODEL);                             // set work offsets in the Gcode model
@@ -1306,7 +1315,9 @@ stat_t cm_set_origin_offsets(const float offset[], const bool flag[])
         if (flag[axis]) {
             cm.gmx.origin_offset[axis] = cm.gmx.position[axis] -
                                          cm.offset[cm.gm.coord_system][axis] - 
+#ifdef __TOOL_LENGTH_OFFSET
                                          cm.tl_offset[axis] -
+#endif
                                          _to_millimeters(offset[axis]);
         }
     }
@@ -2361,9 +2372,11 @@ stat_t cm_get_ofs(nvObj_t *nv)
 
 stat_t cm_get_tof(nvObj_t *nv)
 {
+#ifdef __TOOL_LENGTH_OFFSET
     nv->value = cm.tl_offset[_get_axis(nv->index)];
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
+#endif
     return (STAT_OK);
 }
 
