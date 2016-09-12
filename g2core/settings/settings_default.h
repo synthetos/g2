@@ -1053,6 +1053,121 @@
 #define G59_C_OFFSET 0
 #endif
 
+// *** Tool Table Defaults *** //
+
+#ifndef TT1_X_OFFSET
+#define TT1_X_OFFSET 0
+#endif
+#ifndef TT1_Y_OFFSET
+#define TT1_Y_OFFSET 0
+#endif
+#ifndef TT1_Z_OFFSET
+#define TT1_Z_OFFSET 0
+#endif
+#ifndef TT1_A_OFFSET
+#define TT1_A_OFFSET 0
+#endif
+#ifndef TT1_B_OFFSET
+#define TT1_B_OFFSET 0
+#endif
+#ifndef TT1_C_OFFSET
+#define TT1_C_OFFSET 0
+#endif
+
+#ifndef TT2_X_OFFSET
+#define TT2_X_OFFSET 0
+#endif
+#ifndef TT2_Y_OFFSET
+#define TT2_Y_OFFSET 0
+#endif
+#ifndef TT2_Z_OFFSET
+#define TT2_Z_OFFSET 0
+#endif
+#ifndef TT2_A_OFFSET
+#define TT2_A_OFFSET 0
+#endif
+#ifndef TT2_B_OFFSET
+#define TT2_B_OFFSET 0
+#endif
+#ifndef TT2_C_OFFSET
+#define TT2_C_OFFSET 0
+#endif
+
+#ifndef TT3_X_OFFSET
+#define TT3_X_OFFSET 0
+#endif
+#ifndef TT3_Y_OFFSET
+#define TT3_Y_OFFSET 0
+#endif
+#ifndef TT3_Z_OFFSET
+#define TT3_Z_OFFSET 0
+#endif
+#ifndef TT3_A_OFFSET
+#define TT3_A_OFFSET 0
+#endif
+#ifndef TT3_B_OFFSET
+#define TT3_B_OFFSET 0
+#endif
+#ifndef TT3_C_OFFSET
+#define TT3_C_OFFSET 0
+#endif
+
+#ifndef TT4_X_OFFSET
+#define TT4_X_OFFSET 0
+#endif
+#ifndef TT4_Y_OFFSET
+#define TT4_Y_OFFSET 0
+#endif
+#ifndef TT4_Z_OFFSET
+#define TT4_Z_OFFSET 0
+#endif
+#ifndef TT4_A_OFFSET
+#define TT4_A_OFFSET 0
+#endif
+#ifndef TT4_B_OFFSET
+#define TT4_B_OFFSET 0
+#endif
+#ifndef TT4_C_OFFSET
+#define TT4_C_OFFSET 0
+#endif
+
+#ifndef TT5_X_OFFSET
+#define TT5_X_OFFSET 0
+#endif
+#ifndef TT5_Y_OFFSET
+#define TT5_Y_OFFSET 0
+#endif
+#ifndef TT5_Z_OFFSET
+#define TT5_Z_OFFSET 0
+#endif
+#ifndef TT5_A_OFFSET
+#define TT5_A_OFFSET 0
+#endif
+#ifndef TT5_B_OFFSET
+#define TT5_B_OFFSET 0
+#endif
+#ifndef TT5_C_OFFSET
+#define TT5_C_OFFSET 0
+#endif
+
+#ifndef TT6_X_OFFSET
+#define TT6_X_OFFSET 0
+#endif
+#ifndef TT6_Y_OFFSET
+#define TT6_Y_OFFSET 0
+#endif
+#ifndef TT6_Z_OFFSET
+#define TT6_Z_OFFSET 0
+#endif
+#ifndef TT6_A_OFFSET
+#define TT6_A_OFFSET 0
+#endif
+#ifndef TT6_B_OFFSET
+#define TT6_B_OFFSET 0
+#endif
+#ifndef TT6_C_OFFSET
+#define TT6_C_OFFSET 0
+#endif
 // *** User-Defined Data Defaults *** //
 
 #ifndef USER_DATA_A0
