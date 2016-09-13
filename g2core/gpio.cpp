@@ -583,6 +583,7 @@ stat_t io_get_output(nvObj_t *nv)
         nv->valuetype = TYPE_NULL;   // reports back as NULL
     } else {
         nv->valuetype = TYPE_FLOAT;
+        nv->precision = 2;
         bool invert = (outMode == 0);
         // Note: !! forces a value to boolean 0 or 1
         switch (output_num) {
