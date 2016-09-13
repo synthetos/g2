@@ -103,7 +103,7 @@
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
 #define M3_MOTOR_MAP                AXIS_Y
 #define M3_STEP_ANGLE               1.8
-#define M3_TRAVEL_PER_REV           40.132
+#define M3_TRAVEL_PER_REV           40.011604
 #define M3_MICROSTEPS               32
 #define M3_POLARITY                 0
 #define M3_POWER_MODE               MOTOR_POWER_MODE
