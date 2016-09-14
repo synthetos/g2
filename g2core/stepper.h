@@ -458,6 +458,11 @@ struct Stepper {
         }
     };
 
+    virtual stPowerMode getPowerMode()
+    {
+         return _power_mode;
+    };
+
     bool isDisabled()
     {
         return (_power_mode == MOTOR_DISABLED);
@@ -546,6 +551,7 @@ stat_t st_set_tr(nvObj_t *nv);
 stat_t st_set_mi(nvObj_t *nv);
 stat_t st_set_su(nvObj_t *nv);
 stat_t st_set_pm(nvObj_t *nv);
+stat_t st_get_pm(nvObj_t *nv);
 stat_t st_set_pl(nvObj_t *nv);
 stat_t st_set_mt(nvObj_t *nv);
 stat_t st_set_md(nvObj_t *nv);

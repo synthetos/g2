@@ -875,6 +875,7 @@ static void _set_motor_steps_per_unit(nvObj_t *nv)
  * st_set_tr() - set travel per motor revolution
  * st_set_mi() - set motor microsteps
  * st_set_pm() - set motor power mode
+ * st_get_pm() - get motor power mode
  * st_set_pl() - set motor power level
  */
 
@@ -929,7 +930,7 @@ stat_t st_set_su(nvObj_t *nv)			// motor steps per unit (direct)
     return(STAT_OK);
 }
 
-stat_t st_set_pm(nvObj_t *nv)            // motor power mode
+stat_t st_set_pm(nvObj_t *nv)            // set motor power mode
 {
     if (nv->value >= MOTOR_POWER_MODE_MAX_VALUE) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
 
@@ -937,9 +938,20 @@ stat_t st_set_pm(nvObj_t *nv)            // motor power mode
     if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
 
     Motors[motor]->setPowerMode((stPowerMode)nv->value);
-    //set_ui8(nv);
     // We do this *here* in order for this to take effect immediately.
-//    _deenergize_motor(_get_motor(nv->index));
+    // setPowerMode() sets the value and also executes it.
+    return (STAT_OK);
+}
+
+stat_t st_get_pm(nvObj_t *nv)            // get motor power mode
+{
+    if (nv->value >= MOTOR_POWER_MODE_MAX_VALUE) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
+
+    uint8_t motor = _get_motor(nv->index);
+    if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
+
+    nv->value = (float)Motors[motor]->getPowerMode();
+    nv->valuetype = TYPE_INT;
     return (STAT_OK);
 }
 
