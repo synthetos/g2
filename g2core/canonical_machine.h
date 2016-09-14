@@ -535,11 +535,11 @@ typedef struct cmSingleton {                // struct to manage cm globals and c
     cmHomingState homing_state;             // home: homing cycle sub-state machine
     uint8_t homed[AXES];                    // individual axis homing flags
 
-    cmProbeState probe_state[PROBES_STORED];                 // probing state machine (simple)
+    cmProbeState probe_state[PROBES_STORED];  // probing state machine (simple)
     float probe_results[PROBES_STORED][AXES]; // probing results
 
     float rotation_matrix[3][3];            // three-by-three rotation matrix. We ignore rotary axes.
-    float rotation_z_offset;                // we seperately handle a z-offset, so that the new plane
+    float rotation_z_offset;                // we separately handle a z-offset, so that the new plane
                                             // maintains a consistent distance from the old one.
                                             // We only need z, since we are rotating to the z axis.
 
