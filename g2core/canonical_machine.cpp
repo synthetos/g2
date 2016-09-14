@@ -702,7 +702,8 @@ stat_t cm_test_soft_limits(const float target[])
 void canonical_machine_init()
 {
 // If you can assume all memory has been zeroed by a hard reset you don't need this code:
-    memset(&cm, 0, sizeof(cm));                 // do not reset canonicalMachineSingleton once it's been initialized
+//    memset(&cm, 0, sizeof(cm));                 // do not reset canonicalMachineSingleton once it's been initialized
+    memset(&cm, 0, sizeof(cmSingleton_t));      // do not reset canonicalMachineSingleton once it's been initialized
     memset(&cm.gm, 0, sizeof(GCodeState_t));    // clear all values, pointers and status
     memset(&cm.gn, 0, sizeof(GCodeInput_t));
     memset(&cm.gf, 0, sizeof(GCodeFlags_t));
@@ -1068,8 +1069,8 @@ stat_t cm_set_coord_offsets(const uint8_t coord_system,
                     cm.offset[coord_system][axis] = _to_millimeters(offset[axis]);
                 } else {
                     // Should L20 take into account G92 offsets?
-                    cm.offset[coord_system][axis] =
-                        cm.gmx.position[axis] - _to_millimeters(offset[axis]) - 
+                    cm.offset[coord_system][axis] = cm.gmx.position[axis] - 
+                        _to_millimeters(offset[axis]) - 
                         cm.tl_offset[axis];
                 }
                 // persist offsets once machining cycle is over
