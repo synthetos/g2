@@ -460,16 +460,16 @@ static void _load_move()
 //        }
         motor_1.motionStopped();    // ...start motor power timeouts
         motor_2.motionStopped();    // ...start motor power timeouts
-#if (MOTORS >= 3)
+#if (MOTORS > 2)
         motor_3.motionStopped();    // ...start motor power timeouts
 #endif
-#if (MOTORS >= 4)
+#if (MOTORS > 3)
         motor_4.motionStopped();    // ...start motor power timeouts
 #endif
-#if (MOTORS >= 5)
+#if (MOTORS > 4)
         motor_5.motionStopped();    // ...start motor power timeouts
 #endif
-#if (MOTORS >= 6)
+#if (MOTORS > 5)
         motor_6.motionStopped();    // ...start motor power timeouts
 #endif
         return;
@@ -483,53 +483,18 @@ static void _load_move()
         st_run.dda_ticks_downcount = st_pre.dda_ticks;
         st_run.dda_ticks_X_substeps = st_pre.dda_ticks_X_substeps;
 
-//        for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
-//            // the following if() statement sets the runtime substep increment value or zeroes it
-//            if ((st_run.mot[motor].substep_increment = st_pre.mot[motor].substep_increment) != 0) {
-//
-//                // NB: If motor has 0 steps the following is all skipped. This ensures that state comparisons
-//                //       always operate on the last segment actually run by this motor, regardless of how many
-//                //       segments it may have been inactive in between.
-//
-//                // Apply accumulator correction if the time base has changed since previous segment
-//                if (st_pre.mot[motor].accumulator_correction_flag == true) {
-//                    st_pre.mot[motor].accumulator_correction_flag = false;
-//                    st_run.mot[motor].substep_accumulator *= st_pre.mot[motor].accumulator_correction;
-//                }
-//
-//                // Detect direction change and if so:
-//                //    - Set the direction bit in hardware.
-//                //    - Compensate for direction change by flipping substep accumulator value about its midpoint.
-//
-//                if (st_pre.mot[motor].direction != st_pre.mot[motor].prev_direction) {
-//                    st_pre.mot[motor].prev_direction = st_pre.mot[motor].direction;
-//                    st_run.mot[motor].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[motor].substep_accumulator);
-//                    Motors[motor]->setDirection(st_pre.mot[motor].direction);
-//                }
-//
-//                // Enable the stepper and start/update motor power management
-//                Motors[motor]->enable();
-//                SET_ENCODER_STEP_SIGN(motor, st_pre.mot[motor].step_sign);
-//
-//            } else {  // Motor has 0 steps; might need to energize motor for power mode processing
-//                Motors[motor]->motionStopped();
-//            }
-//            // accumulate counted steps to the step position and zero out counted steps for the segment currently being loaded
-//            ACCUMULATE_ENCODER(motor);
-//        }
-
-// INLINED VERSION: 4.3us
+        // INLINED VERSION: 4.3us
         //**** MOTOR_1 LOAD ****
 
         // These sections are somewhat optimized for execution speed. The whole load operation
-        // is supposed to take < 10 uSec (Xmega). Be careful if you mess with this.
+        // is supposed to take < 5 uSec (Arm M3 core). Be careful if you mess with this.
 
         // the following if() statement sets the runtime substep increment value or zeroes it
         if ((st_run.mot[MOTOR_1].substep_increment = st_pre.mot[MOTOR_1].substep_increment) != 0) {
 
             // NB: If motor has 0 steps the following is all skipped. This ensures that state comparisons
-            //       always operate on the last segment actually run by this motor, regardless of how many
-            //       segments it may have been inactive in between.
+            //     always operate on the last segment actually run by this motor, regardless of how many
+            //     segments it may have been inactive in between.
 
             // Apply accumulator correction if the time base has changed since previous segment
             if (st_pre.mot[MOTOR_1].accumulator_correction_flag == true) {
@@ -538,8 +503,8 @@ static void _load_move()
             }
 
             // Detect direction change and if so:
-            //    - Set the direction bit in hardware.
-            //    - Compensate for direction change by flipping substep accumulator value about its midpoint.
+            //    Set the direction bit in hardware.
+            //    Compensate for direction change by flipping substep accumulator value about its midpoint.
 
             if (st_pre.mot[MOTOR_1].direction != st_pre.mot[MOTOR_1].prev_direction) {
                 st_pre.mot[MOTOR_1].prev_direction = st_pre.mot[MOTOR_1].direction;
@@ -549,14 +514,9 @@ static void _load_move()
 
             // Enable the stepper and start/update motor power management
             motor_1.enable();
-//          st_run.mot[MOTOR_1].power_state = MOTOR_RUNNING;
             SET_ENCODER_STEP_SIGN(MOTOR_1, st_pre.mot[MOTOR_1].step_sign);
 
         } else {  // Motor has 0 steps; might need to energize motor for power mode processing
-//            if (st_cfg.mot[MOTOR_1].power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
-//                motor_1.enable();                                    // energize motor
-//                st_run.mot[MOTOR_1].power_state = MOTOR_POWER_TIMEOUT_START;
-//            }
             motor_1.motionStopped();
             }
         // accumulate counted steps to the step position and zero out counted steps for the segment currently being loaded
