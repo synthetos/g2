@@ -180,6 +180,21 @@ const cfgItem_t cfgArray[] = {
 //  { "jog","jogb",_f0, 0, tx_print_nul, get_nul, cm_run_jogb, (float *)&cm.jogging_dest, 0},
 //  { "jog","jogc",_f0, 0, tx_print_nul, get_nul, cm_run_jogc, (float *)&cm.jogging_dest, 0},
 
+	{ "pwr","pwr1",_f0, 3, st_print_pwr, st_get_pwr, set_nul, (float *)&cs.null, 0},	// motor power readouts
+	{ "pwr","pwr2",_f0, 3, st_print_pwr, st_get_pwr, set_nul, (float *)&cs.null, 0},
+#if (MOTORS > 2)
+	{ "pwr","pwr3",_f0, 3, st_print_pwr, st_get_pwr, set_nul, (float *)&cs.null, 0},
+#endif
+#if (MOTORS > 3)
+	{ "pwr","pwr4",_f0, 3, st_print_pwr, st_get_pwr, set_nul, (float *)&cs.null, 0},
+#endif
+#if (MOTORS > 4)
+	{ "pwr","pwr5",_f0, 3, st_print_pwr, st_get_pwr, set_nul, (float *)&cs.null, 0},
+#endif
+#if (MOTORS > 5)
+	{ "pwr","pwr6",_f0, 3, st_print_pwr, st_get_pwr, set_nul, (float *)&cs.null, 0},
+#endif
+
     // Motor parameters
     { "1","1ma",_fip, 0, st_print_ma, get_ui8, set_ui8,     (float *)&st_cfg.mot[MOTOR_1].motor_map,      M1_MOTOR_MAP },
     { "1","1sa",_fip, 3, st_print_sa, get_flt, st_set_sa,   (float *)&st_cfg.mot[MOTOR_1].step_angle,     M1_STEP_ANGLE },
@@ -591,7 +606,6 @@ const cfgItem_t cfgArray[] = {
     { "sys","jt", _fipn, 2, cm_print_jt,  get_flt, cm_set_jt,(float *)&cm.junction_integration_time,JUNCTION_INTEGRATION_TIME },
     { "sys","ct", _fipnc,4, cm_print_ct,  get_flt, set_flu,  (float *)&cm.chordal_tolerance,        CHORDAL_TOLERANCE },
     { "sys","sl", _fipn, 0, cm_print_sl,  get_ui8, set_01,   (float *)&cm.soft_limit_enable,        SOFT_LIMIT_ENABLE },
-
     { "sys","lim", _fipn,0, cm_print_lim, get_ui8, set_01,   (float *)&cm.limit_enable,             HARD_LIMIT_ENABLE },
     { "sys","saf", _fipn,0, cm_print_saf, get_ui8, set_01,   (float *)&cm.safety_interlock_enable,  SAFETY_INTERLOCK_ENABLE },
     { "sys","m48e",_fipn,0, cm_print_m48e,get_ui8, set_01,   (float *)&cm.gmx.m48_enable, 0 },      // M48/M49 feedrate & spindle override enable
@@ -871,7 +885,7 @@ const cfgItem_t cfgArray[] = {
     { "","ofs",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },  // work offset group
     { "","hom",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },  // axis homing state group
     { "","prb",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },  // probing state group
-    { "","pwr",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },  // motor power enagled group
+    { "","pwr",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },  // motor power readout group
     { "","jog",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },  // axis jogging state group
     { "","jid",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },  // job ID group
     // +8 = 53

@@ -349,7 +349,7 @@ typedef enum {
 
 typedef struct cfgMotor {                   // per-motor configs
     // public
-    uint8_t    motor_map;                   // map motor to axis
+    uint8_t motor_map;                      // map motor to axis
     uint8_t microsteps;                     // microsteps to apply for each axis (ex: 8)
     uint8_t polarity;                       // 0=normal polarity, 1=reverse motor direction
 //  stPowerMode power_mode;                 // See stPowerMode for values
@@ -463,6 +463,14 @@ struct Stepper {
          return _power_mode;
     };
 
+    virtual float getCurrentPowerLevel(uint8_t motor)
+    {
+        if (_power_state == MOTOR_OFF) {
+            return (0.0);
+        }
+        return (st_cfg.mot[motor].power_level);
+    };
+
     bool isDisabled()
     {
         return (_power_mode == MOTOR_DISABLED);
@@ -553,6 +561,8 @@ stat_t st_set_su(nvObj_t *nv);
 stat_t st_set_pm(nvObj_t *nv);
 stat_t st_get_pm(nvObj_t *nv);
 stat_t st_set_pl(nvObj_t *nv);
+stat_t st_get_pwr(nvObj_t *nv);
+
 stat_t st_set_mt(nvObj_t *nv);
 stat_t st_set_md(nvObj_t *nv);
 stat_t st_set_me(nvObj_t *nv);
@@ -567,6 +577,7 @@ stat_t st_set_me(nvObj_t *nv);
     void st_print_po(nvObj_t *nv);
     void st_print_pm(nvObj_t *nv);
     void st_print_pl(nvObj_t *nv);
+    void st_print_pwr(nvObj_t *nv);
     void st_print_mt(nvObj_t *nv);
     void st_print_me(nvObj_t *nv);
     void st_print_md(nvObj_t *nv);
@@ -581,6 +592,7 @@ stat_t st_set_me(nvObj_t *nv);
     #define st_print_po tx_print_stub
     #define st_print_pm tx_print_stub
     #define st_print_pl tx_print_stub
+    #define st_print_pwr tx_print_stub
     #define st_print_mt tx_print_stub
     #define st_print_me tx_print_stub
     #define st_print_md tx_print_stub

@@ -268,7 +268,7 @@ void dda_timer_type::interrupt()
 //        Motors[motor]->stepEnd();
 //    }
 
-    // clear all steps
+    // clear all steps from the previous interrupt
     motor_1.stepEnd();
     motor_2.stepEnd();
 #if MOTORS > 2
@@ -278,10 +278,10 @@ void dda_timer_type::interrupt()
     motor_4.stepEnd();
 #endif
 #if MOTORS > 4
-        motor_5.stepEnd();
+    motor_5.stepEnd();
 #endif
 #if MOTORS > 5
-        motor_6.stepEnd();
+    motor_6.stepEnd();
 #endif
 
     // process last DDA tick after end of segment
@@ -290,6 +290,7 @@ void dda_timer_type::interrupt()
         return;
     }
 
+//  The following code would work, but it's faster to loop unroll it
 //    for (uint8_t motor=0; motor<MOTORS; motor++) {
 //        if  ((st_run.mot[motor].substep_accumulator += st_run.mot[motor].substep_increment) > 0) {
 //            Motors[motor]->stepStart();        // turn step bit on
@@ -362,9 +363,9 @@ namespace Motate {            // Must define timer interrupts inside the Motate 
 } // namespace Motate
 
 /****************************************************************************************
- * Exec sequencing code        - computes and prepares next load segment
- * st_request_exec_move()    - SW interrupt to request to execute a move
- * exec_timer interrupt        - interrupt handler for calling exec function
+ * Exec sequencing code   - computes and prepares next load segment
+ * st_request_exec_move() - SW interrupt to request to execute a move
+ * exec_timer interrupt   - interrupt handler for calling exec function
  */
 
 void st_request_exec_move()
@@ -407,7 +408,7 @@ namespace Motate {    // Define timer inside Motate namespace
 /****************************************************************************************
  * Loader sequencing code
  * st_request_load_move() - fires a software interrupt (timer) to request to load a move
- * load_move interrupt      - interrupt handler for running the loader
+ * load_move interrupt    - interrupt handler for running the loader
  *
  *  _load_move() can only be called be called from an ISR at the same or higher level as
  *  the DDA or dwell ISR. A software interrupt has been provided to allow a non-ISR to
@@ -849,7 +850,7 @@ static int8_t _get_motor(const index_t index)
 {
     char *ptr;
     char motors[] = {"123456"};
-    char tmp[TOKEN_LEN+1];
+    char tmp[GROUP_LEN+1];
 
     strcpy(tmp, cfgArray[index].group);
     if ((ptr = strchr(motors, tmp[0])) == NULL) {
@@ -977,6 +978,25 @@ stat_t st_set_pl(nvObj_t *nv)    // motor power level
     return(STAT_OK);
 }
 
+/*
+ * st_get_pwr()	- get current motor power
+ *
+ *  Returns the current power level of the motor given it's enable/disable state
+ *  Returns 0.0 if motor is de-energized or disabled
+ *  Can be extended to report idle setback by changing getCurrentPowerLevel()
+ */
+stat_t st_get_pwr(nvObj_t *nv)
+{
+    // this is kind of a hack to extract the motor number from the table
+    uint8_t motor = (cfgArray[nv->index].token[3] & 0x0F) - 1;
+    if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
+
+    nv->value = Motors[motor]->getCurrentPowerLevel(motor);
+	nv->valuetype = TYPE_FLOAT;
+    nv->precision = cfgArray[nv->index].precision;
+	return (STAT_OK);
+}
+
 /* GLOBAL FUNCTIONS (SYSTEM LEVEL)
  *
  * st_set_mt() - set motor timeout in seconds
@@ -1034,6 +1054,7 @@ static const char fmt_0su[] = "[%s%s] m%s steps per unit %17.5f steps per%s\n";
 static const char fmt_0po[] = "[%s%s] m%s polarity%18d [0=normal,1=reverse]\n";
 static const char fmt_0pm[] = "[%s%s] m%s power management%10d [0=disabled,1=always on,2=in cycle,3=when moving]\n";
 static const char fmt_0pl[] = "[%s%s] m%s motor power level%13.3f [0.000=minimum, 1.000=maximum]\n";
+static const char fmt_pwr[] = "[%s%s] Motor %c power level:%12.3f\n";
 
 void st_print_me(nvObj_t *nv) { text_print(nv, fmt_me);}    // TYPE_NULL - message only
 void st_print_md(nvObj_t *nv) { text_print(nv, fmt_md);}    // TYPE_NULL - message only
@@ -1057,6 +1078,12 @@ static void _print_motor_flt_units(nvObj_t *nv, const char *format, uint8_t unit
     xio_writeline(cs.out_buf);
 }
 
+static void _print_motor_pwr(nvObj_t *nv, const char *format)
+{
+    sprintf(cs.out_buf, format, nv->group, nv->token, nv->token[0], nv->value);
+    xio_writeline(cs.out_buf);
+}
+
 void st_print_ma(nvObj_t *nv) { _print_motor_int(nv, fmt_0ma);}
 void st_print_sa(nvObj_t *nv) { _print_motor_flt_units(nv, fmt_0sa, DEGREE_INDEX);}
 void st_print_tr(nvObj_t *nv) { _print_motor_flt_units(nv, fmt_0tr, cm_get_units_mode(MODEL));}
@@ -1065,5 +1092,6 @@ void st_print_su(nvObj_t *nv) { _print_motor_flt_units(nv, fmt_0su, cm_get_units
 void st_print_po(nvObj_t *nv) { _print_motor_int(nv, fmt_0po);}
 void st_print_pm(nvObj_t *nv) { _print_motor_int(nv, fmt_0pm);}
 void st_print_pl(nvObj_t *nv) { _print_motor_flt(nv, fmt_0pl);}
+void st_print_pwr(nvObj_t *nv){ _print_motor_pwr(nv, fmt_pwr);}
 
 #endif // __TEXT_MODE
