@@ -279,7 +279,7 @@ typedef enum {
     MOTOR_POWER_MODE_MAX_VALUE          // for input range checking
 } stPowerMode;
 
-// Stepper power management settings (applicable to ARM only)
+// Stepper power management settings
 #define Vcc         3.3                 // volts
 #define MaxVref    2.25                 // max vref for driver circuit. Our ckt is 2.25 volts
 #define POWER_LEVEL_SCALE_FACTOR ((MaxVref/Vcc)) // scale power level setting for voltage range
@@ -287,8 +287,7 @@ typedef enum {
 // Min/Max timeouts allowed for motor disable. Allow for inertial stop; must be non-zero
 #define MOTOR_TIMEOUT_SECONDS_MIN   (float)0.1      // seconds !!! SHOULD NEVER BE ZERO !!!
 #define MOTOR_TIMEOUT_SECONDS_MAX   (float)4294967  // (4294967295/1000) -- for conversion to uint32_t
-#define MOTOR_TIMEOUT_SECONDS       (float)0.25     // seconds in DISABLE_AXIS_WHEN_IDLE & _ONLY_WHEN_MOVING modes
-
+                                                    // 1 dog year (7 weeks)
 // Step generation constants
 #define STEP_INITIAL_DIRECTION        DIRECTION_CW
 
@@ -429,8 +428,8 @@ extern stPrepSingleton_t st_pre;            // only used by config_app diagnosti
 /**** Stepper (base object) ****/
 
 struct Stepper {
-    Timeout _motor_disable_timeout;         // this is the timout object that will let us know when time is u
-    uint32_t _motor_disable_timeout_ms;     // the number of ms that the timout is reset to
+    Timeout _motor_disable_timeout;         // this is the timeout object that will let us know when time is u
+    uint32_t _motor_disable_timeout_ms;     // the number of ms that the timeout is reset to
     stPowerState _power_state;              // state machine for managing motor power
     stPowerMode _power_mode;                // See stPowerMode for values
 
@@ -475,7 +474,8 @@ struct Stepper {
     {
         return (_power_mode == MOTOR_DISABLED);
     };
-    void enable(float timeout = MOTOR_TIMEOUT_SECONDS)
+    
+    void enable(float timeout = st_cfg.motor_power_timeout)
     {
         if (_power_mode != MOTOR_DISABLED) {
             this->_enableImpl();
@@ -483,15 +483,18 @@ struct Stepper {
             _motor_disable_timeout_ms = timeout * 1000.0;
         }
     };
+    
     void disable()
     {
         this->_disableImpl();
         _motor_disable_timeout.clear();
         _power_state = MOTOR_IDLE; // or MOTOR_OFF
     };
+    
     void motionStopped() {
         _power_state = MOTOR_POWER_TIMEOUT_START;
     };
+    
     virtual void periodicCheck(bool have_actually_stopped) // can be overridden
     {
         if (have_actually_stopped && _power_state == MOTOR_RUNNING) {
@@ -504,7 +507,7 @@ struct Stepper {
             if (_power_mode == MOTOR_POWERED_IN_CYCLE) {
                 _motor_disable_timeout.set(_motor_disable_timeout_ms);
             } else if (_power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
-                _motor_disable_timeout.set(MOTOR_TIMEOUT_SECONDS * 1000.0);
+                _motor_disable_timeout.set(st_cfg.motor_power_timeout * 1000.0);
           }
         }
 
