@@ -351,7 +351,6 @@ typedef struct cfgMotor {                   // per-motor configs
     uint8_t motor_map;                      // map motor to axis
     uint8_t microsteps;                     // microsteps to apply for each axis (ex: 8)
     uint8_t polarity;                       // 0=normal polarity, 1=reverse motor direction
-//  stPowerMode power_mode;                 // See stPowerMode for values
     float power_level;                      // set 0.000 to 1.000 for PMW vref setting
     float step_angle;                       // degrees per whole step (ex: 1.8)
     float travel_rev;                       // mm or deg of travel per motor revolution
@@ -373,7 +372,6 @@ typedef struct stRunMotor {                 // one per controlled motor
     uint32_t substep_increment;             // total steps in axis times substeps factor
     int32_t substep_accumulator;            // DDA phase angle accumulator
     bool motor_flag;                        // true if motor is participating in this move
-//  stPowerState power_state;               // state machine for managing motor power
     uint32_t power_systick;                 // sys_tick for next motor power state transition
     float power_level_dynamic;              // power level for this segment of idle
 } stRunMotor_t;
@@ -467,6 +465,9 @@ struct Stepper {
         if (_power_state == MOTOR_OFF) {
             return (0.0);
         }
+        if (_power_state == MOTOR_IDLE) {
+            return (0.0);
+        }        
         return (st_cfg.mot[motor].power_level);
     };
 
