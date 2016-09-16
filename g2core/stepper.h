@@ -245,6 +245,7 @@
 
 // These includes must be BEFORE the STEPPER_H_ONCE is defined
 #include "g2core.h"
+#include "report.h"
 #include "board_stepper.h"  // include board specific stuff, in particular the Stepper objects
 
 // NOW we can do this:
@@ -519,6 +520,7 @@ struct Stepper {
         if (_power_state == MOTOR_POWER_TIMEOUT_COUNTDOWN) {
             if (_motor_disable_timeout.isPast()) {
                 disable();
+				sr_request_status_report(SR_REQUEST_TIMED);
             }
         }
     };
