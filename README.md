@@ -6,7 +6,7 @@ The g2core code base is still under development. This branch (`edge`) is current
 
 That said, Edge is for the adventurous. It is not guaranteed to be stable, but we do our best to achieve this. Once edge build 100 has settled out a bit it will be pushed to Master.
 
-## Firmware Build 100 `{fb:100.00}`
+## Firmware Build 100 `{fb:100.xx}`
 ### Feature Enhancements
 The fb:100 release is a major change from the fb:089 and earlier branches. It represents about a year of development and has many major feature enhancements summarized below. These are described in more detail in the rest of this readme and the linked wiki pages.
 - New Gcode and CNC features
@@ -80,9 +80,10 @@ Build 100.xx also significantly advances the project structure to support multip
   - Added `ENQ/ACK handshake`. If the host sends an ASCII `ENQ (0x05)` the board should respond with an `ACK (0x06)`. This is provided to facilitate low-level communications startup and automated testing
   - Added [`{fbs:n}`](https://github.com/synthetos/g2/wiki/Configuring-0.99-System-Groups#fbsn-firmware-build-string) as a read-only parameter to report the git commit used during compilation
   - Added [`{fbc:n}`](https://github.com/synthetos/g2/wiki/Configuring-0.99-System-Groups#fbcn-firmware-build-config-file) as a read-only parameter to report the configuration file used during compilation
-  - Changes to [`{ej:1}`](https://github.com/synthetos/g2/wiki/Configuring-0.99-System-Groups#ej-enable-json-mode) Enable JSON parameter. JSON and text mode are now "sticky". Auto mode (olsd style) is also available
+  - Changes to [`{ej:1}`](https://github.com/synthetos/g2/wiki/Configuring-0.99-System-Groups#ej-enable-json-mode) Enable JSON parameter. JSON and text mode are now "sticky". Auto mode (old style) is also available
   - Added [`{Nsu:..}`](https://github.com/synthetos/g2/wiki/Configuring-0.99-Motors#1su-steps-per-unit) to directly set motor N's steps-per-unit value
   - Changes to [Status Codes](https://github.com/synthetos/g2/wiki/Status-Codes) (...or see error.h for source)
+  - [Power Management](https://github.com/synthetos/g2/wiki/Power-Management) commands have been updated as of fb:100.11. Notably `{me:n}` and `{md:n}` are no longer valid commands - use `{me:0}` and `{md:0}` instead. Read the link for more changes.
   - Additional [`stat`](https://github.com/synthetos/g2/wiki/Status-Reports#stat-values) machine states
   - Removed `{cv:n}` configuration version tag
   - Removed `{js:...}` JSON syntax. Responses are now always Strict. Accepts Strict or Relaxed on input
