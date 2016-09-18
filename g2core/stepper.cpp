@@ -210,9 +210,7 @@ void st_energize_motors(float timeout_seconds)
 void st_deenergize_motors()
 {
     for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
-		if (Motors[motor]->getPowerMode() != MOTOR_ALWAYS_POWERED) {
-			Motors[motor]->disable();
-		}
+        Motors[motor]->disable();
     }
 }
 
@@ -252,7 +250,7 @@ stat_t st_motor_power_callback()     // called by controller
  *    - fire on overflow
  *    - clear interrupt condition
  *    - clear all step pins - this clears those the were set during the previous interrupt
- *    - if downcount == 0  and stop the timer and exit
+ *    - if downcount == 0 and stop the timer and exit
  *    - run the DDA for each channel
  *    - decrement the downcount - if it reaches zero load the next segment
  *
@@ -266,11 +264,11 @@ void dda_timer_type::interrupt()
 {
     dda_timer.getInterruptCause();        // clear interrupt condition
 
-//    for (uint8_t motor=0; motor<MOTORS; motor++) {
-//        Motors[motor]->stepEnd();
-//    }
-
     // clear all steps from the previous interrupt
+	// for (uint8_t motor=0; motor<MOTORS; motor++) {
+	//	  Motors[motor]->stepEnd();
+	// }
+	// loop unrolled version (it's actually faster)
     motor_1.stepEnd();
     motor_2.stepEnd();
 #if MOTORS > 2
@@ -446,7 +444,7 @@ namespace Motate {    // Define timer inside Motate namespace
  *  In aline() code:
  *   - All axes must set steps and compensate for out-of-range pulse phasing.
  *   - If axis has 0 steps the direction setting can be omitted
- *   - If axis has 0 steps the motor must not be enabled to support power mode = 1
+ *   - If axis has 0 steps the motor power must be set accord to the power mode
  */
 
 static void _load_move()
@@ -457,9 +455,12 @@ static void _load_move()
         return;                                                    // exit if the runtime is busy
     }
     if (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_LOADER) {    // if there are no moves to load...
-//        for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
-//            Motors[motor]->motionStopped();    // ...start motor power timeouts
-//        }
+		
+	// ...start motor power timeouts
+	//	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
+	//		Motors[motor]->motionStopped();    
+	//  }
+	// loop unrolled version
         motor_1.motionStopped();    // ...start motor power timeouts
         motor_2.motionStopped();    // ...start motor power timeouts
 #if (MOTORS > 2)

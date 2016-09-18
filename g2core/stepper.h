@@ -472,32 +472,39 @@ struct Stepper {
         return (st_cfg.mot[motor].power_level);
     };
 
-    bool isDisabled()
-    {
-        return (_power_mode == MOTOR_DISABLED);
-    };
+//    bool isDisabled()
+//    {
+//        return (_power_mode == MOTOR_DISABLED);
+//    };
     
+    // turn on motor in all cases unless it's disabled
     void enable(float timeout = st_cfg.motor_power_timeout)
     {
-        if (_power_mode != MOTOR_DISABLED) {
-            this->_enableImpl();
-            _power_state = MOTOR_RUNNING;
-            _motor_disable_timeout_ms = timeout * 1000.0;
+        if (_power_mode == MOTOR_DISABLED) {
+            return;
         }
+        this->_enableImpl();
+        _power_state = MOTOR_RUNNING;
+        _motor_disable_timeout_ms = timeout * 1000.0;
     };
-    
+
+    // turn off motor in all cases unless it's permanently enabled
     void disable()
     {
+        if (this->getPowerMode() == MOTOR_ALWAYS_POWERED) {
+            return;
+        }
         this->_disableImpl();
         _motor_disable_timeout.clear();
         _power_state = MOTOR_IDLE; // or MOTOR_OFF
     };
     
+    // turn off motor is only powered when moving
     void motionStopped() {
         if (_power_mode == MOTOR_POWERED_IN_CYCLE) {
             this->enable();
+            _power_state = MOTOR_POWER_TIMEOUT_START;
         }
-        _power_state = MOTOR_POWER_TIMEOUT_START;
     };
     
     virtual void periodicCheck(bool have_actually_stopped) // can be overridden
