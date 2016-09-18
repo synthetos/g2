@@ -210,7 +210,9 @@ void st_energize_motors(float timeout_seconds)
 void st_deenergize_motors()
 {
     for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
-        Motors[motor]->disable();
+		if (Motors[motor]->getPowerMode() != MOTOR_ALWAYS_POWERED) {
+			Motors[motor]->disable();
+		}
     }
 }
 
