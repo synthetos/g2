@@ -509,6 +509,10 @@ struct Stepper {
         if (_power_mode == MOTOR_POWERED_IN_CYCLE) {
             this->enable();
             _power_state = MOTOR_POWER_TIMEOUT_START;
+        } else if (_power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
+            if (_power_state == MOTOR_RUNNING) {
+                _power_state = MOTOR_POWER_TIMEOUT_START;
+            }
         }
     };
     
