@@ -193,28 +193,6 @@ stat_t st_clc(nvObj_t *nv)    // clear diagnostic counters, reset stepper prep
 }
 
 /*
- * Motor power management functions
- *
- * st_energize_motors()      - apply power to all motors
- * st_deenergize_motors()    - remove power from all motors
- * st_motor_power_callback() - callback to manage motor power sequencing
- */
-
-void st_energize_motors(float timeout_seconds)
-{
-    for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
-        Motors[motor]->enable(timeout_seconds);
-    }
-}
-
-void st_deenergize_motors()
-{
-    for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
-        Motors[motor]->disable();
-    }
-}
-
-/*
  * st_motor_power_callback() - callback to manage motor power sequencing
  *
  *  Handles motor power-down timing, low-power idle, and adaptive motor power
@@ -977,18 +955,23 @@ stat_t st_set_mt(nvObj_t *nv)
     return (STAT_OK);
 }
 
-stat_t st_set_md(nvObj_t *nv)    // Make sure this function is not part of initialization --> f00
+stat_t st_set_me(nvObj_t *nv)    // Make sure this function is not part of initialization --> f00
 {
-    st_deenergize_motors();
+    for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
+        Motors[motor]->enable(nv->value);   // nv->value is the timeout or 0 for default
+    }
     return (STAT_OK);
 }
 
-stat_t st_set_me(nvObj_t *nv)    // Make sure this function is not part of initialization --> f00
+stat_t st_set_md(nvObj_t *nv)    // Make sure this function is not part of initialization --> f00
 {
-    if (((uint8_t)nv->value == 0) || (nv->valuetype == TYPE_NULL)) {
-        st_energize_motors(st_cfg.motor_power_timeout);
-    } else {
-        st_energize_motors(nv->value);
+    // de-energize all motors
+    if ((uint8_t)nv->value == 0) {      // 0 means all motors
+        for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
+            Motors[motor]->disable();
+        }
+    } else {                            // otherwise it's just one motor
+         Motors[(uint8_t)nv->value -1]->disable();
     }
     return (STAT_OK);
 }

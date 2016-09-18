@@ -296,7 +296,8 @@ stat_t sr_status_report_callback()         // called by controller dispatcher
     }
 
     sr.status_report_request = SR_OFF;
-    if (sr.status_report_request == SR_VERBOSE) {
+    if ((sr.status_report_request == SR_VERBOSE) ||
+        (sr.status_report_verbosity == SR_VERBOSE)) {
         _populate_unfiltered_status_report();
     } else {
         if (_populate_filtered_status_report() == false) {  // no new data

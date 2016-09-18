@@ -478,6 +478,7 @@ struct Stepper {
 //    };
     
     // turn on motor in all cases unless it's disabled
+    // NOTE: in the future the default assigned timeout will be the motor's default value
     void enable(float timeout = st_cfg.motor_power_timeout)
     {
         if (_power_mode == MOTOR_DISABLED) {
@@ -485,6 +486,10 @@ struct Stepper {
         }
         this->_enableImpl();
         _power_state = MOTOR_RUNNING;
+
+        if ((uint8_t)timeout == 0) {
+            timeout = st_cfg.motor_power_timeout;
+        }
         _motor_disable_timeout_ms = timeout * 1000.0;
     };
 
@@ -554,9 +559,6 @@ stat_t stepper_test_assertions(void);
 
 bool st_runtime_isbusy(void);
 stat_t st_clc(nvObj_t *nv);
-
-void st_energize_motors(float timeout_seconds);
-void st_deenergize_motors(void);
 void st_set_motor_power(const uint8_t motor);
 stat_t st_motor_power_callback(void);
 
