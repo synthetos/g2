@@ -21,7 +21,7 @@
 #ifndef G2CORE_INFO_H_ONCE
 #define G2CORE_INFO_H_ONCE
 
-#define G2CORE_FIRMWARE_BUILD			100.10  // Fixes for UART at the wrong baud rate on Sam3x
+#define G2CORE_FIRMWARE_BUILD			100.11  // Power Management Fixes
 #ifdef GIT_VERSION
 #define G2CORE_FIRMWARE_BUILD_STRING	GIT_VERSION
 #else
