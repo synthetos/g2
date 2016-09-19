@@ -654,6 +654,76 @@ const cfgItem_t cfgArray[] = {
     { "tt6","tt6a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[6][AXIS_A], TT6_A_OFFSET },
     { "tt6","tt6b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[6][AXIS_B], TT6_B_OFFSET },
     { "tt6","tt6c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[6][AXIS_C], TT6_C_OFFSET },
+
+    { "tt7","tt7x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[7][AXIS_X], TT7_X_OFFSET },
+    { "tt7","tt7y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[7][AXIS_Y], TT7_Y_OFFSET },
+    { "tt7","tt7z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[7][AXIS_Z], TT7_Z_OFFSET },
+    { "tt7","tt7a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[7][AXIS_A], TT7_A_OFFSET },
+    { "tt7","tt7b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[7][AXIS_B], TT7_B_OFFSET },
+    { "tt7","tt7c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[7][AXIS_C], TT7_C_OFFSET },
+
+    { "tt8","tt8x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[8][AXIS_X], TT8_X_OFFSET },
+    { "tt8","tt8y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[8][AXIS_Y], TT8_Y_OFFSET },
+    { "tt8","tt8z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[8][AXIS_Z], TT8_Z_OFFSET },
+    { "tt8","tt8a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[8][AXIS_A], TT8_A_OFFSET },
+    { "tt8","tt8b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[8][AXIS_B], TT8_B_OFFSET },
+    { "tt8","tt8c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[8][AXIS_C], TT8_C_OFFSET },
+
+    { "tt9","tt9x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[9][AXIS_X], TT9_X_OFFSET },
+    { "tt9","tt9y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[9][AXIS_Y], TT9_Y_OFFSET },
+    { "tt9","tt9z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[9][AXIS_Z], TT9_Z_OFFSET },
+    { "tt9","tt9a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[9][AXIS_A], TT9_A_OFFSET },
+    { "tt9","tt9b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[9][AXIS_B], TT9_B_OFFSET },
+    { "tt9","tt9c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[9][AXIS_C], TT9_C_OFFSET },
+
+    { "tt10","tt10x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[10][AXIS_X], TT10_X_OFFSET },
+    { "tt10","tt10y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[10][AXIS_Y], TT10_Y_OFFSET },
+    { "tt10","tt10z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[10][AXIS_Z], TT10_Z_OFFSET },
+    { "tt10","tt10a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[10][AXIS_A], TT10_A_OFFSET },
+    { "tt10","tt10b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[10][AXIS_B], TT10_B_OFFSET },
+    { "tt10","tt10c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[10][AXIS_C], TT10_C_OFFSET },
+
+    { "tt11","tt11x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[11][AXIS_X], TT11_X_OFFSET },
+    { "tt11","tt11y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[11][AXIS_Y], TT11_Y_OFFSET },
+    { "tt11","tt11z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[11][AXIS_Z], TT11_Z_OFFSET },
+    { "tt11","tt11a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[11][AXIS_A], TT11_A_OFFSET },
+    { "tt11","tt11b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[11][AXIS_B], TT11_B_OFFSET },
+    { "tt11","tt11c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[11][AXIS_C], TT11_C_OFFSET },
+
+    { "tt12","tt12x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[12][AXIS_X], TT12_X_OFFSET },
+    { "tt12","tt12y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[12][AXIS_Y], TT12_Y_OFFSET },
+    { "tt12","tt12z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[12][AXIS_Z], TT12_Z_OFFSET },
+    { "tt12","tt12a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[12][AXIS_A], TT12_A_OFFSET },
+    { "tt12","tt12b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[12][AXIS_B], TT12_B_OFFSET },
+    { "tt12","tt12c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[12][AXIS_C], TT12_C_OFFSET },
+
+    { "tt13","tt13x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[13][AXIS_X], TT13_X_OFFSET },
+    { "tt13","tt13y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[13][AXIS_Y], TT13_Y_OFFSET },
+    { "tt13","tt13z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[13][AXIS_Z], TT13_Z_OFFSET },
+    { "tt13","tt13a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[13][AXIS_A], TT13_A_OFFSET },
+    { "tt13","tt13b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[13][AXIS_B], TT13_B_OFFSET },
+    { "tt13","tt13c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[13][AXIS_C], TT13_C_OFFSET },
+
+    { "tt14","tt14x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[14][AXIS_X], TT14_X_OFFSET },
+    { "tt14","tt14y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[14][AXIS_Y], TT14_Y_OFFSET },
+    { "tt14","tt14z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[14][AXIS_Z], TT14_Z_OFFSET },
+    { "tt14","tt14a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[14][AXIS_A], TT14_A_OFFSET },
+    { "tt14","tt14b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[14][AXIS_B], TT14_B_OFFSET },
+    { "tt14","tt14c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[14][AXIS_C], TT14_C_OFFSET },
+
+    { "tt15","tt15x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[15][AXIS_X], TT15_X_OFFSET },
+    { "tt15","tt15y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[15][AXIS_Y], TT15_Y_OFFSET },
+    { "tt15","tt15z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[15][AXIS_Z], TT15_Z_OFFSET },
+    { "tt15","tt15a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[15][AXIS_A], TT15_A_OFFSET },
+    { "tt15","tt15b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[15][AXIS_B], TT15_B_OFFSET },
+    { "tt15","tt15c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[15][AXIS_C], TT15_C_OFFSET },
+
+    { "tt16","tt16x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[16][AXIS_X], TT16_X_OFFSET },
+    { "tt16","tt16y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[16][AXIS_Y], TT16_Y_OFFSET },
+    { "tt16","tt16z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[16][AXIS_Z], TT16_Z_OFFSET },
+    { "tt16","tt16a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[16][AXIS_A], TT16_A_OFFSET },
+    { "tt16","tt16b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[16][AXIS_B], TT16_B_OFFSET },
+    { "tt16","tt16c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tt_offset[16][AXIS_C], TT16_C_OFFSET },
 #endif
 
     // this is a 128bit UUID for identifying a previously committed job state
@@ -948,8 +1018,18 @@ const cfgItem_t cfgArray[] = {
     { "","tt4",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
     { "","tt5",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
     { "","tt6",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
+    { "","tt7",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
+    { "","tt8",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
+    { "","tt9",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
+    { "","tt10",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
+    { "","tt11",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
+    { "","tt12",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
+    { "","tt13",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
+    { "","tt14",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
+    { "","tt15",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
+    { "","tt16",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
 #endif
-    // +7 = 52
+    // +17 = 62
     { "","mpo",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // machine position group
     { "","pos",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // work position group
     { "","ofs",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // work offset group
@@ -958,14 +1038,14 @@ const cfgItem_t cfgArray[] = {
     { "","pwr",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // motor power enagled group
     { "","jog",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // axis jogging state group
     { "","jid",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // job ID group
-    // +8 = 60
+    // +8 = 70
     { "","he1", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // heater 1 group
     { "","he2", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // heater 2 group
     { "","he3", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // heater 3 group
     { "","pid1",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // PID 1 group
     { "","pid2",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // PID 2 group
     { "","pid3",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // PID 3 group
-    // +6 = 66
+    // +6 = 76
 
 #ifdef __USER_DATA
     { "","uda", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },  // user data group
@@ -999,7 +1079,7 @@ const cfgItem_t cfgArray[] = {
 #define NV_COUNT_UBER_GROUPS    6     // count of uber-groups, above
 
 #ifdef __TOOL_LENGTH_OFFSET
-#define FIXED_GROUPS            66    // count of fixed groups, excluding optional groups
+#define FIXED_GROUPS            76    // count of fixed groups, excluding optional groups
 #else
 #define FIXED_GROUPS            59    // count of fixed groups, excluding optional groups
 #endif
