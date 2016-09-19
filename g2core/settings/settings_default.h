@@ -1168,6 +1168,197 @@
 #ifndef TT6_C_OFFSET
 #define TT6_C_OFFSET 0
 #endif
+
+#ifndef TT7_X_OFFSET
+#define TT7_X_OFFSET 0
+#endif
+#ifndef TT7_Y_OFFSET
+#define TT7_Y_OFFSET 0
+#endif
+#ifndef TT7_Z_OFFSET
+#define TT7_Z_OFFSET 0
+#endif
+#ifndef TT7_A_OFFSET
+#define TT7_A_OFFSET 0
+#endif
+#ifndef TT7_B_OFFSET
+#define TT7_B_OFFSET 0
+#endif
+#ifndef TT7_C_OFFSET
+#define TT7_C_OFFSET 0
+#endif
+
+#ifndef TT8_X_OFFSET
+#define TT8_X_OFFSET 0
+#endif
+#ifndef TT8_Y_OFFSET
+#define TT8_Y_OFFSET 0
+#endif
+#ifndef TT8_Z_OFFSET
+#define TT8_Z_OFFSET 0
+#endif
+#ifndef TT8_A_OFFSET
+#define TT8_A_OFFSET 0
+#endif
+#ifndef TT8_B_OFFSET
+#define TT8_B_OFFSET 0
+#endif
+#ifndef TT8_C_OFFSET
+#define TT8_C_OFFSET 0
+#endif
+
+#ifndef TT9_X_OFFSET
+#define TT9_X_OFFSET 0
+#endif
+#ifndef TT9_Y_OFFSET
+#define TT9_Y_OFFSET 0
+#endif
+#ifndef TT9_Z_OFFSET
+#define TT9_Z_OFFSET 0
+#endif
+#ifndef TT9_A_OFFSET
+#define TT9_A_OFFSET 0
+#endif
+#ifndef TT9_B_OFFSET
+#define TT9_B_OFFSET 0
+#endif
+#ifndef TT9_C_OFFSET
+#define TT9_C_OFFSET 0
+#endif
+
+#ifndef TT10_X_OFFSET
+#define TT10_X_OFFSET 0
+#endif
+#ifndef TT10_Y_OFFSET
+#define TT10_Y_OFFSET 0
+#endif
+#ifndef TT10_Z_OFFSET
+#define TT10_Z_OFFSET 0
+#endif
+#ifndef TT10_A_OFFSET
+#define TT10_A_OFFSET 0
+#endif
+#ifndef TT10_B_OFFSET
+#define TT10_B_OFFSET 0
+#endif
+#ifndef TT10_C_OFFSET
+#define TT10_C_OFFSET 0
+#endif
+
+#ifndef TT11_X_OFFSET
+#define TT11_X_OFFSET 0
+#endif
+#ifndef TT11_Y_OFFSET
+#define TT11_Y_OFFSET 0
+#endif
+#ifndef TT11_Z_OFFSET
+#define TT11_Z_OFFSET 0
+#endif
+#ifndef TT11_A_OFFSET
+#define TT11_A_OFFSET 0
+#endif
+#ifndef TT11_B_OFFSET
+#define TT11_B_OFFSET 0
+#endif
+#ifndef TT11_C_OFFSET
+#define TT11_C_OFFSET 0
+#endif
+
+#ifndef TT12_X_OFFSET
+#define TT12_X_OFFSET 0
+#endif
+#ifndef TT12_Y_OFFSET
+#define TT12_Y_OFFSET 0
+#endif
+#ifndef TT12_Z_OFFSET
+#define TT12_Z_OFFSET 0
+#endif
+#ifndef TT12_A_OFFSET
+#define TT12_A_OFFSET 0
+#endif
+#ifndef TT12_B_OFFSET
+#define TT12_B_OFFSET 0
+#endif
+#ifndef TT12_C_OFFSET
+#define TT12_C_OFFSET 0
+#endif
+
+#ifndef TT13_X_OFFSET
+#define TT13_X_OFFSET 0
+#endif
+#ifndef TT13_Y_OFFSET
+#define TT13_Y_OFFSET 0
+#endif
+#ifndef TT13_Z_OFFSET
+#define TT13_Z_OFFSET 0
+#endif
+#ifndef TT13_A_OFFSET
+#define TT13_A_OFFSET 0
+#endif
+#ifndef TT13_B_OFFSET
+#define TT13_B_OFFSET 0
+#endif
+#ifndef TT13_C_OFFSET
+#define TT13_C_OFFSET 0
+#endif
+
+#ifndef TT14_X_OFFSET
+#define TT14_X_OFFSET 0
+#endif
+#ifndef TT14_Y_OFFSET
+#define TT14_Y_OFFSET 0
+#endif
+#ifndef TT14_Z_OFFSET
+#define TT14_Z_OFFSET 0
+#endif
+#ifndef TT14_A_OFFSET
+#define TT14_A_OFFSET 0
+#endif
+#ifndef TT14_B_OFFSET
+#define TT14_B_OFFSET 0
+#endif
+#ifndef TT14_C_OFFSET
+#define TT14_C_OFFSET 0
+#endif
+
+#ifndef TT15_X_OFFSET
+#define TT15_X_OFFSET 0
+#endif
+#ifndef TT15_Y_OFFSET
+#define TT15_Y_OFFSET 0
+#endif
+#ifndef TT15_Z_OFFSET
+#define TT15_Z_OFFSET 0
+#endif
+#ifndef TT15_A_OFFSET
+#define TT15_A_OFFSET 0
+#endif
+#ifndef TT15_B_OFFSET
+#define TT15_B_OFFSET 0
+#endif
+#ifndef TT15_C_OFFSET
+#define TT15_C_OFFSET 0
+#endif
+
+#ifndef TT16_X_OFFSET
+#define TT16_X_OFFSET 0
+#endif
+#ifndef TT16_Y_OFFSET
+#define TT16_Y_OFFSET 0
+#endif
+#ifndef TT16_Z_OFFSET
+#define TT16_Z_OFFSET 0
+#endif
+#ifndef TT16_A_OFFSET
+#define TT16_A_OFFSET 0
+#endif
+#ifndef TT16_B_OFFSET
+#define TT16_B_OFFSET 0
+#endif
+#ifndef TT16_C_OFFSET
+#define TT16_C_OFFSET 0
+#endif
+
 // *** User-Defined Data Defaults *** //
 
 #ifndef USER_DATA_A0
