@@ -62,9 +62,8 @@ enum hwPlatform {
 #define PWMS 2          // number of supported PWM channels
 #define TOOLS 16        // number of entries in tool table (index starts at 1)
 
-
 ////////////////////////////
-/////// ARM VERSION ////////
+/////// ARM SETTINGS ///////
 ////////////////////////////
 
 #include "MotatePins.h"
