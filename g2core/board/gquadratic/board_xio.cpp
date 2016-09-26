@@ -51,8 +51,8 @@ decltype(usb.mixin<1>::Serial) &SerialUSB1 = usb.mixin<1>::Serial;
 // 115200 is the default, as well.
 //UART<kSerial_RX, kSerial_TX, kSerial_RTS, kSerial_CTS> Serial {115200, UARTMode::RTSCTSFlowControl};
 
-MOTATE_SET_USB_VENDOR_STRING( {'S' ,'y', 'n', 't', 'h', 'e', 't', 'o', 's'} )
-MOTATE_SET_USB_PRODUCT_STRING( {'T', 'i', 'n', 'y', 'G', ' ', 'v', '2'} )
+MOTATE_SET_USB_VENDOR_STRING( u"Synthetos (http://synthetos.com)" )
+MOTATE_SET_USB_PRODUCT_STRING( u"g2core gQuadratic" )
 MOTATE_SET_USB_SERIAL_NUMBER_STRING_FROM_CHIPID()
 #endif // XIO_HAS_USB
 
