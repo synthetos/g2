@@ -1,10 +1,11 @@
-[![Build Status](https://travis-ci.org/synthetos/g2.svg?branch=edge-100)](https://travis-ci.org/synthetos/g2) [![Issues in Ready](https://badge.waffle.io/synthetos/g2.svg?label=ready&title=Ready)](http://waffle.io/synthetos/g2) [![Issues in Progress](https://badge.waffle.io/synthetos/g2.svg?label=in%20progress&title=In%20Progress)](http://waffle.io/synthetos/g2)
+[![Build Status](https://travis-ci.org/synthetos/g2.svg?branch=edge)](https://travis-ci.org/synthetos/g2) [![Issues in Ready](https://badge.waffle.io/synthetos/g2.svg?label=ready&title=Ready)](http://waffle.io/synthetos/g2) [![Issues in Progress](https://badge.waffle.io/synthetos/g2.svg?label=in%20progress&title=In%20Progress)](http://waffle.io/synthetos/g2)
 
 # g2core - Edge Branch
 
-The g2core code base is still under development. This branch (`edge`) is currently the main branch, and the best branch for testing and development, as Master is way out of date.
+G2 [Edge](https://github.com/synthetos/g2/tree/edge) is the branch for beta testing new features under development. New features are developed in feature branches and merged into the edge branch. Periodically edge is promoted to master.
 
-That said, Edge is for the adventurous. It is not guaranteed to be stable, but we do our best to achieve this. Once edge build 100 has settled out a bit it will be pushed to Master.
+That said, Edge is for the adventurous. It is not guaranteed to be stable, but we do our best to achieve this. For production uses we recommend using the [Master branch](https://github.com/synthetos/g2/tree/master).
+
 
 ## Firmware Build 100 `{fb:100.xx}`
 ### Feature Enhancements
@@ -33,7 +34,7 @@ The fb:100 release is the base for  number of other enhancements in the works an
 
 ## Changelog for Edge Branch
 
-### Edge branch, Build 100.00
+### Edge branch, Build 100.xx
 
 Build 100.xx has a number of changes, mostly related to extending Gcode support and supporting 3D printing using g2core. These include temperature controls, auto-bed leveling, planner performance improvements and active JSON comments in Gcode.
 
@@ -43,7 +44,7 @@ Build 100.xx also significantly advances the project structure to support multip
 
 #### Functional Changes:
 - **Gcode and CNC Changes**
-  - Included `G10 L1`, `G10 L10`, `G43`, `G49` tool length offset and added 32 slot tool table
+  - Included `G10 L1`, `G10 L10`, `G43`, `G49` tool length offset and added 16 slot tool table (deferred until build 100.12)
   - Included `G10 L20` offset mode
   - Extended `G38.2` probing to also include `G38.3`, `G38.4`, `G38.5`
   - Homing can now be set to a non-zero switch. Homing will set to the travel value of the positive or negative switch, as determined by the search direction. This allows homing to home to a maximum - for example - and set the homed location to the non-zero switch.
@@ -179,7 +180,7 @@ These changes are primarily fixes applied after testing
   - Digital output generalization and changes
   - Still needs rigorous testing for very fast feedhold/resume and flush cycles
 
-###Edge branch, build 071.02
+### Edge branch, build 071.02
 
 * **No Persistence**. Most ARM chips (including the ATSAM3X8C on v9 and ATSAM3X8E on the Arduino Due) do not have persistence. This is the main reason the v9 has a microSD slot. But this has not been programmed yet. So your options are to either load the board each time you fire it up or reset it, or to build yourself a profile and compile your own settings as the defaults.
 
@@ -189,7 +190,3 @@ These changes are primarily fixes applied after testing
 
 * **Different Behaviors**. There are some behaviors that are different.
   * Feedhold / queue flush on v8 works with !%~ in one line. In g2 it requires a newline. Use !\n%\n  This is due to using a USB stack that is partly on the chip and not being able to get at the individual characters that far upstream. This will probably not change in v9.
-
----
-
-[![Build Status](https://travis-ci.org/synthetos/g2.svg)](https://travis-ci.org/synthetos/g2)
