@@ -103,7 +103,7 @@
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
 #define M3_MOTOR_MAP                AXIS_Y
 #define M3_STEP_ANGLE               1.8
-#define M3_TRAVEL_PER_REV           40.132
+#define M3_TRAVEL_PER_REV           40.011604
 #define M3_MICROSTEPS               32
 #define M3_POLARITY                 0
 #define M3_POWER_MODE               MOTOR_POWER_MODE
@@ -142,7 +142,7 @@
 #define X_VELOCITY_MAX              10000                   // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
-#define X_TRAVEL_MAX                200                     // xtm  travel between switches or crashes
+#define X_TRAVEL_MAX                215                     // xtm  travel between switches or crashes
 #define X_JERK_MAX                  3000                    // xjm  yes, that's "100 billion" mm/(min^3)
 #define X_JERK_HIGH_SPEED           3000                    // xjh
 #define X_HOMING_INPUT              4                       // xhi  input used for homing or 0 to disable
@@ -156,7 +156,7 @@
 #define Y_VELOCITY_MAX              10000
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
-#define Y_TRAVEL_MAX                150
+#define Y_TRAVEL_MAX                152.4
 #define Y_JERK_MAX                  3000
 #define Y_JERK_HIGH_SPEED           3000
 #define Y_HOMING_INPUT              1
@@ -170,7 +170,7 @@
 #define Z_VELOCITY_MAX              2000
 #define Z_FEEDRATE_MAX              Z_VELOCITY_MAX
 #define Z_TRAVEL_MIN                0
-#define Z_TRAVEL_MAX                200
+#define Z_TRAVEL_MAX                215
 #define Z_JERK_MAX                  1500
 #define Z_JERK_HIGH_SPEED           3000
 #define Z_HOMING_INPUT              5
