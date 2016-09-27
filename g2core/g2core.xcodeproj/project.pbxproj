@@ -291,6 +291,20 @@
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
+		D4782AAE1D9B16BE00B32136 /* G2 Probotix */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=ProbotixV90 DEBUG=1";
+			buildConfigurationList = D4782AAF1D9B16BE00B32136 /* Build configuration list for PBXLegacyTarget "G2 Probotix" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "G2 Probotix";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
 		D4AC391A1C7BAB8E0098D685 /* G2 sbv300 */ = {
 			isa = PBXLegacyTarget;
 			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=sbv300 DEBUG=2";
@@ -411,6 +425,7 @@
 				D4AC391A1C7BAB8E0098D685 /* G2 sbv300 */,
 				D4F226F31D088A48008ED57C /* G2 gQuintic PrintrbotPlus */,
 				D43FF7141D537A5C00FB5B53 /* G2 gQuadratic Test */,
+				D4782AAE1D9B16BE00B32136 /* G2 Probotix */,
 				D457112317053BFB00EA19A8 /* index */,
 			);
 		};
@@ -653,6 +668,22 @@
 			};
 			name = Release;
 		};
+		D4782AB01D9B16BE00B32136 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		D4782AB11D9B16BE00B32136 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		D4AC391C1C7BAB8E0098D685 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -786,6 +817,15 @@
 			buildConfigurations = (
 				D457112B17053BFB00EA19A8 /* Debug */,
 				D457112C17053BFB00EA19A8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4782AAF1D9B16BE00B32136 /* Build configuration list for PBXLegacyTarget "G2 Probotix" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4782AB01D9B16BE00B32136 /* Debug */,
+				D4782AB11D9B16BE00B32136 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

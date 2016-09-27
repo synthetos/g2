@@ -80,7 +80,7 @@ endif
 
 ifeq ("$(CONFIG)","TestQuadratic")
     ifeq ("$(BOARD)","NONE")
-        BOARD=gquadratic-a
+        BOARD=gquadratic-b
     endif
     SETTINGS_FILE="settings_test.h"
 endif

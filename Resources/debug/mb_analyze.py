@@ -25,13 +25,13 @@ def load_pool(filename):
             if buf:
                 current_buffer = int(buf.groups()[0], 16)
                 pool[TUMBLER[tumbler_pos]] = current_buffer
-                # print "TUMBLER[tumbler_pos]: %s=%i" % (TUMBLER[tumbler_pos], current_buffer)
+                print "TUMBLER[tumbler_pos]: %s=%i" % (TUMBLER[tumbler_pos], current_buffer)
                 tumbler_pos += 1
         else:
             buf = re.search('\(mpBuf_t\s\*\)\s(0x[0-9a-fA-F]+)', line)
             if buf:
                 current_buffer = int(buf.groups()[0], 16)
-                # print "setup current_buffer: %s" % current_buffer
+                print "setup current_buffer: %s" % current_buffer
                 pool[current_buffer] = {'move_time': 0}
                 if current_buffer == pool['r']:
                     pool[current_buffer]['is_r'] = True
@@ -49,9 +49,11 @@ def load_pool(filename):
                     if key == 'pv':
                         pv = int(val, 16)
                         pool[current_buffer]['pv'] = pv
+                        print "pv: %s" % pv
                     elif key == 'nx':
-                        nv = int(val, 16)
-                        pool[current_buffer]['nx'] = nv
+                        nx = int(val, 16)
+                        pool[current_buffer]['nx'] = nx
+                        print "nx: %s" % nx
                     elif key == 'buffer_state':
                         pool[current_buffer]['buffer_state'] = val
                     elif key == 'jerk':
@@ -60,6 +62,7 @@ def load_pool(filename):
                         pool[current_buffer]['linenum'] = val
                     elif key == 'buffer_number':
                         pool[current_buffer]['buffer_number'] = val
+                        print "#: %s" % val
                     elif key == 'junction_vmax':
                         pool[current_buffer]['junction_vmax'] = float(val)
                     elif key == 'cruise_velocity':

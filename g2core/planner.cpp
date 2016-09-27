@@ -172,6 +172,14 @@ stat_t planner_test_assertions()
         (BAD_MAGIC(mr.magic_start)) || (BAD_MAGIC(mr.magic_end))) {
         return(cm_panic(STAT_PLANNER_ASSERTION_FAILURE, "planner_test_assertions()"));
     }
+    for (uint8_t i=0; i < PLANNER_BUFFER_POOL_SIZE; i++) {
+        if (mb.bf[i].nx == nullptr) {
+            _debug_trap("buffer has nullptr for nx");
+        }
+        if (mb.bf[i].pv == nullptr) {
+            _debug_trap("buffer has nullptr for pv");
+        }
+    }
     return (STAT_OK);
 }
 
@@ -697,25 +705,26 @@ static inline void _clear_buffer(mpBuf_t *bf)
     // the pointers and buffer number during interrupts
 
     // We'll have to figure something else out for C, sorry.
-    bf->clear();
+    bf->reset();
 }
 
 void mp_init_buffers(void)
 {
     mpBuf_t *pv, *nx;
-    uint8_t i, nx_i;
 
-    memset(&mb, 0, sizeof(mb));                     // clear all values, pointers and status
+    //memset(&mb, 0, sizeof(mb));                     // clear all values, pointers and status
     mb.magic_start = MAGICNUM;
     mb.magic_end = MAGICNUM;
 
     mb.w = &mb.bf[0];                               // init all buffer pointers
     mb.r = &mb.bf[0];
     pv = &mb.bf[PLANNER_BUFFER_POOL_SIZE-1];
-    for (i=0; i < PLANNER_BUFFER_POOL_SIZE; i++) {
+    for (uint8_t i=0; i < PLANNER_BUFFER_POOL_SIZE; i++) {
+        _clear_buffer(&mb.bf[i]);
+        uint8_t nx_i = ((i<(PLANNER_BUFFER_POOL_SIZE-1))?(i+1):0); // buffer incr & wrap
+
         mb.bf[i].buffer_number = i;                 //+++++ number it for diagnostics only (otherwise not used)
 
-        nx_i = ((i<PLANNER_BUFFER_POOL_SIZE-1)?(i+1):0); // buffer incr & wrap
         nx = &mb.bf[nx_i];
         mb.bf[i].nx = nx;                           // setup ring pointers
         mb.bf[i].pv = pv;

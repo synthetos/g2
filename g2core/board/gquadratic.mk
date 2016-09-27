@@ -12,15 +12,15 @@
 ##########
 # BOARDs for use directly from the make command line (with default settings) or by CONFIGs.
 
-ifeq ("$(BOARD)","gquadratic-a")
+ifeq ("$(BOARD)","gquadratic-b")
     BASE_BOARD=gquadratic
-    DEVICE_DEFINES += MOTATE_BOARD="gquadratic-a"
+    DEVICE_DEFINES += MOTATE_BOARD="gquadratic-b"
     DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
 endif
 
 
 ##########
-# The general pboard-a BASE_BOARD.
+# The general gquadratic BASE_BOARD.
 
 ifeq ("$(BASE_BOARD)","gquadratic")
     _BOARD_FOUND = 1

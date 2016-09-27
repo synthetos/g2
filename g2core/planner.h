@@ -229,8 +229,51 @@ struct mpBuffer_to_clear {
 
     GCodeState_t gm;                // Gcode model state - passed from model, used by planner and runtime
 
-    void clear() {
-        memset((void *)(this), 0, sizeof(mpBuffer_to_clear));
+    void reset() {
+        //memset((void *)(this), 0, sizeof(mpBuffer_to_clear));
+        
+        bf_func = nullptr;
+        cm_func = nullptr;
+
+        linenum = 0;
+        iterations = 0;
+        block_time_ms = 0;
+        plannable_time_ms = 0;
+        plannable_length = 0;
+        meet_iterations = 0;
+
+        buffer_state = MP_BUFFER_EMPTY;
+        block_type = BLOCK_TYPE_NULL;
+        block_state = BLOCK_INACTIVE;
+        hint = NO_HINT;
+
+        for (uint8_t i = 0; i< AXES; i++) {
+            unit[i] = 0;
+            axis_flags[i] = 0;
+        }
+
+        plannable = false;
+        length  = 0.0;
+        block_time = 0.0;
+        override_factor = 0.0;
+
+        cruise_velocity = 0.0;
+        exit_velocity = 0.0;
+
+        cruise_vset = 0.0;
+        cruise_vmax = 0.0;
+        exit_vmax = 0.0;
+
+        absolute_vmax = 0.0;
+        junction_vmax = 0.0;
+
+        jerk = 0.0;
+        jerk_sq = 0.0;
+        recip_jerk = 0.0;
+        sqrt_j = 0.0;
+        q_recip_2_sqrt_j = 0.0;
+
+        gm.reset();
     }
 };
 

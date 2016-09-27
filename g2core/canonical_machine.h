@@ -339,6 +339,31 @@ typedef struct GCodeState {             // Gcode model state - used by model, pl
     cmCoordSystem coord_system;         // G54-G59 - select coordinate system 1-9
     uint8_t tool;               // G    // M6 tool change - moves "tool_select" to "tool"
     uint8_t tool_select;        // G    // T value - T sets this value
+
+    void reset() {
+        linenum = 0;
+        motion_mode = 0;
+
+        for (uint8_t i = 0; i< AXES; i++) {
+            target[i] = 0.0;
+            work_offset[i] = 0.0;
+        }
+
+        feed_rate = 0.0;
+        parameter = 0.0;
+
+        feed_rate_mode = INVERSE_TIME_MODE;
+        select_plane = CANON_PLANE_XY;
+        units_mode = INCHES;
+        path_control = PATH_EXACT_PATH;
+        distance_mode = ABSOLUTE_MODE;
+        arc_distance_mode = ABSOLUTE_MODE;
+        absolute_override = ABSOLUTE_OVERRIDE_OFF;
+        coord_system = ABSOLUTE_COORDS;
+        tool = 0;
+        tool_select = 0;
+
+    };
 } GCodeState_t;
 
 typedef struct GCodeStateExtended {     // Gcode dynamic state extensions - used by model and arcs
