@@ -1,4 +1,4 @@
-<a data-flickr-embed="true"  href="https://www.flickr.com/photos/rileyporter/29680646540/in/dateposted-public/" title="g2core"><img src="https://c1.staticflickr.com/9/8797/29680646540_dc947dde7a_o.png" width="600" height="258" alt="g2core"></a><script async src="//embedr.flickr.com/assets/client-code.js" charset="utf-8"></script>
+<a data-flickr-embed="true"  href="https://www.flickr.com/photos/rileyporter/29680646540/in/dateposted-public/" title="g2core"><img src="https://c1.staticflickr.com/9/8797/29680646540_dc947dde7a_o.png" width="300" height="129" alt="g2core"></a><script async src="//embedr.flickr.com/assets/client-code.js" charset="utf-8"></script>
 
 [![Build Status](https://travis-ci.org/synthetos/g2.svg?branch=edge)](https://travis-ci.org/synthetos/g2) [![Issues in Ready](https://badge.waffle.io/synthetos/g2.svg?label=ready&title=Ready)](http://waffle.io/synthetos/g2) [![Issues in Progress](https://badge.waffle.io/synthetos/g2.svg?label=in%20progress&title=In%20Progress)](http://waffle.io/synthetos/g2)
 
