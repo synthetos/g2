@@ -147,7 +147,7 @@ _MAKE_MOTATE_PIN(kUnassigned18,                 'A', 26);  //
 _MAKE_MOTATE_PIN(kSocket1_VrefPinNumber,        'A', 27);  // TC2.1
 _MAKE_MOTATE_PIN(kSerial_CTS,                   'A', 28);  //
 _MAKE_MOTATE_PIN(kUnassigned19,                 'A', 29);  // Missing in 100-pin package
-_MAKE_MOTATE_PIN(kOutput1_PinNumber,            'A', 30);  // PWM2
+_MAKE_MOTATE_PIN(kServo1_PinNumber,             'A', 30);  // PWM2
 _MAKE_MOTATE_PIN(kInput4_PinNumber,             'A', 31);  //
 
 _MAKE_MOTATE_PIN(kUnassigned20,                 'B',  0);  //

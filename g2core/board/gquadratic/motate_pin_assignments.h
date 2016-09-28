@@ -215,8 +215,12 @@ pin_number kADC14_PinNumber = 164;  // Not physically pinned out
 
 pin_number kExternalClock1_PinNumber = 170;  // External pins for exporting a clock signal (for Trinamics)
 
+pin_number kServo1_PinNumber = 171;  //
+pin_number kServo2_PinNumber = 172;  //
+pin_number kServo3_PinNumber = 173;  //
 
-// start next sequence at 171
+
+// start next sequence at 174
 
 // blank spots for unassigned pins - all unassigned pins need a unique number (do not re-use numbers)
 

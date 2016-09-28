@@ -93,30 +93,34 @@
 #define M1_MOTOR_MAP                AXIS_Y                  // 1ma
 #define M1_STEP_ANGLE               1.8                     // 1sa
 #define M1_TRAVEL_PER_REV           91.5                    // 1tr
-#define M1_MICROSTEPS               8                       // 1mi        1,2,4,8
-#define M1_POLARITY                 0                       // 1po        0=normal, 1=reversed
+#define M1_MICROSTEPS               32                      // 1mi        1,2,4,8
+#define M1_POLARITY                 1                       // 1po        0=normal, 1=reversed
 #define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm        standard
 #define M1_POWER_LEVEL              0.4
 
 #define M2_MOTOR_MAP                AXIS_X
 #define M2_STEP_ANGLE               1.8
 #define M2_TRAVEL_PER_REV           91.5
-#define M2_MICROSTEPS               8
+#define M2_MICROSTEPS               32
 #define M2_POLARITY                 0
 #define M2_POWER_MODE               MOTOR_POWER_MODE
 #define M2_POWER_LEVEL              0.4
 
 #define M3_MOTOR_MAP                AXIS_Z
-#define M3_STEP_ANGLE               1.8
-#define M3_TRAVEL_PER_REV           2.1166666
-#define M3_MICROSTEPS               8
+                                                            // This "stepper" is a hobby servo. Note that all hobby
+                                                            //   servo settings are per full servo range, instead of
+                                                            //   per revolution.
+#define M3_STEP_ANGLE               1.8                     // hobby servos are simulated with 200 "full steps"
+#define M3_TRAVEL_PER_REV           26                      // this is actually the full travel of the servo, not
+                                                            //   necessarily covering a revolution
+#define M3_MICROSTEPS               32                      // the max step resolution for a hobby servo is 1/32
 #define M3_POLARITY                 1
-#define M3_POWER_MODE               MOTOR_POWER_MODE
-#define M3_POWER_LEVEL              0.50
+#define M3_POWER_MODE               MOTOR_ALWAYS_POWERED
+#define M3_POWER_LEVEL              0.50                    // this is ignored
 
 #define M4_MOTOR_MAP                AXIS_A
 #define M4_STEP_ANGLE               1.8
-#define M4_TRAVEL_PER_REV           360            // degrees moved per motor rev
+#define M4_TRAVEL_PER_REV           360                     // degrees moved per motor rev
 #define M4_MICROSTEPS               32
 #define M4_POLARITY                 0
 #define M4_POWER_MODE               MOTOR_POWER_MODE
@@ -124,7 +128,7 @@
 
 // *** axis settings **********************************************************************************
 
-#define JERK_MAX    30000
+#define JERK_MAX    20000
 
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
 #define X_VELOCITY_MAX              50000                    // xvm  G0 max velocity in mm/min
@@ -155,11 +159,11 @@
 #define Y_ZERO_BACKOFF              2
 
 #define Z_AXIS_MODE                 AXIS_STANDARD
-#define Z_VELOCITY_MAX              1000
+#define Z_VELOCITY_MAX              15000
 #define Z_FEEDRATE_MAX              Z_VELOCITY_MAX
 #define Z_TRAVEL_MIN                0
 #define Z_TRAVEL_MAX                75
-#define Z_JERK_MAX                  JERK_MAX
+#define Z_JERK_MAX                  10000
 #define Z_JERK_HIGH_SPEED           Z_JERK_MAX
 #define Z_HOMING_INPUT              6
 #define Z_HOMING_DIRECTION          1

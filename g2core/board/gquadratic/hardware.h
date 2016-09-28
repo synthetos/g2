@@ -58,7 +58,7 @@ enum hwPlatform {
 
 #define AXES 6         // number of axes supported in this version
 #define HOMING_AXES 4  // number of axes that can be homed (assumes Zxyabc sequence)
-#define MOTORS 2       // number of motors on the board
+#define MOTORS 3       // number of motors on the board
 #define COORDS 6       // number of supported coordinate systems (1-6)
 #define PWMS 2         // number of supported PWM channels
 
