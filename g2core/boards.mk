@@ -85,7 +85,6 @@ ifeq ("$(CONFIG)","TestQuadratic")
     SETTINGS_FILE="settings_test.h"
 endif
 
-
 ##########
 # Shopbot configs:
 
@@ -137,6 +136,17 @@ ifeq ("$(CONFIG)","Ultimakerv9k")
     endif
     SETTINGS_FILE="settings_ultimaker.h"
 endif
+
+##########
+# EMSL configs:
+
+ifeq ("$(CONFIG)","WaterColorBotv2")
+    ifeq ("$(BOARD)","NONE")
+        BOARD=gquadratic-b
+    endif
+    SETTINGS_FILE="settings_watercolorbot_v2.h"
+endif
+
 
 include $(wildcard ./board/$(STAR).mk)
 

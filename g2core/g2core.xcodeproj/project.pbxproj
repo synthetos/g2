@@ -58,6 +58,7 @@
 		D44E72C21D663B0F00ECD5DD /* coolant.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = coolant.h; sourceTree = "<group>"; };
 		D4522DC91C45F41D0086AAE6 /* g2core_info.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = g2core_info.h; sourceTree = "<group>"; };
 		D457117B17053EFA00EA19A8 /* Makefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makefile; sourceTree = "<group>"; usesTabs = 1; xcLanguageSpecificationIdentifier = xcode.lang.sh; };
+		D4782AB21D9B5F9400B32136 /* settings_watercolorbot_v2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = settings_watercolorbot_v2.h; sourceTree = "<group>"; };
 		D47B744C1D4925B4004FAB53 /* device */ = {isa = PBXFileReference; lastKnownFileType = folder; path = device; sourceTree = "<group>"; };
 		D48F5A40172CB1F900D0E055 /* canonical_machine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = canonical_machine.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D48F5A41172CB1F900D0E055 /* config_app.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = config_app.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
@@ -146,6 +147,7 @@
 			isa = PBXGroup;
 			children = (
 				D4AC39081C77C1F20098D685 /* settings_default.h */,
+				D4782AB21D9B5F9400B32136 /* settings_watercolorbot_v2.h */,
 				D4AC39091C77C1F20098D685 /* settings_makeblock.h */,
 				D4AC390A1C77C1F20098D685 /* settings_othermill_test.h */,
 				D4AC390B1C77C1F20098D685 /* settings_othermill.h */,
