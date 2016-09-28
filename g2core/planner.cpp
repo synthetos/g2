@@ -172,14 +172,14 @@ stat_t planner_test_assertions()
         (BAD_MAGIC(mr.magic_start)) || (BAD_MAGIC(mr.magic_end))) {
         return(cm_panic(STAT_PLANNER_ASSERTION_FAILURE, "planner_test_assertions()"));
     }
-    for (uint8_t i=0; i < PLANNER_BUFFER_POOL_SIZE; i++) {
-        if (mb.bf[i].nx == nullptr) {
-            _debug_trap("buffer has nullptr for nx");
-        }
-        if (mb.bf[i].pv == nullptr) {
-            _debug_trap("buffer has nullptr for pv");
-        }
-    }
+//    for (uint8_t i=0; i < PLANNER_BUFFER_POOL_SIZE; i++) {
+//        if (mb.bf[i].nx == nullptr) {
+//            _debug_trap("buffer has nullptr for nx");
+//        }
+//        if (mb.bf[i].pv == nullptr) {
+//            _debug_trap("buffer has nullptr for pv");
+//        }
+//    }
     return (STAT_OK);
 }
 

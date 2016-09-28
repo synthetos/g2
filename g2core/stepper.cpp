@@ -279,39 +279,39 @@ void dda_timer_type::interrupt()
 
     // process DDAs for each motor
         if  ((st_run.mot[MOTOR_1].substep_accumulator += st_run.mot[MOTOR_1].substep_increment) > 0) {
-        motor_1.stepStart();        // turn step bit on
+            motor_1.stepStart();        // turn step bit on
             st_run.mot[MOTOR_1].substep_accumulator -= st_run.dda_ticks_X_substeps;
             INCREMENT_ENCODER(MOTOR_1);
         }
         if ((st_run.mot[MOTOR_2].substep_accumulator += st_run.mot[MOTOR_2].substep_increment) > 0) {
-        motor_2.stepStart();        // turn step bit on
+            motor_2.stepStart();        // turn step bit on
             st_run.mot[MOTOR_2].substep_accumulator -= st_run.dda_ticks_X_substeps;
             INCREMENT_ENCODER(MOTOR_2);
         }
 #if MOTORS > 2
         if ((st_run.mot[MOTOR_3].substep_accumulator += st_run.mot[MOTOR_3].substep_increment) > 0) {
-        motor_3.stepStart();        // turn step bit on
+            motor_3.stepStart();        // turn step bit on
             st_run.mot[MOTOR_3].substep_accumulator -= st_run.dda_ticks_X_substeps;
             INCREMENT_ENCODER(MOTOR_3);
         }
 #endif
 #if MOTORS > 3
         if ((st_run.mot[MOTOR_4].substep_accumulator += st_run.mot[MOTOR_4].substep_increment) > 0) {
-        motor_4.stepStart();        // turn step bit on
+            motor_4.stepStart();        // turn step bit on
             st_run.mot[MOTOR_4].substep_accumulator -= st_run.dda_ticks_X_substeps;
             INCREMENT_ENCODER(MOTOR_4);
         }
 #endif
 #if MOTORS > 4
         if ((st_run.mot[MOTOR_5].substep_accumulator += st_run.mot[MOTOR_5].substep_increment) > 0) {
-        motor_5.stepStart();        // turn step bit on
+            motor_5.stepStart();        // turn step bit on
             st_run.mot[MOTOR_5].substep_accumulator -= st_run.dda_ticks_X_substeps;
             INCREMENT_ENCODER(MOTOR_5);
         }
 #endif
 #if MOTORS > 5
         if ((st_run.mot[MOTOR_6].substep_accumulator += st_run.mot[MOTOR_6].substep_increment) > 0) {
-        motor_6.stepStart();        // turn step bit on
+            motor_6.stepStart();        // turn step bit on
             st_run.mot[MOTOR_6].substep_accumulator -= st_run.dda_ticks_X_substeps;
             INCREMENT_ENCODER(MOTOR_6);
         }
@@ -499,7 +499,7 @@ static void _load_move()
 
         } else {  // Motor has 0 steps; might need to energize motor for power mode processing
             motor_1.motionStopped();
-            }
+        }
         // accumulate counted steps to the step position and zero out counted steps for the segment currently being loaded
         ACCUMULATE_ENCODER(MOTOR_1);
 
@@ -608,6 +608,9 @@ static void _load_move()
         mp_runtime_command(st_pre.bf);
 
     } // else null - WARNING - We cannot printf from here!! Causes crashes.
+    else {
+        _debug_trap("_load_move called when it's not needed?");
+    }
 
     // all other cases drop to here (e.g. Null moves after Mcodes skip to here)
     st_pre.block_type = BLOCK_TYPE_NULL;
