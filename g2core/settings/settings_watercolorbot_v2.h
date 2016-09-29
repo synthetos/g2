@@ -163,7 +163,7 @@
 #define Z_FEEDRATE_MAX              Z_VELOCITY_MAX
 #define Z_TRAVEL_MIN                0
 #define Z_TRAVEL_MAX                75
-#define Z_JERK_MAX                  10000
+#define Z_JERK_MAX                  5000
 #define Z_JERK_HIGH_SPEED           Z_JERK_MAX
 #define Z_HOMING_INPUT              6
 #define Z_HOMING_DIRECTION          1
