@@ -28,7 +28,7 @@
 
 #include "board_stepper.h"
 
-// These are identical to board_stepper.h, except for the word "extern"
+// These are identical to board_stepper.h, except for the word "extern", and they have the initialization parameters
 StepDirStepper<Motate::kSocket1_StepPinNumber,
                Motate::kSocket1_DirPinNumber,
                Motate::kSocket1_EnablePinNumber,
@@ -36,7 +36,7 @@ StepDirStepper<Motate::kSocket1_StepPinNumber,
                Motate::kSocket1_Microstep_1PinNumber,
                Motate::kSocket1_Microstep_2PinNumber,
                Motate::kSocket1_VrefPinNumber>
-    motor_1{};
+    motor_1{M1_ENABLE_POLARITY};
 
 StepDirStepper<Motate::kSocket2_StepPinNumber,
                Motate::kSocket2_DirPinNumber,
@@ -45,7 +45,7 @@ StepDirStepper<Motate::kSocket2_StepPinNumber,
                Motate::kSocket2_Microstep_1PinNumber,
                Motate::kSocket2_Microstep_2PinNumber,
                Motate::kSocket2_VrefPinNumber>
-    motor_2{};
+    motor_2{M2_ENABLE_POLARITY};
 
 StepDirHobbyServo<Motate::kServo1_PinNumber> motor_3;
 

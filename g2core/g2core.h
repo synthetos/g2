@@ -95,11 +95,6 @@ typedef enum {
     PWM_2
 } cmPWMs;
 
-typedef enum {
-    ACTIVE_HIGH = 0,
-    ACTIVE_LOW
-} cmPolarity;
-
 /**********************************************************************************
  * AVR/ARM Compatibility
  *

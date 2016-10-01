@@ -37,6 +37,7 @@ using Motate::pin_number;
 using Motate::OutputPin;
 using Motate::PWMOutputPin;
 using Motate::kStartHigh;
+using Motate::kStartLow;
 using Motate::kNormal;
 using Motate::Timeout;
 
@@ -55,14 +56,14 @@ struct StepDirStepper final : Stepper  {
     OutputPin<step_num>    _step;
     uint8_t                _step_downcount;
     OutputPin<dir_num>     _dir;
-    OutputPin<enable_num>  _enable{kStartHigh};
+    OutputPin<enable_num>  _enable;
     OutputPin<ms0_num>     _ms0;
     OutputPin<ms1_num>     _ms1;
     OutputPin<ms2_num>     _ms2;
     PWMOutputPin<vref_num> _vref;
 
     // sets default pwm freq for all motor vrefs (commented line below also sets HiZ)
-    StepDirStepper(const uint32_t frequency = 250000) : Stepper{}, _vref{kNormal, frequency} {};
+    StepDirStepper(ioMode enable_polarity = IO_ACTIVE_LOW, const uint32_t frequency = 250000) : Stepper{enable_polarity}, _enable{enable_polarity==IO_ACTIVE_LOW?kStartHigh:kStartLow}, _vref{kNormal, frequency} {};
 
     /* Optional override of init */
 
@@ -118,7 +119,7 @@ struct StepDirStepper final : Stepper  {
 //            _enable.clear();
 //        }
         if (!_enable.isNull()) {
-            if (_motor_enable_polarity == 0) {    // ++++ Change this to ACTIVE_HI
+            if (_motor_enable_polarity == IO_ACTIVE_HIGH) {
                 _enable.set();
             } else {
                 _enable.clear();
@@ -131,7 +132,7 @@ struct StepDirStepper final : Stepper  {
 //            _enable.set();
 //        }
         if (!_enable.isNull()) {
-            if (_motor_enable_polarity == 0) {    // ++++ Change this to ACTIVE_HI
+            if (_motor_enable_polarity == IO_ACTIVE_HIGH) {
             _enable.clear();
         } else {
             _enable.set();

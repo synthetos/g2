@@ -255,6 +255,7 @@
 #define STEPPER_H_ONCE
 
 #include "planner.h"    // planner.h must precede stepper.h for moveType typedef
+#include "gpio.h"       // for IO_ACTIVE_HIGH/IO_ACTIVE_LOW
 
 /*********************************
  * Stepper configs and constants *
@@ -430,16 +431,17 @@ extern stPrepSingleton_t st_pre;            // only used by config_app diagnosti
 /**** Stepper (base object) ****/
 
 struct Stepper {
+protected:
     Timeout _motor_disable_timeout;         // this is the timeout object that will let us know when time is u
     uint32_t _motor_disable_timeout_ms;     // the number of ms that the timeout is reset to
-    uint8_t _motor_enable_polarity;         // 0=active HIGH, 1=active LOW
+    ioMode _motor_enable_polarity;         // 0=active HIGH, 1=active LOW
     stPowerState _power_state;              // state machine for managing motor power
     stPowerMode _power_mode;                // See stPowerMode for values
 
     /* stepper default values */
-
+public:
     // sets default pwm freq for all motor vrefs (commented line below also sets HiZ)
-    Stepper(const uint32_t frequency = 500000)
+    Stepper(ioMode enable_polarity = IO_ACTIVE_LOW) : _motor_enable_polarity{enable_polarity}
     {
     };
 
@@ -458,6 +460,18 @@ struct Stepper {
         } else if (_power_mode == MOTOR_DISABLED) {
             disable();
         }
+    };
+
+    virtual ioMode getMotorPolarity()
+    {
+        return _motor_enable_polarity;
+    };
+
+    virtual void setMotorPolarity(ioMode new_mp)
+    {
+        _motor_enable_polarity = new_mp;
+        // this is a misnomer, but handles the logic we need for asserting the newly adjusted enable line correctly
+        motionStopped();
     };
 
     virtual stPowerMode getPowerMode()
@@ -605,6 +619,7 @@ stat_t st_set_me(nvObj_t *nv);
     void st_print_mi(nvObj_t *nv);
     void st_print_su(nvObj_t *nv);
     void st_print_po(nvObj_t *nv);
+    void st_print_ep(nvObj_t *nv);
     void st_print_pm(nvObj_t *nv);
     void st_print_pl(nvObj_t *nv);
     void st_print_pwr(nvObj_t *nv);
@@ -620,6 +635,7 @@ stat_t st_set_me(nvObj_t *nv);
     #define st_print_mi tx_print_stub
     #define st_print_su tx_print_stub
     #define st_print_po tx_print_stub
+    #define st_print_ep tx_print_stub
     #define st_print_pm tx_print_stub
     #define st_print_pl tx_print_stub
     #define st_print_pwr tx_print_stub
