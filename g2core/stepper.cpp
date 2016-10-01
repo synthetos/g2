@@ -936,6 +936,29 @@ stat_t st_set_su(nvObj_t *nv)			// motor steps per unit (direct)
     return(STAT_OK);
 }
 
+stat_t st_set_ep(nvObj_t *nv)            // set motor enable polarity
+{
+    if (nv->value > ACTIVE_LOW) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
+
+    uint8_t motor = _get_motor(nv->index);
+    if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
+
+    Motors[motor]->_motor_enable_polarity = (uint8_t)nv->value;
+    return (STAT_OK);
+}
+
+stat_t st_get_ep(nvObj_t *nv)            // get motor enable polarity
+{
+    if (nv->value > ACTIVE_LOW) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
+
+    uint8_t motor = _get_motor(nv->index);
+    if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
+
+    nv->value = (float)Motors[motor]->_motor_enable_polarity;
+    nv->valuetype = TYPE_INT;
+    return (STAT_OK);
+}
+
 stat_t st_set_pm(nvObj_t *nv)            // set motor power mode
 {
     if (nv->value < 0) {

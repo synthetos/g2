@@ -336,7 +336,7 @@ typedef enum {
  *  There are 5 main structures involved in stepper operations;
  *
  *  data structure:                   found in:      runs primarily at:
- *    mpBuffer planning buffers (bf)    planner.c       main loop
+ *    mpBuffer planning buffers (bf)    planner.c      main loop
  *    mrRuntimeSingleton (mr)           planner.c      MED ISR
  *    stConfig (st_cfg)                 stepper.c      write=bkgd, read=ISRs
  *    stPrepSingleton (st_pre)          stepper.c      MED ISR
@@ -432,6 +432,7 @@ extern stPrepSingleton_t st_pre;            // only used by config_app diagnosti
 struct Stepper {
     Timeout _motor_disable_timeout;         // this is the timeout object that will let us know when time is u
     uint32_t _motor_disable_timeout_ms;     // the number of ms that the timeout is reset to
+    uint8_t _motor_enable_polarity;         // 0=active HIGH, 1=active LOW
     stPowerState _power_state;              // state machine for managing motor power
     stPowerMode _power_mode;                // See stPowerMode for values
 
@@ -585,6 +586,8 @@ stat_t st_set_tr(nvObj_t *nv);
 stat_t st_set_mi(nvObj_t *nv);
 stat_t st_get_su(nvObj_t *nv);
 stat_t st_set_su(nvObj_t *nv);
+stat_t st_set_ep(nvObj_t *nv);
+stat_t st_get_ep(nvObj_t *nv);
 stat_t st_set_pm(nvObj_t *nv);
 stat_t st_get_pm(nvObj_t *nv);
 stat_t st_set_pl(nvObj_t *nv);
