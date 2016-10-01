@@ -208,6 +208,9 @@
 #ifndef M1_POLARITY
 #define M1_POLARITY                 0                       // {1po:  0=normal direction, 1=inverted direction
 #endif
+#ifndef M1_ENABLE_POLARITY
+#define M1_ENABLE_POLARITY          1                       // {1ep:  0=active HIGH, 1=active LOW
+#endif
 #ifndef M1_POWER_MODE
 #define M1_POWER_MODE               MOTOR_DISABLED          // {1pm:  MOTOR_DISABLED, MOTOR_ALWAYS_POWERED, MOTOR_POWERED_IN_CYCLE, MOTOR_POWERED_ONLY_WHEN_MOVING
 #endif
@@ -234,6 +237,9 @@
 #ifndef M2_POLARITY
 #define M2_POLARITY                 0
 #endif
+#ifndef M2_ENABLE_POLARITY
+#define M2_ENABLE_POLARITY          1
+#endif
 #ifndef M2_POWER_MODE
 #define M2_POWER_MODE               MOTOR_DISABLED
 #endif
@@ -258,7 +264,10 @@
 #define M3_STEPS_PER_UNIT           0
 #endif
 #ifndef M3_POLARITY
-#define M3_POLARITY                 1
+#define M3_POLARITY                 0
+#endif
+#ifndef M3_ENABLE_POLARITY
+#define M3_ENABLE_POLARITY          1
 #endif
 #ifndef M3_POWER_MODE
 #define M3_POWER_MODE               MOTOR_DISABLED
@@ -286,6 +295,9 @@
 #ifndef M4_POLARITY
 #define M4_POLARITY                 0
 #endif
+#ifndef M4_ENABLE_POLARITY
+#define M4_ENABLE_POLARITY          1
+#endif
 #ifndef M4_POWER_MODE
 #define M4_POWER_MODE               MOTOR_DISABLED
 #endif
@@ -312,6 +324,9 @@
 #ifndef M5_POLARITY
 #define M5_POLARITY                 0
 #endif
+#ifndef M5_ENABLE_POLARITY
+#define M5_ENABLE_POLARITY          1
+#endif
 #ifndef M5_POWER_MODE
 #define M5_POWER_MODE               MOTOR_DISABLED
 #endif
@@ -337,6 +352,9 @@
 #endif
 #ifndef M6_POLARITY
 #define M6_POLARITY                 0
+#endif
+#ifndef M6_ENABLE_POLARITY
+#define M6_ENABLE_POLARITY          1
 #endif
 #ifndef M6_POWER_MODE
 #define M6_POWER_MODE               MOTOR_DISABLED
