@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Atmel Studio Solution File, Format Version 11.00
-VisualStudioVersion = 14.0.23107.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "g2core", "g2core\g2core.cppproj", "{44EA8FEC-55D7-4149-8A78-A574FC26BF51}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -9,10 +9,16 @@ Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "g2core", "g2core\g2core.cpp
 EndProject
 Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "Motate", "Motate\Motate.cppproj", "{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{EDEADAC5-3D21-4659-892D-57DCADC13B9B}"
+	ProjectSection(SolutionItems) = preProject
+		prog.bat = prog.bat
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		G2v9k|ARM = G2v9k|ARM
 		gShield|ARM = gShield|ARM
+		ISEL|ARM = ISEL|ARM
 		Makeblock-v9|ARM = Makeblock-v9|ARM
 		Othermill|ARM = Othermill|ARM
 		PrintrbotSimple1403-printrboardG2v3|ARM = PrintrbotSimple1403-printrboardG2v3|ARM
@@ -32,6 +38,9 @@ Global
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.G2v9k|ARM.Build.0 = G2v9k|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.gShield|ARM.ActiveCfg = gShield|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.gShield|ARM.Build.0 = gShield|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.ISEL|ARM.ActiveCfg = ISEL|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.ISEL|ARM.Build.0 = ISEL|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.ISEL|ARM.Deploy.0 = ISEL|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Makeblock-v9|ARM.ActiveCfg = Makeblock-v9|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Makeblock-v9|ARM.Build.0 = Makeblock-v9|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Othermill|ARM.ActiveCfg = Othermill|ARM
@@ -59,6 +68,7 @@ Global
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Zen7x12|ARM.Build.0 = Zen7x12|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.G2v9k|ARM.ActiveCfg = Stub|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.gShield|ARM.ActiveCfg = Stub|ARM
+		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.ISEL|ARM.ActiveCfg = Stub|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.Makeblock-v9|ARM.ActiveCfg = Stub|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.Othermill|ARM.ActiveCfg = Stub|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.PrintrbotSimple1403-printrboardG2v3|ARM.ActiveCfg = Stub|ARM
