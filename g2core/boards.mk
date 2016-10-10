@@ -147,6 +147,13 @@ ifeq ("$(CONFIG)","WaterColorBotv2")
     SETTINGS_FILE="settings_watercolorbot_v2.h"
 endif
 
+ifeq ("$(CONFIG)","EggBot")
+    ifeq ("$(BOARD)","NONE")
+        BOARD=gquadratic-b
+    endif
+    SETTINGS_FILE="settings_eggbot.h"
+endif
+
 
 include $(wildcard ./board/$(STAR).mk)
 
