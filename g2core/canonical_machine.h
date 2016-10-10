@@ -324,6 +324,7 @@ typedef struct GCodeState {             // Gcode model state - used by model, pl
                                         // G82, G83 G84, G85, G86, G87, G88, G89
 
     float target[AXES];                 // XYZABC where the move should go
+    float target_comp[AXES];            // summation compensation (Kahan) overflow value
     float work_offset[AXES];            // offset from the work coordinate system (for reporting only)
 
     float feed_rate;                    // F - normalized to millimeters/minute or in inverse time mode
