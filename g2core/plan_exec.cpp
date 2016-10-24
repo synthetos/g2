@@ -893,8 +893,17 @@ static stat_t _exec_aline_segment()
         copy_vector(mr.gm.target, mr.waypoint[mr.section]);
     } else {
         float segment_length = mr.segment_velocity * mr.segment_time;
+        // see https://en.wikipedia.org/wiki/Kahan_summation_algorithm
+        //   for the summation compensation description
         for (uint8_t a=0; a<AXES; a++) {
+#if 1
+            float to_add = (mr.unit[a] * segment_length) - mr.gm.target_comp[a];
+            float target = mr.position[a] + to_add;
+            mr.gm.target_comp[a] = (target - mr.position[a]) - to_add;
+            mr.gm.target[a] = target;
+#else
             mr.gm.target[a] = mr.position[a] + (mr.unit[a] * segment_length);
+#endif
         }
     }
 
