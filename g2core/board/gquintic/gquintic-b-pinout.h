@@ -100,17 +100,17 @@
 // So we have to explicitly enable them as PWM pins.
 // Generated with:
 // perl -e 'for($i=1;$i<14;$i++) { print "#define OUTPUT${i}_PWM 0\n";}'
-#define OUTPUT1_PWM 1   // PWM1 - Fet 1
-#define OUTPUT2_PWM 1   // PWM2 - Fet 2
-#define OUTPUT3_PWM 1   // PWM3 - Fan 1
-#define OUTPUT4_PWM 0   // PWM2 - Fan 2
-#define OUTPUT5_PWM 1   // Timer2ch0 - Fan 3
-#define OUTPUT6_PWM 1   // Timer2ch1
-#define OUTPUT7_PWM 0   // PWM2
-#define OUTPUT8_PWM 1   // PWM0
-#define OUTPUT9_PWM 0   // PWM3 or Timer1ch0
-#define OUTPUT10_PWM 0  // PWM1
-#define OUTPUT11_PWM 0  // Can't PWM - Fet 3
+#define OUTPUT1_PWM 1   // TC0,1 - Fet 1
+#define OUTPUT2_PWM 1   // PWM1 - Fet 2
+#define OUTPUT3_PWM 1   // TC1,0 - Fan 1
+#define OUTPUT4_PWM 1   // TC1,1 - Fan 2
+#define OUTPUT5_PWM 1   // TC2,0 - Fan 3
+#define OUTPUT6_PWM 1   // PWM8+0
+#define OUTPUT7_PWM 1   // PWM3
+#define OUTPUT8_PWM 1   // PWM2
+#define OUTPUT9_PWM 0   // PWM2
+#define OUTPUT10_PWM 1  // PWM8+2
+#define OUTPUT11_PWM 1  // PWM8+3 - Fet 3
 #define OUTPUT12_PWM 0  // Unused
 #define OUTPUT13_PWM 0  // Unused
 
