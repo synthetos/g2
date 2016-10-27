@@ -72,7 +72,7 @@ endif
 
 ifeq ("$(CONFIG)","TestQuintic")
     ifeq ("$(BOARD)","NONE")
-        BOARD=gquintic-a
+        BOARD=gquintic-b
     endif
     SETTINGS_FILE="settings_test.h"
 endif
