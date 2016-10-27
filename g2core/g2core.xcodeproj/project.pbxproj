@@ -381,7 +381,7 @@
 		};
 		D4F226F31D088A48008ED57C /* G2 gQuintic PrintrbotPlus */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=PrintrbotPlus BOARD=gquintic-a DEBUG=2";
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=PrintrbotPlus BOARD=gquintic-b DEBUG=2";
 			buildConfigurationList = D4F226F41D088A48008ED57C /* Build configuration list for PBXLegacyTarget "G2 gQuintic PrintrbotPlus" */;
 			buildPhases = (
 			);

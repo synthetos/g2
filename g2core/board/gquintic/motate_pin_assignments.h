@@ -166,6 +166,8 @@ pin_number kSD_ChipSelectPinNumber = 120;
 pin_number kInterlock_InPinNumber  = 121;
 pin_number kOutputSAFE_PinNumber   = 122;  // SAFE signal
 pin_number kLEDPWM_PinNumber       = 123;
+pin_number kOutputInterrupt_PinNumber = 124;  // to-host interrupt signal
+pin_number kLED_RGBWPixelPinNumber    = 125;  // 117;
 
 // GRBL / gShield compatibility pins -- Due board ONLY
 
