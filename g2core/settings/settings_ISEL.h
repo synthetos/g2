@@ -41,7 +41,7 @@
 
 #define SOFT_LIMIT_ENABLE           1                       // 0=off, 1=on
 #define HARD_LIMIT_ENABLE           0                       // 0=off, 1=on
-#define SAFETY_INTERLOCK_ENABLE     1                       // 0=off, 1=on
+#define SAFETY_INTERLOCK_ENABLE     0                       // 0=off, 1=on
 
 #define SPINDLE_ENABLE_POLARITY     1                       // 0=active low, 1=active high
 #define SPINDLE_DIR_POLARITY        0                       // 0=clockwise is low, 1=clockwise is high

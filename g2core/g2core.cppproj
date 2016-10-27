@@ -118,7 +118,7 @@
     <UseGdbCustomPath>False</UseGdbCustomPath>
     <GdbCustomPath>
     </GdbCustomPath>
-    <CustomProgrammingToolCommand>prog.bat COM4 g2core.bin</CustomProgrammingToolCommand>
+    <CustomProgrammingToolCommand>C:\Workspace\CNC\g2\prog.bat COM3 C:\Workspace\CNC\g2\g2core\bin\ISEL-gShield\g2core.bin</CustomProgrammingToolCommand>
     <CustomProgrammingToolTimeout>100</CustomProgrammingToolTimeout>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'gShield' ">
