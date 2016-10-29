@@ -413,7 +413,7 @@ typedef struct stPrepSingleton {
     struct mpBuffer *bf;                    // static pointer to relevant buffer
     blockType block_type;                   // move type (requires planner.h)
 
-    uint16_t dda_period;                    // DDA or dwell clock period setting
+    //uint16_t dda_period;                    // DDA or dwell clock period setting (No longer used)
     uint32_t dda_ticks;                     // DDA or dwell ticks for the move
     uint32_t dda_ticks_X_substeps;          // DDA ticks scaled by substep factor
     stPrepMotor_t mot[MOTORS];              // prep time motor structs

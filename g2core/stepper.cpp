@@ -51,7 +51,7 @@ static stRunSingleton_t st_run;
 static void _load_move(void);
 
 // handy macro
-#define _f_to_period(f) (uint16_t)((float)F_CPU / (float)f)
+//#define _f_to_period(f) (uint16_t)((float)F_CPU / (float)f)
 
 /**** Setup motate ****/
 
@@ -658,7 +658,7 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
     // - dda_ticks is the integer number of DDA clock ticks needed to play out the segment
     // - ticks_X_substeps is the maximum depth of the DDA accumulator (as a negative number)
 
-    st_pre.dda_period = _f_to_period(FREQUENCY_DDA);                // FYI: this is a constant
+    //st_pre.dda_period = _f_to_period(FREQUENCY_DDA);                // FYI: this is a constant
     st_pre.dda_ticks = (int32_t)(segment_time * 60 * FREQUENCY_DDA);// NB: converts minutes to seconds
     st_pre.dda_ticks_X_substeps = st_pre.dda_ticks * DDA_SUBSTEPS;
 
@@ -753,7 +753,7 @@ void st_prep_command(void *bf)
 void st_prep_dwell(float microseconds)
 {
     st_pre.block_type = BLOCK_TYPE_DWELL;
-    st_pre.dda_period = _f_to_period(FREQUENCY_DWELL);
+    //st_pre.dda_period = _f_to_period(FREQUENCY_DWELL);
     st_pre.dda_ticks = (uint32_t)((microseconds/1000000) * FREQUENCY_DWELL);
     st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;    // signal that prep buffer is ready
 }
