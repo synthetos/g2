@@ -156,14 +156,14 @@ const cfgItem_t cfgArray[] = {
     { "ofs","ofsa",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul,(float *)&cs.null, 0 },        // A work offset
     { "ofs","ofsb",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul,(float *)&cs.null, 0 },        // B work offset
     { "ofs","ofsc",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul,(float *)&cs.null, 0 },        // C work offset
-
+/*
     { "tof","tofx",_f0, 3, cm_print_tof, cm_get_tof, set_nul,(float *)&cs.null, 0 },        // X tool offset
     { "tof","tofy",_f0, 3, cm_print_tof, cm_get_tof, set_nul,(float *)&cs.null, 0 },        // Y tool offset
     { "tof","tofz",_f0, 3, cm_print_tof, cm_get_tof, set_nul,(float *)&cs.null, 0 },        // Z tool offset
     { "tof","tofa",_f0, 3, cm_print_tof, cm_get_tof, set_nul,(float *)&cs.null, 0 },        // A tool offset
     { "tof","tofb",_f0, 3, cm_print_tof, cm_get_tof, set_nul,(float *)&cs.null, 0 },        // B tool offset
     { "tof","tofc",_f0, 3, cm_print_tof, cm_get_tof, set_nul,(float *)&cs.null, 0 },        // C tool offset
-
+*/
     { "hom","home",_f0, 0, cm_print_home,cm_get_home,set_01,(float *)&cm.homing_state, 0 },     // homing state, invoke homing cycle
     { "hom","homx",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_X], false },  // X homed - Homing status group
     { "hom","homy",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_Y], false },  // Y homed
@@ -611,7 +611,14 @@ const cfgItem_t cfgArray[] = {
     { "tl","tla",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tl_offset[AXIS_A], 0 },
     { "tl","tlb",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tl_offset[AXIS_B], 0 },
     { "tl","tlc",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tl_offset[AXIS_C], 0 },
-
+/*
+    { "tl","tlx",_fipc, 3, cm_print_cofs, cm_get_tof, set_flu,(float *)&cm.tl_offset[AXIS_X], 0 },
+    { "tl","tly",_fipc, 3, cm_print_cofs, cm_get_tof, set_flu,(float *)&cm.tl_offset[AXIS_Y], 0 },
+    { "tl","tlz",_fipc, 3, cm_print_cofs, cm_get_tof, set_flu,(float *)&cm.tl_offset[AXIS_Z], 0 },
+    { "tl","tla",_fip,  3, cm_print_cofs, cm_get_tof, set_flt,(float *)&cm.tl_offset[AXIS_A], 0 },
+    { "tl","tlb",_fip,  3, cm_print_cofs, cm_get_tof, set_flt,(float *)&cm.tl_offset[AXIS_B], 0 },
+    { "tl","tlc",_fip,  3, cm_print_cofs, cm_get_tof, set_flt,(float *)&cm.tl_offset[AXIS_C], 0 },
+*/
     // Tool table offsets
     { "tt1","tt1x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[1][AXIS_X], TT1_X_OFFSET },
     { "tt1","tt1y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[1][AXIS_Y], TT1_Y_OFFSET },
