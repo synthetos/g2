@@ -33,7 +33,7 @@ ifeq ("$(BASE_BOARD)","archim")
     CHIP_LOWERCASE = sam3x8e
 
     BOARD_PATH = ./board/Archim
-    SOURCE_DIRS += ${BOARD_PATH}
+    SOURCE_DIRS += ${BOARD_PATH} device/step_dir_driver
 
     PLATFORM_BASE = ${MOTATE_PATH}/platform/atmel_sam
 
