@@ -45,8 +45,8 @@ static Motate::PWMOutputPin<Motate::kSpindle_Pwm2PinNumber> secondary_pwm_pin;
 //#define PWM_TIMER_TYPE    TC1_struct      // PWM uses TC1's
 #define PWM_TIMER_t    TC1_t                // PWM uses TC1's
 #define PWM_TIMER_DISABLE 0                 // turn timer off (clock = 0 Hz)
-#define PWM_MAX_FREQ (F_CPU/256)            // max frequency with 8-bits duty cycle precision
-#define PWM_MIN_FREQ (F_CPU/64/65536)       // min frequency with supported prescaling
+//#define PWM_MAX_FREQ (F_CPU/256)            // max frequency with 8-bits duty cycle precision
+//#define PWM_MIN_FREQ (F_CPU/64/65536)       // min frequency with supported prescaling
 
 // channel specific defines
 /* CLKSEL is used to configure default PWM clock operating ranges
@@ -95,8 +95,8 @@ void pwm_init() {}
 stat_t pwm_set_freq(uint8_t chan, float freq)
 {
     if (chan > PWMS) { return (STAT_NO_SUCH_DEVICE);}
-    if (freq < PWM_MIN_FREQ) { return (STAT_INPUT_LESS_THAN_MIN_VALUE);}
-    if (freq > PWM_MAX_FREQ) { return (STAT_INPUT_EXCEEDS_MAX_VALUE);}
+    //if (freq < PWM_MIN_FREQ) { return (STAT_INPUT_LESS_THAN_MIN_VALUE);}
+    //if (freq > PWM_MAX_FREQ) { return (STAT_INPUT_EXCEEDS_MAX_VALUE);}
 
     if (chan == PWM_1) {
         spindle_pwm_pin.setFrequency(freq);

@@ -85,8 +85,6 @@ using Motate::OutputPin;
  * Global System Defines *
  *************************/
 
-#undef F_CPU  // CPU clock - set for delays
-#define F_CPU 84000000UL
 #define MILLISECONDS_PER_TICK 1  // MS for system tick (systick * N)
 #define SYS_ID_DIGITS 12         // actual digits in system ID (up to 16)
 #define SYS_ID_LEN 16            // total length including dashes and NUL
