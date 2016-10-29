@@ -6,7 +6,7 @@
 #   make BOARD=g2v9k
 
 # You can also choose a CONFIG from boards.mk:
-#   make CONFIG=ShapeokoDualY BOARD=G2v9k
+#   make CONFIG=ShapeokoDualY BOARD=g2v9k
 
 
 
@@ -15,13 +15,13 @@
 
 ifeq ("$(BOARD)","g2v9i")
     BASE_BOARD=g2v9
-    DEVICE_DEFINES += MOTATE_BOARD="G2v9i"
+    DEVICE_DEFINES += MOTATE_BOARD="g2v9i"
     DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
 endif
 
 ifeq ("$(BOARD)","g2v9k")
     BASE_BOARD=g2v9
-    DEVICE_DEFINES += MOTATE_BOARD="G2v9k"
+    DEVICE_DEFINES += MOTATE_BOARD="g2v9k"
     DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
 endif
 
