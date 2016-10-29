@@ -2220,19 +2220,37 @@ char cm_get_axis_char(const int8_t axis)
     return (axis_char[axis]);
 }
 
+/*
+ * _get_axis()      - return axis number or -1 if no match 
+ * _get_axis_type() - return linear axis (0), rotary axis (1) or error (-1)
+ *
+ *  It's possible top get a false positive if a non-axis token is passed
+ *  This function should only be called from functions that process axis commands
+ *
+ *  Cases that are handled:
+ *      - xam   ( axis parameters )
+ *      - mpox  ( readouts)
+ *      - g54x  ( offsets )
+ *      - tlx   ( tool length offset )
+ *      - tt1x  ( tool table )
+ *      - tt16x ( tool table )
+ *      - _tex  ( diagnostic parameters )
+ */
+
 static int8_t _get_axis(const index_t index)
 {
     char *ptr;
-    char tmp[TOKEN_LEN+1];
     char axes[] = {"xyzabc"};
 
-    strncpy(tmp, cfgArray[index].token, TOKEN_LEN);     // kind of a hack. Looks for an axis
-    if ((ptr = strchr(axes, tmp[0])) == NULL) {         // character in the 0 and 3 positions
-        if ((ptr = strchr(axes, tmp[3])) == NULL) {     // to accommodate 'xam' and 'g54x' styles
-            return (-1);
-        }
+    // test first character cases - e.g. xam
+    if ((ptr = strchr(axes, cfgArray[index].token[0])) != NULL) {   
+        return (ptr - axes);
     }
-    return (ptr - axes);
+    // test last character cases - e.g. g54x
+    if ((ptr = strchr(axes, cfgArray[index].token[strlen(cfgArray[index].token)-1])) != NULL) {
+        return (ptr - axes);
+    }
+    return (-1);       
 }
 
 static int8_t _get_axis_type(const index_t index)
@@ -2502,9 +2520,6 @@ stat_t cm_set_jh(nvObj_t *nv)
 
 stat_t cm_set_jt(nvObj_t *nv)
 {
-//    // Prescale it. 
-//    if (nv->value > 10) nv->value /= 100;
-
     stat_t status = STAT_OK;
 
     if (nv->value < JUNCTION_INTEGRATION_MIN) {
