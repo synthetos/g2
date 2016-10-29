@@ -32,48 +32,59 @@
 #include "board_xio.h"
 
 //******** USB ********
+#if XIO_HAS_USB
 const Motate::USBSettings_t Motate::USBSettings = {
     /*gVendorID         = */ 0x1d50,
     /*gProductID        = */ 0x606d,
     /*gProductVersion   = */ G2CORE_FIRMWARE_VERSION,
     /*gAttributes       = */ kUSBConfigAttributeSelfPowered,
-    /*gPowerConsumption = */ 500};
-/*gProductVersion   = */  // 0.1,
+    /*gPowerConsumption = */ 500
+};
+/*gProductVersion   = */ //0.1,
 
-// Motate::USBDevice< Motate::USBCDC > usb;
-Motate::USBDevice<Motate::USBCDC, Motate::USBCDC> usb;
+//Motate::USBDevice< Motate::USBCDC > usb;
+Motate::USBDevice< Motate::USBCDC, Motate::USBCDC > usb;
 
-decltype(usb.mixin<0>::Serial)& SerialUSB  = usb.mixin<0>::Serial;
-decltype(usb.mixin<1>::Serial)& SerialUSB1 = usb.mixin<1>::Serial;
+decltype(usb.mixin<0>::Serial) &SerialUSB = usb.mixin<0>::Serial;
+decltype(usb.mixin<1>::Serial) &SerialUSB1 = usb.mixin<1>::Serial;
 
 // 115200 is the default, as well.
-// UART<kSerial_RX, kSerial_TX, kSerial_RTS, kSerial_CTS> Serial {115200, UARTMode::RTSCTSFlowControl};
+//UART<kSerial_RXPinNumber, kSerial_TXPinNumber, kSerial_RTSPinNumber, kSerial_CTSPinNumber> Serial {115200, UARTMode::RTSCTSFlowControl};
 
-
-MOTATE_SET_USB_VENDOR_STRING({'S', 'y', 'n', 't', 'h', 'e', 't', 'o', 's'})
-MOTATE_SET_USB_PRODUCT_STRING({'T', 'i', 'n', 'y', 'G', ' ', 'v', '2'})
+MOTATE_SET_USB_VENDOR_STRING( u"Synthetos (http://synthetos.com)" )
+MOTATE_SET_USB_PRODUCT_STRING( u"g2core gQuadratic" )
 MOTATE_SET_USB_SERIAL_NUMBER_STRING_FROM_CHIPID()
-
-
+#endif // XIO_HAS_USB
 
 //******** SPI ********
-// Motate::SPI<kSocket4_SPISlaveSelectPinNumber> spi;
-
+#if XIO_HAS_SPI
+Motate::SPI<kSocket4_SPISlaveSelectPinNumber> spi;
+#endif
 
 
 //******** UART ********
-// Motate::UART<Motate::kSerial_RX, Motate::kSerial_TX, Motate::kSerial_RTS, Motate::kSerial_CTS> Serial {115200,
-// Motate::UARTMode::RTSCTSFlowControl};
+#if XIO_HAS_UART
+Motate::UART<Motate::kSerial_RXPinNumber, Motate::kSerial_TXPinNumber, Motate::kSerial_RTSPinNumber, Motate::kSerial_CTSPinNumber> Serial {115200, Motate::UARTMode::RTSCTSFlowControl};
+#endif
 
-
-
-void board_xio_init(void) {
+void board_hardware_init(void) // called 1st
+{
+#if XIO_HAS_USB
     // Init USB
-    usb.attach();  // USB setup. Runs in "background" as the rest of this executes
+    usb.attach();                   // USB setup. Runs in "background" as the rest of this executes
+#endif // XIO_HAS_USB
+}
 
 
-    // Init SPI (handled internally for now)
+void board_xio_init(void) // called later than board_hardware_init (there are thing in between)
+{
+    // Init SPI
+#if XIO_HAS_SPI
+    // handled internally for now
+#endif
 
     // Init UART
-    //    Serial.init();
+#if XIO_HAS_UART
+    Serial.init();
+#endif
 }

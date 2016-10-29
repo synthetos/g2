@@ -126,8 +126,8 @@ _MAKE_MOTATE_PIN(kUnassigned1,                  'A',  5);  //
 _MAKE_MOTATE_PIN(kUnassigned2,                  'A',  6);  // Missing in 100-pin package
 _MAKE_MOTATE_PIN(kUnassigned3,                  'A',  7);  //
 _MAKE_MOTATE_PIN(kUnassigned4,                  'A',  8);  //
-_MAKE_MOTATE_PIN(kSerial_RX,                    'A',  9);  //
-_MAKE_MOTATE_PIN(kSerial_TX,                    'A', 10);  //
+_MAKE_MOTATE_PIN(kSerial_RXPinNumber,                    'A',  9);  //
+_MAKE_MOTATE_PIN(kSerial_TXPinNumber,                    'A', 10);  //
 _MAKE_MOTATE_PIN(kSocket1_Microstep_1PinNumber, 'A', 11);  //
 _MAKE_MOTATE_PIN(kSocket1_EnablePinNumber,      'A', 12);  //
 _MAKE_MOTATE_PIN(kUnassigned5,                  'A', 13);  //
@@ -145,7 +145,7 @@ _MAKE_MOTATE_PIN(kUnassigned16,                 'A', 24);  //
 _MAKE_MOTATE_PIN(kUnassigned17,                 'A', 25);  //
 _MAKE_MOTATE_PIN(kUnassigned18,                 'A', 26);  //
 _MAKE_MOTATE_PIN(kSocket1_VrefPinNumber,        'A', 27);  // TC2.1
-_MAKE_MOTATE_PIN(kSerial_CTS,                   'A', 28);  //
+_MAKE_MOTATE_PIN(kSerial_CTSPinNumber,                   'A', 28);  //
 _MAKE_MOTATE_PIN(kUnassigned19,                 'A', 29);  // Missing in 100-pin package
 _MAKE_MOTATE_PIN(kServo1_PinNumber,             'A', 30);  // PWM2
 _MAKE_MOTATE_PIN(kInput4_PinNumber,             'A', 31);  //
@@ -172,7 +172,7 @@ _MAKE_MOTATE_PIN(kUnassigned25,                 'D',  3);  //
 _MAKE_MOTATE_PIN(kUnassigned26,                 'D',  4);  //
 _MAKE_MOTATE_PIN(kUnassigned27,                 'D',  5);  //
 _MAKE_MOTATE_PIN(kInput3_PinNumber,             'D',  6);  //
-_MAKE_MOTATE_PIN(kSerial_RTS,                   'D',  7);  //
+_MAKE_MOTATE_PIN(kSerial_RTSPinNumber,                   'D',  7);  //
 _MAKE_MOTATE_PIN(kUnassigned28,                 'D',  8);  // INTERRUPT_OUT
 _MAKE_MOTATE_PIN(kUnassigned29,                 'D',  9);  //
 _MAKE_MOTATE_PIN(kUnassigned30,                 'D', 10);  //

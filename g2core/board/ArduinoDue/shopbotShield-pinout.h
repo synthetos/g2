@@ -82,8 +82,8 @@ namespace Motate {
 // NOT ALL OF THESE PINS ARE ON ALL PLATFORMS
 // Undefined pins will be equivalent to Motate::NullPin, and return 1 for Pin<>::isNull();
 
-pin_number kSerial_RX = 0;
-pin_number kSerial_TX = 1;
+pin_number kSerial_RXPinNumber = 0;
+pin_number kSerial_TXPinNumber = 1;
 
 pin_number kSerial0_RX = 0;
 pin_number kSerial0_TX = 1;

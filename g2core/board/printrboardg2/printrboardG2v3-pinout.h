@@ -130,14 +130,14 @@ _MAKE_MOTATE_PIN(kADC0_PinNumber, 'A', 4);                 // BED_ADC
 _MAKE_MOTATE_PIN(kOutput1_PinNumber, 'A', 5);              // DO_1 (Extruder1_PWM)
 _MAKE_MOTATE_PIN(kOutput3_PinNumber, 'A', 6);              // DO_3 (Fan1B_PWM)
 _MAKE_MOTATE_PIN(kOutputSAFE_PinNumber, 'A', 7);           // DO_9 (SAFE_PULSES - output from MCU)
-_MAKE_MOTATE_PIN(kSerial_RX, 'A', 8);                      // UART_RX
-_MAKE_MOTATE_PIN(kSerial_TX, 'A', 9);                      // UART_TX
+_MAKE_MOTATE_PIN(kSerial_RXPinNumber, 'A', 8);                      // UART_RX
+_MAKE_MOTATE_PIN(kSerial_TXPinNumber, 'A', 9);                      // UART_TX
 _MAKE_MOTATE_PIN(kInput5_PinNumber, 'A', 10);              // DI_5 (ZMin)
 _MAKE_MOTATE_PIN(kInput4_PinNumber, 'A', 11);              // DI_4 (YMax)
 _MAKE_MOTATE_PIN(kUnassigned4, 'A', 12);                   // USART_RX (not used)
 _MAKE_MOTATE_PIN(kUnassigned5, 'A', 13);                   // USART_TX (not used)
-_MAKE_MOTATE_PIN(kSerial_RTS, 'A', 14);                    // UART_RTS
-_MAKE_MOTATE_PIN(kSerial_CTS, 'A', 15);                    // UART_CTS
+_MAKE_MOTATE_PIN(kSerial_RTSPinNumber, 'A', 14);                    // UART_RTS
+_MAKE_MOTATE_PIN(kSerial_CTSPinNumber, 'A', 15);                    // UART_CTS
 _MAKE_MOTATE_PIN(kSocket1_DirPinNumber, 'A', 16);          // M1_DIR
 _MAKE_MOTATE_PIN(kUnassigned6, 'A', 17);                   // nc
 _MAKE_MOTATE_PIN(kSocket1_InterruptPinNumber, 'A', 18);    // INTERRUPT_OUT

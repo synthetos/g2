@@ -48,7 +48,7 @@ extern decltype(usb.mixin<1>::Serial)& SerialUSB1;
 
 //******** UART ********
 //#include "MotateUART.h"
-// extern Motate::UART<Motate::kSerial_RX, Motate::kSerial_TX, Motate::kSerial_RTS, Motate::kSerial_CTS> Serial;
+// extern Motate::UART<Motate::kSerial_RXPinNumber, Motate::kSerial_TXPinNumber, Motate::kSerial_RTSPinNumber, Motate::kSerial_CTSPinNumber> Serial;
 
 
 

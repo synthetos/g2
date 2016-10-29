@@ -30,6 +30,7 @@
 #define board_xio_h
 
 //******** USB ********
+#if XIO_HAS_USB
 #include "MotateUSB.h"
 #include "MotateUSBCDC.h"
 
@@ -37,23 +38,23 @@
 extern Motate::USBDevice<Motate::USBCDC, Motate::USBCDC> usb;
 extern decltype(usb.mixin<0>::Serial)& SerialUSB;
 extern decltype(usb.mixin<1>::Serial)& SerialUSB1;
-
+#endif  // XIO_HAS_USB
 
 
 //******** SPI ********
-//#include "MotateSPI.h"
-// extern Motate::SPI<Motate::kSocket4_SPISlaveSelectPinNumber> spi;
-
-
+#if XIO_HAS_SPI
+#include "MotateSPI.h"
+extern Motate::SPI<Motate::kSocket4_SPISlaveSelectPinNumber> spi;
+#endif
 
 //******** UART ********
-#define XIO_HAS_UART 0
-//#include "MotateUART.h"
-// extern Motate::UART<Motate::kSerial_RX, Motate::kSerial_TX, Motate::kSerial_RTS, Motate::kSerial_CTS> Serial;
-
-
+#if XIO_HAS_UART
+#include "MotateUART.h"
+extern Motate::UART<Motate::kSerial_RXPinNumber, Motate::kSerial_TXPinNumber, Motate::kSerial_RTSPinNumber, Motate::kSerial_CTSPinNumber> Serial;
+#endif
 
 //******* Generic Functions *******
-void board_xio_init(void);
+void board_hardware_init(void);  // called 1st
+void board_xio_init(void);       // called later
 
 #endif  // board_xio_h

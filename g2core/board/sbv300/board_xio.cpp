@@ -48,7 +48,7 @@ decltype(usb.mixin<0>::Serial) &SerialUSB = usb.mixin<0>::Serial;
 decltype(usb.mixin<1>::Serial) &SerialUSB1 = usb.mixin<1>::Serial;
 
 // 115200 is the default, as well.
-//UART<kSerial_RX, kSerial_TX, kSerial_RTS, kSerial_CTS> Serial {115200, UARTMode::RTSCTSFlowControl};
+//UART<kSerial_RXPinNumber, kSerial_TXPinNumber, kSerial_RTSPinNumber, kSerial_CTSPinNumber> Serial {115200, UARTMode::RTSCTSFlowControl};
 
 
 MOTATE_SET_USB_VENDOR_STRING( {'S' ,'y', 'n', 't', 'h', 'e', 't', 'o', 's'} )
@@ -65,7 +65,7 @@ Motate::SPI<kSocket4_SPISlaveSelectPinNumber> spi;
 
 //******** UART ********
 #if XIO_HAS_UART
-Motate::UART<Motate::kSerial_RX, Motate::kSerial_TX, Motate::kSerial_RTS, Motate::kSerial_CTS> Serial{
+Motate::UART<Motate::kSerial_RXPinNumber, Motate::kSerial_TXPinNumber, Motate::kSerial_RTSPinNumber, Motate::kSerial_CTSPinNumber> Serial{
     115200, Motate::UARTMode::RTSCTSFlowControl};
 #endif
 

@@ -48,7 +48,7 @@ extern Motate::SPI<Motate::kSocket4_SPISlaveSelectPinNumber> spi;
 //******** UART ********
 #if XIO_HAS_UART
 #include "MotateUART.h"
-extern Motate::UART<Motate::kSerial_RX, Motate::kSerial_TX, Motate::kSerial_RTS, Motate::kSerial_CTS> Serial;
+extern Motate::UART<Motate::kSerial_RXPinNumber, Motate::kSerial_TXPinNumber, Motate::kSerial_RTSPinNumber, Motate::kSerial_CTSPinNumber> Serial;
 #endif
 
 //******* Generic Functions *******

@@ -40,15 +40,15 @@ namespace Motate {
 // Undefined pins will be equivalent to Motate::NullPin, and return 1 for Pin<>::isNull();
 
 
-pin_number kSerial_RX  = 0;
-pin_number kSerial_TX  = 1;
-pin_number kSerial_RTS = 2;  // added later
-pin_number kSerial_CTS = 3;  // added later
+pin_number kSerial_RXPinNumber  = 0;
+pin_number kSerial_TXPinNumber  = 1;
+pin_number kSerial_RTSPinNumber = 2;  // added later
+pin_number kSerial_CTSPinNumber = 3;  // added later
 
-pin_number kSerial0_RX  = 0;
-pin_number kSerial0_TX  = 1;
-pin_number kSerial0_RTS = 2;  // added later
-pin_number kSerial0_CTS = 3;  // added later
+pin_number kSerial0_RXPinNumber  = 0;
+pin_number kSerial0_TXPinNumber  = 1;
+pin_number kSerial0_RTSPinNumber = 2;  // added later
+pin_number kSerial0_CTSPinNumber = 3;  // added later
 
 pin_number kI2C_SDAPinNumber = 5;
 pin_number kI2C_SCLPinNumber = 6;
