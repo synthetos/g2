@@ -6,7 +6,7 @@
 #   make BOARD=g2v9k
 
 # You can also choose a CONFIG from boards.mk:
-#   make CONFIG=ShapeokoDualY BOARD=G2v9k
+#   make CONFIG=ShapeokoDualY BOARD=g2v9k
 
 
 
