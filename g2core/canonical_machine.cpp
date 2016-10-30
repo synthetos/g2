@@ -1516,6 +1516,9 @@ stat_t cm_straight_feed(const float target[], const bool flags[])
  */
 stat_t cm_select_tool(const uint8_t tool_select)
 {
+    if (tool_select > TOOLS) {
+        return (STAT_T_WORD_IS_INVALID);
+    }
     float value[] = { (float)tool_select, 0,0,0,0,0 };
     bool flags[]  = { 1,0,0,0,0,0 };
     mp_queue_command(_exec_select_tool, value, flags);
