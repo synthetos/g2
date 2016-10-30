@@ -1005,7 +1005,7 @@ stat_t cm_panic(const stat_t status, const char *msg)
  *  cm_set_units_mode()         - G20, G21
  *  cm_set_distance_mode()      - G90, G91
  *  cm_set_arc_distance_mode()  - G90.1, G91.1
- *  cm_set_coord_offsets()      - G10 (delayed persistence)
+ *  cm_set_g10_data()           - G10 (delayed persistence)
  *
  *  These functions assume input validation occurred upstream.
  */
@@ -1035,7 +1035,7 @@ stat_t cm_set_arc_distance_mode(const uint8_t mode)
 }
 
 /*
- * cm_set_coord_offsets() - G10 L2/L20 Pn (affects MODEL only)
+ * cm_set_g10_data() - G10 L1/L2/L10/L20 Pn (affects MODEL only)
  *
  *  This function applies the offset to the GM model but does not persist the offsets
  *  during the Gcode cycle. The persist flag is used to persist offsets once the cycle
@@ -1045,9 +1045,8 @@ stat_t cm_set_arc_distance_mode(const uint8_t mode)
  *  cm_set_work_offsets() immediately afterwards.
  */
 
-stat_t cm_set_coord_offsets(const uint8_t coord_system,
-                            const uint8_t L_word,
-                            const float offset[], const bool flag[])
+stat_t cm_set_g10_data(const uint8_t P_word, const uint8_t L_word,
+                       const float offset[], const bool flag[])
 {
     if (!cm.gf.L_word) {
         return (STAT_L_WORD_IS_MISSING);
@@ -1055,17 +1054,17 @@ stat_t cm_set_coord_offsets(const uint8_t coord_system,
 
     if ((L_word == 2) || (L_word == 20)) {
         // coordinate system offset command
-        if ((coord_system < G54) || (coord_system > COORD_SYSTEM_MAX)) {
+        if ((P_word < G54) || (P_word > COORD_SYSTEM_MAX)) {
             // you can't set G53
             return (STAT_P_WORD_IS_INVALID);
         }
         for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
             if (flag[axis]) {
                 if (L_word == 2) {
-                    cm.offset[coord_system][axis] = _to_millimeters(offset[axis]);
+                    cm.offset[P_word][axis] = _to_millimeters(offset[axis]);
                 } else {
                     // Should L20 take into account G92 offsets?
-                    cm.offset[coord_system][axis] = cm.gmx.position[axis] - 
+                    cm.offset[P_word][axis] = cm.gmx.position[axis] - 
                         _to_millimeters(offset[axis]) - 
                         cm.tl_offset[axis];
                 }
@@ -1076,16 +1075,16 @@ stat_t cm_set_coord_offsets(const uint8_t coord_system,
     }
     else if ((L_word == 1) || (L_word == 10)) {
         // tool table offset command. L11 not supported atm.
-        if ((coord_system < 1) || (coord_system > TOOLS)) {
+        if ((P_word < 1) || (P_word > TOOLS)) {
             return (STAT_P_WORD_IS_INVALID);
         }
         for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
             if (flag[axis]) {
                 if (L_word == 1) {
-                    cm.tt_offset[coord_system][axis] = _to_millimeters(offset[axis]);
+                    cm.tt_offset[P_word][axis] = _to_millimeters(offset[axis]);
                 } else {
                     // L10 should also take into account G92 offset
-                    cm.tt_offset[coord_system][axis] =
+                    cm.tt_offset[P_word][axis] =
                         cm.gmx.position[axis] - _to_millimeters(offset[axis]) - 
                         cm.offset[cm.gm.coord_system][axis] - 
                         (cm.gmx.origin_offset[axis] * cm.gmx.origin_offset_enable);

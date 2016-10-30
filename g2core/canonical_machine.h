@@ -153,7 +153,7 @@ typedef enum {
 typedef enum {                          // these are in order to optimized CASE statement
     NEXT_ACTION_DEFAULT = 0,            // Must be zero (invokes motion modes)
     NEXT_ACTION_DWELL,                  // G4
-    NEXT_ACTION_SET_COORD_DATA,         // G10
+    NEXT_ACTION_SET_G10_DATA,           // G10
     NEXT_ACTION_GOTO_G28_POSITION,      // G28 go to machine position
     NEXT_ACTION_SET_G28_POSITION,       // G28.1 set position in abs coordinates
     NEXT_ACTION_SEARCH_HOME,            // G28.2 homing cycle
@@ -648,9 +648,8 @@ stat_t cm_set_distance_mode(const uint8_t mode);                            // G
 stat_t cm_set_arc_distance_mode(const uint8_t mode);                        // G90.1, G91.1
 stat_t cm_set_tl_offset(const uint8_t H_word, bool apply_additional);       // G43, G43.2
 stat_t cm_cancel_tl_offset(void);                                           // G49
-stat_t cm_set_coord_offsets(const uint8_t coord_system,                     // G10
-                            const uint8_t L_word,
-                            const float offset[], const bool flag[]);
+stat_t cm_set_g10_data(const uint8_t P_word, const uint8_t L_word,          // G10
+                       const float offset[], const bool flag[]);
 
 void cm_set_position(const uint8_t axis, const float position);             // set absolute position - single axis
 stat_t cm_set_absolute_origin(const float origin[], bool flag[]);           // G28.3
