@@ -509,10 +509,8 @@ typedef struct cmSingleton {                // struct to manage cm globals and c
 
     // coordinate systems and offsets
     float offset[COORDS+1][AXES];           // persistent coordinate offsets: absolute (G53) + G54,G55,G56,G57,G58,G59
-#ifdef __TOOL_LENGTH_OFFSET
     float tl_offset[AXES];                  // current tool length offset
     float tt_offset[TOOLS+1][AXES];         // persistent tool table offsets
-#endif
 
     // settings for axes X,Y,Z,A B,C
     cfgAxis_t a[AXES];
