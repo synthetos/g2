@@ -82,7 +82,7 @@
 #endif
 
 #ifndef SPINDLE_ENABLE_POLARITY
-#define SPINDLE_ENABLE_POLARITY     1       // {spep: 0=active low, 1=active high
+#define SPINDLE_ENABLE_POLARITY     SPINDLE_ACTIVE_HIGH  // {spep: 0=active low, 1=active high
 #endif
 
 #ifndef SPINDLE_DIR_POLARITY
@@ -792,7 +792,7 @@
 #define DI12_FUNCTION               INPUT_FUNCTION_NONE
 #endif
 
-// DIGITAL OUTPUTS - CUrrently these are hard-wired to extruders
+// DIGITAL OUTPUTS - Currently these are hard-wired to extruders
 
 //Extruder1_PWM
 #ifndef DO1_MODE
