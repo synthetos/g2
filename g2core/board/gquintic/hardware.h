@@ -61,7 +61,7 @@ enum hwPlatform {
 #define MOTORS      5           // number of motors on the board
 #define COORDS      6           // number of supported coordinate systems (index starts at 1)
 #define PWMS        2           // number of supported PWM channels
-#define TOOLS       6           // number of entries in tool table (index starts at 1)
+#define TOOLS       32          // number of entries in tool table (index starts at 1)
 
 
 ////////////////////////////
