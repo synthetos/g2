@@ -114,15 +114,29 @@ struct StepDirStepper : Stepper {
     };
 
     void _enableImpl() override {
+//        if (!_enable.isNull()) {
+//            _enable.clear();
+//        }
         if (!_enable.isNull()) {
-            _enable.clear();
+            if (_motor_enable_polarity == 0) {    // ++++ Change this to ACTIVE_HI
+                _enable.set();
+            } else {
+                _enable.clear();
+            }
         }
     };
 
     void _disableImpl() override {
+//        if (!_enable.isNull()) {
+//            _enable.set();
+//        }
         if (!_enable.isNull()) {
+            if (_motor_enable_polarity == 0) {    // ++++ Change this to ACTIVE_HI
+            _enable.clear();
+        } else {
             _enable.set();
         }
+    }
     };
 
     void stepStart() override { _step.set(); };
