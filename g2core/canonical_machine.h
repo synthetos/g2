@@ -151,7 +151,8 @@ typedef enum {
  */
 
 typedef enum {                          // these are in order to optimized CASE statement
-    NEXT_ACTION_DEFAULT = 0,            // Must be zero (invokes motion modes)
+//    NEXT_ACTION_DEFAULT = 0,            // Must be zero (invokes motion modes)
+    NEXT_ACTION_MOTION = 0,             // Must be zero (invokes motion modes)
     NEXT_ACTION_SEARCH_HOME,            // G28.2 homing cycle
     NEXT_ACTION_SET_ABSOLUTE_ORIGIN,    // G28.3 origin set
     NEXT_ACTION_HOMING_NO_SET,          // G28.4 homing cycle with no coordinate setting
@@ -175,6 +176,8 @@ typedef enum {                          // these are in order to optimized CASE 
 } cmNextAction;
 
 typedef enum {                          // G Modal Group 1
+//    MOTION_MODE_ERROR = 0,              // motion mode has not been set
+//    MOTION_MODE_STRAIGHT_TRAVERSE,      // G0 - straight traverse
     MOTION_MODE_STRAIGHT_TRAVERSE=0,    // G0 - straight traverse
     MOTION_MODE_STRAIGHT_FEED,          // G1 - straight feed
     MOTION_MODE_CW_ARC,                 // G2 - clockwise arc feed
@@ -320,13 +323,12 @@ typedef enum {              // axis modes (ordered: see _cm_get_feed_time())
  */
 typedef struct GCodeState {             // Gcode model state - used by model, planning and runtime
     uint32_t linenum;                   // Gcode block line number
-    uint8_t motion_mode;                // Group1: G0, G1, G2, G3, G38.2, G80, G81,
+    cmMotionMode motion_mode;           // Group1: G0, G1, G2, G3, G38.2, G80, G81,
                                         // G82, G83 G84, G85, G86, G87, G88, G89
 
     float target[AXES];                 // XYZABC where the move should go
     float target_comp[AXES];            // summation compensation (Kahan) overflow value
     float work_offset[AXES];            // offset from the work coordinate system (for reporting only)
-
     float feed_rate;                    // F - normalized to millimeters/minute or in inverse time mode
     float parameter;                    // P - parameter used for dwell time in seconds, G10 coord select...
 
@@ -344,8 +346,8 @@ typedef struct GCodeState {             // Gcode model state - used by model, pl
 
 typedef struct GCodeStateExtended {     // Gcode dynamic state extensions - used by model and arcs
     uint16_t magic_start;               // magic number to test memory integrity
-    uint8_t next_action;                // handles G modal group 1 moves & non-modals
-    uint8_t program_flow;               // used only by the gcode_parser
+    cmNextAction next_action;           // handles G modal group 1 moves & non-modals
+    cmProgramFlow program_flow;         // used only by the gcode_parser
 
     float position[AXES];               // XYZABC model position (Note: not used in gn or gf)
     float origin_offset[AXES];          // XYZABC G92 offsets (Note: not used in gn or gf)
@@ -361,28 +363,24 @@ typedef struct GCodeStateExtended {     // Gcode dynamic state extensions - used
     bool origin_offset_enable;          // G92 offsets enabled/disabled.  0=disabled, 1=enabled
     bool block_delete_switch;           // set true to enable block deletes (true is default)
 
-// unimplemented gcode parameters
-//  float cutter_radius;                // D - cutter radius compensation (0 is off)
-//  float cutter_length;                // H - cutter length compensation (0 is off)
-
     uint16_t magic_end;
 
 } GCodeStateX_t;
 
 typedef struct GCodeInput {             // Gcode model inputs - meaning depends on context
 
-    uint8_t next_action;                // handles G modal group 1 moves & non-modals
-    uint8_t motion_mode;                // Group1: G0, G1, G2, G3, G38.2, G80, G81, G82
+    cmNextAction next_action;           // handles G modal group 1 moves & non-modals
+    cmMotionMode motion_mode;           // Group1: G0, G1, G2, G3, G38.2, G80, G81, G82
                                         //         G83, G84, G85, G86, G87, G88, G89
 
-    uint8_t program_flow;               // used only by the gcode_parser
+    cmProgramFlow program_flow;         // used only by the gcode_parser
     uint32_t linenum;                   // N word
     float target[AXES];                 // XYZABC where the move should go
 
     uint8_t L_word;                     // L word - used by G10s
 
+    cmFeedRateMode feed_rate_mode;      // See cmFeedRateMode for settings
     float feed_rate;                    // F - normalized to millimeters/minute
-    uint8_t feed_rate_mode;             // See cmFeedRateMode for settings
     float parameter;                    // P - parameter used for dwell time in seconds, G10 coord select...
     float arc_radius;                   // R - radius value in arc radius mode
     float arc_offset[3];                // IJK - used by arc commands
@@ -410,10 +408,6 @@ typedef struct GCodeInput {             // Gcode model inputs - meaning depends 
     float spindle_speed;                // in RPM
     float spindle_override_factor;      // 1.0000 x S spindle speed. Go up or down from there
     uint8_t  spindle_override_enable;   // TRUE = override enabled
-
-// unimplemented gcode parameters
-//  float cutter_radius;                // D - cutter radius compensation (0 is off)
-//  float cutter_length;                // H - cutter length compensation (0 is off)
 
 } GCodeInput_t;
 

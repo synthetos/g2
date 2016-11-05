@@ -36,6 +36,12 @@ static stat_t _parse_gcode_block(char *line, char *active_comment); // Parse the
 static stat_t _execute_gcode_block(char *active_comment);           // Execute the gcode block
 
 #define SET_MODAL(m,parm,val) ({cm.gn.parm=val; cm.gf.parm=true; cm.gf.modals[m]=true; break;})
+/*
+#define SET_MODAL(m,parm,val) ({cm.gn.parm=val; \
+                                cm.gf.parm=true; \
+                                cm.gf.modals[m]=true; \
+                                break;})
+*/  
 #define SET_NON_MODAL(parm,val) ({cm.gn.parm=val; cm.gf.parm=true; break;})
 #define EXEC_FUNC(f,v) if(cm.gf.v) { status=f(cm.gn.v);}
 
@@ -417,7 +423,7 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
     // set initial state for new move
     memset(&cm.gn, 0, sizeof(GCodeInput_t));        // clear all next-state values
     memset(&cm.gf, 0, sizeof(GCodeFlags_t));        // clear all next-state flags
-    cm.gn.motion_mode = cm_get_motion_mode(MODEL);  // get motion mode from previous block
+    cm.gn.motion_mode = (cmMotionMode)cm_get_motion_mode(MODEL);  // get motion mode from previous block
 
     // Causes a later exception if
     //  (1) INVERSE_TIME_MODE is active and a feed rate is not provided or
@@ -571,7 +577,9 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
         }
         if(status != STAT_OK) break;
     }
-    if ((status != STAT_OK) && (status != STAT_COMPLETE)) return (status);
+    if ((status != STAT_OK) && (status != STAT_COMPLETE)) {
+        return (status);
+    }
     ritorno(_validate_gcode_block(active_comment));
     return (_execute_gcode_block(active_comment));        // if successful execute the block
 }
@@ -657,7 +665,7 @@ static stat_t _execute_gcode_block(char *active_comment)
     EXEC_FUNC(cm_set_arc_distance_mode, arc_distance_mode); // G90.1, G91.1
     //--> set retract mode goes here
 
-    switch (cm.gn.next_action) {
+    switch ((uint8_t)cm.gn.next_action) {
         case NEXT_ACTION_SET_G28_POSITION:  { status = cm_set_g28_position(); break;}                               // G28.1
         case NEXT_ACTION_GOTO_G28_POSITION: { status = cm_goto_g28_position(cm.gn.target, cm.gf.target); break;}    // G28
         case NEXT_ACTION_SET_G30_POSITION:  { status = cm_set_g30_position(); break;}                               // G30.1
@@ -682,9 +690,9 @@ static stat_t _execute_gcode_block(char *active_comment)
         case NEXT_ACTION_JSON_WAIT:               { status = cm_json_wait(active_comment); break;}                  // M101
 //      case NEXT_ACTION_JSON_COMMAND_IMMEDIATE:  { status = mp_json_command_immediate(active_comment); break;}     // M102
 
-        case NEXT_ACTION_DEFAULT: {
+        case NEXT_ACTION_MOTION: {
             cm_set_absolute_override(MODEL, cm.gn.absolute_override);    // apply absolute override
-            switch (cm.gn.motion_mode) {
+            switch ((uint8_t)cm.gn.motion_mode) {
                 case MOTION_MODE_CANCEL_MOTION_MODE: { cm.gm.motion_mode = cm.gn.motion_mode; break;}               // G80
                 case MOTION_MODE_STRAIGHT_TRAVERSE:  { status = cm_straight_traverse(cm.gn.target, cm.gf.target); break;} // G0
                 case MOTION_MODE_STRAIGHT_FEED:      { status = cm_straight_feed(cm.gn.target, cm.gf.target); break;} // G1
