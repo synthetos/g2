@@ -974,7 +974,10 @@ stat_t st_get_pwr(nvObj_t *nv)
 
 stat_t st_set_mt(nvObj_t *nv)
 {
-    st_cfg.motor_power_timeout = min(MOTOR_TIMEOUT_SECONDS_MAX, max(nv->value, MOTOR_TIMEOUT_SECONDS_MIN));
+    FORCE_RANGE(nv->value, MOTOR_TIMEOUT_SECONDS_MIN, MOTOR_TIMEOUT_SECONDS_MAX)
+    st_cfg.motor_power_timeout = nv->value;
+ 	nv->valuetype = TYPE_FLOAT;
+ 	nv->precision = cfgArray[nv->index].precision;
     return (STAT_OK);
 }
 

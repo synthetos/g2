@@ -51,6 +51,13 @@ using Motate::SysTickTimer;
 
 //*** debug utilities ***
 
+/*  Use to bracket a function for debugging that you don't want optimized
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
+
+#pragma GCC reset_options
+*/
+
 #pragma GCC push_options
 #pragma GCC optimize ("O0")
 inline void _debug_trap(const char *reason) {
@@ -83,11 +90,9 @@ float max3(float x1, float x2, float x3);
 float max4(float x1, float x2, float x3, float x4);
 //float std_dev(float a[], uint8_t n, float *mean);
 
-//*** string utilities ***
+#define FORCE_RANGE(v,n,x) if (v<n) {v=n;} else if (v>x) {v=x;}
 
-//#ifdef __ARM
-//uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src );
-//#endif
+//*** string utilities ***
 
 uint8_t isnumber(char c);
 char *escape_string(char *dst, char *src);
@@ -173,8 +178,7 @@ inline T avg(const T a,const T b) {return (a+b)/2; }
 #define M_SQRT3 (1.73205080756888)
 #endif
 
-
-// It's assumed that the string buffer contains at lest count_ non-\0 chars
+// It's assumed that the string buffer contains at least count_ non-\0 chars
 //constexpr int c_strreverse(char * const t, const int count_, char hold = 0) {
 //    return count_>1 ? (hold=*t, *t=*(t+(count_-1)), *(t+(count_-1))=hold), c_strreverse(t+1, count_-2), count_ : count_;
 //}
