@@ -240,12 +240,6 @@ pin_number kUnassigned4  = 251;
 pin_number kUnassigned3  = 252;
 pin_number kUnassigned2  = 253;
 pin_number kUnassigned1  = 254;  // 254 is the max.. Do not exceed this number
-
-/** NOTE: When adding pin definitions here, they must be
- *        added to ALL board pin assignment files, even if
- *        they are defined as -1.
- **/
-
 }  // namespace Motate
 
 // For the SAM3X8C boards, we actually use the same NUMBERING, but have different number to pin linkages
