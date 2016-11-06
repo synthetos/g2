@@ -907,20 +907,24 @@ void cm_halt_motion(void)
 
 stat_t cm_alarm(const stat_t status, const char *msg)
 {
+    if (status == STAT_OK) {                // allows cm_alarm to be called as a pass through
+        return (STAT_OK);
+    }
+    
     if ((cm.machine_state == MACHINE_ALARM) || (cm.machine_state == MACHINE_SHUTDOWN) ||
         (cm.machine_state == MACHINE_PANIC)) {
-        return (STAT_OK);                       // don't alarm if already in an alarm state
+        return (STAT_OK);                   // don't alarm if already in an alarm state
     }
     cm.machine_state = MACHINE_ALARM;
-    cm_request_feedhold();                      // stop motion
-    cm_request_queue_flush();                   // do a queue flush once runtime is not busy
+    cm_request_feedhold();                  // stop motion
+    cm_request_queue_flush();               // do a queue flush once runtime is not busy
 
 //  TBD - these functions should probably be called - See cm_shutdown()
 //  cm_spindle_control_immediate(SPINDLE_OFF);
 //  cm_coolant_off_immediate();
 //  cm_spindle_optional_pause(spindle.pause_on_hold);
 //  cm_coolant_optional_pause(coolant.pause_on_hold);
-    rpt_exception(status, msg);                    // send alarm message
+    rpt_exception(status, msg);             // send alarm message
 
     // If "stat" is in the status report, we need to poke it to send.
     sr_request_status_report(SR_REQUEST_TIMED);

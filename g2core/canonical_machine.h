@@ -151,8 +151,7 @@ typedef enum {
  */
 
 typedef enum {                          // these are in order to optimized CASE statement
-//    NEXT_ACTION_DEFAULT = 0,            // Must be zero (invokes motion modes)
-    NEXT_ACTION_MOTION = 0,             // Must be zero (invokes motion modes)
+    NEXT_ACTION_MOTION = 0,             // Invokes motion commands (Must be zero)
     NEXT_ACTION_SEARCH_HOME,            // G28.2 homing cycle
     NEXT_ACTION_SET_ABSOLUTE_ORIGIN,    // G28.3 origin set
     NEXT_ACTION_HOMING_NO_SET,          // G28.4 homing cycle with no coordinate setting
@@ -176,13 +175,11 @@ typedef enum {                          // these are in order to optimized CASE 
 } cmNextAction;
 
 typedef enum {                          // G Modal Group 1
-//    MOTION_MODE_ERROR = 0,              // motion mode has not been set
-//    MOTION_MODE_STRAIGHT_TRAVERSE,      // G0 - straight traverse
-    MOTION_MODE_STRAIGHT_TRAVERSE=0,    // G0 - straight traverse
+    MOTION_MODE_CANCEL_MOTION_MODE=0,   // G80 - zero makes this the power-up default
+    MOTION_MODE_STRAIGHT_TRAVERSE,      // G0 - straight traverse
     MOTION_MODE_STRAIGHT_FEED,          // G1 - straight feed
     MOTION_MODE_CW_ARC,                 // G2 - clockwise arc feed
     MOTION_MODE_CCW_ARC,                // G3 - counter-clockwise arc feed
-    MOTION_MODE_CANCEL_MOTION_MODE,     // G80
     MOTION_MODE_STRAIGHT_PROBE,         // G38.2
     MOTION_MODE_CANNED_CYCLE_81,        // G81 - drilling
     MOTION_MODE_CANNED_CYCLE_82,        // G82 - drilling with dwell
@@ -364,22 +361,19 @@ typedef struct GCodeStateExtended {     // Gcode dynamic state extensions - used
     bool block_delete_switch;           // set true to enable block deletes (true is default)
 
     uint16_t magic_end;
-
 } GCodeStateX_t;
 
 typedef struct GCodeInput {             // Gcode model inputs - meaning depends on context
-
+    uint32_t linenum;                   // N word
     cmNextAction next_action;           // handles G modal group 1 moves & non-modals
     cmMotionMode motion_mode;           // Group1: G0, G1, G2, G3, G38.2, G80, G81, G82
                                         //         G83, G84, G85, G86, G87, G88, G89
 
-    cmProgramFlow program_flow;         // used only by the gcode_parser
-    uint32_t linenum;                   // N word
     float target[AXES];                 // XYZABC where the move should go
 
+    uint8_t program_flow;               // used only by the gcode_parser
     uint8_t L_word;                     // L word - used by G10s
-
-    cmFeedRateMode feed_rate_mode;      // See cmFeedRateMode for settings
+    uint8_t feed_rate_mode;             // See cmFeedRateMode for settings
     float feed_rate;                    // F - normalized to millimeters/minute
     float parameter;                    // P - parameter used for dwell time in seconds, G10 coord select...
     float arc_radius;                   // R - radius value in arc radius mode

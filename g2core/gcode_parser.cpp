@@ -35,14 +35,15 @@ static stat_t _validate_gcode_block(char *active_comment);
 static stat_t _parse_gcode_block(char *line, char *active_comment); // Parse the block into the GN/GF structs
 static stat_t _execute_gcode_block(char *active_comment);           // Execute the gcode block
 
-#define SET_MODAL(m,parm,val) ({cm.gn.parm=val; cm.gf.parm=true; cm.gf.modals[m]=true; break;})
-/*
 #define SET_MODAL(m,parm,val) ({cm.gn.parm=val; \
                                 cm.gf.parm=true; \
                                 cm.gf.modals[m]=true; \
                                 break;})
-*/  
-#define SET_NON_MODAL(parm,val) ({cm.gn.parm=val; cm.gf.parm=true; break;})
+  
+#define SET_NON_MODAL(parm,val) ({cm.gn.parm=val; \
+                                  cm.gf.parm=true; \
+                                  break;})
+
 #define EXEC_FUNC(f,v) if(cm.gf.v) { status=f(cm.gn.v);}
 
 /*
@@ -76,7 +77,12 @@ stat_t gcode_parser(char *block)
     if (block_delete_flag == true) {
         return (STAT_NOOP);
     }
-    return(_parse_gcode_block(block, active_comment));
+    
+    stat_t status = _parse_gcode_block(block, active_comment);
+    if (status != STAT_OK) {
+        cm_alarm(status, str);              // generate an alarm and an exception report
+    }
+    return (status);
 }
 
 /*
@@ -88,7 +94,7 @@ stat_t gcode_parser(char *block)
  *   - Strings are handled special (TODO)
  *   - Active comments are moved to the end of the string, and multiple active comments are merged into one
  *   - convert all letters to upper case
- *   - remove white space, control and other invalid characters
+ *   - remove white space, control characters and other invalid characters
  *   - remove (erroneous) leading zeros that might be taken to mean Octal
  *   - identify and return start of comments and messages
  *   - signal if a block-delete character (/) was encountered in the first space
@@ -97,10 +103,10 @@ stat_t gcode_parser(char *block)
  *  So this: "g1 x100 Y100 f400" becomes this: "G1X100Y100F400"
  *
  *  Comment and message handling:
+ *   - Comment field starts with a '(' char or alternately a semicolon ';'
  *   - Active comments start with exactly "({" and end with "})" (no relaxing, invalid is invalid)
- *   - Comments field start with a '(' char or alternately a semicolon ';'
  *   - Active comments are moved to the end of the string and merged.
- *   - Messages are converted to ({msg:"blah"}) active comments.
+ *   - Messages (MSGblah) are converted to ({msg:"blah"}) active comments.
  *     - The 'MSG' specifier in comment can have mixed case but cannot cannot have embedded white spaces
  *   - Other "plain" comments will be discarded.
  *   - Multiple embedded comments are acceptable.
@@ -382,26 +388,31 @@ static uint8_t _point(float value)
 
 /*
  * _validate_gcode_block() - check for some gross Gcode block semantic violations
- */
+ *
+ *  This is the next level of Gcode validation - TODO
+ *
+ *  Check for modal group violations. From NIST, section 3.4 "It is an error to put 
+ *  a G-code from group 1 and a G-code from group 0 on the same line if both of them
+ *  use axis words. If an axis word-using G-code from group 1 is implicitly in effect
+ *  on a line (by having been activated on an earlier line), and a group 0 G-code that
+ *  uses axis words appears on the line, the activity of the group 1 G-code is suspended
+ *  for that line. The axis word-using G-codes from group 0 are G10, G28, G30, and G92"
+*/
 
 static stat_t _validate_gcode_block(char *active_comment)
 {
-//  Check for modal group violations. From NIST, section 3.4 "It is an error to put
-//  a G-code from group 1 and a G-code from group 0 on the same line if both of them
-//  use axis words. If an axis word-using G-code from group 1 is implicitly in effect
-//  on a line (by having been activated on an earlier line), and a group 0 G-code that
-//  uses axis words appears on the line, the activity of the group 1 G-code is suspended
-//  for that line. The axis word-using G-codes from group 0 are G10, G28, G30, and G92"
+/*
+    // trap modal group collisions
+    if ((cm.gn.modals[MODAL_GROUP_G0] == true) && (cm.gn.modals[MODAL_GROUP_G1] == true)) {
+       return (STAT_MODAL_GROUP_VIOLATION);
+    }
 
-//  if ((cm.gn.modals[MODAL_GROUP_G0] == true) && (cm.gn.modals[MODAL_GROUP_G1] == true)) {
-//     return (STAT_MODAL_GROUP_VIOLATION);
-//  }
-
-// look for commands that require an axis word to be present
-//  if ((cm.gn.modals[MODAL_GROUP_G0] == true) || (cm.gn.modals[MODAL_GROUP_G1] == true)) {
-//     if (_axis_changed() == false)
-//     return (STAT_GCODE_AXIS_IS_MISSING);
-//  }
+   // look for commands that require an axis word to be present
+    if ((cm.gn.modals[MODAL_GROUP_G0] == true) || (cm.gn.modals[MODAL_GROUP_G1] == true)) {
+       if (_axis_changed() == false)
+       return (STAT_GCODE_AXIS_IS_MISSING);
+    }
+*/
     return (STAT_OK);
 }
 
@@ -525,7 +536,7 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
                 }
                 case 93: SET_MODAL (MODAL_GROUP_G5, feed_rate_mode, INVERSE_TIME_MODE);
                 case 94: SET_MODAL (MODAL_GROUP_G5, feed_rate_mode, UNITS_PER_MINUTE_MODE);
-//              case 95: SET_MODAL (MODAL_GROUP_G5, feed_rate_mode, UNITS_PER_REVOLUTION_MODE);
+//              case 95: SET_MODAL (MODAL_GROUP_G5, feed_rate_mode, UNITS_PER_REVOLUTION_MODE); // not implemented
                 default: status = STAT_GCODE_COMMAND_UNSUPPORTED;
             }
             break;
@@ -549,7 +560,7 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
                 case 51: SET_MODAL (MODAL_GROUP_M9, sso_enable, true);
                 case 100: SET_NON_MODAL (next_action, NEXT_ACTION_JSON_COMMAND_SYNC);
                 case 101: SET_NON_MODAL (next_action, NEXT_ACTION_JSON_WAIT);
-//              case 102: SET_NON_MODAL (next_action, NEXT_ACTION_JSON_COMMAND_IMMEDIATE);
+//              case 102: SET_NON_MODAL (next_action, NEXT_ACTION_JSON_COMMAND_IMMEDIATE);  // not implemented
                 default: status = STAT_MCODE_COMMAND_UNSUPPORTED;
             }
             break;
@@ -636,7 +647,6 @@ static stat_t _execute_gcode_block(char *active_comment)
     EXEC_FUNC(cm_select_tool, tool_select);                 // tool_select is where it's written
     EXEC_FUNC(cm_change_tool, tool_change);                 // M6
     EXEC_FUNC(cm_spindle_control, spindle_control);         // spindle CW, CCW, OFF
-
 /*
     EXEC_FUNC(cm_feed_rate_override_enable, feed_rate_override_enable);
     EXEC_FUNC(cm_traverse_override_enable, traverse_override_enable);
@@ -658,8 +668,9 @@ static stat_t _execute_gcode_block(char *active_comment)
     //--> cutter radius compensation goes here
     //--> cutter length compensation goes here
     EXEC_FUNC(cm_set_coord_system, coord_system);           // G54, G55, G56, G57, G58, G59
-//    EXEC_FUNC(cm_set_path_control, path_control);         // G61, G61.1, G64
-    if(cm.gf.path_control) { status = cm_set_path_control(MODEL, cm.gn.path_control); }
+    if(cm.gf.path_control) {                                // G61, G61.1, G64
+        status = cm_set_path_control(MODEL, cm.gn.path_control); // requires MODEL variable
+    }
 
     EXEC_FUNC(cm_set_distance_mode, distance_mode);         // G90, G91
     EXEC_FUNC(cm_set_arc_distance_mode, arc_distance_mode); // G90.1, G91.1
@@ -677,8 +688,8 @@ static stat_t _execute_gcode_block(char *active_comment)
 
         case NEXT_ACTION_STRAIGHT_PROBE_ERR:     { status = cm_straight_probe(cm.gn.target, cm.gf.target, true, true); break;}  // G38.2
         case NEXT_ACTION_STRAIGHT_PROBE:         { status = cm_straight_probe(cm.gn.target, cm.gf.target, false, true); break;} // G38.3
-        case NEXT_ACTION_STRAIGHT_PROBE_AWAY_ERR:{ status = cm_straight_probe(cm.gn.target, cm.gf.target, true, false); break;}   // G38.4
-        case NEXT_ACTION_STRAIGHT_PROBE_AWAY:    { status = cm_straight_probe(cm.gn.target, cm.gf.target, false, false); break;}  // G38.5
+        case NEXT_ACTION_STRAIGHT_PROBE_AWAY_ERR:{ status = cm_straight_probe(cm.gn.target, cm.gf.target, true, false); break;} // G38.4
+        case NEXT_ACTION_STRAIGHT_PROBE_AWAY:    { status = cm_straight_probe(cm.gn.target, cm.gf.target, false, false); break;}// G38.5
 
         case NEXT_ACTION_SET_COORD_DATA:         { status = cm_set_coord_offsets(cm.gn.parameter, cm.gn.L_word, cm.gn.target, cm.gf.target); break;}
         case NEXT_ACTION_SET_ORIGIN_OFFSETS:     { status = cm_set_origin_offsets(cm.gn.target, cm.gf.target); break;}// G92
