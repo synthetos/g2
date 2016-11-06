@@ -35,6 +35,7 @@
 #include "report.h"
 #include "util.h"
 #include "spindle.h"
+#include "settings.h"
 
 #include "xio.h"
 
@@ -502,7 +503,22 @@ static void _calculate_jerk(mpBuf_t* bf)
 
     for (uint8_t axis = 0; axis < AXES; axis++) {
         if (fabs(bf->unit[axis]) > 0) {  // if this axis is participating in the move
-            jerk = cm.a[axis].jerk_max / fabs(bf->unit[axis]);
+            float axis_jerk = 0;
+#ifdef TRAVERSE_AT_HIGH_JERK
+#warning using experimental feature TRAVERSE_AT_HIGH_JERK!
+            switch (bf->gm.motion_mode) {
+                case MOTION_MODE_STRAIGHT_TRAVERSE:
+                //case MOTION_MODE_STRAIGHT_PROBE: // <-- not sure on this one
+                    axis_jerk = cm.a[axis].jerk_high;
+                    break;
+                default:
+                    axis_jerk = cm.a[axis].jerk_max;
+            }
+#else
+            axis_jerk = cm.a[axis].jerk_max;
+#endif
+
+            jerk = axis_jerk / fabs(bf->unit[axis]);
             if (jerk < bf->jerk) {
                 bf->jerk = jerk;
                 //              bf->jerk_axis = axis;           // +++ diagnostic
