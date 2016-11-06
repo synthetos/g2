@@ -46,7 +46,7 @@ template <typename device_t,
           pin_number step_num,
           pin_number dir_num,
           pin_number enable_num>
-struct Trinamic2130 : Stepper {
+struct Trinamic2130 final : Stepper {
     // Pins that are directly managed
     OutputPin<step_num> _step;
     OutputPin<dir_num> _dir;

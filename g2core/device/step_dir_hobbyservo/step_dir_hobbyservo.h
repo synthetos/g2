@@ -43,7 +43,7 @@ using Motate::Timeout;
 
 // Motor structures
 template <pin_number pwm_pin_num>  // Setup a stepper template to hold our pins
-struct StepDirHobbyServo : Stepper {
+struct StepDirHobbyServo final : Stepper {
     /* stepper pin assignments */
 
     int16_t                _microsteps_per_step = 1;
