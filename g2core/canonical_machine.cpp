@@ -225,7 +225,7 @@ cmCombinedState cm_get_combined_state()
  *    ACTIVE_MODEL   cm.am                          // active model pointer is maintained by state management
  */
 uint32_t cm_get_linenum(const GCodeState_t *gcode_state) { return gcode_state->linenum;}
-uint8_t cm_get_motion_mode(const GCodeState_t *gcode_state) { return gcode_state->motion_mode;}
+cmMotionMode cm_get_motion_mode(const GCodeState_t *gcode_state) { return gcode_state->motion_mode;}
 uint8_t cm_get_coord_system(const GCodeState_t *gcode_state) { return gcode_state->coord_system;}
 uint8_t cm_get_units_mode(const GCodeState_t *gcode_state) { return gcode_state->units_mode;}
 uint8_t cm_get_select_plane(const GCodeState_t *gcode_state) { return gcode_state->select_plane;}
@@ -2311,7 +2311,7 @@ void _cm_recalc_max_junction_accel(const uint8_t axis) {
 void cm_set_axis_jerk(const uint8_t axis, const float jerk)
 {
     cm.a[axis].jerk_max = jerk;
-    cm.a[axis].recip_jerk = 1/(jerk * JERK_MULTIPLIER);
+    //cm.a[axis].recip_jerk = 1/(jerk * JERK_MULTIPLIER);
 
     // Must recalculate the max_junction_accel now that the jerk has changed.
     _cm_recalc_max_junction_accel(axis);
