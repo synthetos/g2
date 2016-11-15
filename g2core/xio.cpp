@@ -366,7 +366,7 @@ extern xio_t xio;
 // LineRXBuffer takes the Motate RXBuffer (which handles "transfers", usually DMA), and adds G2 line-reading
 // semantics to it.
 template <uint16_t _size, typename owner_type, uint8_t _header_count = 8, uint16_t _line_buffer_size = 255>
-struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128bytes
+struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
     typedef RXBuffer<_size, owner_type, char> parent_type;
 
     // SUPPORTING STRUCTURES
@@ -387,13 +387,19 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
 
         uint16_t _get_next_read_offset() { return ((_read_offset + 1) & (_size-1)); };
 
-
         // Convenience function for reset
         void reset() {
             _status = HEADER_FREE;
             _is_control = false;
             _line_count = 0;
             _read_offset = 0;
+        };
+
+        // Handle prep in one place
+        void prep(int16_t start_of_line) {
+            _status = HEADER_PREPPED;
+
+            _read_offset = start_of_line;
         };
     };
 
@@ -432,7 +438,10 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
 
     LineRXBuffer(owner_type owner) : parent_type{owner} {};
 
-    void init() { parent_type::init(); };
+    void init() {
+        parent_type::init();
+        _at_start_of_line = true;
+    };
 
     uint8_t _get_next_write_header_index() { return ((_write_header_index + 1) & (_header_count-1)); };
     uint8_t _get_next_first_header_index() { return ((_first_header_index + 1) & (_header_count-1)); };
@@ -447,7 +456,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
             _first_header->_is_processing = false;
 
             if ((_first_header->_status == HEADER_FULL) && (_first_header->_line_count == 0)) {
-                _first_header->reset();
+                _first_header->reset(); // free it
                 _first_header_index = _get_next_first_header_index();
 
                 // Point _first_header to the new first header
@@ -459,29 +468,29 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
         }
 
         if ((_write_header_index == _first_header_index) && (_first_header->_status == HEADER_FREE)) {
-            // PREP it
-            _first_header->_status = HEADER_PREPPED;
+            _first_header->prep(_line_start_offset);
 
-            _at_start_of_line = true;
-            _first_header->_read_offset = _line_start_offset;
+            //_at_start_of_line = true;
 
             _restartTransfer();
         }
     };
 
+    // check that we have a valid and available write header and switch to it if we can
+    // returns true if one was or has been made available, otherwise returns false
     bool _check_write_header() {
-        // _status cannot be PROCESSING, since we already cleared those in _free_unused_space()
         if (_headers[_write_header_index]._status == HEADER_FULL) {
             uint8_t _next_write_header_index = _get_next_write_header_index();
             if (_next_write_header_index == _first_header_index) { // we're full full
                 return false;
             }
-            _write_header_index = _next_write_header_index;
-
-            auto _write_header = &_headers[_write_header_index];
-            _write_header->_status = HEADER_PREPPED;
-            _at_start_of_line = true;
-            _write_header->_read_offset = _line_start_offset;
+            auto _potential_write_header = &_headers[_next_write_header_index];
+            if (_potential_write_header->_status == HEADER_FREE) {
+                _write_header_index = _next_write_header_index;
+                _potential_write_header->prep(_line_start_offset);
+                return true;
+            }
+            return false;
         }
         return true;
     };
@@ -547,6 +556,10 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
         _last_scan_offset = _scan_offset;
         while (_is_more_to_scan()) {
             auto write_header = &_headers[_write_header_index];
+            // This is to simply tests later
+            bool is_adding_to_control_header =
+                ((HEADER_FILLING == write_header->_status) &&
+                 write_header->_is_control);
 
             bool ends_line  = false;
             bool is_control = false;
@@ -575,7 +588,8 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
                 (c == ENQ)         ||        // request ENQ/ack
                 (c == CHAR_RESET)  ||        // ^X -  reset (aka cancel, terminate)
                 (c == CHAR_ALARM)  ||        // ^D - request job kill (end of transmission)
-                (cm_has_hold() && c == '%')  // flush (only in feedhold)
+                ((cm_has_hold() || is_adding_to_control_header) &&
+                 c == '%')                   // flush (only in feedhold or part of control header)
                 ) {
 
                 // Special case: if we're NOT _at_start_of_line, we need to move the
@@ -588,11 +602,15 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
                         _data[next_copy_offset] = _data[copy_offset];
                         copy_offset = next_copy_offset;
                     }
+
                     // Copy the single character to the first character
                     _data[_line_start_offset] = c;
+                    // and note that we are now at the start of the line
+                    _at_start_of_line = true;
+                    // oh, and we need to actually be at the beginning of the line
+                    _scan_offset = _line_start_offset;
                 }
 
-                _line_start_offset = _scan_offset;
 
                 // single-character control
                 is_control = true;
@@ -621,7 +639,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
                 }
 
 
-                if (write_header->_status == HEADER_PREPPED) {
+                if (HEADER_PREPPED == write_header->_status) {
                     write_header->_is_control = is_control;
                     write_header->_status = HEADER_FILLING;
                 }
@@ -797,6 +815,8 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> { // reserve size of 128
 template<typename Device>
 struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for reading and writing
     Device _dev;
+
+    // TODO - make _buffer_size, _header_count, and _line_buffer_size configurable
     LineRXBuffer<512, Device> _rx_buffer;
     TXBuffer<512, Device> _tx_buffer;
 
