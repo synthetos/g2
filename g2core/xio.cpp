@@ -81,7 +81,7 @@ using Motate::TXBuffer;
 
 /**** Structures ****/
 
-// We need a buffer to hold single character commands, like !~%
+// We need a buffer to hold single character commands, like !~%, ^x, etc.
 // We also want it to have a NULL character, so we make it two characters.
 char single_char_buffer[2] = " ";
 
@@ -100,11 +100,11 @@ struct xioDeviceWrapperBase {                // C++ base class for device primit
     // connection and device management
     uint8_t caps;                            // bitfield for capabilities flags (these are persistent)
     devflags_t flags;                        // bitfield for device state flags (these are not)
-    devflags_t next_flags;                    // bitfield for next-state transitions
+    devflags_t next_flags;                   // bitfield for next-state transitions
 
     // line reader functions
 //    uint16_t read_index;                    // index into line being read
-//    const uint16_t read_buf_size;                    // static variable set at init time
+//    const uint16_t read_buf_size;           // static variable set at init time
 //    char read_buf[USB_LINE_BUFFER_SIZE];    // buffer for reading lines
 
     // Internal use only:
@@ -223,16 +223,16 @@ struct xio_t {
 
     /*
      * write() - write a block to a device
+     *
+     * There are a few issues with this function that I don't know how to resolve right now:
+     * 1) If a device fails to write the data, or all the data, then it's ignored
+     * 2) Only the amount written by the *last* device to match (CTRL|ACTIVE) is returned.
+     *
+     * In the current environment, these are not foreseen to cause trouble since these
+     * are blocking writes and we expect to only really be writing to one device.
      */
     size_t write(const char *buffer, size_t size)
     {
-        // There are a few issues with this function that I don't know how to resolve right now:
-        // 1) If a device fails to write the data, or all the data, then it's ignored
-        // 2) Only the amount written by the *last* device to match (CTRL|ACTIVE) is returned.
-        //
-        // In the current environment, these are not foreseen to cause trouble,
-        // since these are blocking writes and we expect to only really be writing to one device.
-
         size_t total_written = -1;
         for (int8_t i = 0; i < _dev_count; ++i) {
             if (DeviceWrappers[i]->isCtrlAndActive()) {
@@ -300,10 +300,10 @@ struct xio_t {
      *             DEV_IS_DATA bits in the device flag field. 'Flags' is loaded with the flags of
      *             the channel that was read on return, or 0 (DEV_FLAGS_CLEAR) if no line was returned.
      *
-     *   size -  Returns the size of the completed buffer, including the NUL termination character.
-     *           Lines may be returned truncated to the length of the serial input buffer if the text
-     *           from the physical device is longer than the read buffer for the device. The size value
-     *           provided as a calling argument is ignored (size doesn't matter).
+     *     size -  Returns the size of the completed buffer, including the NUL termination character.
+     *             Lines may be returned truncated to the length of the serial input buffer if the text
+     *             from the physical device is longer than the read buffer for the device. The size value
+     *             provided as a calling argument is ignored (size doesn't matter).
      *
      *     char * Returns a pointer to the buffer containing the line, or NULL (*0) if no text
      */
@@ -357,7 +357,7 @@ struct xio_t {
     uint16_t magic_end;
 };
 
-// Declare (but don't define) the xio singelton object now, define it later
+// Declare (but don't define) the xio singleton object now, define it later
 // Why? xioDeviceWrapper uses it, but we need to define it to contain xioDeviceWrapper objects.
 extern xio_t xio;
 
@@ -420,114 +420,99 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
         return _canBeRead(_scan_offset);
     };
 
-//    // This function skips the "whitespace" at the BEGINNING of a line.
-//    // This assumes we've already located the end of a line.
-//    void _scan_past_line_start() {
-//        while (_is_more_to_scan()) {
-//            char c = _data[_scan_offset];
-//            if (c == '\r' ||
-//                c == '\n' ||
-//                c == '\t' ||
-//                c == ' ') {
-//                _scan_offset = _get_next_scan_offset();
-//            } else {
-//                break;
-//            }
-//        } // end _skipping whitespace
-//    };
-
-
-    // Make a pass through the buffer to create headers for what has been read.
-
-    // This function is designed to be able to exit from almost any point, and
-    // come back in and resume where it left off. This allows it to scan to the
-    // end of the buffer, then exit.
-    //
-    // We return true if we found a control line.
-    // That control line starts at the character at _line_start_offset, and includes the characters up to
-    // _scan_offset-1. If there are multiple line-ending chara ("\r\n" for example) _scan_offset will point to the
-    // *first*.
-
-    // With ascii art (where "." means "invalid data" or "don't care"):
-    // Example 1 of _scan_buffer() == true:
-    //   _data = "G0X10\n{jvm:5}\n{xvm:1200}\nG0Y10\nG1Z......"
-    //                   ^        ^
-    //                   |        |
-    //   _line_start_offset       |
-    //                         _scan_offset
-
-    // Example 2 of _scan_buffer() == true:
-    //   _data = "G0X10\n.........{xvm:1200}\nG0Y10\nG1Z......"
-    //                            ^           ^
-    //                            |           |
-    //            _line_start_offset          |
-    //                                  _scan_offset
-
-    // Example 2 of _scan_buffer() == true:
-    //   _data = "G0X10\n!......"
-    //                   ^^
-    //                   ||
-    //  _line_start_offset|
-    //                    _scan_offset
-
-    // For _scan_buffer() == false, IGNORE _line_start_offset and _scan_offset!!!
-    // Only use _read_offset, and use _lines_found>0 to determine if _data contains a line to return.
-    // Also note that _read_offset needs to be moved once the data is copied to _line_buffer!
+    /*
+     * _scan_buffer()
+     *
+     * Make a pass through the RX DMA buffer to locate any control lines.
+     * Single character controls, like !, ~, %, and ^x are also considered control "lines"
+     *
+     * This function is designed to be able to exit from almost any point, and
+     * come back in and resume where it left off. This allows it to scan to the
+     * end of the buffer then exit. When the function is called next it picks up
+     * where it left off - i.e. avoiding rescanning the entire buffer multiple times.
+     *
+     * _scan_buffer() returns true if it finds a control line.
+     * The control line starts at the character at _line_start_offset and includes 
+     * the characters up to _scan_offset-1. If there are multiple line-ending chars 
+     * ("\r\n" for example) _scan_offset will point to the *first* one.
+     *
+     * With ASCII art (where "." means "invalid data" or "don't care"):
+     *
+     * Example 1 of _scan_buffer() == true:
+     *   _data = "G0X10\n{jvm:5}\n{xvm:1200}\nG0Y10\nG1Z......"
+     *                   ^        ^
+     *                   |        |
+     *   _line_start_offset       |
+     *                         _scan_offset
+     *
+     * Example 2 of _scan_buffer() == true:
+     *   _data = "G0X10\n.........{xvm:1200}\nG0Y10\nG1Z......"
+     *                            ^           ^
+     *                            |           |
+     *            _line_start_offset          |
+     *                                  _scan_offset
+     *
+     * Example 2 of _scan_buffer() == true:
+     *   _data = "G0X10\n!......"
+     *                   ^^
+     *                   ||
+     *  _line_start_offset|
+     *                    _scan_offset
+     *
+     * For _scan_buffer() == false, IGNORE _line_start_offset and _scan_offset!!!
+     * Only use _read_offset, and use _lines_found>0 to determine if _data contains a line to return.
+     * Also note that _read_offset needs to be moved once the data is copied to _line_buffer!
+     */
+    /* Explanation of cases and how we handle it.
+     *
+     * Our first task in this loop is two-fold (done at the same time):
+     *  A) Scan the RX DMA buffer for the next complete line, then classify the line.
+     *  B) Scan for a single-character command (!~% ^D, etc), then classify as a control line.
+     *
+     * If we find a line that classifies as "control" then we return true and stop scanning.
+     *
+     * We also have a constraint that we may run out of characters at any time. This is OK, 
+     * and enough state is kept that we can enter the function at any point with new 
+     * characters added to the RX DMA buffer and get the same results.
+     *
+     * Another constraint is that lines MAY have single character commands embedded in them. 
+     * In this case we need to un-embed them. Since we may not have the end of the line yet, 
+     * we need to move the command to the beginning of the line.
+     *
+     * Note that _at_start_of_line means that we *just* parsed a character that is *at* the end of the line.
+     * So, for a \r\n sequence, _at_start_of_line will go true of the \r, and we'll see the \n and it'll stay
+     * true, then the first non \r or \n char will set it to false, and *then* start the next line.
+     */
 
     bool _scan_buffer() {
-        /* Explanation of cases and how we handle it.
-         *
-         * Our first task in this loop is two fold (done at the same time):
-         *  A) Scan for the next complete line, then classify the line.
-         *  B) Scan for a single-character command (!~% ^D, etc), then classify that as a line.
-         *
-         * If we find a line that classifies as "control" then we return true and stop scanning.
-         *
-         * We also have a constraint that we may run out of character at any time. This is okay, and enough
-         * state is kept that we can enter the function at any point with new characters and get the same results.
-         *
-         * Another constraint is that lines MAY have single character commands embedded in them. In this case,
-         * we need to un-embed them. Since we may not have the end of the line yet, we need to move the command
-         * to the beginning of the line.
-         *
-         * Note that _at_start_of_line means that we *just* parsed a character that is *at* the end of the line.
-         * So, for a \r\n sequence, _at_start_of_line will go true of the \r, and we'll see the \n and it'll stay
-         * true, then the first non \r or \n char will set it to false, and *then* start the next line.
-         *
-         */
         _last_scan_offset = _scan_offset;
         while (_is_more_to_scan()) {
             bool ends_line  = false;
             bool is_control = false;
 
-            // Look for line endings
-            // Classify the line
             char c = _data[_scan_offset];
 
             if (c == 0) {
                 _debug_trap("scan ran into NULL");
             }
 
-            if (c == '\r' ||
-                c == '\n'
-                ) {
-
-                // We only mark ends_line for the first end-line char, and if
-                // _at_start_of_line is already true, this is not the first.
-                if (!_at_start_of_line) {
-                    ends_line  = true;
+            // Look for line endings
+            if (c == '\r' || c == '\n') {
+                if (!_at_start_of_line) {   // We only mark ends_line for the first end-line char, and if
+                    ends_line  = true;      // _at_start_of_line is already true, this is not the first.
                 }
             }
+            // Classify the line if it's a single character 
             else
             if ((c == '!')         ||
                 (c == '~')         ||
                 (c == ENQ)         ||        // request ENQ/ack
-                (c == CHAR_RESET)  ||        // ^X -  reset (aka cancel, terminate)
+                (c == CHAR_RESET)  ||        // ^X - reset (aka cancel, terminate)
                 (c == CHAR_ALARM)  ||        // ^D - request job kill (end of transmission)
                 (cm_has_hold() && c == '%')  // flush (only in feedhold or part of control header)
                 ) {
 
-                // Special case: if we're NOT _at_start_of_line, we need to move the
+                // Special case: if we're NOT _at_start_of_line, we need to move the control
                 // character to _line_start_offset. That means moving every character
                 // forward one. THEN we back-track _scan_offset to this new start of line.
                 if (!_at_start_of_line) {
@@ -537,13 +522,9 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                         _data[next_copy_offset] = _data[copy_offset];
                         copy_offset = next_copy_offset;
                     }
-
-                    // Copy the single character to the first character
-                    _data[_line_start_offset] = c;
-                    // and note that we are now at the start of the line
-                    _at_start_of_line = true;
-                    // oh, and we need to actually be at the beginning of the line
-                    _scan_offset = _line_start_offset;
+                    _data[_line_start_offset] = c;      // Copy the single character to the first character
+                    _at_start_of_line = true;           // and note that we are now at the start of the line
+                    _scan_offset = _line_start_offset;  // oh, and we need to actually be at the beginning of the line
                 }
 
                 // single-character control
@@ -563,7 +544,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 
             if (ends_line) {
                 // _scan_offset is now one past the end of the line,
-                // which means it is at the start of a new one
+                // which means it is at the start of a new line
                 _at_start_of_line = true;
 
                 // Here we classify the line.
@@ -579,11 +560,9 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                     // TODO ---
                 }
 
-                if (is_control) {
-                    // we found a control
+                if (is_control) {       // we found a control
                     return true;
-                } else {
-                    // we did find one more line, though.
+                } else {                // we did find one more line, though.
                     _lines_found++;
                 }
             } // if ends_line
@@ -591,9 +570,14 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
         return false; // no control was found
     };
 
-
-
-    // This is the ONLY external interface in this class
+    /*
+     * readline()
+     *
+     * This is the ONLY external interface in this class
+     *
+     * Exit condition should be that _line_start_offset and _scan_offset should be the same.
+     * If the control was the first char of the buffer it also moves the _data_offset, marking it as read
+     */
     char *readline(bool control_only, uint16_t &line_size) {
         bool found_control = _scan_buffer();
 
@@ -719,6 +703,10 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
         _restartTransfer();
 
         *dst_ptr = 0;
+        
+        if (_line_start_offset != _scan_offset) { // This test should NEVER fail.
+            _debug_trap("readline exit condition incorrect: _line_start_offset != _scan_offset");
+        }
         return _line_buffer;
     };
 
