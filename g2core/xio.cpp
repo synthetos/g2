@@ -653,6 +653,11 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             return _line_buffer;
         } // end if (found_control)
 
+        if (control_only) {
+            line_size = 0;
+            return nullptr;
+        }
+
         if (_lines_found == 0) {
             // nothing to return
             // attempt to request more data
@@ -688,6 +693,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             // skip already-read control data
             if (c == 0xff) {
                 _read_offset = (_read_offset+1)&(_size-1);
+                c = _data[_read_offset];
                 continue;
             }
 
@@ -709,6 +715,8 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
         }
 
         --_lines_found;
+
+        _restartTransfer();
 
         *dst_ptr = 0;
         return _line_buffer;
