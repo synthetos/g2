@@ -575,7 +575,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
      *
      * This is the ONLY external interface in this class
      *
-     * Exit condition should be that _line_start_offset and _scan_offset should be the same.
+     * Exit condition when a control is found: _line_start_offset and _scan_offset should be the same.
      * If the control was the first char of the buffer it also moves the _data_offset, marking it as read
      */
     char *readline(bool control_only, uint16_t &line_size) {
@@ -634,6 +634,10 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 //                // attempt to request more data
 //                _restartTransfer();
 //            }
+
+            if (_line_start_offset != _scan_offset) { // This test should NEVER fail.
+                _debug_trap("readline exit condition incorrect: _line_start_offset != _scan_offset");
+            }
 
             return _line_buffer;
         } // end if (found_control)
@@ -701,10 +705,6 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
         _restartTransfer();
 
         *dst_ptr = 0;
-        
-        if (_line_start_offset != _scan_offset) { // This test should NEVER fail.
-            _debug_trap("readline exit condition incorrect: _line_start_offset != _scan_offset");
-        }
         return _line_buffer;
     };
 
