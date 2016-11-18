@@ -509,7 +509,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                 (c == ENQ)         ||        // request ENQ/ack
                 (c == CHAR_RESET)  ||        // ^X - reset (aka cancel, terminate)
                 (c == CHAR_ALARM)  ||        // ^D - request job kill (end of transmission)
-                (cm_has_hold() && c == '%')  // flush (only in feedhold or part of control header)
+                (c == '%' && cm_has_hold())  // flush (only in feedhold or part of control header)
                 ) {
 
                 // Special case: if we're NOT _at_start_of_line, we need to move the control
@@ -580,6 +580,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
      */
     char *readline(bool control_only, uint16_t &line_size) {
         bool found_control = _scan_buffer();
+        _restartTransfer();
 
         char *dst_ptr = _line_buffer;
         line_size = 0;
@@ -616,7 +617,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                 *dst_ptr = c;
 
                 // mark the data as "read" so we don't read it again
-                _data[_line_start_offset] = 0xFF;
+                //_data[_line_start_offset] = 0xFF;
 
                 // update the line_size
                 line_size++;
@@ -629,10 +630,10 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                 }
             }
 
-            if (ctrl_is_at_beginning_of_data) {
-                // attempt to request more data
-                _restartTransfer();
-            }
+//            if (ctrl_is_at_beginning_of_data) {
+//                // attempt to request more data
+//                _restartTransfer();
+//            }
 
             return _line_buffer;
         } // end if (found_control)
@@ -644,9 +645,6 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 
         if (_lines_found == 0) {
             // nothing to return
-            // attempt to request more data
-            _restartTransfer();
-
             line_size = 0;
             return nullptr;
         }
@@ -719,8 +717,8 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
     Device _dev;
 
     // TODO - make _buffer_size, _header_count, and _line_buffer_size configurable
-    LineRXBuffer<512, Device> _rx_buffer;
-    TXBuffer<512, Device> _tx_buffer;
+    LineRXBuffer<1024, Device> _rx_buffer;
+    TXBuffer<1024, Device> _tx_buffer;
 
     xioDeviceWrapper(Device dev, uint8_t _caps) : xioDeviceWrapperBase(_caps), _dev{dev}, _rx_buffer{_dev}, _tx_buffer{_dev}
     {
