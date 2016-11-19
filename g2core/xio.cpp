@@ -412,6 +412,73 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
         _at_start_of_line = true;
     };
 
+
+    struct SkipSections {
+        struct SkipSection {
+            uint16_t start_offset; // the offset of the first character to skip
+            uint16_t end_offset;   // the offset of the next character to read after skipping
+        };
+
+        static constexpr uint16_t _section_count = 16;
+        SkipSection _sections[_section_count];
+
+        uint8_t read_section_idx; // index of the first skip section to skip
+        uint8_t write_section_idx; // index of the next skip section to populate
+
+        bool is_full() {
+            return ((write_section_idx+1)&(_section_count-1)) == read_section_idx;
+        };
+        bool is_empty() {
+            return (write_section_idx == read_section_idx);
+        };
+
+        void add_skip(uint16_t start_offset, uint16_t end_offset) {
+            if (!is_empty()) {
+                uint8_t last_write_section_idx = write_section_idx;
+                if (write_section_idx == 0) {
+                    last_write_section_idx = _section_count-1;
+                } else {
+                    last_write_section_idx--;
+                }
+
+                if (_sections[last_write_section_idx].end_offset == start_offset) {
+                    _sections[last_write_section_idx].end_offset = end_offset;
+                    return;
+                }
+            }
+            _sections[write_section_idx].start_offset = start_offset;
+            _sections[write_section_idx].end_offset = end_offset;
+            write_section_idx = ((write_section_idx+1)&(_section_count-1));
+        };
+
+        void pop_skip() {
+            _sections[read_section_idx].start_offset = 0;
+            _sections[read_section_idx].end_offset = 0;
+
+            read_section_idx = ((read_section_idx+1)&(_section_count-1));
+        };
+
+        bool skip(volatile uint16_t &from) {
+            if (!is_empty()) {
+                SkipSection &next_skip = _sections[read_section_idx];
+
+                if (next_skip.start_offset == from) {
+                    from = next_skip.end_offset;
+
+                    pop_skip();
+                    return true;
+                }
+            }
+            return false;
+        };
+
+//        const SkipSection& next_skip() {
+//            return _sections[read_section_idx];
+//        }
+    };
+
+    SkipSections _skip_sections;
+
     uint16_t _get_next_scan_offset() {
         return ((_scan_offset + 1) & (_size-1));
     }
@@ -423,8 +490,11 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
     /*
      * _scan_buffer()
      *
-     * Make a pass through the RX DMA buffer to locate any control lines.
+     * Make a pass through the RX DMA buffer to locate any control lines, and count lines.
      * Single character controls, like !, ~, %, and ^x are also considered control "lines"
+     *
+     * _scan_buffer() is called at the beginning of readline, and is effectively the first
+     * "phase" of readline.
      *
      * This function is designed to be able to exit from almost any point, and
      * come back in and resume where it left off. This allows it to scan to the
@@ -504,28 +574,16 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             }
             // Classify the line if it's a single character 
             else
-            if ((c == '!')         ||
-                (c == '~')         ||
-                (c == ENQ)         ||        // request ENQ/ack
-                (c == CHAR_RESET)  ||        // ^X - reset (aka cancel, terminate)
-                (c == CHAR_ALARM)  ||        // ^D - request job kill (end of transmission)
-                (c == '%' && cm_has_hold())  // flush (only in feedhold or part of control header)
-                ) {
+            if (_at_start_of_line &&
+                ((c == '!')         ||
+                 (c == '~')         ||
+                 (c == ENQ)         ||        // request ENQ/ack
+                 (c == CHAR_RESET)  ||        // ^X - reset (aka cancel, terminate)
+                 (c == CHAR_ALARM)  ||        // ^D - request job kill (end of transmission)
+                 (c == '%' && cm_has_hold())  // flush (only in feedhold or part of control header)
+                )) {
 
-                // Special case: if we're NOT _at_start_of_line, we need to move the control
-                // character to _line_start_offset. That means moving every character
-                // forward one. THEN we back-track _scan_offset to this new start of line.
-                if (!_at_start_of_line) {
-                    uint16_t copy_offset = _line_start_offset;
-                    while (copy_offset != _scan_offset) {
-                        uint16_t next_copy_offset = (copy_offset+1)&(_size-1);
-                        _data[next_copy_offset] = _data[copy_offset];
-                        copy_offset = next_copy_offset;
-                    }
-                    _data[_line_start_offset] = c;      // Copy the single character to the first character
-                    _at_start_of_line = true;           // and note that we are now at the start of the line
-                    _scan_offset = _line_start_offset;  // oh, and we need to actually be at the beginning of the line
-                }
+                _line_start_offset = _scan_offset;
 
                 // single-character control
                 is_control = true;
@@ -579,7 +637,9 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
      * If the control was the first char of the buffer it also moves the _data_offset, marking it as read
      */
     char *readline(bool control_only, uint16_t &line_size) {
-        bool found_control = _scan_buffer();
+        // This is tricky: if we don't have room for more skip_sections, then we
+        // can't scan any more for controls. So we don't scan, amd hope some lines are read.
+        bool found_control = _skip_sections.is_full() ? false : _scan_buffer();
         _restartTransfer();
 
         char *dst_ptr = _line_buffer;
@@ -589,6 +649,9 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             // Optimization: if the control was found at the beginning of _data, we note that now
             // and update the _read_offset when we update _line_start_offset
             bool ctrl_is_at_beginning_of_data = (_line_start_offset == _read_offset);
+            if (!ctrl_is_at_beginning_of_data) {
+                _skip_sections.add_skip(_line_start_offset, _scan_offset);
+            }
 
             // When we get here, _line_start_offset points to either:
             // A) A single-character command, OR
@@ -607,7 +670,8 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                 }
             }
 
-            while ((_scan_offset != _line_start_offset) && (line_size < (_line_buffer_size - 2))) {
+            while ((_scan_offset != _line_start_offset) &&
+                   (line_size < (_line_buffer_size - 2))) {
 //                if (!_canBeRead(read_offset)) { // This test should NEVER fail.
 //                    _debug_trap("readline hit unreadable and shouldn't have!");
 //                }
@@ -616,18 +680,16 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                 char c = _data[_line_start_offset];
                 *dst_ptr = c;
 
-                // mark the data as "read" so we don't read it again
-                //_data[_line_start_offset] = 0xFF;
-
                 // update the line_size
                 line_size++;
 
                 // update read/write positions
                 dst_ptr++;
                 _line_start_offset = (_line_start_offset+1)&(_size-1);
-                if (ctrl_is_at_beginning_of_data) {
-                    _read_offset = _line_start_offset;
-                }
+            }
+
+            if (ctrl_is_at_beginning_of_data) {
+                _read_offset = _scan_offset;
             }
 
 //            if (ctrl_is_at_beginning_of_data) {
@@ -661,6 +723,9 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             _debug_trap("read ran into NULL");
         }
 
+        // skip sections will always start at the beginning of a line
+        _skip_sections.skip(_read_offset);
+
         // scan past any leftover CR or LF from the previous line
         char c = _data[_read_offset];
         while ((c == '\n') || (c == '\r')) {
@@ -676,12 +741,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 //                _debug_trap("readline hit unreadable and shouldn't have!");
 //            }
 
-            // skip already-read control data
-            if (c == 0xff) {
-                _read_offset = (_read_offset+1)&(_size-1);
-                c = _data[_read_offset];
-                continue;
-            }
+            _read_offset = (_read_offset+1)&(_size-1);
 
             if ( c == '\r' ||
                  c == '\n'
@@ -695,7 +755,6 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 
             // update read/write positions
             dst_ptr++;
-            _read_offset = (_read_offset+1)&(_size-1);
 
             c = _data[_read_offset];
         }
