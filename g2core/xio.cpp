@@ -640,6 +640,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
         // This is tricky: if we don't have room for more skip_sections, then we
         // can't scan any more for controls. So we don't scan, amd hope some lines are read.
         bool found_control = _skip_sections.is_full() ? false : _scan_buffer();
+
         _restartTransfer();
 
         char *dst_ptr = _line_buffer;
@@ -690,16 +691,38 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 
             if (ctrl_is_at_beginning_of_data) {
                 _read_offset = _scan_offset;
+            } else {
+                // special case: if the return value is '%'
+                // then we actually consider everything before it to be read
+
+                if ('%' == _line_buffer[0]) {
+                    // Things that must be managed here:
+                    // * _read_offset -- we're skipping data
+                    // * _lines_found -- we shouldn't have any lines "left"
+                    // * _skip_sections -- there's nothing to skip, we just did
+
+                    // Things that won't be changed (further):
+                    // * _scan_offset -- we're not changing past where it's scanned
+                    // * _line_start_offset -- we've already adjusted it
+                    // * _at_start_of_line -- should always be true when we're here
+
+                    // move the read buffer up to where we're scanning
+                    _read_offset = _scan_offset;
+
+                    // note that we have 0 lines (of data) in the buffer
+                    _lines_found = 0;
+
+                    // and clear out any skip sections we have
+                    while (!_skip_sections.is_empty()) {
+                        _skip_sections.pop_skip();
+                    }
+                }
             }
 
 //            if (ctrl_is_at_beginning_of_data) {
 //                // attempt to request more data
 //                _restartTransfer();
 //            }
-
-            if (_line_start_offset != _scan_offset) { // This test should NEVER fail.
-                _debug_trap("readline exit condition incorrect: _line_start_offset != _scan_offset");
-            }
 
             return _line_buffer;
         } // end if (found_control)
