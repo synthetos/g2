@@ -121,14 +121,14 @@ void stepper_init()
     dwell_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
 
     // setup software interrupt load timer
-    load_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityMedium);
+    load_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityHigh);
 
     // setup software interrupt exec timer & initial condition
-    exec_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityLow);
+    exec_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityMedium);
     st_pre.buffer_state = PREP_BUFFER_OWNED_BY_EXEC;
 
     // setup software interrupt forward plan timer & initial condition
-    fwd_plan_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityLowest);
+    fwd_plan_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityLow);
 
     // setup motor power levels and apply power level to stepper drivers
     for (uint8_t motor=0; motor<MOTORS; motor++) {
