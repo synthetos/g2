@@ -812,6 +812,9 @@ static stat_t _exec_aline_body(mpBuf_t *bf)
         mr.section_state = SECTION_RUNNING;                 // uses PERIOD_2 so last segment detection works
     }
     if (_exec_aline_segment() == STAT_OK) {                 // OK means this section is done
+        if (fp_ZERO(mr.r->tail_length)) {
+            return(STAT_OK);                                    // ends the move
+        }
         mr.section = SECTION_TAIL;
         mr.section_state = SECTION_NEW;
     }
