@@ -153,9 +153,8 @@ stat_t mp_exec_move()
         // first-time operations
         if (bf->buffer_state != MP_BUFFER_RUNNING) {
             if ((bf->buffer_state < MP_BUFFER_PREPPED) && (cm.motion_state == MOTION_RUN)) {
-                __asm__("BKPT");
-                // rpt_exception(42, "mp_exec_move() buffer is not prepped");
-                // ^^^ CAUSES A CRASH. We can't rpt_exception from here!
+                __asm__("BKPT"); // mp_exec_move() buffer is not prepped
+                // IMPORTANT: We can't rpt_exception from here!
                 st_prep_null();
 
                 return (STAT_NOOP);
@@ -168,7 +167,7 @@ stat_t mp_exec_move()
 
             if (bf->buffer_state == MP_BUFFER_PREPPED) {
                 if (cm.motion_state == MOTION_RUN) {
-//                    __asm__("BKPT"); // we are running but don't have a block planned
+                    __asm__("BKPT"); // we are running but don't have a block planned
                 }
 
                 // We need to have it planned. We don't want to do this here, as it
@@ -288,7 +287,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
         // Start a new move by setting up the runtime singleton (mr)
         memcpy(&mr.gm, &(bf->gm), sizeof(GCodeState_t)); // copy in the gcode model state
-        bf->block_state = BLOCK_ACTIVE;                      // note that this buffer is running -- note the planner doesn't look at block_state
+        bf->block_state = BLOCK_ACTIVE;                  // note that this buffer is running
+                                                         // note the planner doesn't look at block_state
         mr.block_state = BLOCK_INITIAL_ACTION;
         mr.section = SECTION_HEAD;
         mr.section_state = SECTION_NEW;
@@ -423,7 +423,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         // Update the run buffer then force a replan of the whole planner queue
         if (cm.hold_state == FEEDHOLD_DECEL_END) {
             mr.block_state = BLOCK_INACTIVE;                                    // invalidate mr buffer to reset the new move
-            bf->block_state = BLOCK_INITIAL_ACTION;                                  // tell _exec to re-use the bf buffer
+            bf->block_state = BLOCK_INITIAL_ACTION;                             // tell _exec to re-use the bf buffer
             bf->length = get_axis_vector_length(mr.target, mr.position);// reset length
             //bf->entry_vmax = 0;                                         // set bp+0 as hold point
 
@@ -510,11 +510,11 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     }
 
     // There are 4 things that can happen here depending on return conditions:
-    //  status       bf->block_state   Description
-    //  -----------     --------------   ----------------------------------------
-    //  STAT_EAGAIN  <don't care>     mr buffer has more segments to run
-    //  STAT_OK       BLOCK_ACTIVE        mr and bf buffers are done
-    //  STAT_OK       BLOCK_INITIAL_ACTION        mr done; bf must be run again (it's been reused)
+    //  status          bf->block_state     Description
+    //  -----------     --------------      ----------------------------------------
+    //  STAT_EAGAIN   <don't care>          mr buffer has more segments to run
+    //  STAT_OK       BLOCK_ACTIVE          mr and bf buffers are done
+    //  STAT_OK       BLOCK_INITIAL_ACTION  mr done; bf must be run again (it's been reused)
     //  There is no fourth thing. Nobody expects the Spanish Inquisition
 
     if (status == STAT_EAGAIN) {
