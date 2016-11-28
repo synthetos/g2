@@ -94,11 +94,11 @@
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
 #define M1_MOTOR_MAP                AXIS_X                  // 1ma
 #define M1_STEP_ANGLE               1.8                     // 1sa
-#define M1_TRAVEL_PER_REV           40.132                   // 1tr
+#define M1_TRAVEL_PER_REV           40.011604                   // 1tr
 #define M1_MICROSTEPS               32                      // 1mi        1,2,4,8,16,32
 #define M1_POLARITY                 0                       // 1po        0=normal, 1=reversed
 #define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm        standard
-#define M1_POWER_LEVEL              0.5                     // 1mp
+#define M1_POWER_LEVEL              0.35                     // 1mp
 
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
 #define M3_MOTOR_MAP                AXIS_Y
@@ -107,7 +107,7 @@
 #define M3_MICROSTEPS               32
 #define M3_POLARITY                 0
 #define M3_POWER_MODE               MOTOR_POWER_MODE
-#define M3_POWER_LEVEL              0.5
+#define M3_POWER_LEVEL              0.35
 
 // 2020 steps/mm at 1/16 microstepping = 1.58416 mm/rev
 #define M2_MOTOR_MAP                AXIS_Z
@@ -116,7 +116,7 @@
 #define M2_MICROSTEPS               32
 #define M2_POLARITY                 1
 #define M2_POWER_MODE               MOTOR_POWER_MODE
-#define M2_POWER_LEVEL              0.4
+#define M2_POWER_LEVEL              0.3
 
 // 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
 #define M4_MOTOR_MAP                AXIS_A
@@ -125,7 +125,7 @@
 #define M4_MICROSTEPS               32
 #define M4_POLARITY                 1
 #define M4_POWER_MODE               MOTOR_POWER_MODE
-#define M4_POWER_LEVEL              0.4
+#define M4_POWER_LEVEL              0.3
 
 // 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
 #define M5_MOTOR_MAP                AXIS_B
@@ -139,12 +139,12 @@
 // *** axis settings **********************************************************************************
 
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX              10000                   // xvm  G0 max velocity in mm/min
+#define X_VELOCITY_MAX              15000                   // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX                215                     // xtm  travel between switches or crashes
-#define X_JERK_MAX                  3000                    // xjm  yes, that's "100 billion" mm/(min^3)
-#define X_JERK_HIGH_SPEED           3000                    // xjh
+#define X_JERK_MAX                  6000                    // xjm  yes, that's "100 billion" mm/(min^3)
+#define X_JERK_HIGH_SPEED           6000                    // xjh
 #define X_HOMING_INPUT              4                       // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIRECTION          0                       // xhd  0=search moves negative, 1= search moves positive
 #define X_SEARCH_VELOCITY           2500                    // xsv  move in negative direction
@@ -153,12 +153,12 @@
 #define X_ZERO_BACKOFF              0.5                     // xzb  mm
 
 #define Y_AXIS_MODE                 AXIS_STANDARD
-#define Y_VELOCITY_MAX              10000
+#define Y_VELOCITY_MAX              15000
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                152.4
-#define Y_JERK_MAX                  3000
-#define Y_JERK_HIGH_SPEED           3000
+#define Y_JERK_MAX                  6000
+#define Y_JERK_HIGH_SPEED           6000
 #define Y_HOMING_INPUT              1
 #define Y_HOMING_DIRECTION          1
 #define Y_SEARCH_VELOCITY           3000
@@ -185,7 +185,7 @@
  * To calculate the speeds here, in Wolfram Alpha-speak:
  *
  *   c=2*pi*r, r=0.609, d=c/360, s=((S*60)/d), S=40 for s
- *   c=2*pi*r, r=5.30516476972984, d=c/360, s=((S*60)/d), S=40 for s
+ *   c=2*pi*r, r=4.28394, d=c/360, s=((S*60)/d), S=40 for s
  *
  * Change r to A_RADIUS, and S to the desired speed, in mm/s or mm/s/s/s.
  *
@@ -204,12 +204,12 @@
 //#define A_VELOCITY_MAX        25920.0 // ~40 mm/s, 2,400 mm/min
 //#define A_FEEDRATE_MAX        25920.0/2.0 // ~20 mm/s, 1,200 mm/min
 #define A_VELOCITY_MAX          77760.0 // G0 rate ~120 mm/s, 2,400 mm/min
-#define A_FEEDRATE_MAX          6480 // ~10 mm/s
+#define A_FEEDRATE_MAX          16050 // ~10 mm/s
 //#define A_FEEDRATE_MAX        9720.0 // 9720.0 = G1 rate ~15 mm/s, 900 mm/min
 #define A_TRAVEL_MIN            0
 #define A_TRAVEL_MAX            10
-#define A_JERK_MAX              81000 // 250 million mm/min^3 = 324000
-//#define A_JERK_MAX            162000 // 250 million mm/min^3 = 324000
+//#define A_JERK_MAX              81000 // 250 million mm/min^3 = 324000
+#define A_JERK_MAX            162000 // 250 million mm/min^3 = 324000
 //#define A_JERK_MAX            324000 // 500 million mm/min^3 = 324000
 //#define A_JERK_MAX            648000 // 1,000 million mm/min^3 = 648000
 // * a million IF it's over a million
