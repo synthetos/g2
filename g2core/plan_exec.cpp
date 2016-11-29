@@ -120,9 +120,8 @@ stat_t mp_plan_move()
     if (block->exit_velocity > block->cruise_velocity)  {
         __asm__("BKPT"); // exit > cruise after calculate_block
     }
-
     if (block->head_length < 0.00001 && block->body_length < 0.00001 && block->tail_length < 0.00001)  {
-        __asm__("BKPT"); // zero or negaitve length block
+        __asm__("BKPT"); // zero or negative length block
     }
 
     bf->buffer_state = MP_BUFFER_PLANNED;
@@ -156,7 +155,6 @@ stat_t mp_exec_move()
                 __asm__("BKPT"); // mp_exec_move() buffer is not prepped
                 // IMPORTANT: We can't rpt_exception from here!
                 st_prep_null();
-
                 return (STAT_NOOP);
             }
             if (bf->nx->buffer_state < MP_BUFFER_PREPPED) {
@@ -169,7 +167,6 @@ stat_t mp_exec_move()
                 if (cm.motion_state == MOTION_RUN) {
                     __asm__("BKPT"); // we are running but don't have a block planned
                 }
-
                 // We need to have it planned. We don't want to do this here, as it
                 // might already be happening in a lower interrupt.
                 st_request_plan_move();

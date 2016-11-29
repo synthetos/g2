@@ -412,12 +412,12 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
 
             // +++++
             if (bf->buffer_state == MP_BUFFER_EMPTY) {
-                //                _debug_trap("Exec apparently cleared this block while we were planning it.");
+            //     _debug_trap("Exec apparently cleared this block while we were planning it.");
                 break;  // exit the loop, we've hit and passed the running buffer
             }
-            //            if (fp_ZERO(bf->exit_velocity) && !fp_ZERO(bf->exit_vmax)) {
-            //                _debug_trap(); // why zero?
-            //            }
+            // if (fp_ZERO(bf->exit_velocity) && !fp_ZERO(bf->exit_vmax)) {
+            //     _debug_trap(); // why zero?
+            // }
 
             // We might back plan into the running or planned buffer, so we have to check.
             if (bf->buffer_state < MP_BUFFER_PREPPED) {
