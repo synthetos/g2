@@ -139,15 +139,15 @@ pin_number kInput10_PinNumber = 109;
 pin_number kInput11_PinNumber = 110;
 pin_number kInput12_PinNumber = 111;
 
+pin_number kSpindle_EnablePinNumber = 112;
+pin_number kSpindle_DirPinNumber    = 113;
+pin_number kSpindle_PwmPinNumber    = 114;
+pin_number kSpindle_Pwm2PinNumber   = 115;
+pin_number kCoolant_EnablePinNumber = 116;
+
 // START DEBUG PINS - Convenient pins to hijack for hardware debugging
 // To reuse a pin for debug change the original pin number to -1
 // and uncomment the corresponding debug pin
-pin_number kSpindle_EnablePinNumber = 112;  // Spindle ON implemented in g2ref
-pin_number kSpindle_DirPinNumber    = 113;  // Spindle ON implemented in g2ref
-pin_number kSpindle_PwmPinNumber    = -1;   // 114; // Not implemented (superseded by Extruder1_PWM)
-pin_number kSpindle_Pwm2PinNumber   = -1;   // 115; // Not implemented (superseded by Fan1B_PWM)
-pin_number kCoolant_EnablePinNumber = 116;  // Spindle ON implemented in g2ref
-
 pin_number kDebug1_PinNumber = -1;  // 112;
 pin_number kDebug2_PinNumber = -1;  // 113;
 pin_number kDebug3_PinNumber = -1;  // 116; // Note the out-of-order numbering & 115 missing

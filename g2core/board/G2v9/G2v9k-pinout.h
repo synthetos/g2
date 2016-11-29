@@ -119,10 +119,10 @@ _MAKE_MOTATE_PIN(kCoolant_EnablePinNumber, 'A', 1);           // Coolant_EnableP
 _MAKE_MOTATE_PIN(kSocket4_VrefPinNumber, 'A', 2);             // Socket4_VrefPinNumber
 _MAKE_MOTATE_PIN(kSocket5_VrefPinNumber, 'A', 3);             // Socket5_VrefPinNumber
 _MAKE_MOTATE_PIN(kSocket2_Microstep_2PinNumber, 'A', 4);      // Socket2_Microstep_2PinNumber
-_MAKE_MOTATE_PIN(kOutput3_PinNumber, 'A', 5);                 // Spindle_EnablePinNumber -- now used for Fan 1
+_MAKE_MOTATE_PIN(kSpindle_EnablePinNumber, 'A', 5);           // Spindle_EnablePinNumber
 _MAKE_MOTATE_PIN(kSocket1_DirPinNumber, 'A', 6);              // Socket1_DirPinNumber
 _MAKE_MOTATE_PIN(kSpindle_DirPinNumber, 'A', 7);              // Spindle_DirPinNumber
-_MAKE_MOTATE_PIN(kOutput1_PinNumber, 'A', 8);                 // Spindle_PwmPinNumber -- now used for Extruder 1
+_MAKE_MOTATE_PIN(kSpindle_PwmPinNumber, 'A', 8);              // Spindle_PwmPinNumber
 _MAKE_MOTATE_PIN(kInput2_PinNumber, 'A', 9);                  // XAxis_MaxPinNumber
 _MAKE_MOTATE_PIN(kInput3_PinNumber, 'A', 10);                 // YAxis_MinPinNumber
 _MAKE_MOTATE_PIN(kInput4_PinNumber, 'A', 11);                 // YAxis_MaxPinNumber
