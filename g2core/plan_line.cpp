@@ -194,6 +194,7 @@ stat_t mp_aline(GCodeState_t* gm_in)
     if (fp_ZERO(length)) {
         sr_request_status_report(SR_REQUEST_TIMED_FULL);  // Was SR_REQUEST_IMMEDIATE_FULL
         return (STAT_MINIMUM_LENGTH_MOVE);
+//        return (STAT_OK);            //+++++ test this
     }
 
     // get a cleared buffer and copy in the Gcode model state
@@ -285,13 +286,13 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
             }
         }
         _calculate_override(bf);  // adjust cruise_vmax for feed/traverse override
-        //        bf->plannable_time = bf->pv->plannable_time;    // set plannable time - excluding current move
+ //     bf->plannable_time = bf->pv->plannable_time;    // set plannable time - excluding current move
         bf->buffer_state = MP_BUFFER_IN_PROCESS;
 
         // +++++ Why do we have to do this here?
         // bf->pv_group = bf->pv;
 
-        bf->hint = NO_HINT;  // ensure we've cleared the hints
+        bf->hint = NO_HINT;     // ensure we've cleared the hints
         // Time: 12us-41us
         if (bf->nx->plannable) {  // read in new buffers until EMPTY
             return (bf->nx);
@@ -319,15 +320,15 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
             bf->iterations++;
             bf->plannable = bf->plannable && !optimal;  // Don't accidentally enable plannable!
 
-            // Let's be mindful that for ward planning may change exit_vmax, and our exit velocity may be lowered
+            // Let's be mindful that forward planning may change exit_vmax, and our exit velocity may be lowered
             braking_velocity = min(braking_velocity, bf->exit_vmax);
 
             // We *must* set cruise before exit, and keep it at least as high as exit.
             bf->cruise_velocity = max(braking_velocity, bf->cruise_velocity);
             bf->exit_velocity   = braking_velocity;
 
-            // We have two places where it could be a mixed decel or an asymetric bump,
-            // dpending on if the pv->exit_vmax is the same as bf.cruise_vmax
+            // We have two places where it could be a mixed decel or an asymmetric bump,
+            // depending on if the pv->exit_vmax is the same as bf.cruise_vmax
             bool test_decel_or_bump = false;
 
             // command blocks

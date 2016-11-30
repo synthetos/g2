@@ -3,9 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "g2core", "g2core\g2core.cppproj", "{44EA8FEC-55D7-4149-8A78-A574FC26BF51}"
-	ProjectSection(ProjectDependencies) = postProject
-		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0} = {D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}
-	EndProjectSection
 EndProject
 Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "Motate", "Motate\Motate.cppproj", "{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}"
 EndProject
