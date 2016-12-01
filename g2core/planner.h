@@ -26,7 +26,7 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 /*
- * --- Background on the Planner ---
+ * --- Planner Background ---
  *
  *  The planner is a complicated beast that takes a lot of things into account. 
  *  Planner documentation is scattered about and co-located with the functions
@@ -110,7 +110,7 @@
  *
  * Forward planning is performed just-in-time and only once, right before the 
  * planner runtime needs the next buffer. Forward planning provides the final
- * contouring of the move. It is invoked by mp_plan_move() and executed by 
+ * contouring of the move. It is invoked by mp_forward_plan() and executed by 
  * mp_calculate_ramps() in plan_zoid.cpp.
  *
  * Planner timing operates at a few different levels:
@@ -131,7 +131,7 @@
  *  - Velocity throttling to ensure that very short moves do not execute faster 
  *    than the serial interface can deliver them
  *
- *  - Feedhold and resume operations
+ *  - Feed hold and cycle start (resume) operations
  *
  *  - Feed rate override functions and replanning
  *
@@ -590,7 +590,7 @@ void mp_plan_block_forward(mpBuf_t *bf);
 void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float entry_velocity);
 float mp_get_target_length(const float v_0, const float v_1, const mpBuf_t *bf);
 float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t *bf); // acceleration ONLY
-float mp_get_decel_velocity(const float v_0, const float L, const mpBuf_t *bf); // decelleration ONLY
+float mp_get_decel_velocity(const float v_0, const float L, const mpBuf_t *bf);  // deceleration ONLY
 float mp_find_t(const float v_0, const float v_1, const float L, const float totalL, const float initial_t, const float T);
 
 float mp_calc_v(const float t, const float v_0, const float v_1);                // compute the velocity along the curve accelerating from v_0 to v_1, at position t=[0,1]
@@ -599,8 +599,8 @@ float mp_calc_j(const float t, const float v_0, const float v_1, const float T);
 //float mp_calc_l(const float t, const float v_0, const float v_1, const float T); // compute length over curve accelerating from v_0 to v_1, at position t=[0,1], total time T
 
 // plan_exec.c functions
+stat_t mp_forward_plan(void);
 stat_t mp_exec_move(void);
-stat_t mp_plan_move(void);
 stat_t mp_exec_aline(mpBuf_t *bf);
 void mp_exit_hold_state(void);
 

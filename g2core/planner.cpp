@@ -792,7 +792,7 @@ void mp_commit_write_buffer(const blockType block_type)
         if ((mp.planner_state > PLANNER_STARTUP) && (cm.hold_state == FEEDHOLD_OFF)) {
             // NB: BEWARE! the exec may result in the planner buffer being
             // processed IMMEDIATELY and then freed - invalidating the contents
-            st_request_plan_move();                // request an exec if the runtime is not busy
+            st_request_forward_plan();                // request an exec if the runtime is not busy
         }
     }
     mb.w->plannable = true;                     // enable block for planning

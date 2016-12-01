@@ -388,7 +388,7 @@ namespace Motate {    // Define timer inside Motate namespace
     }
 } // namespace Motate
 
-void st_request_plan_move()
+void st_request_forward_plan()
 {
     stepper_debug("p");
     fwd_plan_timer.setInterruptPending();
@@ -398,9 +398,9 @@ namespace Motate {    // Define timer inside Motate namespace
     template<>
     void fwd_plan_timer_type::interrupt()
     {
-        fwd_plan_timer.getInterruptCause();       // clears the interrupt condition
+        fwd_plan_timer.getInterruptCause();     // clears the interrupt condition
         stepper_debug("P>");
-        if (mp_plan_move() != STAT_NOOP) { // We now have a move to exec.
+        if (mp_forward_plan() != STAT_NOOP) {   // We now have a move to exec.
             stepper_debug("P+\n");
             st_request_exec_move();
             return;

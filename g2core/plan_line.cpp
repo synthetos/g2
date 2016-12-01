@@ -260,7 +260,7 @@ void mp_plan_block_list()
     }
     if (mp.planner_state > PLANNER_STARTUP) {
         if (planned_something && (cm.hold_state != FEEDHOLD_HOLD)) {
-            st_request_plan_move();  // start motion if runtime is not already busy
+            st_request_forward_plan();  // start motion if runtime is not already busy
         }
     }
     mp.p = bf;  // update planner pointer

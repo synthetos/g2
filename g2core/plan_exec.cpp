@@ -46,113 +46,101 @@ static stat_t _exec_aline_segment(void);
 
 static void _init_forward_diffs(float v_0, float v_1);
 
-/*************************************************************************
- * mp_plan_move() - call ramping function to plan moves ahead of the exec
+/*******************************************************************************
  *
- *  mp_plan_move() performs just-in-time forward planning immediately before 
+ * mp_forward_plan() - plan commands and moves ahead of exec; call ramping for moves
+ *
+ **** WARNING ****
+ * This function should NOT be called directly! 
+ * Instead call st_request_forward_plan(), which mediates access. 
+ *
+ *  mp_forward_plan() performs just-in-time forward planning immediately before 
  *  lines and commands are queued to the move execution runtime (exec). 
+ *  Unlike backward planning, buffers are only forward planned once.
+ *
+ *  mp_forward_plan() is called aggressively via st_request_forward_plan().
+ *  It has a relatively low interrupt level to call its own.
+ *  See also: Planner Overview notes in planner.h
+ * 
  *  It examines the currently running buffer and its adjacent buffers to:
+ *
  *  - Stop the system from re-planning or planning something that's not prepped
  *  - Plan the next available ALINE (movement) block past the COMMAND blocks
  *  - Skip past/ or pre-plan COMMAND blocks while labeling them as PLANNED
  *
- *  Returns STAT_OK if exec should be called to start (or continue) movement, 
- *  or exit with no action (STAT_NOOP) if exec does not need to be called.
- *
- **** WARNING ****
- **** This function should NOT be called directly! Instead call
- **** st_request_plan_move(), which mediates access. Mp_plan_move() is called
- **** aggressively from multiple places and multiple interrupt levels,
- **** and has a relatively low interrupt level to call its own.
+ *  Returns:
+ *   - STAT_OK if exec should be called to kickstart (or continue) movement 
+ *   - STAT_NOOP to exit with no action taken (do not call exec)
  */
 /*
- * Forward Planning Background
- * 
- *   - Forward planning only occurs once, JIT just ahead of the exec
- Forward planning only ever originates from the run buffer (mb.r), only occurs once for each block
- *   -
- *   - 'Bootstrap' refers to startup condition w/buffers arriving before movement starts
- *   - see planner.h / bufferState enum for shorthand used
- *   - The
+ * --- Forward Planning Processing and Cases ---
+ *    
+ *  These cases describe all possible sequences of buffers in the planner queue starting 
+ *  with the currently executing (or about to execute) Run buffer, looking forward
+ *  to more recently arrived buffers. In most cases only one or two buffers need to 
+ *  be examined, but contiguous groups of commands may need to be processed. 
+ *
+ *  See planner.h / bufferState enum for shorthand used in the descriptions. 
+ *  All cases assume a mix of moves and commands, as noted in the shorthand.
+ *  All cases assume 2 'blocks' - Run block & Plan block. Cases will need to be 
+ *  revisited and generalized if more blocks are used in the future (deeper 
+ *  forward planning).
+ *
+ *  'NOT_PREPPED' refers to any preliminary state below PREPPED, i.e. < PREPPED.
+ * ' NOT_PREPPED' can be either a move or command, we don't care so it's not specified.
+ *
+ *  'COMMAND' or 'COMMAND(s)' refers to one command or a contiguous group of command buffers
+ *  that may be in PREPPED or PLANNED states. Processing is always the same. Plan all 
+ *  PREPPED commands and skip past all PLANNED commands.
+ *
+ *  If '(Note 1)' use mr.entry_velocity for the run velocity (instead of buffer exit velocity).
+ *  In most 'plan move' cases the exit velocity of the run block is propagated forward to 
+ *  set the entry velocity of the planned block. In some cases we instead want mr.entry_velocity 
+ *  for the run velocity, which is almost always 0, but could be non-0 in a race condition.
+ *  FYI: mr.entry_velocity is set at the end of the last running block in mp_exec_aline().
+ *
+ *  If '(Note 2)' we trust exit velocity here because the backplanner has already handled this case
+ *
+ *  CASE:
+ *    0.  Nothing to do
+ *
+ *             run_buffer
+ *             ----------
+ *          a. <no buffer>     Run buffer has not yet been initialized (returns NULL)
+ *          b. NOT_PREPPED     No lines or commands in planner buffer. Exit with no action
+ *
+ *    1.  Bootstrap cases (refers to startup phase where moves are collected before starting movement)
+ *
+ *             run_buffer       next N bufs     terminal buf    Actions
+ *             ----------       -----------     ------------    ----------------------------------
+ *          a. NOT_PREPPED      <don't care>    <don't care>    exit NOOP
+ *          b. PREPPED-MOVE     <don't care>    <don't care>    plan move, exit OK
+ *          c. PLANNED-MOVE     NOT_PREPPED     <don't care>    exit NOOP
+ *          d. PLANNED-MOVE     PREPPED-MOVE    <don't care>    exit NOOP (don't plan past a PLANNED buffer)
+ *          e. PLANNED-MOVE     COMMAND(s)      <don't care>    exit NOOP (I had this as plan the cmds, earlier)
+ *          f. COMMAND          NOT_PREPPED     <don't care>    skip/plan command, exit OK
+ *          g. COMMAND          PREPPED-MOVE    <don't care>    skip/plan command, plan move (Note 1), exit OK.
+ *
+ *    2.  Running cases (refers to normal operation w/movement occurring while buffers are arriving)
+ *
+ *             run_buffer       next N bufs     terminal buf    Actions
+ *             ----------       -----------     ------------    ----------------------------------
+ *          a. NOT_PREPPED      <don't care>    <don't care>    illegal condition, trap, exit NOOP
+ *          b. PREPPED-MOVE     <don't care>    <don't care>    illegal condition, trap, exit NOOP
+ *          c. PLANNED-MOVE     <don't care>    <don't care>    illegal condition, trap, exit NOOP
+ *          d. RUNNING-MOVE     PREPPED-MOVE    <don't care>    plan move, exit OK
+ *          e. RUNNING-MOVE     PLANNED-MOVE    <don't care>    exit NOOP
+ *          f. RUNNING-MOVE     COMMAND(s)      NOT_PREPPED     skip/plan command(s), exit OK
+ *          g. RUNNING-MOVE     COMMAND(s)      PREPPED-MOVE    skip/plan command(s), plan move, exit OK
+ *          h. RUNNING-MOVE     COMMAND(s)      PLANNED-MOVE    illegal condition, trap, exit NOOP (???)
+ *          i. PREPPED-COMMAND  <don't care>    <don't care>    illegal condition, trap, exit NOOP    
+ *          j. PLANNED-COMMAND  <don't care>    <don't care>    illegal condition, trap, exit NOOP
+ *          k. RUNNING-COMMAND  PREPPED-MOVE    <don't care>    plan move, exit OK
+ *          l. RUNNING-COMMAND  PLANNED-MOVE    <don't care>    exit NOOP
+ *          m. RUNNING-COMMAND  COMMAND(s)      NOT_PREPPED     skip/plan command(s), exit OK
+ *          n. RUNNING-COMMAND  COMMAND(s)      PREPPED-MOVE    skip/plan command(s), plan move (Note 2), exit OK
+ *          o. RUNNING-COMMAND  COMMAND(s)      PLANNED-MOVE    illegal condition, trap, exit NOOP (???)
  */
-/*
- *  Forward Planning Cases
- *   
- *
- *    CASE:
- *      0.  NOT_PREPPED. No lines or commands in planner buffer. Exit with no action
- *                       This case also handles case before a run buffer can be assigned
- *
- *      1.  Bootstrap cases, lines only, N lines in buffer, 2 blocks (JIT planning queue only has plan and run)
- *             run_buffer   next_buffer
- *          a. NOT_PREPPED  don't care     Action: exit no action     (backplanner is still running)
- *          b. PREPPED      don't care     Action: plan line, exit OK (prepped means backplanned)
- *          c. PLANNED      don't care     Action: exit no action     (cannot plan next buffer beyond current PLANNED buffer)
- *
- *      1'. Bootstrap cases, lines only, N lines in buffer, N blocks (deeper JIT planning queue)
- *             run_buffer   next_buffer
- *          a. NOT_PREPPED  don't care     Action: exit no action     (backplanner is still running)
- *          b. PREPPED      don't care     Action: plan line, exit OK (prepped means backplanned)
- *          c. PLANNED,     NOT_PREPPED    Action: exit no action     (cannot plan next buffer beyond current PLANNED buffer)
- *          d. PLANNED,     PREPPED        Action: plan the next block into the next planner block if the 
- *                                                  next planner block is NOT the run BLOCK. This can iterate to more blocks
- *
- *      2.  Running cases, lines only, N lines in buffer, 2 blocks
- *             run_buffer   next_buffer
- *          a. RUNNING      NOT_PREPPED     Action: exit no action (backplanner is still running)
- *          b. RUNNING      PREPPED         Action: plan buffer, exit OK (do a  JIT plan)
- *          c. RUNNING      PLANNED         Action: exit no action
-
- *      3.  Bootstrap cases, lines and commands mixed, N lines in buffer, 2 blocks 
-            (Note: NOT_PREPPED can be either line or command)
-            
- *             run_buffer       next/last buffer
- *          a. NOT_PREPPED      (any state)     Action: exit no action
- *          b. PREPPED-LINE     (any state)     Action: plan line, exit OK
- *          c. PLANNED-LINE     NOT_PREPPED     Action: exit no action     (cannot plan next buffer beyond current PLANNED buffer)
- *          d. PLANNED-LINE     PREPPED         Action: plan the next block into the next planner block if the
- *          a. PREPPED-CMD(s)   NOT_PREPPED     Action: set contiguous PREPPED-COMMANDs to PLANNED, exit OK
- *          b. PREPPED-CMD(s)   PREPPED-LINE    Action: set contiguous PREPPED-COMMANDs to PLANNED,
- *                                                       carry forward initial exit_velocity (see note *) 
- *                                                       iterate to PREPPED-LINE, plan line, exit OK.
- *
- *        (*) Use mr.entry_velocity for the run velocity, which is almost always 0, but could be non-0 in a race condition.
- *
- *      4.  Running cases, lines and commands mixed, N lines in buffer, 2 blocks
- *          All running cases start with first block is running (Note: NOT_PREPPED can be either line or command)
- *             run_buffer        next N buffers      terminating buffer
- *          a. RUNNING-LINE     PREPPED-COMAND(s)   NOT_PREPPED     Action: Call mp_plan_command(), exit OK
- *          b. RUNNING-LINE     PREPPED-COMAND(s)   PREPPED-LINE    Action: Mark all commands as PLANNED and exit OK
- *                                                                          Plan PREPPED-LINE using exit_velocity of run block
- *                                                                 (We trust exit velocity here because the backplanner has already handled this)
- *          c. RUNNING-LINE     PREPPED-LINE (identical to 2b)      Action: plan buffer, exit OK (do a  JIT plan)
- *          d. RUNNING-LINE     PLANNED-LINE (identical to 2c)      Action: exit no action
- *
- *          e. RUNNING-LINE     PLANNED-COMMAND9s)                  Action: iterate over the PLANNED and PREPPED commands, skipping PLANNED
- *          f. PLANNED-COMMAND  (anything)
- *
- *          g. RUNNING-COMMAND  (anything)                          as cases 4a - 4e, but use mr.entry_velocity
- */
-
-/*  PSEUDOCODE
- *
- * 
- *  Test the running buffer for early exit conditions. 
- *      (In the motion startup (bootstrap) condition the "running" block is not actually running yet)
- *      If nothing is actually running, ext immediately (prevents a race condition)
- *
- *   Test the planning buffer
- *     Explanation: There are 2 cases where this can occur:
-         (1) nothing is actually running
-         (2) something is running
-            The case changes which buffer is passed to calculate _ramps(), and what the entry_velocity is.
-
- *      Code: See if the running buffer is -in-fact- running
- *              If so, move off the running buffer to the next buffer
- *              Set the entry velocity for be the exit velocity of the running block
- *
- */
-
 
 static stat_t _plan_command(mpBuf_t *bf) 
 {
@@ -160,7 +148,7 @@ static stat_t _plan_command(mpBuf_t *bf)
     return (STAT_OK);
 }
 
-stat_t mp_plan_move()
+stat_t mp_forward_plan()
 {
     mpBuf_t *bf;
 
@@ -269,7 +257,7 @@ stat_t mp_exec_move()
                 }
                 // We need to have it planned. We don't want to do this here, as it
                 // might already be happening in a lower interrupt.
-                st_request_plan_move();
+                st_request_forward_plan();
                 return (STAT_NOOP);
             }
 
@@ -286,7 +274,7 @@ stat_t mp_exec_move()
             // This won't call mp_plan_move until we leave this function
             // (and have called mp_exec_aline via bf->bf_func).
             // This also allows mp_exec_aline to advance mr.p first.
-            st_request_plan_move();
+            st_request_forward_plan();
         }
 
         // Manage motion state transitions
@@ -652,7 +640,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                     cm_cycle_end();    // free buffer & end cycle if planner is empty
                 }
             } else {
-                st_request_plan_move();
+                st_request_forward_plan();
             }
         }
     }
