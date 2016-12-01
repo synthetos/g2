@@ -148,19 +148,13 @@ static void _init_forward_diffs(float v_0, float v_1);
  *          j. RUNNING-COMMAND  COMMAND(s)      PLANNED-MOVE    skip command(s), exit NOOP
  *                                                              (Note: all COMMAND(s) in j. should be in PLANNED state)
  */
-/*
-static stat_t _plan_command(mpBuf_t *bf)            // plan a single command
-{
-    bf->buffer_state = MP_BUFFER_PLANNED;           // report that we "planned" something...
-    return (STAT_OK);
-}
-*/
+
 static mpBuf_t *_plan_commands(mpBuf_t *bf)         // plan or skip commands; return bf past last command
 {
-    while (bf->block_type == BLOCK_TYPE_COMMAND) {
-        if (bf->buffer_state < MP_BUFFER_PLANNED) { // skip buffers that are already planned
-            bf->buffer_state = MP_BUFFER_PLANNED;   // really just a stub, for now
-//            _plan_command(mpBuf_t *bf);
+    // must test for buffer state first as the buffer is only "safe" once it's >= PREPPED
+    while ((bf->buffer_state >= MP_BUFFER_PREPPED) && (bf->block_type == BLOCK_TYPE_COMMAND)) {
+        if (bf->buffer_state != MP_BUFFER_PLANNED) {        // skip already planned buffers
+            bf->buffer_state = MP_BUFFER_PLANNED;           // "planning" is just setting the state (for now)
         }
         bf = bf->nx;
     }
@@ -198,40 +192,41 @@ static stat_t _plan_move(mpBuf_t *bf, float entry_velocity)
 stat_t mp_forward_plan()
 {
     mpBuf_t *bf = mp_get_run_buffer();
-
+    float entry_velocity;
+    
     // Case 0: Examine current running buffer for early exit conditions
-    if (bf == NULL) {                               // 0a: NULL means nothing is running - this is OK
+    if (bf == NULL) {                               // case 0a: NULL means nothing is running - this is OK
         st_prep_null();
         return (STAT_NOOP);
     }
-    if (bf->buffer_state < MP_BUFFER_PREPPED) {     // 0b: nothing to do. get outta here.
+    if (bf->buffer_state < MP_BUFFER_PREPPED) {     // case 0b: nothing to do. get outta here.
         return (STAT_NOOP);
     }
 
-    // Case 2: Runtime conditions - preset bf to behave like case 1 conditions
-    float entry_velocity = mr.entry_velocity;       // preset velocity for command cases - Note 2
+    // Case 2: Running cases - move bf past run buffer so it acts like case 1
     if (bf->buffer_state == MP_BUFFER_RUNNING) {
-        bf = bf->nx;                                // all you need to do is to move to next buffer
-        entry_velocity = mr.r->exit_velocity;       // set entry_velocity to mr.r->exit_velocity
+        bf = bf->nx;
+        entry_velocity = mr.r->exit_velocity;       // set Note 1 entry_velocity (move cases)
+    } else {
+        entry_velocity = mr.entry_velocity;         // set Note 2 entry velocity (command cases)
     }
 
-    // run buffer is a command; start cases 1f - 1k, 2c, 2d, 2e, 2h, 2i, 2j
+    // bf points to command; start cases 1f, 1g, 1h, 1i, 1j, 1k, 2c, 2d, 2e, 2h, 2i, 2j
     if (bf->block_type != BLOCK_TYPE_ALINE) {       // meaning it's a COMMAND
-        bf = _plan_commands(bf);                    // plan or skip past already planned commands
-//        entry_velocity = mr.entry_velocity;         // set entry_velocity for Note 1a
-    }// bf will always be on a non-command at this point      
-        
+        bf = _plan_commands(bf);                    // plan commands or skip past already planned commands
+        // bf now points to the first non-command buffer past the command(s)
+        if ((bf->block_type == BLOCK_TYPE_ALINE) && (bf->buffer_state > MP_BUFFER_PREPPED )) { // case 1i
+            entry_velocity = mr.r->exit_velocity;   // set entry_velocity for Note 1a
+        }        
+    } 
+    // bf will always be on a non-command at this point - either a move or empty buffer
+
     // process move                           
     if (bf->block_type == BLOCK_TYPE_ALINE) {       // do cases 1a - 1e; finish cases 1f - 1k
-        if (bf->buffer_state == MP_BUFFER_PREPPED) {// do 1a; finish 1f, 1j
+        if (bf->buffer_state == MP_BUFFER_PREPPED) {// do 1a; finish 1f, 1j, 2d, 2i
             return (_plan_move(bf, entry_velocity));
         } else {
-            // 1d, 1h: diagnostics. Can be commented out.
-            if ((bf->nx->block_type == BLOCK_TYPE_ALINE) && (bf->nx->buffer_state > MP_BUFFER_PREPPED )) {
-                __asm__("BKPT");                    // illegal condition
-            }
-            // do 1b, 1c, 1e; finish 1g, 1j, 1k, 2e, 2j
-            return (STAT_NOOP);
+            return (STAT_NOOP);                     // do 1b, 1c, 1d, 1e; finish 1g, 1h, 1j, 1k, 2e, 2j
         }
     }
     return (STAT_OK);                               // report that we planned something...
