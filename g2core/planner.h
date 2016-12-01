@@ -25,7 +25,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/*
+/*x
  * --- Planner Background ---
  *
  *  The planner is a complicated beast that takes a lot of things into account. 
@@ -40,7 +40,7 @@
  *  - stepper.cpp/h - Real-time step generation, segment loading, pulls from plan_exec
  *  - plan_arc.cpp/h- Arc calculation and runtime functions - layer above the rest of this
  *
- * --- Overview of Operation ---
+ * --- Planner Overview ---
  *
  * At high level the planner's job is to reconstruct smooth motion from a set of linear 
  * approximations while observing and operating within the physical constraints of the 

@@ -103,7 +103,7 @@ float mp_get_runtime_work_position(uint8_t axis) {
 
 /*
  * mp_get_runtime_busy() - returns TRUE if motion control busy (i.e. robot is moving)
- * mp_runtime_is_idle() - returns TRUE is steppers are not actively moving
+ * mp_runtime_is_idle()  - returns TRUE is steppers are not actively moving
  *
  *  Use mp_get_runtime_busy() to sync to the queue. If you wait until it returns
  *  FALSE you know the queue is empty and the motors have stopped.
@@ -148,31 +148,36 @@ stat_t mp_aline(GCodeState_t* gm_in)
     float length;
 
     // A few notes about the rotated coordinate space:
-    // These are position PRE-rotation:
+    // These are positions PRE-rotation:
     //  gm_in.* (anything in gm_in)
     //
     // These are positions POST-rotation:
-    //  target_rotated (after the rotiton here, of course)
+    //  target_rotated (after the rotation here, of course)
     //  mp.* (anything in mp, including mp.gm.*)
-
-    // a being target[0],
-    // b being target[1],
-    // c being target[2],
-    // x_1 being cm.rotation_matrix[1][0]
-
+    //
     // Shorthand:
-    // target_rotated[0] = a x_0 + b y_0 + c z_0
-    // target_rotated[1] = a x_1 + b y_1 + c z_1
-    // target_rotated[2] = a x_2 + b y_2 + c z_2 + z_offset
+    //  target_rotated[0] = a x_0 + b y_0 + c z_0
+    //  target_rotated[1] = a x_1 + b y_1 + c z_1
+    //  target_rotated[2] = a x_2 + b y_2 + c z_2 + z_offset
+    //
+    // With:
+    //  a being target[0],
+    //  b being target[1],
+    //  c being target[2],
+    //  x_1 being cm.rotation_matrix[1][0]
 
-    target_rotated[0] = gm_in->target[0] * cm.rotation_matrix[0][0] + gm_in->target[1] * cm.rotation_matrix[0][1] +
+    target_rotated[0] = gm_in->target[0] * cm.rotation_matrix[0][0] + 
+                        gm_in->target[1] * cm.rotation_matrix[0][1] +
                         gm_in->target[2] * cm.rotation_matrix[0][2];
 
-    target_rotated[1] = gm_in->target[0] * cm.rotation_matrix[1][0] + gm_in->target[1] * cm.rotation_matrix[1][1] +
+    target_rotated[1] = gm_in->target[0] * cm.rotation_matrix[1][0] + 
+                        gm_in->target[1] * cm.rotation_matrix[1][1] +
                         gm_in->target[2] * cm.rotation_matrix[1][2];
 
-    target_rotated[2] = gm_in->target[0] * cm.rotation_matrix[2][0] + gm_in->target[1] * cm.rotation_matrix[2][1] +
-                        gm_in->target[2] * cm.rotation_matrix[2][2] + cm.rotation_z_offset;
+    target_rotated[2] = gm_in->target[0] * cm.rotation_matrix[2][0] + 
+                        gm_in->target[1] * cm.rotation_matrix[2][1] +
+                        gm_in->target[2] * cm.rotation_matrix[2][2] + 
+                        cm.rotation_z_offset;
 
     // copy rotation axes ABC
     target_rotated[3] = gm_in->target[3];
