@@ -152,7 +152,7 @@ static void _init_forward_diffs(float v_0, float v_1);
 static mpBuf_t *_plan_commands(mpBuf_t *bf)         // plan or skip commands; return bf past last command
 {
     // must test for buffer state first as the buffer is only "safe" once it's >= PREPPED
-    while ((bf->buffer_state >= MP_BUFFER_PREPPED) && (bf->block_type == BLOCK_TYPE_COMMAND)) {
+    while ((bf->buffer_state >= MP_BUFFER_PREPPED) && (bf->block_type >= BLOCK_TYPE_COMMAND)) {
         if (bf->buffer_state != MP_BUFFER_PLANNED) {        // skip already planned buffers
             bf->buffer_state = MP_BUFFER_PLANNED;           // "planning" is just setting the state (for now)
         }

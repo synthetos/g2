@@ -584,7 +584,9 @@ nvObj_t *nv_add_object(const char *token)       // add an object to the body usi
     nvObj_t *nv = nv_body;
     for (uint8_t i=0; i<NV_BODY_LEN; i++) {
         if (nv->valuetype != TYPE_EMPTY) {
-            if ((nv = nv->nx) == NULL) return(NULL); // not supposed to find a NULL; here for safety
+            if ((nv = nv->nx) == NULL) {        // not supposed to find a NULL; here for safety
+                return(NULL);
+            }            
             continue;
         }
         // load the index from the token or die trying
@@ -600,7 +602,9 @@ nvObj_t *nv_add_integer(const char *token, const uint32_t value)// add an intege
     nvObj_t *nv = nv_body;
     for (uint8_t i=0; i<NV_BODY_LEN; i++) {
         if (nv->valuetype != TYPE_EMPTY) {
-            if ((nv = nv->nx) == NULL) return(NULL); // not supposed to find a NULL; here for safety
+            if ((nv = nv->nx) == NULL) {        // not supposed to find a NULL; here for safety
+                return(NULL); 
+            }
             continue;
         }
         strncpy(nv->token, token, TOKEN_LEN);
@@ -616,7 +620,9 @@ nvObj_t *nv_add_data(const char *token, const uint32_t value)// add an integer o
     nvObj_t *nv = nv_body;
     for (uint8_t i=0; i<NV_BODY_LEN; i++) {
         if (nv->valuetype != TYPE_EMPTY) {
-            if ((nv = nv->nx) == NULL) return(NULL); // not supposed to find a NULL; here for safety
+            if ((nv = nv->nx) == NULL) {        // not supposed to find a NULL; here for safety
+                 return(NULL); 
+            }            
             continue;
         }
         strcpy(nv->token, token);
@@ -633,7 +639,9 @@ nvObj_t *nv_add_float(const char *token, const float value)    // add a float ob
     nvObj_t *nv = nv_body;
     for (uint8_t i=0; i<NV_BODY_LEN; i++) {
         if (nv->valuetype != TYPE_EMPTY) {
-            if ((nv = nv->nx) == NULL) return(NULL);        // not supposed to find a NULL; here for safety
+            if ((nv = nv->nx) == NULL) {        // not supposed to find a NULL; here for safety
+                return(NULL);
+            }            
             continue;
         }
         strncpy(nv->token, token, TOKEN_LEN);
@@ -649,7 +657,9 @@ nvObj_t *nv_add_string(const char *token, const char *string) // add a string ob
     nvObj_t *nv = nv_body;
     for (uint8_t i=0; i<NV_BODY_LEN; i++) {
         if (nv->valuetype != TYPE_EMPTY) {
-            if ((nv = nv->nx) == NULL) return(NULL);        // not supposed to find a NULL; here for safety
+            if ((nv = nv->nx) == NULL) {        // not supposed to find a NULL; here for safety
+                return(NULL); 
+            }            
             continue;
         }
         strncpy(nv->token, token, TOKEN_LEN);

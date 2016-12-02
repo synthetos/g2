@@ -180,12 +180,12 @@ typedef enum {                      // bf->buffer_state values in incresing orde
 } bufferState;
 
 typedef enum {                      // bf->block_type values
-    BLOCK_TYPE_NULL = 0,            // null move - does a no-op
-    BLOCK_TYPE_ALINE,               // acceleration planned line
-    BLOCK_TYPE_DWELL,               // delay with no movement
-    BLOCK_TYPE_COMMAND,             // general command
-    BLOCK_TYPE_JSON_WAIT,           // general command
-    BLOCK_TYPE_TOOL,                // T command
+    BLOCK_TYPE_NULL = 0,            // MUST=0  null move - does a no-op
+    BLOCK_TYPE_ALINE = 1,           // MUST=1  acceleration planned line
+    BLOCK_TYPE_COMMAND = 2,         // MUST=2  general command
+    BLOCK_TYPE_DWELL,               // Gcode dwell
+    BLOCK_TYPE_JSON_WAIT,           // JSON wait command
+    BLOCK_TYPE_TOOL,                // T command (T, not M6 tool change)
     BLOCK_TYPE_SPINDLE_SPEED,       // S command
     BLOCK_TYPE_STOP,                // program stop
     BLOCK_TYPE_END                  // program end
