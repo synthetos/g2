@@ -254,7 +254,7 @@ namespace Motate {            // Must define timer interrupts inside the Motate 
 template<>
 void dda_timer_type::interrupt()
 {
-    dda_timer.getInterruptCause();        // clear interrupt condition
+    dda_timer.getInterruptCause();  // clear interrupt condition
 
     // clear all steps from the previous interrupt
 	// for (uint8_t motor=0; motor<MOTORS; motor++) {
@@ -282,7 +282,7 @@ void dda_timer_type::interrupt()
         return;
     }
 
-//  The following code would work, but it's faster to loop unroll it
+//  The following code would work, but it's faster on the M3 to loop unroll it. Perhaps not on the M7
 //    for (uint8_t motor=0; motor<MOTORS; motor++) {
 //        if  ((st_run.mot[motor].substep_accumulator += st_run.mot[motor].substep_increment) > 0) {
 //            Motors[motor]->stepStart();        // turn step bit on
@@ -331,9 +331,10 @@ void dda_timer_type::interrupt()
         }
 #endif
 
-    // process end of segment
+    // Process end of segment. 
+    // One more interrupt will occur to turn of any pulses set in this pass.
     if (--st_run.dda_ticks_downcount == 0) {
-        _load_move();                            // load the next move at the current interrupt level
+        _load_move();       // load the next move at the current interrupt level
     }
 } // MOTATE_TIMER_INTERRUPT
 } // namespace Motate
@@ -629,11 +630,12 @@ static void _load_move()
 
         //**** do this last ****
 
-        dda_timer.start();                                    // start the DDA timer if not already running
+        dda_timer.start();                              // start the DDA timer if not already running
 
     // handle dwells
     } else if (st_pre.block_type == BLOCK_TYPE_DWELL) {
         st_run.dda_ticks_downcount = st_pre.dda_ticks;
+        dda_timer.stop();   // ++++ This is a stopgap. The DDA timer should have been stopped before here
         dwell_timer.start();
 
     // handle synchronous commands
@@ -648,7 +650,7 @@ static void _load_move()
     // all other cases drop to here (e.g. Null moves after Mcodes skip to here)
     st_pre.block_type = BLOCK_TYPE_NULL;
     st_pre.buffer_state = PREP_BUFFER_OWNED_BY_EXEC;    // we are done with the prep buffer - flip the flag back
-    st_request_exec_move();                                // exec and prep next move
+    st_request_exec_move();                             // exec and prep next move
 }
 
 /***********************************************************************************
@@ -788,7 +790,6 @@ void st_prep_command(void *bf)
 void st_prep_dwell(float microseconds)
 {
     st_pre.block_type = BLOCK_TYPE_DWELL;
-    //st_pre.dda_period = _f_to_period(FREQUENCY_DWELL);
     st_pre.dda_ticks = (uint32_t)((microseconds/1000000) * FREQUENCY_DWELL);
     st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;    // signal that prep buffer is ready
 }

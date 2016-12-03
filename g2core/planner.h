@@ -381,23 +381,18 @@ struct mpBuffer_to_clear {
         length  = 0.0;
         block_time = 0.0;
         override_factor = 0.0;
-
         cruise_velocity = 0.0;
         exit_velocity = 0.0;
-
         cruise_vset = 0.0;
         cruise_vmax = 0.0;
         exit_vmax = 0.0;
-
         absolute_vmax = 0.0;
         junction_vmax = 0.0;
-
         jerk = 0.0;
         jerk_sq = 0.0;
         recip_jerk = 0.0;
         sqrt_j = 0.0;
         q_recip_2_sqrt_j = 0.0;
-
         gm.reset();
     }
 };
