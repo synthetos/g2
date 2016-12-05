@@ -608,6 +608,9 @@ static void _load_move()
         mp_runtime_command(st_pre.bf);
 
     } // else null - WARNING - We cannot printf from here!! Causes crashes.
+    else {
+        _debug_trap("_load_move called when it's not needed?");
+    }
 
     // all other cases drop to here (e.g. Null moves after Mcodes skip to here)
     st_pre.block_type = BLOCK_TYPE_NULL;
