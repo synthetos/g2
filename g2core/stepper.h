@@ -515,7 +515,7 @@ struct Stepper {
             }
         }
     };
-    
+
     virtual void periodicCheck(bool have_actually_stopped) // can be overridden
     {
         if (have_actually_stopped && _power_state == MOTOR_RUNNING) {

@@ -1,5 +1,6 @@
 /*
  * hardware.h - system hardware configuration
+ *              for: /board/g2v9
  *				THIS FILE IS HARDWARE PLATFORM SPECIFIC - ARM version
  *
  * This file is part of the g2core project

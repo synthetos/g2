@@ -537,6 +537,17 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     return (status);
 }
 
+
+/*
+ * mp_plan_feedhold_move() - plan Z lift moves for feedhold
+ */
+
+stat_t mp_plan_feedhold_move()
+{
+    
+    return (STAT_OK);
+}
+
 /*
  * mp_exit_hold_state() - end a feedhold
  *

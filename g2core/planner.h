@@ -125,6 +125,7 @@ typedef enum {
 
 #define PLANNER_BUFFER_POOL_SIZE    ((uint8_t)48)       // Suggest 12 min. Limit is 255
 #define PLANNER_BUFFER_HEADROOM     ((uint8_t)4)        // Buffers to reserve in planner before processing new input line
+#define SECONDARY_BUFFER_POOL_SIZE  ((uint8_t)4)        // Secondary planner queue for feedhold operations
 #define JERK_MULTIPLIER             ((float)1000000)    // DO NOT CHANGE - must always be 1 million
 
 #define JUNCTION_INTEGRATION_MIN    (0.05)              // minimum allowable setting
@@ -241,7 +242,7 @@ typedef struct mpBuffer : mpBuffer_to_clear { // See Planning Velocity Notes for
     struct mpBuffer *nx;            // static pointer to next buffer
     uint8_t buffer_number;          //+++++ DIAGNOSTIC for easier debugging
 } mpBuf_t;
-
+/*
 typedef struct mpBufferPool {       // ring buffer for sub-moves
     magic_t magic_start;            // magic number to test memory integrity
 
@@ -249,7 +250,19 @@ typedef struct mpBufferPool {       // ring buffer for sub-moves
     mpBuf_t *w;                     // write buffer pointer
     uint8_t buffers_available;      // running count of available buffers
     mpBuf_t bf[PLANNER_BUFFER_POOL_SIZE];// buffer storage
+    
+    magic_t magic_end;
+} mpBufferPool_t;
+*/
+typedef struct mpBufferPool {       // one or more planner buffer queues
+    magic_t magic_start;            // magic number to test memory integrity
 
+    mpBuf_t *r;                     // run buffer pointer
+    mpBuf_t *w;                     // write buffer pointer
+    uint8_t queue_size;             // total number of buffers, zero-based (e.g. 47 not 48)
+    uint8_t buffers_available;      // running count of available buffers
+    mpBuf_t *bf;                    // pointer to buffer storage array
+    
     magic_t magic_end;
 } mpBufferPool_t;
 

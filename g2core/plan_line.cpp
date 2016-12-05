@@ -129,16 +129,15 @@ bool mp_runtime_is_idle() { return (!st_runtime_isbusy()); }
  *  Controlling jerk smooths transitions between moves and allows for faster feeds while
  *  controlling machine oscillations and other undesirable side-effects.
  *
- *  Note All math is done in absolute coordinates using single precision floating point (float).
+ *  Note: All math is done in absolute coordinates using single precision floating point (float).
  *
  *  Note: Returning a status that is not STAT_OK means the endpoint is NOT advanced. So lines
  *        that are too short to move will accumulate and get executed once the accumulated error
  *        exceeds the minimums.
  */
 
-stat_t mp_aline(GCodeState_t* gm_in) 
+stat_t mp_aline(GCodeState_t* gm_in)
 {
-    mpBuf_t* bf;  // current move pointer
     float target_rotated[AXES] = {0, 0, 0, 0, 0, 0};
     float axis_square[AXES]    = {0, 0, 0, 0, 0, 0};
     float axis_length[AXES];
@@ -191,33 +190,35 @@ stat_t mp_aline(GCodeState_t* gm_in)
 
     // exit if the move has zero movement. At all.
     if (fp_ZERO(length)) {
-        sr_request_status_report(SR_REQUEST_TIMED_FULL);  // Was SR_REQUEST_IMMEDIATE_FULL
+        sr_request_status_report(SR_REQUEST_TIMED_FULL); // Was SR_REQUEST_IMMEDIATE_FULL
         return (STAT_MINIMUM_LENGTH_MOVE);
     }
 
     // get a cleared buffer and copy in the Gcode model state
-    if ((bf = mp_get_write_buffer()) == NULL) {  // never supposed to fail
+    mpBuf_t* bf = mp_get_write_buffer(); 
+    if (bf == NULL) {                                   // never supposed to fail
+//    if ((bf = mp_get_write_buffer()) == NULL) {         // never supposed to fail
         return (cm_panic(STAT_FAILED_GET_PLANNER_BUFFER, "aline()"));
     }
     memcpy(&bf->gm, gm_in, sizeof(GCodeState_t));
     // Since bf->gm.target is being used all over the place, we'll make it the rotated target
-    copy_vector(bf->gm.target, target_rotated);  // copy the rotated taget in place
+    copy_vector(bf->gm.target, target_rotated);         // copy the rotated taget in place
 
     // setup the buffer
-    bf->bf_func = mp_exec_aline;                          // register the callback to the exec function
-    bf->length  = length;                                 // record the length
-    for (uint8_t axis = 0; axis < AXES; axis++) {         // compute the unit vector and set flags
-        if ((bf->axis_flags[axis] = flags[axis])) {       // yes, this is supposed to be = and not ==
-            bf->unit[axis] = axis_length[axis] / length;  // nb: bf-> unit was cleared by mp_get_write_buffer()
+    bf->bf_func = mp_exec_aline;                        // register the callback to the exec function
+    bf->length  = length;                               // record the length
+    for (uint8_t axis = 0; axis < AXES; axis++) {       // compute the unit vector and set flags
+        if ((bf->axis_flags[axis] = flags[axis])) {     // yes, this is supposed to be = and not ==
+            bf->unit[axis] = axis_length[axis] / length;// nb: bf-> unit was cleared by mp_get_write_buffer()
         }
     }
-    _calculate_jerk(bf);                              // compute bf->jerk values
-    _calculate_vmaxes(bf, axis_length, axis_square);  // compute cruise_vmax and absolute_vmax
-    _set_bf_diagnostics(bf);                          //+++++DIAGNOSTIC
+    _calculate_jerk(bf);                                // compute bf->jerk values
+    _calculate_vmaxes(bf, axis_length, axis_square);    // compute cruise_vmax and absolute_vmax
+    _set_bf_diagnostics(bf);                            //+++++DIAGNOSTIC
 
     // Note: these next lines must remain in exact order. Position must update before committing the buffer.
-    copy_vector(mp.position, bf->gm.target);   // set the planner position
-    mp_commit_write_buffer(BLOCK_TYPE_ALINE);  // commit current block (must follow the position update)
+    copy_vector(mp.position, bf->gm.target);            // set the planner position
+    mp_commit_write_buffer(BLOCK_TYPE_ALINE);           // commit current block (must follow the position update)
     return (STAT_OK);
 }
 

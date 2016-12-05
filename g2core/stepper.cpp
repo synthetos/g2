@@ -430,28 +430,29 @@ static void _load_move()
     // Be aware that dda_ticks_downcount must equal zero for the loader to run.
     // So the initial load must also have this set to zero as part of initialization
     if (st_runtime_isbusy()) {
-        return;                                                    // exit if the runtime is busy
+        return;                                                 // exit if the runtime is busy
     }
-    if (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_LOADER) {    // if there are no moves to load...
-		
-	// ...start motor power timeouts
-	//	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
-	//		Motors[motor]->motionStopped();    
-	//  }
-	// loop unrolled version
+
+    // If there are no moves to load start motor power timeouts
+    if (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_LOADER) {
+    //	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
+    //		Motors[motor]->motionStopped();
+    //  }
+
+        // loop unrolled version
         motor_1.motionStopped();    // ...start motor power timeouts
-        motor_2.motionStopped();    // ...start motor power timeouts
+        motor_2.motionStopped();
 #if (MOTORS > 2)
-        motor_3.motionStopped();    // ...start motor power timeouts
+        motor_3.motionStopped();
 #endif
 #if (MOTORS > 3)
-        motor_4.motionStopped();    // ...start motor power timeouts
+        motor_4.motionStopped();
 #endif
 #if (MOTORS > 4)
-        motor_5.motionStopped();    // ...start motor power timeouts
+        motor_5.motionStopped();
 #endif
 #if (MOTORS > 5)
-        motor_6.motionStopped();    // ...start motor power timeouts
+        motor_6.motionStopped();
 #endif
         return;
     }

@@ -65,9 +65,10 @@
 #include "xio.h"    //+++++ DIAGNOSTIC - only needed if xio_writeline() direct prints are used
 
 // Allocate planner structures
-mpBufferPool_t mb;                  // buffer pool management
-mpMotionPlannerSingleton_t mp;      // context for block planning
-mpMotionRuntimeSingleton_t mr;      // context for block runtime
+mpBufferPool_t mb;                          // buffer pool management
+mpBuf_t mb_pool0[PLANNER_BUFFER_POOL_SIZE]; // storage allocation for pool #1 buffers
+mpMotionPlannerSingleton_t mp;              // context for block planning
+mpMotionRuntimeSingleton_t mr;              // context for block runtime
 
 #define JSON_COMMAND_BUFFER_SIZE 3
 
@@ -700,15 +701,68 @@ static inline void _clear_buffer(mpBuf_t *bf)
     bf->clear();
 }
 
-void mp_init_buffers(void)
+void _init_buffers(mpBuf_t *base, uint8_t size)
 {
     mpBuf_t *pv, *nx;
     uint8_t i, nx_i;
 
-    memset(&mb, 0, sizeof(mb));                     // clear all values, pointers and status
+//    memset(base, 0, sizeof(mpBuf_t * size));  // clear all buffers in pool
+    mb.bf = base;                           // link the buffer pool first
+    mb.w = mb.bf;                           // init all buffer pointers
+    mb.r = mb.bf;
+    mb.queue_size = size-1;
+    mb.buffers_available = size;
+    
+    pv = &mb.bf[size-1];
+    for (i=0; i < size-1; i++) {
+        mb.bf[i].buffer_number = i;         //+++++ number it for diagnostics only (otherwise not used)
+
+        nx_i = ((i<size-1) ? (i+1) : 0);    // buffer increment & wrap
+        nx = &mb.bf[nx_i];
+        mb.bf[i].nx = nx;                   // setup circular list pointers
+        mb.bf[i].pv = pv;
+        pv = &mb.bf[i];
+    }
+}
+
+void mp_init_buffers(void)
+{
+//    mpBuf_t *pv, *nx;
+//    uint8_t i, nx_i;
+
+//    memset(&mb_pool0, 0, sizeof(mb_pool0));         // clear all buffers in pool
+    memset(&mb, 0, sizeof(mb));                     // clear values, pointers and status
     mb.magic_start = MAGICNUM;
     mb.magic_end = MAGICNUM;
 
+    _init_buffers(mb_pool0, PLANNER_BUFFER_POOL_SIZE);
+ /*
+    mb.bf = mb_pool0;                               // link the buffer pool first
+    mb.w = mb.bf;                                   // init all buffer pointers
+    mb.r = mb.bf;
+    mb.buffers_total = PLANNER_BUFFER_POOL_SIZE-1;
+    
+    pv = &mb.bf[PLANNER_BUFFER_POOL_SIZE-1];
+    for (i=0; i < mb.buffers_total; i++) {
+        mb.bf[i].buffer_number = i;                //+++++ number it for diagnostics only (otherwise not used)
+
+        nx_i = ((i<mb.buffers_total) ? (i+1) : 0);  // buffer increment & wrap
+        nx = &mb.bf[nx_i];
+        mb.bf[i].nx = nx;                          // setup ring pointers
+        mb.bf[i].pv = pv;
+
+        pv = &mb.bf[i];
+    }
+    mb.buffers_available = PLANNER_BUFFER_POOL_SIZE;
+*/
+    // Now handle the two "stub buffers" in the runtime structure.
+    mr.bf[0].nx = &mr.bf[1];
+    mr.bf[1].nx = &mr.bf[0];
+    mr.r = &mr.bf[0];
+    mr.p = &mr.bf[1];
+ }
+  
+  /*
     mb.w = &mb.bf[0];                               // init all buffer pointers
     mb.r = &mb.bf[0];
     pv = &mb.bf[PLANNER_BUFFER_POOL_SIZE-1];
@@ -724,15 +778,13 @@ void mp_init_buffers(void)
     }
     mb.buffers_available = PLANNER_BUFFER_POOL_SIZE;
 
-//    mb.entry_changed = false;
-
     // Now handle the two "stub buffers" in the runtime structure.
     mr.bf[0].nx = &mr.bf[1];
     mr.bf[1].nx = &mr.bf[0];
     mr.r = &mr.bf[0];
     mr.p = &mr.bf[1];
 }
-
+*/  
 /*
  * These GET functions are defined here but we use the macros in planner.h instead
  *
