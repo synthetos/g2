@@ -78,7 +78,7 @@ stat_t cm_arc_callback()
     if (arc.run_state == BLOCK_INACTIVE) {
         return (STAT_NOOP);
     }
-    if (mp_planner_is_full()) {
+    if (mp_planner_is_full(ACTIVE_Q)) {
         return (STAT_EAGAIN);
     }
     arc.theta += arc.segment_theta;

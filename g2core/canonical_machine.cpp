@@ -1248,7 +1248,7 @@ stat_t cm_straight_traverse(const float target[], const bool flags[])
     cm_cycle_start();                               // required for homing & other cycles
     stat_t status = mp_aline(&cm.gm);               // send the move to the planner
     cm_finalize_move();
-    if (status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer()) {
+    if (status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer(ACTIVE_Q)) {
         cm_cycle_end();
         return (STAT_OK);
     }
@@ -1277,7 +1277,7 @@ stat_t _goto_stored_position(float target2[], const float target[], const bool f
             target2[i] -= target[i];
         }
     }
-    while (mp_planner_is_full());                   // Make sure you have available buffers
+    while (mp_planner_is_full(ACTIVE_Q));           // Make sure you have available buffers
 
     bool flags2[] = { 1,1,1,1,1,1 };
     return (cm_straight_traverse(target2, flags2)); // Go to programmed endpoint
@@ -1395,7 +1395,7 @@ stat_t cm_straight_feed(const float target[], const bool flags[])
 
     cm_finalize_move(); // <-- ONLY safe because we don't care about status...
 
-    if (status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer()) {
+    if (status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer(ACTIVE_Q)) {
         cm_cycle_end();
         return (STAT_OK);
     }
@@ -1720,7 +1720,7 @@ bool cm_has_hold()
 
 void cm_start_hold()
 {
-    if (mp_has_runnable_buffer()) {                         // meaning there's something running
+    if (mp_has_runnable_buffer(ACTIVE_Q)) {                 // meaning there's something running
         cm_spindle_optional_pause(spindle.pause_on_hold);   // pause if this option is selected
         cm_coolant_optional_pause(coolant.pause_on_hold);   // pause if this option is selected
         cm_set_motion_state(MOTION_HOLD);

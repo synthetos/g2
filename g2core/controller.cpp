@@ -201,7 +201,7 @@ static stat_t _dispatch_command()
 {
     if (cs.controller_state != CONTROLLER_PAUSED) {
         devflags_t flags = DEV_IS_BOTH;
-        if ((!mp_planner_is_full()) && (cs.bufp = xio_readline(flags, cs.linelen)) != NULL) {
+        if ((!mp_planner_is_full(ACTIVE_Q)) && (cs.bufp = xio_readline(flags, cs.linelen)) != NULL) {
             _dispatch_kernel();
         }
     }
@@ -350,7 +350,7 @@ static stat_t _sync_to_tx_buffer()
 
 static stat_t _sync_to_planner()
 {
-    if (mp_planner_is_full()) {   // allow up to N planner buffers for this line
+    if (mp_planner_is_full(ACTIVE_Q)) {   // allow up to N planner buffers for this line
         return (STAT_EAGAIN);
     }
     return (STAT_OK);

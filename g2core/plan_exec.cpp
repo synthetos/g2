@@ -419,8 +419,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         // Case (5) - decelerated to zero
         // Update the run buffer then force a replan of the whole planner queue
         if (cm.hold_state == FEEDHOLD_DECEL_END) {
-            mr.block_state = BLOCK_INACTIVE;                                    // invalidate mr buffer to reset the new move
-            bf->block_state = BLOCK_INITIAL_ACTION;                                  // tell _exec to re-use the bf buffer
+            mr.block_state = BLOCK_INACTIVE;                            // invalidate mr buffer to reset the new move
+            bf->block_state = BLOCK_INITIAL_ACTION;                     // tell _exec to re-use the bf buffer
             bf->length = get_axis_vector_length(mr.target, mr.position);// reset length
             //bf->entry_vmax = 0;                                         // set bp+0 as hold point
 
@@ -431,7 +431,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                 mp_free_run_buffer();
             }
 
-            mp_replan_queue(mb.r);                                      // make it replan all the blocks
+            mp_replan_queue(mp_get_r(ACTIVE_Q));                        // make it replan all the blocks
+//            mp_replan_queue(mb.r);                                      // make it replan all the blocks
 
             return (STAT_OK);
         }
@@ -560,7 +561,7 @@ stat_t mp_plan_feedhold_move()
 void mp_exit_hold_state()
 {
     cm.hold_state = FEEDHOLD_OFF;
-    if (mp_has_runnable_buffer()) {
+    if (mp_has_runnable_buffer(ACTIVE_Q)) {
         cm_set_motion_state(MOTION_RUN);
         sr_request_status_report(SR_REQUEST_IMMEDIATE);
     } else {

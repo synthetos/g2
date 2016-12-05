@@ -112,7 +112,9 @@ bool mp_get_runtime_busy()
     if (cm.cycle_state == CYCLE_OFF) {
         return (false);
     }
-    if ((st_runtime_isbusy() == true) || (mr.block_state == BLOCK_ACTIVE) || (mb.r->buffer_state > MP_BUFFER_EMPTY)) {
+    if ((st_runtime_isbusy() == true) || 
+        (mr.block_state == BLOCK_ACTIVE) || 
+        (mp_get_r(ACTIVE_Q)->buffer_state > MP_BUFFER_EMPTY)) {
         return (true);
     }
     return (false);

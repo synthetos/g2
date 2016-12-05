@@ -124,8 +124,8 @@ typedef enum {
 /*** Most of these factors are the result of a lot of tweaking. Change with caution.***/
 
 #define PLANNER_BUFFER_POOL_SIZE    ((uint8_t)48)       // Suggest 12 min. Limit is 255
-#define PLANNER_BUFFER_HEADROOM     ((uint8_t)4)        // Buffers to reserve in planner before processing new input line
 #define SECONDARY_BUFFER_POOL_SIZE  ((uint8_t)4)        // Secondary planner queue for feedhold operations
+#define PLANNER_BUFFER_HEADROOM     ((uint8_t)4)        // Buffers to reserve in planner before processing new input line
 #define JERK_MULTIPLIER             ((float)1000000)    // DO NOT CHANGE - must always be 1 million
 
 #define JUNCTION_INTEGRATION_MIN    (0.05)              // minimum allowable setting
@@ -171,6 +171,11 @@ typedef enum {
 #define ASCII_ART(s)
 //#define UPDATE_BF_DIAGNOSTICS(bf) { bf->block_time_ms = bf->block_time*60000; bf->plannable_time_ms = bf->plannable_time*60000; }
 #define UPDATE_MP_DIAGNOSTICS     { mp.plannable_time_ms = mp.plannable_time*60000; }
+
+// Define which queue you are interested in for input args
+#define PRIMARY_Q   0
+#define SECONDARY_Q 1
+#define ACTIVE_Q    -1
 
 /*
  *    Planner structures
@@ -243,17 +248,20 @@ typedef struct mpBuffer : mpBuffer_to_clear { // See Planning Velocity Notes for
     uint8_t buffer_number;          //+++++ DIAGNOSTIC for easier debugging
 } mpBuf_t;
 
-typedef struct mpBufferPool {       // one or more planner buffer queues
+typedef struct mpQueue {            // a planner buffer queue
     magic_t magic_start;            // magic number to test memory integrity
-
     mpBuf_t *r;                     // run buffer pointer
     mpBuf_t *w;                     // write buffer pointer
     uint8_t queue_size;             // total number of buffers, zero-based (e.g. 47 not 48)
-    uint8_t buffers_available;      // running count of available buffers
+    uint8_t buffers_available;      // running count of available buffers in queue
     mpBuf_t *bf;                    // pointer to buffer storage array
-    
     magic_t magic_end;
-} mpBufferPool_t;
+} mpQueue_t;
+
+typedef struct mpBufferQueue {      // one or more planner buffer queues
+    uint8_t active_q;               // index of currently active queue
+    mpQueue_t q[2];                 // number of queues
+} mpBufferQueue_t;
 
 typedef struct mpMotionPlannerSingleton {  // common variables for planning (move master)
     magic_t magic_start;            // magic number to test memory integrity
@@ -350,7 +358,7 @@ typedef struct mpMotionRuntimeSingleton {    // persistent runtime variables
 } mpMotionRuntimeSingleton_t;
 
 // Reference global scope structures
-extern mpBufferPool_t mb;               // buffer pool management
+extern mpBufferQueue_t mb;              // planner buffer queue management
 extern mpMotionPlannerSingleton_t mp;   // context for block planning
 extern mpMotionRuntimeSingleton_t mr;   // context for block runtime
 
@@ -383,9 +391,9 @@ void mp_request_out_of_band_dwell(float seconds);
 stat_t mp_exec_out_of_band_dwell(void);
 
 // planner functions and helpers
-uint8_t mp_get_planner_buffers(void);
-bool mp_planner_is_full(void);
-bool mp_has_runnable_buffer(void);
+uint8_t mp_get_planner_buffers(int8_t q);
+bool mp_planner_is_full(int8_t q);
+bool mp_has_runnable_buffer(int8_t q);
 bool mp_is_phat_city_time(void);
 
 stat_t mp_planner_callback();
@@ -396,6 +404,8 @@ void mp_planner_time_accounting(void);
 
 // planner buffer primitives
 void mp_init_buffers(void);
+mpBuf_t * mp_get_w(int8_t q);
+mpBuf_t * mp_get_r(int8_t q);
 
 //mpBuf_t * mp_get_prev_buffer(const mpBuf_t *bf);      // Use the following macro instead
 //mpBuf_t * mp_get_next_buffer(const mpBuf_t *bf);      // Use the following macro instead
