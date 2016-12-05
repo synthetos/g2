@@ -242,18 +242,7 @@ typedef struct mpBuffer : mpBuffer_to_clear { // See Planning Velocity Notes for
     struct mpBuffer *nx;            // static pointer to next buffer
     uint8_t buffer_number;          //+++++ DIAGNOSTIC for easier debugging
 } mpBuf_t;
-/*
-typedef struct mpBufferPool {       // ring buffer for sub-moves
-    magic_t magic_start;            // magic number to test memory integrity
 
-    mpBuf_t *r;                     // run buffer pointer
-    mpBuf_t *w;                     // write buffer pointer
-    uint8_t buffers_available;      // running count of available buffers
-    mpBuf_t bf[PLANNER_BUFFER_POOL_SIZE];// buffer storage
-    
-    magic_t magic_end;
-} mpBufferPool_t;
-*/
 typedef struct mpBufferPool {       // one or more planner buffer queues
     magic_t magic_start;            // magic number to test memory integrity
 

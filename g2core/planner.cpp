@@ -701,12 +701,12 @@ static inline void _clear_buffer(mpBuf_t *bf)
     bf->clear();
 }
 
-void _init_buffers(mpBuf_t *base, uint8_t size)
+void _init_buffer_pool(mpBuf_t *base, uint8_t size)
 {
     mpBuf_t *pv, *nx;
     uint8_t i, nx_i;
 
-//    memset(base, 0, sizeof(mpBuf_t * size));  // clear all buffers in pool
+    memset(base, 0, sizeof(mpBuf_t)*size);  // clear all buffers in pool
     mb.bf = base;                           // link the buffer pool first
     mb.w = mb.bf;                           // init all buffer pointers
     mb.r = mb.bf;
@@ -715,8 +715,7 @@ void _init_buffers(mpBuf_t *base, uint8_t size)
     
     pv = &mb.bf[size-1];
     for (i=0; i < size-1; i++) {
-        mb.bf[i].buffer_number = i;         //+++++ number it for diagnostics only (otherwise not used)
-
+        mb.bf[i].buffer_number = i;         // number is for diagnostics only (otherwise not used)
         nx_i = ((i<size-1) ? (i+1) : 0);    // buffer increment & wrap
         nx = &mb.bf[nx_i];
         mb.bf[i].nx = nx;                   // setup circular list pointers
@@ -727,34 +726,12 @@ void _init_buffers(mpBuf_t *base, uint8_t size)
 
 void mp_init_buffers(void)
 {
-//    mpBuf_t *pv, *nx;
-//    uint8_t i, nx_i;
-
-//    memset(&mb_pool0, 0, sizeof(mb_pool0));         // clear all buffers in pool
     memset(&mb, 0, sizeof(mb));                     // clear values, pointers and status
     mb.magic_start = MAGICNUM;
     mb.magic_end = MAGICNUM;
 
-    _init_buffers(mb_pool0, PLANNER_BUFFER_POOL_SIZE);
- /*
-    mb.bf = mb_pool0;                               // link the buffer pool first
-    mb.w = mb.bf;                                   // init all buffer pointers
-    mb.r = mb.bf;
-    mb.buffers_total = PLANNER_BUFFER_POOL_SIZE-1;
-    
-    pv = &mb.bf[PLANNER_BUFFER_POOL_SIZE-1];
-    for (i=0; i < mb.buffers_total; i++) {
-        mb.bf[i].buffer_number = i;                //+++++ number it for diagnostics only (otherwise not used)
+    _init_buffer_pool(mb_pool0, PLANNER_BUFFER_POOL_SIZE);
 
-        nx_i = ((i<mb.buffers_total) ? (i+1) : 0);  // buffer increment & wrap
-        nx = &mb.bf[nx_i];
-        mb.bf[i].nx = nx;                          // setup ring pointers
-        mb.bf[i].pv = pv;
-
-        pv = &mb.bf[i];
-    }
-    mb.buffers_available = PLANNER_BUFFER_POOL_SIZE;
-*/
     // Now handle the two "stub buffers" in the runtime structure.
     mr.bf[0].nx = &mr.bf[1];
     mr.bf[1].nx = &mr.bf[0];
@@ -762,40 +739,11 @@ void mp_init_buffers(void)
     mr.p = &mr.bf[1];
  }
   
-  /*
-    mb.w = &mb.bf[0];                               // init all buffer pointers
-    mb.r = &mb.bf[0];
-    pv = &mb.bf[PLANNER_BUFFER_POOL_SIZE-1];
-    for (i=0; i < PLANNER_BUFFER_POOL_SIZE; i++) {
-        mb.bf[i].buffer_number = i;                 //+++++ number it for diagnostics only (otherwise not used)
-
-        nx_i = ((i<PLANNER_BUFFER_POOL_SIZE-1)?(i+1):0); // buffer incr & wrap
-        nx = &mb.bf[nx_i];
-        mb.bf[i].nx = nx;                           // setup ring pointers
-        mb.bf[i].pv = pv;
-
-        pv = &mb.bf[i];
-    }
-    mb.buffers_available = PLANNER_BUFFER_POOL_SIZE;
-
-    // Now handle the two "stub buffers" in the runtime structure.
-    mr.bf[0].nx = &mr.bf[1];
-    mr.bf[1].nx = &mr.bf[0];
-    mr.r = &mr.bf[0];
-    mr.p = &mr.bf[1];
-}
-*/  
 /*
  * These GET functions are defined here but we use the macros in planner.h instead
  *
-mpBuf_t * mp_get_prev_buffer(const mpBuf_t *bf)
-{
-    return (bf->pv);
-}
-mpBuf_t * mp_get_next_buffer(const mpBuf_t *bf)
-{
-    return (bf->nx);
-}
+mpBuf_t * mp_get_prev_buffer(const mpBuf_t *bf) { return (bf->pv); }
+mpBuf_t * mp_get_next_buffer(const mpBuf_t *bf) { return (bf->nx); }
 */
 
 mpBuf_t * mp_get_write_buffer()     // get & clear a buffer
