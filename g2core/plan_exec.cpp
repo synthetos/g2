@@ -283,7 +283,7 @@ stat_t mp_exec_move()
             mp_planner_time_accounting();
         }
 
-        if (bf->nx->buffer_state == MP_BUFFER_PREPPED) {
+        if (bf->nx->buffer_state >= MP_BUFFER_PREPPED) {
             // We go ahead and *ask* for a forward planning of the next move.
             // This won't call mp_plan_move until we leave this function
             // (and have called mp_exec_aline via bf->bf_func).
