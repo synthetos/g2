@@ -642,10 +642,7 @@ static void _load_move()
     } else if (st_pre.block_type == BLOCK_TYPE_COMMAND) {
         mp_runtime_command(st_pre.bf);
 
-    } // else null - WARNING - We cannot printf from here!! Causes crashes.
-    else {
-        _debug_trap("_load_move called when it's not needed?");
-    }
+    } // else null - which is okay in many cases
 
     // all other cases drop to here (e.g. Null moves after Mcodes skip to here)
     st_pre.block_type = BLOCK_TYPE_NULL;
