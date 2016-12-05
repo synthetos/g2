@@ -121,6 +121,12 @@ typedef enum {
     ZOID_EXIT_3a2
 } zoidExitPoint;
 
+typedef enum {
+    ACTIVE_Q = -1,                  // Must be -1
+    PRIMARY_Q,                      // must line up with structure indexes
+    SECONDARY_Q
+} queueType;
+
 /*** Most of these factors are the result of a lot of tweaking. Change with caution.***/
 
 #define PLANNER_BUFFER_POOL_SIZE    ((uint8_t)48)       // Suggest 12 min. Limit is 255
@@ -171,11 +177,6 @@ typedef enum {
 #define ASCII_ART(s)
 //#define UPDATE_BF_DIAGNOSTICS(bf) { bf->block_time_ms = bf->block_time*60000; bf->plannable_time_ms = bf->plannable_time*60000; }
 #define UPDATE_MP_DIAGNOSTICS     { mp.plannable_time_ms = mp.plannable_time*60000; }
-
-// Define which queue you are interested in for input args
-#define PRIMARY_Q   0
-#define SECONDARY_Q 1
-#define ACTIVE_Q    -1
 
 /*
  *    Planner structures
