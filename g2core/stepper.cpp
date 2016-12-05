@@ -76,7 +76,6 @@ extern OutputPin<kDebug3_PinNumber> debug_pin3;
 //extern OutputPin<kDebug4_PinNumber> debug_pin4;
 
 dda_timer_type dda_timer     {kTimerUpToMatch, FREQUENCY_DDA};      // stepper pulse generation
-dwell_timer_type dwell_timer {kTimerUpToMatch, FREQUENCY_DWELL};    // dwell timer
 load_timer_type load_timer;         // triggers load of next stepper segment
 exec_timer_type exec_timer;         // triggers calculation of next+1 stepper segment
 fwd_plan_timer_type fwd_plan_timer; // triggers planning of next block
@@ -117,9 +116,6 @@ void stepper_init()
     // If you need more pulse width you need to drop the DDA clock rate
     dda_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
 
-    // setup DWELL timer
-    dwell_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
-
     // setup software interrupt load timer
     load_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityHigh);
 
@@ -148,7 +144,6 @@ void stepper_init()
 void stepper_reset()
 {
     dda_timer.stop();                                   // stop all movement
-    dwell_timer.stop();
     st_run.dda_ticks_downcount = 0;                     // signal the runtime is not busy
     st_pre.buffer_state = PREP_BUFFER_OWNED_BY_EXEC;    // set to EXEC or it won't restart
 
@@ -337,22 +332,6 @@ void dda_timer_type::interrupt()
         _load_move();       // load the next move at the current interrupt level
     }
 } // MOTATE_TIMER_INTERRUPT
-} // namespace Motate
-
-/***** Dwell Interrupt Service Routine **************************************************
- * ISR - DDA timer interrupt routine - service ticks from DDA timer
- */
-
-namespace Motate {            // Must define timer interrupts inside the Motate namespace
-    template<>
-    void dwell_timer_type::interrupt()
-    {
-        dwell_timer.getInterruptCause(); // read SR to clear interrupt condition
-        if (--st_run.dda_ticks_downcount == 0) {
-            dwell_timer.stop();
-            _load_move();
-        }
-    }
 } // namespace Motate
 
 /****************************************************************************************
@@ -635,8 +614,24 @@ static void _load_move()
     // handle dwells
     } else if (st_pre.block_type == BLOCK_TYPE_DWELL) {
         st_run.dda_ticks_downcount = st_pre.dda_ticks;
-        dda_timer.stop();   // ++++ This is a stopgap. The DDA timer should have been stopped before here
-        dwell_timer.start();
+        st_run.mot[MOTOR_1].substep_accumulator = 0;
+        st_run.mot[MOTOR_2].substep_accumulator = 0;
+#if (MOTORS > 2)
+        st_run.mot[MOTOR_3].substep_accumulator = 0;
+#endif
+#if (MOTORS > 3)
+        st_run.mot[MOTOR_4].substep_accumulator = 0;
+#endif
+#if (MOTORS > 4)
+        st_run.mot[MOTOR_5].substep_accumulator = 0;
+#endif
+#if (MOTORS > 5)
+        st_run.mot[MOTOR_6].substep_accumulator = 0;
+#endif
+
+        //**** do this last ****
+        // Note: we are using the dda timer for the dwells (we didn't always)
+        dda_timer.start();                              // start the DDA timer if not already running
 
     // handle synchronous commands
     } else if (st_pre.block_type == BLOCK_TYPE_COMMAND) {
@@ -787,7 +782,8 @@ void st_prep_command(void *bf)
 void st_prep_dwell(float microseconds)
 {
     st_pre.block_type = BLOCK_TYPE_DWELL;
-    st_pre.dda_ticks = (uint32_t)((microseconds/1000000) * FREQUENCY_DWELL);
+    // Note: we are using the dda timer for the dwells (we didn't always)
+    st_pre.dda_ticks = (uint32_t)((microseconds/1000000) * FREQUENCY_DDA);
     st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;    // signal that prep buffer is ready
 }
 
