@@ -756,6 +756,8 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             if (_scan_offset == _read_offset) {
                 _debug_trap("read ran into scan (2)");
             }
+            // this also counts as the beginning of a line
+            _skip_sections.skip(_read_offset);
             c = _data[_read_offset];
         }
 
