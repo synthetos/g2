@@ -21,7 +21,7 @@
 #ifndef G2CORE_INFO_H_ONCE
 #define G2CORE_INFO_H_ONCE
 
-#define G2CORE_FIRMWARE_BUILD			100.11  // Power Management Fixes
+#define G2CORE_FIRMWARE_BUILD			100.12  // Changes to USB serial for SAMS70 and SAM8X targets
 #ifdef GIT_VERSION
 #define G2CORE_FIRMWARE_BUILD_STRING	GIT_VERSION
 #else

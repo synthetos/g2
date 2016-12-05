@@ -44,7 +44,7 @@
  *  functions. Data from the Gcode model is transferred to the motion planner by the mp_xxxx()
  *  functions called by the canonical machine.
  *
- *  The planner should only use data in the planner model. When a move (block) is ready for
+ *  The planner should only use data in the planner model. When a move (buffer) is ready for
  *  execution the relevant data from the planner is transferred to the runtime model,
  *  which should also be isolated.
  *
@@ -470,8 +470,8 @@ bool mp_is_phat_city_time()
  *  mp_planner_callback()'s job is to invoke backward planning intelligently.
  *  The flow of control and division of responsibilities for planning is:
  *
- *  - mp_aline() receives new Gcode blocks and initializes the local variables
- *    for the new block.
+ *  - mp_aline() receives new Gcode moves and initializes the local variables
+ *    for the new buffer.
  *
  *  - mp_planner_callback() is called regularly from the main loop.
  *    It's job is to determine whether or not to call mp_plan_block_list(),
@@ -480,9 +480,9 @@ bool mp_is_phat_city_time()
  *    mp_planner_callback() also manages planner state - whether the planner
  *    is IDLE, in STARTUP or in one of the running states.
  *
- *  - _plan_block_list() / _planblock() is the backward planning function.
+ *  - _plan_block() is the backward planning function for a single buffer.
  *
- *  - Forward planning is just-in-time by the execution runtime
+ *  - Just-in-time forward planning is performed by mp_plan_move() in the plan_exec.cpp runtime executive
  *
  *  Some Items to note:
  *
@@ -542,12 +542,9 @@ void mp_replan_queue(mpBuf_t *bf)
 {
     do {
         if (bf->buffer_state >= MP_BUFFER_PLANNED) {
-            // revert from PLANNED state
-            bf->buffer_state = MP_BUFFER_PREPPED;
-        } else {
-            // If it's not "planned" then it's either PREPPED or earlier.
-            // We don't need to adjust it.
-            break;
+            bf->buffer_state = MP_BUFFER_PREPPED;            // revert from PLANNED state
+        } else {        // If it's not "planned" then it's either PREPPED or earlier.
+            break;      // We don't need to adjust it.
         }
     } while ((bf = mp_get_next_buffer(bf)) != mb.r);
 
@@ -795,7 +792,7 @@ void mp_commit_write_buffer(const blockType block_type)
         if ((mp.planner_state > PLANNER_STARTUP) && (cm.hold_state == FEEDHOLD_OFF)) {
             // NB: BEWARE! the exec may result in the planner buffer being
             // processed IMMEDIATELY and then freed - invalidating the contents
-            st_request_plan_move();                // request an exec if the runtime is not busy
+            st_request_forward_plan();                // request an exec if the runtime is not busy
         }
     }
     mb.w->plannable = true;                     // enable block for planning

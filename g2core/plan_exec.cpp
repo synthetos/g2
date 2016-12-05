@@ -46,97 +46,197 @@ static stat_t _exec_aline_segment(void);
 
 static void _init_forward_diffs(float v_0, float v_1);
 
-/*************************************************************************
- * mp_plan_move() - call ramping function to plan moves ahead of the exec
+/*******************************************************************************
+ * mp_forward_plan() - plan commands and moves ahead of exec; call ramping for moves
  *
- * This should NOT normally be called directly! Instead call st_request_plan_move().
+ **** WARNING ****
+ * This function should NOT be called directly! 
+ * Instead call st_request_forward_plan(), which mediates access. 
  *
+ *  mp_forward_plan() performs just-in-time forward planning immediately before 
+ *  lines and commands are queued to the move execution runtime (exec). 
+ *  Unlike backward planning, buffers are only forward planned once.
+ *
+ *  mp_forward_plan() is called aggressively via st_request_forward_plan().
+ *  It has a relatively low interrupt level to call its own.
+ *  See also: Planner Overview notes in planner.h
+ * 
+ *  It examines the currently running buffer and its adjacent buffers to:
+ *
+ *  - Stop the system from re-planning or planning something that's not prepped
+ *  - Plan the next available ALINE (movement) block past the COMMAND blocks
+ *  - Skip past/ or pre-plan COMMAND blocks while labeling them as PLANNED
+ *
+ *  Returns:
+ *   - STAT_OK if exec should be called to kickstart (or continue) movement 
+ *   - STAT_NOOP to exit with no action taken (do not call exec)
+ */
+/*
+ * --- Forward Planning Processing and Cases ---
+ *    
+ *  These cases describe all possible sequences of buffers in the planner queue starting 
+ *  with the currently executing (or about to execute) Run buffer, looking forward
+ *  to more recently arrived buffers. In most cases only one or two buffers need to 
+ *  be examined, but contiguous groups of commands may need to be processed. 
+ *
+ * 'Running' cases are where the run buffer state is RUNNING. Bootstrap handles all other cases.
+ * 'Bootstrap' occurs during the startup phase where moves are collected before starting movement.
+ *  Conditions that are impossible based on this definition are not listed in the tables below.
+ *
+ *  See planner.h / bufferState enum for shorthand used in the descriptions. 
+ *  All cases assume a mix of moves and commands, as noted in the shorthand.
+ *  All cases assume 2 'blocks' - Run block & Plan block. Cases will need to be 
+ *  revisited and generalized if more blocks are used in the future (deeper 
+ *  forward planning).
+ *
+ *  'NOT_PREPPED' refers to any preliminary state below PREPPED, i.e. < PREPPED.
+ * ' NOT_PREPPED' can be either a move or command, we don't care so it's not specified.
+ *
+ *  'COMMAND' or 'COMMAND(s)' refers to one command or a contiguous group of command buffers
+ *  that may be in PREPPED or PLANNED states. Processing is always the same. Plan all 
+ *  PREPPED commands and skip past all PLANNED commands.
+ *
+ *  Note 1: For MOVEs use the exit velocity of the Run block (mr.r->exit_velocity) as the 
+ *  entry velocity of the next adjacent move.
+ *
+ *  Note 1a: In this special COMMAND case we trust mr.r->exit_velocity  because the 
+ *  backplanner has already handled this case for us.
+ *
+ *  Note 2: For COMMANDs use the entry velocity of the current runtime (mr.entry_velocity)
+ *  as the entry velocity for the next adjacent move. mr.entry_velocity is almost always 0, 
+ *  but could be non-0 in a race condition. 
+ *  FYI: mr.entry_velocity is set at the end of the last running block in mp_exec_aline().
+ *
+ *
+ *  CASE:
+ *    0.  Nothing to do
+ *
+ *             run_buffer
+ *             ----------
+ *          a. <no buffer>     Run buffer has not yet been initialized (prep null buffer and return NOOP)
+ *          b. NOT_PREPPED     No moves or commands in run buffer. Exit with no action
+ *
+ *    1.  Bootstrap cases (buffer state < RUNNING)
+ *
+ *             run_buffer       next N bufs     terminal buf    Actions
+ *             ----------       -----------     ------------    ----------------------------------
+ *          a. PREPPED-MOVE     <don't care>    <don't care>    plan move, exit OK
+ *          b. PLANNED-MOVE     NOT_PREPPED     <don't care>    exit NOOP
+ *          c. PLANNED-MOVE     PREPPED-MOVE    <don't care>    exit NOOP (don't plan past a PLANNED buffer)
+ *          d. PLANNED-MOVE     PLANNED-MOVE    <don't care>    trap illegal condition, exit NOOP
+ *          e. PLANNED-MOVE     COMMAND(s)      <don't care>    exit NOOP
+ *          f. PREPPED-COMMAND  NOT_PREPPED     <don't care>    plan command, exit OK
+ *          g. PREPPED-COMMAND  PREPPED-MOVE    <don't care>    plan command, plan move (Note 2), exit OK
+ *          h. PREPPED-COMMAND  PLANNED-MOVE    <don't care>    trap illegal condition, exit NOOP
+ *          i. PLANNED-COMMAND  NOT_PREPPED     <don't care>    skip command, exit OK
+ *          j. PLANNED-COMMAND  PREPPED-MOVE    <don't care>    skip command, plan move (Note 2), exit OK
+ *          k. PLANNED-COMMAND  PLANNED-MOVE    <don't care>    exit NOOP
+ *
+ *    2.  Running cases (buffer state == RUNNING)
+ *
+ *             run_buffer       next N bufs     terminal buf    Actions
+ *             ----------       -----------     ------------    ----------------------------------
+ *          a. RUNNING-MOVE     PREPPED-MOVE    <don't care>    plan move, exit OK
+ *          b. RUNNING-MOVE     PLANNED-MOVE    <don't care>    exit NOOP
+ *          c. RUNNING-MOVE     COMMAND(s)      NOT_PREPPED     skip/plan command(s), exit OK
+ *          d. RUNNING-MOVE     COMMAND(s)      PREPPED-MOVE    skip/plan command(s), plan move, exit OK
+ *          e. RUNNING-MOVE     COMMAND(s)      PLANNED-MOVE    exit NOOP
+ *          f. RUNNING-COMMAND  PREPPED-MOVE    <don't care>    plan move, exit OK
+ *          g. RUNNING-COMMAND  PLANNED-MOVE    <don't care>    exit NOOP
+ *          h. RUNNING-COMMAND  COMMAND(s)      NOT_PREPPED     skip/plan command(s), exit OK
+ *          i. RUNNING-COMMAND  COMMAND(s)      PREPPED-MOVE    skip/plan command(s), plan move (Note 1a), exit OK
+ *          j. RUNNING-COMMAND  COMMAND(s)      PLANNED-MOVE    skip command(s), exit NOOP
+ *                                                              (Note: all COMMAND(s) in j. should be in PLANNED state)
  */
 
-stat_t mp_plan_move()
+static mpBuf_t *_plan_commands(mpBuf_t *bf)         // plan or skip commands; return bf past last command
 {
-    mpBuf_t *bf;
+    // must test for buffer state first as the buffer is only "safe" once it's >= PREPPED
+    while ((bf->buffer_state >= MP_BUFFER_PREPPED) && (bf->block_type >= BLOCK_TYPE_COMMAND)) {
+        if (bf->buffer_state != MP_BUFFER_PLANNED) {        // skip already planned buffers
+            bf->buffer_state = MP_BUFFER_PLANNED;           // "planning" is just setting the state (for now)
+        }
+        bf = bf->nx;
+    }
+    return (bf);
+}
 
-    // NULL means nothing's running - this is OK
-    if ((bf = mp_get_run_buffer()) == NULL) {
+static stat_t _plan_move(mpBuf_t *bf, float entry_velocity)
+{
+    // Calculate ramps for the current planning block and the next PREPPED buffer
+    // The PREPPED buffer will be set to PLANNED later...
+    //
+    // Pass in the bf buffer that will "link" with the planned block
+    // The block and the buffer are implicitly linked for exec_aline()
+    //
+    // Note that that can only be one PLANNED move at a time.
+    // This is to help sync mr.p to point to the next planned mr.bf
+    // mr.p is only advanced in mp_exec_aline(), after mp.r = mr.p.
+    // This code aligns the buffers and the blocks for exec_aline().
+
+    mpBlockRuntimeBuf_t* block = mr.p;              // set a local planning block so it doesn't change on you
+    mp_calculate_ramps(block, bf, entry_velocity);  // (which it will if you don't do this)
+
+    // diagnostic traps
+    if (block->exit_velocity > block->cruise_velocity)  {
+        __asm__("BKPT");                            // exit > cruise after calculate_block
+    }
+    if (block->head_length < 0.00001 && block->body_length < 0.00001 && block->tail_length < 0.00001)  {
+        __asm__("BKPT");                            // zero or negative length block
+    }
+    bf->buffer_state = MP_BUFFER_PLANNED;           //...here
+    bf->plannable = false;
+    return (STAT_OK);                               // report that we planned something...
+}
+
+stat_t mp_forward_plan()
+{
+    mpBuf_t *bf = mp_get_run_buffer();
+    float entry_velocity;
+    
+    // Case 0: Examine current running buffer for early exit conditions
+    if (bf == NULL) {                               // case 0a: NULL means nothing is running - this is OK
         st_prep_null();
         return (STAT_NOOP);
     }
-
-    if (bf->buffer_state < MP_BUFFER_PREPPED) {
-        // Get outta here.
-        // We did nothing
+    if (bf->buffer_state < MP_BUFFER_PREPPED) {     // case 0b: nothing to do. get outta here.
         return (STAT_NOOP);
     }
 
-    if (bf->block_type != BLOCK_TYPE_ALINE) {
-        // Nothing to see here...
-
-        bf->buffer_state = MP_BUFFER_PLANNED;
-
-        // report that we "planned" something...
-        return (STAT_OK);
-    }
-
-    // We default to the planning block
-    mpBlockRuntimeBuf_t* block = mr.p;
-
-    // Default to the planning buffer
-    float entry_velocity     = mr.entry_velocity;
-
-    // At this point, bf == bf.r
+    // Case 2: Running cases - move bf past run buffer so it acts like case 1
     if (bf->buffer_state == MP_BUFFER_RUNNING) {
-        // Update bf to bf->nx, set entry_* to mr.r->exit_*.
         bf = bf->nx;
-        entry_velocity = mr.r->exit_velocity;
+        entry_velocity = mr.r->exit_velocity;       // set Note 1 entry_velocity (move cases)
+    } else {
+        entry_velocity = mr.entry_velocity;         // set Note 2 entry velocity (command cases)
+    }
 
-        if (bf->buffer_state < MP_BUFFER_PREPPED) {
-            // Get outta here.
-            // We did nothing
-            return (STAT_NOOP);
+    // bf points to command; start cases 1f, 1g, 1h, 1i, 1j, 1k, 2c, 2d, 2e, 2h, 2i, 2j
+    if (bf->block_type != BLOCK_TYPE_ALINE) {       // meaning it's a COMMAND
+        bf = _plan_commands(bf);                    // plan commands or skip past already planned commands
+        // bf now points to the first non-command buffer past the command(s)
+        if ((bf->block_type == BLOCK_TYPE_ALINE) && (bf->buffer_state > MP_BUFFER_PREPPED )) { // case 1i
+            entry_velocity = mr.r->exit_velocity;   // set entry_velocity for Note 1a
+        }        
+    } 
+    // bf will always be on a non-command at this point - either a move or empty buffer
+
+    // process move                           
+    if (bf->block_type == BLOCK_TYPE_ALINE) {       // do cases 1a - 1e; finish cases 1f - 1k
+        if (bf->buffer_state == MP_BUFFER_PREPPED) {// do 1a; finish 1f, 1j, 2d, 2i
+            return (_plan_move(bf, entry_velocity));
+        } else {
+            return (STAT_NOOP);                     // do 1b, 1c, 1d, 1e; finish 1g, 1h, 1j, 1k, 2e, 2j
         }
-
-        if (bf->block_type != BLOCK_TYPE_ALINE) {
-            // Nothing to see here...
-
-            bf->buffer_state = MP_BUFFER_PLANNED;
-            // report that we "planned" something...
-            return (STAT_OK);
-        }
     }
-
-    if (bf->buffer_state == MP_BUFFER_PLANNED) {
-        // Get outta here.
-        // We did nothing
-        return (STAT_NOOP);
-    }
-
-    // Note that that can only be one PLANNED move at a time.
-    // This is to help sync mr.p to point to the next planned mr.bf
-    // mr.p is only advanced in mp_exec_aline, after mp.r = mr.p.
-
-    mp_calculate_ramps(block, bf, entry_velocity);
-
-    if (block->exit_velocity > block->cruise_velocity)  {
-        __asm__("BKPT"); // exit > cruise after calculate_block
-    }
-
-    if (block->head_length < 0.00001 && block->body_length < 0.00001 && block->tail_length < 0.00001)  {
-        __asm__("BKPT"); // zero or negaitve length block
-    }
-
-    bf->buffer_state = MP_BUFFER_PLANNED;
-    bf->plannable = false;
-
-    // report that we planned something...
-    return (STAT_OK);
+    return (STAT_OK);                               // report that we planned something...
 }
 
 /*************************************************************************
  * mp_exec_move() - execute runtime functions to prep move for steppers
  *
- *    Dequeues the buffer queue and executes the move continuations.
- *    Manages run buffers and other details
+ *  Dequeues the buffer queue and executes the move continuations.
+ *  Manages run buffers and other details
  */
 
 stat_t mp_exec_move()
@@ -150,13 +250,13 @@ stat_t mp_exec_move()
     }
 
     if (bf->block_type == BLOCK_TYPE_ALINE) {             // cycle auto-start for lines only
+
         // first-time operations
         if (bf->buffer_state != MP_BUFFER_RUNNING) {
             if ((bf->buffer_state < MP_BUFFER_PREPPED) && (cm.motion_state == MOTION_RUN)) {
-                __asm__("BKPT"); // mp_exec_move() buffer is not prepped
-                // IMPORTANT: We can't rpt_exception from here!
+                __asm__("BKPT");    // mp_exec_move() buffer is not prepped
+                                    // IMPORTANT: We can't rpt_exception from here!
                 st_prep_null();
-
                 return (STAT_NOOP);
             }
             if (bf->nx->buffer_state < MP_BUFFER_PREPPED) {
@@ -169,10 +269,9 @@ stat_t mp_exec_move()
                 if (cm.motion_state == MOTION_RUN) {
                     __asm__("BKPT"); // we are running but don't have a block planned
                 }
-
                 // We need to have it planned. We don't want to do this here, as it
                 // might already be happening in a lower interrupt.
-                st_request_plan_move();
+                st_request_forward_plan();
                 return (STAT_NOOP);
             }
 
@@ -189,7 +288,7 @@ stat_t mp_exec_move()
             // This won't call mp_plan_move until we leave this function
             // (and have called mp_exec_aline via bf->bf_func).
             // This also allows mp_exec_aline to advance mr.p first.
-            st_request_plan_move();
+            st_request_forward_plan();
         }
 
         // Manage motion state transitions
@@ -217,24 +316,23 @@ stat_t mp_exec_move()
  *  Returns:
  *     STAT_OK        move is done
  *     STAT_EAGAIN    move is not finished - has more segments to run
- *     STAT_NOOP        cause no operation from the steppers - do not load the move
- *     STAT_xxxxx        fatal error. Ends the move and frees the bf buffer
+ *     STAT_NOOP      cause no operation from the steppers - do not load the move
+ *     STAT_xxxxx     fatal error. Ends the move and frees the bf buffer
  *
- *  This routine is called from the (LO) interrupt level. The interrupt
- *  sequencing relies on the behaviors of the routines being exactly correct.
- *  Each call to _exec_aline() must execute and prep *one and only one*
- *  segment. If the segment is the not the last segment in the bf buffer the
- *  _aline() must return STAT_EAGAIN. If it's the last segment it must return
- *  STAT_OK. If it encounters a fatal error that would terminate the move it
- *  should return a valid error code. Failure to obey this will introduce
- *  subtle and very difficult to diagnose bugs (trust me on this).
+ *  This routine is called from the (LO) interrupt level. The interrupt sequencing 
+ *  relies on the behaviors of the routines being exactly correct. Each call to 
+ *  _exec_aline() must execute and prep *one and only one* segment. If the segment 
+ *  is the not the last segment in the bf buffer the _aline() must return STAT_EAGAIN. 
+ *  If it's the last segment it must return STAT_OK. If it encounters a fatal error 
+ *  that would terminate the move it should return a valid error code. Failure to 
+ *  obey this will introduce subtle and very difficult to diagnose bugs (trust us on this).
  *
- *    Note 1 Returning STAT_OK ends the move and frees the bf buffer.
+ *   Note 1: Returning STAT_OK ends the move and frees the bf buffer.
  *           Returning STAT_OK at this point does NOT advance position meaning any
  *           position error will be compensated by the next move.
  *
- *    Note 2 Solves a potential race condition where the current move ends but the
- *            new move has not started because the previous move is still being run
+ *   Note 2: Solves a potential race condition where the current move ends but the
+ *           new move has not started because the previous move is still being run
  *           by the steppers. Planning can overwrite the new move.
  */
 /* --- State transitions - hierarchical state machine ---
@@ -249,12 +347,35 @@ stat_t mp_exec_move()
  *     _NEW - trigger initialization
  *     _RUN1 - run the first part
  *     _RUN2 - run the second part
+ *
+ *  Important distinction to note:
+ *    - mp_plan move() is called for every type of move
+ *    - mp_exec_move() is called for every type of move
+ *    - mp_exec_aline() is only called for alines
  */
-/*  Note:
- *  For a version of these routines that execute using the original equation-of-motion
- *  math (as opposed to the forward difference math) please refer to build 357.xx or earlier.
- *  Builds 358 onward have only forward difference code. ALso, the Kahan corrections for the
- *  forward differencing were also been removed shortly after as they were not needed.
+/* Synchronization of run BUFFER and run BLOCK
+ *
+ * Note first: mp_exec_aline() makes a huge assumption: When it comes time to get a 
+ *  new run block (mr.r) it assumes the planner block (mr.p) has been fully planned 
+ *  via the JIT forward planning and is ready for use as the new run block.
+ *
+ * The runtime uses 2 structures for the current move or commend, the run BUFFER 
+ *  from the planner queue (mb.r, aka bf), and the run BLOCK from the runtime 
+ *  singleton (mr.r). These structures are synchronized implicitly, but not 
+ *  explicitly referenced, as pointers can lead to race conditions. 
+ *  See plan_zoid.cpp / mp_calculate_ramps() for more details
+ *
+ * When mp_exec_aline() needs to grab a new planner buffer for a new move or command 
+ *  (i.e. block state is inactive) it swaps (rolls) the run and planner BLOCKS so that
+ *  mr.p (planner block) is now the mr.r (run block), and the old mr.r block becomes 
+ *  available for planning; it becomes mr.p block.
+ *
+ * At the same time, it's when finished with its current run buffer (mb.r), it has already 
+ *  advanced to the next buffer. mp_exec_move() does this at the end of previous move.
+ *  Or in the bootstrap case, there never was a previous mb.r, so the current one is OK.
+ * 
+ * As if by magic, the new mb.r aligns with the run block that was just moved in from 
+ *  the planning block.
  */
 
 /**** NOTICE ** NOTICE ** NOTICE ****
@@ -293,8 +414,9 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         mr.section = SECTION_HEAD;
         mr.section_state = SECTION_NEW;
 
-        mr.r = mr.p;
-        mr.p = mr.p->nx;
+        // This is the only place in the system where mr.r and mr.p are allowed to be changed
+        mr.r = mr.p;        // we are now going to run the planning block
+        mr.p = mr.p->nx;    // re-use the old running block as the new planning block
 
         // Assumptions that are required for this to work:
         // entry velocity <= cruise velocity && cruise velocity >= exit velocity
@@ -533,7 +655,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                     cm_cycle_end();    // free buffer & end cycle if planner is empty
                 }
             } else {
-                st_request_plan_move();
+                st_request_forward_plan();
             }
         }
     }

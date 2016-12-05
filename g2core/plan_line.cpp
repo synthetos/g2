@@ -103,7 +103,7 @@ float mp_get_runtime_work_position(uint8_t axis) {
 
 /*
  * mp_get_runtime_busy() - returns TRUE if motion control busy (i.e. robot is moving)
- * mp_runtime_is_idle() - returns TRUE is steppers are not actively moving
+ * mp_runtime_is_idle()  - returns TRUE is steppers are not actively moving
  *
  *  Use mp_get_runtime_busy() to sync to the queue. If you wait until it returns
  *  FALSE you know the queue is empty and the motors have stopped.
@@ -148,31 +148,36 @@ stat_t mp_aline(GCodeState_t* gm_in)
     float length;
 
     // A few notes about the rotated coordinate space:
-    // These are position PRE-rotation:
+    // These are positions PRE-rotation:
     //  gm_in.* (anything in gm_in)
     //
     // These are positions POST-rotation:
-    //  target_rotated (after the rotiton here, of course)
+    //  target_rotated (after the rotation here, of course)
     //  mp.* (anything in mp, including mp.gm.*)
-
-    // a being target[0],
-    // b being target[1],
-    // c being target[2],
-    // x_1 being cm.rotation_matrix[1][0]
-
+    //
     // Shorthand:
-    // target_rotated[0] = a x_0 + b y_0 + c z_0
-    // target_rotated[1] = a x_1 + b y_1 + c z_1
-    // target_rotated[2] = a x_2 + b y_2 + c z_2 + z_offset
+    //  target_rotated[0] = a x_0 + b y_0 + c z_0
+    //  target_rotated[1] = a x_1 + b y_1 + c z_1
+    //  target_rotated[2] = a x_2 + b y_2 + c z_2 + z_offset
+    //
+    // With:
+    //  a being target[0],
+    //  b being target[1],
+    //  c being target[2],
+    //  x_1 being cm.rotation_matrix[1][0]
 
-    target_rotated[0] = gm_in->target[0] * cm.rotation_matrix[0][0] + gm_in->target[1] * cm.rotation_matrix[0][1] +
+    target_rotated[0] = gm_in->target[0] * cm.rotation_matrix[0][0] + 
+                        gm_in->target[1] * cm.rotation_matrix[0][1] +
                         gm_in->target[2] * cm.rotation_matrix[0][2];
 
-    target_rotated[1] = gm_in->target[0] * cm.rotation_matrix[1][0] + gm_in->target[1] * cm.rotation_matrix[1][1] +
+    target_rotated[1] = gm_in->target[0] * cm.rotation_matrix[1][0] + 
+                        gm_in->target[1] * cm.rotation_matrix[1][1] +
                         gm_in->target[2] * cm.rotation_matrix[1][2];
 
-    target_rotated[2] = gm_in->target[0] * cm.rotation_matrix[2][0] + gm_in->target[1] * cm.rotation_matrix[2][1] +
-                        gm_in->target[2] * cm.rotation_matrix[2][2] + cm.rotation_z_offset;
+    target_rotated[2] = gm_in->target[0] * cm.rotation_matrix[2][0] + 
+                        gm_in->target[1] * cm.rotation_matrix[2][1] +
+                        gm_in->target[2] * cm.rotation_matrix[2][2] + 
+                        cm.rotation_z_offset;
 
     // copy rotation axes ABC
     target_rotated[3] = gm_in->target[3];
@@ -194,6 +199,7 @@ stat_t mp_aline(GCodeState_t* gm_in)
     if (fp_ZERO(length)) {
         sr_request_status_report(SR_REQUEST_TIMED_FULL);  // Was SR_REQUEST_IMMEDIATE_FULL
         return (STAT_MINIMUM_LENGTH_MOVE);
+//        return (STAT_OK);            //+++++ test this
     }
 
     // get a cleared buffer and copy in the Gcode model state
@@ -259,7 +265,7 @@ void mp_plan_block_list()
     }
     if (mp.planner_state > PLANNER_STARTUP) {
         if (planned_something && (cm.hold_state != FEEDHOLD_HOLD)) {
-            st_request_plan_move();  // start motion if runtime is not already busy
+            st_request_forward_plan();  // start motion if runtime is not already busy
         }
     }
     mp.p = bf;  // update planner pointer
@@ -285,13 +291,13 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
             }
         }
         _calculate_override(bf);  // adjust cruise_vmax for feed/traverse override
-        //        bf->plannable_time = bf->pv->plannable_time;    // set plannable time - excluding current move
+ //     bf->plannable_time = bf->pv->plannable_time;    // set plannable time - excluding current move
         bf->buffer_state = MP_BUFFER_IN_PROCESS;
 
         // +++++ Why do we have to do this here?
         // bf->pv_group = bf->pv;
 
-        bf->hint = NO_HINT;  // ensure we've cleared the hints
+        bf->hint = NO_HINT;     // ensure we've cleared the hints
         // Time: 12us-41us
         if (bf->nx->plannable) {  // read in new buffers until EMPTY
             return (bf->nx);
@@ -319,15 +325,15 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
             bf->iterations++;
             bf->plannable = bf->plannable && !optimal;  // Don't accidentally enable plannable!
 
-            // Let's be mindful that for ward planning may change exit_vmax, and our exit velocity may be lowered
+            // Let's be mindful that forward planning may change exit_vmax, and our exit velocity may be lowered
             braking_velocity = min(braking_velocity, bf->exit_vmax);
 
             // We *must* set cruise before exit, and keep it at least as high as exit.
             bf->cruise_velocity = max(braking_velocity, bf->cruise_velocity);
             bf->exit_velocity   = braking_velocity;
 
-            // We have two places where it could be a mixed decel or an asymetric bump,
-            // dpending on if the pv->exit_vmax is the same as bf.cruise_vmax
+            // We have two places where it could be a mixed decel or an asymmetric bump,
+            // depending on if the pv->exit_vmax is the same as bf.cruise_vmax
             bool test_decel_or_bump = false;
 
             // command blocks
@@ -412,12 +418,12 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
 
             // +++++
             if (bf->buffer_state == MP_BUFFER_EMPTY) {
-                //                _debug_trap("Exec apparently cleared this block while we were planning it.");
+            //     _debug_trap("Exec apparently cleared this block while we were planning it.");
                 break;  // exit the loop, we've hit and passed the running buffer
             }
-            //            if (fp_ZERO(bf->exit_velocity) && !fp_ZERO(bf->exit_vmax)) {
-            //                _debug_trap(); // why zero?
-            //            }
+            // if (fp_ZERO(bf->exit_velocity) && !fp_ZERO(bf->exit_vmax)) {
+            //     _debug_trap(); // why zero?
+            // }
 
             // We might back plan into the running or planned buffer, so we have to check.
             if (bf->buffer_state < MP_BUFFER_PREPPED) {

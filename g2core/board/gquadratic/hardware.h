@@ -110,8 +110,8 @@ using Motate::OutputPin;
  *
  * The following interrupts are defined w/indicated priorities
  *
- *	 0	DDA_TIMER (3) for step pulse generation
- *	 1	DWELL_TIMER (4) for dwell timing
+ *	 0	DDA_TIMER (9) for step pulse generation
+ *	 1	DWELL_TIMER (10) for dwell timing
  *	 2	LOADER software generated interrupt (STIR / SGI)
  *	 3	Serial read character interrupt
  *	 4	EXEC software generated interrupt (STIR / SGI)
@@ -128,11 +128,11 @@ using Motate::OutputPin;
 /**** Motate Definitions ****/
 
 // Timer definitions. See stepper.h and other headers for setup
-typedef TimerChannel<9, 0> dda_timer_type;    // stepper pulse generation in stepper.cpp
-typedef TimerChannel<10, 0> dwell_timer_type;  // dwell timing in stepper.cpp
-typedef ServiceCall<0> load_timer_type;       // request load timer in stepper.cpp
-typedef ServiceCall<1> exec_timer_type;       // request exec timer in stepper.cpp
-typedef ServiceCall<2> fwd_plan_timer_type;   // request exec timer in stepper.cpp
+typedef TimerChannel<9, 0> dda_timer_type;      // stepper pulse generation in stepper.cpp
+typedef TimerChannel<10, 0> dwell_timer_type;   // dwell timing in stepper.cpp
+typedef ServiceCall<0> load_timer_type;         // request load timer in stepper.cpp
+typedef ServiceCall<1> exec_timer_type;         // request exec timer in stepper.cpp
+typedef ServiceCall<2> fwd_plan_timer_type;     // request exec timer in stepper.cpp
 
 // Pin assignments
 

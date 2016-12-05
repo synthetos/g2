@@ -26,13 +26,15 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 /*
+ * --- Stepper Operation Overview ---
+ *
  *  Coordinated motion (line drawing) is performed using a classic Bresenham DDA.
- *  A number of additional steps are taken to optimize interpolation and pulse train
- *  timing accuracy to minimize pulse jitter and make for very smooth motion and surface
+ *  Additional steps are taken to optimize interpolation and pulse train timing
+ *  accuracy to minimize pulse jitter and produce very smooth motion and surface
  *  finish.
  *
  *  - The DDA is not used as a ramp for acceleration management. Acceleration is computed
- *    upstream in the motion planner as 5th order (linear snap) equations. These
+ *    upstream in the motion planner as 6th order (linear pop) equations. These
  *    generate accel/decel *segments* that are passed to the DDA for step output.
  *
  *  - The DDA accepts and processes fractional motor steps as floating point numbers
@@ -566,7 +568,7 @@ stat_t st_clc(nvObj_t *nv);
 void st_set_motor_power(const uint8_t motor);
 stat_t st_motor_power_callback(void);
 
-void st_request_plan_move(void);
+void st_request_forward_plan(void);
 void st_request_exec_move(void);
 void st_request_load_move(void);
 void st_prep_null(void);
