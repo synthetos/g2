@@ -80,6 +80,15 @@ load_timer_type load_timer;         // triggers load of next stepper segment
 exec_timer_type exec_timer;         // triggers calculation of next+1 stepper segment
 fwd_plan_timer_type fwd_plan_timer; // triggers planning of next block
 
+// SystickEvent for handling dweels (must be registered before it is active)
+Motate::SysTickEvent dwell_systick_event {[&] {
+    if (--st_run.dwell_ticks_downcount == 0) {
+        SysTickTimer.unregisterEvent(&dwell_systick_event);
+        _load_move();       // load the next move at the current interrupt level
+    }
+}, nullptr};
+
+
 /************************************************************************************
  **** CODE **************************************************************************
  ************************************************************************************/
@@ -145,6 +154,7 @@ void stepper_reset()
 {
     dda_timer.stop();                                   // stop all movement
     st_run.dda_ticks_downcount = 0;                     // signal the runtime is not busy
+    st_run.dwell_ticks_downcount = 0;
     st_pre.buffer_state = PREP_BUFFER_OWNED_BY_EXEC;    // set to EXEC or it won't restart
 
     for (uint8_t motor=0; motor<MOTORS; motor++) {
@@ -188,7 +198,7 @@ stat_t stepper_test_assertions()
 
 bool st_runtime_isbusy()
 {
-    return (st_run.dda_ticks_downcount);    // returns false if down count is zero
+    return (st_run.dda_ticks_downcount || st_run.dwell_ticks_downcount);    // returns false if down count is zero
 }
 
 /*
@@ -611,32 +621,17 @@ static void _load_move()
 
         dda_timer.start();                              // start the DDA timer if not already running
 
-    // handle dwells
+    // handle dwells and commands
     } else if (st_pre.block_type == BLOCK_TYPE_DWELL) {
-        st_run.dda_ticks_downcount = st_pre.dda_ticks;
-        st_run.mot[MOTOR_1].substep_accumulator = 0;
-        st_run.mot[MOTOR_2].substep_accumulator = 0;
-#if (MOTORS > 2)
-        st_run.mot[MOTOR_3].substep_accumulator = 0;
-#endif
-#if (MOTORS > 3)
-        st_run.mot[MOTOR_4].substep_accumulator = 0;
-#endif
-#if (MOTORS > 4)
-        st_run.mot[MOTOR_5].substep_accumulator = 0;
-#endif
-#if (MOTORS > 5)
-        st_run.mot[MOTOR_6].substep_accumulator = 0;
-#endif
+        st_run.dwell_ticks_downcount = st_pre.dwell_ticks;
 
-        //**** do this last ****
-        // Note: we are using the dda timer for the dwells (we didn't always)
-        dda_timer.start();                              // start the DDA timer if not already running
+        // We now use SysTick events to handle dwells
+        SysTickTimer.registerEvent(&dwell_systick_event);
 
-    // handle synchronous commands
+        // handle synchronous commands
     } else if (st_pre.block_type == BLOCK_TYPE_COMMAND) {
         mp_runtime_command(st_pre.bf);
-
+        
     } // else null - which is okay in many cases
 
     // all other cases drop to here (e.g. Null moves after Mcodes skip to here)
@@ -782,8 +777,8 @@ void st_prep_command(void *bf)
 void st_prep_dwell(float microseconds)
 {
     st_pre.block_type = BLOCK_TYPE_DWELL;
-    // Note: we are using the dda timer for the dwells (we didn't always)
-    st_pre.dda_ticks = (uint32_t)((microseconds/1000000) * FREQUENCY_DDA);
+    // we need dwell_ticks to be at least 1
+    st_pre.dwell_ticks = std::max((uint32_t)((microseconds/1000000) * FREQUENCY_DWELL), 1UL);
     st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;    // signal that prep buffer is ready
 }
 

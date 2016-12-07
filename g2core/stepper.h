@@ -381,7 +381,8 @@ typedef struct stRunMotor {                 // one per controlled motor
 
 typedef struct stRunSingleton {             // Stepper static values and axis parameters
     magic_t magic_start;                    // magic number to test memory integrity
-    uint32_t dda_ticks_downcount;           // tick down-counter (unscaled)
+    uint32_t dda_ticks_downcount;           // dda tick down-counter (unscaled)
+    uint32_t dwell_ticks_downcount;         // dwell tick down-counter (unscaled)
     uint32_t dda_ticks_X_substeps;          // ticks multiplied by scaling factor
     stRunMotor_t mot[MOTORS];               // runtime motor structures
     magic_t magic_end;
@@ -415,8 +416,8 @@ typedef struct stPrepSingleton {
     struct mpBuffer *bf;                    // static pointer to relevant buffer
     blockType block_type;                   // move type (requires planner.h)
 
-    //uint16_t dda_period;                    // DDA or dwell clock period setting (No longer used)
-    uint32_t dda_ticks;                     // DDA or dwell ticks for the move
+    uint32_t dda_ticks;                     // DDA ticks for the move
+    uint32_t dwell_ticks;                   // dwell ticks remaining
     uint32_t dda_ticks_X_substeps;          // DDA ticks scaled by substep factor
     stPrepMotor_t mot[MOTORS];              // prep time motor structs
     magic_t magic_end;
