@@ -22,8 +22,7 @@
     <eraseonlaunchrule>1</eraseonlaunchrule>
     <AsfVersion>3.5.0</AsfVersion>
     <avrtoolinterface>SWD</avrtoolinterface>
-    <avrtool>
-    </avrtool>
+    <avrtool>com.atmel.avrdbg.tool.atmelice</avrtool>
     <com_atmel_avrdbg_tool_samice>
       <ToolType>com.atmel.avrdbg.tool.samice</ToolType>
       <ToolName>J-Link</ToolName>
@@ -102,7 +101,7 @@
     </PercepioTrace>
     <preserveEEPROM>true</preserveEEPROM>
     <avrtoolserialnumber>J41800019454</avrtoolserialnumber>
-    <avrdeviceexpectedsignature>0x284E0A60</avrdeviceexpectedsignature>
+    <avrdeviceexpectedsignature>0xA11D0A00</avrdeviceexpectedsignature>
     <avrtoolinterfaceclock>2000000</avrtoolinterfaceclock>
     <custom>
       <ToolOptions xmlns="">
@@ -1609,7 +1608,7 @@
     <Compile Include="board\gquadratic\board_xio.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="board\gquadratic\gquadratic-a-pinout.h">
+    <Compile Include="board\gquadratic\gquadratic-b-pinout.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="board\gquadratic\hardware.cpp">
@@ -1633,7 +1632,7 @@
     <Compile Include="board\gquintic\board_xio.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="board\gquintic\gquintic-a-pinout.h">
+    <Compile Include="board\gquintic\gquintic-b-pinout.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="board\gquintic\hardware.cpp">
