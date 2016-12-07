@@ -281,9 +281,6 @@ struct xio_t {
         }
     }
 
-#pragma GCC push_options
-#pragma GCC optimize ("O0")
-
     /*
      * readline() - read a complete line from a device
      *
@@ -352,8 +349,6 @@ struct xio_t {
         return (NULL);
     };
 
-    #pragma GCC pop_options
-
     uint16_t magic_end;
 };
 
@@ -366,9 +361,6 @@ extern xio_t xio;
 // Note that we expect Device to be a pointer type!
 // See here for a discussion of what this means if you are not familiar with C++
 // https://github.com/synthetos/g2/wiki/Dual-Endpoint-USB-Internals#c-classes-virtual-functions-and-inheritance
-
-#pragma GCC push_options
-#pragma GCC optimize ("O0")
 
 // LineRXBuffer takes the Motate RXBuffer (which handles "transfers", usually DMA), and adds G2 line-reading
 // semantics to it.
@@ -709,7 +701,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                     // move the read buffer up to where we're scanning
                     _read_offset = _scan_offset;
 
-                    // note that we have 0 lines (of data) in the buffer
+                    // record that we have 0 lines (of data) in the buffer
                     _lines_found = 0;
 
                     // and clear out any skip sections we have
@@ -790,11 +782,27 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 
         *dst_ptr = 0;
         return _line_buffer;
-    };
+    }; // readline
+
+    // this is called from flushRead()
+    void flush() {
+        parent_type::flush();
+        _scan_offset = _read_offset;
+
+        // This is similar to the % "queue flush" handling above, except we flush
+        // the scan to the to the read (which was just set tot he write by the parent),
+        // not the other way around.
+
+        // record that we have 0 lines (of data) in the buffer
+        _lines_found = 0;
+
+        // and clear out any skip sections we have
+        while (!_skip_sections.is_empty()) {
+            _skip_sections.pop_skip();
+        }
+    }; // flush
 
 }; // LineRXBuffer
-
-#pragma GCC pop_options
 
 template<typename Device>
 struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for reading and writing
@@ -847,9 +855,6 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
         return _tx_buffer.write(buffer, len);
     }
 
-#pragma GCC push_options
-#pragma GCC optimize ("O0")
-
     virtual char *readline(devflags_t limit_flags, uint16_t &size) final {
         if ((limit_flags & flags) && isConnected()) {
             return _rx_buffer.readline(!(limit_flags & DEV_IS_DATA), size);
@@ -858,8 +863,6 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
         size = 0;
         return NULL;
     };
-
-#pragma GCC pop_options
 
     void _flushLine() {
         // TODO: Call to flush the RX buffer line structures
@@ -1018,7 +1021,6 @@ size_t xio_write(const char *buffer, size_t size)
 /*
  * xio_readline() - read a complete line from a device
  * xio_writeline() - write a complete line to control device
- * xio_flush_read() - flush read buffers
  *
  *  Defers to xio.readline(), etc.
  */
@@ -1031,11 +1033,6 @@ char *xio_readline(devflags_t &flags, uint16_t &size)
 int16_t xio_writeline(const char *buffer)
 {
     return xio.writeline(buffer);
-}
-
-void xio_flush_read()
-{
-    return xio.flushRead();
 }
 
 bool xio_connected()

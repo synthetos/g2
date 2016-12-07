@@ -1683,8 +1683,9 @@ void cm_request_queue_flush()
 {
     if ((cm.hold_state != FEEDHOLD_OFF) &&          // don't honor request unless you are in a feedhold
         (cm.queue_flush_state == FLUSH_OFF)) {      // ...and only once
-        xio_flush_read();                           // flush the input buffers - you can do that now
         cm.queue_flush_state = FLUSH_REQUESTED;     // request planner flush once motion has stopped
+
+        // NOTE: we used to flush the input buffers, but this is handled in xio *prior* to queue flush now
     }
 }
 
