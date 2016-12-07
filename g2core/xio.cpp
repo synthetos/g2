@@ -612,6 +612,14 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                 }
 
                 if (is_control) {       // we found a control
+                    // Quick check for single-character with a \n after it
+                    while (_is_more_to_scan() &&
+                           ((_data[_scan_offset] == '\n') ||
+                            (_data[_scan_offset] == '\r'))
+                           )
+                    {
+                        _scan_offset = _get_next_scan_offset();
+                    }
                     return true;
                 } else {                // we did find one more line, though.
                     _lines_found++;
@@ -681,6 +689,9 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                 dst_ptr++;
                 _line_start_offset = (_line_start_offset+1)&(_size-1);
             }
+
+            // null-terminate the string
+            *dst_ptr = 0;
 
             if (ctrl_is_at_beginning_of_data) {
                 _read_offset = _scan_offset;
@@ -781,6 +792,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 
         _restartTransfer();
 
+        // null-terminate the string
         *dst_ptr = 0;
         return _line_buffer;
     }; // readline
