@@ -38,6 +38,7 @@
 #include "report.h"
 #include "controller.h"
 #include "util.h"
+#include "settings.h"
 
 #include "board_xio.h"
 
@@ -949,10 +950,12 @@ xioDeviceWrapper<decltype(&SerialUSB)> serialUSB0Wrapper {
     &SerialUSB,
     (DEV_CAN_READ | DEV_CAN_WRITE | DEV_CAN_BE_CTRL | DEV_CAN_BE_DATA)
 };
+#if USB_SERIAL_PORTS_EXPOSED == 2
 xioDeviceWrapper<decltype(&SerialUSB1)> serialUSB1Wrapper {
     &SerialUSB1,
     (DEV_CAN_READ | DEV_CAN_WRITE | DEV_CAN_BE_CTRL | DEV_CAN_BE_DATA)
 };
+#endif
 #endif // XIO_HAS_USB
 #if XIO_HAS_UART==1
 xioDeviceWrapper<decltype(&Serial)> serial0Wrapper {
@@ -966,7 +969,9 @@ xioDeviceWrapper<decltype(&Serial)> serial0Wrapper {
 xio_t xio = {
 #if XIO_HAS_USB == 1
     &serialUSB0Wrapper,
+#if USB_SERIAL_PORTS_EXPOSED == 2
     &serialUSB1Wrapper,
+#endif
 #endif // XIO_HAS_USB
 #if XIO_HAS_UART == 1
     &serial0Wrapper
@@ -994,7 +999,9 @@ void xio_init()
 
 #if XIO_HAS_USB == 1
     serialUSB0Wrapper.init();
+#if USB_SERIAL_PORTS_EXPOSED == 2
     serialUSB1Wrapper.init();
+#endif
 #endif
 #if XIO_HAS_UART == 1
     serial0Wrapper.init();

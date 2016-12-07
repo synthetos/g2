@@ -32,6 +32,7 @@
 #include "board_xio.h"
 
 //******** USB ********
+#if XIO_HAS_USB
 const Motate::USBSettings_t Motate::USBSettings = {
     /*gVendorID         = */ 0x1d50,
     /*gProductID        = */ 0x606d,
@@ -41,18 +42,21 @@ const Motate::USBSettings_t Motate::USBSettings = {
 };
 /*gProductVersion   = */ //0.1,
 
-//Motate::USBDevice< Motate::USBCDC > usb;
-Motate::USBDevice< Motate::USBCDC, Motate::USBCDC > usb;
+XIOUSBDevice_t usb;
+
+extern decltype(usb.mixin<0>::Serial)& SerialUSB;
+#if USB_SERIAL_PORTS_EXPOSED == 2
+extern decltype(usb.mixin<1>::Serial)& SerialUSB1;
+#endif
+
 
 decltype(usb.mixin<0>::Serial) &SerialUSB = usb.mixin<0>::Serial;
-decltype(usb.mixin<1>::Serial) &SerialUSB1 = usb.mixin<1>::Serial;
-
-// 115200 is the default, as well.
-//UART<kSerial_RXPinNumber, kSerial_TXPinNumber, kSerial_RTSPinNumber, kSerial_CTSPinNumber> Serial {115200, UARTMode::RTSCTSFlowControl};
+//decltype(usb.mixin<1>::Serial) &SerialUSB1 = usb.mixin<1>::Serial;
 
 MOTATE_SET_USB_VENDOR_STRING( u"Synthetos" )
 MOTATE_SET_USB_PRODUCT_STRING( u"TinyG v2" )
 MOTATE_SET_USB_SERIAL_NUMBER_STRING_FROM_CHIPID()
+#endif // XIO_HAS_USB
 
 
 //******** SPI ********
@@ -68,8 +72,10 @@ Motate::UART<Motate::kSerial_RXPinNumber, Motate::kSerial_TXPinNumber, Motate::k
 
 void board_hardware_init(void) // called 1st
 {
+#if XIO_HAS_USB
     // Init USB
-    usb.attach();                   // USB setup. Runs in "background" as the rest of this executes
+    usb.attach();
+#endif // XIO_HAS_USB
 }
 
 

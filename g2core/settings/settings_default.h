@@ -58,6 +58,11 @@
 
 // *** Machine configuration settings *** //
 
+#ifndef USB_SERIAL_PORTS_EXPOSED
+#define USB_SERIAL_PORTS_EXPOSED   1        // Valid options are 1 or 2, only!
+#endif
+
+
 #ifndef JUNCTION_INTEGRATION_TIME
 #define JUNCTION_INTEGRATION_TIME   0.75    // {jt: cornering - between 0.05 and 2.00 (max)
 #endif
