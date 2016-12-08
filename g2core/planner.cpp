@@ -672,7 +672,7 @@ void mp_planner_time_accounting()
  * Functions Provided:
  *   _clear_buffer(bf)        Zero the contents of a buffer
  *
- *   mp_init_buffers()        Initialize or reset buffers
+ *   mp_init_buffers()        Initialize and reset buffers in all planner queues
  *
  *   mp_get_prev_buffer(bf)   Return pointer to the previous buffer in the linked list
  *   mp_get_next_buffer(bf)   Return pointer to the next buffer in the linked list
@@ -706,13 +706,10 @@ void mp_planner_time_accounting()
 // Also clears unlocked, so the buffer cannot be used
 static inline void _clear_buffer(mpBuf_t *bf)
 {
-    // Note: bf->bf_func is the first address we wish to clear as we must preserve
-    // the pointers and buffer number during interrupts
+    bf->reset();    // Call a reset method on the buffer object.
+}                   // We'll need something else for C - like bring the method code back into this function.
 
-    // We'll have to figure something else out for C, sorry.
-    bf->reset();
-}
-
+// initialize a single planner queue
 void _init_planner_queue(uint8_t q, mpBuf_t *pool, uint8_t size)
 {
     mpBuf_t *pv, *nx;
@@ -731,37 +728,15 @@ void _init_planner_queue(uint8_t q, mpBuf_t *pool, uint8_t size)
     b->buffers_available = size;
     
     pv = &b->bf[size-1];
-    for (i=0; i < size-1; i++) {
+    for (i=0; i < size; i++) {
         b->bf[i].buffer_number = i;         // number is for diagnostics only (otherwise not used)
         nx_i = ((i<size-1) ? (i+1) : 0);    // buffer increment & wrap
         nx = &b->bf[nx_i];
         b->bf[i].nx = nx;                   // setup circular list pointers
         b->bf[i].pv = pv;
         pv = &b->bf[i];
-
-/*=======
-
-    //memset(&mb, 0, sizeof(mb));                     // clear all values, pointers and status
-    mb.magic_start = MAGICNUM;
-    mb.magic_end = MAGICNUM;
-
-    mb.w = &mb.bf[0];                               // init all buffer pointers
-    mb.r = &mb.bf[0];
-    pv = &mb.bf[PLANNER_BUFFER_POOL_SIZE-1];
-    for (uint8_t i=0; i < PLANNER_BUFFER_POOL_SIZE; i++) {
-        _clear_buffer(&mb.bf[i]);
-        uint8_t nx_i = ((i<(PLANNER_BUFFER_POOL_SIZE-1))?(i+1):0); // buffer incr & wrap
-
-        mb.bf[i].buffer_number = i;                 //+++++ number it for diagnostics only (otherwise not used)
-
-        nx = &mb.bf[nx_i];
-        mb.bf[i].nx = nx;                           // setup ring pointers
-        mb.bf[i].pv = pv;
-
-        pv = &mb.bf[i];
->>refs/heads/dev-168-gquadratic
-*/
     }
+    b->bf[size-1].nx = pool;
 }
 
 void mp_init_buffers(void)
@@ -777,7 +752,6 @@ void mp_init_buffers(void)
 
 /*
  * These GET functions are defined here but we use the macros in planner.h instead
- *
 mpBuf_t * mp_get_prev_buffer(const mpBuf_t *bf) { return (bf->pv); }
 mpBuf_t * mp_get_next_buffer(const mpBuf_t *bf) { return (bf->nx); }
  */
@@ -828,9 +802,8 @@ void mp_commit_write_buffer(const blockType block_type)
         }
     } else {
         if ((mp.planner_state > PLANNER_STARTUP) && (cm.hold_state == FEEDHOLD_OFF)) {
-            // NB: BEWARE! the exec may result in the planner buffer being
+            // NB: BEWARE! the requested exec may result in the planner buffer being
             // processed IMMEDIATELY and then freed - invalidating the contents
-//            st_request_plan_move();         // ++++ request an exec if the runtime is not busy
             st_request_forward_plan();      // request an exec if the runtime is not busy
         }
     }
@@ -860,16 +833,16 @@ mpBuf_t * mp_get_run_buffer()
 bool mp_free_run_buffer()           // EMPTY current run buffer & advance to the next
 {
     mpQueue_t *q = &mb.q[mb.active_q];
-
+    mpBuf_t *r_now = q->r;          // this is to avoid a race condition when clearing the buffer
+     
     _audit_buffers();               // ++++diagnostic audit for buffer chain integrity (only runs in DEBUG mode)
 
     q->r = q->r->nx;                // advance to next run buffer
-    _clear_buffer(q->r);            // clear it out (& reset unlocked and set MP_BUFFER_EMPTY)
+    _clear_buffer(r_now);           // clear out the old buffer (& reset unlocked and set MP_BUFFER_EMPTY)
 
     q->buffers_available++;
     qr_request_queue_report(-1);    // request a QR and add to the "removed buffers" count
     return (q->w == q->r);          // return true if the queue emptied
-
 }
 
 /* UNUSED FUNCTIONS - left in for completeness and for reference
@@ -925,8 +898,6 @@ void mp_dump_planner(mpBuf_t *bf_start)   // starting at bf
 #if 0 && defined(DEBUG)
 
 #warning DEBUG TRAPS ENABLED
-
-#pragma GCC optimize ("O0")
 
 //static void _planner_report(const char *msg)
 //{
@@ -1029,8 +1000,6 @@ static void _audit_buffers()
     }
     __enable_irq();
 }
-
-#pragma GCC reset_options
 
 #else
 

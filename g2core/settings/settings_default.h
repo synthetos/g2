@@ -58,11 +58,6 @@
 
 // *** Machine configuration settings *** //
 
-#ifndef USB_SERIAL_PORTS_EXPOSED
-#define USB_SERIAL_PORTS_EXPOSED   1        // Valid options are 1 or 2, only!
-#endif
-
-
 #ifndef JUNCTION_INTEGRATION_TIME
 #define JUNCTION_INTEGRATION_TIME   0.75    // {jt: cornering - between 0.05 and 2.00 (max)
 #endif
@@ -129,16 +124,20 @@
 
 // *** Communications and Reporting Settings *** //
 
-#ifndef TEXT_VERBOSITY
-#define TEXT_VERBOSITY              TV_VERBOSE              // {tv: TV_SILENT, TV_VERBOSE
+#ifndef USB_SERIAL_PORTS_EXPOSED
+#define USB_SERIAL_PORTS_EXPOSED   1                        // Valid options are 1 or 2, only!
+#endif
+
+#ifndef XIO_ENABLE_FLOW_CONTROL
+#define XIO_ENABLE_FLOW_CONTROL     FLOW_CONTROL_RTS        // {ex: FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
 #endif
 
 #ifndef COMM_MODE
 #define COMM_MODE                   JSON_MODE               // {ej: TEXT_MODE, JSON_MODE
 #endif
 
-#ifndef XIO_ENABLE_FLOW_CONTROL
-#define XIO_ENABLE_FLOW_CONTROL     FLOW_CONTROL_RTS        // FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
+#ifndef TEXT_VERBOSITY
+#define TEXT_VERBOSITY              TV_VERBOSE              // {tv: TV_SILENT, TV_VERBOSE
 #endif
 
 #ifndef JSON_VERBOSITY

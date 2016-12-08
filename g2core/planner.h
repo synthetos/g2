@@ -308,7 +308,6 @@ typedef enum {
  */
 
 struct mpBuffer_to_clear {
-    // Note: _clear_buffer() zeros all data from this point down
     stat_t (*bf_func)(struct mpBuffer *bf); // callback to buffer exec function
     cm_exec_t cm_func;              // callback to canonical machine execution function
 
@@ -336,10 +335,9 @@ struct mpBuffer_to_clear {
     float block_time;               // computed move time for entire block (move)
     float override_factor;          // feed rate or rapid override factor for this block ("override" is a reserved word)
 
-    // We are removing all entry_* values.
-    // To get the entry_* values, look at pv->exit_* or mr.exit_*
-
     // *** SEE NOTES ON THESE VARIABLES, in aline() ***
+    // We removed all entry_* values.
+    // To get the entry_* values, look at pv->exit_* or mr.exit_*
     float cruise_velocity;          // cruise velocity requested & achieved
     float exit_velocity;            // exit velocity requested for the move
                                     // is also the entry velocity of the *next* move
@@ -361,9 +359,10 @@ struct mpBuffer_to_clear {
 
     GCodeState_t gm;                // Gcode model state - passed from model, used by planner and runtime
 
+    // cleasr the above structure
     void reset() {
-        //memset((void *)(this), 0, sizeof(mpBuffer_to_clear));
-        
+        //memset((void *)(this), 0, sizeof(mpBuffer_to_clear)); // slower on the M3. Test for M7
+
         bf_func = nullptr;
         cm_func = nullptr;
 
