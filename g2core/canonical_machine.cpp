@@ -112,7 +112,7 @@
  **** STRUCTURE ALLOCATIONS ********************************************************
  ***********************************************************************************/
 
-cmSingleton_t cm;        // canonical machine controller singleton
+cmMachine_t cm;        // canonical machine master structure
 
 /***********************************************************************************
  **** GENERIC STATIC FUNCTIONS AND VARIABLES ***************************************

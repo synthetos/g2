@@ -497,7 +497,6 @@ typedef struct cmAxis {
     float travel_min;                       // min work envelope for soft limits
     float jerk_max;                         // max jerk (Jm) in mm/min^3 divided by 1 million
     float jerk_high;                        // high speed deceleration jerk (Jh) in mm/min^3 divided by 1 million
-    //float recip_jerk;                       // stored reciprocal of current jerk value - has the million in it
     float max_junction_accel;               // high speed deceleration jerk (Jh) in mm/min^3 divided by 1 million
     float junction_dev;                     // aka cornering delta -- DEPRICATED!
     float radius;                           // radius in mm for rotary axis modes
@@ -579,11 +578,11 @@ typedef struct cmSingleton {                // struct to manage cm globals and c
     GCodeFlags_t  gf;                       // gcode input flags - transient
 
     magic_t magic_end;
-} cmSingleton_t;
+} cmMachine_t;
 
 /**** Externs - See canonical_machine.c for allocation ****/
 
-extern cmSingleton_t cm;        // canonical machine controller singleton
+extern cmMachine_t cm;        // canonical machine controller singleton
 
 /*****************************************************************************
  * FUNCTION PROTOTYPES
