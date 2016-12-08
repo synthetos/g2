@@ -25,6 +25,126 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+/*x
+ * --- Planner Background ---
+ *
+ *  The planner is a complicated beast that takes a lot of things into account. 
+ *  Planner documentation is scattered about and co-located with the functions
+ *  that perform the actions. Key files are:
+ *
+ *  - planner.h     - This file has defines, structures and prototypes. What you would expect
+ *  - planner.cpp   - Core and common functions, queue handling, JSON and command handlers
+ *  - plan_line.cpp - Move planning and queuing, backward planning functions
+ *  - plan_zoid.cpp - Move forward planning, velocity contour calculations and crazy math
+ *  - plan_exec.cpp - Runtime execution functions, calls zoid's forward planning functions
+ *  - stepper.cpp/h - Real-time step generation, segment loading, pulls from plan_exec
+ *  - plan_arc.cpp/h- Arc calculation and runtime functions - layer above the rest of this
+ *
+ * --- Planner Overview ---
+ *
+ * At high level the planner's job is to reconstruct smooth motion from a set of linear 
+ * approximations while observing and operating within the physical constraints of the 
+ * machine and the physics of motion. Gcode - which consists of a series of into linear 
+ * motion segments - is interpreted, queued to the planner, and joined together to produce 
+ * continuous, synchronized motion. Non-motion commands such as pauses (dwells) and 
+ * peripheral controls such as spindles can also be synchronized in the queue. Arcs are 
+ * just a special case consisting of many linear moves. Arcs are not interpreted directly.
+ *
+ * The planner sits in the middle of three system layers: 
+ *  - The Gcode interpreter and canonical machine (the 'model'), which feeds...
+ *  - The planner - taking generic commands from the model and queuing them for...
+ *  - The runtime layer - pulling from the planner and driving stepper motors or other devices
+ * 
+ * The planner queue is the heart of the planner. It's a circular list of ~48 complex structures
+ * that carry the state of the system needs to execute a linear motion, run a pre-planned command,
+ * like turning on a spindle, or executing an arbitrary JSON command such as an active comment.
+ *
+ * The queue can be viewed as a list of instructions that will execute in exact sequence.
+ * Some instructions control motion and need to be joined to their forward and backwards 
+ * neighbors so that position, velocity, acceleration, and jerk constraints are not 
+ * violated when moving from one motion to the next. 
+ *
+ * Others are "commands" that are actually just function callbacks that happen to execute
+ * at a particular point in time (synchronized with motion commands). Commands can control
+ * anything you can reasonably program, such as digital IO, serial communications, or 
+ * interpreted commands encoded in JSON.
+ *
+ * The buffers in the planner queue are treated as a 'closure' - with all state needed for
+ * proper execution carried in the planner structure. This is important as it keeps
+ * model state coherent in a heavily pipelined system. The local copy of the Gcode
+ * model is carried in the gm structure that is part of each planner buffer.
+ * See header notes in planner.cpp for more details.
+ *
+ * The planner is entered by calling one of:
+ *  - mp_aline()         - plan and queue a move with acceleration management
+ *  - mp_dwell()         - plan and queue a pause (dwell) to the planner queue
+ *  - mp_queue_command() - queue a canned command
+ *  - mp_json_command()  - queue a JSON command for run-time interpretation and execution (M100)  
+ *  - mp_json_wait()     - queue a JSON wait for run-time interpretation and execution (M101)
+ *  - 
+ * In addition, cm_arc_feed() valaidates and sets up a arc paramewters and calls mp_aline() 
+ * repeatedly to spool out the arc segments into the planner queue.
+ *
+ * All the above queueing commands other than mp_aline() are relatively trivial; they just
+ * post callbacks into the next available planner buffer. Command functions are in 2 parts: 
+ * the part that posts to the queue, and the callback that is executed when the command is 
+ * finally reached in the queue - the _exec().
+ *
+ * All mp_aline() does is some preliminary math and then posts an initialized buffer to 
+ * the planner queue. The rest of the move planning operations takes place in background;
+ * via mp_planner_callback() called from the main loop, and as 'pulls' from the runtime 
+ * stepper operations.
+ *
+ * Motion planning is separated into backward planning and forward planning stages. 
+ * Backward planning is initiated by mp_planner_callback() which is called repeatedly 
+ * from the main loop. Backwards planning is performed by mp_plan_block_list() and 
+ * _plan_block(). It starts at the most recently arrived Gcode block. Backward 
+ * planning can occur multiple times for a given buffer, as new moves arriving 
+ * can make the motion profile more optimal.
+ *
+ * Backward planning uses velocity and jerk constraints to set maximum entry,
+ * travel (cruise) and exit velocities for the moves in the queue. In addition, 
+ * it observes the maximum cornering velocities that adjoining moves can sustain 
+ * in a corner or a 'kink' to ensure that the jerk limit of any axis participating 
+ * in the move is not violated. See mp_planner_callback() header comments for more detail.
+ *
+ * Forward planning is performed just-in-time and only once, right before the 
+ * planner runtime needs the next buffer. Forward planning provides the final
+ * contouring of the move. It is invoked by mp_forward_plan() and executed by 
+ * mp_calculate_ramps() in plan_zoid.cpp.
+ *
+ * Planner timing operates at a few different levels:
+ *
+ *  - New lines of ASCII containing commands and moves arriving from the USB are 
+ *    parsed and executed as the lowest priority background task from the main loop.
+ *
+ *  - Backward planning is invoked by a main loop callback, so it also executes as 
+ *    a background task, albeit a higher priority one.
+ *
+ *  - Forward planning and the ultimate preparation of the move for the runtime runs 
+ *    as an interrupt as a 'pull' from the planner queue that uses a series of 
+ *    interrupts at progressively lower priorities to ensure that the next planner 
+ *    buffer is ready before the runtime runs out of forward-planned moves and starves.
+ *
+ * Some other functions performed by the planner include:
+ *
+ *  - Velocity throttling to ensure that very short moves do not execute faster 
+ *    than the serial interface can deliver them
+ *
+ *  - Feed hold and cycle start (resume) operations
+ *
+ *  - Feed rate override functions and replanning
+ *
+ * Some terms that are useful that we try to use consistently:
+ *
+ *  - buffer  - in this context a planner buffer holding a move or a command: mb._ or bf
+ *  - block   - a data structure for planning or runtime control. See mp_calculate_ramps() comments
+ *  - move    - a linear Gcode move, typically from a G0 or G1 code
+ *  - command - a non-move executable in the planner
+ *  - group   - a collection of moves or commands that are treated as a unit
+ *  - line    - a line of ASCII gcode or arbitrary text
+ *  - bootstrap - the startup period where the planner collects moves but does not yet execute them
+ */
 
 #ifndef PLANNER_H_ONCE
 #define PLANNER_H_ONCE
@@ -60,12 +180,12 @@ typedef enum {                      // bf->buffer_state values in incresing orde
 } bufferState;
 
 typedef enum {                      // bf->block_type values
-    BLOCK_TYPE_NULL = 0,            // null move - does a no-op
-    BLOCK_TYPE_ALINE,               // acceleration planned line
-    BLOCK_TYPE_DWELL,               // delay with no movement
-    BLOCK_TYPE_COMMAND,             // general command
-    BLOCK_TYPE_JSON_WAIT,           // general command
-    BLOCK_TYPE_TOOL,                // T command
+    BLOCK_TYPE_NULL = 0,            // MUST=0  null move - does a no-op
+    BLOCK_TYPE_ALINE = 1,           // MUST=1  acceleration planned line
+    BLOCK_TYPE_COMMAND = 2,         // MUST=2  general command
+    BLOCK_TYPE_DWELL,               // Gcode dwell
+    BLOCK_TYPE_JSON_WAIT,           // JSON wait command
+    BLOCK_TYPE_TOOL,                // T command (T, not M6 tool change)
     BLOCK_TYPE_SPINDLE_SPEED,       // S command
     BLOCK_TYPE_STOP,                // program stop
     BLOCK_TYPE_END                  // program end
@@ -179,7 +299,12 @@ typedef enum {
 #define UPDATE_MP_DIAGNOSTICS     { mp.plannable_time_ms = mp.plannable_time*60000; }
 
 /*
- *    Planner structures
+ *  Planner structures
+ *
+ *  You should be aware of the distinction between 'buffers' and 'blocks'
+ *  Please refer to header comments in for important details on buffers and blocks
+ *    - plan_zoid.cpp / mp_calculate_ramps()
+ *    - plan_exec.cpp / mp_exec_aline()
  */
 
 struct mpBuffer_to_clear {
@@ -236,8 +361,46 @@ struct mpBuffer_to_clear {
 
     GCodeState_t gm;                // Gcode model state - passed from model, used by planner and runtime
 
-    void clear() {
-        memset((void *)(this), 0, sizeof(mpBuffer_to_clear));
+    void reset() {
+        //memset((void *)(this), 0, sizeof(mpBuffer_to_clear));
+        
+        bf_func = nullptr;
+        cm_func = nullptr;
+
+        linenum = 0;
+        iterations = 0;
+        block_time_ms = 0;
+        plannable_time_ms = 0;
+        plannable_length = 0;
+        meet_iterations = 0;
+
+        buffer_state = MP_BUFFER_EMPTY;
+        block_type = BLOCK_TYPE_NULL;
+        block_state = BLOCK_INACTIVE;
+        hint = NO_HINT;
+
+        for (uint8_t i = 0; i< AXES; i++) {
+            unit[i] = 0;
+            axis_flags[i] = 0;
+        }
+
+        plannable = false;
+        length  = 0.0;
+        block_time = 0.0;
+        override_factor = 0.0;
+        cruise_velocity = 0.0;
+        exit_velocity = 0.0;
+        cruise_vset = 0.0;
+        cruise_vmax = 0.0;
+        exit_vmax = 0.0;
+        absolute_vmax = 0.0;
+        junction_vmax = 0.0;
+        jerk = 0.0;
+        jerk_sq = 0.0;
+        recip_jerk = 0.0;
+        sqrt_j = 0.0;
+        q_recip_2_sqrt_j = 0.0;
+        gm.reset();
     }
 };
 
@@ -336,9 +499,9 @@ typedef struct mpMotionRuntimeSingleton {    // persistent runtime variables
     float encoder_steps[MOTORS];        // encoder position in steps - ideally the same as commanded_steps
     float following_error[MOTORS];      // difference between encoder_steps and commanded steps
 
-    mpBlockRuntimeBuf_t *r;             // what's running
-    mpBlockRuntimeBuf_t *p;             // what's being planned, p might == r
-    mpBlockRuntimeBuf_t bf[2];          // the buffer
+    mpBlockRuntimeBuf_t *r;             // block that is running
+    mpBlockRuntimeBuf_t *p;             // block that is being planned, p might == r
+    mpBlockRuntimeBuf_t bf[2];          // buffer holding the two blocks
 
     float entry_velocity;               // entry values for the currently running block
 
@@ -435,7 +598,7 @@ void mp_plan_block_forward(mpBuf_t *bf);
 void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float entry_velocity);
 float mp_get_target_length(const float v_0, const float v_1, const mpBuf_t *bf);
 float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t *bf); // acceleration ONLY
-float mp_get_decel_velocity(const float v_0, const float L, const mpBuf_t *bf); // decelleration ONLY
+float mp_get_decel_velocity(const float v_0, const float L, const mpBuf_t *bf);  // deceleration ONLY
 float mp_find_t(const float v_0, const float v_1, const float L, const float totalL, const float initial_t, const float T);
 
 float mp_calc_v(const float t, const float v_0, const float v_1);                // compute the velocity along the curve accelerating from v_0 to v_1, at position t=[0,1]
@@ -444,8 +607,8 @@ float mp_calc_j(const float t, const float v_0, const float v_1, const float T);
 //float mp_calc_l(const float t, const float v_0, const float v_1, const float T); // compute length over curve accelerating from v_0 to v_1, at position t=[0,1], total time T
 
 // plan_exec.c functions
+stat_t mp_forward_plan(void);
 stat_t mp_exec_move(void);
-stat_t mp_plan_move(void);
 stat_t mp_exec_aline(mpBuf_t *bf);
 void mp_exit_hold_state(void);
 

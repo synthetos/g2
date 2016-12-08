@@ -58,6 +58,8 @@
 		D44E72C21D663B0F00ECD5DD /* coolant.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = coolant.h; sourceTree = "<group>"; };
 		D4522DC91C45F41D0086AAE6 /* g2core_info.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = g2core_info.h; sourceTree = "<group>"; };
 		D457117B17053EFA00EA19A8 /* Makefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makefile; sourceTree = "<group>"; usesTabs = 1; xcLanguageSpecificationIdentifier = xcode.lang.sh; };
+		D4782AB21D9B5F9400B32136 /* settings_watercolorbot_v2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = settings_watercolorbot_v2.h; sourceTree = "<group>"; };
+		D4782AB41D9E2FF300B32136 /* settings_eggbot.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = settings_eggbot.h; sourceTree = "<group>"; };
 		D47B744C1D4925B4004FAB53 /* device */ = {isa = PBXFileReference; lastKnownFileType = folder; path = device; sourceTree = "<group>"; };
 		D48F5A40172CB1F900D0E055 /* canonical_machine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = canonical_machine.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D48F5A41172CB1F900D0E055 /* config_app.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = config_app.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
@@ -146,6 +148,8 @@
 			isa = PBXGroup;
 			children = (
 				D4AC39081C77C1F20098D685 /* settings_default.h */,
+				D4782AB41D9E2FF300B32136 /* settings_eggbot.h */,
+				D4782AB21D9B5F9400B32136 /* settings_watercolorbot_v2.h */,
 				D4AC39091C77C1F20098D685 /* settings_makeblock.h */,
 				D4AC390A1C77C1F20098D685 /* settings_othermill_test.h */,
 				D4AC390B1C77C1F20098D685 /* settings_othermill.h */,
@@ -291,6 +295,34 @@
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
+		D4782AAE1D9B16BE00B32136 /* G2 Probotix */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=ProbotixV90 DEBUG=1";
+			buildConfigurationList = D4782AAF1D9B16BE00B32136 /* Build configuration list for PBXLegacyTarget "G2 Probotix" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "G2 Probotix";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
+		D4782AB61D9E39EC00B32136 /* G2 EggBot */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=EggBot DEBUG=1";
+			buildConfigurationList = D4782AB71D9E39EC00B32136 /* Build configuration list for PBXLegacyTarget "G2 EggBot" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "G2 EggBot";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
 		D4AC391A1C7BAB8E0098D685 /* G2 sbv300 */ = {
 			isa = PBXLegacyTarget;
 			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=sbv300 DEBUG=2";
@@ -349,7 +381,7 @@
 		};
 		D4F226F31D088A48008ED57C /* G2 gQuintic PrintrbotPlus */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=PrintrbotPlus BOARD=gquintic-a DEBUG=2";
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=PrintrbotPlus BOARD=gquintic-b DEBUG=2";
 			buildConfigurationList = D4F226F41D088A48008ED57C /* Build configuration list for PBXLegacyTarget "G2 gQuintic PrintrbotPlus" */;
 			buildPhases = (
 			);
@@ -411,7 +443,9 @@
 				D4AC391A1C7BAB8E0098D685 /* G2 sbv300 */,
 				D4F226F31D088A48008ED57C /* G2 gQuintic PrintrbotPlus */,
 				D43FF7141D537A5C00FB5B53 /* G2 gQuadratic Test */,
+				D4782AAE1D9B16BE00B32136 /* G2 Probotix */,
 				D457112317053BFB00EA19A8 /* index */,
+				D4782AB61D9E39EC00B32136 /* G2 EggBot */,
 			);
 		};
 /* End PBXProject section */
@@ -653,6 +687,38 @@
 			};
 			name = Release;
 		};
+		D4782AB01D9B16BE00B32136 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		D4782AB11D9B16BE00B32136 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		D4782AB81D9E39EC00B32136 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		D4782AB91D9E39EC00B32136 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		D4AC391C1C7BAB8E0098D685 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -786,6 +852,24 @@
 			buildConfigurations = (
 				D457112B17053BFB00EA19A8 /* Debug */,
 				D457112C17053BFB00EA19A8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4782AAF1D9B16BE00B32136 /* Build configuration list for PBXLegacyTarget "G2 Probotix" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4782AB01D9B16BE00B32136 /* Debug */,
+				D4782AB11D9B16BE00B32136 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4782AB71D9E39EC00B32136 /* Build configuration list for PBXLegacyTarget "G2 EggBot" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4782AB81D9E39EC00B32136 /* Debug */,
+				D4782AB91D9E39EC00B32136 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

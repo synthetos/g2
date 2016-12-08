@@ -126,8 +126,7 @@ using Motate::OutputPin;
 
 // Timer definitions. See stepper.h and other headers for setup
 typedef TimerChannel<3,0> dda_timer_type;	// stepper pulse generation in stepper.cpp
-typedef TimerChannel<4,0> dwell_timer_type;	// dwell timing in stepper.cpp
-typedef ServiceCall<0> load_timer_type;	// request load timer in stepper.cpp
+typedef TimerChannel<4,0> load_timer_type;	// request load timer in stepper.cpp
 typedef ServiceCall<1> exec_timer_type;	// request exec timer in stepper.cpp
 typedef ServiceCall<2> fwd_plan_timer_type;	// request exec timer in stepper.cpp
 

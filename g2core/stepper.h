@@ -26,13 +26,15 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 /*
+ * --- Stepper Operation Overview ---
+ *
  *  Coordinated motion (line drawing) is performed using a classic Bresenham DDA.
- *  A number of additional steps are taken to optimize interpolation and pulse train
- *  timing accuracy to minimize pulse jitter and make for very smooth motion and surface
+ *  Additional steps are taken to optimize interpolation and pulse train timing
+ *  accuracy to minimize pulse jitter and produce very smooth motion and surface
  *  finish.
  *
  *  - The DDA is not used as a ramp for acceleration management. Acceleration is computed
- *    upstream in the motion planner as 5th order (linear snap) equations. These
+ *    upstream in the motion planner as 6th order (linear pop) equations. These
  *    generate accel/decel *segments* that are passed to the DDA for step output.
  *
  *  - The DDA accepts and processes fractional motor steps as floating point numbers
@@ -379,7 +381,8 @@ typedef struct stRunMotor {                 // one per controlled motor
 
 typedef struct stRunSingleton {             // Stepper static values and axis parameters
     magic_t magic_start;                    // magic number to test memory integrity
-    uint32_t dda_ticks_downcount;           // tick down-counter (unscaled)
+    uint32_t dda_ticks_downcount;           // dda tick down-counter (unscaled)
+    uint32_t dwell_ticks_downcount;         // dwell tick down-counter (unscaled)
     uint32_t dda_ticks_X_substeps;          // ticks multiplied by scaling factor
     stRunMotor_t mot[MOTORS];               // runtime motor structures
     magic_t magic_end;
@@ -413,8 +416,8 @@ typedef struct stPrepSingleton {
     struct mpBuffer *bf;                    // static pointer to relevant buffer
     blockType block_type;                   // move type (requires planner.h)
 
-    //uint16_t dda_period;                    // DDA or dwell clock period setting (No longer used)
-    uint32_t dda_ticks;                     // DDA or dwell ticks for the move
+    uint32_t dda_ticks;                     // DDA ticks for the move
+    uint32_t dwell_ticks;                   // dwell ticks remaining
     uint32_t dda_ticks_X_substeps;          // DDA ticks scaled by substep factor
     stPrepMotor_t mot[MOTORS];              // prep time motor structs
     magic_t magic_end;
@@ -566,7 +569,7 @@ stat_t st_clc(nvObj_t *nv);
 void st_set_motor_power(const uint8_t motor);
 stat_t st_motor_power_callback(void);
 
-void st_request_plan_move(void);
+void st_request_forward_plan(void);
 void st_request_exec_move(void);
 void st_request_load_move(void);
 void st_prep_null(void);

@@ -225,7 +225,7 @@ cmCombinedState cm_get_combined_state()
  *    ACTIVE_MODEL   cm.am                          // active model pointer is maintained by state management
  */
 uint32_t cm_get_linenum(const GCodeState_t *gcode_state) { return gcode_state->linenum;}
-uint8_t cm_get_motion_mode(const GCodeState_t *gcode_state) { return gcode_state->motion_mode;}
+cmMotionMode cm_get_motion_mode(const GCodeState_t *gcode_state) { return gcode_state->motion_mode;}
 uint8_t cm_get_coord_system(const GCodeState_t *gcode_state) { return gcode_state->coord_system;}
 uint8_t cm_get_units_mode(const GCodeState_t *gcode_state) { return gcode_state->units_mode;}
 uint8_t cm_get_select_plane(const GCodeState_t *gcode_state) { return gcode_state->select_plane;}
@@ -1683,8 +1683,9 @@ void cm_request_queue_flush()
 {
     if ((cm.hold_state != FEEDHOLD_OFF) &&          // don't honor request unless you are in a feedhold
         (cm.queue_flush_state == FLUSH_OFF)) {      // ...and only once
-        xio_flush_read();                           // flush the input buffers - you can do that now
         cm.queue_flush_state = FLUSH_REQUESTED;     // request planner flush once motion has stopped
+
+        // NOTE: we used to flush the input buffers, but this is handled in xio *prior* to queue flush now
     }
 }
 
@@ -2311,7 +2312,7 @@ void _cm_recalc_max_junction_accel(const uint8_t axis) {
 void cm_set_axis_jerk(const uint8_t axis, const float jerk)
 {
     cm.a[axis].jerk_max = jerk;
-    cm.a[axis].recip_jerk = 1/(jerk * JERK_MULTIPLIER);
+    //cm.a[axis].recip_jerk = 1/(jerk * JERK_MULTIPLIER);
 
     // Must recalculate the max_junction_accel now that the jerk has changed.
     _cm_recalc_max_junction_accel(axis);
