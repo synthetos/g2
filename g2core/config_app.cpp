@@ -655,23 +655,25 @@ const cfgItem_t cfgArray[] = {
     { "",   "gc",  _f0,   0, tx_print_nul, gc_get_gc,gc_run_gc,(float *)&cs.null, 0 },              // gcode block - must be last in this group
 
     // Actions and Reports
-    { "", "sr",  _f0, 0, sr_print_sr,  sr_get,    sr_set,    (float *)&cs.null, 0 },    // request and set status reports
-    { "", "qr",  _f0, 0, qr_print_qr,  qr_get,    set_nul,   (float *)&cs.null, 0 },    // get queue value - planner buffers available
-    { "", "qi",  _f0, 0, qr_print_qi,  qi_get,    set_nul,   (float *)&cs.null, 0 },    // get queue value - buffers added to queue
-    { "", "qo",  _f0, 0, qr_print_qo,  qo_get,    set_nul,   (float *)&cs.null, 0 },    // get queue value - buffers removed from queue
-    { "", "er",  _f0, 0, tx_print_nul, rpt_er,    set_nul,   (float *)&cs.null, 0 },    // get bogus exception report for testing
-    { "", "qf",  _f0, 0, tx_print_nul, get_nul,   cm_run_qf, (float *)&cs.null, 0 },    // SET to invoke queue flush
-    { "", "rx",  _f0, 0, tx_print_int, get_rx,    set_nul,   (float *)&cs.null, 0 },    // get RX buffer bytes or packets
-    { "", "msg", _f0, 0, tx_print_str, get_nul,   set_nul,   (float *)&cs.null, 0 },    // string for generic messages
-    { "", "alarm",_f0,0, tx_print_nul, cm_alrm,   cm_alrm,   (float *)&cs.null, 0 },    // trigger alarm
-    { "", "panic",_f0,0, tx_print_nul, cm_pnic,   cm_pnic,   (float *)&cs.null, 0 },    // trigger panic
-    { "", "shutd",_f0,0, tx_print_nul, cm_shutd,  cm_shutd,  (float *)&cs.null, 0 },    // trigger shutdown
-    { "", "clear",_f0,0, tx_print_nul, cm_clr,    cm_clr,    (float *)&cs.null, 0 },    // GET "clear" to clear alarm state
-    { "", "clr",  _f0,0, tx_print_nul, cm_clr,    cm_clr,    (float *)&cs.null, 0 },    // synonym for "clear"
-    { "", "tick", _f0,0, tx_print_int, get_tick,  set_nul,   (float *)&cs.null, 0 },    // get system time tic
-    { "", "tram", _f0,0, cm_print_tram, cm_get_tram, cm_set_tram, (float *)&cs.null, 0 },// SET to attempt setting rotation matrix from probes
-    { "", "defa",_f0, 0, tx_print_nul, help_defa, set_defaults,(float *)&cs.null,0 },   // set/print defaults / help screen
-    { "", "flash",_f0,0, tx_print_nul, help_flash,hw_flash,  (float *)&cs.null,0 },
+    { "", "sr",  _f0, 0, sr_print_sr,   sr_get,    sr_set,    (float *)&cs.null, 0 },    // request and set status reports
+    { "", "qr",  _f0, 0, qr_print_qr,   qr_get,    set_nul,   (float *)&cs.null, 0 },    // get queue value - planner buffers available
+    { "", "qi",  _f0, 0, qr_print_qi,   qi_get,    set_nul,   (float *)&cs.null, 0 },    // get queue value - buffers added to queue
+    { "", "qo",  _f0, 0, qr_print_qo,   qo_get,    set_nul,   (float *)&cs.null, 0 },    // get queue value - buffers removed from queue
+    { "", "er",  _f0, 0, tx_print_nul,  rpt_er,    set_nul,   (float *)&cs.null, 0 },    // get bogus exception report for testing
+    { "", "qf",  _f0, 0, tx_print_nul,  get_nul,   cm_run_qf, (float *)&cs.null, 0 },    // SET to invoke queue flush
+    { "", "rx",  _f0, 0, tx_print_int,  get_rx,    set_nul,   (float *)&cs.null, 0 },    // get RX buffer bytes or packets
+    { "", "msg", _f0, 0, tx_print_str,  get_nul,   set_nul,   (float *)&cs.null, 0 },    // string for generic messages
+    { "", "alarm",_f0,0, tx_print_nul,  cm_alrm,   cm_alrm,   (float *)&cs.null, 0 },    // trigger alarm
+    { "", "panic",_f0,0, tx_print_nul,  cm_pnic,   cm_pnic,   (float *)&cs.null, 0 },    // trigger panic
+    { "", "shutd",_f0,0, tx_print_nul,  cm_shutd,  cm_shutd,  (float *)&cs.null, 0 },    // trigger shutdown
+    { "", "clear",_f0,0, tx_print_nul,  cm_clr,    cm_clr,    (float *)&cs.null, 0 },    // GET "clear" to clear alarm state
+    { "", "clr",  _f0,0, tx_print_nul,  cm_clr,    cm_clr,    (float *)&cs.null, 0 },    // synonym for "clear"
+    { "", "tick", _f0,0, tx_print_int,  get_tick,  set_nul,   (float *)&cs.null, 0 },    // get system time tic
+    { "", "tram", _f0,0, cm_print_tram, cm_get_tram,cm_set_tram, (float *)&cs.null, 0 },// SET to attempt setting rotation matrix from probes
+    { "", "defa",_f0, 0, tx_print_nul,  help_defa, set_defaults,(float *)&cs.null,0 },   // set/print defaults / help screen
+    { "", "flash",_f0,0, tx_print_nul,  help_flash,hw_flash,  (float *)&cs.null,0 },
+    { "", "switch",_f0,0, tx_print_nul, get_nul, mp_switch_q, (float *)&cs.null,0 },
+    { "", "return",_f0,0, tx_print_nul, get_nul, mp_return_q, (float *)&cs.null,0 },
 
 #ifdef __HELP_SCREENS
     { "", "help",_f0, 0, tx_print_nul, help_config, set_nul, (float *)&cs.null,0 }, // prints config help screen

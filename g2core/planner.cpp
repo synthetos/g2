@@ -627,6 +627,26 @@ void mp_planner_time_accounting()
     UPDATE_MP_DIAGNOSTICS //+++++
 }
 
+/*
+ *  mp_switch_q() - switch planner to different quue
+ *  mp_return_q() - return from a planner queue switch
+ */
+stat_t mp_switch_q(nvObj_t *nv)
+{
+    if ((nv->value < PRIMARY_Q) || (nv->value < SECONDARY_Q)) {
+        return (STAT_INPUT_VALUE_RANGE_ERROR);
+    }
+    mb.return_q = mb.active_q;
+    mb.active_q = (uint8_t)nv->value;
+    return (STAT_OK);
+}
+
+stat_t mp_return_q(nvObj_t *nv)     // if value == true return with offset corrections
+{
+    mb.active_q = mb.return_q;
+    return (STAT_OK);
+}
+
 /**** PLANNER BUFFER PRIMITIVES ************************************************************
  *
  *  Planner buffers are used to queue and operate on Gcode blocks. Each buffer contains
@@ -830,16 +850,16 @@ mpBuf_t * mp_get_run_buffer()
 }
 
 // Note: mp_free_run_buffer() is only called from mp_exec_XXX, which are within an interrupt
+// Clearing and advancing must be done atomically as other interrupts may be using the run buffer
 bool mp_free_run_buffer()           // EMPTY current run buffer & advance to the next
 {
     mpQueue_t *q = &mb.q[mb.active_q];
-    mpBuf_t *r_now = q->r;          // this is to avoid a race condition when clearing the buffer
-     
+    mpBuf_t *r_now = q->r;          // save this pointer is to avoid a race condition when clearing the buffer
+
     _audit_buffers();               // ++++diagnostic audit for buffer chain integrity (only runs in DEBUG mode)
 
-    q->r = q->r->nx;                // advance to next run buffer
-    _clear_buffer(r_now);           // clear out the old buffer (& reset unlocked and set MP_BUFFER_EMPTY)
-
+    q->r = q->r->nx;                // advance to next run buffer first,
+    _clear_buffer(r_now);           // ... then clear out the old buffer (& set MP_BUFFER_EMPTY)
     q->buffers_available++;
     qr_request_queue_report(-1);    // request a QR and add to the "removed buffers" count
     return (q->w == q->r);          // return true if the queue emptied

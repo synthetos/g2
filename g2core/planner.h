@@ -423,6 +423,7 @@ typedef struct mpQueue {            // a planner buffer queue
 
 typedef struct mpBufferQueue {      // one or more planner buffer queues
     uint8_t active_q;               // index of currently active queue
+    uint8_t return_q;               // index of queue to return to
     mpQueue_t q[2];                 // number of queues
 } mpBufferQueue_t;
 
@@ -564,6 +565,9 @@ void mp_replan_queue(mpBuf_t *bf);
 void mp_start_feed_override(const float ramp_time, const float override);
 void mp_end_feed_override(const float ramp_time);
 void mp_planner_time_accounting(void);
+
+stat_t mp_switch_q(nvObj_t *nv);
+stat_t mp_return_q(nvObj_t *nv);
 
 // planner buffer primitives
 void mp_init_buffers(void);
