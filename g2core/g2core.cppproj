@@ -1782,7 +1782,7 @@
     <Compile Include="gcode_parser.cpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="gcode_parser.h">
+    <Compile Include="gcode.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="gpio.cpp">

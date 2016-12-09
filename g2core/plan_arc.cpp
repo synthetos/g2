@@ -136,7 +136,7 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
 
     // trap missing feed rate
     if (fp_ZERO(cm->gm.feed_rate)) {
-        return (STAT_GCODE_FEEDRATE_NOT_SPECIFIED);
+        return (STAT_FEEDRATE_NOT_SPECIFIED);
     }
 
     // Set the arc plane for the current G17/G18/G19 setting and test arc specification
@@ -154,7 +154,7 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
         arc.plane_axis_1 = AXIS_Z;
         arc.linear_axis  = AXIS_X;
     } else {
-        return(cm_panic(STAT_GCODE_ACTIVE_PLANE_IS_MISSING, "cm_arc_feed() impossible value")); // plane axis has impossible value
+        return(cm_panic(STAT_ACTIVE_PLANE_IS_MISSING, "cm_arc_feed() impossible value")); // plane axis has impossible value
     }
 
     // test if no endpoints are specified in the selected plane

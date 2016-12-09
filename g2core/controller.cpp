@@ -31,7 +31,7 @@
 #include "controller.h"
 #include "json_parser.h"
 #include "text_parser.h"
-#include "gcode_parser.h"
+#include "gcode.h"
 #include "canonical_machine.h"
 #include "plan_arc.h"
 #include "planner.h"

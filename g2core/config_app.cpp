@@ -30,7 +30,7 @@
 #include "config.h"  // #2
 #include "controller.h"
 #include "canonical_machine.h"
-#include "gcode_parser.h"
+#include "gcode.h"
 #include "json_parser.h"
 #include "text_parser.h"
 #include "settings.h"

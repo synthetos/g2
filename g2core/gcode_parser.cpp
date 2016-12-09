@@ -20,7 +20,7 @@
 #include "g2core.h"  // #1
 #include "config.h"  // #2
 #include "controller.h"
-#include "gcode_parser.h"
+#include "gcode.h"
 #include "canonical_machine.h"
 #include "spindle.h"
 #include "coolant.h"
