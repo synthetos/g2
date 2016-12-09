@@ -268,7 +268,7 @@ const cfgItem_t cfgArray[] = {
 #endif
     // Axis parameters
     { "x","xam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cs.null,                      X_AXIS_MODE },
-    { "x","xvm",_fipc, 0, cm_print_vm, get_flt,   cm_set_vm, (float *)&cm->a[AXIS_X].velocity_max,   X_VELOCITY_MAX },
+    { "x","xvm",_fipc, 0, cm_print_vm, cm_get_vm, cm_set_vm, (float *)&cm->a[AXIS_X].velocity_max,   X_VELOCITY_MAX },
     { "x","xfr",_fipc, 0, cm_print_fr, get_flt,   cm_set_fr, (float *)&cm->a[AXIS_X].feedrate_max,   X_FEEDRATE_MAX },
     { "x","xtn",_fipc, 3, cm_print_tn, get_flt,   set_flu,   (float *)&cm->a[AXIS_X].travel_min,     X_TRAVEL_MIN },
     { "x","xtm",_fipc, 3, cm_print_tm, get_flt,   set_flu,   (float *)&cm->a[AXIS_X].travel_max,     X_TRAVEL_MAX },

@@ -2245,14 +2245,15 @@ stat_t cm_get_ofs(nvObj_t *nv)
 
 /*
  * AXIS GET AND SET FUNCTIONS
- *
+ */
+/* Axis Basic Settings
  * cm_get_am() - get axis mode w/enumeration string
  * cm_set_am() - set axis mode w/exception handling for axis type
- * cm_set_hi() - set homing input
+ * cm_get_tn() - get axis travel min
+ * cm_set_tn() - set axis travel min
+ * cm_get_tm() - get axis travel max
+ * cm_set_tm() - set axis travel max
  */
-
-#pragma GCC push_options
-#pragma GCC optimize ("O0")
 
 stat_t cm_get_am(nvObj_t *nv)
 {
@@ -2273,35 +2274,29 @@ stat_t cm_set_am(nvObj_t *nv)        // axis mode
     return(STAT_OK);    
 }
 
-#pragma GCC reset_options
-
-stat_t cm_set_hi(nvObj_t *nv)
+stat_t cm_get_tn(nvObj_t *nv)
 {
-    if ((nv->value < 0) || (nv->value > D_IN_CHANNELS)) {
-        return (STAT_INPUT_VALUE_RANGE_ERROR);
-    }
-    set_ui8(nv);
     return (STAT_OK);
 }
 
-/**** Velocity and Jerk functions
+stat_t cm_set_tn(nvObj_t *nv)
+{
+    return (STAT_OK);
+}
+
+stat_t cm_get_tm(nvObj_t *nv)
+{
+    return (STAT_OK);
+}
+
+stat_t cm_set_tm(nvObj_t *nv)
+{
+    return (STAT_OK);
+}
+
+/**** Axis Jerk Primitives
  * cm_get_axis_jerk() - returns jerk for an axis
  * cm_set_axis_jerk() - sets the jerk for an axis, including recirpcal and cached values
- *
- * cm_set_vm() - set velocity max value - called from dispatch table
- * cm_set_fr() - set feedrate max value - called from dispatch table
- * cm_set_jm() - set jerk max value - called from dispatch table
- * cm_set_jh() - set jerk homing value - called from dispatch table
- *
- *  Jerk values can be rather large, often in the billions. This makes for some pretty big
- *  numbers for people to deal with. Jerk values are stored in the system in truncated format;
- *  values are divided by 1,000,000 then reconstituted before use.
- *
- *  The set_xjm() nad set_xjh() functions will accept either truncated or untruncated jerk
- *  numbers as input. If the number is > 1,000,000 it is divided by 1,000,000 before storing.
- *  Numbers are accepted in either millimeter or inch mode and converted to millimeter mode.
- *
- *  The axis_jerk() functions expect the jerk in divided-by 1,000,000 form
  */
 float cm_get_axis_jerk(const uint8_t axis)
 {
@@ -2317,17 +2312,40 @@ static const float _junction_accel_multiplier = sqrt(3.0)/10.0;
 void _cm_recalc_max_junction_accel(const uint8_t axis) {
     float T = cm->junction_integration_time / 1000.0;
     float T2 = T*T;
-
     cm->a[axis].max_junction_accel = _junction_accel_multiplier * T2 * (cm->a[axis].jerk_max * JERK_MULTIPLIER);
 }
 
 void cm_set_axis_jerk(const uint8_t axis, const float jerk)
 {
     cm->a[axis].jerk_max = jerk;
-    //cm->a[axis].recip_jerk = 1/(jerk * JERK_MULTIPLIER);
+    _cm_recalc_max_junction_accel(axis);    // Must recalculate the max_junction_accel now that the jerk has changed.
 
-    // Must recalculate the max_junction_accel now that the jerk has changed.
-    _cm_recalc_max_junction_accel(axis);
+}
+
+/**** Axis Velocity and Jerk Settings
+ * cm_get_vm() - get velocity max value - called from dispatch table
+ * cm_set_vm() - set velocity max value - called from dispatch table
+ * cm_get_fr() - get feedrate max value - called from dispatch table
+ * cm_set_fr() - set feedrate max value - called from dispatch table
+ * cm_get_jm() - get jerk max value     - called from dispatch table
+ * cm_set_jm() - set jerk max value     - called from dispatch table
+ * cm_get_jh() - get jerk homing value  - called from dispatch table
+ * cm_set_jh() - set jerk homing value  - called from dispatch table
+ *
+ *  Jerk values can be rather large, often in the billions. This makes for some pretty big
+ *  numbers for people to deal with. Jerk values are stored in the system in truncated format;
+ *  values are divided by 1,000,000 then reconstituted before use.
+ *
+ *  The set_xjm() nad set_xjh() functions will accept either truncated or untruncated jerk
+ *  numbers as input. If the number is > 1,000,000 it is divided by 1,000,000 before storing.
+ *  Numbers are accepted in either millimeter or inch mode and converted to millimeter mode.
+ *
+ *  The axis_jerk() functions expect the jerk in divided-by 1,000,000 form
+ */
+
+stat_t cm_get_vm(nvObj_t *nv)
+{
+    return(STAT_OK);    
 }
 
 stat_t cm_set_vm(nvObj_t *nv)
@@ -2339,6 +2357,11 @@ stat_t cm_set_vm(nvObj_t *nv)
         set_flu(nv);
     }
     cm->a[axis].recip_velocity_max = 1/nv->value;
+    return(STAT_OK);
+}
+
+stat_t cm_get_fr(nvObj_t *nv)
+{
     return(STAT_OK);
 }
 
@@ -2354,6 +2377,11 @@ stat_t cm_set_fr(nvObj_t *nv)
     return(STAT_OK);
 }
 
+stat_t cm_get_jm(nvObj_t *nv)
+{
+    return(STAT_OK);
+}
+
 stat_t cm_set_jm(nvObj_t *nv)
 {
 //    if (nv->value > JERK_MULTIPLIER) nv->value /= JERK_MULTIPLIER;
@@ -2362,10 +2390,106 @@ stat_t cm_set_jm(nvObj_t *nv)
     return(STAT_OK);
 }
 
+stat_t cm_get_jh(nvObj_t *nv)
+{
+    return(STAT_OK);
+}
+
 stat_t cm_set_jh(nvObj_t *nv)
 {
 //    if (nv->value > JERK_MULTIPLIER) nv->value /= JERK_MULTIPLIER;
     set_flu(nv);
+    return(STAT_OK);
+}
+
+/**** Axis Homing Settings
+ * cm_get_hi() - get homing input
+ * cm_set_hi() - set homing input
+ * cm_get_hd() - get homing direction
+ * cm_set_hd() - set homing direction
+ * cm_get_sv() - get homing search velocity
+ * cm_set_sv() - set homing search velocity
+ * cm_get_lv() - get homing latch velocity
+ * cm_set_lv() - set homing latch velocity
+ * cm_get_lb() - get homing latch backoff
+ * cm_set_lb() - set homing latch backoff
+ * cm_get_zb() - get homing zero backoff
+ * cm_set_zb() - set homing zero backoff
+ */
+
+stat_t cm_get_hi(nvObj_t *nv)
+{
+    return(STAT_OK);
+}
+
+stat_t cm_set_hi(nvObj_t *nv)
+{
+    if ((nv->value < 0) || (nv->value > D_IN_CHANNELS)) {
+        return (STAT_INPUT_VALUE_RANGE_ERROR);
+    }
+    set_ui8(nv);
+    return (STAT_OK);
+}
+
+stat_t cm_get_hd(nvObj_t *nv)
+{
+    return(STAT_OK);
+}
+
+stat_t cm_set_hd(nvObj_t *nv)
+{
+    return (STAT_OK);
+}
+
+stat_t cm_get_sv(nvObj_t *nv)
+{
+    return(STAT_OK);
+}
+
+stat_t cm_set_sv(nvObj_t *nv)
+{
+    return(STAT_OK);
+}
+
+stat_t cm_get_lv(nvObj_t *nv)
+{
+    return(STAT_OK);
+}
+
+stat_t cm_set_lv(nvObj_t *nv)
+{
+    return(STAT_OK);
+}
+
+stat_t cm_get_lb(nvObj_t *nv)
+{
+    return(STAT_OK);
+}
+
+stat_t cm_set_lb(nvObj_t *nv)
+{
+    return(STAT_OK);
+}
+
+stat_t cm_get_zb(nvObj_t *nv)
+{
+    return(STAT_OK);
+}
+
+stat_t cm_set_zb(nvObj_t *nv)
+{
+    return(STAT_OK);
+}
+
+
+/*** Canonical Machine Global Settings ***/
+/*
+ * cm_get_jt() - get junction integration time
+ * cm_set_jt() - get junction integration time
+ */
+
+stat_t cm_get_jt(nvObj_t *nv)
+{
     return(STAT_OK);
 }
 
@@ -2390,7 +2514,6 @@ stat_t cm_set_jt(nvObj_t *nv)
     for (uint8_t axis=0; axis<AXES; axis++) {
         _cm_recalc_max_junction_accel(axis);
     }
-
     return(status);
 }
 

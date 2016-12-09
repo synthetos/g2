@@ -610,8 +610,6 @@ cmHomingState cm_get_homing_state(void);
 uint8_t cm_get_jogging_state(void);
 
 void cm_set_motion_state(const cmMotionState motion_state);
-float cm_get_axis_jerk(const uint8_t axis);
-void cm_set_axis_jerk(const uint8_t axis, const float jerk);
 
 uint32_t cm_get_linenum(const GCodeState_t *gcode_state);
 cmMotionMode cm_get_motion_mode(const GCodeState_t *gcode_state);
@@ -811,13 +809,37 @@ stat_t cm_run_joga(nvObj_t *nv);        // start jogging cycle for a
 
 stat_t cm_get_am(nvObj_t *nv);          // get axis mode
 stat_t cm_set_am(nvObj_t *nv);          // set axis mode
+stat_t cm_get_tn(nvObj_t *nv);          // get travel minimum
+stat_t cm_set_tn(nvObj_t *nv);          // set travel minimum
+stat_t cm_get_tm(nvObj_t *nv);          // get travel maximum
+stat_t cm_set_tm(nvObj_t *nv);          // set travel maximum
+
+float cm_get_axis_jerk(const uint8_t axis);
+void cm_set_axis_jerk(const uint8_t axis, const float jerk);
+
+stat_t cm_get_vm(nvObj_t *nv);          // get velocity max
+stat_t cm_set_vm(nvObj_t *nv);          // set velocity max and reciprocal
+stat_t cm_get_fr(nvObj_t *nv);          // get feedrate max
+stat_t cm_set_fr(nvObj_t *nv);          // set feedrate max and reciprocal
+stat_t cm_get_jm(nvObj_t *nv);          // get jerk max with 1,000,000 correction
+stat_t cm_set_jm(nvObj_t *nv);          // set jerk max with 1,000,000 correction
+stat_t cm_get_jh(nvObj_t *nv);          // get jerk high with 1,000,000 correction
+stat_t cm_set_jh(nvObj_t *nv);          // set jerk high with 1,000,000 correction
+
+stat_t cm_get_hi(nvObj_t *nv);          // get homing input
 stat_t cm_set_hi(nvObj_t *nv);          // set homing input
+stat_t cm_get_hd(nvObj_t *nv);          // get homing direction
+stat_t cm_set_hd(nvObj_t *nv);          // set homing direction
+stat_t cm_get_sv(nvObj_t *nv);          // get homing search velocity
+stat_t cm_set_sv(nvObj_t *nv);          // set homing search velocity
+stat_t cm_get_lv(nvObj_t *nv);          // get homing latch velocity
+stat_t cm_set_lv(nvObj_t *nv);          // set homing latch velocity
+stat_t cm_get_lb(nvObj_t *nv);          // get homing latch backoff
+stat_t cm_set_lb(nvObj_t *nv);          // set homing latch backoff
+stat_t cm_get_zb(nvObj_t *nv);          // get homing zero backoff
+stat_t cm_set_zb(nvObj_t *nv);          // set homing zero backoff
 
 stat_t cm_set_jt(nvObj_t *nv);          // set junction integration time constant
-stat_t cm_set_vm(nvObj_t *nv);          // set velocity max and reciprocal
-stat_t cm_set_fr(nvObj_t *nv);          // set feedrate max and reciprocal
-stat_t cm_set_jm(nvObj_t *nv);          // set jerk max with 1,000,000 correction
-stat_t cm_set_jh(nvObj_t *nv);          // set jerk high with 1,000,000 correction
 
 stat_t cm_set_mfo(nvObj_t *nv);         // set manual feedrate override factor
 stat_t cm_set_mto(nvObj_t *nv);         // set manual traverse override factor
