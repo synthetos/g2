@@ -128,7 +128,7 @@ static void _exec_absolute_origin(float *value, bool *flag);
 static void _exec_program_finalize(float *value, bool *flag);
 
 static int8_t _get_axis(const index_t index);
-static cmAxisType _get_axis_type(const index_t index);
+//static cmAxisType _get_axis_type(const index_t index);
 
 /***********************************************************************************
  **** CODE *************************************************************************
@@ -2080,17 +2080,10 @@ static const char *const msg_frmo[] = { msg_g93, msg_g94, msg_g95 };
 
 
 /***** AXIS HELPERS *****************************************************************
- * cm_get_axis_char()   - return ASCII char for axis given the axis number
- * _get_axis()          - return axis number or -1 if NA
- * _get_axis_type()     - return 0 -f axis is linear, 1 if rotary, -1 if NA
+ * _get_axis()        - return axis number or -1 if not an axis
+ * cm_get_axis_char() - return ASCII char for axis given the axis number
+ * cm_get_axis_type() - return axis type (0 if axis is linear, 1 if rotary, -1 if NA)
  */
-
-char cm_get_axis_char(const int8_t axis)
-{
-    char axis_char[] = "XYZABC";
-    if ((axis < 0) || (axis > AXES)) return (' ');
-    return (axis_char[axis]);
-}
 
 static int8_t _get_axis(const index_t index)
 {
@@ -2107,7 +2100,14 @@ static int8_t _get_axis(const index_t index)
     return (ptr - axes);
 }
 
-static cmAxisType _get_axis_type(const index_t index)
+char cm_get_axis_char(const int8_t axis)
+{
+    char axis_char[] = "XYZABC";
+    if ((axis < 0) || (axis > AXES)) return (' ');
+    return (axis_char[axis]);
+}
+
+cmAxisType cm_get_axis_type(const index_t index)
 {
     int8_t axis = _get_axis(index);
     if (axis >= AXIS_A) return (AXIS_TYPE_ROTARY);
@@ -2246,6 +2246,36 @@ stat_t cm_get_ofs(nvObj_t *nv)
 /*
  * AXIS GET AND SET FUNCTIONS
  */
+
+/*
+ * _decorate_settable_float() - convert incoming float value by units and axis type & complete NV struct
+ * _decorate_gettable_float() - convert outcoming float value by units and axis type & complete NV struct
+ */
+/*
+float _preprocess_float(nvObj_t *nv) 
+{
+    if (cm_get_units_mode(MODEL) == INCHES) {                   // If inn inches mode
+        if (_get_axis_type(nv->index) == AXIS_TYPE_LINEAR) {    // ...and a linear axis...
+            nv->value *= MM_PER_INCH;                           // convert to canonical millimeter units
+        }
+    }
+    nv->precision = GET_TABLE_WORD(precision);
+    nv->valuetype = TYPE_FLOAT;
+    return(nv->value);
+}
+
+float _decorate_gettable_float(nvObj_t *nv)
+{
+    if (cm_get_units_mode(MODEL) == INCHES) {                   // If inn inches mode
+        if (_get_axis_type(nv->index) == AXIS_TYPE_LINEAR) {    // ...and a linear axis...
+            nv->value *= MM_PER_INCH;                           // convert to canonical millimeter units
+        }
+    }
+    nv->precision = GET_TABLE_WORD(precision);
+    nv->valuetype = TYPE_FLOAT;
+    return(nv->value);
+}
+*/
 /* Axis Basic Settings
  * cm_get_am() - get axis mode w/enumeration string
  * cm_set_am() - set axis mode w/exception handling for axis type
@@ -2265,7 +2295,7 @@ stat_t cm_get_am(nvObj_t *nv)
 stat_t cm_set_am(nvObj_t *nv)        // axis mode
 {
     nv->valuetype = TYPE_INT;
-    if (_get_axis_type(nv->index) == AXIS_TYPE_LINEAR) {
+    if (cm_get_axis_type(nv->index) == AXIS_TYPE_LINEAR) {
         if (nv->value > AXIS_MODE_LINEAR_MAX) { return (STAT_INPUT_VALUE_RANGE_ERROR);}
     } else {
         if (nv->value > AXIS_MODE_ROTARY_MAX) { return (STAT_INPUT_VALUE_RANGE_ERROR);}
@@ -2780,7 +2810,7 @@ static void _print_axis_ui8(nvObj_t *nv, const char *format)
 static void _print_axis_flt(nvObj_t *nv, const char *format)
 {
     char *units;
-    if (_get_axis_type(nv->index) == 0) {    // linear
+    if (cm_get_axis_type(nv->index) == 0) {    // linear
         units = (char *)GET_UNITS(MODEL);
     } else {
         units = (char *)GET_TEXT_ITEM(msg_units, DEGREE_INDEX);
@@ -2792,7 +2822,7 @@ static void _print_axis_flt(nvObj_t *nv, const char *format)
 static void _print_axis_coord_flt(nvObj_t *nv, const char *format)
 {
     char *units;
-    if (_get_axis_type(nv->index) == 0) {    // linear
+    if (cm_get_axis_type(nv->index) == 0) {    // linear
         units = (char *)GET_UNITS(MODEL);
     } else {
         units = (char *)GET_TEXT_ITEM(msg_units, DEGREE_INDEX);

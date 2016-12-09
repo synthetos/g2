@@ -995,20 +995,27 @@ stat_t set_flu(nvObj_t *nv)
 }
 
 /*
- * preprocess_float() - pre-process floating point number for units display
+ * preprocess_incoming_float() - pre-process an incoming floating point number for canonical units
+ * preprocess_outgoing_float() - pre-process an outgoing floating point number for units display
  */
 
-void preprocess_float(nvObj_t *nv)
-/*
+void preprocess_incoming_float(nvObj_t *nv)
 {
-    if (isnan((double)nv->value) || isinf((double)nv->value)) return; // illegal float values
-    if (GET_TABLE_BYTE(flags) & F_CONVERT) {    // unit conversion required?
-        if (cm_get_units_mode(MODEL) == INCHES) {
-            nv->value *= INCHES_PER_MM;
+    uint8_t f;
+    f = GET_TABLE_BYTE(flags);
+//   if (f & (F_CONVERT | F_ICONVERT)) {		// unit conversion required?
+    if (f & F_CONVERT) {		                    // unit conversion required?
+        if (cm_get_units_mode(MODEL) == INCHES) {                   // If inn inches mode
+            if (cm_get_axis_type(nv->index) == AXIS_TYPE_LINEAR) {  // ...and a linear axis...
+                nv->value *= MM_PER_INCH;                           // convert to canonical millimeter units
+            }
         }
-    }
+    }    
+    nv->precision = GET_TABLE_WORD(precision);
+    nv->valuetype = TYPE_FLOAT;
 }
-*/
+
+void preprocess_outgoing_float(nvObj_t *nv)
 {
     uint8_t f;
     if (isnan((double)nv->value) || isinf((double)nv->value)) return; // illegal float values
@@ -1022,6 +1029,8 @@ void preprocess_float(nvObj_t *nv)
 			}
  		}
  	}
+    nv->precision = GET_TABLE_WORD(precision);
+    nv->valuetype = TYPE_FLOAT;
 }
 
 /*

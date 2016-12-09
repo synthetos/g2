@@ -353,7 +353,8 @@ void nv_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags);
 
 // application specific helpers and functions (config_app.c)
 stat_t set_flu(nvObj_t *nv);            // set floating point number with G20/G21 units conversion
-void preprocess_float(nvObj_t *nv);     // pre-process float values for units and illegal values
+void preprocess_incoming_float(nvObj_t *nv);     // pre-process outgoing float values for units and illegal values
+void preprocess_outgoing_float(nvObj_t *nv);     // pre-process incoming float values for canonical units
 
 // diagnostics
 void nv_dump_nv(nvObj_t *nv);
