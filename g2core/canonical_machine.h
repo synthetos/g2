@@ -515,7 +515,7 @@ typedef struct cmAxis {
     float zero_backoff;                     // backoff from switches for machine zero
 } cfgAxis_t;
 
-typedef struct cmSingleton {                // struct to manage cm globals and cycles
+typedef struct cmMachine {                  // struct to manage canonical machine globals and state
     magic_t magic_start;                    // magic number to test memory integrity
 
     /**** Config variables (PUBLIC) ****/

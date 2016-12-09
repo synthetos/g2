@@ -1323,7 +1323,7 @@ stat_t cm_set_feed_rate(const float feed_rate)
 {
     if (cm->gm.feed_rate_mode == INVERSE_TIME_MODE) {
         if (fp_ZERO(feed_rate)) {
-            return (STAT_GCODE_FEEDRATE_NOT_SPECIFIED);
+            return (STAT_FEEDRATE_NOT_SPECIFIED);
         }
         cm->gm.feed_rate = 1/feed_rate;    // normalize to minutes (NB: active for this gcode block only)
     } else {
@@ -1382,7 +1382,7 @@ stat_t cm_straight_feed(const float target[], const bool flags[])
 {
     // trap zero feed rate condition
     if (fp_ZERO(cm->gm.feed_rate)) {
-        return (STAT_GCODE_FEEDRATE_NOT_SPECIFIED);
+        return (STAT_FEEDRATE_NOT_SPECIFIED);
     }
     cm->gm.motion_mode = MOTION_MODE_STRAIGHT_FEED;
 
@@ -2251,35 +2251,26 @@ stat_t cm_get_ofs(nvObj_t *nv)
  * cm_set_hi() - set homing input
  */
 
-stat_t cm_get_am(nvObj_t *nv)
-{
-    get_ui8(nv);
-    return(_get_msg_helper(nv, msg_am, nv->value));
-}
-
 #pragma GCC push_options
 #pragma GCC optimize ("O0")
 
+stat_t cm_get_am(nvObj_t *nv)
+{
+    int8_t axis = _get_axis(nv->index);
+    nv->value = (float)cm->a[axis].axis_mode;
+    return(_get_msg_helper(nv, msg_am, nv->value));
+}
+
 stat_t cm_set_am(nvObj_t *nv)        // axis mode
 {
-        
     nv->valuetype = TYPE_INT;
     if (_get_axis_type(nv->index) == AXIS_TYPE_LINEAR) {
         if (nv->value > AXIS_MODE_LINEAR_MAX) { return (STAT_INPUT_VALUE_RANGE_ERROR);}
     } else {
         if (nv->value > AXIS_MODE_ROTARY_MAX) { return (STAT_INPUT_VALUE_RANGE_ERROR);}
     }
-    cmAxisMode *am = (cmAxisMode *)cfgArray[nv->index].target;
-    void *p = (cfgArray[nv->index].target);
-    cmAxisMode a = *((cmAxisMode *)cfgArray[nv->index].target);
-//    *((uint8_t *)cfgArray[nv->index].target) = nv->value;
-//    cmAxisMode a = (cmAxisMode)nv->value;
-//    *am = (cmAxisMode)nv->value;
-    *am = a;
-    return(STAT_OK);
-
-//    set_ui8(nv);
-//    return(STAT_OK);
+    cm->a[_get_axis(nv->index)].axis_mode = (cmAxisMode)nv->value;
+    return(STAT_OK);    
 }
 
 #pragma GCC reset_options

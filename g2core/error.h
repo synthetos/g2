@@ -226,19 +226,19 @@ char *get_status_message(stat_t status);
 #define STAT_GCODE_COMMAND_UNSUPPORTED 131      // G command is not supported
 #define STAT_MCODE_COMMAND_UNSUPPORTED 132      // M command is not supported
 #define STAT_GCODE_MODAL_GROUP_VIOLATION 133    // gcode modal group error
-#define STAT_GCODE_AXIS_IS_MISSING 134          // command requires at least one axis present
-#define STAT_GCODE_AXIS_CANNOT_BE_PRESENT 135   // error if G80 has axis words
-#define STAT_GCODE_AXIS_IS_INVALID 136          // an axis is specified that is illegal for the command
-#define STAT_GCODE_AXIS_IS_NOT_CONFIGURED 137   // WARNING: attempt to program an axis that is disabled
-#define STAT_GCODE_AXIS_NUMBER_IS_MISSING 138   // axis word is missing its value
-#define STAT_GCODE_AXIS_NUMBER_IS_INVALID 139   // axis word value is illegal
+#define STAT_AXIS_IS_MISSING 134                // command requires at least one axis present
+#define STAT_AXIS_CANNOT_BE_PRESENT 135         // error if G80 has axis words
+#define STAT_AXIS_IS_INVALID 136                // an axis is specified that is illegal for the command
+#define STAT_AXIS_IS_NOT_CONFIGURED 137         // WARNING: attempt to program an axis that is disabled
+#define STAT_AXIS_NUMBER_IS_MISSING 138         // axis word is missing its value
+#define STAT_AXIS_NUMBER_IS_INVALID 139         // axis word value is illegal
 
-#define STAT_GCODE_ACTIVE_PLANE_IS_MISSING 140  // active plane is not programmed
-#define STAT_GCODE_ACTIVE_PLANE_IS_INVALID 141  // active plane selected is not valid for this command
-#define STAT_GCODE_FEEDRATE_NOT_SPECIFIED 142   // move has no feedrate
-#define STAT_GCODE_INVERSE_TIME_MODE_CANNOT_BE_USED 143  // G38.2 and some canned cycles cannot accept inverse time mode
-#define STAT_GCODE_ROTARY_AXIS_CANNOT_BE_USED 144   // G38.2 and some other commands cannot have rotary axes
-#define STAT_GCODE_G53_WITHOUT_G0_OR_G1 145         // G0 or G1 must be active for G53
+#define STAT_ACTIVE_PLANE_IS_MISSING 140        // active plane is not programmed
+#define STAT_ACTIVE_PLANE_IS_INVALID 141        // active plane selected is not valid for this command
+#define STAT_FEEDRATE_NOT_SPECIFIED 142         // move has no feedrate
+#define STAT_INVERSE_TIME_MODE_CANNOT_BE_USED 143  // G38.2 and some canned cycles cannot accept inverse time mode
+#define STAT_ROTARY_AXIS_CANNOT_BE_USED 144     // G38.2 and some other commands cannot have rotary axes
+#define STAT_GCODE_G53_WITHOUT_G0_OR_G1 145     // G0 or G1 must be active for G53
 #define STAT_REQUESTED_VELOCITY_EXCEEDS_LIMITS 146
 #define STAT_CUTTER_COMPENSATION_CANNOT_BE_ENABLED 147
 #define STAT_PROGRAMMED_POINT_SAME_AS_CURRENT_POINT 148

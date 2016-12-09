@@ -140,12 +140,12 @@ static stat_t _set_pb_func(uint8_t (*func)()) {
 uint8_t cm_straight_probe(float target[], bool flags[], bool failure_is_fatal, bool moving_toward_switch) {
     // trap zero feed rate condition
     if (fp_ZERO(cm->gm.feed_rate)) {
-        return (STAT_GCODE_FEEDRATE_NOT_SPECIFIED);
+        return (STAT_FEEDRATE_NOT_SPECIFIED);
     }
 
     // error if no axes specified
     if (!flags[AXIS_X] && !flags[AXIS_Y] && !flags[AXIS_Z]) {
-        return (STAT_GCODE_AXIS_IS_MISSING);
+        return (STAT_AXIS_IS_MISSING);
     }
 
     pb.failure_is_fatal     = failure_is_fatal;

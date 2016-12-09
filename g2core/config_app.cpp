@@ -268,7 +268,6 @@ const cfgItem_t cfgArray[] = {
 #endif
     // Axis parameters
     { "x","xam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cs.null,                      X_AXIS_MODE },
-//    { "x","xam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cm->a[AXIS_X].axis_mode,      X_AXIS_MODE },
     { "x","xvm",_fipc, 0, cm_print_vm, get_flt,   cm_set_vm, (float *)&cm->a[AXIS_X].velocity_max,   X_VELOCITY_MAX },
     { "x","xfr",_fipc, 0, cm_print_fr, get_flt,   cm_set_fr, (float *)&cm->a[AXIS_X].feedrate_max,   X_FEEDRATE_MAX },
     { "x","xtn",_fipc, 3, cm_print_tn, get_flt,   set_flu,   (float *)&cm->a[AXIS_X].travel_min,     X_TRAVEL_MIN },
@@ -282,7 +281,7 @@ const cfgItem_t cfgArray[] = {
     { "x","xlb",_fipc, 3, cm_print_lb, get_flt,   set_flu,   (float *)&cm->a[AXIS_X].latch_backoff,  X_LATCH_BACKOFF },
     { "x","xzb",_fipc, 3, cm_print_zb, get_flt,   set_flu,   (float *)&cm->a[AXIS_X].zero_backoff,   X_ZERO_BACKOFF },
 
-    { "y","yam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cm->a[AXIS_Y].axis_mode,      Y_AXIS_MODE },
+    { "y","yam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cs.null,                      Y_AXIS_MODE },
     { "y","yvm",_fipc, 0, cm_print_vm, get_flt,   cm_set_vm, (float *)&cm->a[AXIS_Y].velocity_max,   Y_VELOCITY_MAX },
     { "y","yfr",_fipc, 0, cm_print_fr, get_flt,   cm_set_fr, (float *)&cm->a[AXIS_Y].feedrate_max,   Y_FEEDRATE_MAX },
     { "y","ytn",_fipc, 3, cm_print_tn, get_flt,   set_flu,   (float *)&cm->a[AXIS_Y].travel_min,     Y_TRAVEL_MIN },
@@ -296,7 +295,7 @@ const cfgItem_t cfgArray[] = {
     { "y","ylb",_fipc, 3, cm_print_lb, get_flt,   set_flu,   (float *)&cm->a[AXIS_Y].latch_backoff,  Y_LATCH_BACKOFF },
     { "y","yzb",_fipc, 3, cm_print_zb, get_flt,   set_flu,   (float *)&cm->a[AXIS_Y].zero_backoff,   Y_ZERO_BACKOFF },
 
-    { "z","zam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cm->a[AXIS_Z].axis_mode,      Z_AXIS_MODE },
+    { "z","zam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cs.null,                      Z_AXIS_MODE },
     { "z","zvm",_fipc, 0, cm_print_vm, get_flt,   cm_set_vm, (float *)&cm->a[AXIS_Z].velocity_max,   Z_VELOCITY_MAX },
     { "z","zfr",_fipc, 0, cm_print_fr, get_flt,   cm_set_fr, (float *)&cm->a[AXIS_Z].feedrate_max,   Z_FEEDRATE_MAX },
     { "z","ztn",_fipc, 3, cm_print_tn, get_flt,   set_flu,   (float *)&cm->a[AXIS_Z].travel_min,     Z_TRAVEL_MIN },
@@ -310,7 +309,7 @@ const cfgItem_t cfgArray[] = {
     { "z","zlb",_fipc, 3, cm_print_lb, get_flt,   set_flu,   (float *)&cm->a[AXIS_Z].latch_backoff,  Z_LATCH_BACKOFF },
     { "z","zzb",_fipc, 3, cm_print_zb, get_flt,   set_flu,   (float *)&cm->a[AXIS_Z].zero_backoff,   Z_ZERO_BACKOFF },
 
-    { "a","aam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cm->a[AXIS_A].axis_mode,      A_AXIS_MODE },
+    { "a","aam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cs.null,                      A_AXIS_MODE },
     { "a","avm",_fip,  0, cm_print_vm, get_flt,   cm_set_vm, (float *)&cm->a[AXIS_A].velocity_max,   A_VELOCITY_MAX },
     { "a","afr",_fip,  0, cm_print_fr, get_flt,   cm_set_fr, (float *)&cm->a[AXIS_A].feedrate_max,   A_FEEDRATE_MAX },
     { "a","atn",_fip,  3, cm_print_tn, get_flt,   set_flt,   (float *)&cm->a[AXIS_A].travel_min,     A_TRAVEL_MIN },
@@ -325,7 +324,7 @@ const cfgItem_t cfgArray[] = {
     { "a","alb",_fip,  3, cm_print_lb, get_flt,   set_flt,   (float *)&cm->a[AXIS_A].latch_backoff,  A_LATCH_BACKOFF },
     { "a","azb",_fip,  3, cm_print_zb, get_flt,   set_flt,   (float *)&cm->a[AXIS_A].zero_backoff,   A_ZERO_BACKOFF },
 
-    { "b","bam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cm->a[AXIS_B].axis_mode,      B_AXIS_MODE },
+    { "b","bam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cs.null,                      B_AXIS_MODE },
     { "b","bvm",_fip,  0, cm_print_vm, get_flt,   cm_set_vm, (float *)&cm->a[AXIS_B].velocity_max,   B_VELOCITY_MAX },
     { "b","bfr",_fip,  0, cm_print_fr, get_flt,   cm_set_fr, (float *)&cm->a[AXIS_B].feedrate_max,   B_FEEDRATE_MAX },
     { "b","btn",_fip,  3, cm_print_tn, get_flt,   set_flt,   (float *)&cm->a[AXIS_B].travel_min,     B_TRAVEL_MIN },
@@ -340,7 +339,7 @@ const cfgItem_t cfgArray[] = {
     { "b","blb",_fip,  3, cm_print_lb, get_flt,   set_flt,   (float *)&cm->a[AXIS_B].latch_backoff,  B_LATCH_BACKOFF },
     { "b","bzb",_fip,  3, cm_print_zb, get_flt,   set_flt,   (float *)&cm->a[AXIS_B].zero_backoff,   B_ZERO_BACKOFF },
 
-    { "c","cam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cm->a[AXIS_C].axis_mode,      C_AXIS_MODE },
+    { "c","cam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cs.null,                      C_AXIS_MODE },
     { "c","cvm",_fip,  0, cm_print_vm, get_flt,   cm_set_vm, (float *)&cm->a[AXIS_C].velocity_max,   C_VELOCITY_MAX },
     { "c","cfr",_fip,  0, cm_print_fr, get_flt,   cm_set_fr, (float *)&cm->a[AXIS_C].feedrate_max,   C_FEEDRATE_MAX },
     { "c","ctn",_fip,  3, cm_print_tn, get_flt,   set_flt,   (float *)&cm->a[AXIS_C].travel_min,     C_TRAVEL_MIN },
