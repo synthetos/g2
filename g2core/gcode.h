@@ -372,8 +372,17 @@ typedef struct GCodeFlags {             // Gcode model input flags
 } GCodeFlags_t;
     
 typedef struct GCodeSingleton {
+
+    // gcode power-on default settings - defaults are not the same as the gm state
+    cmCoordSystem default_coord_system;     // G10 active coordinate system default
+    cmCanonicalPlane default_select_plane;  // G17,G18,G19 reset default
+    cmUnitsMode default_units_mode;         // G20,G21 reset default
+    cmPathControl default_path_control;     // G61,G61.1,G64 reset default
+    cmDistanceMode default_distance_mode;   // G90,G91 reset default
+
     GCodeInput_t  gn;               // gcode input values - transient
     GCodeFlags_t  gf;               // gcode input flags - transient
+
 } GCodeSingleton_t;
 
 extern GCodeSingleton_t gc;         // gcode structs

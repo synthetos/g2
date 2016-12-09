@@ -128,8 +128,7 @@ static void _exec_select_tool(float *value, bool *flag);
 static void _exec_absolute_origin(float *value, bool *flag);
 static void _exec_program_finalize(float *value, bool *flag);
 
-static int8_t _get_axis(const index_t index);
-//static cmAxisType _get_axis_type(const index_t index);
+static int8_t _axis(const index_t index);
 
 /***********************************************************************************
  **** CODE *************************************************************************
@@ -726,11 +725,11 @@ void canonical_machine_reset_rotation() {
 void canonical_machine_reset()
 {
     // set gcode defaults
-    cm_set_units_mode(cm->default_units_mode);
-    cm_set_coord_system(cm->default_coord_system);   // NB: queues a block to the planner with the coordinates
-    cm_select_plane(cm->default_select_plane);
-    cm_set_path_control(MODEL, cm->default_path_control);
-    cm_set_distance_mode(cm->default_distance_mode);
+    cm_set_units_mode(gc.default_units_mode);
+    cm_set_coord_system(gc.default_coord_system);   // NB: queues a block to the planner with the coordinates
+    cm_select_plane(gc.default_select_plane);
+    cm_set_path_control(MODEL, gc.default_path_control);
+    cm_set_distance_mode(gc.default_distance_mode);
     cm_set_arc_distance_mode(INCREMENTAL_MODE);     // always the default
     cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);   // always the default
     cm_reset_overrides();                           // set overrides to initial conditions
@@ -1848,9 +1847,9 @@ static void _exec_program_finalize(float *value, bool *flag)
     if (((uint8_t)value[0]) == MACHINE_PROGRAM_END) {
         cm_suspend_origin_offsets();                    // G92.2 - as per NIST
 //      cm_reset_origin_offsets();                      // G92.1 - alternative to above
-        cm_set_coord_system(cm->default_coord_system);   // reset to default coordinate system
-        cm_select_plane(cm->default_select_plane);       // reset to default arc plane
-        cm_set_distance_mode(cm->default_distance_mode);
+        cm_set_coord_system(gc.default_coord_system);   // reset to default coordinate system
+        cm_select_plane(gc.default_select_plane);       // reset to default arc plane
+        cm_set_distance_mode(gc.default_distance_mode);
         cm_set_arc_distance_mode(INCREMENTAL_MODE);     // always the default
         cm_spindle_off_immediate();                     // M5
         cm_coolant_off_immediate();                     // M9
@@ -2086,7 +2085,7 @@ static const char *const msg_frmo[] = { msg_g93, msg_g94, msg_g95 };
  * cm_get_axis_type() - return axis type (0 if axis is linear, 1 if rotary, -1 if NA)
  */
 
-static int8_t _get_axis(const index_t index)
+static int8_t _axis(const index_t index)
 {
     char *ptr;
     char tmp[TOKEN_LEN+1];
@@ -2110,7 +2109,7 @@ char cm_get_axis_char(const int8_t axis)
 
 cmAxisType cm_get_axis_type(const index_t index)
 {
-    int8_t axis = _get_axis(index);
+    int8_t axis = _axis(index);
     if (axis >= AXIS_A) return (AXIS_TYPE_ROTARY);
     if (axis == -1) return (AXIS_TYPE_UNDEFINED);
     return (AXIS_TYPE_LINEAR);
@@ -2222,7 +2221,7 @@ stat_t cm_get_feed(nvObj_t *nv)
 
 stat_t cm_get_pos(nvObj_t *nv)
 {
-    nv->value = cm_get_work_position(ACTIVE_MODEL, _get_axis(nv->index));
+    nv->value = cm_get_work_position(ACTIVE_MODEL, _axis(nv->index));
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
     return (STAT_OK);
@@ -2230,7 +2229,7 @@ stat_t cm_get_pos(nvObj_t *nv)
 
 stat_t cm_get_mpo(nvObj_t *nv)
 {
-    nv->value = cm_get_absolute_position(ACTIVE_MODEL, _get_axis(nv->index));
+    nv->value = cm_get_absolute_position(ACTIVE_MODEL, _axis(nv->index));
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
     return (STAT_OK);
@@ -2238,7 +2237,7 @@ stat_t cm_get_mpo(nvObj_t *nv)
 
 stat_t cm_get_ofs(nvObj_t *nv)
 {
-    nv->value = cm_get_work_offset(ACTIVE_MODEL, _get_axis(nv->index));
+    nv->value = cm_get_work_offset(ACTIVE_MODEL, _axis(nv->index));
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
     return (STAT_OK);
@@ -2259,7 +2258,7 @@ stat_t cm_get_ofs(nvObj_t *nv)
 
 stat_t cm_get_am(nvObj_t *nv)
 {
-    int8_t axis = _get_axis(nv->index);
+    int8_t axis = _axis(nv->index);
     nv->value = (float)cm->a[axis].axis_mode;
     return(_get_msg_helper(nv, msg_am, nv->value));
 }
@@ -2272,28 +2271,16 @@ stat_t cm_set_am(nvObj_t *nv)        // axis mode
     } else {
         if (nv->value > AXIS_MODE_ROTARY_MAX) { return (STAT_INPUT_VALUE_RANGE_ERROR);}
     }
-    cm->a[_get_axis(nv->index)].axis_mode = (cmAxisMode)nv->value;
+    cm->a[_axis(nv->index)].axis_mode = (cmAxisMode)nv->value;
     return(STAT_OK);    
 }
 
-stat_t cm_get_tn(nvObj_t *nv)
-{
-    nv->value = cm->a[_get_axis(nv->index)].travel_min;
-    nv->valuetype = TYPE_FLOAT;
-    return (STAT_OK);
-}
-
-
-stat_t cm_set_tn(nvObj_t *nv)
-{
-    preprocess_incoming_float(nv);
-    cm->a[_get_axis(nv->index)].travel_min = nv->value;
-    return (STAT_OK);
-}
+stat_t cm_get_tn(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].travel_min)); }
+stat_t cm_set_tn(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv->index)].travel_min));}
 
 stat_t cm_get_tm(nvObj_t *nv)
 {
-    nv->value = cm->a[_get_axis(nv->index)].travel_max;
+    nv->value = cm->a[_axis(nv->index)].travel_max;
     nv->valuetype = TYPE_FLOAT;
     return (STAT_OK);
 }
@@ -2301,7 +2288,7 @@ stat_t cm_get_tm(nvObj_t *nv)
 stat_t cm_set_tm(nvObj_t *nv)
 {
     preprocess_incoming_float(nv);
-    cm->a[_get_axis(nv->index)].travel_max = nv->value;
+    cm->a[_axis(nv->index)].travel_max = nv->value;
     return (STAT_OK);
 }
 
@@ -2361,7 +2348,7 @@ stat_t cm_get_vm(nvObj_t *nv)
 
 stat_t cm_set_vm(nvObj_t *nv)
 {
-    uint8_t axis = _get_axis(nv->index);
+    uint8_t axis = _axis(nv->index);
     if ((axis == AXIS_A) || (axis == AXIS_B) || (axis == AXIS_C)) {
         set_flt(nv);
     } else {
@@ -2378,7 +2365,7 @@ stat_t cm_get_fr(nvObj_t *nv)
 
 stat_t cm_set_fr(nvObj_t *nv)
 {
-    uint8_t axis = _get_axis(nv->index);
+    uint8_t axis = _axis(nv->index);
     if ((axis == AXIS_A) || (axis == AXIS_B) || (axis == AXIS_C)) {
         set_flt(nv);
     } else {
@@ -2397,7 +2384,7 @@ stat_t cm_set_jm(nvObj_t *nv)
 {
 //    if (nv->value > JERK_MULTIPLIER) nv->value /= JERK_MULTIPLIER;
     set_flu(nv);
-    cm_set_axis_jerk(_get_axis(nv->index), nv->value);
+    cm_set_axis_jerk(_axis(nv->index), nv->value);
     return(STAT_OK);
 }
 
@@ -2815,7 +2802,7 @@ static void _print_axis_coord_flt(nvObj_t *nv, const char *format)
 static void _print_pos(nvObj_t *nv, const char *format, uint8_t units)
 {
     char axes[] = {"XYZABC"};
-    uint8_t axis = _get_axis(nv->index);
+    uint8_t axis = _axis(nv->index);
     if (axis >= AXIS_A) { units = DEGREES;}
     sprintf(cs.out_buf, format, axes[axis], nv->value, GET_TEXT_ITEM(msg_units, units));
     xio_writeline(cs.out_buf);
@@ -2824,7 +2811,7 @@ static void _print_pos(nvObj_t *nv, const char *format, uint8_t units)
 static void _print_hom(nvObj_t *nv, const char *format)
 {
     char axes[] = {"XYZABC"};
-    uint8_t axis = _get_axis(nv->index);
+    uint8_t axis = _axis(nv->index);
     sprintf(cs.out_buf, format, axes[axis], nv->value);
     xio_writeline(cs.out_buf);
 }

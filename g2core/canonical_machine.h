@@ -184,11 +184,11 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     bool safety_interlock_enable;           // true to enable safety interlock system
 
     // gcode power-on default settings - defaults are not the same as the gm state
-    cmCoordSystem default_coord_system;     // G10 active coordinate system default
-    cmCanonicalPlane default_select_plane;  // G17,G18,G19 reset default
-    cmUnitsMode default_units_mode;         // G20,G21 reset default
-    cmPathControl default_path_control;     // G61,G61.1,G64 reset default
-    cmDistanceMode default_distance_mode;   // G90,G91 reset default
+//    cmCoordSystem default_coord_system;     // G10 active coordinate system default
+//    cmCanonicalPlane default_select_plane;  // G17,G18,G19 reset default
+//    cmUnitsMode default_units_mode;         // G20,G21 reset default
+//    cmPathControl default_path_control;     // G61,G61.1,G64 reset default
+//    cmDistanceMode default_distance_mode;   // G90,G91 reset default
 
     // coordinate systems and offsets
     float offset[COORDS+1][AXES];           // persistent coordinate offsets: absolute (G53) + G54,G55,G56,G57,G58,G59

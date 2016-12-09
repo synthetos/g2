@@ -200,7 +200,7 @@ const cfgItem_t cfgArray[] = {
     { "1","1sa",_fip, 3, st_print_sa, get_flt, st_set_sa,   (float *)&st_cfg.mot[MOTOR_1].step_angle,     M1_STEP_ANGLE },
     { "1","1tr",_fipc,4, st_print_tr, get_flt, st_set_tr,   (float *)&st_cfg.mot[MOTOR_1].travel_rev,     M1_TRAVEL_PER_REV },
     { "1","1mi",_fip, 0, st_print_mi, get_ui8, st_set_mi,   (float *)&st_cfg.mot[MOTOR_1].microsteps,     M1_MICROSTEPS },
-    { "1","1su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_1].steps_per_unit,	M1_STEPS_PER_UNIT },
+    { "1","1su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_1].steps_per_unit, M1_STEPS_PER_UNIT },
     { "1","1po",_fip, 0, st_print_po, get_ui8, set_01,      (float *)&st_cfg.mot[MOTOR_1].polarity,       M1_POLARITY },
     { "1","1pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null,                            M1_POWER_MODE },
     { "1","1pl",_fip, 3, st_print_pl, get_flt, st_set_pl,   (float *)&st_cfg.mot[MOTOR_1].power_level,    M1_POWER_LEVEL },
@@ -211,7 +211,7 @@ const cfgItem_t cfgArray[] = {
     { "2","2sa",_fip, 3, st_print_sa, get_flt, st_set_sa,   (float *)&st_cfg.mot[MOTOR_2].step_angle,     M2_STEP_ANGLE },
     { "2","2tr",_fipc,4, st_print_tr, get_flt, st_set_tr,   (float *)&st_cfg.mot[MOTOR_2].travel_rev,     M2_TRAVEL_PER_REV },
     { "2","2mi",_fip, 0, st_print_mi, get_ui8, st_set_mi,   (float *)&st_cfg.mot[MOTOR_2].microsteps,     M2_MICROSTEPS },
-    { "2","2su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_2].steps_per_unit,	M2_STEPS_PER_UNIT },
+    { "2","2su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_2].steps_per_unit, M2_STEPS_PER_UNIT },
     { "2","2po",_fip, 0, st_print_po, get_ui8, set_01,      (float *)&st_cfg.mot[MOTOR_2].polarity,       M2_POLARITY },
     { "2","2pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null,                            M2_POWER_MODE },
     { "2","2pl",_fip, 3, st_print_pl, get_flt, st_set_pl,   (float *)&st_cfg.mot[MOTOR_2].power_level,    M2_POWER_LEVEL},
@@ -223,7 +223,7 @@ const cfgItem_t cfgArray[] = {
     { "3","3sa",_fip, 3, st_print_sa, get_flt, st_set_sa,   (float *)&st_cfg.mot[MOTOR_3].step_angle,     M3_STEP_ANGLE },
     { "3","3tr",_fipc,4, st_print_tr, get_flt, st_set_tr,   (float *)&st_cfg.mot[MOTOR_3].travel_rev,     M3_TRAVEL_PER_REV },
     { "3","3mi",_fip, 0, st_print_mi, get_ui8, st_set_mi,   (float *)&st_cfg.mot[MOTOR_3].microsteps,     M3_MICROSTEPS },
-    { "3","3su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_3].steps_per_unit,	M3_STEPS_PER_UNIT },
+    { "3","3su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_3].steps_per_unit, M3_STEPS_PER_UNIT },
     { "3","3po",_fip, 0, st_print_po, get_ui8, set_01,      (float *)&st_cfg.mot[MOTOR_3].polarity,       M3_POLARITY },
     { "3","3pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null,                            M3_POWER_MODE },
     { "3","3pl",_fip, 3, st_print_pl, get_flt, st_set_pl,   (float *)&st_cfg.mot[MOTOR_3].power_level,    M3_POWER_LEVEL },
@@ -235,7 +235,7 @@ const cfgItem_t cfgArray[] = {
     { "4","4sa",_fip, 3, st_print_sa, get_flt, st_set_sa,   (float *)&st_cfg.mot[MOTOR_4].step_angle,     M4_STEP_ANGLE },
     { "4","4tr",_fipc,4, st_print_tr, get_flt, st_set_tr,   (float *)&st_cfg.mot[MOTOR_4].travel_rev,     M4_TRAVEL_PER_REV },
     { "4","4mi",_fip, 0, st_print_mi, get_ui8, st_set_mi,   (float *)&st_cfg.mot[MOTOR_4].microsteps,     M4_MICROSTEPS },
-    { "4","4su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_4].steps_per_unit,	M4_STEPS_PER_UNIT },
+    { "4","4su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_4].steps_per_unit, M4_STEPS_PER_UNIT },
     { "4","4po",_fip, 0, st_print_po, get_ui8, set_01,      (float *)&st_cfg.mot[MOTOR_4].polarity,       M4_POLARITY },
     { "4","4pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null,                            M4_POWER_MODE },
     { "4","4pl",_fip, 3, st_print_pl, get_flt, st_set_pl,   (float *)&st_cfg.mot[MOTOR_4].power_level,    M4_POWER_LEVEL },
@@ -247,7 +247,7 @@ const cfgItem_t cfgArray[] = {
     { "5","5sa",_fip, 3, st_print_sa, get_flt, st_set_sa,   (float *)&st_cfg.mot[MOTOR_5].step_angle,     M5_STEP_ANGLE },
     { "5","5tr",_fipc,4, st_print_tr, get_flt, st_set_tr,   (float *)&st_cfg.mot[MOTOR_5].travel_rev,     M5_TRAVEL_PER_REV },
     { "5","5mi",_fip, 0, st_print_mi, get_ui8, st_set_mi,   (float *)&st_cfg.mot[MOTOR_5].microsteps,     M5_MICROSTEPS },
-    { "5","5su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_5].steps_per_unit,	M5_STEPS_PER_UNIT },
+    { "5","5su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_5].steps_per_unit, M5_STEPS_PER_UNIT },
     { "5","5po",_fip, 0, st_print_po, get_ui8, set_01,      (float *)&st_cfg.mot[MOTOR_5].polarity,       M5_POLARITY },
     { "5","5pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null,                            M5_POWER_MODE },
     { "5","5pl",_fip, 3, st_print_pl, get_flt, st_set_pl,   (float *)&st_cfg.mot[MOTOR_5].power_level,    M5_POWER_LEVEL },
@@ -259,7 +259,7 @@ const cfgItem_t cfgArray[] = {
     { "6","6sa",_fip, 3, st_print_sa, get_flt, st_set_sa,   (float *)&st_cfg.mot[MOTOR_6].step_angle,     M6_STEP_ANGLE },
     { "6","6tr",_fipc,4, st_print_tr, get_flt, st_set_tr,   (float *)&st_cfg.mot[MOTOR_6].travel_rev,     M6_TRAVEL_PER_REV },
     { "6","6mi",_fip, 0, st_print_mi, get_ui8, st_set_mi,   (float *)&st_cfg.mot[MOTOR_6].microsteps,     M6_MICROSTEPS },
-    { "6","6su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_6].steps_per_unit,	M6_STEPS_PER_UNIT },
+    { "6","6su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_6].steps_per_unit, M6_STEPS_PER_UNIT },
     { "6","6po",_fip, 0, st_print_po, get_ui8, set_01,      (float *)&st_cfg.mot[MOTOR_6].polarity,       M6_POLARITY },
     { "6","6pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null,                            M6_POWER_MODE },
     { "6","6pl",_fip, 3, st_print_pl, get_flt, st_set_pl,   (float *)&st_cfg.mot[MOTOR_6].power_level,    M6_POWER_LEVEL },
@@ -647,11 +647,11 @@ const cfgItem_t cfgArray[] = {
 
     // Gcode defaults
     // NOTE: The ordering within the gcode defaults is important for token resolution. gc must follow gco
-    { "sys","gpl", _fipn, 0, cm_print_gpl, get_ui8, set_012, (float *)&cm->default_select_plane,     GCODE_DEFAULT_PLANE },
-    { "sys","gun", _fipn, 0, cm_print_gun, get_ui8, set_01,  (float *)&cm->default_units_mode,       GCODE_DEFAULT_UNITS },
-    { "sys","gco", _fipn, 0, cm_print_gco, get_ui8, set_ui8, (float *)&cm->default_coord_system,     GCODE_DEFAULT_COORD_SYSTEM },
-    { "sys","gpa", _fipn, 0, cm_print_gpa, get_ui8, set_012, (float *)&cm->default_path_control,     GCODE_DEFAULT_PATH_CONTROL },
-    { "sys","gdi", _fipn, 0, cm_print_gdi, get_ui8, set_01,  (float *)&cm->default_distance_mode,    GCODE_DEFAULT_DISTANCE_MODE },
+    { "sys","gpl", _fipn, 0, cm_print_gpl, get_ui8, set_012, (float *)&gc.default_select_plane,     GCODE_DEFAULT_PLANE },
+    { "sys","gun", _fipn, 0, cm_print_gun, get_ui8, set_01,  (float *)&gc.default_units_mode,       GCODE_DEFAULT_UNITS },
+    { "sys","gco", _fipn, 0, cm_print_gco, get_ui8, set_ui8, (float *)&gc.default_coord_system,     GCODE_DEFAULT_COORD_SYSTEM },
+    { "sys","gpa", _fipn, 0, cm_print_gpa, get_ui8, set_012, (float *)&gc.default_path_control,     GCODE_DEFAULT_PATH_CONTROL },
+    { "sys","gdi", _fipn, 0, cm_print_gdi, get_ui8, set_01,  (float *)&gc.default_distance_mode,    GCODE_DEFAULT_DISTANCE_MODE },
     { "",   "gc",  _f0,   0, tx_print_nul, gc_get_gc,gc_run_gc,(float *)&cs.null, 0 },              // gcode block - must be last in this group
 
     // Actions and Reports
@@ -992,6 +992,23 @@ stat_t set_flu(nvObj_t *nv)
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
     return(STAT_OK);
+}
+
+/*
+ * get_float() - boilerplate for retrieving a floating point value
+ * set_float() - boilerplate for setting a floating point value
+ */
+
+stat_t get_float(nvObj_t *nv, const float value) {
+    nv->value = value;
+    nv->valuetype = TYPE_FLOAT;
+    return STAT_OK;
+}
+
+stat_t set_float(nvObj_t *nv, float &value) {
+    preprocess_incoming_float(nv);
+    value = nv->value;
+    return (STAT_OK);
 }
 
 /*
