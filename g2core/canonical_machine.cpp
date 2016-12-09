@@ -86,8 +86,9 @@
  *      and have no buffer.
  */
 
-#include "g2core.h"  // #1
-#include "config.h"  // #2
+#include "g2core.h"     // #1
+#include "config.h"     // #2
+#include "gcode.h"      // #3
 #include "canonical_machine.h"
 #include "hardware.h"
 #include "controller.h"
@@ -705,8 +706,8 @@ void canonical_machine_init()
 //    memset(&cm, 0, sizeof(cm));                 // do not reset canonicalMachineSingleton once it's been initialized
     memset(cm, 0, sizeof(cm0));                 // do not reset canonicalMachineSingleton once it's been initialized
     memset(&cm->gm, 0, sizeof(GCodeState_t));    // clear all values, pointers and status
-    memset(&cm->gn, 0, sizeof(GCodeInput_t));
-    memset(&cm->gf, 0, sizeof(GCodeFlags_t));
+    memset(&gc.gn, 0, sizeof(GCodeInput_t));
+    memset(&gc.gf, 0, sizeof(GCodeFlags_t));
 
     canonical_machine_init_assertions();        // establish assertions
     ACTIVE_MODEL = MODEL;                       // setup initial Gcode model pointer
@@ -1055,7 +1056,7 @@ stat_t cm_set_coord_offsets(const uint8_t coord_system,
     if ((coord_system < G54) || (coord_system > COORD_SYSTEM_MAX)) {    // you can't set G53
         return (STAT_P_WORD_IS_INVALID);
     }
-    if (!cm->gf.L_word) {
+    if (!gc.gf.L_word) {
         return (STAT_L_WORD_IS_MISSING);
     }
     if ((L_word != 2) && (L_word != 20)) {
@@ -1558,17 +1559,17 @@ stat_t cm_mfo_enable(uint8_t enable)            // M50
 {
     bool new_enable = true;
     bool new_override = false;
-    if (cm->gf.parameter) {                      // if parameter is present in Gcode block
-        if (fp_ZERO(cm->gn.parameter)) {
+    if (gc.gf.parameter) {                      // if parameter is present in Gcode block
+        if (fp_ZERO(gc.gn.parameter)) {
             new_enable = false;                 // P0 disables override
         } else {
-            if (cm->gn.parameter < FEED_OVERRIDE_MIN) {
+            if (gc.gn.parameter < FEED_OVERRIDE_MIN) {
                 return (STAT_INPUT_LESS_THAN_MIN_VALUE);
             }
-            if (cm->gn.parameter > FEED_OVERRIDE_MAX) {
+            if (gc.gn.parameter > FEED_OVERRIDE_MAX) {
                 return (STAT_INPUT_EXCEEDS_MAX_VALUE);
             }
-            cm->gmx.mfo_factor = cm->gn.parameter; // it validates - store it.
+            cm->gmx.mfo_factor = gc.gn.parameter; // it validates - store it.
             new_override = true;
         }
     }
