@@ -128,7 +128,7 @@ static void _exec_absolute_origin(float *value, bool *flag);
 static void _exec_program_finalize(float *value, bool *flag);
 
 static int8_t _get_axis(const index_t index);
-static int8_t _get_axis_type(const index_t index);
+static cmAxisType _get_axis_type(const index_t index);
 
 /***********************************************************************************
  **** CODE *************************************************************************
@@ -2107,12 +2107,12 @@ static int8_t _get_axis(const index_t index)
     return (ptr - axes);
 }
 
-static int8_t _get_axis_type(const index_t index)
+static cmAxisType _get_axis_type(const index_t index)
 {
     int8_t axis = _get_axis(index);
-    if (axis >= AXIS_A) return (1);
-    if (axis == -1) return (-1);
-    return (0);
+    if (axis >= AXIS_A) return (AXIS_TYPE_ROTARY);
+    if (axis == -1) return (AXIS_TYPE_UNDEFINED);
+    return (AXIS_TYPE_LINEAR);
 }
 
 /**** Functions called directly from cfgArray table - mostly wrappers ****
@@ -2262,10 +2262,12 @@ stat_t cm_get_am(nvObj_t *nv)
 
 stat_t cm_set_am(nvObj_t *nv)        // axis mode
 {
-    if (_get_axis_type(nv->index) == 0) {    // linear
-        if (nv->value > AXIS_MODE_MAX_LINEAR) { return (STAT_INPUT_VALUE_RANGE_ERROR);}
+        
+    nv->valuetype = TYPE_INT;
+    if (_get_axis_type(nv->index) == AXIS_TYPE_LINEAR) {
+        if (nv->value > AXIS_MODE_LINEAR_MAX) { return (STAT_INPUT_VALUE_RANGE_ERROR);}
     } else {
-        if (nv->value > AXIS_MODE_MAX_ROTARY) { return (STAT_INPUT_VALUE_RANGE_ERROR);}
+        if (nv->value > AXIS_MODE_ROTARY_MAX) { return (STAT_INPUT_VALUE_RANGE_ERROR);}
     }
     cmAxisMode *am = (cmAxisMode *)cfgArray[nv->index].target;
     void *p = (cfgArray[nv->index].target);
@@ -2274,11 +2276,10 @@ stat_t cm_set_am(nvObj_t *nv)        // axis mode
 //    cmAxisMode a = (cmAxisMode)nv->value;
 //    *am = (cmAxisMode)nv->value;
     *am = a;
-    nv->valuetype = TYPE_INT;
     return(STAT_OK);
 
-    set_ui8(nv);
-    return(STAT_OK);
+//    set_ui8(nv);
+//    return(STAT_OK);
 }
 
 #pragma GCC reset_options

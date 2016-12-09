@@ -267,7 +267,8 @@ const cfgItem_t cfgArray[] = {
 //  { "6","6mt",_fip, 2, st_print_mt, get_flt, st_set_mt,   (float *)&st_cfg.mot[MOTOR_6].motor_timeout,  M6_MOTOR_TIMEOUT },
 #endif
     // Axis parameters
-    { "x","xam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cm->a[AXIS_X].axis_mode,      X_AXIS_MODE },
+    { "x","xam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cs.null,                      X_AXIS_MODE },
+//    { "x","xam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cm->a[AXIS_X].axis_mode,      X_AXIS_MODE },
     { "x","xvm",_fipc, 0, cm_print_vm, get_flt,   cm_set_vm, (float *)&cm->a[AXIS_X].velocity_max,   X_VELOCITY_MAX },
     { "x","xfr",_fipc, 0, cm_print_fr, get_flt,   cm_set_fr, (float *)&cm->a[AXIS_X].feedrate_max,   X_FEEDRATE_MAX },
     { "x","xtn",_fipc, 3, cm_print_tn, get_flt,   set_flu,   (float *)&cm->a[AXIS_X].travel_min,     X_TRAVEL_MIN },

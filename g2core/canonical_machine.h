@@ -276,14 +276,20 @@ typedef enum {              // used for spindle and arc dir
     DIRECTION_CCW
 } cmDirection;
 
+typedef enum {              // axis types
+    AXIS_TYPE_UNDEFINED=-1, // invalid type
+    AXIS_TYPE_LINEAR,       // linear axis
+    AXIS_TYPE_ROTARY        // rotary axis
+} cmAxisType;
+
 typedef enum {              // axis modes (ordered: see _cm_get_feed_time())
     AXIS_DISABLED = 0,      // kill axis
     AXIS_STANDARD,          // axis in coordinated motion w/standard behaviors
     AXIS_INHIBITED,         // axis is computed but not activated
     AXIS_RADIUS             // rotary axis calibrated to circumference
 } cmAxisMode;
-#define AXIS_MODE_MAX_LINEAR AXIS_INHIBITED
-#define AXIS_MODE_MAX_ROTARY AXIS_RADIUS
+#define AXIS_MODE_LINEAR_MAX    AXIS_INHIBITED
+#define AXIS_MODE_ROTARY_MAX    AXIS_RADIUS
 
 /*****************************************************************************
  * GCODE MODEL - The following GCodeModel/GCodeInput structs are used:
