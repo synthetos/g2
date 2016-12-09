@@ -2276,21 +2276,9 @@ stat_t cm_set_am(nvObj_t *nv)        // axis mode
 }
 
 stat_t cm_get_tn(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].travel_min)); }
-stat_t cm_set_tn(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv->index)].travel_min));}
-
-stat_t cm_get_tm(nvObj_t *nv)
-{
-    nv->value = cm->a[_axis(nv->index)].travel_max;
-    nv->valuetype = TYPE_FLOAT;
-    return (STAT_OK);
-}
-
-stat_t cm_set_tm(nvObj_t *nv)
-{
-    preprocess_incoming_float(nv);
-    cm->a[_axis(nv->index)].travel_max = nv->value;
-    return (STAT_OK);
-}
+stat_t cm_set_tn(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv->index)].travel_min)); }
+stat_t cm_get_tm(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].travel_max)); }
+stat_t cm_set_tm(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv->index)].travel_max)); }
 
 /**** Axis Jerk Primitives
  * cm_get_axis_jerk() - returns jerk for an axis
@@ -2341,64 +2329,32 @@ void cm_set_axis_jerk(const uint8_t axis, const float jerk)
  *  The axis_jerk() functions expect the jerk in divided-by 1,000,000 form
  */
 
-stat_t cm_get_vm(nvObj_t *nv)
-{
-    return(STAT_OK);    
-}
+stat_t cm_get_vm(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].velocity_max)); }
+stat_t cm_set_vm(nvObj_t *nv) { 
+                                uint8_t axis = _axis(nv->index);
+                                set_float(nv, cm->a[axis].velocity_max); 
+                                cm->a[axis].recip_velocity_max = 1/nv->value;
+                                return(STAT_OK);
+                              }
 
-stat_t cm_set_vm(nvObj_t *nv)
-{
-    uint8_t axis = _axis(nv->index);
-    if ((axis == AXIS_A) || (axis == AXIS_B) || (axis == AXIS_C)) {
-        set_flt(nv);
-    } else {
-        set_flu(nv);
-    }
-    cm->a[axis].recip_velocity_max = 1/nv->value;
-    return(STAT_OK);
-}
+stat_t cm_get_fr(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].feedrate_max)); }
+stat_t cm_set_fr(nvObj_t *nv) {
+                                uint8_t axis = _axis(nv->index);
+                                set_float(nv, cm->a[axis].feedrate_max);
+                                cm->a[axis].recip_feedrate_max = 1/nv->value;
+                                return(STAT_OK);
+                              }
 
-stat_t cm_get_fr(nvObj_t *nv)
-{
-    return(STAT_OK);
-}
+stat_t cm_get_jm(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].jerk_max)); }
+stat_t cm_set_jm(nvObj_t *nv) {
+                                uint8_t axis = _axis(nv->index);
+                                set_float(nv, cm->a[axis].jerk_max);
+                                cm_set_axis_jerk(axis, nv->value);
+                                return(STAT_OK);
+                              }
 
-stat_t cm_set_fr(nvObj_t *nv)
-{
-    uint8_t axis = _axis(nv->index);
-    if ((axis == AXIS_A) || (axis == AXIS_B) || (axis == AXIS_C)) {
-        set_flt(nv);
-    } else {
-        set_flu(nv);
-    }
-    cm->a[axis].recip_feedrate_max = 1/nv->value;
-    return(STAT_OK);
-}
-
-stat_t cm_get_jm(nvObj_t *nv)
-{
-    return(STAT_OK);
-}
-
-stat_t cm_set_jm(nvObj_t *nv)
-{
-//    if (nv->value > JERK_MULTIPLIER) nv->value /= JERK_MULTIPLIER;
-    set_flu(nv);
-    cm_set_axis_jerk(_axis(nv->index), nv->value);
-    return(STAT_OK);
-}
-
-stat_t cm_get_jh(nvObj_t *nv)
-{
-    return(STAT_OK);
-}
-
-stat_t cm_set_jh(nvObj_t *nv)
-{
-//    if (nv->value > JERK_MULTIPLIER) nv->value /= JERK_MULTIPLIER;
-    set_flu(nv);
-    return(STAT_OK);
-}
+stat_t cm_get_jh(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].jerk_high)); }
+stat_t cm_set_jh(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].jerk_high)); }
 
 /**** Axis Homing Settings
  * cm_get_hi() - get homing input
@@ -2415,69 +2371,18 @@ stat_t cm_set_jh(nvObj_t *nv)
  * cm_set_zb() - set homing zero backoff
  */
 
-stat_t cm_get_hi(nvObj_t *nv)
-{
-    return(STAT_OK);
-}
-
-stat_t cm_set_hi(nvObj_t *nv)
-{
-    if ((nv->value < 0) || (nv->value > D_IN_CHANNELS)) {
-        return (STAT_INPUT_VALUE_RANGE_ERROR);
-    }
-    set_ui8(nv);
-    return (STAT_OK);
-}
-
-stat_t cm_get_hd(nvObj_t *nv)
-{
-    return(STAT_OK);
-}
-
-stat_t cm_set_hd(nvObj_t *nv)
-{
-    return (STAT_OK);
-}
-
-stat_t cm_get_sv(nvObj_t *nv)
-{
-    return(STAT_OK);
-}
-
-stat_t cm_set_sv(nvObj_t *nv)
-{
-    return(STAT_OK);
-}
-
-stat_t cm_get_lv(nvObj_t *nv)
-{
-    return(STAT_OK);
-}
-
-stat_t cm_set_lv(nvObj_t *nv)
-{
-    return(STAT_OK);
-}
-
-stat_t cm_get_lb(nvObj_t *nv)
-{
-    return(STAT_OK);
-}
-
-stat_t cm_set_lb(nvObj_t *nv)
-{
-    return(STAT_OK);
-}
-
-stat_t cm_get_zb(nvObj_t *nv)
-{
-    return(STAT_OK);
-}
-
-stat_t cm_set_zb(nvObj_t *nv)
-{
-    return(STAT_OK);
-}
+stat_t cm_get_hi(nvObj_t *nv) { return (get_int(nv, cm->a[_axis(nv->index)].homing_input)); }
+stat_t cm_set_hi(nvObj_t *nv) { return (set_int(nv, cm->a[_axis(nv->index)].homing_input, 0, D_IN_CHANNELS)); }
+stat_t cm_get_hd(nvObj_t *nv) { return (get_int(nv, cm->a[_axis(nv->index)].homing_dir)); }
+stat_t cm_set_hd(nvObj_t *nv) { return (set_int(nv, cm->a[_axis(nv->index)].homing_dir, 0, 1)); }
+stat_t cm_get_sv(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].search_velocity)); }
+stat_t cm_set_sv(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv->index)].search_velocity)); }
+stat_t cm_get_lv(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].latch_velocity)); }
+stat_t cm_set_lv(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv->index)].latch_velocity)); }
+stat_t cm_get_lb(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].latch_backoff)); }
+stat_t cm_set_lb(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv->index)].latch_backoff)); }
+stat_t cm_get_zb(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].zero_backoff)); }
+stat_t cm_set_zb(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv->index)].zero_backoff)); }
 
 
 /*** Canonical Machine Global Settings ***/

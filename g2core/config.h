@@ -352,9 +352,12 @@ nvObj_t *nv_add_conditional_message(const char *string);
 void nv_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags);
 
 // application specific helpers and functions (config_app.c)
-stat_t set_flu(nvObj_t *nv);            // set floating point number with G20/G21 units conversion
+stat_t set_flu(nvObj_t *nv);                        // set floating point number with G20/G21 units conversion
+
 stat_t get_float(nvObj_t *nv, const float value);   // boilerplate for retrieving a floating point value
 stat_t set_float(nvObj_t *nv, float &value);        // boilerplate for setting a floating point value
+stat_t get_int(nvObj_t *nv, const uint8_t value);     // boilerplate for retrieving an integer value
+stat_t set_int(nvObj_t *nv, uint8_t &value, uint8_t low, uint8_t high);
 void preprocess_incoming_float(nvObj_t *nv);        // pre-process outgoing float values for units and illegal values
 void preprocess_outgoing_float(nvObj_t *nv);        // pre-process incoming float values for canonical units
 

@@ -267,33 +267,33 @@ const cfgItem_t cfgArray[] = {
 //  { "6","6mt",_fip, 2, st_print_mt, get_flt, st_set_mt,   (float *)&st_cfg.mot[MOTOR_6].motor_timeout,  M6_MOTOR_TIMEOUT },
 #endif
     // Axis parameters
-    { "x","xam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cs.null,                      X_AXIS_MODE },
-    { "x","xvm",_fipc, 0, cm_print_vm, cm_get_vm, cm_set_vm, (float *)&cm->a[AXIS_X].velocity_max,   X_VELOCITY_MAX },
-    { "x","xfr",_fipc, 0, cm_print_fr, get_flt,   cm_set_fr, (float *)&cm->a[AXIS_X].feedrate_max,   X_FEEDRATE_MAX },
-    { "x","xtn",_fipc, 3, cm_print_tn, cm_get_tn, cm_set_tn, (float *)&cs.null,     X_TRAVEL_MIN },
-    { "x","xtm",_fipc, 3, cm_print_tm, cm_get_tm, cm_set_tm, (float *)&cs.null,     X_TRAVEL_MAX },
-    { "x","xjm",_fipc, 0, cm_print_jm, get_flt,   cm_set_jm, (float *)&cm->a[AXIS_X].jerk_max,       X_JERK_MAX },
-    { "x","xjh",_fipc, 0, cm_print_jh, get_flt,   cm_set_jh, (float *)&cm->a[AXIS_X].jerk_high,      X_JERK_HIGH_SPEED },
-    { "x","xhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm->a[AXIS_X].homing_input,   X_HOMING_INPUT },
-    { "x","xhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm->a[AXIS_X].homing_dir,     X_HOMING_DIRECTION },
-    { "x","xsv",_fipc, 0, cm_print_sv, get_flt,   set_flu,   (float *)&cm->a[AXIS_X].search_velocity,X_SEARCH_VELOCITY },
-    { "x","xlv",_fipc, 2, cm_print_lv, get_flt,   set_flu,   (float *)&cm->a[AXIS_X].latch_velocity, X_LATCH_VELOCITY },
-    { "x","xlb",_fipc, 3, cm_print_lb, get_flt,   set_flu,   (float *)&cm->a[AXIS_X].latch_backoff,  X_LATCH_BACKOFF },
-    { "x","xzb",_fipc, 3, cm_print_zb, get_flt,   set_flu,   (float *)&cm->a[AXIS_X].zero_backoff,   X_ZERO_BACKOFF },
+    { "x","xam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cs.null, X_AXIS_MODE },
+    { "x","xvm",_fipc, 0, cm_print_vm, cm_get_vm, cm_set_vm, (float *)&cs.null, X_VELOCITY_MAX },
+    { "x","xfr",_fipc, 0, cm_print_fr, cm_get_fr, cm_set_fr, (float *)&cs.null, X_FEEDRATE_MAX },
+    { "x","xtn",_fipc, 3, cm_print_tn, cm_get_tn, cm_set_tn, (float *)&cs.null, X_TRAVEL_MIN },
+    { "x","xtm",_fipc, 3, cm_print_tm, cm_get_tm, cm_set_tm, (float *)&cs.null, X_TRAVEL_MAX },
+    { "x","xjm",_fipc, 0, cm_print_jm, cm_get_jm, cm_set_jm, (float *)&cs.null, X_JERK_MAX },
+    { "x","xjh",_fipc, 0, cm_print_jh, cm_get_jh, cm_set_jh, (float *)&cs.null, X_JERK_HIGH_SPEED },
+    { "x","xhi",_fip,  0, cm_print_hi, cm_get_hi, cm_set_hi, (float *)&cs.null, X_HOMING_INPUT },
+    { "x","xhd",_fip,  0, cm_print_hd, cm_get_hd, cm_set_hd, (float *)&cs.null, X_HOMING_DIRECTION },
+    { "x","xsv",_fipc, 0, cm_print_sv, cm_get_sv, cm_set_sv, (float *)&cs.null, X_SEARCH_VELOCITY },
+    { "x","xlv",_fipc, 2, cm_print_lv, cm_get_lv, cm_set_lv, (float *)&cs.null, X_LATCH_VELOCITY },
+    { "x","xlb",_fipc, 3, cm_print_lb, cm_get_lb, cm_set_lb, (float *)&cs.null, X_LATCH_BACKOFF },
+    { "x","xzb",_fipc, 3, cm_print_zb, cm_get_zb, cm_set_zb, (float *)&cs.null, X_ZERO_BACKOFF },
 
     { "y","yam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cs.null,                      Y_AXIS_MODE },
-    { "y","yvm",_fipc, 0, cm_print_vm, get_flt,   cm_set_vm, (float *)&cm->a[AXIS_Y].velocity_max,   Y_VELOCITY_MAX },
-    { "y","yfr",_fipc, 0, cm_print_fr, get_flt,   cm_set_fr, (float *)&cm->a[AXIS_Y].feedrate_max,   Y_FEEDRATE_MAX },
-    { "y","ytn",_fipc, 3, cm_print_tn, get_flt,   set_flu,   (float *)&cm->a[AXIS_Y].travel_min,     Y_TRAVEL_MIN },
-    { "y","ytm",_fipc, 3, cm_print_tm, get_flt,   set_flu,   (float *)&cm->a[AXIS_Y].travel_max,     Y_TRAVEL_MAX },
-    { "y","yjm",_fipc, 0, cm_print_jm, get_flt,   cm_set_jm, (float *)&cm->a[AXIS_Y].jerk_max,       Y_JERK_MAX },
-    { "y","yjh",_fipc, 0, cm_print_jh, get_flt,   cm_set_jh, (float *)&cm->a[AXIS_Y].jerk_high,      Y_JERK_HIGH_SPEED },
-    { "y","yhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm->a[AXIS_Y].homing_input,   Y_HOMING_INPUT },
-    { "y","yhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm->a[AXIS_Y].homing_dir,     Y_HOMING_DIRECTION },
-    { "y","ysv",_fipc, 0, cm_print_sv, get_flt,   set_flu,   (float *)&cm->a[AXIS_Y].search_velocity,Y_SEARCH_VELOCITY },
-    { "y","ylv",_fipc, 2, cm_print_lv, get_flt,   set_flu,   (float *)&cm->a[AXIS_Y].latch_velocity, Y_LATCH_VELOCITY },
-    { "y","ylb",_fipc, 3, cm_print_lb, get_flt,   set_flu,   (float *)&cm->a[AXIS_Y].latch_backoff,  Y_LATCH_BACKOFF },
-    { "y","yzb",_fipc, 3, cm_print_zb, get_flt,   set_flu,   (float *)&cm->a[AXIS_Y].zero_backoff,   Y_ZERO_BACKOFF },
+    { "y","yvm",_fipc, 0, cm_print_vm, cm_get_vm, cm_set_vm, (float *)&cm->a[AXIS_Y].velocity_max,   Y_VELOCITY_MAX },
+    { "y","yfr",_fipc, 0, cm_print_fr, cm_get_fr, cm_set_fr, (float *)&cm->a[AXIS_Y].feedrate_max,   Y_FEEDRATE_MAX },
+    { "y","ytn",_fipc, 3, cm_print_tn, cm_get_tn, cm_set_tn, (float *)&cm->a[AXIS_Y].travel_min,     Y_TRAVEL_MIN },
+    { "y","ytm",_fipc, 3, cm_print_tm, cm_get_tm, cm_set_tm, (float *)&cm->a[AXIS_Y].travel_max,     Y_TRAVEL_MAX },
+    { "y","yjm",_fipc, 0, cm_print_jm, cm_get_jm, cm_set_jm, (float *)&cm->a[AXIS_Y].jerk_max,       Y_JERK_MAX },
+    { "y","yjh",_fipc, 0, cm_print_jh, cm_get_jh, cm_set_jh, (float *)&cm->a[AXIS_Y].jerk_high,      Y_JERK_HIGH_SPEED },
+    { "y","yhi",_fip,  0, cm_print_hi, cm_get_hi, cm_set_hi, (float *)&cm->a[AXIS_Y].homing_input,   Y_HOMING_INPUT },
+    { "y","yhd",_fip,  0, cm_print_hd, cm_get_hd, cm_set_hd, (float *)&cm->a[AXIS_Y].homing_dir,     Y_HOMING_DIRECTION },
+    { "y","ysv",_fipc, 0, cm_print_sv, cm_get_sv, cm_set_sv, (float *)&cm->a[AXIS_Y].search_velocity,Y_SEARCH_VELOCITY },
+    { "y","ylv",_fipc, 2, cm_print_lv, cm_get_lv, cm_set_lv, (float *)&cm->a[AXIS_Y].latch_velocity, Y_LATCH_VELOCITY },
+    { "y","ylb",_fipc, 3, cm_print_lb, cm_get_lb, cm_set_lb, (float *)&cm->a[AXIS_Y].latch_backoff,  Y_LATCH_BACKOFF },
+    { "y","yzb",_fipc, 3, cm_print_zb, cm_get_zb, cm_set_zb, (float *)&cm->a[AXIS_Y].zero_backoff,   Y_ZERO_BACKOFF },
 
     { "z","zam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cs.null,                      Z_AXIS_MODE },
     { "z","zvm",_fipc, 0, cm_print_vm, get_flt,   cm_set_vm, (float *)&cm->a[AXIS_Z].velocity_max,   Z_VELOCITY_MAX },
@@ -1012,6 +1012,26 @@ stat_t set_float(nvObj_t *nv, float &value) {
 }
 
 /*
+ * get_int() - boilerplate for retrieving an integer value
+ * set_int() - boilerplate for setting an integer value
+ */
+
+stat_t get_int(nvObj_t *nv, const uint8_t value) {
+    nv->value = value;
+    nv->valuetype = TYPE_INT;
+    return STAT_OK;
+}
+
+stat_t set_int(nvObj_t *nv, uint8_t &value, uint8_t low, uint8_t high) {
+
+    if ((nv->value < low) || (nv->value > high)) {
+        return (STAT_INPUT_VALUE_RANGE_ERROR);
+    }
+    value = nv->value;
+    return (STAT_OK);
+}
+
+/*
  * preprocess_incoming_float() - pre-process an incoming floating point number for canonical units
  * preprocess_outgoing_float() - pre-process an outgoing floating point number for units display
  */
@@ -1027,9 +1047,7 @@ void preprocess_incoming_float(nvObj_t *nv)
                 nv->value *= MM_PER_INCH;                           // convert to canonical millimeter units
             }
         }
-    }    
-//    nv->precision = GET_TABLE_WORD(precision);
-//    nv->valuetype = TYPE_FLOAT;
+    }
 }
 
 void preprocess_outgoing_float(nvObj_t *nv)
