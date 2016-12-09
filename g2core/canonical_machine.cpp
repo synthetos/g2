@@ -2243,39 +2243,10 @@ stat_t cm_get_ofs(nvObj_t *nv)
     return (STAT_OK);
 }
 
-/*
- * AXIS GET AND SET FUNCTIONS
- */
+/************************************
+ **** AXIS GET AND SET FUNCTIONS ****
+ ************************************/
 
-/*
- * _decorate_settable_float() - convert incoming float value by units and axis type & complete NV struct
- * _decorate_gettable_float() - convert outcoming float value by units and axis type & complete NV struct
- */
-/*
-float _preprocess_float(nvObj_t *nv) 
-{
-    if (cm_get_units_mode(MODEL) == INCHES) {                   // If inn inches mode
-        if (_get_axis_type(nv->index) == AXIS_TYPE_LINEAR) {    // ...and a linear axis...
-            nv->value *= MM_PER_INCH;                           // convert to canonical millimeter units
-        }
-    }
-    nv->precision = GET_TABLE_WORD(precision);
-    nv->valuetype = TYPE_FLOAT;
-    return(nv->value);
-}
-
-float _decorate_gettable_float(nvObj_t *nv)
-{
-    if (cm_get_units_mode(MODEL) == INCHES) {                   // If inn inches mode
-        if (_get_axis_type(nv->index) == AXIS_TYPE_LINEAR) {    // ...and a linear axis...
-            nv->value *= MM_PER_INCH;                           // convert to canonical millimeter units
-        }
-    }
-    nv->precision = GET_TABLE_WORD(precision);
-    nv->valuetype = TYPE_FLOAT;
-    return(nv->value);
-}
-*/
 /* Axis Basic Settings
  * cm_get_am() - get axis mode w/enumeration string
  * cm_set_am() - set axis mode w/exception handling for axis type
@@ -2306,21 +2277,30 @@ stat_t cm_set_am(nvObj_t *nv)        // axis mode
 
 stat_t cm_get_tn(nvObj_t *nv)
 {
+    nv->value = cm->a[_get_axis(nv->index)].travel_min;
+    nv->valuetype = TYPE_FLOAT;
     return (STAT_OK);
 }
 
+
 stat_t cm_set_tn(nvObj_t *nv)
 {
+    preprocess_incoming_float(nv);
+    cm->a[_get_axis(nv->index)].travel_min = nv->value;
     return (STAT_OK);
 }
 
 stat_t cm_get_tm(nvObj_t *nv)
 {
+    nv->value = cm->a[_get_axis(nv->index)].travel_max;
+    nv->valuetype = TYPE_FLOAT;
     return (STAT_OK);
 }
 
 stat_t cm_set_tm(nvObj_t *nv)
 {
+    preprocess_incoming_float(nv);
+    cm->a[_get_axis(nv->index)].travel_max = nv->value;
     return (STAT_OK);
 }
 

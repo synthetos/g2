@@ -270,8 +270,8 @@ const cfgItem_t cfgArray[] = {
     { "x","xam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cs.null,                      X_AXIS_MODE },
     { "x","xvm",_fipc, 0, cm_print_vm, cm_get_vm, cm_set_vm, (float *)&cm->a[AXIS_X].velocity_max,   X_VELOCITY_MAX },
     { "x","xfr",_fipc, 0, cm_print_fr, get_flt,   cm_set_fr, (float *)&cm->a[AXIS_X].feedrate_max,   X_FEEDRATE_MAX },
-    { "x","xtn",_fipc, 3, cm_print_tn, get_flt,   set_flu,   (float *)&cm->a[AXIS_X].travel_min,     X_TRAVEL_MIN },
-    { "x","xtm",_fipc, 3, cm_print_tm, get_flt,   set_flu,   (float *)&cm->a[AXIS_X].travel_max,     X_TRAVEL_MAX },
+    { "x","xtn",_fipc, 3, cm_print_tn, cm_get_tn, cm_set_tn, (float *)&cs.null,     X_TRAVEL_MIN },
+    { "x","xtm",_fipc, 3, cm_print_tm, cm_get_tm, cm_set_tm, (float *)&cs.null,     X_TRAVEL_MAX },
     { "x","xjm",_fipc, 0, cm_print_jm, get_flt,   cm_set_jm, (float *)&cm->a[AXIS_X].jerk_max,       X_JERK_MAX },
     { "x","xjh",_fipc, 0, cm_print_jh, get_flt,   cm_set_jh, (float *)&cm->a[AXIS_X].jerk_high,      X_JERK_HIGH_SPEED },
     { "x","xhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm->a[AXIS_X].homing_input,   X_HOMING_INPUT },
@@ -1011,8 +1011,8 @@ void preprocess_incoming_float(nvObj_t *nv)
             }
         }
     }    
-    nv->precision = GET_TABLE_WORD(precision);
-    nv->valuetype = TYPE_FLOAT;
+//    nv->precision = GET_TABLE_WORD(precision);
+//    nv->valuetype = TYPE_FLOAT;
 }
 
 void preprocess_outgoing_float(nvObj_t *nv)
