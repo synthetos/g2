@@ -449,7 +449,7 @@ typedef struct mpMotionPlannerSingleton {  // common variables for planning (mov
     bool ramp_active;               // true when a ramp is occurring
     bool entry_changed;             // mark if exit_velocity changed to invalidate next block's hint
 
-    // feed overrides and ramp variables (these extend the variables in cm.gmx)
+    // feed overrides and ramp variables (these extend the variables in cm->gmx)
     float mfo_factor;               // runtime override factor
     float ramp_target;
     float ramp_dvdt;

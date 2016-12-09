@@ -130,8 +130,8 @@ static stat_t _set_pb_func(uint8_t (*func)()) {
  *  in-progress) occupies one of those positions, wich is the one reported by the
  *  "prb" JSON.
  *
- *  Internally we store the active/most recent probe in cm.probe_results[0] and
- *  cm.probe_state[0]. Before we start a new probe, if cm.probe_state[0] ==
+ *  Internally we store the active/most recent probe in cm->probe_results[0] and
+ *  cm->probe_state[0]. Before we start a new probe, if cm->probe_state[0] ==
  *  PROBE_SUCCEEDED, then we roll 0 to 1, and 1 to 2, up to PROBES_STORED-1.
  *  The oldest probe is "lost."
  *
@@ -139,7 +139,7 @@ static stat_t _set_pb_func(uint8_t (*func)()) {
 
 uint8_t cm_straight_probe(float target[], bool flags[], bool failure_is_fatal, bool moving_toward_switch) {
     // trap zero feed rate condition
-    if (fp_ZERO(cm.gm.feed_rate)) {
+    if (fp_ZERO(cm->gm.feed_rate)) {
         return (STAT_GCODE_FEEDRATE_NOT_SPECIFIED);
     }
 
@@ -156,19 +156,19 @@ uint8_t cm_straight_probe(float target[], bool flags[], bool failure_is_fatal, b
     copy_vector(pb.flags, flags);    // set axes involved on the move
 
     // if the previous probe succeeded, roll probes to the next position
-    if (cm.probe_state[0] == PROBE_SUCCEEDED) {
+    if (cm->probe_state[0] == PROBE_SUCCEEDED) {
         for (uint8_t n = PROBES_STORED - 1; n > 0; n--) {
-            cm.probe_state[n] = cm.probe_state[n - 1];
-            for (uint8_t axis = 0; axis < AXES; axis++) { cm.probe_results[n][axis] = cm.probe_results[n - 1][axis]; }
+            cm->probe_state[n] = cm->probe_state[n - 1];
+            for (uint8_t axis = 0; axis < AXES; axis++) { cm->probe_results[n][axis] = cm->probe_results[n - 1][axis]; }
         }
     }
 
     // clear the old probe position
-    clear_vector(cm.probe_results[0]);
+    clear_vector(cm->probe_results[0]);
 
     // NOTE: relying on probe_result will not detect a probe to 0,0,0.
 
-    cm.probe_state[0]         = PROBE_WAITING;  // wait until planner queue empties before completing initialization
+    cm->probe_state[0]         = PROBE_WAITING;  // wait until planner queue empties before completing initialization
     pb.waiting_for_motion_end = true;
 
     // queue a function to let us know when we can start probing
@@ -195,7 +195,7 @@ uint8_t cm_straight_probe(float target[], bool flags[], bool failure_is_fatal, b
  */
 
 uint8_t cm_probing_cycle_callback(void) {
-    if ((cm.cycle_state != CYCLE_PROBE) && (cm.probe_state[0] != PROBE_WAITING)) {  // exit if not in a homing cycle
+    if ((cm->cycle_state != CYCLE_PROBE) && (cm->probe_state[0] != PROBE_WAITING)) {  // exit if not in a homing cycle
         return (STAT_NOOP);
     }
     if (pb.waiting_for_motion_end) {  // sync to planner move ends (using callback)
@@ -219,9 +219,9 @@ static uint8_t _probing_init() {
     // so optimistic... ;)
     // NOTE: it is *not* an error condition for the probe not to trigger.
     // it is an error for the limit or homing switches to fire, or for some other configuration error.
-    cm.probe_state[0] = PROBE_FAILED;
-    cm.machine_state  = MACHINE_CYCLE;
-    cm.cycle_state    = CYCLE_PROBE;
+    cm->probe_state[0] = PROBE_FAILED;
+    cm->machine_state  = MACHINE_CYCLE;
+    cm->cycle_state    = CYCLE_PROBE;
 
     // save relevant non-axis parameters from Gcode model
     pb.saved_coord_system  = cm_get_coord_system(ACTIVE_MODEL);
@@ -234,7 +234,7 @@ static uint8_t _probing_init() {
     // initialize the axes - save the jerk settings & switch to the jerk_homing settings
     for (uint8_t axis = 0; axis < AXES; axis++) {
         pb.saved_jerk[axis] = cm_get_axis_jerk(axis);  // save the max jerk value
-        cm_set_axis_jerk(axis, cm.a[axis].jerk_high);  // use the high-speed jerk for probe
+        cm_set_axis_jerk(axis, cm->a[axis].jerk_high);  // use the high-speed jerk for probe
         start_position[axis] = cm_get_absolute_position(ACTIVE_MODEL, axis);
     }
 
@@ -254,10 +254,10 @@ static uint8_t _probing_init() {
 
     // initialize the probe switch
     // TODO -- for now we hard code it to z homing switch
-    if (fp_ZERO(cm.a[AXIS_Z].homing_input)) {
+    if (fp_ZERO(cm->a[AXIS_Z].homing_input)) {
         return (_probing_error_exit(-2));
     }
-    pb.probe_input = cm.a[AXIS_Z].homing_input;
+    pb.probe_input = cm->a[AXIS_Z].homing_input;
     gpio_set_probing_mode(pb.probe_input, true);
 
     // turn off spindle and start the move
@@ -281,7 +281,7 @@ static stat_t _probing_start() {
         return (_set_pb_func(_probing_backoff));
     }
 
-    cm.probe_state[0] = PROBE_FAILED;  // we failed
+    cm->probe_state[0] = PROBE_FAILED;  // we failed
     return (_set_pb_func(_probing_finish));
 }
 
@@ -299,7 +299,7 @@ static stat_t _probing_backoff() {
     // INPUT_INACTIVE is the right end condition for G38.4 and G38.5
     // Note that we're testing for SUCCESS here
     if (probe == (pb.moving_toward_switch ? INPUT_ACTIVE : INPUT_INACTIVE)) {
-        cm.probe_state[0] = PROBE_SUCCEEDED;
+        cm->probe_state[0] = PROBE_SUCCEEDED;
 
         // capture contact position in step space and convert from steps to mm.
         // snapshot was taken by switch interrupt at the time of closure
@@ -308,18 +308,18 @@ static stat_t _probing_backoff() {
 
         _probe_axis_move(contact_position, true);  // NB: feed rate is the same as the probe move
     } else {
-        cm.probe_state[0] = PROBE_FAILED;
+        cm->probe_state[0] = PROBE_FAILED;
     }
     return (_set_pb_func(_probing_finish));
 }
 
 static stat_t _probe_axis_move(const float target[], bool exact_position) {
-    auto stored_units_mode    = cm.gm.units_mode;
-    auto stored_distance_mode = cm.gm.distance_mode;
+    auto stored_units_mode    = cm->gm.units_mode;
+    auto stored_distance_mode = cm->gm.distance_mode;
     if (exact_position) {
         cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_ON);  // Position was stored in absolute coords
-        cm.gm.units_mode    = MILLIMETERS;
-        cm.gm.distance_mode = ABSOLUTE_MODE;
+        cm->gm.units_mode    = MILLIMETERS;
+        cm->gm.distance_mode = ABSOLUTE_MODE;
     }
 
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {  // set all positions
@@ -332,8 +332,8 @@ static stat_t _probe_axis_move(const float target[], bool exact_position) {
     cm_straight_feed(target, pb.flags);
 
     if (exact_position) {
-        cm.gm.units_mode    = stored_units_mode;
-        cm.gm.distance_mode = stored_distance_mode;
+        cm->gm.units_mode    = stored_units_mode;
+        cm->gm.distance_mode = stored_distance_mode;
     }
 
     // the last two arguments are ignored anyway
@@ -350,30 +350,30 @@ static void _probe_axis_move_callback(float* vect, bool* flag) { pb.waiting_for_
 
 static stat_t _probing_finish() {
     for (uint8_t axis = 0; axis < AXES; axis++) {
-        cm.probe_results[0][axis] = cm_get_absolute_position(ACTIVE_MODEL, axis);
+        cm->probe_results[0][axis] = cm_get_absolute_position(ACTIVE_MODEL, axis);
     }
 
     // If probe was successful the 'e' word == 1, otherwise e == 0 to signal an error
     char  buf[32];
     char* bufp = buf;
-    bufp += sprintf(bufp, "{\"prb\":{\"e\":%i, \"", (int)cm.probe_state[0]);
+    bufp += sprintf(bufp, "{\"prb\":{\"e\":%i, \"", (int)cm->probe_state[0]);
     if (pb.flags[AXIS_X]) {
-        sprintf(bufp, "x\":%0.3f}}\n", cm.probe_results[0][AXIS_X]);
+        sprintf(bufp, "x\":%0.3f}}\n", cm->probe_results[0][AXIS_X]);
     }
     if (pb.flags[AXIS_Y]) {
-        sprintf(bufp, "y\":%0.3f}}\n", cm.probe_results[0][AXIS_Y]);
+        sprintf(bufp, "y\":%0.3f}}\n", cm->probe_results[0][AXIS_Y]);
     }
     if (pb.flags[AXIS_Z]) {
-        sprintf(bufp, "z\":%0.3f}}\n", cm.probe_results[0][AXIS_Z]);
+        sprintf(bufp, "z\":%0.3f}}\n", cm->probe_results[0][AXIS_Z]);
     }
     if (pb.flags[AXIS_A]) {
-        sprintf(bufp, "a\":%0.3f}}\n", cm.probe_results[0][AXIS_A]);
+        sprintf(bufp, "a\":%0.3f}}\n", cm->probe_results[0][AXIS_A]);
     }
     if (pb.flags[AXIS_B]) {
-        sprintf(bufp, "b\":%0.3f}}\n", cm.probe_results[0][AXIS_B]);
+        sprintf(bufp, "b\":%0.3f}}\n", cm->probe_results[0][AXIS_B]);
     }
     if (pb.flags[AXIS_C]) {
-        sprintf(bufp, "c\":%0.3f}}\n", cm.probe_results[0][AXIS_C]);
+        sprintf(bufp, "c\":%0.3f}}\n", cm->probe_results[0][AXIS_C]);
     }
     xio_writeline(buf);
 
@@ -391,7 +391,7 @@ static void _probe_restore_settings() {
     gpio_set_probing_mode(pb.probe_input, false);
 
     // restore axis jerk
-    for (uint8_t axis = 0; axis < AXES; axis++) { cm.a[axis].jerk_max = pb.saved_jerk[axis]; }
+    for (uint8_t axis = 0; axis < AXES; axis++) { cm->a[axis].jerk_max = pb.saved_jerk[axis]; }
 
     // restore coordinate system and distance mode
     cm_set_coord_system(pb.saved_coord_system);
@@ -407,7 +407,7 @@ static void _probe_restore_settings() {
 
 static stat_t _probing_finalize_exit() {
     _probe_restore_settings();
-    if (cm.probe_state[0] == PROBE_SUCCEEDED) {
+    if (cm->probe_state[0] == PROBE_SUCCEEDED) {
         return (STAT_OK);
     }
 

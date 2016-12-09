@@ -228,7 +228,7 @@ static float _get_spindle_pwm (cmSpindleEnable enable, cmSpindleDir direction)
 /*
 stat_t cm_spindle_override_enable(uint8_t flag)        // M51.1
 {
-    if (fp_TRUE(cm.gf.parameter) && fp_ZERO(cm.gn.parameter)) {
+    if (fp_TRUE(cm->gf.parameter) && fp_ZERO(cm->gn.parameter)) {
         spindle.override_enable = false;
     } else {
         spindle.override_enable = true;
@@ -239,7 +239,7 @@ stat_t cm_spindle_override_enable(uint8_t flag)        // M51.1
 stat_t cm_spindle_override_factor(uint8_t flag)        // M50.1
 {
     spindle.override_enable = flag;
-    spindle.override_factor = cm.gn.parameter;
+    spindle.override_factor = cm->gn.parameter;
 //    change spindle speed
     return (STAT_OK);
 }

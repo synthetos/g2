@@ -523,7 +523,7 @@ const float kTempDiffSRTrigger = 0.25;
 
 stat_t temperature_callback()
 {
-    if (cm.machine_state == MACHINE_ALARM) {
+    if (cm->machine_state == MACHINE_ALARM) {
         // Force the heaters off (redundant with the safety circuit)
         fet_pin1 = 0.0;
         fet_pin2 = 0.0;

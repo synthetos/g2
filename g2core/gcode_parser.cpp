@@ -35,9 +35,9 @@ static stat_t _validate_gcode_block(char *active_comment);
 static stat_t _parse_gcode_block(char *line, char *active_comment); // Parse the block into the GN/GF structs
 static stat_t _execute_gcode_block(char *active_comment);           // Execute the gcode block
 
-#define SET_MODAL(m,parm,val) ({cm.gn.parm=val; cm.gf.parm=true; cm.gf.modals[m]=true; break;})
-#define SET_NON_MODAL(parm,val) ({cm.gn.parm=val; cm.gf.parm=true; break;})
-#define EXEC_FUNC(f,v) if(cm.gf.v) { status=f(cm.gn.v);}
+#define SET_MODAL(m,parm,val) ({cm->gn.parm=val; cm->gf.parm=true; cm->gf.modals[m]=true; break;})
+#define SET_NON_MODAL(parm,val) ({cm->gn.parm=val; cm->gf.parm=true; break;})
+#define EXEC_FUNC(f,v) if(cm->gf.v) { status=f(cm->gn.v);}
 
 /*
  * gcode_parser() - parse a block (line) of gcode
@@ -387,12 +387,12 @@ static stat_t _validate_gcode_block(char *active_comment)
 //  uses axis words appears on the line, the activity of the group 1 G-code is suspended
 //  for that line. The axis word-using G-codes from group 0 are G10, G28, G30, and G92"
 
-//  if ((cm.gn.modals[MODAL_GROUP_G0] == true) && (cm.gn.modals[MODAL_GROUP_G1] == true)) {
+//  if ((cm->gn.modals[MODAL_GROUP_G0] == true) && (cm->gn.modals[MODAL_GROUP_G1] == true)) {
 //     return (STAT_MODAL_GROUP_VIOLATION);
 //  }
 
 // look for commands that require an axis word to be present
-//  if ((cm.gn.modals[MODAL_GROUP_G0] == true) || (cm.gn.modals[MODAL_GROUP_G1] == true)) {
+//  if ((cm->gn.modals[MODAL_GROUP_G0] == true) || (cm->gn.modals[MODAL_GROUP_G1] == true)) {
 //     if (_axis_changed() == false)
 //     return (STAT_GCODE_AXIS_IS_MISSING);
 //  }
@@ -415,16 +415,16 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
     stat_t status = STAT_OK;
 
     // set initial state for new move
-    memset(&cm.gn, 0, sizeof(GCodeInput_t));        // clear all next-state values
-    memset(&cm.gf, 0, sizeof(GCodeFlags_t));        // clear all next-state flags
-    cm.gn.motion_mode = cm_get_motion_mode(MODEL);  // get motion mode from previous block
+    memset(&cm->gn, 0, sizeof(GCodeInput_t));        // clear all next-state values
+    memset(&cm->gf, 0, sizeof(GCodeFlags_t));        // clear all next-state flags
+    cm->gn.motion_mode = cm_get_motion_mode(MODEL);  // get motion mode from previous block
 
     // Causes a later exception if
     //  (1) INVERSE_TIME_MODE is active and a feed rate is not provided or
     //  (2) INVERSE_TIME_MODE is changed to UNITS_PER_MINUTE and a new feed rate is missing
-    if (cm.gm.feed_rate_mode == INVERSE_TIME_MODE) {// new feed rate req'd when in INV_TIME_MODE
-        cm.gn.feed_rate = 0;
-        cm.gf.feed_rate = true;
+    if (cm->gm.feed_rate_mode == INVERSE_TIME_MODE) {// new feed rate req'd when in INV_TIME_MODE
+        cm->gn.feed_rate = 0;
+        cm->gf.feed_rate = true;
     }
 
     // extract commands and parameters
@@ -620,7 +620,7 @@ static stat_t _execute_gcode_block(char *active_comment)
 {
     stat_t status = STAT_OK;
 
-    cm_set_model_linenum(cm.gn.linenum);
+    cm_set_model_linenum(cm->gn.linenum);
     EXEC_FUNC(cm_set_feed_rate_mode, feed_rate_mode);       // G93, G94
     EXEC_FUNC(cm_set_feed_rate, feed_rate);                 // F
     EXEC_FUNC(cm_set_spindle_speed, spindle_speed);         // S
@@ -642,8 +642,8 @@ static stat_t _execute_gcode_block(char *active_comment)
 //  EXEC_FUNC(cm_mfo_enable, feed_rate_override_factor);
 //  EXEC_FUNC(cm_sso_enable, sso_enable);
 
-    if (cm.gn.next_action == NEXT_ACTION_DWELL) {           // G4 - dwell
-        ritorno(cm_dwell(cm.gn.parameter));                 // return if error, otherwise complete the block
+    if (cm->gn.next_action == NEXT_ACTION_DWELL) {           // G4 - dwell
+        ritorno(cm_dwell(cm->gn.parameter));                 // return if error, otherwise complete the block
     }
     EXEC_FUNC(cm_select_plane, select_plane);               // G17, G18, G19
     EXEC_FUNC(cm_set_units_mode, units_mode);               // G20, G21
@@ -651,29 +651,29 @@ static stat_t _execute_gcode_block(char *active_comment)
     //--> cutter length compensation goes here
     EXEC_FUNC(cm_set_coord_system, coord_system);           // G54, G55, G56, G57, G58, G59
 //    EXEC_FUNC(cm_set_path_control, path_control);         // G61, G61.1, G64
-    if(cm.gf.path_control) { status = cm_set_path_control(MODEL, cm.gn.path_control); }
+    if(cm->gf.path_control) { status = cm_set_path_control(MODEL, cm->gn.path_control); }
 
     EXEC_FUNC(cm_set_distance_mode, distance_mode);         // G90, G91
     EXEC_FUNC(cm_set_arc_distance_mode, arc_distance_mode); // G90.1, G91.1
     //--> set retract mode goes here
 
-    switch (cm.gn.next_action) {
+    switch (cm->gn.next_action) {
         case NEXT_ACTION_SET_G28_POSITION:  { status = cm_set_g28_position(); break;}                               // G28.1
-        case NEXT_ACTION_GOTO_G28_POSITION: { status = cm_goto_g28_position(cm.gn.target, cm.gf.target); break;}    // G28
+        case NEXT_ACTION_GOTO_G28_POSITION: { status = cm_goto_g28_position(cm->gn.target, cm->gf.target); break;}    // G28
         case NEXT_ACTION_SET_G30_POSITION:  { status = cm_set_g30_position(); break;}                               // G30.1
-        case NEXT_ACTION_GOTO_G30_POSITION: { status = cm_goto_g30_position(cm.gn.target, cm.gf.target); break;}    // G30
+        case NEXT_ACTION_GOTO_G30_POSITION: { status = cm_goto_g30_position(cm->gn.target, cm->gf.target); break;}    // G30
 
         case NEXT_ACTION_SEARCH_HOME:         { status = cm_homing_cycle_start(); break;}                           // G28.2
-        case NEXT_ACTION_SET_ABSOLUTE_ORIGIN: { status = cm_set_absolute_origin(cm.gn.target, cm.gf.target); break;}// G28.3
+        case NEXT_ACTION_SET_ABSOLUTE_ORIGIN: { status = cm_set_absolute_origin(cm->gn.target, cm->gf.target); break;}// G28.3
         case NEXT_ACTION_HOMING_NO_SET:       { status = cm_homing_cycle_start_no_set(); break;}                    // G28.4
 
-        case NEXT_ACTION_STRAIGHT_PROBE_ERR:     { status = cm_straight_probe(cm.gn.target, cm.gf.target, true, true); break;}  // G38.2
-        case NEXT_ACTION_STRAIGHT_PROBE:         { status = cm_straight_probe(cm.gn.target, cm.gf.target, false, true); break;} // G38.3
-        case NEXT_ACTION_STRAIGHT_PROBE_AWAY_ERR:{ status = cm_straight_probe(cm.gn.target, cm.gf.target, true, false); break;}   // G38.4
-        case NEXT_ACTION_STRAIGHT_PROBE_AWAY:    { status = cm_straight_probe(cm.gn.target, cm.gf.target, false, false); break;}  // G38.5
+        case NEXT_ACTION_STRAIGHT_PROBE_ERR:     { status = cm_straight_probe(cm->gn.target, cm->gf.target, true, true); break;}  // G38.2
+        case NEXT_ACTION_STRAIGHT_PROBE:         { status = cm_straight_probe(cm->gn.target, cm->gf.target, false, true); break;} // G38.3
+        case NEXT_ACTION_STRAIGHT_PROBE_AWAY_ERR:{ status = cm_straight_probe(cm->gn.target, cm->gf.target, true, false); break;}   // G38.4
+        case NEXT_ACTION_STRAIGHT_PROBE_AWAY:    { status = cm_straight_probe(cm->gn.target, cm->gf.target, false, false); break;}  // G38.5
 
-        case NEXT_ACTION_SET_COORD_DATA:         { status = cm_set_coord_offsets(cm.gn.parameter, cm.gn.L_word, cm.gn.target, cm.gf.target); break;}
-        case NEXT_ACTION_SET_ORIGIN_OFFSETS:     { status = cm_set_origin_offsets(cm.gn.target, cm.gf.target); break;}// G92
+        case NEXT_ACTION_SET_COORD_DATA:         { status = cm_set_coord_offsets(cm->gn.parameter, cm->gn.L_word, cm->gn.target, cm->gf.target); break;}
+        case NEXT_ACTION_SET_ORIGIN_OFFSETS:     { status = cm_set_origin_offsets(cm->gn.target, cm->gf.target); break;}// G92
         case NEXT_ACTION_RESET_ORIGIN_OFFSETS:   { status = cm_reset_origin_offsets(); break;}                      // G92.1
         case NEXT_ACTION_SUSPEND_ORIGIN_OFFSETS: { status = cm_suspend_origin_offsets(); break;}                    // G92.2
         case NEXT_ACTION_RESUME_ORIGIN_OFFSETS:  { status = cm_resume_origin_offsets(); break;}                     // G92.3
@@ -683,18 +683,18 @@ static stat_t _execute_gcode_block(char *active_comment)
 //      case NEXT_ACTION_JSON_COMMAND_IMMEDIATE:  { status = mp_json_command_immediate(active_comment); break;}     // M102
 
         case NEXT_ACTION_DEFAULT: {
-            cm_set_absolute_override(MODEL, cm.gn.absolute_override);    // apply absolute override
-            switch (cm.gn.motion_mode) {
-                case MOTION_MODE_CANCEL_MOTION_MODE: { cm.gm.motion_mode = cm.gn.motion_mode; break;}               // G80
-                case MOTION_MODE_STRAIGHT_TRAVERSE:  { status = cm_straight_traverse(cm.gn.target, cm.gf.target); break;} // G0
-                case MOTION_MODE_STRAIGHT_FEED:      { status = cm_straight_feed(cm.gn.target, cm.gf.target); break;} // G1
+            cm_set_absolute_override(MODEL, cm->gn.absolute_override);    // apply absolute override
+            switch (cm->gn.motion_mode) {
+                case MOTION_MODE_CANCEL_MOTION_MODE: { cm->gm.motion_mode = cm->gn.motion_mode; break;}               // G80
+                case MOTION_MODE_STRAIGHT_TRAVERSE:  { status = cm_straight_traverse(cm->gn.target, cm->gf.target); break;} // G0
+                case MOTION_MODE_STRAIGHT_FEED:      { status = cm_straight_feed(cm->gn.target, cm->gf.target); break;} // G1
                 case MOTION_MODE_CW_ARC:                                                                            // G2
-                case MOTION_MODE_CCW_ARC: { status = cm_arc_feed(cm.gn.target,     cm.gf.target,                    // G3
-                                                                 cm.gn.arc_offset, cm.gf.arc_offset,
-                                                                 cm.gn.arc_radius, cm.gf.arc_radius,
-                                                                 cm.gn.parameter,  cm.gf.parameter,
-                                                                 cm.gf.modals[MODAL_GROUP_G1],
-                                                                 cm.gn.motion_mode);
+                case MOTION_MODE_CCW_ARC: { status = cm_arc_feed(cm->gn.target,     cm->gf.target,                    // G3
+                                                                 cm->gn.arc_offset, cm->gf.arc_offset,
+                                                                 cm->gn.arc_radius, cm->gf.arc_radius,
+                                                                 cm->gn.parameter,  cm->gf.parameter,
+                                                                 cm->gf.modals[MODAL_GROUP_G1],
+                                                                 cm->gn.motion_mode);
                                                                  break;
                                           }
                 default: break;
@@ -704,8 +704,8 @@ static stat_t _execute_gcode_block(char *active_comment)
     }
 
     // do the program stops and ends : M0, M1, M2, M30, M60
-    if (cm.gf.program_flow == true) {
-        if (cm.gn.program_flow == PROGRAM_STOP) {
+    if (cm->gf.program_flow == true) {
+        if (cm->gn.program_flow == PROGRAM_STOP) {
             cm_program_stop();
         } else {
             cm_program_end();

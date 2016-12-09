@@ -113,8 +113,8 @@ const cfgItem_t cfgArray[] = {
 
     // dynamic model attributes for reporting purposes (up front for speed)
     { "",   "stat",_f0, 0, cm_print_stat, cm_get_stat, set_nul,(float *)&cs.null, 0 },      // combined machine state
-    { "",   "n",   _fi, 0, cm_print_line, cm_get_mline,set_int,(float *)&cm.gm.linenum,0 }, // Model line number
-    { "",   "line",_fi, 0, cm_print_line, cm_get_line, set_int,(float *)&cm.gm.linenum,0 }, // Active line number - model or runtime line number
+    { "",   "n",   _fi, 0, cm_print_line, cm_get_mline,set_int,(float *)&cm->gm.linenum,0 }, // Model line number
+    { "",   "line",_fi, 0, cm_print_line, cm_get_line, set_int,(float *)&cm->gm.linenum,0 }, // Active line number - model or runtime line number
     { "",   "vel", _f0, 2, cm_print_vel,  cm_get_vel,  set_nul,(float *)&cs.null, 0 },      // current velocity
     { "",   "feed",_f0, 2, cm_print_feed, cm_get_feed, set_nul,(float *)&cs.null, 0 },      // feed rate
     { "",   "macs",_f0, 0, cm_print_macs, cm_get_macs, set_nul,(float *)&cs.null, 0 },      // raw machine state
@@ -130,7 +130,7 @@ const cfgItem_t cfgArray[] = {
     { "",   "admo",_f0, 0, cm_print_admo, cm_get_admo, set_nul,(float *)&cs.null, 0 },      // arc distance mode
     { "",   "frmo",_f0, 0, cm_print_frmo, cm_get_frmo, set_nul,(float *)&cs.null, 0 },      // feed rate mode
     { "",   "tool",_f0, 0, cm_print_tool, cm_get_toolv,set_nul,(float *)&cs.null, 0 },      // active tool
-    { "",   "g92e",_f0, 0, cm_print_g92e, get_ui8,     set_nul,(float *)&cm.gmx.origin_offset_enable, 0 }, // G92 enabled
+    { "",   "g92e",_f0, 0, cm_print_g92e, get_ui8,     set_nul,(float *)&cm->gmx.origin_offset_enable, 0 }, // G92 enabled
 
 #ifdef TEMPORARY_HAS_LEDS
     { "",   "_leds",_f0, 0, tx_print_nul, _get_leds,_set_leds,(float *)&cs.null, 0 },      // TEMPORARY - change LEDs
@@ -157,28 +157,28 @@ const cfgItem_t cfgArray[] = {
     { "ofs","ofsb",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul,(float *)&cs.null, 0 },      // B work offset
     { "ofs","ofsc",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul,(float *)&cs.null, 0 },      // C work offset
 
-    { "hom","home",_f0, 0, cm_print_home,cm_get_home,set_01,(float *)&cm.homing_state, 0 },     // homing state, invoke homing cycle
-    { "hom","homx",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_X], false },  // X homed - Homing status group
-    { "hom","homy",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_Y], false },  // Y homed
-    { "hom","homz",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_Z], false },  // Z homed
-    { "hom","homa",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_A], false },  // A homed
-    { "hom","homb",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_B], false },  // B homed
-    { "hom","homc",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_C], false },  // C homed
+    { "hom","home",_f0, 0, cm_print_home,cm_get_home,set_01,(float *)&cm->homing_state, 0 },     // homing state, invoke homing cycle
+    { "hom","homx",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm->homed[AXIS_X], false },  // X homed - Homing status group
+    { "hom","homy",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm->homed[AXIS_Y], false },  // Y homed
+    { "hom","homz",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm->homed[AXIS_Z], false },  // Z homed
+    { "hom","homa",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm->homed[AXIS_A], false },  // A homed
+    { "hom","homb",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm->homed[AXIS_B], false },  // B homed
+    { "hom","homc",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm->homed[AXIS_C], false },  // C homed
 
-    { "prb","prbe",_f0, 0, tx_print_nul, get_ui8, set_nul,(float *)&cm.probe_state[0], 0 },    // probing state
-    { "prb","prbx",_f0, 3, tx_print_nul, get_flt, set_nul,(float *)&cm.probe_results[0][AXIS_X], 0 },
-    { "prb","prby",_f0, 3, tx_print_nul, get_flt, set_nul,(float *)&cm.probe_results[0][AXIS_Y], 0 },
-    { "prb","prbz",_f0, 3, tx_print_nul, get_flt, set_nul,(float *)&cm.probe_results[0][AXIS_Z], 0 },
-    { "prb","prba",_f0, 3, tx_print_nul, get_flt, set_nul,(float *)&cm.probe_results[0][AXIS_A], 0 },
-    { "prb","prbb",_f0, 3, tx_print_nul, get_flt, set_nul,(float *)&cm.probe_results[0][AXIS_B], 0 },
-    { "prb","prbc",_f0, 3, tx_print_nul, get_flt, set_nul,(float *)&cm.probe_results[0][AXIS_C], 0 },
+    { "prb","prbe",_f0, 0, tx_print_nul, get_ui8, set_nul,(float *)&cm->probe_state[0], 0 },    // probing state
+    { "prb","prbx",_f0, 3, tx_print_nul, get_flt, set_nul,(float *)&cm->probe_results[0][AXIS_X], 0 },
+    { "prb","prby",_f0, 3, tx_print_nul, get_flt, set_nul,(float *)&cm->probe_results[0][AXIS_Y], 0 },
+    { "prb","prbz",_f0, 3, tx_print_nul, get_flt, set_nul,(float *)&cm->probe_results[0][AXIS_Z], 0 },
+    { "prb","prba",_f0, 3, tx_print_nul, get_flt, set_nul,(float *)&cm->probe_results[0][AXIS_A], 0 },
+    { "prb","prbb",_f0, 3, tx_print_nul, get_flt, set_nul,(float *)&cm->probe_results[0][AXIS_B], 0 },
+    { "prb","prbc",_f0, 3, tx_print_nul, get_flt, set_nul,(float *)&cm->probe_results[0][AXIS_C], 0 },
 
-    { "jog","jogx",_f0, 0, tx_print_nul, get_nul, cm_run_jogx, (float *)&cm.jogging_dest, 0},
-    { "jog","jogy",_f0, 0, tx_print_nul, get_nul, cm_run_jogy, (float *)&cm.jogging_dest, 0},
-    { "jog","jogz",_f0, 0, tx_print_nul, get_nul, cm_run_jogz, (float *)&cm.jogging_dest, 0},
-    { "jog","joga",_f0, 0, tx_print_nul, get_nul, cm_run_joga, (float *)&cm.jogging_dest, 0},
-//  { "jog","jogb",_f0, 0, tx_print_nul, get_nul, cm_run_jogb, (float *)&cm.jogging_dest, 0},
-//  { "jog","jogc",_f0, 0, tx_print_nul, get_nul, cm_run_jogc, (float *)&cm.jogging_dest, 0},
+    { "jog","jogx",_f0, 0, tx_print_nul, get_nul, cm_run_jogx, (float *)&cm->jogging_dest, 0},
+    { "jog","jogy",_f0, 0, tx_print_nul, get_nul, cm_run_jogy, (float *)&cm->jogging_dest, 0},
+    { "jog","jogz",_f0, 0, tx_print_nul, get_nul, cm_run_jogz, (float *)&cm->jogging_dest, 0},
+    { "jog","joga",_f0, 0, tx_print_nul, get_nul, cm_run_joga, (float *)&cm->jogging_dest, 0},
+//  { "jog","jogb",_f0, 0, tx_print_nul, get_nul, cm_run_jogb, (float *)&cm->jogging_dest, 0},
+//  { "jog","jogc",_f0, 0, tx_print_nul, get_nul, cm_run_jogc, (float *)&cm->jogging_dest, 0},
 
 	{ "pwr","pwr1",_f0, 3, st_print_pwr, st_get_pwr, set_nul, (float *)&cs.null, 0},	// motor power readouts
 	{ "pwr","pwr2",_f0, 3, st_print_pwr, st_get_pwr, set_nul, (float *)&cs.null, 0},
@@ -267,92 +267,92 @@ const cfgItem_t cfgArray[] = {
 //  { "6","6mt",_fip, 2, st_print_mt, get_flt, st_set_mt,   (float *)&st_cfg.mot[MOTOR_6].motor_timeout,  M6_MOTOR_TIMEOUT },
 #endif
     // Axis parameters
-    { "x","xam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cm.a[AXIS_X].axis_mode,      X_AXIS_MODE },
-    { "x","xvm",_fipc, 0, cm_print_vm, get_flt,   cm_set_vm, (float *)&cm.a[AXIS_X].velocity_max,   X_VELOCITY_MAX },
-    { "x","xfr",_fipc, 0, cm_print_fr, get_flt,   cm_set_fr, (float *)&cm.a[AXIS_X].feedrate_max,   X_FEEDRATE_MAX },
-    { "x","xtn",_fipc, 3, cm_print_tn, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].travel_min,     X_TRAVEL_MIN },
-    { "x","xtm",_fipc, 3, cm_print_tm, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].travel_max,     X_TRAVEL_MAX },
-    { "x","xjm",_fipc, 0, cm_print_jm, get_flt,   cm_set_jm, (float *)&cm.a[AXIS_X].jerk_max,       X_JERK_MAX },
-    { "x","xjh",_fipc, 0, cm_print_jh, get_flt,   cm_set_jh, (float *)&cm.a[AXIS_X].jerk_high,      X_JERK_HIGH_SPEED },
-    { "x","xhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_X].homing_input,   X_HOMING_INPUT },
-    { "x","xhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_X].homing_dir,     X_HOMING_DIRECTION },
-    { "x","xsv",_fipc, 0, cm_print_sv, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].search_velocity,X_SEARCH_VELOCITY },
-    { "x","xlv",_fipc, 2, cm_print_lv, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].latch_velocity, X_LATCH_VELOCITY },
-    { "x","xlb",_fipc, 3, cm_print_lb, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].latch_backoff,  X_LATCH_BACKOFF },
-    { "x","xzb",_fipc, 3, cm_print_zb, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].zero_backoff,   X_ZERO_BACKOFF },
+    { "x","xam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cm->a[AXIS_X].axis_mode,      X_AXIS_MODE },
+    { "x","xvm",_fipc, 0, cm_print_vm, get_flt,   cm_set_vm, (float *)&cm->a[AXIS_X].velocity_max,   X_VELOCITY_MAX },
+    { "x","xfr",_fipc, 0, cm_print_fr, get_flt,   cm_set_fr, (float *)&cm->a[AXIS_X].feedrate_max,   X_FEEDRATE_MAX },
+    { "x","xtn",_fipc, 3, cm_print_tn, get_flt,   set_flu,   (float *)&cm->a[AXIS_X].travel_min,     X_TRAVEL_MIN },
+    { "x","xtm",_fipc, 3, cm_print_tm, get_flt,   set_flu,   (float *)&cm->a[AXIS_X].travel_max,     X_TRAVEL_MAX },
+    { "x","xjm",_fipc, 0, cm_print_jm, get_flt,   cm_set_jm, (float *)&cm->a[AXIS_X].jerk_max,       X_JERK_MAX },
+    { "x","xjh",_fipc, 0, cm_print_jh, get_flt,   cm_set_jh, (float *)&cm->a[AXIS_X].jerk_high,      X_JERK_HIGH_SPEED },
+    { "x","xhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm->a[AXIS_X].homing_input,   X_HOMING_INPUT },
+    { "x","xhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm->a[AXIS_X].homing_dir,     X_HOMING_DIRECTION },
+    { "x","xsv",_fipc, 0, cm_print_sv, get_flt,   set_flu,   (float *)&cm->a[AXIS_X].search_velocity,X_SEARCH_VELOCITY },
+    { "x","xlv",_fipc, 2, cm_print_lv, get_flt,   set_flu,   (float *)&cm->a[AXIS_X].latch_velocity, X_LATCH_VELOCITY },
+    { "x","xlb",_fipc, 3, cm_print_lb, get_flt,   set_flu,   (float *)&cm->a[AXIS_X].latch_backoff,  X_LATCH_BACKOFF },
+    { "x","xzb",_fipc, 3, cm_print_zb, get_flt,   set_flu,   (float *)&cm->a[AXIS_X].zero_backoff,   X_ZERO_BACKOFF },
 
-    { "y","yam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cm.a[AXIS_Y].axis_mode,      Y_AXIS_MODE },
-    { "y","yvm",_fipc, 0, cm_print_vm, get_flt,   cm_set_vm, (float *)&cm.a[AXIS_Y].velocity_max,   Y_VELOCITY_MAX },
-    { "y","yfr",_fipc, 0, cm_print_fr, get_flt,   cm_set_fr, (float *)&cm.a[AXIS_Y].feedrate_max,   Y_FEEDRATE_MAX },
-    { "y","ytn",_fipc, 3, cm_print_tn, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].travel_min,     Y_TRAVEL_MIN },
-    { "y","ytm",_fipc, 3, cm_print_tm, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].travel_max,     Y_TRAVEL_MAX },
-    { "y","yjm",_fipc, 0, cm_print_jm, get_flt,   cm_set_jm, (float *)&cm.a[AXIS_Y].jerk_max,       Y_JERK_MAX },
-    { "y","yjh",_fipc, 0, cm_print_jh, get_flt,   cm_set_jh, (float *)&cm.a[AXIS_Y].jerk_high,      Y_JERK_HIGH_SPEED },
-    { "y","yhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_Y].homing_input,   Y_HOMING_INPUT },
-    { "y","yhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_Y].homing_dir,     Y_HOMING_DIRECTION },
-    { "y","ysv",_fipc, 0, cm_print_sv, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].search_velocity,Y_SEARCH_VELOCITY },
-    { "y","ylv",_fipc, 2, cm_print_lv, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].latch_velocity, Y_LATCH_VELOCITY },
-    { "y","ylb",_fipc, 3, cm_print_lb, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].latch_backoff,  Y_LATCH_BACKOFF },
-    { "y","yzb",_fipc, 3, cm_print_zb, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].zero_backoff,   Y_ZERO_BACKOFF },
+    { "y","yam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cm->a[AXIS_Y].axis_mode,      Y_AXIS_MODE },
+    { "y","yvm",_fipc, 0, cm_print_vm, get_flt,   cm_set_vm, (float *)&cm->a[AXIS_Y].velocity_max,   Y_VELOCITY_MAX },
+    { "y","yfr",_fipc, 0, cm_print_fr, get_flt,   cm_set_fr, (float *)&cm->a[AXIS_Y].feedrate_max,   Y_FEEDRATE_MAX },
+    { "y","ytn",_fipc, 3, cm_print_tn, get_flt,   set_flu,   (float *)&cm->a[AXIS_Y].travel_min,     Y_TRAVEL_MIN },
+    { "y","ytm",_fipc, 3, cm_print_tm, get_flt,   set_flu,   (float *)&cm->a[AXIS_Y].travel_max,     Y_TRAVEL_MAX },
+    { "y","yjm",_fipc, 0, cm_print_jm, get_flt,   cm_set_jm, (float *)&cm->a[AXIS_Y].jerk_max,       Y_JERK_MAX },
+    { "y","yjh",_fipc, 0, cm_print_jh, get_flt,   cm_set_jh, (float *)&cm->a[AXIS_Y].jerk_high,      Y_JERK_HIGH_SPEED },
+    { "y","yhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm->a[AXIS_Y].homing_input,   Y_HOMING_INPUT },
+    { "y","yhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm->a[AXIS_Y].homing_dir,     Y_HOMING_DIRECTION },
+    { "y","ysv",_fipc, 0, cm_print_sv, get_flt,   set_flu,   (float *)&cm->a[AXIS_Y].search_velocity,Y_SEARCH_VELOCITY },
+    { "y","ylv",_fipc, 2, cm_print_lv, get_flt,   set_flu,   (float *)&cm->a[AXIS_Y].latch_velocity, Y_LATCH_VELOCITY },
+    { "y","ylb",_fipc, 3, cm_print_lb, get_flt,   set_flu,   (float *)&cm->a[AXIS_Y].latch_backoff,  Y_LATCH_BACKOFF },
+    { "y","yzb",_fipc, 3, cm_print_zb, get_flt,   set_flu,   (float *)&cm->a[AXIS_Y].zero_backoff,   Y_ZERO_BACKOFF },
 
-    { "z","zam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cm.a[AXIS_Z].axis_mode,      Z_AXIS_MODE },
-    { "z","zvm",_fipc, 0, cm_print_vm, get_flt,   cm_set_vm, (float *)&cm.a[AXIS_Z].velocity_max,   Z_VELOCITY_MAX },
-    { "z","zfr",_fipc, 0, cm_print_fr, get_flt,   cm_set_fr, (float *)&cm.a[AXIS_Z].feedrate_max,   Z_FEEDRATE_MAX },
-    { "z","ztn",_fipc, 3, cm_print_tn, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].travel_min,     Z_TRAVEL_MIN },
-    { "z","ztm",_fipc, 3, cm_print_tm, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].travel_max,     Z_TRAVEL_MAX },
-    { "z","zjm",_fipc, 0, cm_print_jm, get_flt,   cm_set_jm, (float *)&cm.a[AXIS_Z].jerk_max,       Z_JERK_MAX },
-    { "z","zjh",_fipc, 0, cm_print_jh, get_flt,   cm_set_jh, (float *)&cm.a[AXIS_Z].jerk_high,      Z_JERK_HIGH_SPEED },
-    { "z","zhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_Z].homing_input,   Z_HOMING_INPUT },
-    { "z","zhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_Z].homing_dir,     Z_HOMING_DIRECTION },
-    { "z","zsv",_fipc, 0, cm_print_sv, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].search_velocity,Z_SEARCH_VELOCITY },
-    { "z","zlv",_fipc, 2, cm_print_lv, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].latch_velocity, Z_LATCH_VELOCITY },
-    { "z","zlb",_fipc, 3, cm_print_lb, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].latch_backoff,  Z_LATCH_BACKOFF },
-    { "z","zzb",_fipc, 3, cm_print_zb, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].zero_backoff,   Z_ZERO_BACKOFF },
+    { "z","zam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cm->a[AXIS_Z].axis_mode,      Z_AXIS_MODE },
+    { "z","zvm",_fipc, 0, cm_print_vm, get_flt,   cm_set_vm, (float *)&cm->a[AXIS_Z].velocity_max,   Z_VELOCITY_MAX },
+    { "z","zfr",_fipc, 0, cm_print_fr, get_flt,   cm_set_fr, (float *)&cm->a[AXIS_Z].feedrate_max,   Z_FEEDRATE_MAX },
+    { "z","ztn",_fipc, 3, cm_print_tn, get_flt,   set_flu,   (float *)&cm->a[AXIS_Z].travel_min,     Z_TRAVEL_MIN },
+    { "z","ztm",_fipc, 3, cm_print_tm, get_flt,   set_flu,   (float *)&cm->a[AXIS_Z].travel_max,     Z_TRAVEL_MAX },
+    { "z","zjm",_fipc, 0, cm_print_jm, get_flt,   cm_set_jm, (float *)&cm->a[AXIS_Z].jerk_max,       Z_JERK_MAX },
+    { "z","zjh",_fipc, 0, cm_print_jh, get_flt,   cm_set_jh, (float *)&cm->a[AXIS_Z].jerk_high,      Z_JERK_HIGH_SPEED },
+    { "z","zhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm->a[AXIS_Z].homing_input,   Z_HOMING_INPUT },
+    { "z","zhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm->a[AXIS_Z].homing_dir,     Z_HOMING_DIRECTION },
+    { "z","zsv",_fipc, 0, cm_print_sv, get_flt,   set_flu,   (float *)&cm->a[AXIS_Z].search_velocity,Z_SEARCH_VELOCITY },
+    { "z","zlv",_fipc, 2, cm_print_lv, get_flt,   set_flu,   (float *)&cm->a[AXIS_Z].latch_velocity, Z_LATCH_VELOCITY },
+    { "z","zlb",_fipc, 3, cm_print_lb, get_flt,   set_flu,   (float *)&cm->a[AXIS_Z].latch_backoff,  Z_LATCH_BACKOFF },
+    { "z","zzb",_fipc, 3, cm_print_zb, get_flt,   set_flu,   (float *)&cm->a[AXIS_Z].zero_backoff,   Z_ZERO_BACKOFF },
 
-    { "a","aam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cm.a[AXIS_A].axis_mode,      A_AXIS_MODE },
-    { "a","avm",_fip,  0, cm_print_vm, get_flt,   cm_set_vm, (float *)&cm.a[AXIS_A].velocity_max,   A_VELOCITY_MAX },
-    { "a","afr",_fip,  0, cm_print_fr, get_flt,   cm_set_fr, (float *)&cm.a[AXIS_A].feedrate_max,   A_FEEDRATE_MAX },
-    { "a","atn",_fip,  3, cm_print_tn, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].travel_min,     A_TRAVEL_MIN },
-    { "a","atm",_fip,  3, cm_print_tm, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].travel_max,     A_TRAVEL_MAX },
-    { "a","ajm",_fip,  0, cm_print_jm, get_flt,   cm_set_jm, (float *)&cm.a[AXIS_A].jerk_max,       A_JERK_MAX },
-    { "a","ajh",_fip,  0, cm_print_jh, get_flt,   cm_set_jh, (float *)&cm.a[AXIS_A].jerk_high,      A_JERK_HIGH_SPEED },
-    { "a","ara",_fipc, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].radius,         A_RADIUS},
-    { "a","ahi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_A].homing_input,   A_HOMING_INPUT },
-    { "a","ahd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_A].homing_dir,     A_HOMING_DIRECTION },
-    { "a","asv",_fip,  0, cm_print_sv, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].search_velocity,A_SEARCH_VELOCITY },
-    { "a","alv",_fip,  2, cm_print_lv, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].latch_velocity, A_LATCH_VELOCITY },
-    { "a","alb",_fip,  3, cm_print_lb, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].latch_backoff,  A_LATCH_BACKOFF },
-    { "a","azb",_fip,  3, cm_print_zb, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].zero_backoff,   A_ZERO_BACKOFF },
+    { "a","aam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cm->a[AXIS_A].axis_mode,      A_AXIS_MODE },
+    { "a","avm",_fip,  0, cm_print_vm, get_flt,   cm_set_vm, (float *)&cm->a[AXIS_A].velocity_max,   A_VELOCITY_MAX },
+    { "a","afr",_fip,  0, cm_print_fr, get_flt,   cm_set_fr, (float *)&cm->a[AXIS_A].feedrate_max,   A_FEEDRATE_MAX },
+    { "a","atn",_fip,  3, cm_print_tn, get_flt,   set_flt,   (float *)&cm->a[AXIS_A].travel_min,     A_TRAVEL_MIN },
+    { "a","atm",_fip,  3, cm_print_tm, get_flt,   set_flt,   (float *)&cm->a[AXIS_A].travel_max,     A_TRAVEL_MAX },
+    { "a","ajm",_fip,  0, cm_print_jm, get_flt,   cm_set_jm, (float *)&cm->a[AXIS_A].jerk_max,       A_JERK_MAX },
+    { "a","ajh",_fip,  0, cm_print_jh, get_flt,   cm_set_jh, (float *)&cm->a[AXIS_A].jerk_high,      A_JERK_HIGH_SPEED },
+    { "a","ara",_fipc, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm->a[AXIS_A].radius,         A_RADIUS},
+    { "a","ahi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm->a[AXIS_A].homing_input,   A_HOMING_INPUT },
+    { "a","ahd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm->a[AXIS_A].homing_dir,     A_HOMING_DIRECTION },
+    { "a","asv",_fip,  0, cm_print_sv, get_flt,   set_flt,   (float *)&cm->a[AXIS_A].search_velocity,A_SEARCH_VELOCITY },
+    { "a","alv",_fip,  2, cm_print_lv, get_flt,   set_flt,   (float *)&cm->a[AXIS_A].latch_velocity, A_LATCH_VELOCITY },
+    { "a","alb",_fip,  3, cm_print_lb, get_flt,   set_flt,   (float *)&cm->a[AXIS_A].latch_backoff,  A_LATCH_BACKOFF },
+    { "a","azb",_fip,  3, cm_print_zb, get_flt,   set_flt,   (float *)&cm->a[AXIS_A].zero_backoff,   A_ZERO_BACKOFF },
 
-    { "b","bam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cm.a[AXIS_B].axis_mode,      B_AXIS_MODE },
-    { "b","bvm",_fip,  0, cm_print_vm, get_flt,   cm_set_vm, (float *)&cm.a[AXIS_B].velocity_max,   B_VELOCITY_MAX },
-    { "b","bfr",_fip,  0, cm_print_fr, get_flt,   cm_set_fr, (float *)&cm.a[AXIS_B].feedrate_max,   B_FEEDRATE_MAX },
-    { "b","btn",_fip,  3, cm_print_tn, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].travel_min,     B_TRAVEL_MIN },
-    { "b","btm",_fip,  3, cm_print_tm, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].travel_max,     B_TRAVEL_MAX },
-    { "b","bjm",_fip,  0, cm_print_jm, get_flt,   cm_set_jm, (float *)&cm.a[AXIS_B].jerk_max,       B_JERK_MAX },
-    { "b","bjh",_fip,  0, cm_print_jh, get_flt,   cm_set_jh, (float *)&cm.a[AXIS_B].jerk_high,      B_JERK_HIGH_SPEED },
-    { "b","bra",_fipc, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].radius,         B_RADIUS },
-    { "b","bhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_B].homing_input,   B_HOMING_INPUT },
-    { "b","bhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_B].homing_dir,     B_HOMING_DIRECTION },
-    { "b","bsv",_fip,  0, cm_print_sv, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].search_velocity,B_SEARCH_VELOCITY },
-    { "b","blv",_fip,  2, cm_print_lv, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].latch_velocity, B_LATCH_VELOCITY },
-    { "b","blb",_fip,  3, cm_print_lb, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].latch_backoff,  B_LATCH_BACKOFF },
-    { "b","bzb",_fip,  3, cm_print_zb, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].zero_backoff,   B_ZERO_BACKOFF },
+    { "b","bam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cm->a[AXIS_B].axis_mode,      B_AXIS_MODE },
+    { "b","bvm",_fip,  0, cm_print_vm, get_flt,   cm_set_vm, (float *)&cm->a[AXIS_B].velocity_max,   B_VELOCITY_MAX },
+    { "b","bfr",_fip,  0, cm_print_fr, get_flt,   cm_set_fr, (float *)&cm->a[AXIS_B].feedrate_max,   B_FEEDRATE_MAX },
+    { "b","btn",_fip,  3, cm_print_tn, get_flt,   set_flt,   (float *)&cm->a[AXIS_B].travel_min,     B_TRAVEL_MIN },
+    { "b","btm",_fip,  3, cm_print_tm, get_flt,   set_flt,   (float *)&cm->a[AXIS_B].travel_max,     B_TRAVEL_MAX },
+    { "b","bjm",_fip,  0, cm_print_jm, get_flt,   cm_set_jm, (float *)&cm->a[AXIS_B].jerk_max,       B_JERK_MAX },
+    { "b","bjh",_fip,  0, cm_print_jh, get_flt,   cm_set_jh, (float *)&cm->a[AXIS_B].jerk_high,      B_JERK_HIGH_SPEED },
+    { "b","bra",_fipc, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm->a[AXIS_B].radius,         B_RADIUS },
+    { "b","bhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm->a[AXIS_B].homing_input,   B_HOMING_INPUT },
+    { "b","bhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm->a[AXIS_B].homing_dir,     B_HOMING_DIRECTION },
+    { "b","bsv",_fip,  0, cm_print_sv, get_flt,   set_flt,   (float *)&cm->a[AXIS_B].search_velocity,B_SEARCH_VELOCITY },
+    { "b","blv",_fip,  2, cm_print_lv, get_flt,   set_flt,   (float *)&cm->a[AXIS_B].latch_velocity, B_LATCH_VELOCITY },
+    { "b","blb",_fip,  3, cm_print_lb, get_flt,   set_flt,   (float *)&cm->a[AXIS_B].latch_backoff,  B_LATCH_BACKOFF },
+    { "b","bzb",_fip,  3, cm_print_zb, get_flt,   set_flt,   (float *)&cm->a[AXIS_B].zero_backoff,   B_ZERO_BACKOFF },
 
-    { "c","cam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cm.a[AXIS_C].axis_mode,      C_AXIS_MODE },
-    { "c","cvm",_fip,  0, cm_print_vm, get_flt,   cm_set_vm, (float *)&cm.a[AXIS_C].velocity_max,   C_VELOCITY_MAX },
-    { "c","cfr",_fip,  0, cm_print_fr, get_flt,   cm_set_fr, (float *)&cm.a[AXIS_C].feedrate_max,   C_FEEDRATE_MAX },
-    { "c","ctn",_fip,  3, cm_print_tn, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].travel_min,     C_TRAVEL_MIN },
-    { "c","ctm",_fip,  3, cm_print_tm, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].travel_max,     C_TRAVEL_MAX },
-    { "c","cjm",_fip,  0, cm_print_jm, get_flt,   cm_set_jm, (float *)&cm.a[AXIS_C].jerk_max,       C_JERK_MAX },
-    { "c","cjh",_fip,  0, cm_print_jh, get_flt,   cm_set_jh, (float *)&cm.a[AXIS_C].jerk_high,       C_JERK_HIGH_SPEED },
-    { "c","cra",_fipc, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].radius,         C_RADIUS },
-    { "c","chi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_C].homing_input,   C_HOMING_INPUT },
-    { "c","chd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_C].homing_dir,     C_HOMING_DIRECTION },
-    { "c","csv",_fip,  0, cm_print_sv, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].search_velocity,C_SEARCH_VELOCITY },
-    { "c","clv",_fip,  2, cm_print_lv, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].latch_velocity, C_LATCH_VELOCITY },
-    { "c","clb",_fip,  3, cm_print_lb, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].latch_backoff,  C_LATCH_BACKOFF },
-    { "c","czb",_fip,  3, cm_print_zb, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].zero_backoff,   C_ZERO_BACKOFF },
+    { "c","cam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cm->a[AXIS_C].axis_mode,      C_AXIS_MODE },
+    { "c","cvm",_fip,  0, cm_print_vm, get_flt,   cm_set_vm, (float *)&cm->a[AXIS_C].velocity_max,   C_VELOCITY_MAX },
+    { "c","cfr",_fip,  0, cm_print_fr, get_flt,   cm_set_fr, (float *)&cm->a[AXIS_C].feedrate_max,   C_FEEDRATE_MAX },
+    { "c","ctn",_fip,  3, cm_print_tn, get_flt,   set_flt,   (float *)&cm->a[AXIS_C].travel_min,     C_TRAVEL_MIN },
+    { "c","ctm",_fip,  3, cm_print_tm, get_flt,   set_flt,   (float *)&cm->a[AXIS_C].travel_max,     C_TRAVEL_MAX },
+    { "c","cjm",_fip,  0, cm_print_jm, get_flt,   cm_set_jm, (float *)&cm->a[AXIS_C].jerk_max,       C_JERK_MAX },
+    { "c","cjh",_fip,  0, cm_print_jh, get_flt,   cm_set_jh, (float *)&cm->a[AXIS_C].jerk_high,       C_JERK_HIGH_SPEED },
+    { "c","cra",_fipc, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm->a[AXIS_C].radius,         C_RADIUS },
+    { "c","chi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm->a[AXIS_C].homing_input,   C_HOMING_INPUT },
+    { "c","chd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm->a[AXIS_C].homing_dir,     C_HOMING_DIRECTION },
+    { "c","csv",_fip,  0, cm_print_sv, get_flt,   set_flt,   (float *)&cm->a[AXIS_C].search_velocity,C_SEARCH_VELOCITY },
+    { "c","clv",_fip,  2, cm_print_lv, get_flt,   set_flt,   (float *)&cm->a[AXIS_C].latch_velocity, C_LATCH_VELOCITY },
+    { "c","clb",_fip,  3, cm_print_lb, get_flt,   set_flt,   (float *)&cm->a[AXIS_C].latch_backoff,  C_LATCH_BACKOFF },
+    { "c","czb",_fip,  3, cm_print_zb, get_flt,   set_flt,   (float *)&cm->a[AXIS_C].zero_backoff,   C_ZERO_BACKOFF },
 
     // Digital input configs
     { "di1","di1mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[0].mode,     DI1_MODE },
@@ -532,69 +532,69 @@ const cfgItem_t cfgArray[] = {
     { "he3","he3fh",_f0,  1, tx_print_nul, cm_get_fan_high_temp,   cm_set_fan_high_temp,   (float *)&cs.null, 0 },
 
     // Coordinate system offsets (G54-G59 and G92)
-    { "g54","g54x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G54][AXIS_X], G54_X_OFFSET },
-    { "g54","g54y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G54][AXIS_Y], G54_Y_OFFSET },
-    { "g54","g54z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G54][AXIS_Z], G54_Z_OFFSET },
-    { "g54","g54a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.offset[G54][AXIS_A], G54_A_OFFSET },
-    { "g54","g54b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.offset[G54][AXIS_B], G54_B_OFFSET },
-    { "g54","g54c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.offset[G54][AXIS_C], G54_C_OFFSET },
+    { "g54","g54x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm->offset[G54][AXIS_X], G54_X_OFFSET },
+    { "g54","g54y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm->offset[G54][AXIS_Y], G54_Y_OFFSET },
+    { "g54","g54z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm->offset[G54][AXIS_Z], G54_Z_OFFSET },
+    { "g54","g54a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm->offset[G54][AXIS_A], G54_A_OFFSET },
+    { "g54","g54b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm->offset[G54][AXIS_B], G54_B_OFFSET },
+    { "g54","g54c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm->offset[G54][AXIS_C], G54_C_OFFSET },
 
-    { "g55","g55x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G55][AXIS_X], G55_X_OFFSET },
-    { "g55","g55y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G55][AXIS_Y], G55_Y_OFFSET },
-    { "g55","g55z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G55][AXIS_Z], G55_Z_OFFSET },
-    { "g55","g55a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.offset[G55][AXIS_A], G55_A_OFFSET },
-    { "g55","g55b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.offset[G55][AXIS_B], G55_B_OFFSET },
-    { "g55","g55c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.offset[G55][AXIS_C], G55_C_OFFSET },
+    { "g55","g55x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm->offset[G55][AXIS_X], G55_X_OFFSET },
+    { "g55","g55y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm->offset[G55][AXIS_Y], G55_Y_OFFSET },
+    { "g55","g55z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm->offset[G55][AXIS_Z], G55_Z_OFFSET },
+    { "g55","g55a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm->offset[G55][AXIS_A], G55_A_OFFSET },
+    { "g55","g55b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm->offset[G55][AXIS_B], G55_B_OFFSET },
+    { "g55","g55c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm->offset[G55][AXIS_C], G55_C_OFFSET },
 
-    { "g56","g56x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G56][AXIS_X], G56_X_OFFSET },
-    { "g56","g56y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G56][AXIS_Y], G56_Y_OFFSET },
-    { "g56","g56z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G56][AXIS_Z], G56_Z_OFFSET },
-    { "g56","g56a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.offset[G56][AXIS_A], G56_A_OFFSET },
-    { "g56","g56b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.offset[G56][AXIS_B], G56_B_OFFSET },
-    { "g56","g56c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.offset[G56][AXIS_C], G56_C_OFFSET },
+    { "g56","g56x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm->offset[G56][AXIS_X], G56_X_OFFSET },
+    { "g56","g56y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm->offset[G56][AXIS_Y], G56_Y_OFFSET },
+    { "g56","g56z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm->offset[G56][AXIS_Z], G56_Z_OFFSET },
+    { "g56","g56a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm->offset[G56][AXIS_A], G56_A_OFFSET },
+    { "g56","g56b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm->offset[G56][AXIS_B], G56_B_OFFSET },
+    { "g56","g56c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm->offset[G56][AXIS_C], G56_C_OFFSET },
 
-    { "g57","g57x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G57][AXIS_X], G57_X_OFFSET },
-    { "g57","g57y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G57][AXIS_Y], G57_Y_OFFSET },
-    { "g57","g57z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G57][AXIS_Z], G57_Z_OFFSET },
-    { "g57","g57a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.offset[G57][AXIS_A], G57_A_OFFSET },
-    { "g57","g57b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.offset[G57][AXIS_B], G57_B_OFFSET },
-    { "g57","g57c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.offset[G57][AXIS_C], G57_C_OFFSET },
+    { "g57","g57x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm->offset[G57][AXIS_X], G57_X_OFFSET },
+    { "g57","g57y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm->offset[G57][AXIS_Y], G57_Y_OFFSET },
+    { "g57","g57z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm->offset[G57][AXIS_Z], G57_Z_OFFSET },
+    { "g57","g57a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm->offset[G57][AXIS_A], G57_A_OFFSET },
+    { "g57","g57b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm->offset[G57][AXIS_B], G57_B_OFFSET },
+    { "g57","g57c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm->offset[G57][AXIS_C], G57_C_OFFSET },
 
-    { "g58","g58x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G58][AXIS_X], G58_X_OFFSET },
-    { "g58","g58y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G58][AXIS_Y], G58_Y_OFFSET },
-    { "g58","g58z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G58][AXIS_Z], G58_Z_OFFSET },
-    { "g58","g58a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.offset[G58][AXIS_A], G58_A_OFFSET },
-    { "g58","g58b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.offset[G58][AXIS_B], G58_B_OFFSET },
-    { "g58","g58c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.offset[G58][AXIS_C], G58_C_OFFSET },
+    { "g58","g58x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm->offset[G58][AXIS_X], G58_X_OFFSET },
+    { "g58","g58y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm->offset[G58][AXIS_Y], G58_Y_OFFSET },
+    { "g58","g58z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm->offset[G58][AXIS_Z], G58_Z_OFFSET },
+    { "g58","g58a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm->offset[G58][AXIS_A], G58_A_OFFSET },
+    { "g58","g58b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm->offset[G58][AXIS_B], G58_B_OFFSET },
+    { "g58","g58c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm->offset[G58][AXIS_C], G58_C_OFFSET },
 
-    { "g59","g59x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G59][AXIS_X], G59_X_OFFSET },
-    { "g59","g59y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G59][AXIS_Y], G59_Y_OFFSET },
-    { "g59","g59z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.offset[G59][AXIS_Z], G59_Z_OFFSET },
-    { "g59","g59a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.offset[G59][AXIS_A], G59_A_OFFSET },
-    { "g59","g59b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.offset[G59][AXIS_B], G59_B_OFFSET },
-    { "g59","g59c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.offset[G59][AXIS_C], G59_C_OFFSET },
+    { "g59","g59x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm->offset[G59][AXIS_X], G59_X_OFFSET },
+    { "g59","g59y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm->offset[G59][AXIS_Y], G59_Y_OFFSET },
+    { "g59","g59z",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm->offset[G59][AXIS_Z], G59_Z_OFFSET },
+    { "g59","g59a",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm->offset[G59][AXIS_A], G59_A_OFFSET },
+    { "g59","g59b",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm->offset[G59][AXIS_B], G59_B_OFFSET },
+    { "g59","g59c",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm->offset[G59][AXIS_C], G59_C_OFFSET },
 
-    { "g92","g92x",_fic, 3, cm_print_cofs, get_flt, set_nul,(float *)&cm.gmx.origin_offset[AXIS_X], 0 },// G92 handled differently
-    { "g92","g92y",_fic, 3, cm_print_cofs, get_flt, set_nul,(float *)&cm.gmx.origin_offset[AXIS_Y], 0 },
-    { "g92","g92z",_fic, 3, cm_print_cofs, get_flt, set_nul,(float *)&cm.gmx.origin_offset[AXIS_Z], 0 },
-    { "g92","g92a",_fi,  3, cm_print_cofs, get_flt, set_nul,(float *)&cm.gmx.origin_offset[AXIS_A], 0 },
-    { "g92","g92b",_fi,  3, cm_print_cofs, get_flt, set_nul,(float *)&cm.gmx.origin_offset[AXIS_B], 0 },
-    { "g92","g92c",_fi,  3, cm_print_cofs, get_flt, set_nul,(float *)&cm.gmx.origin_offset[AXIS_C], 0 },
+    { "g92","g92x",_fic, 3, cm_print_cofs, get_flt, set_nul,(float *)&cm->gmx.origin_offset[AXIS_X], 0 },// G92 handled differently
+    { "g92","g92y",_fic, 3, cm_print_cofs, get_flt, set_nul,(float *)&cm->gmx.origin_offset[AXIS_Y], 0 },
+    { "g92","g92z",_fic, 3, cm_print_cofs, get_flt, set_nul,(float *)&cm->gmx.origin_offset[AXIS_Z], 0 },
+    { "g92","g92a",_fi,  3, cm_print_cofs, get_flt, set_nul,(float *)&cm->gmx.origin_offset[AXIS_A], 0 },
+    { "g92","g92b",_fi,  3, cm_print_cofs, get_flt, set_nul,(float *)&cm->gmx.origin_offset[AXIS_B], 0 },
+    { "g92","g92c",_fi,  3, cm_print_cofs, get_flt, set_nul,(float *)&cm->gmx.origin_offset[AXIS_C], 0 },
 
     // Coordinate positions (G28, G30)
-    { "g28","g28x",_fic, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g28_position[AXIS_X], 0 },// g28 handled differently
-    { "g28","g28y",_fic, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g28_position[AXIS_Y], 0 },
-    { "g28","g28z",_fic, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g28_position[AXIS_Z], 0 },
-    { "g28","g28a",_fi,  3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g28_position[AXIS_A], 0 },
-    { "g28","g28b",_fi,  3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g28_position[AXIS_B], 0 },
-    { "g28","g28c",_fi,  3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g28_position[AXIS_C], 0 },
+    { "g28","g28x",_fic, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm->gmx.g28_position[AXIS_X], 0 },// g28 handled differently
+    { "g28","g28y",_fic, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm->gmx.g28_position[AXIS_Y], 0 },
+    { "g28","g28z",_fic, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm->gmx.g28_position[AXIS_Z], 0 },
+    { "g28","g28a",_fi,  3, cm_print_cpos, get_flt, set_nul,(float *)&cm->gmx.g28_position[AXIS_A], 0 },
+    { "g28","g28b",_fi,  3, cm_print_cpos, get_flt, set_nul,(float *)&cm->gmx.g28_position[AXIS_B], 0 },
+    { "g28","g28c",_fi,  3, cm_print_cpos, get_flt, set_nul,(float *)&cm->gmx.g28_position[AXIS_C], 0 },
 
-    { "g30","g30x",_fic, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g30_position[AXIS_X], 0 },// g30 handled differently
-    { "g30","g30y",_fic, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g30_position[AXIS_Y], 0 },
-    { "g30","g30z",_fic, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g30_position[AXIS_Z], 0 },
-    { "g30","g30a",_fi,  3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g30_position[AXIS_A], 0 },
-    { "g30","g30b",_fi,  3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g30_position[AXIS_B], 0 },
-    { "g30","g30c",_fi,  3, cm_print_cpos, get_flt, set_nul,(float *)&cm.gmx.g30_position[AXIS_C], 0 },
+    { "g30","g30x",_fic, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm->gmx.g30_position[AXIS_X], 0 },// g30 handled differently
+    { "g30","g30y",_fic, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm->gmx.g30_position[AXIS_Y], 0 },
+    { "g30","g30z",_fic, 3, cm_print_cpos, get_flt, set_nul,(float *)&cm->gmx.g30_position[AXIS_Z], 0 },
+    { "g30","g30a",_fi,  3, cm_print_cpos, get_flt, set_nul,(float *)&cm->gmx.g30_position[AXIS_A], 0 },
+    { "g30","g30b",_fi,  3, cm_print_cpos, get_flt, set_nul,(float *)&cm->gmx.g30_position[AXIS_B], 0 },
+    { "g30","g30c",_fi,  3, cm_print_cpos, get_flt, set_nul,(float *)&cm->gmx.g30_position[AXIS_C], 0 },
 
     // this is a 128bit UUID for identifying a previously committed job state
     { "jid","jida",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[0], 0},
@@ -603,16 +603,16 @@ const cfgItem_t cfgArray[] = {
     { "jid","jidd",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[3], 0},
 
     // General system parameters
-    { "sys","jt", _fipn, 2, cm_print_jt,  get_flt, cm_set_jt,(float *)&cm.junction_integration_time,JUNCTION_INTEGRATION_TIME },
-    { "sys","ct", _fipnc,4, cm_print_ct,  get_flt, set_flu,  (float *)&cm.chordal_tolerance,        CHORDAL_TOLERANCE },
-    { "sys","sl", _fipn, 0, cm_print_sl,  get_ui8, set_01,   (float *)&cm.soft_limit_enable,        SOFT_LIMIT_ENABLE },
-    { "sys","lim", _fipn,0, cm_print_lim, get_ui8, set_01,   (float *)&cm.limit_enable,             HARD_LIMIT_ENABLE },
-    { "sys","saf", _fipn,0, cm_print_saf, get_ui8, set_01,   (float *)&cm.safety_interlock_enable,  SAFETY_INTERLOCK_ENABLE },
-    { "sys","m48e",_fipn,0, cm_print_m48e,get_ui8, set_01,   (float *)&cm.gmx.m48_enable, 0 },      // M48/M49 feedrate & spindle override enable
-    { "sys","mfoe",_fipn,0, cm_print_mfoe,get_ui8, set_01,   (float *)&cm.gmx.mfo_enable,           FEED_OVERRIDE_ENABLE},
-    { "sys","mfo", _fipn,3, cm_print_mfo, get_flt,cm_set_mfo,(float *)&cm.gmx.mfo_factor,           FEED_OVERRIDE_FACTOR},
-    { "sys","mtoe",_fipn,0, cm_print_mtoe,get_ui8, set_01,   (float *)&cm.gmx.mto_enable,           TRAVERSE_OVERRIDE_ENABLE},
-    { "sys","mto", _fipn,3, cm_print_mto, get_flt,cm_set_mto,(float *)&cm.gmx.mto_factor,           TRAVERSE_OVERRIDE_FACTOR},
+    { "sys","jt", _fipn, 2, cm_print_jt,  get_flt, cm_set_jt,(float *)&cm->junction_integration_time,JUNCTION_INTEGRATION_TIME },
+    { "sys","ct", _fipnc,4, cm_print_ct,  get_flt, set_flu,  (float *)&cm->chordal_tolerance,        CHORDAL_TOLERANCE },
+    { "sys","sl", _fipn, 0, cm_print_sl,  get_ui8, set_01,   (float *)&cm->soft_limit_enable,        SOFT_LIMIT_ENABLE },
+    { "sys","lim", _fipn,0, cm_print_lim, get_ui8, set_01,   (float *)&cm->limit_enable,             HARD_LIMIT_ENABLE },
+    { "sys","saf", _fipn,0, cm_print_saf, get_ui8, set_01,   (float *)&cm->safety_interlock_enable,  SAFETY_INTERLOCK_ENABLE },
+    { "sys","m48e",_fipn,0, cm_print_m48e,get_ui8, set_01,   (float *)&cm->gmx.m48_enable, 0 },      // M48/M49 feedrate & spindle override enable
+    { "sys","mfoe",_fipn,0, cm_print_mfoe,get_ui8, set_01,   (float *)&cm->gmx.mfo_enable,           FEED_OVERRIDE_ENABLE},
+    { "sys","mfo", _fipn,3, cm_print_mfo, get_flt,cm_set_mfo,(float *)&cm->gmx.mfo_factor,           FEED_OVERRIDE_FACTOR},
+    { "sys","mtoe",_fipn,0, cm_print_mtoe,get_ui8, set_01,   (float *)&cm->gmx.mto_enable,           TRAVERSE_OVERRIDE_ENABLE},
+    { "sys","mto", _fipn,3, cm_print_mto, get_flt,cm_set_mto,(float *)&cm->gmx.mto_factor,           TRAVERSE_OVERRIDE_FACTOR},
     { "sys","mt",  _fipn,2, st_print_mt,  get_flt, st_set_mt,(float *)&st_cfg.motor_power_timeout,  MOTOR_POWER_TIMEOUT},
     { "",   "me",  _f0,  0, st_print_me,  get_nul, st_set_me,(float *)&cs.null, 0 },    // GET or SET to enable motors
     { "",   "md",  _f0,  0, st_print_md,  get_nul, st_set_md,(float *)&cs.null, 0 },    // GET or SET to disable motors
@@ -647,11 +647,11 @@ const cfgItem_t cfgArray[] = {
 
     // Gcode defaults
     // NOTE: The ordering within the gcode defaults is important for token resolution. gc must follow gco
-    { "sys","gpl", _fipn, 0, cm_print_gpl, get_ui8, set_012, (float *)&cm.default_select_plane,     GCODE_DEFAULT_PLANE },
-    { "sys","gun", _fipn, 0, cm_print_gun, get_ui8, set_01,  (float *)&cm.default_units_mode,       GCODE_DEFAULT_UNITS },
-    { "sys","gco", _fipn, 0, cm_print_gco, get_ui8, set_ui8, (float *)&cm.default_coord_system,     GCODE_DEFAULT_COORD_SYSTEM },
-    { "sys","gpa", _fipn, 0, cm_print_gpa, get_ui8, set_012, (float *)&cm.default_path_control,     GCODE_DEFAULT_PATH_CONTROL },
-    { "sys","gdi", _fipn, 0, cm_print_gdi, get_ui8, set_01,  (float *)&cm.default_distance_mode,    GCODE_DEFAULT_DISTANCE_MODE },
+    { "sys","gpl", _fipn, 0, cm_print_gpl, get_ui8, set_012, (float *)&cm->default_select_plane,     GCODE_DEFAULT_PLANE },
+    { "sys","gun", _fipn, 0, cm_print_gun, get_ui8, set_01,  (float *)&cm->default_units_mode,       GCODE_DEFAULT_UNITS },
+    { "sys","gco", _fipn, 0, cm_print_gco, get_ui8, set_ui8, (float *)&cm->default_coord_system,     GCODE_DEFAULT_COORD_SYSTEM },
+    { "sys","gpa", _fipn, 0, cm_print_gpa, get_ui8, set_012, (float *)&cm->default_path_control,     GCODE_DEFAULT_PATH_CONTROL },
+    { "sys","gdi", _fipn, 0, cm_print_gdi, get_ui8, set_01,  (float *)&cm->default_distance_mode,    GCODE_DEFAULT_DISTANCE_MODE },
     { "",   "gc",  _f0,   0, tx_print_nul, gc_get_gc,gc_run_gc,(float *)&cs.null, 0 },              // gcode block - must be last in this group
 
     // Actions and Reports

@@ -57,7 +57,7 @@ void kn_inverse_kinematics(const float travel[], float steps[]) {
     // Most of the conversion math has already been done in during config in steps_per_unit()
     // which takes axis travel, step angle and microsteps into account.
     for (uint8_t axis=0; axis<AXES; axis++) {
-        if (cm.a[axis].axis_mode == AXIS_INHIBITED) { joint[axis] = 0;}
+        if (cm->a[axis].axis_mode == AXIS_INHIBITED) { joint[axis] = 0;}
         if (st_cfg.mot[MOTOR_1].motor_map == axis) {
             steps[MOTOR_1] = joint[axis] * st_cfg.mot[MOTOR_1].steps_per_unit;
         }
@@ -85,7 +85,7 @@ void kn_inverse_kinematics(const float travel[], float steps[]) {
 #else
 
     for (uint8_t axis = 0; axis < AXES; axis++) {
-        if (cm.a[axis].axis_mode == AXIS_INHIBITED) {
+        if (cm->a[axis].axis_mode == AXIS_INHIBITED) {
             joint[axis] = 0;
             continue;
         }
@@ -141,7 +141,7 @@ void kn_forward_kinematics(const float steps[], float travel[]) {
 
     // Scan through each axis, and then through each motor
     for (uint8_t axis = 0; axis < AXES; axis++) {
-        if (cm.a[axis].axis_mode == AXIS_INHIBITED) {
+        if (cm->a[axis].axis_mode == AXIS_INHIBITED) {
             travel[axis] = 0.0;
             continue;
         }

@@ -84,12 +84,12 @@ static stat_t _jogging_finalize_exit(int8_t axis);
 
 stat_t cm_jogging_cycle_start(uint8_t axis) {
     // save relevant non-axis parameters from Gcode model
-    jog.saved_units_mode     = cm_get_units_mode(ACTIVE_MODEL);     // cm.gm.units_mode;
-    jog.saved_coord_system   = cm_get_coord_system(ACTIVE_MODEL);   // cm.gm.coord_system;
-    jog.saved_distance_mode  = cm_get_distance_mode(ACTIVE_MODEL);  // cm.gm.distance_mode;
+    jog.saved_units_mode     = cm_get_units_mode(ACTIVE_MODEL);     // cm->gm.units_mode;
+    jog.saved_coord_system   = cm_get_coord_system(ACTIVE_MODEL);   // cm->gm.coord_system;
+    jog.saved_distance_mode  = cm_get_distance_mode(ACTIVE_MODEL);  // cm->gm.distance_mode;
     jog.saved_feed_rate_mode = cm_get_feed_rate_mode(ACTIVE_MODEL);
-    jog.saved_feed_rate      = (ACTIVE_MODEL)->feed_rate;  // cm.gm.feed_rate;
-    jog.saved_jerk           = cm.a[axis].jerk_max;
+    jog.saved_feed_rate      = (ACTIVE_MODEL)->feed_rate;  // cm->gm.feed_rate;
+    jog.saved_jerk           = cm->a[axis].jerk_max;
 
     // set working values
     cm_set_units_mode(MILLIMETERS);
@@ -98,7 +98,7 @@ stat_t cm_jogging_cycle_start(uint8_t axis) {
     cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);
 
     jog.velocity_start = JOGGING_START_VELOCITY;  // see canonical_machine.h for #define
-    jog.velocity_max   = cm.a[axis].velocity_max;
+    jog.velocity_max   = cm->a[axis].velocity_max;
 
     jog.start_pos = cm_get_absolute_position(RUNTIME, axis);
     jog.dest_pos  = cm_get_jogging_dest();
@@ -107,8 +107,8 @@ stat_t cm_jogging_cycle_start(uint8_t axis) {
     jog.axis = axis;
     jog.func = _jogging_axis_start;  // bind initial processing function
 
-    cm.machine_state = MACHINE_CYCLE;
-    cm.cycle_state   = CYCLE_JOG;
+    cm->machine_state = MACHINE_CYCLE;
+    cm->cycle_state   = CYCLE_JOG;
     return (STAT_OK);
 }
 
@@ -123,7 +123,7 @@ stat_t cm_jogging_cycle_start(uint8_t axis) {
  */
 
 stat_t cm_jogging_cycle_callback(void) {
-    if (cm.cycle_state != CYCLE_JOG) {
+    if (cm->cycle_state != CYCLE_JOG) {
         return (STAT_NOOP);  // exit if not in a jogging cycle
     }
     if (jog.func == _jogging_finalize_exit && cm_get_runtime_busy() == true) {

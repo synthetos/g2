@@ -101,7 +101,8 @@ void application_init_services(void)
 
 void application_init_machine(void)
 {
-    cm.machine_state = MACHINE_INITIALIZING;
+    cm = &cm0;
+    cm->machine_state = MACHINE_INITIALIZING;
 
     stepper_init();                 // stepper subsystem
     encoder_init();                 // virtual encoders

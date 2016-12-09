@@ -371,10 +371,10 @@ static stat_t _sync_to_planner()
  */
 static stat_t _shutdown_handler(void)
 {
-    if (cm.shutdown_requested != 0) {  // request may contain the (non-zero) input number
+    if (cm->shutdown_requested != 0) {  // request may contain the (non-zero) input number
         char msg[10];
-        sprintf(msg, "input %d", (int)cm.shutdown_requested);
-        cm.shutdown_requested = false; // clear limit request used here ^
+        sprintf(msg, "input %d", (int)cm->shutdown_requested);
+        cm->shutdown_requested = false; // clear limit request used here ^
         cm_shutdown(STAT_SHUTDOWN, msg);
     }
     return(STAT_OK);
@@ -389,10 +389,10 @@ static stat_t _limit_switch_handler(void)
 
 //    safe_pin = 1;
 
-    if ((cm.limit_enable == true) && (cm.limit_requested != 0)) {
+    if ((cm->limit_enable == true) && (cm->limit_requested != 0)) {
         char msg[10];
-        sprintf(msg, "input %d", (int)cm.limit_requested);
-        cm.limit_requested = false; // clear limit request used here ^
+        sprintf(msg, "input %d", (int)cm->limit_requested);
+        cm->limit_requested = false; // clear limit request used here ^
         cm_alarm(STAT_LIMIT_SWITCH_HIT, msg);
     }
     return (STAT_OK);
@@ -400,11 +400,11 @@ static stat_t _limit_switch_handler(void)
 
 static stat_t _interlock_handler(void)
 {
-    if (cm.safety_interlock_enable) {
+    if (cm->safety_interlock_enable) {
     // interlock broken
-        if (cm.safety_interlock_disengaged != 0) {
-            cm.safety_interlock_disengaged = 0;
-            cm.safety_interlock_state = SAFETY_INTERLOCK_DISENGAGED;
+        if (cm->safety_interlock_disengaged != 0) {
+            cm->safety_interlock_disengaged = 0;
+            cm->safety_interlock_state = SAFETY_INTERLOCK_DISENGAGED;
             cm_request_feedhold();                                  // may have already requested STOP as INPUT_ACTION
             // feedhold was initiated by input action in gpio
             // pause spindle
@@ -412,9 +412,9 @@ static stat_t _interlock_handler(void)
         }
 
         // interlock restored
-        if ((cm.safety_interlock_reengaged != 0) && (mp_runtime_is_idle())) {
-            cm.safety_interlock_reengaged = 0;
-            cm.safety_interlock_state = SAFETY_INTERLOCK_ENGAGED;   // interlock restored
+        if ((cm->safety_interlock_reengaged != 0) && (mp_runtime_is_idle())) {
+            cm->safety_interlock_reengaged = 0;
+            cm->safety_interlock_state = SAFETY_INTERLOCK_ENGAGED;   // interlock restored
             // restart spindle with dwell
             cm_request_end_hold();                                // use cm_request_end_hold() instead of just ending
             // restart coolant

@@ -172,9 +172,9 @@ stat_t cm_homing_cycle_start(void) {
 
     hm.axis          = -1;                  // set to retrieve initial axis
     hm.func          = _homing_axis_start;  // bind initial processing function
-    cm.machine_state = MACHINE_CYCLE;
-    cm.cycle_state   = CYCLE_HOMING;
-    cm.homing_state  = HOMING_NOT_HOMED;
+    cm->machine_state = MACHINE_CYCLE;
+    cm->cycle_state   = CYCLE_HOMING;
+    cm->homing_state  = HOMING_NOT_HOMED;
     return (STAT_OK);
 }
 
@@ -185,7 +185,7 @@ stat_t cm_homing_cycle_start_no_set(void) {
 }
 
 stat_t cm_homing_cycle_callback(void) {
-    if (cm.cycle_state != CYCLE_HOMING) {  // exit if not in a homing cycle
+    if (cm->cycle_state != CYCLE_HOMING) {  // exit if not in a homing cycle
         return (STAT_NOOP);
     }
     if (hm.waiting_for_motion_end) {  // sync to planner move ends (using callback)
@@ -210,57 +210,57 @@ static stat_t _homing_axis_start(int8_t axis) {
     // get the first or next axis
     if ((axis = _get_next_axis(axis)) < 0) {  // axes are done or error
         if (axis == -1) {                     // -1 is done
-            cm.homing_state = HOMING_HOMED;
+            cm->homing_state = HOMING_HOMED;
             return (_set_homing_func(_homing_finalize_exit));
         } else if (axis == -2) {  // -2 is error
             return (_homing_error_exit(-2, STAT_HOMING_ERROR_BAD_OR_NO_AXIS));
         }
     }
     // clear the homed flag for axis so we'll be able to move w/o triggering soft limits
-    cm.homed[axis] = false;
+    cm->homed[axis] = false;
 
     // trap axis mis-configurations
-    if (fp_ZERO(cm.a[axis].homing_input)) {
+    if (fp_ZERO(cm->a[axis].homing_input)) {
         return (_homing_error_exit(axis, STAT_HOMING_ERROR_HOMING_INPUT_MISCONFIGURED));
     }
-    if (fp_ZERO(cm.a[axis].search_velocity)) {
+    if (fp_ZERO(cm->a[axis].search_velocity)) {
         return (_homing_error_exit(axis, STAT_HOMING_ERROR_ZERO_SEARCH_VELOCITY));
     }
-    if (fp_ZERO(cm.a[axis].latch_velocity)) {
+    if (fp_ZERO(cm->a[axis].latch_velocity)) {
         return (_homing_error_exit(axis, STAT_HOMING_ERROR_ZERO_LATCH_VELOCITY));
     }
 
     // calculate and test travel distance
-    float travel_distance = fabs(cm.a[axis].travel_max - cm.a[axis].travel_min) + cm.a[axis].latch_backoff;
+    float travel_distance = fabs(cm->a[axis].travel_max - cm->a[axis].travel_min) + cm->a[axis].latch_backoff;
     if (fp_ZERO(travel_distance)) {
         return (_homing_error_exit(axis, STAT_HOMING_ERROR_TRAVEL_MIN_MAX_IDENTICAL));
     }
 
     // Nothing to do about direction now that direction is explicit
     // However, here's a good place to stash the homing_switch:
-    hm.homing_input = cm.a[axis].homing_input;
+    hm.homing_input = cm->a[axis].homing_input;
     gpio_set_homing_mode(hm.homing_input, true);
     hm.axis            = axis;                              // persist the axis
-    hm.search_velocity = fabs(cm.a[axis].search_velocity);  // search velocity is always positive
-    hm.latch_velocity  = fabs(cm.a[axis].latch_velocity);   // latch velocity is always positive
+    hm.search_velocity = fabs(cm->a[axis].search_velocity);  // search velocity is always positive
+    hm.latch_velocity  = fabs(cm->a[axis].latch_velocity);   // latch velocity is always positive
 
-    bool homing_to_max = cm.a[axis].homing_dir;
+    bool homing_to_max = cm->a[axis].homing_dir;
 
     // setup parameters for positive or negative travel (homing to the max or min switch)
     if (homing_to_max) {
         hm.search_travel = travel_distance;                      // search travels in positive direction
-        hm.latch_backoff = fabs(cm.a[axis].latch_backoff);       // latch travels in positive direction
-        hm.zero_backoff  = -max(0.0f, cm.a[axis].zero_backoff);  // zero backoff is negative direction (or zero)
+        hm.latch_backoff = fabs(cm->a[axis].latch_backoff);       // latch travels in positive direction
+        hm.zero_backoff  = -max(0.0f, cm->a[axis].zero_backoff);  // zero backoff is negative direction (or zero)
                                                                  // will set the maximum position
                                                                  //     (plus any negative backoff)
-        hm.setpoint = cm.a[axis].travel_max + (max(0.0f, -cm.a[axis].zero_backoff));
+        hm.setpoint = cm->a[axis].travel_max + (max(0.0f, -cm->a[axis].zero_backoff));
     } else {
         hm.search_travel = -travel_distance;                    // search travels in negative direction
-        hm.latch_backoff = -fabs(cm.a[axis].latch_backoff);     // latch travels in negative direction
-        hm.zero_backoff  = max(0.0f, cm.a[axis].zero_backoff);  // zero backoff is positive direction (or zero)
+        hm.latch_backoff = -fabs(cm->a[axis].latch_backoff);     // latch travels in negative direction
+        hm.zero_backoff  = max(0.0f, cm->a[axis].zero_backoff);  // zero backoff is positive direction (or zero)
                                                                 // will set the minimum position
                                                                 //     (minus any negative backoff)
-        hm.setpoint = cm.a[axis].travel_min + (max(0.0f, -cm.a[axis].zero_backoff));
+        hm.setpoint = cm->a[axis].travel_min + (max(0.0f, -cm->a[axis].zero_backoff));
     }
 
     // if homing is disabled for the axis then skip to the next axis
@@ -276,7 +276,7 @@ static stat_t _homing_axis_clear_init(int8_t axis)  // first clear move
 
         // determine if the input switch for this axis is shared w/other axes
         for (uint8_t check_axis = AXIS_X; check_axis < AXES; check_axis++) {
-            if (axis != check_axis && cm.a[check_axis].homing_input == hm.homing_input) {
+            if (axis != check_axis && cm->a[check_axis].homing_input == hm.homing_input) {
                 return (_homing_error_exit(
                     axis, STAT_HOMING_ERROR_MUST_CLEAR_SWITCHES_BEFORE_HOMING));  // axis cannot be homed
             }
@@ -288,7 +288,7 @@ static stat_t _homing_axis_clear_init(int8_t axis)  // first clear move
 
 static stat_t _homing_axis_search(int8_t axis)  // drive to switch
 {
-    cm_set_axis_jerk(axis, cm.a[axis].jerk_high);  // use the high-speed jerk for search onward
+    cm_set_axis_jerk(axis, cm->a[axis].jerk_high);  // use the high-speed jerk for search onward
     _homing_axis_move(axis, hm.search_travel, hm.search_velocity);
     return (_set_homing_func(_homing_axis_clear));
 }
@@ -315,7 +315,7 @@ static stat_t _homing_axis_set_position(int8_t axis)  // set axis zero / max and
 {
     if (hm.set_coordinates) {
         cm_set_position(axis, hm.setpoint);
-        cm.homed[axis] = true;
+        cm->homed[axis] = true;
 
     } else {  // handle G28.4 cycle - set position to the point of switch closure
         float contact_position[AXES];
@@ -407,38 +407,38 @@ static stat_t _homing_finalize_exit(int8_t axis)  // third part of return to hom
 static int8_t _get_next_axis(int8_t axis) {
 #if (HOMING_AXES <= 4)
     if (axis == -1) {  // inelegant brute force solution
-        if (cm.gf.target[AXIS_Z]) {
+        if (cm->gf.target[AXIS_Z]) {
             return (AXIS_Z);
         }
-        if (cm.gf.target[AXIS_X]) {
+        if (cm->gf.target[AXIS_X]) {
             return (AXIS_X);
         }
-        if (cm.gf.target[AXIS_Y]) {
+        if (cm->gf.target[AXIS_Y]) {
             return (AXIS_Y);
         }
-        if (cm.gf.target[AXIS_A]) {
+        if (cm->gf.target[AXIS_A]) {
             return (AXIS_A);
         }
         return (-2);  // error
     } else if (axis == AXIS_Z) {
-        if (cm.gf.target[AXIS_X]) {
+        if (cm->gf.target[AXIS_X]) {
             return (AXIS_X);
         }
-        if (cm.gf.target[AXIS_Y]) {
+        if (cm->gf.target[AXIS_Y]) {
             return (AXIS_Y);
         }
-        if (cm.gf.target[AXIS_A]) {
+        if (cm->gf.target[AXIS_A]) {
             return (AXIS_A);
         }
     } else if (axis == AXIS_X) {
-        if (cm.gf.target[AXIS_Y]) {
+        if (cm->gf.target[AXIS_Y]) {
             return (AXIS_Y);
         }
-        if (cm.gf.target[AXIS_A]) {
+        if (cm->gf.target[AXIS_A]) {
             return (AXIS_A);
         }
     } else if (axis == AXIS_Y) {
-        if (cm.gf.target[AXIS_A]) {
+        if (cm->gf.target[AXIS_A]) {
             return (AXIS_A);
         }
     }
@@ -446,73 +446,73 @@ static int8_t _get_next_axis(int8_t axis) {
 
 #else
     if (axis == -1) {
-        if (cm.gf.target[AXIS_Z]) {
+        if (cm->gf.target[AXIS_Z]) {
             return (AXIS_Z);
         }
-        if (cm.gf.target[AXIS_X]) {
+        if (cm->gf.target[AXIS_X]) {
             return (AXIS_X);
         }
-        if (cm.gf.target[AXIS_Y]) {
+        if (cm->gf.target[AXIS_Y]) {
             return (AXIS_Y);
         }
-        if (cm.gf.target[AXIS_A]) {
+        if (cm->gf.target[AXIS_A]) {
             return (AXIS_A);
         }
-        if (cm.gf.target[AXIS_B]) {
+        if (cm->gf.target[AXIS_B]) {
             return (AXIS_B);
         }
-        if (cm.gf.target[AXIS_C]) {
+        if (cm->gf.target[AXIS_C]) {
             return (AXIS_C);
         }
         return (-2);  // error
     } else if (axis == AXIS_Z) {
-        if (cm.gf.target[AXIS_X]) {
+        if (cm->gf.target[AXIS_X]) {
             return (AXIS_X);
         }
-        if (cm.gf.target[AXIS_Y]) {
+        if (cm->gf.target[AXIS_Y]) {
             return (AXIS_Y);
         }
-        if (cm.gf.target[AXIS_A]) {
+        if (cm->gf.target[AXIS_A]) {
             return (AXIS_A);
         }
-        if (cm.gf.target[AXIS_B]) {
+        if (cm->gf.target[AXIS_B]) {
             return (AXIS_B);
         }
-        if (cm.gf.target[AXIS_C]) {
+        if (cm->gf.target[AXIS_C]) {
             return (AXIS_C);
         }
     } else if (axis == AXIS_X) {
-        if (cm.gf.target[AXIS_Y]) {
+        if (cm->gf.target[AXIS_Y]) {
             return (AXIS_Y);
         }
-        if (cm.gf.target[AXIS_A]) {
+        if (cm->gf.target[AXIS_A]) {
             return (AXIS_A);
         }
-        if (cm.gf.target[AXIS_B]) {
+        if (cm->gf.target[AXIS_B]) {
             return (AXIS_B);
         }
-        if (cm.gf.target[AXIS_C]) {
+        if (cm->gf.target[AXIS_C]) {
             return (AXIS_C);
         }
     } else if (axis == AXIS_Y) {
-        if (cm.gf.target[AXIS_A]) {
+        if (cm->gf.target[AXIS_A]) {
             return (AXIS_A);
         }
-        if (cm.gf.target[AXIS_B]) {
+        if (cm->gf.target[AXIS_B]) {
             return (AXIS_B);
         }
-        if (cm.gf.target[AXIS_C]) {
+        if (cm->gf.target[AXIS_C]) {
             return (AXIS_C);
         }
     } else if (axis == AXIS_A) {
-        if (cm.gf.target[AXIS_B]) {
+        if (cm->gf.target[AXIS_B]) {
             return (AXIS_B);
         }
-        if (cm.gf.target[AXIS_C]) {
+        if (cm->gf.target[AXIS_C]) {
             return (AXIS_C);
         }
     } else if (axis == AXIS_B) {
-        if (cm.gf.target[AXIS_C]) {
+        if (cm->gf.target[AXIS_C]) {
             return (AXIS_C);
         }
     }

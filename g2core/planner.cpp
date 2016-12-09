@@ -466,7 +466,7 @@ bool mp_has_runnable_buffer(int8_t q)   // which queue are you interested in?)
 
 bool mp_is_phat_city_time()
 {
-    if(cm.hold_state == FEEDHOLD_HOLD) {
+    if(cm->hold_state == FEEDHOLD_HOLD) {
         return true;
     }
     return ((mp.plannable_time <= 0.0) || (PHAT_CITY_TIME < mp.plannable_time));
@@ -510,8 +510,8 @@ stat_t mp_planner_callback()
 {
     // Test if the planner has transitioned to an IDLE state
     if ((mp_get_planner_buffers(ACTIVE_Q) == PLANNER_BUFFER_POOL_SIZE) &&   // detect and set IDLE state
-        (cm.motion_state == MOTION_STOP) &&
-        (cm.hold_state == FEEDHOLD_OFF)) {
+        (cm->motion_state == MOTION_STOP) &&
+        (cm->hold_state == FEEDHOLD_OFF)) {
         mp.planner_state = PLANNER_IDLE;
         return (STAT_OK);
     }
@@ -580,7 +580,7 @@ void mp_replan_queue(mpBuf_t *bf)
 
 void mp_start_feed_override(const float ramp_time, const float override_factor)
 {
-    cm.mfo_state = MFO_REQUESTED;
+    cm->mfo_state = MFO_REQUESTED;
 
     if (mp.planner_state == PLANNER_IDLE) {
         mp.mfo_factor = override_factor;             // that was easy
@@ -817,11 +817,11 @@ void mp_commit_write_buffer(const blockType block_type)
     q->w->block_state = BLOCK_INITIAL_ACTION;
 
     if (block_type == BLOCK_TYPE_ALINE) {
-        if (cm.motion_state == MOTION_STOP) {
+        if (cm->motion_state == MOTION_STOP) {
             cm_set_motion_state(MOTION_PLANNING);
         }
     } else {
-        if ((mp.planner_state > PLANNER_STARTUP) && (cm.hold_state == FEEDHOLD_OFF)) {
+        if ((mp.planner_state > PLANNER_STARTUP) && (cm->hold_state == FEEDHOLD_OFF)) {
             // NB: BEWARE! the requested exec may result in the planner buffer being
             // processed IMMEDIATELY and then freed - invalidating the contents
             st_request_forward_plan();      // request an exec if the runtime is not busy

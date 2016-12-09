@@ -37,12 +37,12 @@
 
 /* Defines, Macros, and  Assorted Parameters */
 
-#define MODEL   (GCodeState_t *)&cm.gm      // absolute pointer from canonical machine gm model
+#define MODEL   (GCodeState_t *)&cm->gm      // absolute pointer from canonical machine gm model
 #define PLANNER (GCodeState_t *)&bf->gm     // relative to buffer *bf is currently pointing to
 #define RUNTIME (GCodeState_t *)&mr.gm      // absolute pointer from runtime mm struct
-#define ACTIVE_MODEL cm.am                  // active model pointer is maintained by state management
+#define ACTIVE_MODEL cm->am                  // active model pointer is maintained by state management
 
-#define _to_millimeters(a) ((cm.gm.units_mode == INCHES) ? (a * MM_PER_INCH) : a)
+#define _to_millimeters(a) ((cm->gm.units_mode == INCHES) ? (a * MM_PER_INCH) : a)
 
 #define JOGGING_START_VELOCITY ((float)10.0)
 #define DISABLE_SOFT_LIMIT (999999)
@@ -53,9 +53,9 @@
  * MACHINE STATE MODEL
  *
  * The following main variables track canonical machine state and state transitions.
- *    - cm.machine_state  - overall state of machine and program execution
- *    - cm.cycle_state  - what cycle the machine is executing (or none)
- *    - cm.motion_state  - state of movement
+ *    - cm->machine_state  - overall state of machine and program execution
+ *    - cm->cycle_state  - what cycle the machine is executing (or none)
+ *    - cm->motion_state  - state of movement
  */
 // *** Note: check config printout strings align with all the state variables
 
@@ -128,15 +128,15 @@ typedef enum {                  // queue flush state machine
     FLUSH_REQUESTED,            // flush has been requested but not started yet
 } cmQueueFlushState;
 
-typedef enum {                  // applies to cm.homing_state
+typedef enum {                  // applies to cm->homing_state
     HOMING_NOT_HOMED = 0,       // machine is not homed (0=false)
     HOMING_HOMED = 1,           // machine is homed (1=true)
     HOMING_WAITING              // machine waiting to be homed
 } cmHomingState;
 
-typedef enum {                  // applies to cm.probe_state
+typedef enum {                  // applies to cm->probe_state
     PROBE_FAILED = 0,           // probe reached endpoint without triggering
-    PROBE_SUCCEEDED = 1,        // probe was triggered, cm.probe_results has position
+    PROBE_SUCCEEDED = 1,        // probe was triggered, cm->probe_results has position
     PROBE_WAITING               // probe is waiting to be started
 } cmProbeState;
 
@@ -308,7 +308,7 @@ typedef enum {              // axis modes (ordered: see _cm_get_feed_time())
  *   some state elements are necessarily restored from gm.
  *
  * - gf is used by the gcode parser interpreter to hold flags for any data
- *   that has changed in gn during the parse. cm.gf.target[] values are also used
+ *   that has changed in gn during the parse. cm->gf.target[] values are also used
  *   by the canonical machine during set_target().
  *
  * - cfg (config struct in config.h) is also used heavily and contains some
@@ -580,9 +580,12 @@ typedef struct cmSingleton {                // struct to manage cm globals and c
     magic_t magic_end;
 } cmMachine_t;
 
-/**** Externs - See canonical_machine.c for allocation ****/
+/**** Externs - See canonical_machine.cpp for allocation ****/
 
-extern cmMachine_t cm;        // canonical machine controller singleton
+//extern cmMachine_t cm;          // canonical machine controller singleton
+extern cmMachine_t *cm;         // pointer to active canonical machine
+extern cmMachine_t cm0;         // canonical machine primary machine
+extern cmMachine_t cm1;         // canonical machine secondary machine
 
 /*****************************************************************************
  * FUNCTION PROTOTYPES

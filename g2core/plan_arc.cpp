@@ -135,21 +135,21 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
     //  - rotary axes are present. Ignored
 
     // trap missing feed rate
-    if (fp_ZERO(cm.gm.feed_rate)) {
+    if (fp_ZERO(cm->gm.feed_rate)) {
         return (STAT_GCODE_FEEDRATE_NOT_SPECIFIED);
     }
 
     // Set the arc plane for the current G17/G18/G19 setting and test arc specification
     // Plane axis 0 and 1 are the arc plane, the linear axis is normal to the arc plane.
-    if (cm.gm.select_plane == CANON_PLANE_XY) {         // G17 - the vast majority of arcs are in the G17 (XY) plane
+    if (cm->gm.select_plane == CANON_PLANE_XY) {         // G17 - the vast majority of arcs are in the G17 (XY) plane
         arc.plane_axis_0 = AXIS_X;
         arc.plane_axis_1 = AXIS_Y;
         arc.linear_axis  = AXIS_Z;
-    } else if (cm.gm.select_plane == CANON_PLANE_XZ) {  // G18
+    } else if (cm->gm.select_plane == CANON_PLANE_XZ) {  // G18
         arc.plane_axis_0 = AXIS_X;
         arc.plane_axis_1 = AXIS_Z;
         arc.linear_axis  = AXIS_Y;
-    } else if (cm.gm.select_plane == CANON_PLANE_YZ) {  // G19
+    } else if (cm->gm.select_plane == CANON_PLANE_YZ) {  // G19
         arc.plane_axis_0 = AXIS_Y;
         arc.plane_axis_1 = AXIS_Z;
         arc.linear_axis  = AXIS_X;
@@ -175,7 +175,7 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
         }
     } 
     else {  // test that center format absolute distance mode arcs have both offsets specified
-        if (cm.gm.arc_distance_mode == ABSOLUTE_MODE) {
+        if (cm->gm.arc_distance_mode == ABSOLUTE_MODE) {
             if (!(offset_f[arc.plane_axis_0] && offset_f[arc.plane_axis_1])) {  // if one or both offsets are missing
                 return (STAT_ARC_OFFSETS_MISSING_FOR_SELECTED_PLANE);
             }
@@ -204,18 +204,18 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
 
     // in radius mode it's an error for start == end
     if (radius_f) {
-        if ((fp_EQ(cm.gmx.position[AXIS_X], cm.gm.target[AXIS_X])) &&
-            (fp_EQ(cm.gmx.position[AXIS_Y], cm.gm.target[AXIS_Y])) &&
-            (fp_EQ(cm.gmx.position[AXIS_Z], cm.gm.target[AXIS_Z]))) {
+        if ((fp_EQ(cm->gmx.position[AXIS_X], cm->gm.target[AXIS_X])) &&
+            (fp_EQ(cm->gmx.position[AXIS_Y], cm->gm.target[AXIS_Y])) &&
+            (fp_EQ(cm->gmx.position[AXIS_Z], cm->gm.target[AXIS_Z]))) {
             return (STAT_ARC_ENDPOINT_IS_STARTING_POINT);
         }
     }
 
     // *** now get down to the rest of the work setting up the arc for execution ***
-    cm.gm.motion_mode = motion_mode;
-    cm_set_work_offsets(&cm.gm);                        // capture the fully resolved offsets to gm
-    memcpy(&arc.gm, &cm.gm, sizeof(GCodeState_t));      // copy GCode context to arc singleton - some will be overwritten to run segments
-    copy_vector(arc.position, cm.gmx.position);         // set initial arc position from gcode model
+    cm->gm.motion_mode = motion_mode;
+    cm_set_work_offsets(&cm->gm);                        // capture the fully resolved offsets to gm
+    memcpy(&arc.gm, &cm->gm, sizeof(GCodeState_t));      // copy GCode context to arc singleton - some will be overwritten to run segments
+    copy_vector(arc.position, cm->gmx.position);         // set initial arc position from gcode model
 
     // setup offsets
     arc.offset[OFS_I] = _to_millimeters(offset[OFS_I]); // copy offsets with conversion to canonical form (mm)
@@ -240,8 +240,8 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
     // test arc soft limits
     stat_t status = _test_arc_soft_limits();
     if (status != STAT_OK) {
-        cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;
-        copy_vector(cm.gm.target, arc.position);        // reset model position
+        cm->gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;
+        copy_vector(cm->gm.target, arc.position);        // reset model position
         return (cm_alarm(status, "arc soft_limits"));   // throw an alarm
     }
 
@@ -333,7 +333,7 @@ static stat_t _compute_arc(const bool radius_f)
     // Note: removed segment_length test as segment_time accounts for this (build 083.37)
     float arc_time;
     float segments_for_minimum_time = _estimate_arc_time(arc_time) * (MICROSECONDS_PER_MINUTE / MIN_ARC_SEGMENT_USEC);
-    float segments_for_chordal_accuracy = arc.length / sqrt(4*cm.chordal_tolerance * (2 * arc.radius - cm.chordal_tolerance));
+    float segments_for_chordal_accuracy = arc.length / sqrt(4*cm->chordal_tolerance * (2 * arc.radius - cm->chordal_tolerance));
     arc.segments = floor(min(segments_for_chordal_accuracy, segments_for_minimum_time));
     arc.segments = max(arc.segments, (float)1.0);        //...but is at least 1 segment
 
@@ -482,14 +482,14 @@ static float _estimate_arc_time (float arc_time)
     if (arc.gm.feed_rate_mode == INVERSE_TIME_MODE) {
         arc_time = arc.gm.feed_rate;    // inverse feed rate has been normalized to minutes
     } else {
-        arc_time = arc.length / cm.gm.feed_rate;
+        arc_time = arc.length / cm->gm.feed_rate;
     }
 
     // Downgrade the time if there is a rate-limiting axis
-    arc_time = max(arc_time, (float)fabs(arc.planar_travel/cm.a[arc.plane_axis_0].feedrate_max));
-    arc_time = max(arc_time, (float)fabs(arc.planar_travel/cm.a[arc.plane_axis_1].feedrate_max));
+    arc_time = max(arc_time, (float)fabs(arc.planar_travel/cm->a[arc.plane_axis_0].feedrate_max));
+    arc_time = max(arc_time, (float)fabs(arc.planar_travel/cm->a[arc.plane_axis_1].feedrate_max));
     if (fabs(arc.linear_travel) > 0) {
-        arc_time = max(arc_time, (float)fabs(arc.linear_travel/cm.a[arc.linear_axis].feedrate_max));
+        arc_time = max(arc_time, (float)fabs(arc.linear_travel/cm->a[arc.linear_axis].feedrate_max));
     }
     return (arc_time);
 }
@@ -555,11 +555,11 @@ static stat_t _test_arc_soft_limit_plane_axis(float center, uint8_t plane_axis)
         if (arc.angular_travel < M_PI) {                            // case (1)
             return (STAT_OK);
         }
-        if ((center - arc.radius) < cm.a[plane_axis].travel_min) {    // case (2)
+        if ((center - arc.radius) < cm->a[plane_axis].travel_min) {    // case (2)
             return (STAT_SOFT_LIMIT_EXCEEDED);
         }
     }
-    if ((center + arc.radius) > cm.a[plane_axis].travel_max) {        // cases (3) and (4)
+    if ((center + arc.radius) > cm->a[plane_axis].travel_max) {        // cases (3) and (4)
         return (STAT_SOFT_LIMIT_EXCEEDED);
     }
     return(STAT_OK);
@@ -568,7 +568,7 @@ static stat_t _test_arc_soft_limit_plane_axis(float center, uint8_t plane_axis)
 static stat_t _test_arc_soft_limits()
 {
 /*
-    if (cm.soft_limit_enable == true) {
+    if (cm->soft_limit_enable == true) {
 
         // Test if target falls outside boundaries. This is a 3 dimensional test
         // so it also checks the linear axis of the arc (helix axis)

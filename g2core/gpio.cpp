@@ -194,20 +194,20 @@ struct ioDigitalInputExt {
         // these functions trigger on the leading edge
         if (in->edge == INPUT_EDGE_LEADING) {
             if (in->function == INPUT_FUNCTION_LIMIT) {
-                cm.limit_requested = ext_pin_number;
+                cm->limit_requested = ext_pin_number;
 
             } else if (in->function == INPUT_FUNCTION_SHUTDOWN) {
-                cm.shutdown_requested = ext_pin_number;
+                cm->shutdown_requested = ext_pin_number;
 
             } else if (in->function == INPUT_FUNCTION_INTERLOCK) {
-                cm.safety_interlock_disengaged = ext_pin_number;
+                cm->safety_interlock_disengaged = ext_pin_number;
             }
         }
 
         // trigger interlock release on trailing edge
         if (in->edge == INPUT_EDGE_TRAILING) {
             if (in->function == INPUT_FUNCTION_INTERLOCK) {
-                cm.safety_interlock_reengaged = ext_pin_number;
+                cm->safety_interlock_reengaged = ext_pin_number;
             }
         }
 

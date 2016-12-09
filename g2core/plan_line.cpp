@@ -87,14 +87,14 @@ float mp_get_runtime_work_position(uint8_t axis) {
     // target_rotated[2] = a z_1 + b z_2 + c z_3 + z_offset
 
     if (axis == AXIS_X) {
-        return mr.position[0] * cm.rotation_matrix[0][0] + mr.position[1] * cm.rotation_matrix[1][0] +
-               mr.position[2] * cm.rotation_matrix[2][0] - mr.gm.work_offset[0];
+        return mr.position[0] * cm->rotation_matrix[0][0] + mr.position[1] * cm->rotation_matrix[1][0] +
+               mr.position[2] * cm->rotation_matrix[2][0] - mr.gm.work_offset[0];
     } else if (axis == AXIS_Y) {
-        return mr.position[0] * cm.rotation_matrix[0][1] + mr.position[1] * cm.rotation_matrix[1][1] +
-               mr.position[2] * cm.rotation_matrix[2][1] - mr.gm.work_offset[1];
+        return mr.position[0] * cm->rotation_matrix[0][1] + mr.position[1] * cm->rotation_matrix[1][1] +
+               mr.position[2] * cm->rotation_matrix[2][1] - mr.gm.work_offset[1];
     } else if (axis == AXIS_Z) {
-        return mr.position[0] * cm.rotation_matrix[0][2] + mr.position[1] * cm.rotation_matrix[1][2] +
-               mr.position[2] * cm.rotation_matrix[2][2] - cm.rotation_z_offset - mr.gm.work_offset[2];
+        return mr.position[0] * cm->rotation_matrix[0][2] + mr.position[1] * cm->rotation_matrix[1][2] +
+               mr.position[2] * cm->rotation_matrix[2][2] - cm->rotation_z_offset - mr.gm.work_offset[2];
     } else {
         // ABC, UVW, we don't rotate them
         return (mr.position[axis] - mr.gm.work_offset[axis]);
@@ -110,7 +110,7 @@ float mp_get_runtime_work_position(uint8_t axis) {
  */
 bool mp_get_runtime_busy() 
 {
-    if (cm.cycle_state == CYCLE_OFF) {
+    if (cm->cycle_state == CYCLE_OFF) {
         return (false);
     }
     if ((st_runtime_isbusy() == true) || 
@@ -165,20 +165,20 @@ stat_t mp_aline(GCodeState_t* gm_in)
     //  a being target[0],
     //  b being target[1],
     //  c being target[2],
-    //  x_1 being cm.rotation_matrix[1][0]
+    //  x_1 being cm->rotation_matrix[1][0]
 
-    target_rotated[0] = gm_in->target[0] * cm.rotation_matrix[0][0] + 
-                        gm_in->target[1] * cm.rotation_matrix[0][1] +
-                        gm_in->target[2] * cm.rotation_matrix[0][2];
+    target_rotated[0] = gm_in->target[0] * cm->rotation_matrix[0][0] + 
+                        gm_in->target[1] * cm->rotation_matrix[0][1] +
+                        gm_in->target[2] * cm->rotation_matrix[0][2];
 
-    target_rotated[1] = gm_in->target[0] * cm.rotation_matrix[1][0] + 
-                        gm_in->target[1] * cm.rotation_matrix[1][1] +
-                        gm_in->target[2] * cm.rotation_matrix[1][2];
+    target_rotated[1] = gm_in->target[0] * cm->rotation_matrix[1][0] + 
+                        gm_in->target[1] * cm->rotation_matrix[1][1] +
+                        gm_in->target[2] * cm->rotation_matrix[1][2];
 
-    target_rotated[2] = gm_in->target[0] * cm.rotation_matrix[2][0] + 
-                        gm_in->target[1] * cm.rotation_matrix[2][1] +
-                        gm_in->target[2] * cm.rotation_matrix[2][2] + 
-                        cm.rotation_z_offset;
+    target_rotated[2] = gm_in->target[0] * cm->rotation_matrix[2][0] + 
+                        gm_in->target[1] * cm->rotation_matrix[2][1] +
+                        gm_in->target[2] * cm->rotation_matrix[2][2] + 
+                        cm->rotation_z_offset;
 
     // copy rotation axes ABC
     target_rotated[3] = gm_in->target[3];
@@ -256,7 +256,7 @@ void mp_plan_block_list()
         }
 
         // OK to replan running buffer during feedhold, but no other times (not supposed to happen)
-        if ((cm.hold_state == FEEDHOLD_OFF) && (bf->buffer_state == MP_BUFFER_RUNNING)) {
+        if ((cm->hold_state == FEEDHOLD_OFF) && (bf->buffer_state == MP_BUFFER_RUNNING)) {
             mp.p = mp.p->nx;
             return;
         }
@@ -267,7 +267,7 @@ void mp_plan_block_list()
         mp.p              = bf;  //+++++ DIAGNOSTIC - this is not needed but is set here for debugging purposes
     }
     if (mp.planner_state > PLANNER_STARTUP) {
-        if (planned_something && (cm.hold_state != FEEDHOLD_HOLD)) {
+        if (planned_something && (cm->hold_state != FEEDHOLD_HOLD)) {
             st_request_forward_plan();  // start motion if runtime is not already busy
         }
     }
@@ -452,7 +452,7 @@ static void _calculate_override(mpBuf_t* bf)  // execute ramp to adjust cruise v
     // TODO: Account for rapid overrides as well as feed overrides
 
     // pull in override factor from previous block or seed initial value from the system setting
-    bf->override_factor = fp_ZERO(bf->pv->override_factor) ? cm.gmx.mfo_factor : bf->pv->override_factor;
+    bf->override_factor = fp_ZERO(bf->pv->override_factor) ? cm->gmx.mfo_factor : bf->pv->override_factor;
     bf->cruise_vmax     = bf->override_factor * bf->cruise_vset;
 
     // generate ramp term is a ramp is active
@@ -518,13 +518,13 @@ static void _calculate_jerk(mpBuf_t* bf)
             switch (bf->gm.motion_mode) {
                 case MOTION_MODE_STRAIGHT_TRAVERSE:
                 //case MOTION_MODE_STRAIGHT_PROBE: // <-- not sure on this one
-                    axis_jerk = cm.a[axis].jerk_high;
+                    axis_jerk = cm->a[axis].jerk_high;
                     break;
                 default:
-                    axis_jerk = cm.a[axis].jerk_max;
+                    axis_jerk = cm->a[axis].jerk_max;
             }
 #else
-            axis_jerk = cm.a[axis].jerk_max;
+            axis_jerk = cm->a[axis].jerk_max;
 #endif
 
             jerk = axis_jerk / fabs(bf->unit[axis]);
@@ -630,9 +630,9 @@ static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const floa
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         if (bf->axis_flags[axis]) {
             if (bf->gm.motion_mode == MOTION_MODE_STRAIGHT_TRAVERSE) {
-                tmp_time = fabs(axis_length[axis]) / cm.a[axis].velocity_max;
+                tmp_time = fabs(axis_length[axis]) / cm->a[axis].velocity_max;
             } else {  // gm.motion_mode == MOTION_MODE_STRAIGHT_FEED
-                tmp_time = fabs(axis_length[axis]) / cm.a[axis].feedrate_max;
+                tmp_time = fabs(axis_length[axis]) / cm->a[axis].feedrate_max;
             }
             max_time = max(max_time, tmp_time);
 
@@ -716,9 +716,9 @@ static void _calculate_junction_vmax(mpBuf_t* bf)
             if (delta > EPSILON) {
                 // formula (4): (See Note 1, above)
 
-                // velocity = min(velocity, (cm.a[axis].max_junction_accel / delta));
-                if ((cm.a[axis].max_junction_accel / delta) < velocity) {
-                    velocity = (cm.a[axis].max_junction_accel / delta);
+                // velocity = min(velocity, (cm->a[axis].max_junction_accel / delta));
+                if ((cm->a[axis].max_junction_accel / delta) < velocity) {
+                    velocity = (cm->a[axis].max_junction_accel / delta);
                     // bf->jerk_axis = axis;
                 }
             }
