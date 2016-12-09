@@ -460,6 +460,8 @@ stat_t cm_get_tn(nvObj_t *nv);          // get travel minimum
 stat_t cm_set_tn(nvObj_t *nv);          // set travel minimum
 stat_t cm_get_tm(nvObj_t *nv);          // get travel maximum
 stat_t cm_set_tm(nvObj_t *nv);          // set travel maximum
+stat_t cm_get_ra(nvObj_t *nv);          // get radius
+stat_t cm_set_ra(nvObj_t *nv);          // set radius
 
 float cm_get_axis_jerk(const uint8_t axis);
 void cm_set_axis_jerk(const uint8_t axis, const float jerk);

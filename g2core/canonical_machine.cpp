@@ -2279,6 +2279,8 @@ stat_t cm_get_tn(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].tr
 stat_t cm_set_tn(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv->index)].travel_min)); }
 stat_t cm_get_tm(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].travel_max)); }
 stat_t cm_set_tm(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv->index)].travel_max)); }
+stat_t cm_get_ra(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].radius)); }
+stat_t cm_set_ra(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].radius)); }
 
 /**** Axis Jerk Primitives
  * cm_get_axis_jerk() - returns jerk for an axis
