@@ -2356,7 +2356,7 @@ stat_t cm_set_jm(nvObj_t *nv) {
                               }
 
 stat_t cm_get_jh(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].jerk_high)); }
-stat_t cm_set_jh(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].jerk_high)); }
+stat_t cm_set_jh(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv->index)].jerk_high)); }
 
 /**** Axis Homing Settings
  * cm_get_hi() - get homing input
