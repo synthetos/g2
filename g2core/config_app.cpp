@@ -113,8 +113,8 @@ const cfgItem_t cfgArray[] = {
 
     // dynamic model attributes for reporting purposes (up front for speed)
     { "",   "stat",_f0, 0, cm_print_stat, cm_get_stat, set_nul,(float *)&cs.null, 0 },      // combined machine state
-    { "",   "n",   _fi, 0, cm_print_line, cm_get_mline,set_int,(float *)&cm->gm.linenum,0 }, // Model line number
-    { "",   "line",_fi, 0, cm_print_line, cm_get_line, set_int,(float *)&cm->gm.linenum,0 }, // Active line number - model or runtime line number
+    { "",   "n",   _fi, 0, cm_print_line, cm_get_mline,set_nul,(float *)&cs.null, 0 },      // Model line number
+    { "",   "line",_fi, 0, cm_print_line, cm_get_line, set_nul,(float *)&cs.null, 0 },      // Active line number - model or runtime line number
     { "",   "vel", _f0, 2, cm_print_vel,  cm_get_vel,  set_nul,(float *)&cs.null, 0 },      // current velocity
     { "",   "feed",_f0, 2, cm_print_feed, cm_get_feed, set_nul,(float *)&cs.null, 0 },      // feed rate
     { "",   "macs",_f0, 0, cm_print_macs, cm_get_macs, set_nul,(float *)&cs.null, 0 },      // raw machine state
@@ -136,34 +136,34 @@ const cfgItem_t cfgArray[] = {
     { "",   "_leds",_f0, 0, tx_print_nul, _get_leds,_set_leds,(float *)&cs.null, 0 },      // TEMPORARY - change LEDs
 #endif
 
-    { "mpo","mpox",_f0, 3, cm_print_mpo, cm_get_mpo, set_nul,(float *)&cs.null, 0 },      // X machine position
-    { "mpo","mpoy",_f0, 3, cm_print_mpo, cm_get_mpo, set_nul,(float *)&cs.null, 0 },      // Y machine position
-    { "mpo","mpoz",_f0, 3, cm_print_mpo, cm_get_mpo, set_nul,(float *)&cs.null, 0 },      // Z machine position
-    { "mpo","mpoa",_f0, 3, cm_print_mpo, cm_get_mpo, set_nul,(float *)&cs.null, 0 },      // A machine position
-    { "mpo","mpob",_f0, 3, cm_print_mpo, cm_get_mpo, set_nul,(float *)&cs.null, 0 },      // B machine position
-    { "mpo","mpoc",_f0, 3, cm_print_mpo, cm_get_mpo, set_nul,(float *)&cs.null, 0 },      // C machine position
+    { "mpo","mpox",_f0, 3, cm_print_mpo, cm_get_mpo, set_nul, (float *)&cs.null, 0 },   // X machine position
+    { "mpo","mpoy",_f0, 3, cm_print_mpo, cm_get_mpo, set_nul, (float *)&cs.null, 0 },   // Y machine position
+    { "mpo","mpoz",_f0, 3, cm_print_mpo, cm_get_mpo, set_nul, (float *)&cs.null, 0 },   // Z machine position
+    { "mpo","mpoa",_f0, 3, cm_print_mpo, cm_get_mpo, set_nul, (float *)&cs.null, 0 },   // A machine position
+    { "mpo","mpob",_f0, 3, cm_print_mpo, cm_get_mpo, set_nul, (float *)&cs.null, 0 },   // B machine position
+    { "mpo","mpoc",_f0, 3, cm_print_mpo, cm_get_mpo, set_nul, (float *)&cs.null, 0 },   // C machine position
 
-    { "pos","posx",_f0, 3, cm_print_pos, cm_get_pos, set_nul,(float *)&cs.null, 0 },      // X work position
-    { "pos","posy",_f0, 3, cm_print_pos, cm_get_pos, set_nul,(float *)&cs.null, 0 },      // Y work position
-    { "pos","posz",_f0, 3, cm_print_pos, cm_get_pos, set_nul,(float *)&cs.null, 0 },      // Z work position
-    { "pos","posa",_f0, 3, cm_print_pos, cm_get_pos, set_nul,(float *)&cs.null, 0 },      // A work position
-    { "pos","posb",_f0, 3, cm_print_pos, cm_get_pos, set_nul,(float *)&cs.null, 0 },      // B work position
-    { "pos","posc",_f0, 3, cm_print_pos, cm_get_pos, set_nul,(float *)&cs.null, 0 },      // C work position
+    { "pos","posx",_f0, 3, cm_print_pos, cm_get_pos, set_nul, (float *)&cs.null, 0 },   // X work position
+    { "pos","posy",_f0, 3, cm_print_pos, cm_get_pos, set_nul, (float *)&cs.null, 0 },   // Y work position
+    { "pos","posz",_f0, 3, cm_print_pos, cm_get_pos, set_nul, (float *)&cs.null, 0 },   // Z work position
+    { "pos","posa",_f0, 3, cm_print_pos, cm_get_pos, set_nul, (float *)&cs.null, 0 },   // A work position
+    { "pos","posb",_f0, 3, cm_print_pos, cm_get_pos, set_nul, (float *)&cs.null, 0 },   // B work position
+    { "pos","posc",_f0, 3, cm_print_pos, cm_get_pos, set_nul, (float *)&cs.null, 0 },   // C work position
 
-    { "ofs","ofsx",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul,(float *)&cs.null, 0 },      // X work offset
-    { "ofs","ofsy",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul,(float *)&cs.null, 0 },      // Y work offset
-    { "ofs","ofsz",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul,(float *)&cs.null, 0 },      // Z work offset
-    { "ofs","ofsa",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul,(float *)&cs.null, 0 },      // A work offset
-    { "ofs","ofsb",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul,(float *)&cs.null, 0 },      // B work offset
-    { "ofs","ofsc",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul,(float *)&cs.null, 0 },      // C work offset
+    { "ofs","ofsx",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul, (float *)&cs.null, 0 },   // X work offset
+    { "ofs","ofsy",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul, (float *)&cs.null, 0 },   // Y work offset
+    { "ofs","ofsz",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul, (float *)&cs.null, 0 },   // Z work offset
+    { "ofs","ofsa",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul, (float *)&cs.null, 0 },   // A work offset
+    { "ofs","ofsb",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul, (float *)&cs.null, 0 },   // B work offset
+    { "ofs","ofsc",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul, (float *)&cs.null, 0 },   // C work offset
 
-    { "hom","home",_f0, 0, cm_print_home,cm_get_home,set_01,(float *)&cm->homing_state, 0 },     // homing state, invoke homing cycle
-    { "hom","homx",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm->homed[AXIS_X], false },  // X homed - Homing status group
-    { "hom","homy",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm->homed[AXIS_Y], false },  // Y homed
-    { "hom","homz",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm->homed[AXIS_Z], false },  // Z homed
-    { "hom","homa",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm->homed[AXIS_A], false },  // A homed
-    { "hom","homb",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm->homed[AXIS_B], false },  // B homed
-    { "hom","homc",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm->homed[AXIS_C], false },  // C homed
+    { "hom","home",_f0, 0, cm_print_home,cm_get_home,set_nul, (float *)&cs.null, 0 },   // homing state, invoke homing cycle
+    { "hom","homx",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, false },  // X homed - Homing status group
+    { "hom","homy",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, false },  // Y homed
+    { "hom","homz",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, false },  // Z homed
+    { "hom","homa",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, false },  // A homed
+    { "hom","homb",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, false },  // B homed
+    { "hom","homc",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, false },  // C homed
 
     { "prb","prbe",_f0, 0, tx_print_nul, get_ui8, set_nul,(float *)&cm->probe_state[0], 0 },    // probing state
     { "prb","prbx",_f0, 3, tx_print_nul, get_flt, set_nul,(float *)&cm->probe_results[0][AXIS_X], 0 },

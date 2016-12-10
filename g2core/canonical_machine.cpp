@@ -159,6 +159,7 @@ void cm_set_motion_state(const cmMotionState motion_state)
  * cm_get_cycle_state()
  * cm_get_hold_state()
  * cm_get_homing_state()
+ * cm_get_homing_state()
  */
 cmMachineState  cm_get_machine_state() { return cm->machine_state;}
 cmCycleState    cm_get_cycle_state()   { return cm->cycle_state;}
@@ -2243,6 +2244,21 @@ stat_t cm_get_ofs(nvObj_t *nv)
     return (STAT_OK);
 }
 
+stat_t cm_get_hom(nvObj_t *nv)
+{
+    nv->value = (float)cm->homed[_axis(nv->index)];
+    nv->valuetype = TYPE_INT;
+    return (STAT_OK);
+}
+/*
+stat_t cm_get_prb(nvObj_t *nv)
+{
+    nv->value = (float)cm->homed[_axis(nv->index)];
+    nv->valuetype = TYPE_INT;
+    return (STAT_OK);
+}
+*/
+
 /************************************
  **** AXIS GET AND SET FUNCTIONS ****
  ************************************/
@@ -2311,6 +2327,7 @@ void cm_set_axis_jerk(const uint8_t axis, const float jerk)
 }
 
 /**** Axis Velocity and Jerk Settings
+ *
  * cm_get_vm() - get velocity max value - called from dispatch table
  * cm_set_vm() - set velocity max value - called from dispatch table
  * cm_get_fr() - get feedrate max value - called from dispatch table
