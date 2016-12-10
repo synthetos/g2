@@ -157,7 +157,7 @@ const cfgItem_t cfgArray[] = {
     { "ofs","ofsb",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul, (float *)&cs.null, 0 },   // B work offset
     { "ofs","ofsc",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul, (float *)&cs.null, 0 },   // C work offset
 
-    { "hom","home",_f0, 0, cm_print_home,cm_get_home,cm_set_home, (float *)&cs.null,0 },// homing state, invoke homing cycle
+    { "hom","home",_f0, 0, cm_print_home,cm_get_home,cm_set_home,(float *)&cs.null,0 },// homing state, invoke homing cycle
     { "hom","homx",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, 0 },   // X homed - Homing status group
     { "hom","homy",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, 0 },   // Y homed
     { "hom","homz",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, 0 },   // Z homed
@@ -165,13 +165,13 @@ const cfgItem_t cfgArray[] = {
     { "hom","homb",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, 0 },   // B homed
     { "hom","homc",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, 0 },   // C homed
 
-    { "prb","prbe",_f0, 0, tx_print_nul, get_ui8, set_nul,(float *)&cm->probe_state[0], 0 },    // probing state
-    { "prb","prbx",_f0, 3, tx_print_nul, get_flt, set_nul,(float *)&cm->probe_results[0][AXIS_X], 0 },
-    { "prb","prby",_f0, 3, tx_print_nul, get_flt, set_nul,(float *)&cm->probe_results[0][AXIS_Y], 0 },
-    { "prb","prbz",_f0, 3, tx_print_nul, get_flt, set_nul,(float *)&cm->probe_results[0][AXIS_Z], 0 },
-    { "prb","prba",_f0, 3, tx_print_nul, get_flt, set_nul,(float *)&cm->probe_results[0][AXIS_A], 0 },
-    { "prb","prbb",_f0, 3, tx_print_nul, get_flt, set_nul,(float *)&cm->probe_results[0][AXIS_B], 0 },
-    { "prb","prbc",_f0, 3, tx_print_nul, get_flt, set_nul,(float *)&cm->probe_results[0][AXIS_C], 0 },
+    { "prb","prbe",_f0, 0, tx_print_nul, cm_get_prob,set_nul,(float *)&cs.null, 0 },    // probing state
+    { "prb","prbx",_f0, 3, tx_print_nul, cm_get_prb, set_nul,(float *)&cs.null, 0 },    // X probe results
+    { "prb","prby",_f0, 3, tx_print_nul, cm_get_prb, set_nul,(float *)&cs.null, 0 },    // Y probe results
+    { "prb","prbz",_f0, 3, tx_print_nul, cm_get_prb, set_nul,(float *)&cs.null, 0 },    // Z probe results
+    { "prb","prba",_f0, 3, tx_print_nul, cm_get_prb, set_nul,(float *)&cs.null, 0 },    // A probe results
+    { "prb","prbb",_f0, 3, tx_print_nul, cm_get_prb, set_nul,(float *)&cs.null, 0 },    // B probe results
+    { "prb","prbc",_f0, 3, tx_print_nul, cm_get_prb, set_nul,(float *)&cs.null, 0 },    // C probe results
 
     { "jog","jogx",_f0, 0, tx_print_nul, get_nul, cm_run_jogx, (float *)&cm->jogging_dest, 0},
     { "jog","jogy",_f0, 0, tx_print_nul, get_nul, cm_run_jogy, (float *)&cm->jogging_dest, 0},

@@ -159,13 +159,14 @@ void cm_set_motion_state(const cmMotionState motion_state)
  * cm_get_cycle_state()
  * cm_get_hold_state()
  * cm_get_homing_state()
- * cm_get_homing_state()
+ * cm_get_probe_state()
  */
 cmMachineState  cm_get_machine_state() { return cm->machine_state;}
 cmCycleState    cm_get_cycle_state()   { return cm->cycle_state;}
 cmMotionState   cm_get_motion_state()  { return cm->motion_state;}
 cmFeedholdState cm_get_hold_state()    { return cm->hold_state;}
 cmHomingState   cm_get_homing_state()  { return cm->homing_state;}
+cmProbeState    cm_get_probe_state()   { return cm->probe_state[0];}
 
 /*
  * cm_get_combined_state() - combines raw states into something a user might want to see
@@ -1976,7 +1977,6 @@ static const char *const msg_stat[] = { msg_stat0, msg_stat1, msg_stat2, msg_sta
                                                 msg_stat4, msg_stat5, msg_stat6, msg_stat7,
                                                 msg_stat8, msg_stat9, msg_stat10, msg_stat11,
                                                 msg_stat12, msg_stat13 };
-
 static const char msg_macs0[] = "Initializing";
 static const char msg_macs1[] = "Ready";
 static const char msg_macs2[] = "Alarm";
@@ -1989,7 +1989,6 @@ static const char msg_macs8[] = "PANIC";
 static const char *const msg_macs[] = { msg_macs0, msg_macs1, msg_macs2, msg_macs3,
                                                 msg_macs4, msg_macs5, msg_macs6, msg_macs7,
                                                 msg_macs8 };
-
 static const char msg_cycs0[] = "Off";
 static const char msg_cycs1[] = "Machining";
 static const char msg_cycs2[] = "Homing";
@@ -2018,6 +2017,11 @@ static const char msg_home0[] = "Not Homed";
 static const char msg_home1[] = "Homed";
 static const char msg_home2[] = "Homing";
 static const char *const msg_home[] = { msg_home0, msg_home1, msg_home2 };
+
+static const char msg_probe0[] = "Probe Failed";
+static const char msg_probe1[] = "Probe Succeeded";
+static const char msg_probe2[] = "Probe Waiting";
+static const char *const msg_probe[] = { msg_probe0, msg_probe1, msg_probe2 };
 
 static const char msg_g53[] = "G53 - machine coordinate system";
 static const char msg_g54[] = "G54 - coordinate system 1";
@@ -2162,8 +2166,6 @@ stat_t cm_get_macs(nvObj_t *nv) { return(_get_msg_helper(nv, msg_macs, cm_get_ma
 stat_t cm_get_cycs(nvObj_t *nv) { return(_get_msg_helper(nv, msg_cycs, cm_get_cycle_state()));}
 stat_t cm_get_mots(nvObj_t *nv) { return(_get_msg_helper(nv, msg_mots, cm_get_motion_state()));}
 stat_t cm_get_hold(nvObj_t *nv) { return(_get_msg_helper(nv, msg_hold, cm_get_hold_state()));}
-stat_t cm_get_home(nvObj_t *nv) { return(_get_msg_helper(nv, msg_home, cm_get_homing_state()));}
-stat_t cm_set_home(nvObj_t *nv) { return( set_int(nv, ((uint8_t &)(cm->homing_state)), false, true)); }
 
 stat_t cm_get_unit(nvObj_t *nv) { return(_get_msg_helper(nv, msg_unit, cm_get_units_mode(ACTIVE_MODEL)));}
 stat_t cm_get_coor(nvObj_t *nv) { return(_get_msg_helper(nv, msg_coor, cm_get_coord_system(ACTIVE_MODEL)));}
@@ -2245,15 +2247,12 @@ stat_t cm_get_ofs(nvObj_t *nv)
     return (STAT_OK);
 }
 
-stat_t cm_get_hom(nvObj_t *nv) { return (get_int(nv, cm->homed[_axis(nv->index)])); }
+stat_t cm_get_home(nvObj_t *nv) { return(_get_msg_helper(nv, msg_home, cm_get_homing_state()));}
+stat_t cm_set_home(nvObj_t *nv) { return (set_int(nv, ((uint8_t &)(cm->homing_state)), false, true)); }
+stat_t cm_get_hom(nvObj_t *nv)  { return (get_int(nv, cm->homed[_axis(nv->index)])); }
 
-stat_t cm_get_prb(nvObj_t *nv)
-{
-    return (get_float(nv, *cm->probe_results[_axis(nv->index)]));
-//    nv->value = (float)cm->probe_results[_axis(nv->index)];
-//    nv->valuetype = TYPE_FLOAT;
-//    return (STAT_OK);
-}
+stat_t cm_get_prob(nvObj_t *nv) { return(_get_msg_helper(nv, msg_probe, cm_get_probe_state()));}
+stat_t cm_get_prb(nvObj_t *nv)  { return (get_float(nv, cm->probe_results[0][_axis(nv->index)])); }
 
 /************************************
  **** AXIS GET AND SET FUNCTIONS ****

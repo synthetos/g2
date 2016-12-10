@@ -117,17 +117,6 @@ typedef enum {                  // feedhold state machine
     FEEDHOLD_HOLD               // holding
 } cmFeedholdState;
 
-typedef enum {                  // feed override state machine
-    MFO_OFF = 0,
-    MFO_REQUESTED,
-    MFO_SYNC
-} cmOverrideState;
-
-typedef enum {                  // queue flush state machine
-    FLUSH_OFF = 0,              // no queue flush in effect
-    FLUSH_REQUESTED,            // flush has been requested but not started yet
-} cmQueueFlushState;
-
 typedef enum {                  // applies to cm->homing_state
     HOMING_NOT_HOMED = 0,       // machine is not homed (0=false)
     HOMING_HOMED = 1,           // machine is homed (1=true)
@@ -144,6 +133,17 @@ typedef enum {
     SAFETY_INTERLOCK_ENGAGED = 0, // meaning the interlock input is CLOSED (low)
     SAFETY_INTERLOCK_DISENGAGED
 } cmSafetyState;
+
+typedef enum {                  // feed override state machine
+    MFO_OFF = 0,
+    MFO_REQUESTED,
+    MFO_SYNC
+} cmOverrideState;
+
+typedef enum {                  // queue flush state machine
+    FLUSH_OFF = 0,              // no queue flush in effect
+    FLUSH_REQUESTED,            // flush has been requested but not started yet
+} cmQueueFlushState;
 
 /*****************************************************************************
  * CANONICAL MACHINE STRUCTURES
@@ -257,6 +257,7 @@ cmCycleState cm_get_cycle_state(void);
 cmMotionState cm_get_motion_state(void);
 cmFeedholdState cm_get_hold_state(void);
 cmHomingState cm_get_homing_state(void);
+cmProbeState cm_get_probe_state(void);
 uint8_t cm_get_jogging_state(void);
 
 void cm_set_motion_state(const cmMotionState motion_state);
@@ -432,7 +433,9 @@ stat_t cm_get_mots(nvObj_t *nv);        // get raw motion state
 stat_t cm_get_hold(nvObj_t *nv);        // get raw hold state
 stat_t cm_get_home(nvObj_t *nv);        // get machine homing state
 stat_t cm_set_home(nvObj_t *nv);        // set machine homing state
-stat_t cm_get_hom(nvObj_t *nv);         // get axis homing state
+stat_t cm_get_hom(nvObj_t *nv);         // get homing state for axis
+stat_t cm_get_prob(nvObj_t *nv);        // get probe state
+stat_t cm_get_prb (nvObj_t *nv);        // get probe result for axis
 stat_t cm_get_unit(nvObj_t *nv);        // get unit mode
 stat_t cm_get_coor(nvObj_t *nv);        // get coordinate system in effect
 stat_t cm_get_momo(nvObj_t *nv);        // get motion mode

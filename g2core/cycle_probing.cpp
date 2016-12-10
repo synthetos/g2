@@ -44,23 +44,22 @@
 #define MINIMUM_PROBE_TRAVEL 0.254
 
 struct pbProbingSingleton {         // persistent probing runtime variables
-    bool waiting_for_motion_end;    // flag to use to now when the motion has ended
-    bool failure_is_fatal;          // flag for G38.2 and G38.4, where failure is NOT an option
-    bool moving_toward_switch;      // flag for G38.4 and G38.5, where we move off of the switch
-
-    stat_t (*func)();  // binding for callback function state machine
 
     // controls for probing cycle
+    stat_t (*func)();               // binding for callback function state machine
     uint8_t probe_input;            // which input should we check?
+    float target[AXES];             // probe destination
+    bool  flags[AXES];
 
     // state saved from gcode model
     uint8_t saved_distance_mode;    // G90,G91 global setting
     uint8_t saved_coord_system;     // G54 - G59 setting
     float   saved_jerk[AXES];       // saved and restored for each axis
 
-    // probe destination
-    float target[AXES];
-    bool  flags[AXES];
+    // internals
+    bool waiting_for_motion_end;    // flag to use to now when the motion has ended
+    bool failure_is_fatal;          // flag for G38.2 and G38.4, where failure is NOT an option
+    bool moving_toward_switch;      // flag for G38.4 and G38.5, where we move off of the switch
 };
 static struct pbProbingSingleton pb;
 
@@ -92,68 +91,62 @@ static stat_t _set_pb_func(uint8_t (*func)()) {
  * cm_probing_cycle_start()    - G38.x probing cycle using limit switches
  * cm_probing_cycle_callback() - main loop callback for running the probing cycle
  *
- *  All cm_probe_cycle_start does is prevent any new commands from queueing to the
+ *  All cm_probe_cycle_start does is prevent any new commands from queuing to the
  *  planner so that the planner can move to a stop and report MACHINE_PROGRAM_STOP.
  *  OK, it also queues the function that's called once motion has stopped.
  *
- *  Note: When coding a cycle (like this one) you get to perform one queued
- *  move per entry into the continuation, then you must exit. We put two buffer
- *  items into the queue: We queue a move, then we queue a "command" that simply
- *  sets a flag in the probing object (pb.waiting_for_motion_end) to tell us that
- *  the move has finished. The runtime has a special exception for probing and
- *  homing where if a move is interrupted it clears it out of the queue.
- *
- *  --- Some further details ---
+ *  Note: When coding a cycle (like this one) you get to perform one queued move per
+ *  entry into the continuation, then you must exit. We put two buffer items into the 
+ *  queue: We queue a move, then we queue a "command" that simply sets a flag in the 
+ *  probing object (pb.waiting_for_motion_end) to tell us that the move has finished.
+ *  The runtime has a special exception for probing and homing where if a move is 
+ *  interrupted it clears it out of the queue.
+ */
+/*  --- Some further details ---
  *  Starting from the definition of G38.x from the LinuxCNC docs:
  *  http://linuxcnc.org/docs/2.6/html/gcode/gcode.html#sec:G38-probe
  *
- *  Once we are past the starting conditions for the probe to succeed as listed
- *  in the LinuxCNC documentation, we will then execute the move. After the move
- *  we interpret "success" as the probe value changing in the correct direction,
- *  and "failure" as it not changing. IOW, the move can finish and the switch not
- *  change, which we consider to be a failure.
+ *  Once we are past the starting conditions for the probe to succeed as listed in 
+ *  the LinuxCNC documentation, we will then execute the move. After the move we 
+ *  interpret "success" as the probe value changing in the correct direction, and 
+ *  "failure" as it not changing. IOW, the move can finish and the switch not change, 
+ *  which we consider to be a failure.
  *
- *  Taking polarity of the switch into account to give a value of Active or
- *  Inactive, for G38.2 and G38.3, success requires going from Inactive to Active,
- *  and for G38.4 and G38.5 success requires an edge from Inactive to Active.
+ *  Taking polarity of the switch into account to give a value of Active or Inactive, 
+ *  for G38.2 and G38.3, success requires going from Inactive to Active, and for 
+ *  G38.4 and G38.5 success requires an edge from Inactive to Active.
  *
- *  For G38.2 and G38.4 we also put the machine into an ALARM state if the probing
- *  "fails".
+ *  For G38.2 and G38.4 we also put the machine into an ALARM state if the probing "fails".
+ */
+/*  When the probe switch fires the input interrupt takes a snapshot of the internal
+ *  encoders, then requests a "high speed" feedhold. It then runs forward kinematics on 
+ *  the encoder snapshot to get the reported position. It also executes a move from the 
+ *  final position (after the feedhold) back to the point we report.
  *
- *  When the switch fires, the input interrupt takes a snapshot of the internal
- *  encoders, then requests a "high speed" feedhold. We then run forward kinematics
- *  on the encoder snapshot to get the reported position. We also execute a move
- *  from the final position (after the feedhold) back to the point we report.
+ *  Additionally, probing record the last PROBES_STORED (at least 3) probe points that 
+ *  succeeded. The current or most recent probe (be it success, failure, or in-progress) 
+ *  occupies one of those positions, which is the one reported by the {prb:n} JSON.
  *
- *  Additionally, we record the last PROBES_STORED (at least 3) probe points that
- *  succeded. The current or most recent probe (be it sucess, failure, or
- *  in-progress) occupies one of those positions, wich is the one reported by the
- *  "prb" JSON.
- *
- *  Internally we store the active/most recent probe in cm->probe_results[0] and
- *  cm->probe_state[0]. Before we start a new probe, if cm->probe_state[0] ==
- *  PROBE_SUCCEEDED, then we roll 0 to 1, and 1 to 2, up to PROBES_STORED-1.
+ *  Internally the active/most recent probe is stored in cm->probe_results[0] and
+ *  cm->probe_state[0]. Before a new probe is started, if cm->probe_state[0] ==
+ *  PROBE_SUCCEEDED, then 0 rolls to 1, and 1 to 2, up to PROBES_STORED-1.
  *  The oldest probe is "lost."
- *
  */
 
 uint8_t cm_straight_probe(float target[], bool flags[], bool failure_is_fatal, bool moving_toward_switch) {
-    // trap zero feed rate condition
-    if (fp_ZERO(cm->gm.feed_rate)) {
+
+    if (fp_ZERO(cm->gm.feed_rate)) {                            // trap zero feed rate condition
         return (STAT_FEEDRATE_NOT_SPECIFIED);
     }
-
-    // error if no axes specified
-    if (!flags[AXIS_X] && !flags[AXIS_Y] && !flags[AXIS_Z]) {
+    if (!flags[AXIS_X] && !flags[AXIS_Y] && !flags[AXIS_Z]) {   // error if no axes specified
         return (STAT_AXIS_IS_MISSING);
     }
 
     pb.failure_is_fatal     = failure_is_fatal;
     pb.moving_toward_switch = moving_toward_switch;
 
-    // set probe move endpoint
-    copy_vector(pb.target, target);  // set probe move endpoint
-    copy_vector(pb.flags, flags);    // set axes involved on the move
+    copy_vector(pb.target, target);     // set probe move endpoint
+    copy_vector(pb.flags, flags);       // set axes involved on the move
 
     // if the previous probe succeeded, roll probes to the next position
     if (cm->probe_state[0] == PROBE_SUCCEEDED) {
@@ -162,12 +155,9 @@ uint8_t cm_straight_probe(float target[], bool flags[], bool failure_is_fatal, b
             for (uint8_t axis = 0; axis < AXES; axis++) { cm->probe_results[n][axis] = cm->probe_results[n - 1][axis]; }
         }
     }
-
-    // clear the old probe position
-    clear_vector(cm->probe_results[0]);
+    clear_vector(cm->probe_results[0]);     // clear the old probe position
 
     // NOTE: relying on probe_result will not detect a probe to 0,0,0.
-
     cm->probe_state[0]         = PROBE_WAITING;  // wait until planner queue empties before completing initialization
     pb.waiting_for_motion_end = true;
 
