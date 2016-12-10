@@ -165,20 +165,20 @@ const cfgItem_t cfgArray[] = {
     { "hom","homb",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, 0 },   // B homed
     { "hom","homc",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, 0 },   // C homed
 
-    { "prb","prbe",_f0, 0, tx_print_nul, cm_get_prob,set_nul,(float *)&cs.null, 0 },    // probing state
-    { "prb","prbx",_f0, 3, tx_print_nul, cm_get_prb, set_nul,(float *)&cs.null, 0 },    // X probe results
-    { "prb","prby",_f0, 3, tx_print_nul, cm_get_prb, set_nul,(float *)&cs.null, 0 },    // Y probe results
-    { "prb","prbz",_f0, 3, tx_print_nul, cm_get_prb, set_nul,(float *)&cs.null, 0 },    // Z probe results
-    { "prb","prba",_f0, 3, tx_print_nul, cm_get_prb, set_nul,(float *)&cs.null, 0 },    // A probe results
-    { "prb","prbb",_f0, 3, tx_print_nul, cm_get_prb, set_nul,(float *)&cs.null, 0 },    // B probe results
-    { "prb","prbc",_f0, 3, tx_print_nul, cm_get_prb, set_nul,(float *)&cs.null, 0 },    // C probe results
+    { "prb","prbe",_f0, 0, tx_print_nul, cm_get_prob,set_nul, (float *)&cs.null, 0 },   // probing state
+    { "prb","prbx",_f0, 3, tx_print_nul, cm_get_prb, set_nul, (float *)&cs.null, 0 },   // X probe results
+    { "prb","prby",_f0, 3, tx_print_nul, cm_get_prb, set_nul, (float *)&cs.null, 0 },   // Y probe results
+    { "prb","prbz",_f0, 3, tx_print_nul, cm_get_prb, set_nul, (float *)&cs.null, 0 },   // Z probe results
+    { "prb","prba",_f0, 3, tx_print_nul, cm_get_prb, set_nul, (float *)&cs.null, 0 },   // A probe results
+    { "prb","prbb",_f0, 3, tx_print_nul, cm_get_prb, set_nul, (float *)&cs.null, 0 },   // B probe results
+    { "prb","prbc",_f0, 3, tx_print_nul, cm_get_prb, set_nul, (float *)&cs.null, 0 },   // C probe results
 
-    { "jog","jogx",_f0, 0, tx_print_nul, get_nul, cm_run_jogx, (float *)&cm->jogging_dest, 0},
-    { "jog","jogy",_f0, 0, tx_print_nul, get_nul, cm_run_jogy, (float *)&cm->jogging_dest, 0},
-    { "jog","jogz",_f0, 0, tx_print_nul, get_nul, cm_run_jogz, (float *)&cm->jogging_dest, 0},
-    { "jog","joga",_f0, 0, tx_print_nul, get_nul, cm_run_joga, (float *)&cm->jogging_dest, 0},
-//  { "jog","jogb",_f0, 0, tx_print_nul, get_nul, cm_run_jogb, (float *)&cm->jogging_dest, 0},
-//  { "jog","jogc",_f0, 0, tx_print_nul, get_nul, cm_run_jogc, (float *)&cm->jogging_dest, 0},
+    { "jog","jogx",_f0, 0, tx_print_nul, get_nul, cm_run_jog, (float *)&cs.null, 0},    // jog in X axis
+    { "jog","jogy",_f0, 0, tx_print_nul, get_nul, cm_run_jog, (float *)&cs.null, 0},    // jog in Y axis
+    { "jog","jogz",_f0, 0, tx_print_nul, get_nul, cm_run_jog, (float *)&cs.null, 0},    // jog in Z axis
+    { "jog","joga",_f0, 0, tx_print_nul, get_nul, cm_run_jog, (float *)&cs.null, 0},    // jog in A axis
+    { "jog","jogb",_f0, 0, tx_print_nul, get_nul, cm_run_jog, (float *)&cs.null, 0},    // jog in B axis
+    { "jog","jogc",_f0, 0, tx_print_nul, get_nul, cm_run_jog, (float *)&cs.null, 0},    // jog in C axis
 
 	{ "pwr","pwr1",_f0, 3, st_print_pwr, st_get_pwr, set_nul, (float *)&cs.null, 0},	// motor power readouts
 	{ "pwr","pwr2",_f0, 3, st_print_pwr, st_get_pwr, set_nul, (float *)&cs.null, 0},

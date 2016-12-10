@@ -431,11 +431,14 @@ stat_t cm_get_macs(nvObj_t *nv);        // get raw machine state as value and st
 stat_t cm_get_cycs(nvObj_t *nv);        // get raw cycle state
 stat_t cm_get_mots(nvObj_t *nv);        // get raw motion state
 stat_t cm_get_hold(nvObj_t *nv);        // get raw hold state
+
 stat_t cm_get_home(nvObj_t *nv);        // get machine homing state
 stat_t cm_set_home(nvObj_t *nv);        // set machine homing state
 stat_t cm_get_hom(nvObj_t *nv);         // get homing state for axis
 stat_t cm_get_prob(nvObj_t *nv);        // get probe state
 stat_t cm_get_prb (nvObj_t *nv);        // get probe result for axis
+stat_t cm_run_jog(nvObj_t *nv);         // start jogging cycle
+
 stat_t cm_get_unit(nvObj_t *nv);        // get unit mode
 stat_t cm_get_coor(nvObj_t *nv);        // get coordinate system in effect
 stat_t cm_get_momo(nvObj_t *nv);        // get motion mode
@@ -457,11 +460,6 @@ stat_t cm_run_qf(nvObj_t *nv);          // run queue flush
 stat_t cm_run_home(nvObj_t *nv);        // start homing cycle
 
 stat_t cm_dam(nvObj_t *nv);             // dump active model (debugging command)
-
-stat_t cm_run_jogx(nvObj_t *nv);        // start jogging cycle for x
-stat_t cm_run_jogy(nvObj_t *nv);        // start jogging cycle for y
-stat_t cm_run_jogz(nvObj_t *nv);        // start jogging cycle for z
-stat_t cm_run_joga(nvObj_t *nv);        // start jogging cycle for a
 
 stat_t cm_get_am(nvObj_t *nv);          // get axis mode
 stat_t cm_set_am(nvObj_t *nv);          // set axis mode

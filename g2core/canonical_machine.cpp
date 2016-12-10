@@ -2464,7 +2464,7 @@ stat_t cm_set_mto(nvObj_t *nv)
 }
 
 /*
- * Commands
+ * Run Commands
  *
  * cm_run_qf() - flush planner queue
  * cm_run_home() - run homing sequence
@@ -2485,8 +2485,30 @@ stat_t cm_run_home(nvObj_t *nv)
 }
 
 /*
- * Debugging Commands
+ * Jogging Commands
  *
+ * cm_get_jogging_dest()
+ * cm_run_jog()
+ */
+
+float cm_get_jogging_dest(void)
+{
+    return cm->jogging_dest;
+}
+
+stat_t cm_run_jog(nvObj_t *nv)
+{
+    set_float(nv, cm->jogging_dest);
+    cm_jogging_cycle_start(_axis(nv->index));
+    return (STAT_OK);
+}
+
+
+/***********************************************************************************
+ * Debugging Commands
+ ***********************************************************************************/
+
+/*
  * cm_dam() - dump active model
  */
 
@@ -2513,44 +2535,6 @@ stat_t cm_dam(nvObj_t *nv)
 
     return (STAT_OK);
 }
-
-/***********************************************************************************
- * AXIS JOGGING
- ***********************************************************************************/
-
-float cm_get_jogging_dest(void)
-{
-    return cm->jogging_dest;
-}
-
-stat_t cm_run_jogx(nvObj_t *nv)
-{
-    set_flt(nv);
-    cm_jogging_cycle_start(AXIS_X);
-    return (STAT_OK);
-}
-
-stat_t cm_run_jogy(nvObj_t *nv)
-{
-    set_flt(nv);
-    cm_jogging_cycle_start(AXIS_Y);
-    return (STAT_OK);
-}
-
-stat_t cm_run_jogz(nvObj_t *nv)
-{
-    set_flt(nv);
-    cm_jogging_cycle_start(AXIS_Z);
-    return (STAT_OK);
-}
-
-stat_t cm_run_joga(nvObj_t *nv)
-{
-    set_flt(nv);
-    cm_jogging_cycle_start(AXIS_A);
-    return (STAT_OK);
-}
-
 /***********************************************************************************
  * TEXT MODE SUPPORT
  * Functions to print variables from the cfgArray table
