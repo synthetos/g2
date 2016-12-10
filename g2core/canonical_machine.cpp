@@ -2085,7 +2085,8 @@ static const char *const msg_frmo[] = { msg_g93, msg_g94, msg_g95 };
 
 
 /***** AXIS HELPERS *****************************************************************
- * _get_axis()        - return axis number or -1 if not an axis
+ * _axis()            - return axis number or -1 if not an axis
+ * _coord()           - return coordinate system number or -1 if error
  * cm_get_axis_char() - return ASCII char for axis given the axis number
  * cm_get_axis_type() - return axis type (0 if axis is linear, 1 if rotary, -1 if NA)
  */
@@ -2103,6 +2104,17 @@ static int8_t _axis(const index_t index)
         }
     }
     return (ptr - axes);
+}
+
+int8_t _coord(char *token) // extract coordinate system from 3rd character
+{
+    char *ptr;
+    char coord_list[] = {"456789"};
+
+    if ((ptr = strchr(coord_list, token[2])) == NULL) { // test the 3rd character against the string
+        return (-1);
+    }
+    return (ptr - coord_list);
 }
 
 char cm_get_axis_char(const int8_t axis)
@@ -2212,40 +2224,10 @@ stat_t cm_get_vel(nvObj_t *nv)
     return (STAT_OK);
 }
 
-stat_t cm_get_feed(nvObj_t *nv)
-{
-    nv->value = cm_get_feed_rate(ACTIVE_MODEL);
-    if (cm_get_units_mode(ACTIVE_MODEL) == INCHES) {
-        nv->value *= INCHES_PER_MM;
-    }
-    nv->precision = GET_TABLE_WORD(precision);
-    nv->valuetype = TYPE_FLOAT;
-    return (STAT_OK);
-}
-
-stat_t cm_get_pos(nvObj_t *nv)
-{
-    nv->value = cm_get_work_position(ACTIVE_MODEL, _axis(nv->index));
-    nv->precision = GET_TABLE_WORD(precision);
-    nv->valuetype = TYPE_FLOAT;
-    return (STAT_OK);
-}
-
-stat_t cm_get_mpo(nvObj_t *nv)
-{
-    nv->value = cm_get_absolute_position(ACTIVE_MODEL, _axis(nv->index));
-    nv->precision = GET_TABLE_WORD(precision);
-    nv->valuetype = TYPE_FLOAT;
-    return (STAT_OK);
-}
-
-stat_t cm_get_ofs(nvObj_t *nv)
-{
-    nv->value = cm_get_work_offset(ACTIVE_MODEL, _axis(nv->index));
-    nv->precision = GET_TABLE_WORD(precision);
-    nv->valuetype = TYPE_FLOAT;
-    return (STAT_OK);
-}
+stat_t cm_get_feed(nvObj_t *nv) { return (get_float(nv, cm_get_feed_rate(ACTIVE_MODEL))); }
+stat_t cm_get_pos(nvObj_t *nv)  { return (get_float(nv, cm_get_work_position(ACTIVE_MODEL, _axis(nv->index)))); }
+stat_t cm_get_mpo(nvObj_t *nv)  { return (get_float(nv, cm_get_absolute_position(ACTIVE_MODEL, _axis(nv->index)))); }
+stat_t cm_get_ofs(nvObj_t *nv)  { return (get_float(nv, cm_get_work_offset(ACTIVE_MODEL, _axis(nv->index)))); }
 
 stat_t cm_get_home(nvObj_t *nv) { return(_get_msg_helper(nv, msg_home, cm_get_homing_state()));}
 stat_t cm_set_home(nvObj_t *nv) { return (set_int(nv, ((uint8_t &)(cm->homing_state)), false, true)); }
@@ -2253,6 +2235,13 @@ stat_t cm_get_hom(nvObj_t *nv)  { return (get_int(nv, cm->homed[_axis(nv->index)
 
 stat_t cm_get_prob(nvObj_t *nv) { return(_get_msg_helper(nv, msg_probe, cm_get_probe_state()));}
 stat_t cm_get_prb(nvObj_t *nv)  { return (get_float(nv, cm->probe_results[0][_axis(nv->index)])); }
+
+stat_t cm_get_coord(nvObj_t *nv) { return (get_float(nv, cm->offset[_coord(nv->token)][_axis(nv->index)]));}
+stat_t cm_set_coord(nvObj_t *nv) { return (set_float(nv, cm->offset[_coord(nv->token)][_axis(nv->index)]));}
+
+stat_t cm_get_g92(nvObj_t *nv){ return (get_float(nv, cm->gmx.origin_offset[_axis(nv->index)]));}
+stat_t cm_set_g92(nvObj_t *nv){ return (get_float(nv, cm->gmx.origin_offset[_axis(nv->index)]));}
+
 
 /************************************
  **** AXIS GET AND SET FUNCTIONS ****

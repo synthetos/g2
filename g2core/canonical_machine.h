@@ -455,6 +455,8 @@ stat_t cm_get_feed(nvObj_t *nv);        // get feed rate, converted to units
 stat_t cm_get_pos(nvObj_t *nv);         // get runtime work position
 stat_t cm_get_mpo(nvObj_t *nv);         // get runtime machine position
 stat_t cm_get_ofs(nvObj_t *nv);         // get runtime work offset
+stat_t cm_get_coord(nvObj_t *nv);       // get coordinate offset
+stat_t cm_set_coord(nvObj_t *nv);       // set coordinate offset
 
 stat_t cm_run_qf(nvObj_t *nv);          // run queue flush
 stat_t cm_run_home(nvObj_t *nv);        // start homing cycle
