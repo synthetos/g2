@@ -323,7 +323,7 @@ stat_t set_int8(nvObj_t *nv);           // set signed 8 bit integer
 stat_t set_01(nvObj_t *nv);             // set a 0 or 1 value with validation
 stat_t set_012(nvObj_t *nv);            // set a 0, 1 or 2 value with validation
 stat_t set_0123(nvObj_t *nv);           // set a 0, 1, 2 or 3 value with validation
-stat_t set_int(nvObj_t *nv);            // set uint32_t integer value
+stat_t set_int32(nvObj_t *nv);          // set uint32_t integer value
 stat_t set_data(nvObj_t *nv);           // set uint32_t integer value blind cast
 stat_t set_flt(nvObj_t *nv);            // set floating point value
 
@@ -331,7 +331,7 @@ stat_t get_nul(nvObj_t *nv);            // get null value type
 stat_t get_bool(nvObj_t *nv);           // get boolean value
 stat_t get_ui8(nvObj_t *nv);            // get uint8_t value
 stat_t get_int8(nvObj_t *nv);           // get signed 8 bit integer
-stat_t get_int(nvObj_t *nv);            // get uint32_t integer value
+stat_t get_int32(nvObj_t *nv);          // get uint32_t integer value
 stat_t get_data(nvObj_t *nv);           // get uint32_t integer value blind cast
 stat_t get_flt(nvObj_t *nv);            // get floating point value
 
@@ -354,10 +354,13 @@ void nv_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags);
 // application specific helpers and functions (config_app.c)
 stat_t set_flu(nvObj_t *nv);                        // set floating point number with G20/G21 units conversion
 
-stat_t get_float(nvObj_t *nv, const float value);   // boilerplate for retrieving a floating point value
-stat_t set_float(nvObj_t *nv, float &value);        // boilerplate for setting a floating point value
+stat_t get_float(nvObj_t *nv, const float value);   // boilerplate for retrieving raw floating point value
+stat_t set_float(nvObj_t *nv, float &value);        // boilerplate for setting a floating point value w/conversion
+stat_t set_float_range(nvObj_t *nv, float &value, float low, float high);
+
 stat_t get_int(nvObj_t *nv, const uint8_t value);     // boilerplate for retrieving an integer value
 stat_t set_int(nvObj_t *nv, uint8_t &value, uint8_t low, uint8_t high);
+
 void preprocess_incoming_float(nvObj_t *nv);        // pre-process outgoing float values for units and illegal values
 void preprocess_outgoing_float(nvObj_t *nv);        // pre-process incoming float values for canonical units
 

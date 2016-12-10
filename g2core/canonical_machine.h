@@ -150,19 +150,23 @@ typedef enum {
  */
 
 typedef struct cmAxis {
+
+    // axis settings
     cmAxisMode axis_mode;                   // see cmAxisMode above
     float velocity_max;                     // max velocity in mm/min or deg/min
-    float recip_velocity_max;
     float feedrate_max;                     // max velocity in mm/min or deg/min
-    float recip_feedrate_max;
-    float travel_max;                       // max work envelope for soft limits
     float travel_min;                       // min work envelope for soft limits
+    float travel_max;                       // max work envelope for soft limits
     float jerk_max;                         // max jerk (Jm) in mm/min^3 divided by 1 million
     float jerk_high;                        // high speed deceleration jerk (Jh) in mm/min^3 divided by 1 million
-    float max_junction_accel;               // high speed deceleration jerk (Jh) in mm/min^3 divided by 1 million
-    float junction_dev;                     // aka cornering delta -- DEPRICATED!
     float radius;                           // radius in mm for rotary axis modes
 
+    // derived
+    float recip_velocity_max;
+    float recip_feedrate_max;
+    float max_junction_accel;               // high speed deceleration jerk (Jh) in mm/min^3 divided by 1 million
+
+    // homing settings
     uint8_t homing_input;                   // set 1-N for homing input. 0 will disable homing
     uint8_t homing_dir;                     // 0=search to negative, 1=search to positive
     float search_velocity;                  // homing search velocity
@@ -176,22 +180,22 @@ typedef struct cmMachine {                  // struct to manage canonical machin
 
     /**** Config variables (PUBLIC) ****/
 
-    // system group settings
+    // System group settings
     float junction_integration_time;        // how aggressively will the machine corner? 1.6 or so is about the upper limit
     float chordal_tolerance;                // arc chordal accuracy setting in mm
     bool soft_limit_enable;                 // true to enable soft limit testing on Gcode inputs
     bool limit_enable;                      // true to enable limit switches (disabled is same as override)
     bool safety_interlock_enable;           // true to enable safety interlock system
 
-    // coordinate systems and offsets
+    // Coordinate systems and offsets
     float offset[COORDS+1][AXES];           // persistent coordinate offsets: absolute (G53) + G54,G55,G56,G57,G58,G59
 
-    // settings for axes X,Y,Z,A B,C
+    // Axis settings
     cfgAxis_t a[AXES];
 
   /**** Runtime variables (PRIVATE) ****/
 
-    // global state variables and requestors
+    // Global state variables and requestors
 
     cmMachineState machine_state;           // macs: machine/cycle/motion is the actual machine state
     cmCycleState cycle_state;               // cycs
@@ -205,25 +209,25 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     cmSafetyState safety_interlock_state;   // safety interlock state
     uint32_t esc_boot_timer;                // timer for Electronic Speed Control (Spindle electronics) to boot
 
-    cmHomingState homing_state;             // home: homing cycle sub-state machine
-    uint8_t homed[AXES];                    // individual axis homing flags
-
-    cmProbeState probe_state[PROBES_STORED];                 // probing state machine (simple)
-    float probe_results[PROBES_STORED][AXES]; // probing results
-
-    float rotation_matrix[3][3];            // three-by-three rotation matrix. We ignore rotary axes.
-    float rotation_z_offset;                // we seperately handle a z-offset, so that the new plane
-                                            // maintains a consistent distance from the old one.
-                                            // We only need z, since we are rotating to the z axis.
-
-    float jogging_dest;                     // jogging direction as a relative move from current position
-
     bool g28_flag;                          // true = complete a G28 move
     bool g30_flag;                          // true = complete a G30 move
     bool deferred_write_flag;               // G10 data has changed (e.g. offsets) - flag to persist them
     bool end_hold_requested;                // request restart after feedhold
     uint8_t limit_requested;                // set non-zero to request limit switch processing (value is input number)
     uint8_t shutdown_requested;             // set non-zero to request shutdown in support of external estop (value is input number)
+
+    cmHomingState homing_state;             // home: homing cycle sub-state machine
+    uint8_t homed[AXES];                    // individual axis homing flags
+
+    cmProbeState probe_state[PROBES_STORED];    // probing state machine (simple)
+    float probe_results[PROBES_STORED][AXES];   // probing results
+
+    float rotation_matrix[3][3];            // three-by-three rotation matrix. We ignore rotary axes.
+    float rotation_z_offset;                // separately handle a z-offset, so that the new plane
+                                            // maintains a consistent distance from the old one.
+                                            // We only need z, since we are rotating to the z axis.
+
+    float jogging_dest;                     // jogging destination as a relative move from current position
 
   /**** Model states ****/
     GCodeState_t *am;                       // active Gcode model is maintained by state management
@@ -412,7 +416,7 @@ stat_t cm_probing_cycle_callback(void);                         // G38.x main lo
 // Jogging cycle
 stat_t cm_jogging_cycle_callback(void);                         // jogging cycle main loop
 stat_t cm_jogging_cycle_start(uint8_t axis);                    // {"jogx":-100.3}
-float cm_get_jogging_dest(void);
+float cm_get_jogging_dest(void);                                // get jogging destination
 
 /*--- cfgArray interface functions ---*/
 
@@ -426,7 +430,8 @@ stat_t cm_get_macs(nvObj_t *nv);        // get raw machine state as value and st
 stat_t cm_get_cycs(nvObj_t *nv);        // get raw cycle state
 stat_t cm_get_mots(nvObj_t *nv);        // get raw motion state
 stat_t cm_get_hold(nvObj_t *nv);        // get raw hold state
-stat_t cm_get_home(nvObj_t *nv);        // get raw homing state
+stat_t cm_get_home(nvObj_t *nv);        // get machine homing state
+stat_t cm_set_home(nvObj_t *nv);        // set machine homing state
 stat_t cm_get_hom(nvObj_t *nv);         // get axis homing state
 stat_t cm_get_unit(nvObj_t *nv);        // get unit mode
 stat_t cm_get_coor(nvObj_t *nv);        // get coordinate system in effect

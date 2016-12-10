@@ -432,7 +432,7 @@ stat_t sr_set_si(nvObj_t *nv)
     if (nv->value < STATUS_REPORT_MIN_MS) {
         nv->value = STATUS_REPORT_MIN_MS;
     }
-    set_int(nv);
+    set_int32(nv);
     return(STAT_OK);
 }
 

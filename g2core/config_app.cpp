@@ -157,13 +157,13 @@ const cfgItem_t cfgArray[] = {
     { "ofs","ofsb",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul, (float *)&cs.null, 0 },   // B work offset
     { "ofs","ofsc",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul, (float *)&cs.null, 0 },   // C work offset
 
-    { "hom","home",_f0, 0, cm_print_home,cm_get_home,set_nul, (float *)&cs.null, 0 },   // homing state, invoke homing cycle
-    { "hom","homx",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, false },  // X homed - Homing status group
-    { "hom","homy",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, false },  // Y homed
-    { "hom","homz",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, false },  // Z homed
-    { "hom","homa",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, false },  // A homed
-    { "hom","homb",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, false },  // B homed
-    { "hom","homc",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, false },  // C homed
+    { "hom","home",_f0, 0, cm_print_home,cm_get_home,cm_set_home, (float *)&cs.null,0 },// homing state, invoke homing cycle
+    { "hom","homx",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, 0 },   // X homed - Homing status group
+    { "hom","homy",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, 0 },   // Y homed
+    { "hom","homz",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, 0 },   // Z homed
+    { "hom","homa",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, 0 },   // A homed
+    { "hom","homb",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, 0 },   // B homed
+    { "hom","homc",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, 0 },   // C homed
 
     { "prb","prbe",_f0, 0, tx_print_nul, get_ui8, set_nul,(float *)&cm->probe_state[0], 0 },    // probing state
     { "prb","prbx",_f0, 3, tx_print_nul, get_flt, set_nul,(float *)&cm->probe_results[0][AXIS_X], 0 },
@@ -643,7 +643,7 @@ const cfgItem_t cfgArray[] = {
     { "sys","jv", _fipn, 0, js_print_jv,  get_ui8, json_set_jv,(float *)&js.json_verbosity,         JSON_VERBOSITY },
     { "sys","qv", _fipn, 0, qr_print_qv,  get_ui8, set_0123,   (float *)&qr.queue_report_verbosity, QUEUE_REPORT_VERBOSITY },
     { "sys","sv", _fipn, 0, sr_print_sv,  get_ui8, set_012,    (float *)&sr.status_report_verbosity,STATUS_REPORT_VERBOSITY },
-    { "sys","si", _fipn, 0, sr_print_si,  get_int, sr_set_si,  (float *)&sr.status_report_interval, STATUS_REPORT_INTERVAL_MS },
+    { "sys","si", _fipn, 0, sr_print_si,  get_int32, sr_set_si,  (float *)&sr.status_report_interval, STATUS_REPORT_INTERVAL_MS },
 
     // Gcode defaults
     // NOTE: The ordering within the gcode defaults is important for token resolution. gc must follow gco
@@ -774,46 +774,46 @@ const cfgItem_t cfgArray[] = {
 
     // Persistence for status report - must be in sequence
     // *** Count must agree with NV_STATUS_REPORT_LEN in report.h ***
-    { "","se00",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[0],0 },
-    { "","se01",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[1],0 },
-    { "","se02",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[2],0 },
-    { "","se03",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[3],0 },
-    { "","se04",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[4],0 },
-    { "","se05",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[5],0 },
-    { "","se06",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[6],0 },
-    { "","se07",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[7],0 },
-    { "","se08",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[8],0 },
-    { "","se09",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[9],0 },
-    { "","se10",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[10],0 },
-    { "","se11",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[11],0 },
-    { "","se12",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[12],0 },
-    { "","se13",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[13],0 },
-    { "","se14",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[14],0 },
-    { "","se15",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[15],0 },
-    { "","se16",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[16],0 },
-    { "","se17",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[17],0 },
-    { "","se18",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[18],0 },
-    { "","se19",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[19],0 },
-    { "","se20",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[20],0 },
-    { "","se21",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[21],0 },
-    { "","se22",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[22],0 },
-    { "","se23",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[23],0 },
-    { "","se24",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[24],0 },
-    { "","se25",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[25],0 },
-    { "","se26",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[26],0 },
-    { "","se27",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[27],0 },
-    { "","se28",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[28],0 },
-    { "","se29",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[29],0 },
-    { "","se30",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[30],0 },
-    { "","se31",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[31],0 },
-    { "","se32",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[32],0 },
-    { "","se33",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[33],0 },
-    { "","se34",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[34],0 },
-    { "","se35",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[35],0 },
-    { "","se36",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[36],0 },
-    { "","se37",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[37],0 },
-    { "","se38",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[38],0 },
-    { "","se39",_fp, 0, tx_print_nul, get_int, set_int,(float *)&sr.status_report_list[39],0 },
+    { "","se00",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[0],0 },
+    { "","se01",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[1],0 },
+    { "","se02",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[2],0 },
+    { "","se03",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[3],0 },
+    { "","se04",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[4],0 },
+    { "","se05",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[5],0 },
+    { "","se06",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[6],0 },
+    { "","se07",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[7],0 },
+    { "","se08",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[8],0 },
+    { "","se09",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[9],0 },
+    { "","se10",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[10],0 },
+    { "","se11",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[11],0 },
+    { "","se12",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[12],0 },
+    { "","se13",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[13],0 },
+    { "","se14",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[14],0 },
+    { "","se15",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[15],0 },
+    { "","se16",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[16],0 },
+    { "","se17",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[17],0 },
+    { "","se18",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[18],0 },
+    { "","se19",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[19],0 },
+    { "","se20",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[20],0 },
+    { "","se21",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[21],0 },
+    { "","se22",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[22],0 },
+    { "","se23",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[23],0 },
+    { "","se24",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[24],0 },
+    { "","se25",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[25],0 },
+    { "","se26",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[26],0 },
+    { "","se27",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[27],0 },
+    { "","se28",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[28],0 },
+    { "","se29",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[29],0 },
+    { "","se30",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[30],0 },
+    { "","se31",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[31],0 },
+    { "","se32",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[32],0 },
+    { "","se33",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[33],0 },
+    { "","se34",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[34],0 },
+    { "","se35",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[35],0 },
+    { "","se36",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[36],0 },
+    { "","se37",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[37],0 },
+    { "","se38",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[38],0 },
+    { "","se39",_fp, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[39],0 },
     // Count is 40, since se00 counts as one.
 
     // Group lookups - must follow the single-valued entries for proper sub-string matching
@@ -995,13 +995,23 @@ stat_t set_flu(nvObj_t *nv)
 }
 
 /*
- * get_float() - boilerplate for retrieving a floating point value
- * set_float() - boilerplate for setting a floating point value
+ * get_float()       - boilerplate for retrieving raw floating point value
+ * set_float()       - boilerplate for setting a floating point value with unit conversion
+ * set_float_range() - set a floating point value with inclusive range check
+ *
+ *  get_float() returns a raw float value in internal canonical units (e.g. mm, degrees)
+ *  without units conversion. If conversion is required call preprocess_outgoing_float() 
+ *  afterwards. The text mode and JSON display routines do this, so you generally don't
+ *  have to worry about this.
+ *
+ *  set_float() is designed to capture incoming float values, so it performs unit conversion.
+ *  set_float_range() perfoems an inclusive range test on the CONVERTED value
  */
 
 stat_t get_float(nvObj_t *nv, const float value) {
     nv->value = value;
     nv->valuetype = TYPE_FLOAT;
+    nv->precision = GET_TABLE_WORD(precision);
     return STAT_OK;
 }
 
@@ -1011,9 +1021,18 @@ stat_t set_float(nvObj_t *nv, float &value) {
     return (STAT_OK);
 }
 
+stat_t set_float_range(nvObj_t *nv, float &value, float low, float high) {
+    preprocess_incoming_float(nv);
+    if ((nv->value < low) || (nv->value > high)) {
+        return (STAT_INPUT_VALUE_RANGE_ERROR);
+    }
+    value = nv->value;
+    return (STAT_OK);
+}
+
 /*
  * get_int() - boilerplate for retrieving an integer value
- * set_int() - boilerplate for setting an integer value
+ * set_int() - boilerplate for setting an integer value with range checking
  */
 
 stat_t get_int(nvObj_t *nv, const uint8_t value) {

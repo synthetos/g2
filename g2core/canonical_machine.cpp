@@ -344,8 +344,8 @@ void cm_set_work_offsets(GCodeState_t *gcode_state)
  * cm_get_absolute_position() - get position of axis in absolute coordinates
  *
  *  This function accepts as input:
- *    MODEL         (GCodeState_t *)&cm->gm          // absolute pointer from canonical machine gm model
- *    RUNTIME       (GCodeState_t *)&mr.gm          // absolute pointer from runtime mm struct
+ *    MODEL         (GCodeState_t *)&cm->gm     // absolute pointer from canonical machine gm model
+ *    RUNTIME       (GCodeState_t *)&mr.gm      // absolute pointer from runtime mm struct
  *
  *    NOTE: Only MODEL and RUNTIME are supported (no PLANNER or bf's)
  *    NOTE: Machine position is always returned in mm mode. No units conversion is performed
@@ -2163,6 +2163,7 @@ stat_t cm_get_cycs(nvObj_t *nv) { return(_get_msg_helper(nv, msg_cycs, cm_get_cy
 stat_t cm_get_mots(nvObj_t *nv) { return(_get_msg_helper(nv, msg_mots, cm_get_motion_state()));}
 stat_t cm_get_hold(nvObj_t *nv) { return(_get_msg_helper(nv, msg_hold, cm_get_hold_state()));}
 stat_t cm_get_home(nvObj_t *nv) { return(_get_msg_helper(nv, msg_home, cm_get_homing_state()));}
+stat_t cm_set_home(nvObj_t *nv) { return( set_int(nv, ((uint8_t &)(cm->homing_state)), false, true)); }
 
 stat_t cm_get_unit(nvObj_t *nv) { return(_get_msg_helper(nv, msg_unit, cm_get_units_mode(ACTIVE_MODEL)));}
 stat_t cm_get_coor(nvObj_t *nv) { return(_get_msg_helper(nv, msg_coor, cm_get_coord_system(ACTIVE_MODEL)));}
@@ -2244,20 +2245,15 @@ stat_t cm_get_ofs(nvObj_t *nv)
     return (STAT_OK);
 }
 
-stat_t cm_get_hom(nvObj_t *nv)
-{
-    nv->value = (float)cm->homed[_axis(nv->index)];
-    nv->valuetype = TYPE_INT;
-    return (STAT_OK);
-}
-/*
+stat_t cm_get_hom(nvObj_t *nv) { return (get_int(nv, cm->homed[_axis(nv->index)])); }
+
 stat_t cm_get_prb(nvObj_t *nv)
 {
-    nv->value = (float)cm->homed[_axis(nv->index)];
-    nv->valuetype = TYPE_INT;
-    return (STAT_OK);
+    return (get_float(nv, *cm->probe_results[_axis(nv->index)]));
+//    nv->value = (float)cm->probe_results[_axis(nv->index)];
+//    nv->valuetype = TYPE_FLOAT;
+//    return (STAT_OK);
 }
-*/
 
 /************************************
  **** AXIS GET AND SET FUNCTIONS ****
