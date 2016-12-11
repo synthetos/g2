@@ -2188,6 +2188,10 @@ stat_t cm_get_dist(nvObj_t *nv) { return(_get_msg_helper(nv, msg_dist, cm_get_di
 stat_t cm_get_admo(nvObj_t *nv) { return(_get_msg_helper(nv, msg_admo, cm_get_arc_distance_mode(ACTIVE_MODEL)));}
 stat_t cm_get_frmo(nvObj_t *nv) { return(_get_msg_helper(nv, msg_frmo, cm_get_feed_rate_mode(ACTIVE_MODEL)));}
 
+stat_t cm_get_toolv(nvObj_t *nv) { return(get_int(nv, cm_get_tool(ACTIVE_MODEL))); }
+stat_t cm_get_mline(nvObj_t *nv) { return(get_int(nv, cm_get_linenum(MODEL))); }
+stat_t cm_get_line(nvObj_t *nv)  { return(get_int(nv, cm_get_linenum(ACTIVE_MODEL))); }
+/*
 stat_t cm_get_toolv(nvObj_t *nv)
 {
     nv->value = (float)cm_get_tool(ACTIVE_MODEL);
@@ -2208,7 +2212,7 @@ stat_t cm_get_line(nvObj_t *nv)
     nv->valuetype = TYPE_INT;
     return (STAT_OK);
 }
-
+*/
 stat_t cm_get_vel(nvObj_t *nv)
 {
     if (cm_get_motion_state() == MOTION_STOP) {
@@ -2239,8 +2243,9 @@ stat_t cm_get_prb(nvObj_t *nv)  { return (get_float(nv, cm->probe_results[0][_ax
 stat_t cm_get_coord(nvObj_t *nv) { return (get_float(nv, cm->offset[_coord(nv->token)][_axis(nv->index)]));}
 stat_t cm_set_coord(nvObj_t *nv) { return (set_float(nv, cm->offset[_coord(nv->token)][_axis(nv->index)]));}
 
-stat_t cm_get_g92(nvObj_t *nv){ return (get_float(nv, cm->gmx.origin_offset[_axis(nv->index)]));}
-stat_t cm_set_g92(nvObj_t *nv){ return (get_float(nv, cm->gmx.origin_offset[_axis(nv->index)]));}
+stat_t cm_get_g92(nvObj_t *nv)   { return (get_float(nv, cm->gmx.origin_offset[_axis(nv->index)]));}
+stat_t cm_get_g28(nvObj_t *nv)   { return (get_float(nv, cm->gmx.g28_position[_axis(nv->index)]));}
+stat_t cm_get_g30(nvObj_t *nv)   { return (get_float(nv, cm->gmx.g30_position[_axis(nv->index)]));}
 
 
 /************************************

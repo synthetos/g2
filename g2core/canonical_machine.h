@@ -458,6 +458,10 @@ stat_t cm_get_ofs(nvObj_t *nv);         // get runtime work offset
 stat_t cm_get_coord(nvObj_t *nv);       // get coordinate offset
 stat_t cm_set_coord(nvObj_t *nv);       // set coordinate offset
 
+stat_t cm_get_g92(nvObj_t *nv);         // get g92 offset
+stat_t cm_get_g28(nvObj_t *nv);         // get g28 offset
+stat_t cm_get_g30(nvObj_t *nv);         // get g30 offset
+
 stat_t cm_run_qf(nvObj_t *nv);          // run queue flush
 stat_t cm_run_home(nvObj_t *nv);        // start homing cycle
 
