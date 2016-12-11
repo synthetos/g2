@@ -50,7 +50,9 @@ Build 100.xx also significantly advances the project structure to support multip
   - Included `G10 L20` offset mode
   - Extended `G38.2` probing to also include `G38.3`, `G38.4`, `G38.5`
   - Homing can now be set to a non-zero switch. Homing will set to the travel value of the positive or negative switch, as determined by the search direction. This allows homing to home to a maximum - for example - and set the homed location to the non-zero switch.
-
+  - [100.13] Fixes for dwells mixed with gcode moves.
+  - [100.13] Minor planner refactoring to better handle commands and gcode mixed. (Forward-planning now looks past commands.)
+  - [100.13] *Experimental!* Optioan `TRAVERSE_AT_HIGH_JERK` (defaults to off, set to 1 in a settings file to enable) will make traverse moves (`G0`) use the high-jerk settings instead of the normal jerk settings. This applies to all axes universally.
 
 - **Planner and Motion Changes**
   - Junction Integration Time - the [`{jt:...}`](https://github.com/synthetos/g2/wiki/Configuring-0.99-System-Groups#jt-junction-integration-time) parameter is now the way to set cornering velocity limits. Cornering now obeys full jerk limitation instead of the centripetal acceleration heuristic, making it much more accurate and more true to the jerk limits set for the machine. JT is a normalized scaled factor that is nominally set to 1.000. Set to less than 1 for slower cornering (less aggressive), greater than 1 (but probably less than 2) for more aggressive cornering. This parameter replaces Junction Acceleration `{ja:...}` and the axis Junction Deviation commands - e.g. `{xjd:0.01}`.
@@ -75,9 +77,23 @@ Build 100.xx also significantly advances the project structure to support multip
 - **Active JSON comments** - i.e. JSON called from Gcode
   - Added `M100 ({...})` active comment. Currently only supports temperature setting command.
   - Added `M101 ({...})` "wait-on-event" active comment. Currently only supports temperature wait command.
+    - Additional note: `M101` will only wait on values that return `true` or `false`, and will only work if given `true` or `false`.
+    - Valid example:
+    ```
+    M101 ({in1: true})
+    ```
+    - Using `0` or `1`, or anything except `true` or `false` will *not* work.
 
 
 - **System and Communications**
+  - [100.13] **Important:** USB will only expose one virtal serial port by default.
+    - This can be overridden in the settings file with:
+    ```c++
+    // Valid options are 1 or 2 only!
+    #define USB_SERIAL_PORTS_EXPOSED   1        
+    ```
+  - [100.13] Refactored XIO to handle `!`, `%`, `~`, and JSON commends intermixed with gcode better.
+  - [100.13] Fixes to USB connection, initialization, and DMA operation for Sam3X-base machines.
   - Added `Linemode` communication protocol, and provide guidance to use linemode for much simpler and more reliable application-level flow control
   - Footer format has changed. Checksum is no longer supported and has been removed
   - Added `ENQ/ACK handshake`. If the host sends an ASCII `ENQ (0x05)` the board should respond with an `ACK (0x06)`. This is provided to facilitate low-level communications startup and automated testing
