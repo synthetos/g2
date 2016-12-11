@@ -153,7 +153,7 @@
 #endif
 
 #ifndef STATUS_REPORT_MIN_MS
-#define STATUS_REPORT_MIN_MS        200                     // (no JSON) milliseconds - enforces a viable minimum
+#define STATUS_REPORT_MIN_MS        100                     // (no JSON) milliseconds - enforces a viable minimum
 #endif
 
 #ifndef STATUS_REPORT_INTERVAL_MS
