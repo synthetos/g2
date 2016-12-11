@@ -501,6 +501,7 @@ stat_t cm_set_lb(nvObj_t *nv);          // set homing latch backoff
 stat_t cm_get_zb(nvObj_t *nv);          // get homing zero backoff
 stat_t cm_set_zb(nvObj_t *nv);          // set homing zero backoff
 
+stat_t cm_get_jt(nvObj_t *nv);          // get junction integration time constant
 stat_t cm_set_jt(nvObj_t *nv);          // set junction integration time constant
 
 stat_t cm_set_mfo(nvObj_t *nv);         // set manual feedrate override factor

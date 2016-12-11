@@ -2399,33 +2399,21 @@ stat_t cm_set_zb(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv->index)].ze
  * cm_set_jt() - get junction integration time
  */
 
-stat_t cm_get_jt(nvObj_t *nv)
-{
-    return(STAT_OK);
-}
+stat_t cm_get_jt(nvObj_t *nv) { 
+    return(get_float(nv, cm->junction_integration_time)); }
 
 stat_t cm_set_jt(nvObj_t *nv)
 {
-//    // Prescale it. 
-//    if (nv->value > 10) nv->value /= 100;
-
-    stat_t status = STAT_OK;
-
-    if (nv->value < JUNCTION_INTEGRATION_MIN) {
-        nv->value = JUNCTION_INTEGRATION_MIN;
-        status = STAT_INPUT_LESS_THAN_MIN_VALUE;
-    }
-    if (nv->value > JUNCTION_INTEGRATION_MAX) {
-        nv->value = JUNCTION_INTEGRATION_MAX;
-        status = STAT_INPUT_EXCEEDS_MAX_VALUE;
-    }
-    set_flt(nv);
+    // Get JT or return range error
+    ritorno(set_float_range(nv, cm->junction_integration_time, 
+                                JUNCTION_INTEGRATION_MIN, 
+                                JUNCTION_INTEGRATION_MAX));
 
     // Must recalculate the max_junction_accel now that the time quanta has changed.
     for (uint8_t axis=0; axis<AXES; axis++) {
         _cm_recalc_max_junction_accel(axis);
     }
-    return(status);
+    return(STAT_OK);
 }
 
 /*

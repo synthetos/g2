@@ -53,6 +53,7 @@ using Motate::SysTickTimer;
 
 #pragma GCC push_options
 #pragma GCC optimize ("O0")
+//#pragma GCC reset_options
 inline void _debug_trap(const char *reason) {
     // We might be able to put a print here, but it MIGHT interrupt other output
     // and might be deep in an ISR, so we had better just _NOP() and hope for the best.
