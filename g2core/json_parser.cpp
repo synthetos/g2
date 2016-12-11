@@ -421,7 +421,7 @@ uint16_t json_serialize(nvObj_t *nv, char *out_buf, uint16_t size)
                                         need_a_comma = false;
                                         break;
                                     }
-                case (TYPE_FLOAT):  {   preprocess_outgoing_float(nv);
+                case (TYPE_FLOAT):  {   process_outgoing_float(nv);
                                         str += floattoa(str, nv->value, nv->precision);
                                         break;
                                     }

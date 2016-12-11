@@ -47,6 +47,7 @@
 
 #define JOGGING_START_VELOCITY ((float)10.0)
 #define DISABLE_SOFT_LIMIT (999999)
+#define CHORDAL_TOLERANCE_MIN (0.001)
 #define PROBES_STORED 3                     // we store three probes for coordinate rotation computation
 
 /*****************************************************************************
@@ -503,6 +504,8 @@ stat_t cm_set_zb(nvObj_t *nv);          // set homing zero backoff
 
 stat_t cm_get_jt(nvObj_t *nv);          // get junction integration time constant
 stat_t cm_set_jt(nvObj_t *nv);          // set junction integration time constant
+stat_t cm_get_ct(nvObj_t *nv);          // get chordal tolerance
+stat_t cm_set_ct(nvObj_t *nv);          // set chordal tolerance
 
 stat_t cm_set_mfo(nvObj_t *nv);         // set manual feedrate override factor
 stat_t cm_set_mto(nvObj_t *nv);         // set manual traverse override factor

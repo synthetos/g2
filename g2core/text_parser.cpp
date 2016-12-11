@@ -196,7 +196,7 @@ void text_print_multiline_formatted(nvObj_t *nv)
 {
     for (uint8_t i=0; i<NV_BODY_LEN-1; i++) {
         if (nv->valuetype != TYPE_PARENT) {
-            preprocess_outgoing_float(nv);
+            process_outgoing_float(nv);
             nv_print(nv);
         }
         if ((nv = nv->nx) == NULL) return;

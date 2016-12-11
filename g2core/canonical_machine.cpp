@@ -2396,11 +2396,12 @@ stat_t cm_set_zb(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv->index)].ze
 /*** Canonical Machine Global Settings ***/
 /*
  * cm_get_jt() - get junction integration time
- * cm_set_jt() - get junction integration time
+ * cm_set_jt() - set junction integration time
+ * cm_get_ct() - get chordal tolerance
+ * cm_set_ct() - set chordal tolerance
  */
 
-stat_t cm_get_jt(nvObj_t *nv) { 
-    return(get_float(nv, cm->junction_integration_time)); }
+stat_t cm_get_jt(nvObj_t *nv) { return(get_float(nv, cm->junction_integration_time)); }
 
 stat_t cm_set_jt(nvObj_t *nv)
 {
@@ -2415,6 +2416,11 @@ stat_t cm_set_jt(nvObj_t *nv)
     }
     return(STAT_OK);
 }
+
+stat_t cm_get_ct(nvObj_t *nv) { return(get_float(nv, cm->chordal_tolerance)); }
+stat_t cm_set_ct(nvObj_t *nv) { return(set_float_range(nv, cm->chordal_tolerance, 
+                                                           CHORDAL_TOLERANCE_MIN,
+                                                           10000000)); }
 
 /*
  * cm_set_mfo() - set manual feedrate override factor

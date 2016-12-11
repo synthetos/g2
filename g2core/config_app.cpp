@@ -603,8 +603,8 @@ const cfgItem_t cfgArray[] = {
     { "jid","jidd",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[3], 0},
 
     // General system parameters
-    { "sys","jt", _fipn, 2, cm_print_jt,  cm_get_jt, cm_set_jt, (float *)&cm->junction_integration_time,JUNCTION_INTEGRATION_TIME },
-    { "sys","ct", _fipnc,4, cm_print_ct,  get_flt, set_flu,  (float *)&cm->chordal_tolerance,        CHORDAL_TOLERANCE },
+    { "sys","jt", _fipn, 2, cm_print_jt,  cm_get_jt, cm_set_jt, (float *)&cs.null,  JUNCTION_INTEGRATION_TIME },
+    { "sys","ct", _fipnc,4, cm_print_ct,  cm_get_ct, cm_set_ct, (float *)&cs.null,  CHORDAL_TOLERANCE },
     { "sys","sl", _fipn, 0, cm_print_sl,  get_ui8, set_01,   (float *)&cm->soft_limit_enable,        SOFT_LIMIT_ENABLE },
     { "sys","lim", _fipn,0, cm_print_lim, get_ui8, set_01,   (float *)&cm->limit_enable,             HARD_LIMIT_ENABLE },
     { "sys","saf", _fipn,0, cm_print_saf, get_ui8, set_01,   (float *)&cm->safety_interlock_enable,  SAFETY_INTERLOCK_ENABLE },
@@ -995,9 +995,11 @@ stat_t set_flu(nvObj_t *nv)
 }
 
 /*
- * get_float()       - boilerplate for retrieving raw floating point value
- * set_float()       - boilerplate for setting a floating point value with unit conversion
- * set_float_range() - set a floating point value with inclusive range check
+ * process_incoming_float() - pre-process an incoming floating point number for canonical units
+ * process_outgoing_float() - pre-process an outgoing floating point number for units display
+ * get_float()              - boilerplate for retrieving raw floating point value
+ * set_float()              - boilerplate for setting a floating point value with unit conversion
+ * set_float_range()        - set a floating point value with inclusive range check
  *
  *  get_float() returns a raw float value in internal canonical units (e.g. mm, degrees)
  *  without units conversion. If conversion is required call preprocess_outgoing_float() 
@@ -1008,6 +1010,37 @@ stat_t set_flu(nvObj_t *nv)
  *  set_float_range() perfoems an inclusive range test on the CONVERTED value
  */
 
+void process_incoming_float(nvObj_t *nv)
+{
+    uint8_t f;
+    f = GET_TABLE_BYTE(flags);
+//   if (f & (F_CONVERT | F_ICONVERT)) {		// unit conversion required?
+    if (f & F_CONVERT) {		                    // unit conversion required?
+        if (cm_get_units_mode(MODEL) == INCHES) {                   // If inn inches mode
+            if (cm_get_axis_type(nv->index) == AXIS_TYPE_LINEAR) {  // ...and a linear axis...
+                nv->value *= MM_PER_INCH;                           // convert to canonical millimeter units
+            }
+        }
+    }
+}
+
+void process_outgoing_float(nvObj_t *nv)
+{
+    uint8_t f;
+    if (isnan((double)nv->value) || isinf((double)nv->value)) return; // illegal float values
+    f = GET_TABLE_BYTE(flags);
+    if (f & (F_CONVERT | F_ICONVERT)) {		// unit conversion required?
+        if (cm_get_units_mode(MODEL) == INCHES) {
+            if(f & F_ICONVERT) {
+                nv->value *= MM_PER_INCH;
+ 			} else {
+ 				nv->value *= INCHES_PER_MM;
+			}
+ 		}
+ 	}
+    nv->precision = GET_TABLE_WORD(precision);
+    nv->valuetype = TYPE_FLOAT;
+}
 stat_t get_float(nvObj_t *nv, const float value) {
     nv->value = value;
     nv->valuetype = TYPE_FLOAT;
@@ -1016,14 +1049,15 @@ stat_t get_float(nvObj_t *nv, const float value) {
 }
 
 stat_t set_float(nvObj_t *nv, float &value) {
-    preprocess_incoming_float(nv);
+    process_incoming_float(nv);
     value = nv->value;
     return (STAT_OK);
 }
 
 stat_t set_float_range(nvObj_t *nv, float &value, float low, float high) {
-    preprocess_incoming_float(nv);
+    process_incoming_float(nv);      // conditional unit conversion
     if ((nv->value < low) || (nv->value > high)) {
+        nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_VALUE_RANGE_ERROR);
     }
     value = nv->value;
@@ -1050,42 +1084,7 @@ stat_t set_int(nvObj_t *nv, uint8_t &value, uint8_t low, uint8_t high) {
     return (STAT_OK);
 }
 
-/*
- * preprocess_incoming_float() - pre-process an incoming floating point number for canonical units
- * preprocess_outgoing_float() - pre-process an outgoing floating point number for units display
- */
 
-void preprocess_incoming_float(nvObj_t *nv)
-{
-    uint8_t f;
-    f = GET_TABLE_BYTE(flags);
-//   if (f & (F_CONVERT | F_ICONVERT)) {		// unit conversion required?
-    if (f & F_CONVERT) {		                    // unit conversion required?
-        if (cm_get_units_mode(MODEL) == INCHES) {                   // If inn inches mode
-            if (cm_get_axis_type(nv->index) == AXIS_TYPE_LINEAR) {  // ...and a linear axis...
-                nv->value *= MM_PER_INCH;                           // convert to canonical millimeter units
-            }
-        }
-    }
-}
-
-void preprocess_outgoing_float(nvObj_t *nv)
-{
-    uint8_t f;
-    if (isnan((double)nv->value) || isinf((double)nv->value)) return; // illegal float values
-    f = GET_TABLE_BYTE(flags);
-    if (f & (F_CONVERT | F_ICONVERT)) {		// unit conversion required?
-        if (cm_get_units_mode(MODEL) == INCHES) {
-            if(f & F_ICONVERT) {
-                nv->value *= MM_PER_INCH;
- 			} else {
- 				nv->value *= INCHES_PER_MM;
-			}
- 		}
- 	}
-    nv->precision = GET_TABLE_WORD(precision);
-    nv->valuetype = TYPE_FLOAT;
-}
 
 /*
  * nv_group_is_prefixed() - hack
