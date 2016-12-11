@@ -546,11 +546,9 @@ stat_t cm_set_tram(nvObj_t *nv)
             return (STAT_COMMAND_NOT_ACCEPTED);
         }
 
-
     } else {
         return (STAT_INPUT_VALUE_RANGE_ERROR);
     }
-
     return (STAT_OK);
 }
 
@@ -569,14 +567,11 @@ stat_t cm_get_tram(nvObj_t *nv)
         fp_NE(1.0,  cm->rotation_matrix[1][1]) ||
         fp_NE(1.0,  cm->rotation_matrix[2][2]))
     {
-
         nv->value = false;
     }
-
     nv->valuetype = TYPE_BOOL;
     return (STAT_OK);
 }
-
 
 /*
  * cm_set_model_target() - set target vector in GM model
@@ -2270,12 +2265,17 @@ stat_t cm_get_am(nvObj_t *nv)
 
 stat_t cm_set_am(nvObj_t *nv)        // axis mode
 {
-    nv->valuetype = TYPE_INT;
+    nv->valuetype = TYPE_NULL;
     if (cm_get_axis_type(nv->index) == AXIS_TYPE_LINEAR) {
-        if (nv->value > AXIS_MODE_LINEAR_MAX) { return (STAT_INPUT_VALUE_RANGE_ERROR);}
+        if (nv->value > AXIS_MODE_LINEAR_MAX) { 
+            return (STAT_INPUT_VALUE_RANGE_ERROR);
+        }
     } else {
-        if (nv->value > AXIS_MODE_ROTARY_MAX) { return (STAT_INPUT_VALUE_RANGE_ERROR);}
+        if (nv->value > AXIS_MODE_ROTARY_MAX) { 
+            return (STAT_INPUT_VALUE_RANGE_ERROR);
+        }
     }
+    nv->valuetype = TYPE_INT;
     cm->a[_axis(nv->index)].axis_mode = (cmAxisMode)nv->value;
     return(STAT_OK);    
 }
@@ -2330,39 +2330,40 @@ void cm_set_axis_jerk(const uint8_t axis, const float jerk)
  *  numbers for people to deal with. Jerk values are stored in the system in truncated format;
  *  values are divided by 1,000,000 then reconstituted before use.
  *
- *  The set_xjm() nad set_xjh() functions will accept either truncated or untruncated jerk
- *  numbers as input. If the number is > 1,000,000 it is divided by 1,000,000 before storing.
- *  Numbers are accepted in either millimeter or inch mode and converted to millimeter mode.
- *
- *  The axis_jerk() functions expect the jerk in divided-by 1,000,000 form
+ *  The axis_jerk() functions expect the jerk in divided-by 1,000,000 form.
+ *  The set_xjm() and set_xjh() functions accept values divided by 1,000,000. 
+ *  This is corrected to mm/min^3 by the internals of the code.
  */
 
 stat_t cm_get_vm(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].velocity_max)); }
-stat_t cm_set_vm(nvObj_t *nv) { 
-                                uint8_t axis = _axis(nv->index);
-                                set_float(nv, cm->a[axis].velocity_max); 
-                                cm->a[axis].recip_velocity_max = 1/nv->value;
-                                return(STAT_OK);
-                              }
+stat_t cm_set_vm(nvObj_t *nv) 
+{ 
+    uint8_t axis = _axis(nv->index);
+    set_float(nv, cm->a[axis].velocity_max); 
+    cm->a[axis].recip_velocity_max = 1/nv->value;
+    return(STAT_OK);
+}
 
 stat_t cm_get_fr(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].feedrate_max)); }
-stat_t cm_set_fr(nvObj_t *nv) {
-                                uint8_t axis = _axis(nv->index);
-                                set_float(nv, cm->a[axis].feedrate_max);
-                                cm->a[axis].recip_feedrate_max = 1/nv->value;
-                                return(STAT_OK);
-                              }
+stat_t cm_set_fr(nvObj_t *nv) 
+{
+    uint8_t axis = _axis(nv->index);
+    set_float(nv, cm->a[axis].feedrate_max);
+    cm->a[axis].recip_feedrate_max = 1/nv->value;
+    return(STAT_OK);
+}
 
 stat_t cm_get_jm(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].jerk_max)); }
-stat_t cm_set_jm(nvObj_t *nv) {
-                                uint8_t axis = _axis(nv->index);
-                                set_float(nv, cm->a[axis].jerk_max);
-                                cm_set_axis_jerk(axis, nv->value);
-                                return(STAT_OK);
-                              }
+stat_t cm_set_jm(nvObj_t *nv) 
+{
+    uint8_t axis = _axis(nv->index);
+    ritorno(set_float_range(nv, cm->a[axis].jerk_max, JERK_INPUT_MIN, JERK_INPUT_MAX));
+    cm_set_axis_jerk(axis, nv->value);
+    return(STAT_OK);
+}
 
 stat_t cm_get_jh(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].jerk_high)); }
-stat_t cm_set_jh(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv->index)].jerk_high)); }
+stat_t cm_set_jh(nvObj_t *nv) { return (set_float_range(nv, cm->a[_axis(nv->index)].jerk_high, JERK_INPUT_MIN, JERK_INPUT_MAX)); }
 
 /**** Axis Homing Settings
  * cm_get_hi() - get homing input
@@ -2395,61 +2396,51 @@ stat_t cm_set_zb(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv->index)].ze
 
 /*** Canonical Machine Global Settings ***/
 /*
- * cm_get_jt() - get junction integration time
- * cm_set_jt() - set junction integration time
- * cm_get_ct() - get chordal tolerance
- * cm_set_ct() - set chordal tolerance
+ * cm_get_jt()  - get junction integration time
+ * cm_set_jt()  - set junction integration time
+ * cm_get_ct()  - get chordal tolerance
+ * cm_set_ct()  - set chordal tolerance
+ * cm_get_sl()  - get soft limit enable
+ * cm_set_sl()  - set soft limit enable
+ * cm_get_lim() - get hard limit enable
+ * cm_set_lim() - set hard limit enable
+ * cm_get_saf() - get safety interlock enable
+ * cm_set_saf() - set safety interlock enable
+ * cm_set_mfo() - set manual feedrate override factor
+ * cm_set_mto() - set manual traverse override factor
  */
 
 stat_t cm_get_jt(nvObj_t *nv) { return(get_float(nv, cm->junction_integration_time)); }
-
 stat_t cm_set_jt(nvObj_t *nv)
 {
-    // Get JT or return range error
-    ritorno(set_float_range(nv, cm->junction_integration_time, 
-                                JUNCTION_INTEGRATION_MIN, 
-                                JUNCTION_INTEGRATION_MAX));
-
-    // Must recalculate the max_junction_accel now that the time quanta has changed.
-    for (uint8_t axis=0; axis<AXES; axis++) {
+    ritorno(set_float_range(nv, cm->junction_integration_time, JUNCTION_INTEGRATION_MIN, JUNCTION_INTEGRATION_MAX));
+    for (uint8_t axis=0; axis<AXES; axis++) { // recalculate max_junction_accel now that time quanta has changed.
         _cm_recalc_max_junction_accel(axis);
     }
     return(STAT_OK);
 }
 
 stat_t cm_get_ct(nvObj_t *nv) { return(get_float(nv, cm->chordal_tolerance)); }
-stat_t cm_set_ct(nvObj_t *nv) { return(set_float_range(nv, cm->chordal_tolerance, 
-                                                           CHORDAL_TOLERANCE_MIN,
-                                                           10000000)); }
+stat_t cm_set_ct(nvObj_t *nv) { return(set_float_range(nv, cm->chordal_tolerance, CHORDAL_TOLERANCE_MIN, 10000000)); }
 
-/*
- * cm_set_mfo() - set manual feedrate override factor
- * cm_set_mto() - set manual traverse override factor
- */
+stat_t cm_get_sl(nvObj_t *nv) { return(get_int(nv, cm->soft_limit_enable)); }
+stat_t cm_set_sl(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->soft_limit_enable, 0, 1)); }
 
-stat_t cm_set_mfo(nvObj_t *nv)
-{
-    if (nv->value < FEED_OVERRIDE_MIN) {
-        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
-    }
-    if (nv->value > FEED_OVERRIDE_MAX) {
-        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
-    }
-    set_flt(nv);
-    return(STAT_OK);
-}
+stat_t cm_get_lim(nvObj_t *nv) { return(get_int(nv, cm->limit_enable)); }
+stat_t cm_set_lim(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->limit_enable, 0, 1)); }
 
-stat_t cm_set_mto(nvObj_t *nv)
-{
-    if (nv->value < TRAVERSE_OVERRIDE_MIN) {
-        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
-    }
-    if (nv->value > TRAVERSE_OVERRIDE_MAX) {
-        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
-    }
-    set_flt(nv);
-    return(STAT_OK);
-}
+stat_t cm_get_saf(nvObj_t *nv) { return(get_int(nv, cm->safety_interlock_enable)); }
+stat_t cm_set_saf(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->safety_interlock_enable, 0, 1)); }
+
+stat_t cm_get_froe(nvObj_t *nv) { return(get_int(nv, cm->gmx.mfo_enable)); }
+stat_t cm_set_froe(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->gmx.mfo_enable, 0, 1)); }
+stat_t cm_get_fro(nvObj_t *nv)  { return(get_float(nv, cm->gmx.mfo_factor)); }
+stat_t cm_set_fro(nvObj_t *nv)  { return(set_float_range(nv, cm->gmx.mfo_factor, FEED_OVERRIDE_MIN, FEED_OVERRIDE_MAX)); }
+
+stat_t cm_get_troe(nvObj_t *nv) { return(get_int(nv, cm->gmx.mto_enable)); }
+stat_t cm_set_troe(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->gmx.mto_enable, 0, 1)); }
+stat_t cm_get_tro(nvObj_t *nv)  { return(get_float(nv, cm->gmx.mto_factor)); }
+stat_t cm_set_tro(nvObj_t *nv)  { return(set_float_range(nv, cm->gmx.mto_factor, TRAVERSE_OVERRIDE_MIN, TRAVERSE_OVERRIDE_MAX)); }
 
 /*
  * Run Commands
@@ -2598,18 +2589,18 @@ void cm_print_sl(nvObj_t *nv) { text_print(nv, fmt_sl);}        // TYPE_INT
 void cm_print_lim(nvObj_t *nv){ text_print(nv, fmt_lim);}       // TYPE_INT
 void cm_print_saf(nvObj_t *nv){ text_print(nv, fmt_saf);}       // TYPE_INT
 
-static const char fmt_m48e[] = "[m48e] overrides enabled%11d [0=disable,1=enable]\n";
-static const char fmt_mfoe[] = "[mfoe] manual feed override enab%3d [0=disable,1=enable]\n";
-static const char fmt_mfo[]  = "[mfo]  manual feedrate override%8.3f [0.05 < mfo < 2.00]\n";
-static const char fmt_mtoe[] = "[mtoe] manual traverse over enab%3d [0=disable,1=enable]\n";
-static const char fmt_mto[]  = "[mto]  manual traverse override%8.3f [0.05 < mto < 1.00]\n";
-static const char fmt_tram[] = "[tram]  is coordinate space rotated to be tram %s\n";
+//static const char fmt_m48e[] = "[m48e] overrides enabled%11d [0=disable,1=enable]\n";
+static const char fmt_froe[] = "[froe] feed override enable%8d [0=disable,1=enable]\n";
+static const char fmt_fro[]  = "[fro]  feedrate override%15.3f [0.05 < mfo < 2.00]\n";
+static const char fmt_troe[] = "[troe] traverse over enable%8d [0=disable,1=enable]\n";
+static const char fmt_tro[]  = "[tro]  traverse override%15.3f [0.05 < mto < 1.00]\n";
+static const char fmt_tram[] = "[tram] is coordinate space rotated to be tram %s\n";
 
-void cm_print_m48e(nvObj_t *nv) { text_print(nv, fmt_m48e);}    // TYPE_INT
-void cm_print_mfoe(nvObj_t *nv) { text_print(nv, fmt_mfoe);}    // TYPE INT
-void cm_print_mfo(nvObj_t *nv)  { text_print(nv, fmt_mfo);}     // TYPE FLOAT
-void cm_print_mtoe(nvObj_t *nv) { text_print(nv, fmt_mtoe);}    // TYPE INT
-void cm_print_mto(nvObj_t *nv)  { text_print(nv, fmt_mto);}     // TYPE FLOAT
+//void cm_print_m48e(nvObj_t *nv) { text_print(nv, fmt_m48e);}    // TYPE_INT
+void cm_print_froe(nvObj_t *nv) { text_print(nv, fmt_froe);}    // TYPE INT
+void cm_print_fro(nvObj_t *nv)  { text_print(nv, fmt_fro);}     // TYPE FLOAT
+void cm_print_troe(nvObj_t *nv) { text_print(nv, fmt_troe);}    // TYPE INT
+void cm_print_tro(nvObj_t *nv)  { text_print(nv, fmt_tro);}     // TYPE FLOAT
 void cm_print_tram(nvObj_t *nv) { text_print(nv, fmt_tram);};   // TYPE BOOL
 
 /*

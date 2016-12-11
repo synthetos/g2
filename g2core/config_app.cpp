@@ -102,14 +102,14 @@ static stat_t get_tick(nvObj_t *nv);        // get system tick count
  *    the %f in the corresponding format string to set text mode display precision
  */
 const cfgItem_t cfgArray[] = {
-    // group token flags p, print_func,   get_func,  set_func, target for get/set,       default value
-    { "sys", "fb", _fipn,2, hw_print_fb, get_flt,   set_nul,  (float *)&cs.fw_build,    G2CORE_FIRMWARE_BUILD }, // MUST BE FIRST!
-    { "sys", "fbs",_fn,  2, hw_print_fbs,hw_get_fbs,set_nul,  (float *)&cs.null, 0 },
-    { "sys", "fbc",_fn,  2, hw_print_fbc,hw_get_fbc,set_nul,  (float *)&cs.null, 0 },
-    { "sys", "fv", _fipn,2, hw_print_fv, get_flt,   set_nul,  (float *)&cs.fw_version,  G2CORE_FIRMWARE_VERSION },
-    { "sys", "hp", _fipn,0, hw_print_hp, get_flt,   set_flt,  (float *)&cs.hw_platform, G2CORE_HARDWARE_PLATFORM },
-    { "sys", "hv", _fipn,0, hw_print_hv, get_flt,   hw_set_hv,(float *)&cs.hw_version,  G2CORE_HARDWARE_VERSION },
-    { "sys", "id", _fn,  0, hw_print_id, hw_get_id, set_nul,  (float *)&cs.null, 0 },   // device ID (ASCII signature)
+    // group token flags p, print_func,   get_func,   set_func, target for get/set,       default value
+    { "sys", "fb", _fipn,2, hw_print_fb,  get_flt,    set_nul,  (float *)&cs.fw_build,    G2CORE_FIRMWARE_BUILD }, // MUST BE FIRST!
+    { "sys", "fbs",_fn,  2, hw_print_fbs, hw_get_fbs, set_nul,  (float *)&cs.null, 0 },
+    { "sys", "fbc",_fn,  2, hw_print_fbc, hw_get_fbc, set_nul,  (float *)&cs.null, 0 },
+    { "sys", "fv", _fipn,2, hw_print_fv,  get_flt,    set_nul,  (float *)&cs.fw_version,  G2CORE_FIRMWARE_VERSION },
+    { "sys", "hp", _fipn,0, hw_print_hp,  get_flt,    set_nul,  (float *)&cs.hw_platform, G2CORE_HARDWARE_PLATFORM },
+    { "sys", "hv", _fipn,0, hw_print_hv,  get_flt,    set_nul,  (float *)&cs.hw_version,  G2CORE_HARDWARE_VERSION },
+    { "sys", "id", _fn,  0, hw_print_id,  hw_get_id,  set_nul,  (float *)&cs.null, 0 },   // device ID (ASCII signature)
 
     // dynamic model attributes for reporting purposes (up front for speed)
     { "",   "stat",_f0, 0, cm_print_stat, cm_get_stat, set_nul,(float *)&cs.null, 0 },      // combined machine state
@@ -603,19 +603,19 @@ const cfgItem_t cfgArray[] = {
     { "jid","jidd",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[3], 0},
 
     // General system parameters
-    { "sys","jt", _fipn, 2, cm_print_jt,  cm_get_jt, cm_set_jt, (float *)&cs.null,  JUNCTION_INTEGRATION_TIME },
-    { "sys","ct", _fipnc,4, cm_print_ct,  cm_get_ct, cm_set_ct, (float *)&cs.null,  CHORDAL_TOLERANCE },
-    { "sys","sl", _fipn, 0, cm_print_sl,  get_ui8, set_01,   (float *)&cm->soft_limit_enable,        SOFT_LIMIT_ENABLE },
-    { "sys","lim", _fipn,0, cm_print_lim, get_ui8, set_01,   (float *)&cm->limit_enable,             HARD_LIMIT_ENABLE },
-    { "sys","saf", _fipn,0, cm_print_saf, get_ui8, set_01,   (float *)&cm->safety_interlock_enable,  SAFETY_INTERLOCK_ENABLE },
-    { "sys","m48e",_fipn,0, cm_print_m48e,get_ui8, set_01,   (float *)&cm->gmx.m48_enable, 0 },      // M48/M49 feedrate & spindle override enable
-    { "sys","mfoe",_fipn,0, cm_print_mfoe,get_ui8, set_01,   (float *)&cm->gmx.mfo_enable,           FEED_OVERRIDE_ENABLE},
-    { "sys","mfo", _fipn,3, cm_print_mfo, get_flt,cm_set_mfo,(float *)&cm->gmx.mfo_factor,           FEED_OVERRIDE_FACTOR},
-    { "sys","mtoe",_fipn,0, cm_print_mtoe,get_ui8, set_01,   (float *)&cm->gmx.mto_enable,           TRAVERSE_OVERRIDE_ENABLE},
-    { "sys","mto", _fipn,3, cm_print_mto, get_flt,cm_set_mto,(float *)&cm->gmx.mto_factor,           TRAVERSE_OVERRIDE_FACTOR},
-    { "sys","mt",  _fipn,2, st_print_mt,  get_flt, st_set_mt,(float *)&st_cfg.motor_power_timeout,  MOTOR_POWER_TIMEOUT},
-    { "",   "me",  _f0,  0, st_print_me,  get_nul, st_set_me,(float *)&cs.null, 0 },    // GET or SET to enable motors
-    { "",   "md",  _f0,  0, st_print_md,  get_nul, st_set_md,(float *)&cs.null, 0 },    // GET or SET to disable motors
+    { "sys","jt", _fipn, 2, cm_print_jt,  cm_get_jt,  cm_set_jt,  (float *)&cs.null, JUNCTION_INTEGRATION_TIME },
+    { "sys","ct", _fipnc,4, cm_print_ct,  cm_get_ct,  cm_set_ct,  (float *)&cs.null, CHORDAL_TOLERANCE },
+    { "sys","sl", _fipn, 0, cm_print_sl,  cm_get_sl,  cm_set_sl,  (float *)&cs.null, SOFT_LIMIT_ENABLE },
+    { "sys","lim", _fipn,0, cm_print_lim, cm_get_lim, cm_set_lim, (float *)&cs.null, HARD_LIMIT_ENABLE },
+    { "sys","saf", _fipn,0, cm_print_saf, cm_get_saf, cm_set_saf, (float *)&cs.null, SAFETY_INTERLOCK_ENABLE },
+    { "sys","froe",_fipn,0, cm_print_froe,cm_get_froe,cm_get_froe,(float *)&cs.null, FEED_OVERRIDE_ENABLE},
+    { "sys","fro", _fipn,3, cm_print_fro, cm_get_fro, cm_set_fro, (float *)&cs.null, FEED_OVERRIDE_FACTOR},
+    { "sys","troe",_fipn,0, cm_print_troe,cm_get_troe,cm_get_troe,(float *)&cs.null, TRAVERSE_OVERRIDE_ENABLE},
+    { "sys","tro", _fipn,3, cm_print_tro, cm_get_tro, cm_set_tro, (float *)&cs.null, TRAVERSE_OVERRIDE_FACTOR},
+    { "sys","mt",  _fipn,2, st_print_mt,  get_flt,    st_set_mt,  (float *)&st_cfg.motor_power_timeout, MOTOR_POWER_TIMEOUT},
+    { "",   "me",  _f0,  0, st_print_me,  get_nul,    st_set_me,  (float *)&cs.null, 0 },    // SET to enable motors
+    { "",   "md",  _f0,  0, st_print_md,  get_nul,    st_set_md,  (float *)&cs.null, 0 },    // SET to disable motors
+//    { "sys","m48e",_fipn,0, cm_print_m48e,get_ui8,   set_01,   (float *)&cm->gmx.m48_enable, 0 },      // M48/M49 feedrate & spindle override enable
 
     // Spindle functions
     { "sys","spep",_fipn,0, cm_print_spep,get_ui8, set_01,   (float *)&spindle.enable_polarity,     SPINDLE_ENABLE_POLARITY },

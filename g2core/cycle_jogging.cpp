@@ -34,6 +34,8 @@
 #include "util.h"
 #include "xio.h"
 
+#define JOGGING_START_VELOCITY ((float)10.0)
+
 /**** Jogging singleton structure ****/
 
 struct jmJoggingSingleton {         // persistent jogging runtime variables

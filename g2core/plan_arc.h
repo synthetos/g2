@@ -30,6 +30,8 @@
 #define ARC_RADIUS_ERROR_MIN ((float)0.005)     // min mm where 1% rule applies
 #define ARC_RADIUS_TOLERANCE ((float)0.001)     // 0.1% radius variance test
 
+#define CHORDAL_TOLERANCE_MIN (0.001)           // values below this are not accepted
+
 typedef struct arArcSingleton {                 // persistent planner and runtime variables
     magic_t magic_start;
     uint8_t run_state;              // runtime state machine sequence

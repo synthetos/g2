@@ -38,16 +38,16 @@
 
 /* Defines, Macros, and  Assorted Parameters */
 
-#define MODEL   (GCodeState_t *)&cm->gm      // absolute pointer from canonical machine gm model
+#define MODEL   (GCodeState_t *)&cm->gm     // absolute pointer from canonical machine gm model
 #define PLANNER (GCodeState_t *)&bf->gm     // relative to buffer *bf is currently pointing to
 #define RUNTIME (GCodeState_t *)&mr.gm      // absolute pointer from runtime mm struct
-#define ACTIVE_MODEL cm->am                  // active model pointer is maintained by state management
+#define ACTIVE_MODEL cm->am                 // active model pointer is maintained by state management
 
 #define _to_millimeters(a) ((cm->gm.units_mode == INCHES) ? (a * MM_PER_INCH) : a)
 
-#define JOGGING_START_VELOCITY ((float)10.0)
 #define DISABLE_SOFT_LIMIT (999999)
-#define CHORDAL_TOLERANCE_MIN (0.001)
+#define JERK_INPUT_MIN (0.01)               // minimum allowable jerk setting in millions mm/min^3
+#define JERK_INPUT_MAX (100000)             // maximum allowable jerk setting in millions mm/min^3
 #define PROBES_STORED 3                     // we store three probes for coordinate rotation computation
 
 /*****************************************************************************
@@ -506,9 +506,22 @@ stat_t cm_get_jt(nvObj_t *nv);          // get junction integration time constan
 stat_t cm_set_jt(nvObj_t *nv);          // set junction integration time constant
 stat_t cm_get_ct(nvObj_t *nv);          // get chordal tolerance
 stat_t cm_set_ct(nvObj_t *nv);          // set chordal tolerance
+stat_t cm_get_sl(nvObj_t *nv);          // get soft limit enable
+stat_t cm_set_sl(nvObj_t *nv);          // set soft limit enable
+stat_t cm_get_lim(nvObj_t *nv);         // get hard limit enable
+stat_t cm_set_lim(nvObj_t *nv);         // set hard limit enable
+stat_t cm_get_saf(nvObj_t *nv);         // get safety interlock enable
+stat_t cm_set_saf(nvObj_t *nv);         // set safety interlock enable
 
-stat_t cm_set_mfo(nvObj_t *nv);         // set manual feedrate override factor
-stat_t cm_set_mto(nvObj_t *nv);         // set manual traverse override factor
+stat_t cm_get_froe(nvObj_t *nv);        // get feedrate override enable
+stat_t cm_set_froe(nvObj_t *nv);        // set feedrate override enable
+stat_t cm_get_fro(nvObj_t *nv);         // get feedrate override factor
+stat_t cm_set_fro(nvObj_t *nv);         // set feedrate override factor
+
+stat_t cm_get_troe(nvObj_t *nv);         // get traverse override enable
+stat_t cm_set_troe(nvObj_t *nv);         // set traverse override enable
+stat_t cm_get_tro(nvObj_t *nv);          // get traverse override factor
+stat_t cm_set_tro(nvObj_t *nv);          // set traverse override factor
 
 stat_t cm_set_tram(nvObj_t *nv);        // attempt setting the rotation matrix
 stat_t cm_get_tram(nvObj_t *nv);        // return if the rotation matrix is non-identity
@@ -555,11 +568,11 @@ stat_t cm_get_tram(nvObj_t *nv);        // return if the rotation matrix is non-
   void cm_print_lim(nvObj_t *nv);
   void cm_print_saf(nvObj_t *nv);
 
-  void cm_print_m48e(nvObj_t *nv);
-  void cm_print_mfoe(nvObj_t *nv);
-  void cm_print_mfo(nvObj_t *nv);
-  void cm_print_mtoe(nvObj_t *nv);
-  void cm_print_mto(nvObj_t *nv);
+//  void cm_print_m48e(nvObj_t *nv);
+  void cm_print_froe(nvObj_t *nv);
+  void cm_print_fro(nvObj_t *nv);
+  void cm_print_troe(nvObj_t *nv);
+  void cm_print_tro(nvObj_t *nv);
 
     void cm_print_tram(nvObj_t *nv);    // print if the axis has been rotated
 

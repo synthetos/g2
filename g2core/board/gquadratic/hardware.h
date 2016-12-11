@@ -86,8 +86,8 @@ using Motate::OutputPin;
  *************************/
 
 #define MILLISECONDS_PER_TICK 1  // MS for system tick (systick * N)
-#define SYS_ID_DIGITS 12         // actual digits in system ID (up to 16)
-#define SYS_ID_LEN 16            // total length including dashes and NUL
+#define SYS_ID_DIGITS 16         // actual digits in system ID (up to 16)
+#define SYS_ID_LEN 24            // total length including dashes and NUL
 
 /************************************************************************************
  **** ARM SAM3X8E SPECIFIC HARDWARE *************************************************
