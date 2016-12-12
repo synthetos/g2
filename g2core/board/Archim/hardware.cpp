@@ -1,5 +1,6 @@
 /*
  * hardware.cpp - general hardware support functions
+ * For: g2core Archim boards
  * This file is part of the g2core project
  *
  * Copyright (c) 2010 - 2015 Alden S. Hart, Jr.

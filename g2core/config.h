@@ -363,6 +363,8 @@ stat_t set_float_range(nvObj_t *nv, float &value, float low, float high);
 stat_t get_int(nvObj_t *nv, const uint8_t value);   // boilerplate for retrieving an integer value
 stat_t set_int(nvObj_t *nv, uint8_t &value, uint8_t low, uint8_t high);
 
+stat_t get_string(nvObj_t *nv, const char *str);
+
 // diagnostics
 void nv_dump_nv(nvObj_t *nv);
 

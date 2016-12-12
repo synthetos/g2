@@ -32,6 +32,7 @@
 #define SAVED_BUFFER_LEN 80             // saved buffer size (for reporting only)
 #define MAXED_BUFFER_LEN 255            // same as streaming RX buffer size as a worst case
 #define OUTPUT_BUFFER_LEN 512           // text buffer size
+#define HARDWARE_STRING 16              // max length for hw platform and version is 15 chars
 
 #define LED_NORMAL_BLINK_RATE 3000      // blink rate for normal operation (in ms)
 #define LED_ALARM_BLINK_RATE 750        // blink rate for alarm state (in ms)
@@ -54,8 +55,10 @@ typedef struct controllerSingleton {    // main TG controller struct
     // system identification values
     float fw_build;                     // firmware build number
     float fw_version;                   // firmware version number
-    float hw_platform;                  // hardware compatibility - platform type
-    float hw_version;                   // hardware compatibility - platform revision
+//    float hw_platform;                  // hardware compatibility - platform type
+//    float hw_version;                   // hardware compatibility - platform revision
+    char hw_platform[HARDWARE_STRING];  // hardware compatibility - platform type
+    char hw_version[HARDWARE_STRING];   // hardware compatibility - platform revision
 
     // system state variables
     csControllerState controller_state;

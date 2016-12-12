@@ -22,14 +22,12 @@
 #define G2CORE_INFO_H_ONCE
 
 #define G2CORE_FIRMWARE_BUILD			100.12  // Changes to USB serial for SAMS70 and SAM8X targets
+#define G2CORE_FIRMWARE_VERSION			0.99    // firmware major version
+
 #ifdef GIT_VERSION
 #define G2CORE_FIRMWARE_BUILD_STRING	GIT_VERSION
 #else
 #define G2CORE_FIRMWARE_BUILD_STRING	"unknown"
 #endif
-#define G2CORE_FIRMWARE_VERSION			0.99						// firmware major version
-#define G2CORE_HARDWARE_PLATFORM		HW_PLATFORM_V9		        // hardware platform indicator (2 = Native Arduino Due)
-#define G2CORE_HARDWARE_VERSION		    HW_VERSION_TINYGV9K			// hardware platform revision number
-#define G2CORE_HARDWARE_VERSION_MAX     (G2CORE_HARDWARE_VERSION)
 
 #endif // G2CORE_INFO_H_ONCE

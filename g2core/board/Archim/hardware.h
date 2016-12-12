@@ -1,6 +1,7 @@
 /*
  * hardware.h - system hardware configuration
- *				THIS FILE IS HARDWARE PLATFORM SPECIFIC - ARM version
+ * For: g2core Archim boards
+ * THIS FILE IS HARDWARE PLATFORM SPECIFIC - ARM version
  *
  * This file is part of the g2core project
  *
@@ -61,10 +62,9 @@ enum hwPlatform {
 #define COORDS 6       // number of supported coordinate systems (1-6)
 #define PWMS 2         // number of supported PWM channels
 
-
-////////////////////////////
-/////// ARM VERSION ////////
-////////////////////////////
+/*************************
+ * Motate Setup          *
+ *************************/
 
 #include "MotatePins.h"
 #include "MotateTimers.h" // for TimerChanel<> and related...

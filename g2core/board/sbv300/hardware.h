@@ -61,11 +61,6 @@ enum hwPlatform {
 #define COORDS 6       // number of supported coordinate systems (1-6)
 #define PWMS 2         // number of supported PWM channels
 
-
-////////////////////////////
-/////// ARM VERSION ////////
-////////////////////////////
-
 #include "MotatePins.h"
 #include "MotateTimers.h" // for TimerChanel<> and related...
 #include "MotateServiceCall.h" // for ServiceCall<>
