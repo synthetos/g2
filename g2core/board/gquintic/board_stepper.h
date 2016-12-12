@@ -31,7 +31,7 @@
 #include "hardware.h"  // for MOTORS
 #include "tmc2130.h"
 
-typedef Motate::SPIBus<Motate::kSPI_MISOPinNumber, Motate::kSPI_MOSIPinNumber, Motate::kSPI_SCKPinNumber> SPIBus_used_t;
+typedef Motate::SPIBus<Motate::kSPI_MISOPinNumber, Motate::kSPI_MOSIPinNumber, Motate::kSPI_SCKPinNumber, kSPI_ServiceCallNumber> SPIBus_used_t;
 
 // These are identical to board_stepper.h, except for the word "extern" and the initialization
 extern Trinamic2130<SPIBus_used_t::SPIBusDevice,

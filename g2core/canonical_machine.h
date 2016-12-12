@@ -320,7 +320,7 @@ typedef enum {              // axis modes (ordered: see _cm_get_feed_time())
  */
 typedef struct GCodeState {             // Gcode model state - used by model, planning and runtime
     uint32_t linenum;                   // Gcode block line number
-    uint8_t motion_mode;                // Group1: G0, G1, G2, G3, G38.2, G80, G81,
+    cmMotionMode motion_mode;           // Group1: G0, G1, G2, G3, G38.2, G80, G81,
                                         // G82, G83 G84, G85, G86, G87, G88, G89
 
     float target[AXES];                 // XYZABC where the move should go
@@ -340,6 +340,31 @@ typedef struct GCodeState {             // Gcode model state - used by model, pl
     cmCoordSystem coord_system;         // G54-G59 - select coordinate system 1-9
     uint8_t tool;               // G    // M6 tool change - moves "tool_select" to "tool"
     uint8_t tool_select;        // G    // T value - T sets this value
+
+    void reset() {
+        linenum = 0;
+        motion_mode = MOTION_MODE_STRAIGHT_TRAVERSE;
+
+        for (uint8_t i = 0; i< AXES; i++) {
+            target[i] = 0.0;
+            work_offset[i] = 0.0;
+        }
+
+        feed_rate = 0.0;
+        parameter = 0.0;
+
+        feed_rate_mode = INVERSE_TIME_MODE;
+        select_plane = CANON_PLANE_XY;
+        units_mode = INCHES;
+        path_control = PATH_EXACT_PATH;
+        distance_mode = ABSOLUTE_MODE;
+        arc_distance_mode = ABSOLUTE_MODE;
+        absolute_override = ABSOLUTE_OVERRIDE_OFF;
+        coord_system = ABSOLUTE_COORDS;
+        tool = 0;
+        tool_select = 0;
+
+    };
 } GCodeState_t;
 
 typedef struct GCodeStateExtended {     // Gcode dynamic state extensions - used by model and arcs
@@ -372,7 +397,7 @@ typedef struct GCodeStateExtended {     // Gcode dynamic state extensions - used
 typedef struct GCodeInput {             // Gcode model inputs - meaning depends on context
 
     uint8_t next_action;                // handles G modal group 1 moves & non-modals
-    uint8_t motion_mode;                // Group1: G0, G1, G2, G3, G38.2, G80, G81, G82
+    cmMotionMode motion_mode;           // Group1: G0, G1, G2, G3, G38.2, G80, G81, G82
                                         //         G83, G84, G85, G86, G87, G88, G89
 
     uint8_t program_flow;               // used only by the gcode_parser
@@ -472,7 +497,7 @@ typedef struct cmAxis {
     float travel_min;                       // min work envelope for soft limits
     float jerk_max;                         // max jerk (Jm) in mm/min^3 divided by 1 million
     float jerk_high;                        // high speed deceleration jerk (Jh) in mm/min^3 divided by 1 million
-    float recip_jerk;                       // stored reciprocal of current jerk value - has the million in it
+    //float recip_jerk;                       // stored reciprocal of current jerk value - has the million in it
     float max_junction_accel;               // high speed deceleration jerk (Jh) in mm/min^3 divided by 1 million
     float junction_dev;                     // aka cornering delta -- DEPRICATED!
     float radius;                           // radius in mm for rotary axis modes
@@ -581,7 +606,7 @@ float cm_get_axis_jerk(const uint8_t axis);
 void cm_set_axis_jerk(const uint8_t axis, const float jerk);
 
 uint32_t cm_get_linenum(const GCodeState_t *gcode_state);
-uint8_t cm_get_motion_mode(const GCodeState_t *gcode_state);
+cmMotionMode cm_get_motion_mode(const GCodeState_t *gcode_state);
 uint8_t cm_get_coord_system(const GCodeState_t *gcode_state);
 uint8_t cm_get_units_mode(const GCodeState_t *gcode_state);
 uint8_t cm_get_select_plane(const GCodeState_t *gcode_state);
@@ -676,7 +701,7 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],             // G
                    const float radius, const bool radius_f,                 // radius if radius mode
                    const float P_word, const bool P_word_f,                 // parameter
                    const bool modal_g1_f,                                   // modal group flag for motion group
-                   const uint8_t motion_mode);                              // defined motion mode
+                   const cmMotionMode motion_mode);                         // defined motion mode
 
 // Spindle Functions (4.3.7)
 // see spindle.h for spindle functions - which would go right here

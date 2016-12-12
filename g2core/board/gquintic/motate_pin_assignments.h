@@ -40,15 +40,15 @@ namespace Motate {
 // Undefined pins will be equivalent to Motate::NullPin, and return 1 for Pin<>::isNull();
 
 
-pin_number kSerial_RX  = 0;
-pin_number kSerial_TX  = 1;
-pin_number kSerial_RTS = 2;  // added later
-pin_number kSerial_CTS = 3;  // added later
+pin_number kSerial_RXPinNumber  = 0;
+pin_number kSerial_TXPinNumber  = 1;
+pin_number kSerial_RTSPinNumber = 2;  // added later
+pin_number kSerial_CTSPinNumber = 3;  // added later
 
-pin_number kSerial0_RX  = 0;
-pin_number kSerial0_TX  = 1;
-pin_number kSerial0_RTS = 2;  // added later
-pin_number kSerial0_CTS = 3;  // added later
+pin_number kSerial0_RXPinNumber  = 0;
+pin_number kSerial0_TXPinNumber  = 1;
+pin_number kSerial0_RTSPinNumber = 2;  // added later
+pin_number kSerial0_CTSPinNumber = 3;  // added later
 
 pin_number kI2C_SDAPinNumber = 5;
 pin_number kI2C_SCLPinNumber = 6;
@@ -166,6 +166,8 @@ pin_number kSD_ChipSelectPinNumber = 120;
 pin_number kInterlock_InPinNumber  = 121;
 pin_number kOutputSAFE_PinNumber   = 122;  // SAFE signal
 pin_number kLEDPWM_PinNumber       = 123;
+pin_number kOutputInterrupt_PinNumber = 124;  // to-host interrupt signal
+pin_number kLED_RGBWPixelPinNumber    = 125;  // 117;
 
 // GRBL / gShield compatibility pins -- Due board ONLY
 
@@ -238,12 +240,6 @@ pin_number kUnassigned4  = 251;
 pin_number kUnassigned3  = 252;
 pin_number kUnassigned2  = 253;
 pin_number kUnassigned1  = 254;  // 254 is the max.. Do not exceed this number
-
-/** NOTE: When adding pin definitions here, they must be
- *        added to ALL board pin assignment files, even if
- *        they are defined as -1.
- **/
-
 }  // namespace Motate
 
 // For the SAM3X8C boards, we actually use the same NUMBERING, but have different number to pin linkages
