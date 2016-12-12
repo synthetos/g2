@@ -88,8 +88,8 @@ void json_print_object(nvObj_t *nv);
 void json_print_response(uint8_t status);
 void json_print_list(stat_t status, uint8_t flags);
 
-stat_t json_set_jv(nvObj_t *nv);
-stat_t json_set_ej(nvObj_t *nv);
+stat_t js_set_jv(nvObj_t *nv);
+stat_t js_set_ej(nvObj_t *nv);
 
 #ifdef __TEXT_MODE
 

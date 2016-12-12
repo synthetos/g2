@@ -637,10 +637,10 @@ const cfgItem_t cfgArray[] = {
 
     // Communications and reporting parameters
 #ifdef __TEXT_MODE
-    { "sys","tv", _fipn, 0, tx_print_tv,  get_ui8, set_01,     (float *)&txt.text_verbosity,        TEXT_VERBOSITY },
+    { "sys","tv", _fipn, 0, tx_print_tv, txt_get_tv, txt_set_tv, (float *)&cs.null, TEXT_VERBOSITY },
 #endif
-    { "sys","ej", _fipn, 0, js_print_ej,  get_ui8, json_set_ej,(float *)&cs.comm_mode,              COMM_MODE },
-    { "sys","jv", _fipn, 0, js_print_jv,  get_ui8, json_set_jv,(float *)&js.json_verbosity,         JSON_VERBOSITY },
+    { "sys","ej", _fipn, 0, js_print_ej,  get_ui8, js_set_ej,(float *)&cs.comm_mode, COMM_MODE },
+    { "sys","jv", _fipn, 0, js_print_jv,  get_ui8, js_set_jv,(float *)&js.json_verbosity, JSON_VERBOSITY },
     { "sys","qv", _fipn, 0, qr_print_qv,  get_ui8, set_0123,   (float *)&qr.queue_report_verbosity, QUEUE_REPORT_VERBOSITY },
     { "sys","sv", _fipn, 0, sr_print_sv,  get_ui8, set_012,    (float *)&sr.status_report_verbosity,STATUS_REPORT_VERBOSITY },
     { "sys","si", _fipn, 0, sr_print_si,  get_int32,sr_set_si, (float *)&sr.status_report_interval, STATUS_REPORT_INTERVAL_MS },
@@ -1055,10 +1055,21 @@ stat_t set_float(nvObj_t *nv, float &value) {
 }
 
 stat_t set_float_range(nvObj_t *nv, float &value, float low, float high) {
+
+    char msg[64];
+
     process_incoming_float(nv);      // conditional unit conversion
-    if ((nv->value < low) || (nv->value > high)) {
+    if (nv->value < low) {
+        sprintf(msg, "Input is less than minimum value %0.4f", low);
+        nv_add_conditional_message(msg);
         nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_VALUE_RANGE_ERROR);
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    if (nv->value > high) {
+        sprintf(msg, "Input is more than maximum value %0.4f", high);
+        nv_add_conditional_message(msg);
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
     value = nv->value;
     return (STAT_OK);
@@ -1077,11 +1088,21 @@ stat_t get_int(nvObj_t *nv, const uint8_t value) {
 
 stat_t set_int(nvObj_t *nv, uint8_t &value, uint8_t low, uint8_t high) {
 
-    if ((nv->value < low) || (nv->value > high)) {
+    char msg[64];
+
+    if (nv->value < low) {
+        sprintf(msg, "Input is less than minimum value %d", (int)low);
+        nv_add_conditional_message(msg);
         nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_VALUE_RANGE_ERROR);
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
     }
-    value = nv->value;
+    if (nv->value > high) {
+        sprintf(msg, "Input is more than maximum value %d", (int)high);
+        nv_add_conditional_message(msg);
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+    }
+    value = nv->value;  // note: valuetype = TYPE_INT already set
     return (STAT_OK);
 }
 

@@ -609,14 +609,11 @@ void json_print_response(uint8_t status)
  ***********************************************************************************/
 
 /*
- * json_set_jv()
+ * js_set_jv()
  */
 
-stat_t json_set_jv(nvObj_t *nv)
+stat_t js_set_jv(nvObj_t *nv)
 {
-//    if ((uint8_t)nv->value >= JV_MAX_VALUE) { return (STAT_INPUT_EXCEEDS_MAX_VALUE);}
-//    js.json_verbosity = (jsonVerbosity)nv->value;
-
     ritorno (set_int(nv, (uint8_t &)js.json_verbosity, 0, JV_MAX_VALUE));  
 
     js.echo_json_footer = false;
@@ -640,11 +637,12 @@ stat_t json_set_jv(nvObj_t *nv)
 }
 
 /*
- * json_set_ej() - set JSON communications mode
+ * js_set_ej() - set JSON communications mode
  */
 
-stat_t json_set_ej(nvObj_t *nv)
+stat_t js_set_ej(nvObj_t *nv)
 {
+//    ritorno (set_int(nv, cs.comm_mode, TEXT_MODE, AUTO_MODE));
     if ((nv->value < TEXT_MODE) || (nv->value > AUTO_MODE)) {
         nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_VALUE_RANGE_ERROR);

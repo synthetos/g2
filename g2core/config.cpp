@@ -682,7 +682,7 @@ nvObj_t *nv_add_string(const char *token, const char *string) // add a string ob
 
 nvObj_t *nv_add_conditional_message(const char *string)    // conditionally add a message object to the body
 {
-    if ((js.json_mode == JSON_MODE) && (js.echo_json_messages != true)) { return (NULL);}
+    if ((js.json_mode == JSON_MODE) && (js.echo_json_messages != true)) { return (NULL); }
     return(nv_add_string((const char *)"msg", string));
 }
 

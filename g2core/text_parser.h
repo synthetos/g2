@@ -95,4 +95,7 @@ stat_t text_parser_stub(char* str);
 void text_response_stub(const stat_t status, char* buf);
 void text_print_list_stub(stat_t status, uint8_t flags);
 
+stat_t txt_get_tv(nvObj_t *nv);
+stat_t txt_set_tv(nvObj_t *nv);
+
 #endif  // End of include guard: TEXT_PARSER_H_ONCE
