@@ -61,10 +61,10 @@ typedef struct controllerSingleton {    // main TG controller struct
     uint32_t led_blink_rate;            // used to flash indicator LED
 
     // communications state variables
-    // cs.comm_mode is the setting for the communications more
-    // js.json_mode is the actual current mode (see also js.json_now)
+    // cs.comm_mode is the setting for the communications mode
+    // js.json_mode is the actual current mode
     commMode comm_mode;                 // ej: 0=text mode sticky, 1=JSON mode sticky, 2=auto mode
-    commMode comm_request_mode;         // mode of request (may be different thatn the setting)
+    commMode comm_request_mode;         // mode of request (may be different than the setting)
     
     // controller serial buffers
     char *bufp;                         // pointer to primary or secondary in buffer

@@ -97,7 +97,7 @@ void json_parser(char *str)
     if (status == STAT_COMPLETE) {                  // skip the print if returning from something that already did it.
         return;
     }
-    nv_print_list(status, TEXT_NO_PRINT, JSON_RESPONSE_FORMAT);
+    nv_print_list(status, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT);
 
     sr_request_status_report(SR_REQUEST_TIMED);     // generate incremental status report to show any changes
 }
@@ -609,12 +609,36 @@ void json_print_response(uint8_t status)
  ***********************************************************************************/
 
 /*
- * js_set_jv()
+ * js_get_ej() - get JSON communications mode
+ * js_set_ej() - set JSON communications mode
+ *
+ * This one is a bit different: 
+ *  - cs.comm_mode is the setting for the *communications mode* (persistent)
+ *  - js.json_mode is the actual current mode
+ *
+ *  If comm_mode is set to TEXT_MORE (0) or JSON_MODE (1) then json_mode should also be changed
+ *  If comm_mode is set to AUTO_MORE (0) then json_mode should not be changed
  */
 
+stat_t js_get_ej(nvObj_t *nv) { return(get_int(nv, cs.comm_mode)); }
+stat_t js_set_ej(nvObj_t *nv)
+{
+    ritorno (set_int(nv, (uint8_t &)cs.comm_mode, TEXT_MODE, AUTO_MODE));
+    if (commMode(nv->value) < AUTO_MODE) {    // set json_mode to 0 or 1, but don't change it if comm_mode == 2
+        js.json_mode = commMode(nv->value);
+    }
+    return (STAT_OK);
+}
+
+/*
+ * js_get_jv() - get JSON verbosity
+ * js_set_jv() - set JSON verbosity and related flags
+ */
+
+stat_t js_get_jv(nvObj_t *nv) { return(get_int(nv, js.json_verbosity)); }
 stat_t js_set_jv(nvObj_t *nv)
 {
-    ritorno (set_int(nv, (uint8_t &)js.json_verbosity, 0, JV_MAX_VALUE));  
+    ritorno (set_int(nv, (uint8_t &)js.json_verbosity, JV_SILENT, JV_MAX_VALUE));  
 
     js.echo_json_footer = false;
     js.echo_json_messages = false;
@@ -634,25 +658,6 @@ stat_t js_set_jv(nvObj_t *nv)
         if (nv->value >= JV_VERBOSE)    js.echo_json_gcode_block = true;
     }
     return(STAT_OK);
-}
-
-/*
- * js_set_ej() - set JSON communications mode
- */
-
-stat_t js_set_ej(nvObj_t *nv)
-{
-//    ritorno (set_int(nv, cs.comm_mode, TEXT_MODE, AUTO_MODE));
-    if ((nv->value < TEXT_MODE) || (nv->value > AUTO_MODE)) {
-        nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_VALUE_RANGE_ERROR);
-    }
-    
-    // set json_mode to 0 or 1, but don't change it if comm_mode == 2
-    if (commMode(nv->value) < AUTO_MODE) {
-        js.json_mode = commMode(nv->value);
-    }
-    return (set_ui8(nv));
 }
 
 /***********************************************************************************

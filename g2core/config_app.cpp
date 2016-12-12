@@ -639,11 +639,11 @@ const cfgItem_t cfgArray[] = {
 #ifdef __TEXT_MODE
     { "sys","tv", _fipn, 0, tx_print_tv, txt_get_tv, txt_set_tv, (float *)&cs.null, TEXT_VERBOSITY },
 #endif
-    { "sys","ej", _fipn, 0, js_print_ej,  get_ui8, js_set_ej,(float *)&cs.comm_mode, COMM_MODE },
-    { "sys","jv", _fipn, 0, js_print_jv,  get_ui8, js_set_jv,(float *)&js.json_verbosity, JSON_VERBOSITY },
-    { "sys","qv", _fipn, 0, qr_print_qv,  get_ui8, set_0123,   (float *)&qr.queue_report_verbosity, QUEUE_REPORT_VERBOSITY },
-    { "sys","sv", _fipn, 0, sr_print_sv,  get_ui8, set_012,    (float *)&sr.status_report_verbosity,STATUS_REPORT_VERBOSITY },
-    { "sys","si", _fipn, 0, sr_print_si,  get_int32,sr_set_si, (float *)&sr.status_report_interval, STATUS_REPORT_INTERVAL_MS },
+    { "sys","ej", _fipn, 0, js_print_ej,  js_get_ej, js_set_ej, (float *)&cs.null, COMM_MODE },
+    { "sys","jv", _fipn, 0, js_print_jv,  js_get_jv, js_set_jv, (float *)&cs.null, JSON_VERBOSITY },
+    { "sys","qv", _fipn, 0, qr_print_qv,  qr_get_qv, qr_set_qv, (float *)&cs.null, QUEUE_REPORT_VERBOSITY },
+    { "sys","sv", _fipn, 0, sr_print_sv,  sr_get_sv, sr_set_sv, (float *)&cs.null, STATUS_REPORT_VERBOSITY },
+    { "sys","si", _fipn, 0, sr_print_si,  sr_get_si, sr_set_si, (float *)&cs.null, STATUS_REPORT_INTERVAL_MS },
 
     // Gcode defaults
     // NOTE: The ordering within the gcode defaults is important for token resolution. gc must follow gco
@@ -1082,8 +1082,10 @@ stat_t set_float_range(nvObj_t *nv, float &value, float low, float high) {
 }
 
 /*
- * get_int() - boilerplate for retrieving an integer value
- * set_int() - boilerplate for setting an integer value with range checking
+ * get_int()   - boilerplate for retrieving 8 bit integer value
+ * set_int()   - boilerplate for setting 8 bit integer value with range checking
+ * get_int32() - boilerplate for retrieving 32 bit integer value
+ * set_int32() - boilerplate for setting 32 bit integer value with range checking
  */
 
 stat_t get_int(nvObj_t *nv, const uint8_t value) {
@@ -1097,13 +1099,39 @@ stat_t set_int(nvObj_t *nv, uint8_t &value, uint8_t low, uint8_t high) {
     char msg[64];
 
     if (nv->value < low) {
-        sprintf(msg, "Input is less than minimum value %d", (int)low);
+        sprintf(msg, "Input is less than minimum value %d", low);
         nv_add_conditional_message(msg);
         nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_LESS_THAN_MIN_VALUE);
     }
     if (nv->value > high) {
-        sprintf(msg, "Input is more than maximum value %d", (int)high);
+        sprintf(msg, "Input is more than maximum value %d", high);
+        nv_add_conditional_message(msg);
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+    }
+    value = nv->value;  // note: valuetype = TYPE_INT already set
+    return (STAT_OK);
+}
+
+stat_t get_int32(nvObj_t *nv, const uint32_t value) {
+    nv->value = value;
+    nv->valuetype = TYPE_INT;
+    return STAT_OK;
+}
+
+stat_t set_int32(nvObj_t *nv, uint32_t &value, uint32_t low, uint32_t high) {
+
+    char msg[64];
+
+    if (nv->value < low) {
+        sprintf(msg, "Input is less than minimum value %lu", low);
+        nv_add_conditional_message(msg);
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    if (nv->value > high) {
+        sprintf(msg, "Input is more than maximum value %lu", high);
         nv_add_conditional_message(msg);
         nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_EXCEEDS_MAX_VALUE);

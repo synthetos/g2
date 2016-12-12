@@ -166,10 +166,8 @@ stat_t hw_get_fb(nvObj_t *nv);
 stat_t hw_get_fv(nvObj_t *nv);
 stat_t hw_get_hp(nvObj_t *nv);
 stat_t hw_get_hv(nvObj_t *nv);
-
 stat_t hw_get_fbs(nvObj_t *nv);
 stat_t hw_get_fbc(nvObj_t *nv);
-stat_t hw_get_hv(nvObj_t *nv);
 stat_t hw_get_id(nvObj_t *nv);
 
 #ifdef __TEXT_MODE

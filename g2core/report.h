@@ -36,6 +36,7 @@
 
 #define SR_THROTTLE_COUNT   4       // scale back filtered SR's during time-constrained intervals
 #define MIN_ARC_QR_INTERVAL 200     // minimum interval between QRs during arc generation (in system ticks)
+#define STATUS_REPORT_MAX_MS (MAX_LONG/1000)
 
 typedef enum {                      // status report enable, verbosity and request type
     SR_OFF = 0,                     // no reports
@@ -112,6 +113,10 @@ stat_t sr_run_text_status_report(void);
 
 stat_t sr_get(nvObj_t *nv);
 stat_t sr_set(nvObj_t *nv);
+
+stat_t sr_get_sv(nvObj_t *nv);
+stat_t sr_set_sv(nvObj_t *nv);
+stat_t sr_get_si(nvObj_t *nv);
 stat_t sr_set_si(nvObj_t *nv);
 
 void qr_init_queue_report(void);
@@ -124,6 +129,9 @@ stat_t rx_report_callback(void);
 stat_t qr_get(nvObj_t *nv);
 stat_t qi_get(nvObj_t *nv);
 stat_t qo_get(nvObj_t *nv);
+
+stat_t qr_get_qv(nvObj_t *nv);
+stat_t qr_set_qv(nvObj_t *nv);
 
 #ifdef __TEXT_MODE
 

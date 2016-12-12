@@ -412,41 +412,33 @@ static uint8_t _populate_filtered_status_report()
 /*
  * Wrappers and Setters - for calling from nvArray table
  *
- * sr_get()        - run status report
- * sr_set()        - set status report elements
- * sr_set_si()    - set status report interval
+ * sr_get()    - run status report
+ * sr_set()    - set status report elements
+ * sr_get_sv() - get status report verbosity
+ * sr_set_sv() - set status report verbosity
+ * sr_get_si() - get status report interval
+ * sr_set_si() - set status report interval
  */
 
-stat_t sr_get(nvObj_t *nv)
-{
-    return (_populate_unfiltered_status_report());
-}
+stat_t sr_get(nvObj_t *nv) { return (_populate_unfiltered_status_report()); }
+stat_t sr_set(nvObj_t *nv) { return (sr_set_status_report(nv)); }
 
-stat_t sr_set(nvObj_t *nv)
-{
-    return (sr_set_status_report(nv));
-}
-
-stat_t sr_set_si(nvObj_t *nv)
-{
-    if (nv->value < STATUS_REPORT_MIN_MS) {
-        nv->value = STATUS_REPORT_MIN_MS;
-    }
-    set_int32(nv);
-    return(STAT_OK);
-}
+stat_t sr_get_sv(nvObj_t *nv) { return(get_int(nv, (uint8_t &)sr.status_report_verbosity)); }
+stat_t sr_set_sv(nvObj_t *nv) { return(set_int(nv, (uint8_t &)sr.status_report_verbosity, SR_OFF, SR_VERBOSE)); }
+stat_t sr_get_si(nvObj_t *nv) { return(get_int32(nv, sr.status_report_interval)); }
+stat_t sr_set_si(nvObj_t *nv) { return(set_int32(nv, sr.status_report_interval, STATUS_REPORT_MIN_MS, STATUS_REPORT_MAX_MS)); }
 
 /*********************
  * TEXT MODE SUPPORT *
  *********************/
 #ifdef __TEXT_MODE
 
-static const char fmt_si[] = "[si]  status interval%14d ms\n";
 static const char fmt_sv[] = "[sv]  status report verbosity%6d [0=off,1=filtered,2=verbose]\n";
+static const char fmt_si[] = "[si]  status interval%14d ms\n";
 
 void sr_print_sr(nvObj_t *nv) { _populate_unfiltered_status_report();}
-void sr_print_si(nvObj_t *nv) { text_print(nv, fmt_si);}
 void sr_print_sv(nvObj_t *nv) { text_print(nv, fmt_sv);}
+void sr_print_si(nvObj_t *nv) { text_print(nv, fmt_si);}
 
 #endif // __TEXT_MODE
 
@@ -594,6 +586,9 @@ stat_t qo_get(nvObj_t *nv)
     qr.buffers_removed = 0;                // reset it
     return (STAT_OK);
 }
+
+stat_t qr_get_qv(nvObj_t *nv) { return(get_int(nv, (uint8_t &)qr.queue_report_verbosity)); }
+stat_t qr_set_qv(nvObj_t *nv) { return(set_int(nv, (uint8_t &)qr.queue_report_verbosity, QR_OFF, QR_TRIPLE)); }
 
 /*****************************************************************************
  * JOB ID REPORTS
