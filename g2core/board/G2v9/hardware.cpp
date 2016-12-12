@@ -160,11 +160,11 @@ stat_t hw_flash(nvObj_t *nv)
 
 static const char fmt_fb[] =  "[fb]  firmware build%18.2f\n";
 static const char fmt_fv[] =  "[fv]  firmware version%16.2f\n";
-static const char fmt_fbs[] = "[fbs] firmware build \"%32s\"\n";
-static const char fmt_fbc[] = "[fbc] firmware config \"%s\"\n";
+static const char fmt_fbs[] = "[fbs] firmware build%34s\n";
+static const char fmt_fbc[] = "[fbc] firmware config%33s\n";
 static const char fmt_hp[] =  "[hp]  hardware platform%15s\n";
-static const char fmt_hv[] =  "[hv]  hardware version%16s\n";
-static const char fmt_id[] =  "[id]  g2core ID%21s\n";
+static const char fmt_hv[] =  "[hv]  hardware version%13s\n";
+static const char fmt_id[] =  "[id]  g2core ID%37s\n";
 
 void hw_print_fb(nvObj_t *nv)  { text_print(nv, fmt_fb);}   // TYPE_FLOAT
 void hw_print_fv(nvObj_t *nv)  { text_print(nv, fmt_fv);}   // TYPE_FLOAT

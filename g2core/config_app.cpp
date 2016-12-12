@@ -105,10 +105,10 @@ const cfgItem_t cfgArray[] = {
     // group token flags p, print_func,   get_func,   set_func, get/set target,    default value
     { "sys", "fb", _fipn,2, hw_print_fb,  hw_get_fb,  set_nul,  (float *)&cs.null, 0 },   // MUST BE FIRST for persistence checking!
     { "sys", "fv", _fipn,2, hw_print_fv,  hw_get_fv,  set_nul,  (float *)&cs.null, 0 },
-    { "sys", "fbs",_fn,  2, hw_print_fbs, hw_get_fbs, set_nul,  (float *)&cs.null, 0 },
-    { "sys", "fbc",_fn,  2, hw_print_fbc, hw_get_fbc, set_nul,  (float *)&cs.null, 0 },
-    { "sys", "hp", _fipn,0, hw_print_hp,  hw_get_hp,  set_nul,  (float *)&cs.null, 0 },
-    { "sys", "hv", _fipn,0, hw_print_hv,  hw_get_hv,  set_nul,  (float *)&cs.null, 0 },
+    { "sys", "fbs",_fn,  0, hw_print_fbs, hw_get_fbs, set_nul,  (float *)&cs.null, 0 },
+    { "sys", "fbc",_fn,  0, hw_print_fbc, hw_get_fbc, set_nul,  (float *)&cs.null, 0 },
+    { "sys", "hp", _fn,  0, hw_print_hp,  hw_get_hp,  set_nul,  (float *)&cs.null, 0 },
+    { "sys", "hv", _fn,  0, hw_print_hv,  hw_get_hv,  set_nul,  (float *)&cs.null, 0 },
     { "sys", "id", _fn,  0, hw_print_id,  hw_get_id,  set_nul,  (float *)&cs.null, 0 },   // device ID (ASCII signature)
 
     // dynamic model attributes for reporting purposes (up front for speed)
@@ -1012,6 +1012,8 @@ stat_t set_flu(nvObj_t *nv)
 
 void process_incoming_float(nvObj_t *nv)
 {
+    if (nv->valuetype != TYPE_FLOAT) { return; } // can be called non-destructively for any value type
+
     uint8_t f;
     f = GET_TABLE_BYTE(flags);
 //   if (f & (F_CONVERT | F_ICONVERT)) {		// unit conversion required?
@@ -1024,10 +1026,13 @@ void process_incoming_float(nvObj_t *nv)
     }
 }
 
-void process_outgoing_float(nvObj_t *nv)
+void process_outgoing_float(nvObj_t *nv)    
 {
+    if (nv->valuetype != TYPE_FLOAT) { return; } // can be called non-destructively for any value type
+    if (isnan((double)nv->value) || isinf((double)nv->value)) { return; } // trap illegal float values
+    ///+++ transform these checks into NaN or INF strings with an error return?
+
     uint8_t f;
-    if (isnan((double)nv->value) || isinf((double)nv->value)) return; // illegal float values
     f = GET_TABLE_BYTE(flags);
     if (f & (F_CONVERT | F_ICONVERT)) {		// unit conversion required?
         if (cm_get_units_mode(MODEL) == INCHES) {
@@ -1041,6 +1046,7 @@ void process_outgoing_float(nvObj_t *nv)
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
 }
+
 stat_t get_float(nvObj_t *nv, const float value) {
     nv->value = value;
     nv->valuetype = TYPE_FLOAT;
