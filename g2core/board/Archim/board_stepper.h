@@ -1,6 +1,6 @@
 /*
  * board_stepper.h - board-specific code for stepper.h
- * For: g2core Archim boards
+ * For: /board/Archim
  * This file is part of g2core project
  *
  * Copyright (c) 2016 Alden S. Hart, Jr.

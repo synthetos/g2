@@ -1,5 +1,6 @@
 /*
- * motate_pin_assignments.h - pin assignments for the g2core g2v9 boards
+ * motate_pin_assignments.h - pin assignments
+ * For: /board/g2v9
  * This file is part of the g2core project
  *
  * Copyright (c) 2013 - 2016 Robert Giseburt

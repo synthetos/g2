@@ -1,7 +1,7 @@
 /*
  * hardware.h - system hardware configuration
- *              for: /board/g2v9
- *				THIS FILE IS HARDWARE PLATFORM SPECIFIC - ARM version
+ * For: /board/g2v9
+ * THIS FILE IS HARDWARE PLATFORM SPECIFIC - ARM version
  *
  * This file is part of the g2core project
  *
@@ -37,8 +37,8 @@
 
 /*--- Hardware platform enumerations ---*/
 
-#define G2CORE_HARDWARE_PLATFORM    "g2v9"      // cannot exceed 15 bytes!!!
-#define G2CORE_HARDWARE_VERSION     "k"         // cannot exceed 15 bytes!!!
+#define G2CORE_HARDWARE_PLATFORM    "g2v9"
+#define G2CORE_HARDWARE_VERSION     "k"
 
 /***** Axes, motors & PWM channels used by the application *****/
 // Axes, motors & PWM channels must be defines (not enums) so expressions like this:
@@ -50,12 +50,9 @@
 #define COORDS 6       // number of supported coordinate systems (1-6)
 #define PWMS 2         // number of supported PWM channels
 
-
-////////////////////////////
-/////// ARM VERSION ////////
-////////////////////////////
-
-// ARM specific code start here
+/*************************
+ * Motate Setup          *
+ *************************/
 
 #include "MotatePins.h"
 #include "MotateTimers.h" // for TimerChanel<> and related...
@@ -172,28 +169,28 @@ stat_t hw_get_hv(nvObj_t *nv);
 
 stat_t hw_get_fbs(nvObj_t *nv);
 stat_t hw_get_fbc(nvObj_t *nv);
-stat_t hw_set_hv(nvObj_t *nv);
+stat_t hw_get_hv(nvObj_t *nv);
 stat_t hw_get_id(nvObj_t *nv);
 
 #ifdef __TEXT_MODE
 
-	void hw_print_fb(nvObj_t *nv);
+    void hw_print_fb(nvObj_t *nv);
+    void hw_print_fv(nvObj_t *nv);
     void hw_print_fbs(nvObj_t *nv);
     void hw_print_fbc(nvObj_t *nv);
-	void hw_print_fv(nvObj_t *nv);
-	void hw_print_hp(nvObj_t *nv);
-	void hw_print_hv(nvObj_t *nv);
-	void hw_print_id(nvObj_t *nv);
+    void hw_print_hp(nvObj_t *nv);
+    void hw_print_hv(nvObj_t *nv);
+    void hw_print_id(nvObj_t *nv);
 
 #else
 
-	#define hw_print_fb tx_print_stub
+    #define hw_print_fb tx_print_stub
+    #define hw_print_fv tx_print_stub
     #define hw_print_fbs tx_print_stub
     #define hw_print_fbc tx_print_stub
-	#define hw_print_fv tx_print_stub
-	#define hw_print_hp tx_print_stub
-	#define hw_print_hv tx_print_stub
-	#define hw_print_id tx_print_stub
+    #define hw_print_hp tx_print_stub
+    #define hw_print_hv tx_print_stub
+    #define hw_print_id tx_print_stub
 
 #endif // __TEXT_MODE
 

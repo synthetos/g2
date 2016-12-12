@@ -1,5 +1,6 @@
 /*
  * hardware.cpp - general hardware support functions
+ * For: /board/g2v9
  * This file is part of the g2core project
  *
  * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
@@ -94,15 +95,18 @@ void _get_id(char *id)
  ***********************************************************************************/
 
 /*
+ * hw_get_fb()  - get firmware build number
+ * hw_get_fv()  - get firmware version number
+ * hw_get_hp()  - get hardware platform string
+ * hw_get_hv()  - get hardware version string
  * hw_get_fbs() - get firmware build string
  */
 
-stat_t hw_get_fbs(nvObj_t *nv)
-{
-    nv->valuetype = TYPE_STRING;
-    ritorno(nv_copy_string(nv, G2CORE_FIRMWARE_BUILD_STRING));
-    return (STAT_OK);
-}
+stat_t hw_get_fb(nvObj_t *nv) { return (get_float(nv, cs.fw_build)); }
+stat_t hw_get_fv(nvObj_t *nv) { return (get_float(nv, cs.fw_version)); }
+stat_t hw_get_hp(nvObj_t *nv) { return (get_string(nv, G2CORE_HARDWARE_PLATFORM)); }
+stat_t hw_get_hv(nvObj_t *nv) { return (get_string(nv, G2CORE_HARDWARE_VERSION)); }
+stat_t hw_get_fbs(nvObj_t *nv) { return (get_string(nv, G2CORE_FIRMWARE_BUILD_STRING)); }
 
 /*
  * hw_get_fbc() - get configuration settings file
@@ -111,15 +115,15 @@ stat_t hw_get_fbs(nvObj_t *nv)
 stat_t hw_get_fbc(nvObj_t *nv)
 {
     nv->valuetype = TYPE_STRING;
-    #ifdef SETTINGS_FILE
-    #define settings_file_string1(s) #s
-    #define settings_file_string2(s) settings_file_string1(s)
+#ifdef SETTINGS_FILE
+#define settings_file_string1(s) #s
+#define settings_file_string2(s) settings_file_string1(s)
     ritorno(nv_copy_string(nv, settings_file_string2(SETTINGS_FILE)));
-    #undef settings_file_string1
-    #undef settings_file_string2
-    #else
+#undef settings_file_string1
+#undef settings_file_string2
+#else
     ritorno(nv_copy_string(nv, "<default-settings>"));
-    #endif
+ #endif
 
     return (STAT_OK);
 }
@@ -146,15 +150,6 @@ stat_t hw_flash(nvObj_t *nv)
 	return(STAT_OK);
 }
 
-/*
- * hw_set_hv() - set hardware version number
- */
-stat_t hw_set_hv(nvObj_t *nv)
-{
-	return (STAT_OK);
-}
-
-
 /***********************************************************************************
  * TEXT MODE SUPPORT
  * Functions to print variables from the cfgArray table
@@ -162,22 +157,20 @@ stat_t hw_set_hv(nvObj_t *nv)
 
 #ifdef __TEXT_MODE
 
-static const char fmt_fb[] =  "[fb]  firmware build %18.2f\n";
-static const char fmt_fbs[] = "[fbs] firmware build \"%s\"\n";
-static const char fmt_fbc[] = "[fbc] firmware config \"%s\"\n";
-static const char fmt_fv[] =  "[fv]  firmware version%16.2f\n";
-static const char fmt_cv[] =  "[cv]  configuration version%11.2f\n";
-static const char fmt_hp[] =  "[hp]  hardware platform%15.2f\n";
-static const char fmt_hv[] =  "[hv]  hardware version%16.2f\n";
-static const char fmt_id[] =  "[id]  g2core ID%21s\n";
+    static const char fmt_fb[] =  "[fb]  firmware build%18.2f\n";
+    static const char fmt_fv[] =  "[fv]  firmware version%16.2f\n";
+    static const char fmt_fbs[] = "[fbs] firmware build%34s\n";
+    static const char fmt_fbc[] = "[fbc] firmware config%33s\n";
+    static const char fmt_hp[] =  "[hp]  hardware platform%15s\n";
+    static const char fmt_hv[] =  "[hv]  hardware version%13s\n";
+    static const char fmt_id[] =  "[id]  g2core ID%37s\n";
 
-void hw_print_fb(nvObj_t *nv)  { text_print(nv, fmt_fb);}   // TYPE_FLOAT
-void hw_print_fbs(nvObj_t *nv) { text_print(nv, fmt_fbs);}  // TYPE_STRING
-void hw_print_fbc(nvObj_t *nv) { text_print(nv, fmt_fbc);}  // TYPE_STRING
-void hw_print_fv(nvObj_t *nv)  { text_print(nv, fmt_fv);}   // TYPE_FLOAT
-void hw_print_cv(nvObj_t *nv)  { text_print(nv, fmt_cv);}   // TYPE_FLOAT
-void hw_print_hp(nvObj_t *nv)  { text_print(nv, fmt_hp);}   // TYPE_FLOAT
-void hw_print_hv(nvObj_t *nv)  { text_print(nv, fmt_hv);}   // TYPE_FLOAT
-void hw_print_id(nvObj_t *nv)  { text_print(nv, fmt_id);}   // TYPE_STRING
+    void hw_print_fb(nvObj_t *nv)  { text_print(nv, fmt_fb);}   // TYPE_FLOAT
+    void hw_print_fv(nvObj_t *nv)  { text_print(nv, fmt_fv);}   // TYPE_FLOAT
+    void hw_print_fbs(nvObj_t *nv) { text_print(nv, fmt_fbs);}  // TYPE_STRING
+    void hw_print_fbc(nvObj_t *nv) { text_print(nv, fmt_fbc);}  // TYPE_STRING
+    void hw_print_hp(nvObj_t *nv)  { text_print(nv, fmt_hp);}   // TYPE_STRING
+    void hw_print_hv(nvObj_t *nv)  { text_print(nv, fmt_hv);}   // TYPE_STRING
+    void hw_print_id(nvObj_t *nv)  { text_print(nv, fmt_id);}   // TYPE_STRING
 
 #endif //__TEXT_MODE

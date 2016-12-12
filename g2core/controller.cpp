@@ -95,9 +95,6 @@ void controller_init()
     cs.comm_mode = comm_mode;                       // restore parameters
     cs.fw_build = G2CORE_FIRMWARE_BUILD;            // set up identification
     cs.fw_version = G2CORE_FIRMWARE_VERSION;
-//    cs.hw_platform = G2CORE_HARDWARE_PLATFORM;
-    strncpy(cs.hw_platform, G2CORE_HARDWARE_PLATFORM, HARDWARE_STRING);
-    strncpy(cs.hw_version, G2CORE_HARDWARE_VERSION, HARDWARE_STRING);
 
     cs.controller_state = CONTROLLER_STARTUP;       // ready to run startup lines
     if (xio_connected()) {

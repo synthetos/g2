@@ -1,5 +1,6 @@
 /*
  * shopbotShield-pinout.h - board pinout specification
+ * For: /board/ArduinoDue
  * This file is part of the g2core project
  *
  * Copyright (c) 2013 - 2016 Robert Giseburt

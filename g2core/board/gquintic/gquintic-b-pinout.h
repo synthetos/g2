@@ -1,5 +1,6 @@
 /*
  * gquintic-a-pinout.h - board pinout specification
+ * For: /board/gQuintic
  * This file is part of the g2core project
  *
  * Copyright (c) 2016 Robert Giseburt

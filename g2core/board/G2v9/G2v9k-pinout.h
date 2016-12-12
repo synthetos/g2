@@ -1,5 +1,6 @@
 /*
  * g2v9k-pinout.h - board pinout specification
+ * For: /board/g2v9
  * This file is part of the g2core project
  *
  * Copyright (c) 2013 - 2016 Robert Giseburt

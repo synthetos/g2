@@ -1,5 +1,6 @@
 /*
  * sbv300-pinout.h - board pinout specification
+ * For: /board/sbv300
  * This file is part of the g2core project
  *
  * Copyright (c) 2013 - 2016 Robert Giseburt

@@ -1,5 +1,6 @@
 /*
- * motate_pin_assignments.h - pin assignments for the shopbot sbv300 boards
+ * motate_pin_assignments.h - pin assignments
+ * For: /board/sbv300
  * This file is part of the g2core project
  *
  * Copyright (c) 2013 - 2016 Robert Giseburt

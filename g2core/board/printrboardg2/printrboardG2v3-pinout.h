@@ -1,5 +1,6 @@
 /*
  * printrbaordG2v3-pinout.h - board pinout specification
+ * For: /board/printrboardg2
  * This file is part of the g2core project
  *
  * Copyright (c) 2013 - 2016 Robert Giseburt
