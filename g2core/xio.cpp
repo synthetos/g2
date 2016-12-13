@@ -363,8 +363,8 @@ struct xio_t {
         // We only do this second pass if this is not a CTRL-only read
         if (!checkForCtrlOnly(limit_flags)) {
             for (uint8_t dev=0; dev < _dev_count; dev++) {
-//                if (!DeviceWrappers[dev]->isActive())
-//                    continue;
+                if (!DeviceWrappers[dev]->isActive())
+                    continue;
 
                 ret_buffer = DeviceWrappers[dev]->readline(limit_flags, size);
 

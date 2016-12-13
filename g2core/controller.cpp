@@ -200,7 +200,7 @@ static stat_t _dispatch_control()
 static stat_t _dispatch_command()
 {
     if (cs.controller_state != CONTROLLER_PAUSED) {
-        devflags_t flags = DEV_IS_BOTH;
+        devflags_t flags = DEV_IS_BOTH | DEV_IS_MUTED; // expressly state we'll handle muted devices
         if ((!mp_planner_is_full()) && (cs.bufp = xio_readline(flags, cs.linelen)) != NULL) {
             _dispatch_kernel(flags);
         }
@@ -217,6 +217,9 @@ static void _dispatch_kernel(const devflags_t flags)
         nv_reset_nv_list();                   // get a fresh nvObj list
         nv_add_string((const char *)"msg", "lines from muted devices are ignored");
         nv_print_list(status, TEXT_NO_PRINT, JSON_RESPONSE_TO_MUTED_FORMAT);
+
+        // It's possible to let some stuff through, but that's not happening yet.
+        return;
     }
     
     while ((*cs.bufp == SPC) || (*cs.bufp == TAB)) {        // position past any leading whitespace
