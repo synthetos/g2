@@ -157,7 +157,7 @@ const cfgItem_t cfgArray[] = {
     { "ofs","ofsb",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul, (float *)&cs.null, 0 },   // B work offset
     { "ofs","ofsc",_f0, 3, cm_print_ofs, cm_get_ofs, set_nul, (float *)&cs.null, 0 },   // C work offset
 
-    { "hom","home",_f0, 0, cm_print_home,cm_get_home,cm_set_home,(float *)&cs.null,0 },// homing state, invoke homing cycle
+    { "hom","home",_f0, 0, cm_print_home,cm_get_home,cm_set_home,(float *)&cs.null,0 }, // homing state, invoke homing cycle
     { "hom","homx",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, 0 },   // X homed - Homing status group
     { "hom","homy",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, 0 },   // Y homed
     { "hom","homz",_f0, 0, cm_print_hom, cm_get_hom, set_nul, (float *)&cs.null, 0 },   // Z homed
@@ -196,72 +196,72 @@ const cfgItem_t cfgArray[] = {
 #endif
 
     // Motor parameters
-    { "1","1ma",_fip, 0, st_print_ma, get_ui8, set_ui8,     (float *)&st_cfg.mot[MOTOR_1].motor_map,      M1_MOTOR_MAP },
-    { "1","1sa",_fip, 3, st_print_sa, get_flt, st_set_sa,   (float *)&st_cfg.mot[MOTOR_1].step_angle,     M1_STEP_ANGLE },
+    { "1","1ma",_fip, 0, st_print_ma, st_get_ma, st_set_ma, (float *)&cs.null, M1_MOTOR_MAP },
+    { "1","1sa",_fip, 3, st_print_sa, st_get_sa, st_set_sa, (float *)&cs.null, M1_STEP_ANGLE },
     { "1","1tr",_fipc,4, st_print_tr, get_flt, st_set_tr,   (float *)&st_cfg.mot[MOTOR_1].travel_rev,     M1_TRAVEL_PER_REV },
     { "1","1mi",_fip, 0, st_print_mi, get_ui8, st_set_mi,   (float *)&st_cfg.mot[MOTOR_1].microsteps,     M1_MICROSTEPS },
     { "1","1su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_1].steps_per_unit, M1_STEPS_PER_UNIT },
     { "1","1po",_fip, 0, st_print_po, get_ui8, set_01,      (float *)&st_cfg.mot[MOTOR_1].polarity,       M1_POLARITY },
-    { "1","1pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null,                            M1_POWER_MODE },
+    { "1","1pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null, M1_POWER_MODE },
     { "1","1pl",_fip, 3, st_print_pl, get_flt, st_set_pl,   (float *)&st_cfg.mot[MOTOR_1].power_level,    M1_POWER_LEVEL },
 //  { "1","1pi",_fip, 3, st_print_pi, get_flt, st_set_pi,   (float *)&st_cfg.mot[MOTOR_1].power_idle,     M1_POWER_IDLE },
 //  { "1","1mt",_fip, 2, st_print_mt, get_flt, st_set_mt,   (float *)&st_cfg.mot[MOTOR_1].motor_timeout,  M1_MOTOR_TIMEOUT },
 #if (MOTORS >= 2)
-    { "2","2ma",_fip, 0, st_print_ma, get_ui8, set_ui8,     (float *)&st_cfg.mot[MOTOR_2].motor_map,      M2_MOTOR_MAP },
-    { "2","2sa",_fip, 3, st_print_sa, get_flt, st_set_sa,   (float *)&st_cfg.mot[MOTOR_2].step_angle,     M2_STEP_ANGLE },
+    { "2","2ma",_fip, 0, st_print_ma, st_get_ma, st_set_ma, (float *)&cs.null, M2_MOTOR_MAP },
+    { "2","2sa",_fip, 3, st_print_sa, st_get_sa, st_set_sa, (float *)&cs.null, M2_STEP_ANGLE },
     { "2","2tr",_fipc,4, st_print_tr, get_flt, st_set_tr,   (float *)&st_cfg.mot[MOTOR_2].travel_rev,     M2_TRAVEL_PER_REV },
     { "2","2mi",_fip, 0, st_print_mi, get_ui8, st_set_mi,   (float *)&st_cfg.mot[MOTOR_2].microsteps,     M2_MICROSTEPS },
     { "2","2su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_2].steps_per_unit, M2_STEPS_PER_UNIT },
     { "2","2po",_fip, 0, st_print_po, get_ui8, set_01,      (float *)&st_cfg.mot[MOTOR_2].polarity,       M2_POLARITY },
-    { "2","2pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null,                            M2_POWER_MODE },
+    { "2","2pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null, M2_POWER_MODE },
     { "2","2pl",_fip, 3, st_print_pl, get_flt, st_set_pl,   (float *)&st_cfg.mot[MOTOR_2].power_level,    M2_POWER_LEVEL},
 //  { "2","2pi",_fip, 3, st_print_pi, get_flt, st_set_pi,   (float *)&st_cfg.mot[MOTOR_2].power_idle,     M2_POWER_IDLE },
 //  { "2","2mt",_fip, 2, st_print_mt, get_flt, st_set_mt,   (float *)&st_cfg.mot[MOTOR_2].motor_timeout,  M2_MOTOR_TIMEOUT },
 #endif
 #if (MOTORS >= 3)
-    { "3","3ma",_fip, 0, st_print_ma, get_ui8, set_ui8,     (float *)&st_cfg.mot[MOTOR_3].motor_map,      M3_MOTOR_MAP },
-    { "3","3sa",_fip, 3, st_print_sa, get_flt, st_set_sa,   (float *)&st_cfg.mot[MOTOR_3].step_angle,     M3_STEP_ANGLE },
+    { "3","3ma",_fip, 0, st_print_ma, st_get_ma, st_set_ma, (float *)&cs.null, M3_MOTOR_MAP },
+    { "3","3sa",_fip, 3, st_print_sa, st_get_sa, st_set_sa, (float *)&cs.null, M3_STEP_ANGLE },
     { "3","3tr",_fipc,4, st_print_tr, get_flt, st_set_tr,   (float *)&st_cfg.mot[MOTOR_3].travel_rev,     M3_TRAVEL_PER_REV },
     { "3","3mi",_fip, 0, st_print_mi, get_ui8, st_set_mi,   (float *)&st_cfg.mot[MOTOR_3].microsteps,     M3_MICROSTEPS },
     { "3","3su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_3].steps_per_unit, M3_STEPS_PER_UNIT },
     { "3","3po",_fip, 0, st_print_po, get_ui8, set_01,      (float *)&st_cfg.mot[MOTOR_3].polarity,       M3_POLARITY },
-    { "3","3pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null,                            M3_POWER_MODE },
+    { "3","3pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null, M3_POWER_MODE },
     { "3","3pl",_fip, 3, st_print_pl, get_flt, st_set_pl,   (float *)&st_cfg.mot[MOTOR_3].power_level,    M3_POWER_LEVEL },
 //  { "3","3pi",_fip, 3, st_print_pi, get_flt, st_set_pi,   (float *)&st_cfg.mot[MOTOR_3].power_idle,     M3_POWER_IDLE },
 //  { "3","3mt",_fip, 2, st_print_mt, get_flt, st_set_mt,   (float *)&st_cfg.mot[MOTOR_3].motor_timeout,  M3_MOTOR_TIMEOUT },
 #endif
 #if (MOTORS >= 4)
-    { "4","4ma",_fip, 0, st_print_ma, get_ui8, set_ui8,     (float *)&st_cfg.mot[MOTOR_4].motor_map,      M4_MOTOR_MAP },
-    { "4","4sa",_fip, 3, st_print_sa, get_flt, st_set_sa,   (float *)&st_cfg.mot[MOTOR_4].step_angle,     M4_STEP_ANGLE },
+    { "4","4ma",_fip, 0, st_print_ma, st_get_ma, st_set_ma, (float *)&cs.null, M4_MOTOR_MAP },
+    { "4","4sa",_fip, 3, st_print_sa, st_get_sa, st_set_sa, (float *)&cs.null, M4_STEP_ANGLE },
     { "4","4tr",_fipc,4, st_print_tr, get_flt, st_set_tr,   (float *)&st_cfg.mot[MOTOR_4].travel_rev,     M4_TRAVEL_PER_REV },
     { "4","4mi",_fip, 0, st_print_mi, get_ui8, st_set_mi,   (float *)&st_cfg.mot[MOTOR_4].microsteps,     M4_MICROSTEPS },
     { "4","4su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_4].steps_per_unit, M4_STEPS_PER_UNIT },
     { "4","4po",_fip, 0, st_print_po, get_ui8, set_01,      (float *)&st_cfg.mot[MOTOR_4].polarity,       M4_POLARITY },
-    { "4","4pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null,                            M4_POWER_MODE },
+    { "4","4pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null, M4_POWER_MODE },
     { "4","4pl",_fip, 3, st_print_pl, get_flt, st_set_pl,   (float *)&st_cfg.mot[MOTOR_4].power_level,    M4_POWER_LEVEL },
 //  { "4","4pi",_fip, 3, st_print_pi, get_flt, st_set_pi,   (float *)&st_cfg.mot[MOTOR_4].power_idle,     M4_POWER_IDLE },
 //  { "4","4mt",_fip, 2, st_print_mt, get_flt, st_set_mt,   (float *)&st_cfg.mot[MOTOR_4].motor_timeout,  M4_MOTOR_TIMEOUT },
 #endif
 #if (MOTORS >= 5)
-    { "5","5ma",_fip, 0, st_print_ma, get_ui8, set_ui8,     (float *)&st_cfg.mot[MOTOR_5].motor_map,      M5_MOTOR_MAP },
-    { "5","5sa",_fip, 3, st_print_sa, get_flt, st_set_sa,   (float *)&st_cfg.mot[MOTOR_5].step_angle,     M5_STEP_ANGLE },
+    { "5","5ma",_fip, 0, st_print_ma, st_get_ma, st_set_ma, (float *)&cs.null, M5_MOTOR_MAP },
+    { "5","5sa",_fip, 3, st_print_sa, st_get_sa, st_set_sa, (float *)&cs.null, M5_STEP_ANGLE },
     { "5","5tr",_fipc,4, st_print_tr, get_flt, st_set_tr,   (float *)&st_cfg.mot[MOTOR_5].travel_rev,     M5_TRAVEL_PER_REV },
     { "5","5mi",_fip, 0, st_print_mi, get_ui8, st_set_mi,   (float *)&st_cfg.mot[MOTOR_5].microsteps,     M5_MICROSTEPS },
     { "5","5su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_5].steps_per_unit, M5_STEPS_PER_UNIT },
     { "5","5po",_fip, 0, st_print_po, get_ui8, set_01,      (float *)&st_cfg.mot[MOTOR_5].polarity,       M5_POLARITY },
-    { "5","5pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null,                            M5_POWER_MODE },
+    { "5","5pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null, M5_POWER_MODE },
     { "5","5pl",_fip, 3, st_print_pl, get_flt, st_set_pl,   (float *)&st_cfg.mot[MOTOR_5].power_level,    M5_POWER_LEVEL },
 //  { "5","5pi",_fip, 3, st_print_pi, get_flt, st_set_pi,   (float *)&st_cfg.mot[MOTOR_5].power_idle,     M5_POWER_IDLE },
 //  { "5","5mt",_fip, 2, st_print_mt, get_flt, st_set_mt,   (float *)&st_cfg.mot[MOTOR_5].motor_timeout,  M5_MOTOR_TIMEOUT },
 #endif
 #if (MOTORS >= 6)
-    { "6","6ma",_fip, 0, st_print_ma, get_ui8, set_ui8,     (float *)&st_cfg.mot[MOTOR_6].motor_map,      M6_MOTOR_MAP },
-    { "6","6sa",_fip, 3, st_print_sa, get_flt, st_set_sa,   (float *)&st_cfg.mot[MOTOR_6].step_angle,     M6_STEP_ANGLE },
+    { "6","6ma",_fip, 0, st_print_ma, st_get_ma, st_set_ma, (float *)&cs.null, M6_MOTOR_MAP },
+    { "6","6sa",_fip, 3, st_print_sa, st_get_sa, st_set_sa, (float *)&cs.null, M6_STEP_ANGLE },
     { "6","6tr",_fipc,4, st_print_tr, get_flt, st_set_tr,   (float *)&st_cfg.mot[MOTOR_6].travel_rev,     M6_TRAVEL_PER_REV },
     { "6","6mi",_fip, 0, st_print_mi, get_ui8, st_set_mi,   (float *)&st_cfg.mot[MOTOR_6].microsteps,     M6_MICROSTEPS },
     { "6","6su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_6].steps_per_unit, M6_STEPS_PER_UNIT },
     { "6","6po",_fip, 0, st_print_po, get_ui8, set_01,      (float *)&st_cfg.mot[MOTOR_6].polarity,       M6_POLARITY },
-    { "6","6pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null,                            M6_POWER_MODE },
+    { "6","6pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null, M6_POWER_MODE },
     { "6","6pl",_fip, 3, st_print_pl, get_flt, st_set_pl,   (float *)&st_cfg.mot[MOTOR_6].power_level,    M6_POWER_LEVEL },
 //  { "6","6pi",_fip, 3, st_print_pi, get_flt, st_set_pi,   (float *)&st_cfg.mot[MOTOR_6].power_idle,     M6_POWER_IDLE },
 //  { "6","6mt",_fip, 2, st_print_mt, get_flt, st_set_mt,   (float *)&st_cfg.mot[MOTOR_6].motor_timeout,  M6_MOTOR_TIMEOUT },
@@ -430,19 +430,19 @@ const cfgItem_t cfgArray[] = {
 #endif
 
     // digital output configs
-    { "do1", "do1mo", _fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[0].mode,     DO1_MODE },
-    { "do2", "do2mo", _fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[1].mode,     DO2_MODE },
-    { "do3", "do3mo", _fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[2].mode,     DO3_MODE },
-    { "do4", "do4mo", _fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[3].mode,     DO4_MODE },
-    { "do5", "do5mo", _fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[4].mode,     DO5_MODE },
-    { "do6", "do6mo", _fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[5].mode,     DO6_MODE },
-    { "do7", "do7mo", _fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[6].mode,     DO7_MODE },
-    { "do8", "do8mo", _fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[7].mode,     DO8_MODE },
-    { "do9", "do9mo", _fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[8].mode,     DO9_MODE },
-    { "do10","do10mo",_fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[9].mode,     DO10_MODE },
-    { "do11","do11mo",_fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[10].mode,    DO11_MODE },
-    { "do12","do12mo",_fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[11].mode,    DO12_MODE },
-    { "do13","do13mo",_fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[12].mode,    DO13_MODE },
+    { "do1", "do1mo", _fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[0].mode,  DO1_MODE },
+    { "do2", "do2mo", _fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[1].mode,  DO2_MODE },
+    { "do3", "do3mo", _fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[2].mode,  DO3_MODE },
+    { "do4", "do4mo", _fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[3].mode,  DO4_MODE },
+    { "do5", "do5mo", _fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[4].mode,  DO5_MODE },
+    { "do6", "do6mo", _fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[5].mode,  DO6_MODE },
+    { "do7", "do7mo", _fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[6].mode,  DO7_MODE },
+    { "do8", "do8mo", _fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[7].mode,  DO8_MODE },
+    { "do9", "do9mo", _fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[8].mode,  DO9_MODE },
+    { "do10","do10mo",_fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[9].mode,  DO10_MODE },
+    { "do11","do11mo",_fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[10].mode, DO11_MODE },
+    { "do12","do12mo",_fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[11].mode, DO12_MODE },
+    { "do13","do13mo",_fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[12].mode, DO13_MODE },
 
     // Digital output state readers (default to non-active)
     { "out","out1",  _f0, 2, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
@@ -459,16 +459,16 @@ const cfgItem_t cfgArray[] = {
     { "out","out12", _f0, 2, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
 
     // PWM settings
-    { "p1","p1frq",_fip, 0, pwm_print_p1frq, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].frequency,     P1_PWM_FREQUENCY },
-    { "p1","p1csl",_fip, 0, pwm_print_p1csl, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].cw_speed_lo,   P1_CW_SPEED_LO },
-    { "p1","p1csh",_fip, 0, pwm_print_p1csh, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].cw_speed_hi,   P1_CW_SPEED_HI },
-    { "p1","p1cpl",_fip, 3, pwm_print_p1cpl, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].cw_phase_lo,   P1_CW_PHASE_LO },
-    { "p1","p1cph",_fip, 3, pwm_print_p1cph, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].cw_phase_hi,   P1_CW_PHASE_HI },
-    { "p1","p1wsl",_fip, 0, pwm_print_p1wsl, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].ccw_speed_lo,  P1_CCW_SPEED_LO },
-    { "p1","p1wsh",_fip, 0, pwm_print_p1wsh, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].ccw_speed_hi,  P1_CCW_SPEED_HI },
-    { "p1","p1wpl",_fip, 3, pwm_print_p1wpl, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].ccw_phase_lo,  P1_CCW_PHASE_LO },
-    { "p1","p1wph",_fip, 3, pwm_print_p1wph, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].ccw_phase_hi,  P1_CCW_PHASE_HI },
-    { "p1","p1pof",_fip, 3, pwm_print_p1pof, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].phase_off,     P1_PWM_PHASE_OFF },
+    { "p1","p1frq",_fip, 0, pwm_print_p1frq, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].frequency,    P1_PWM_FREQUENCY },
+    { "p1","p1csl",_fip, 0, pwm_print_p1csl, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].cw_speed_lo,  P1_CW_SPEED_LO },
+    { "p1","p1csh",_fip, 0, pwm_print_p1csh, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].cw_speed_hi,  P1_CW_SPEED_HI },
+    { "p1","p1cpl",_fip, 3, pwm_print_p1cpl, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].cw_phase_lo,  P1_CW_PHASE_LO },
+    { "p1","p1cph",_fip, 3, pwm_print_p1cph, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].cw_phase_hi,  P1_CW_PHASE_HI },
+    { "p1","p1wsl",_fip, 0, pwm_print_p1wsl, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].ccw_speed_lo, P1_CCW_SPEED_LO },
+    { "p1","p1wsh",_fip, 0, pwm_print_p1wsh, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].ccw_speed_hi, P1_CCW_SPEED_HI },
+    { "p1","p1wpl",_fip, 3, pwm_print_p1wpl, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].ccw_phase_lo, P1_CCW_PHASE_LO },
+    { "p1","p1wph",_fip, 3, pwm_print_p1wph, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].ccw_phase_hi, P1_CCW_PHASE_HI },
+    { "p1","p1pof",_fip, 3, pwm_print_p1pof, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].phase_off,    P1_PWM_PHASE_OFF },
 
     // temperature configs - pid active values (read-only)
     // NOTICE: If you change these PID group keys, you MUST change the get/set functions too!!
@@ -612,7 +612,7 @@ const cfgItem_t cfgArray[] = {
     { "sys","fro", _fipn,3, cm_print_fro, cm_get_fro, cm_set_fro, (float *)&cs.null, FEED_OVERRIDE_FACTOR},
     { "sys","troe",_fipn,0, cm_print_troe,cm_get_troe,cm_get_troe,(float *)&cs.null, TRAVERSE_OVERRIDE_ENABLE},
     { "sys","tro", _fipn,3, cm_print_tro, cm_get_tro, cm_set_tro, (float *)&cs.null, TRAVERSE_OVERRIDE_FACTOR},
-    { "sys","mt",  _fipn,2, st_print_mt,  get_flt,    st_set_mt,  (float *)&st_cfg.motor_power_timeout, MOTOR_POWER_TIMEOUT},
+    { "sys","mt",  _fipn,2, st_print_mt,  st_get_mt,  st_set_mt,  (float *)&st_cfg.motor_power_timeout, MOTOR_POWER_TIMEOUT},
     { "",   "me",  _f0,  0, st_print_me,  get_nul,    st_set_me,  (float *)&cs.null, 0 },    // SET to enable motors
     { "",   "md",  _f0,  0, st_print_md,  get_nul,    st_set_md,  (float *)&cs.null, 0 },    // SET to disable motors
 //    { "sys","m48e",_fipn,0, cm_print_m48e,get_ui8,   set_01,   (float *)&cm->gmx.m48_enable, 0 },      // M48/M49 feedrate & spindle override enable

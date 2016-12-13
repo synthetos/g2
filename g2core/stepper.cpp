@@ -815,7 +815,7 @@ static void _set_hw_microsteps(const uint8_t motor, const uint8_t microsteps)
  * _get_motor() - helper to return motor number as an index or -1 if na
  */
 
-static int8_t _get_motor(const index_t index)
+static int8_t _motor(const index_t index)
 {
     char *ptr;
     char motors[] = {"123456"};
@@ -835,12 +835,16 @@ static int8_t _get_motor(const index_t index)
 
 static void _set_motor_steps_per_unit(nvObj_t *nv)
 {
-    uint8_t m = _get_motor(nv->index);
+    uint8_t m = _motor(nv->index);
     st_cfg.mot[m].units_per_step = (st_cfg.mot[m].travel_rev * st_cfg.mot[m].step_angle) / (360 * st_cfg.mot[m].microsteps);
     st_cfg.mot[m].steps_per_unit = 1/st_cfg.mot[m].units_per_step;
 }
 
 /* PER-MOTOR FUNCTIONS
+ *
+ * st_get_ma() - get motor axis mapping
+ * st_set_ma() - set motor axis mapping
+ * st_get_sa() - get motor step angle
  * st_set_sa() - set motor step angle
  * st_set_tr() - set travel per motor revolution
  * st_set_mi() - set motor microsteps
@@ -848,6 +852,11 @@ static void _set_motor_steps_per_unit(nvObj_t *nv)
  * st_get_pm() - get motor power mode
  * st_set_pl() - set motor power level
  */
+
+stat_t st_get_ma(nvObj_t *nv) { return(get_int(nv, st_cfg.mot[_motor(nv->index)].motor_map)); }
+stat_t st_set_ma(nvObj_t *nv) { return(set_int(nv, st_cfg.mot[_motor(nv->index)].motor_map, 0, AXES)); }
+
+stat_t st_get_sa(nvObj_t *nv) { return(get_int(nv, st_cfg.mot[_motor(nv->index)].step_angle)); }
 
 stat_t st_set_sa(nvObj_t *nv)            // motor step angle
 {
@@ -872,13 +881,13 @@ stat_t st_set_mi(nvObj_t *nv)            // motor microsteps
     }
     set_ui8(nv);                        // set it anyway, even if it's unsupported
     _set_motor_steps_per_unit(nv);
-    _set_hw_microsteps(_get_motor(nv->index), (uint8_t)nv->value);
+    _set_hw_microsteps(_motor(nv->index), (uint8_t)nv->value);
     return (STAT_OK);
 }
 
 stat_t st_set_su(nvObj_t *nv)			// motor steps per unit (direct)
 {
-    uint8_t m = _get_motor(nv->index);
+    uint8_t m = _motor(nv->index);
     // Do the unit conversion here (rather than using set_flu) because it's a reciprocal value
     if ((m <= 3) && (cm_get_units_mode(MODEL) == INCHES)) {
         nv->value *= INCHES_PER_MM;
@@ -904,7 +913,7 @@ stat_t st_set_pm(nvObj_t *nv)            // set motor power mode
 {
     if (nv->value >= MOTOR_POWER_MODE_MAX_VALUE) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
 
-    uint8_t motor = _get_motor(nv->index);
+    uint8_t motor = _motor(nv->index);
     if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
 
     Motors[motor]->setPowerMode((stPowerMode)nv->value);
@@ -917,7 +926,7 @@ stat_t st_get_pm(nvObj_t *nv)            // get motor power mode
 {
     if (nv->value >= MOTOR_POWER_MODE_MAX_VALUE) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
 
-    uint8_t motor = _get_motor(nv->index);
+    uint8_t motor = _motor(nv->index);
     if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
 
     nv->value = (float)Motors[motor]->getPowerMode();
@@ -939,7 +948,7 @@ stat_t st_set_pl(nvObj_t *nv)    // motor power level
     }
     set_flt(nv);    // set power_setting value in the motor config struct (st)
 
-    uint8_t motor = _get_motor(nv->index);
+    uint8_t motor = _motor(nv->index);
     st_cfg.mot[motor].power_level_scaled = (nv->value * POWER_LEVEL_SCALE_FACTOR);
     st_run.mot[motor].power_level_dynamic = (st_cfg.mot[motor].power_level_scaled);
     Motors[motor]->setPowerLevel(st_cfg.mot[motor].power_level_scaled);
@@ -968,6 +977,7 @@ stat_t st_get_pwr(nvObj_t *nv)
 
 /* GLOBAL FUNCTIONS (SYSTEM LEVEL)
  *
+ * st_get_mt() - get motor timeout in seconds
  * st_set_mt() - set motor timeout in seconds
  * st_set_md() - disable motor power
  * st_set_me() - enable motor power
@@ -977,12 +987,17 @@ stat_t st_get_pwr(nvObj_t *nv)
  * Setting a value from 1 to MOTORS will enable or disable that motor only
  */
 
+stat_t st_get_mt(nvObj_t *nv) { return(get_float(nv, st_cfg.motor_power_timeout)); }
+stat_t st_set_mt(nvObj_t *nv) { return(set_float_range(nv, st_cfg.motor_power_timeout,
+                                                           MOTOR_TIMEOUT_SECONDS_MAX,
+                                                           MOTOR_TIMEOUT_SECONDS_MIN)); }
+/*
 stat_t st_set_mt(nvObj_t *nv)
 {
     st_cfg.motor_power_timeout = min(MOTOR_TIMEOUT_SECONDS_MAX, max(nv->value, MOTOR_TIMEOUT_SECONDS_MIN));
     return (STAT_OK);
 }
-
+*/
 stat_t st_set_me(nvObj_t *nv)    // Make sure this function is not part of initialization --> f00
 {
     for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {

@@ -462,7 +462,7 @@ static stat_t _input_set_helper(nvObj_t *nv, const int8_t lower_bound, const int
     if ((nv->value < lower_bound) || (nv->value >= upper_bound)) {
         return (STAT_INPUT_VALUE_RANGE_ERROR);
     }
-    set_ui8(nv);        // will this work in -1 is a valid value?
+    set_ui8(nv);        // will this work if -1 is a valid value?
     if (cm_get_machine_state() != MACHINE_INITIALIZING) {
         inputs_reset();
     }
