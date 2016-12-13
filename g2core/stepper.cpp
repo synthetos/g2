@@ -846,40 +846,49 @@ static void _set_motor_steps_per_unit(nvObj_t *nv)
  * st_set_ma() - set motor axis mapping
  * st_get_sa() - get motor step angle
  * st_set_sa() - set motor step angle
+ * st_get_tr() - get travel per motor revolution
  * st_set_tr() - set travel per motor revolution
+ * st_get_mi() - get motor microsteps
  * st_set_mi() - set motor microsteps
+ * 
  * st_set_pm() - set motor power mode
  * st_get_pm() - get motor power mode
  * st_set_pl() - set motor power level
  */
 
+// motor axis mapping
 stat_t st_get_ma(nvObj_t *nv) { return(get_int(nv, st_cfg.mot[_motor(nv->index)].motor_map)); }
 stat_t st_set_ma(nvObj_t *nv) { return(set_int(nv, st_cfg.mot[_motor(nv->index)].motor_map, 0, AXES)); }
 
-stat_t st_get_sa(nvObj_t *nv) { return(get_int(nv, st_cfg.mot[_motor(nv->index)].step_angle)); }
-
-stat_t st_set_sa(nvObj_t *nv)            // motor step angle
+// step angle
+stat_t st_get_sa(nvObj_t *nv) { return(get_float(nv, st_cfg.mot[_motor(nv->index)].step_angle)); }
+stat_t st_set_sa(nvObj_t *nv)
 {
-    set_flt(nv);
+    ritorno(set_float_range(nv, st_cfg.mot[_motor(nv->index)].step_angle, 0.001, 360));
     _set_motor_steps_per_unit(nv);
     return(STAT_OK);
 }
 
-stat_t st_set_tr(nvObj_t *nv)            // motor travel per revolution
+// travel per revolution
+stat_t st_get_tr(nvObj_t *nv) { return(get_float(nv, st_cfg.mot[_motor(nv->index)].travel_rev)); }
+stat_t st_set_tr(nvObj_t *nv)
 {
-    set_flu(nv);
+    ritorno(set_float_range(nv, st_cfg.mot[_motor(nv->index)].travel_rev, 0.0001, 1000000));
     _set_motor_steps_per_unit(nv);
     return(STAT_OK);
 }
 
-stat_t st_set_mi(nvObj_t *nv)            // motor microsteps
+// microsteps
+stat_t st_get_mi(nvObj_t *nv) { return(get_int(nv, st_cfg.mot[_motor(nv->index)].microsteps)); }
+stat_t st_set_mi(nvObj_t *nv)
 {
     uint8_t mi = (uint8_t)nv->value;
 
     if ((mi != 1) && (mi != 2) && (mi != 4) && (mi != 8) && (mi != 16) && (mi != 32)) {
         nv_add_conditional_message((const char *)"*** WARNING *** Setting non-standard microstep value");
     }
-    set_ui8(nv);                        // set it anyway, even if it's unsupported
+    // set it anyway, even if it's unsupported
+    ritorno(set_int(nv, st_cfg.mot[_motor(nv->index)].microsteps, 1, 255));
     _set_motor_steps_per_unit(nv);
     _set_hw_microsteps(_motor(nv->index), (uint8_t)nv->value);
     return (STAT_OK);
