@@ -72,7 +72,7 @@ static stat_t _sync_to_planner(void);
 static stat_t _sync_to_tx_buffer(void);
 static stat_t _dispatch_command(void);
 static stat_t _dispatch_control(void);
-static void _dispatch_kernel(void);
+static void _dispatch_kernel(const devflags_t flags);
 static stat_t _controller_state(void);          // manage controller state transitions
 
 static Motate::OutputPin<Motate::kOutputSAFE_PinNumber> safe_pin;
@@ -191,7 +191,7 @@ static stat_t _dispatch_control()
     if (cs.controller_state != CONTROLLER_PAUSED) {
         devflags_t flags = DEV_IS_CTRL;
         if ((cs.bufp = xio_readline(flags, cs.linelen)) != NULL) {
-            _dispatch_kernel();
+            _dispatch_kernel(flags);
         }
     }
     return (STAT_OK);
@@ -200,17 +200,27 @@ static stat_t _dispatch_control()
 static stat_t _dispatch_command()
 {
     if (cs.controller_state != CONTROLLER_PAUSED) {
-        devflags_t flags = DEV_IS_BOTH;
+        devflags_t flags = DEV_IS_BOTH | DEV_IS_MUTED; // expressly state we'll handle muted devices
         if ((!mp_planner_is_full()) && (cs.bufp = xio_readline(flags, cs.linelen)) != NULL) {
-            _dispatch_kernel();
+            _dispatch_kernel(flags);
         }
     }
     return (STAT_OK);
 }
 
-static void _dispatch_kernel()
+static void _dispatch_kernel(const devflags_t flags)
 {
     stat_t status;
+
+    if (flags & DEV_IS_MUTED) {
+        status = STAT_INPUT_FROM_MUTED_CHANNEL_ERROR;
+        nv_reset_nv_list();                   // get a fresh nvObj list
+        nv_add_string((const char *)"msg", "lines from muted devices are ignored");
+        nv_print_list(status, TEXT_NO_PRINT, JSON_RESPONSE_TO_MUTED_FORMAT);
+
+        // It's possible to let some stuff through, but that's not happening yet.
+        return;
+    }
     
     while ((*cs.bufp == SPC) || (*cs.bufp == TAB)) {        // position past any leading whitespace
         cs.bufp++;
@@ -296,6 +306,23 @@ void controller_set_connected(bool is_connected) {
         cs.controller_state = CONTROLLER_CONNECTED; // we JUST connected
     } else {  // we just disconnected from the last device, we'll expect a banner again
         cs.controller_state = CONTROLLER_NOT_CONNECTED;
+    }
+}
+
+/*
+ * controller_set_muted(bool) - hook for xio to tell the controller that we
+ * have/don't have one or more muted devices.
+ */
+
+void controller_set_muted(bool is_muted) {
+    // TODO: care about text mode
+    if (is_muted) {
+        // one channel just got muted.
+        const bool only_to_muted = true;
+        xio_writeline("{\"muted\":true}\n", only_to_muted);
+    } else {
+        // one channel just got unmuted, announce it (except to the muted)
+        xio_writeline("{\"muted\":false}\n");
     }
 }
 

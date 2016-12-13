@@ -499,7 +499,9 @@ void json_print_list(stat_t status, uint8_t flags)
     switch (flags) {
         case JSON_NO_PRINT: break;
         case JSON_OBJECT_FORMAT: { json_print_object(nv_body); break; }
-        case JSON_RESPONSE_FORMAT: { json_print_response(status); break; }
+        case JSON_RESPONSE_FORMAT:
+        case JSON_RESPONSE_TO_MUTED_FORMAT:
+            { json_print_response(status, flags == JSON_RESPONSE_TO_MUTED_FORMAT); break; }
     }
 }
 
@@ -522,7 +524,7 @@ void json_print_list(stat_t status, uint8_t flags)
  *  on all the (non-silent) responses.
  */
 
-void json_print_response(uint8_t status)
+void json_print_response(uint8_t status, const bool only_to_muted /*= false*/)
 {
     if (js.json_verbosity == JV_SILENT) {                   // silent means no responses
         return;
@@ -599,7 +601,7 @@ void json_print_response(uint8_t status)
 
     // serialize the JSON response and print it if there were no errors
     if (json_serialize(nv_header, cs.out_buf, sizeof(cs.out_buf)) >= 0) {
-        xio_writeline(cs.out_buf);
+        xio_writeline(cs.out_buf, only_to_muted);
     }
 }
 

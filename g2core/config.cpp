@@ -692,6 +692,7 @@ nvObj_t *nv_add_conditional_message(const char *string)    // conditionally add 
  *  Inputs:
  *    json_flags = JSON_OBJECT_FORMAT - print just the body w/o header or footer
  *    json_flags = JSON_RESPONSE_FORMAT - print a full "r" object with footer
+ *    json_flags = JSON_RESPONSE_TO_MUTED_FORMAT - JSON_RESPONSE_FORMAT, but only to muted channels
  *
  *    text_flags = TEXT_INLINE_PAIRS - print text as name/value pairs on a single line
  *    text_flags = TEXT_INLINE_VALUES - print text as comma separated values on a single line

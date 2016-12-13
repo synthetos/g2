@@ -84,6 +84,7 @@ extern controller_t cs;                 // controller state structure
 void controller_init(void);
 void controller_run(void);
 void controller_set_connected(bool is_connected);
+void controller_set_muted(bool is_muted);
 bool controller_parse_control(char *p);
 
 #endif // End of include guard: CONTROLLER_H_ONCE
