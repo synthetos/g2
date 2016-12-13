@@ -204,7 +204,7 @@ char *get_status_message(stat_t status);
 #define STAT_MAX_DEPTH_EXCEEDED 115             // JSON exceeded maximum nesting depth
 #define STAT_VALUE_TYPE_ERROR 116               // JSON value does not agree with variable type
 
-#define STAT_ERROR_117 117
+#define STAT_ERROR_DEVICE_NOT_ACTIVE 117        // Device cannot receive commands at this time
 #define STAT_ERROR_118 118
 #define STAT_ERROR_119 119
 
@@ -501,7 +501,7 @@ static const char stat_113[] = "JSON string too long";
 static const char stat_114[] = "JSON txt fields cannot be nested";
 static const char stat_115[] = "JSON maximum nesting depth exceeded";
 static const char stat_116[] = "JSON value does not agree with variable type";
-static const char stat_117[] = "117";
+static const char stat_117[] = "Device not active";
 static const char stat_118[] = "118";
 static const char stat_119[] = "119";
 

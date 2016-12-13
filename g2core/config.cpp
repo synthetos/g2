@@ -239,7 +239,8 @@ stat_t get_flt(nvObj_t *nv)
 }
 
 /* Generic sets()
- *  set_nul()  - set nothing
+ *  set_noop() - set nothing and return OK
+ *  set_nul()  - set nothing and return READ_ONLY error
  *  set_ui8()  - set value as 8 bit uint8_t value
  *  set_int8() - set value as an 8 bit int8_t value
  *  set_01()   - set a 0 or 1 uint8_t value with validation
@@ -250,11 +251,17 @@ stat_t get_flt(nvObj_t *nv)
  *  set_flt()  - set value as float
  */
 
+stat_t set_noop(nvObj_t *nv) {
+    nv->valuetype = TYPE_NULL;
+    return (STAT_OK);                       // hack until JSON is refactored
+}
+
 stat_t set_nul(nvObj_t *nv) {
     nv->valuetype = TYPE_NULL;
     return (STAT_PARAMETER_IS_READ_ONLY);   // this is what it should be
 //    return (STAT_OK);                       // hack until JSON is refactored
 }
+
 stat_t set_ui8(nvObj_t *nv)
 {
     *((uint8_t *)GET_TABLE_WORD(target)) = nv->value;

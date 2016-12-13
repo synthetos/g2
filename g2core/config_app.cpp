@@ -198,8 +198,8 @@ const cfgItem_t cfgArray[] = {
     // Motor parameters
     { "1","1ma",_fip, 0, st_print_ma, st_get_ma, st_set_ma, (float *)&cs.null, M1_MOTOR_MAP },
     { "1","1sa",_fip, 3, st_print_sa, st_get_sa, st_set_sa, (float *)&cs.null, M1_STEP_ANGLE },
-    { "1","1tr",_fipc,4, st_print_tr, st_get_tr, st_set_tr, (float *)&cs.null,     M1_TRAVEL_PER_REV },
-    { "1","1mi",_fip, 0, st_print_mi, st_get_mi, st_set_mi, (float *)&cs.null,     M1_MICROSTEPS },
+    { "1","1tr",_fipc,4, st_print_tr, st_get_tr, st_set_tr, (float *)&cs.null, M1_TRAVEL_PER_REV },
+    { "1","1mi",_fip, 0, st_print_mi, st_get_mi, st_set_mi, (float *)&cs.null, M1_MICROSTEPS },
     { "1","1su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_1].steps_per_unit, M1_STEPS_PER_UNIT },
     { "1","1po",_fip, 0, st_print_po, get_ui8, set_01,      (float *)&st_cfg.mot[MOTOR_1].polarity,       M1_POLARITY },
     { "1","1pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null, M1_POWER_MODE },
@@ -655,22 +655,22 @@ const cfgItem_t cfgArray[] = {
     { "",   "gc",  _f0,   0, tx_print_nul, gc_get_gc,gc_run_gc,(float *)&cs.null, 0 },              // gcode block - must be last in this group
 
     // Actions and Reports
-    { "", "sr",  _f0, 0, sr_print_sr,   sr_get,    sr_set,    (float *)&cs.null, 0 },    // request and set status reports
-    { "", "qr",  _f0, 0, qr_print_qr,   qr_get,    set_nul,   (float *)&cs.null, 0 },    // get queue value - planner buffers available
-    { "", "qi",  _f0, 0, qr_print_qi,   qi_get,    set_nul,   (float *)&cs.null, 0 },    // get queue value - buffers added to queue
-    { "", "qo",  _f0, 0, qr_print_qo,   qo_get,    set_nul,   (float *)&cs.null, 0 },    // get queue value - buffers removed from queue
-    { "", "er",  _f0, 0, tx_print_nul,  rpt_er,    set_nul,   (float *)&cs.null, 0 },    // get bogus exception report for testing
-    { "", "qf",  _f0, 0, tx_print_nul,  get_nul,   cm_run_qf, (float *)&cs.null, 0 },    // SET to invoke queue flush
-    { "", "rx",  _f0, 0, tx_print_int,  get_rx,    set_nul,   (float *)&cs.null, 0 },    // get RX buffer bytes or packets
-    { "", "msg", _f0, 0, tx_print_str,  get_nul,   set_nul,   (float *)&cs.null, 0 },    // string for generic messages
-    { "", "alarm",_f0,0, tx_print_nul,  cm_alrm,   cm_alrm,   (float *)&cs.null, 0 },    // trigger alarm
-    { "", "panic",_f0,0, tx_print_nul,  cm_pnic,   cm_pnic,   (float *)&cs.null, 0 },    // trigger panic
-    { "", "shutd",_f0,0, tx_print_nul,  cm_shutd,  cm_shutd,  (float *)&cs.null, 0 },    // trigger shutdown
-    { "", "clear",_f0,0, tx_print_nul,  cm_clr,    cm_clr,    (float *)&cs.null, 0 },    // GET "clear" to clear alarm state
-    { "", "clr",  _f0,0, tx_print_nul,  cm_clr,    cm_clr,    (float *)&cs.null, 0 },    // synonym for "clear"
-    { "", "tick", _f0,0, tx_print_int,  get_tick,  set_nul,   (float *)&cs.null, 0 },    // get system time tic
-    { "", "tram", _f0,0, cm_print_tram, cm_get_tram,cm_set_tram, (float *)&cs.null, 0 },// SET to attempt setting rotation matrix from probes
-    { "", "defa",_f0, 0, tx_print_nul,  help_defa, set_defaults,(float *)&cs.null,0 },   // set/print defaults / help screen
+    { "", "sr",  _f0, 0, sr_print_sr,   sr_get,    sr_set,    (float *)&cs.null, 0 },   // request and set status reports
+    { "", "qr",  _f0, 0, qr_print_qr,   qr_get,    set_nul,   (float *)&cs.null, 0 },   // get queue value - planner buffers available
+    { "", "qi",  _f0, 0, qr_print_qi,   qi_get,    set_nul,   (float *)&cs.null, 0 },   // get queue value - buffers added to queue
+    { "", "qo",  _f0, 0, qr_print_qo,   qo_get,    set_nul,   (float *)&cs.null, 0 },   // get queue value - buffers removed from queue
+    { "", "er",  _f0, 0, tx_print_nul,  rpt_er,    set_nul,   (float *)&cs.null, 0 },   // get bogus exception report for testing
+    { "", "qf",  _f0, 0, tx_print_nul,  get_nul,   cm_run_qf, (float *)&cs.null, 0 },   // SET to invoke queue flush
+    { "", "rx",  _f0, 0, tx_print_int,  get_rx,    set_nul,   (float *)&cs.null, 0 },   // get RX buffer bytes or packets
+    { "", "msg", _f0, 0, tx_print_str,  get_nul,   set_noop,  (float *)&cs.null, 0 },   // no operation on messages
+    { "", "alarm",_f0,0, tx_print_nul,  cm_alrm,   cm_alrm,   (float *)&cs.null, 0 },   // trigger alarm
+    { "", "panic",_f0,0, tx_print_nul,  cm_pnic,   cm_pnic,   (float *)&cs.null, 0 },   // trigger panic
+    { "", "shutd",_f0,0, tx_print_nul,  cm_shutd,  cm_shutd,  (float *)&cs.null, 0 },   // trigger shutdown
+    { "", "clear",_f0,0, tx_print_nul,  cm_clr,    cm_clr,    (float *)&cs.null, 0 },   // GET "clear" to clear alarm state
+    { "", "clr",  _f0,0, tx_print_nul,  cm_clr,    cm_clr,    (float *)&cs.null, 0 },   // synonym for "clear"
+    { "", "tick", _f0,0, tx_print_int,  get_tick,  set_nul,   (float *)&cs.null, 0 },   // get system time tic
+    { "", "tram", _f0,0, cm_print_tram,cm_get_tram,cm_set_tram,(float *)&cs.null, 0 },  // SET to attempt setting rotation matrix from probes
+    { "", "defa",_f0, 0, tx_print_nul,  help_defa,set_defaults,(float *)&cs.null,0 },   // set/print defaults / help screen
     { "", "flash",_f0,0, tx_print_nul,  help_flash,hw_flash,  (float *)&cs.null,0 },
     { "", "switch",_f0,0, tx_print_nul, get_nul, mp_switch_q, (float *)&cs.null,0 },
     { "", "return",_f0,0, tx_print_nul, get_nul, mp_return_q, (float *)&cs.null,0 },
@@ -1110,7 +1110,8 @@ stat_t set_int(nvObj_t *nv, uint8_t &value, uint8_t low, uint8_t high) {
         nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
-    value = nv->value;  // note: valuetype = TYPE_INT already set
+    value = nv->value;
+    nv->valuetype = TYPE_INT;
     return (STAT_OK);
 }
 
@@ -1137,6 +1138,7 @@ stat_t set_int32(nvObj_t *nv, uint32_t &value, uint32_t low, uint32_t high) {
         return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
     value = nv->value;  // note: valuetype = TYPE_INT already set
+    nv->valuetype = TYPE_INT;
     return (STAT_OK);
 }
 

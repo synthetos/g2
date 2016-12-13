@@ -894,7 +894,8 @@ stat_t st_set_mi(nvObj_t *nv)
     return (STAT_OK);
 }
 
-stat_t st_set_su(nvObj_t *nv)			// motor steps per unit (direct)
+// motor steps per unit (direct)
+stat_t st_set_su(nvObj_t *nv)
 {
     uint8_t m = _motor(nv->index);
     // Do the unit conversion here (rather than using set_flu) because it's a reciprocal value
