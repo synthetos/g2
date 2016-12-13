@@ -46,7 +46,7 @@ template <typename device_t,
           pin_number step_num,
           pin_number dir_num,
           pin_number enable_num>
-struct Trinamic2130 : Stepper {
+struct Trinamic2130 final : Stepper {
     // Pins that are directly managed
     OutputPin<step_num> _step;
     OutputPin<dir_num> _dir;
@@ -501,7 +501,8 @@ struct Trinamic2130 : Stepper {
         }
 
         out_buffer.addr = (uint8_t) next_reg;
-        _device.queueMessage(_message.setup((uint8_t *)&out_buffer, (uint8_t *)&in_buffer, 5, SPIMessage::DeassertAfter, SPIMessage::KeepTransaction));
+        _message.setup((uint8_t *)&out_buffer, (uint8_t *)&in_buffer, 5, SPIMessage::DeassertAfter, SPIMessage::KeepTransaction);
+        _device.queueMessage(&_message);
     };
 
     void _doneReadingCallback()
@@ -538,7 +539,7 @@ struct Trinamic2130 : Stepper {
         _reading_only = false;
 
         _transmitting = false;
-        _startNextReadWrite();
+        //_startNextReadWrite();
     };
 
     void init() override

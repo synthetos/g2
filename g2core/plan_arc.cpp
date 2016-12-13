@@ -108,7 +108,7 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
                    const float radius, const bool radius_f,         // radius if radius mode
                    const float P_word, const bool P_word_f,         // parameter
                    const bool modal_g1_f,                           // modal group flag for motion group
-                   const uint8_t motion_mode)                       // defined motion mode
+                   const cmMotionMode motion_mode)                  // defined motion mode
 {
     // Start setting up the arc and trapping arc specification errors
 

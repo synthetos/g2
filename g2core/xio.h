@@ -113,7 +113,6 @@ enum xioSPIMode {
 void xio_init(void);
 stat_t xio_test_assertions(void);
 
-void xio_flush_read();
 size_t xio_write(const uint8_t *buffer, size_t size);
 char *xio_readline(devflags_t &flags, uint16_t &size);
 int16_t xio_writeline(const char *buffer);

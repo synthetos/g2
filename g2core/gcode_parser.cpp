@@ -697,6 +697,7 @@ static stat_t _execute_gcode_block(char *active_comment)
                                                                  cm.gn.motion_mode);
                                                                  break;
                                           }
+                default: break;
             }
             cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_OFF);     // un-set absolute override once the move is planned
         }

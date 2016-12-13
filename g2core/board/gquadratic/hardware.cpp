@@ -37,7 +37,37 @@
 #include "MotatePower.h"
 
 //Motate::ClockOutputPin<Motate::kExternalClock1_PinNumber> external_clk_pin {16000000}; // 16MHz optimally
-Motate::OutputPin<Motate::kExternalClock1_PinNumber> external_clk_pin {Motate::kStartLow};
+//Motate::OutputPin<Motate::kExternalClock1_PinNumber> external_clk_pin {Motate::kStartLow};
+
+#include "neopixel.h"
+#include "canonical_machine.h"
+
+namespace LEDs {
+    NeoPixel<Motate::kLED_RGBWPixelPinNumber, 15> rgbw_leds {NeoPixelOrder::GRB};
+
+    RGB_Color_t display_color[15] {
+        {0, 0, 0, 5},
+        {0, 0, 0, 5},
+        {0, 0, 0, 5},
+        {0, 0, 0, 5},
+        {0, 0, 0, 5},
+        {0, 0, 0, 5},
+        {0, 0, 0, 5},
+        {0, 0, 0, 5},
+        {0, 0, 0, 5},
+        {0, 0, 0, 5},
+        {0, 0, 0, 5},
+        {0, 0, 0, 5},
+        {0, 0, 0, 5},
+        {0, 0, 0, 5},
+        {0, 0, 0, 5},
+    };
+
+    bool alarm_red = false; // if we are in alarm, the tells us if we're going to red (pulsing)
+    bool shutdown_white = false; // if we are in shutdown, the tells us if we're going to red (pulsing)
+    cmMachineState last_see_machine_state;
+    float old_x_pos = 0.0;
+}
 
 /*
  * hardware_init() - lowest level hardware init
@@ -46,7 +76,13 @@ Motate::OutputPin<Motate::kExternalClock1_PinNumber> external_clk_pin {Motate::k
 void hardware_init()
 {
     board_hardware_init();
-    external_clk_pin = 0; // Force external clock to 0 for now.
+//    external_clk_pin = 0; // Force external clock to 0 for now.
+
+    for (uint8_t pixel = 0; pixel < LEDs::rgbw_leds.count; pixel++) {
+        LEDs::display_color[pixel].startTransition(100, 0, 0, 0);
+        LEDs::rgbw_leds.setPixel(pixel, LEDs::display_color[pixel]);
+    }
+    LEDs::rgbw_leds.update();
 }
 
 /*
@@ -55,6 +91,36 @@ void hardware_init()
 
 stat_t hardware_periodic()
 {
+    float x_pos = cm_get_work_position(ACTIVE_MODEL, AXIS_X);
+    if (fabs(LEDs::old_x_pos - x_pos) > 0.01) {
+        LEDs::old_x_pos = x_pos;
+
+        float led_pos = x_pos * ((float)(LEDs::rgbw_leds.count-1) / 40);
+
+        for (uint8_t pixel = 0; pixel < LEDs::rgbw_leds.count; pixel++) {
+            float value = fabs(led_pos - (float)pixel);
+            if (value < 1.001) {
+                value = 1.0 - value;
+                if (LEDs::display_color[pixel].red < value) {
+                    LEDs::display_color[pixel].startTransition(10, value, value, value);
+                } else {
+                    LEDs::display_color[pixel].startTransition(500, 0, 0, 0);
+                }
+            } else {
+//                LEDs::display_color[pixel].startTransition(500, 0, 0, 0);
+            }
+//            LEDs::display_color[pixel].startTransition(100, std::max(0.0f, std::min(40.0f, (float)(x_pos/40.0) )), 0, 0);
+        }
+    }
+
+    for (uint8_t pixel = 0; pixel < LEDs::rgbw_leds.count; pixel++) {
+        if (LEDs::display_color[pixel].update()) {
+            LEDs::rgbw_leds.setPixel(pixel, LEDs::display_color[pixel]);
+        }
+    }
+
+    LEDs::rgbw_leds.update();
+
     return STAT_OK;
 }
 
