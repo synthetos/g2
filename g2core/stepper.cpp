@@ -812,7 +812,7 @@ static void _set_hw_microsteps(const uint8_t motor, const uint8_t microsteps)
  ***********************************************************************************/
 
 /* HELPERS
- * _get_motor() - helper to return motor number as an index or -1 if na
+ * _motor()         - motor number as an index or -1 if na
  */
 
 static int8_t _motor(const index_t index)
@@ -828,16 +828,24 @@ static int8_t _motor(const index_t index)
     return (ptr - motors);
 }
 
+cmAxisType st_get_axis_type_by_motor(const index_t index)
+{
+    return (cm_get_axis_type_by_axis(st_cfg.mot[_motor(index)].motor_map));
+}
+
 /*
  * _set_motor_steps_per_unit() - what it says
  * This function will need to be rethought if microstep morphing is implemented
  */
 
-static void _set_motor_steps_per_unit(nvObj_t *nv)
+static float _set_motor_steps_per_unit(nvObj_t *nv)
 {
     uint8_t m = _motor(nv->index);
-    st_cfg.mot[m].units_per_step = (st_cfg.mot[m].travel_rev * st_cfg.mot[m].step_angle) / (360 * st_cfg.mot[m].microsteps);
+    st_cfg.mot[m].units_per_step = (st_cfg.mot[m].travel_rev * st_cfg.mot[m].step_angle) / 
+                                   (360 * st_cfg.mot[m].microsteps);
+
     st_cfg.mot[m].steps_per_unit = 1/st_cfg.mot[m].units_per_step;
+    return (st_cfg.mot[m].steps_per_unit);
 }
 
 /* PER-MOTOR FUNCTIONS
@@ -895,27 +903,35 @@ stat_t st_set_mi(nvObj_t *nv)
 }
 
 // motor steps per unit (direct)
+stat_t st_get_su(nvObj_t *nv) 
+{ 
+    return(get_float(nv, st_cfg.mot[_motor(nv->index)].steps_per_unit)); 
+}
+
 stat_t st_set_su(nvObj_t *nv)
 {
-    uint8_t m = _motor(nv->index);
-    // Do the unit conversion here (rather than using set_flu) because it's a reciprocal value
-    if ((m <= 3) && (cm_get_units_mode(MODEL) == INCHES)) {
-        nv->value *= INCHES_PER_MM;
-    }
-
+    // Don't set a zero or negative value - just calculate based on sa, tr, and mi
+    // This way, if STEPS_PER_UNIT is set to 0 it is unused and we get the computed value
     if(nv->value <= 0) {
-        // Don't set a zero or negative value - just calculate based on sa,tr,mi
-        // This way, if we set the STEPS_PER_UNIT to default to 0, it is unused and we get the computed value
-        _set_motor_steps_per_unit(nv);
+        nv->value = _set_motor_steps_per_unit(nv);
         return(STAT_OK);
     }
-    
-    set_flt(nv);
+
+    // Do unit conversion here because it's a reciprocal value (rather than process_incoming_float())
+    uint8_t m = _motor(nv->index);
+    if (cm_get_units_mode(MODEL) == INCHES) {
+        uint8_t a = st_cfg.mot[m].motor_map;
+        if (cm_get_axis_type_by_axis(a) == AXIS_TYPE_LINEAR) {
+            nv->value *= INCHES_PER_MM;
+        }
+    }    
+    st_cfg.mot[m].steps_per_unit = nv->value;
     st_cfg.mot[m].units_per_step = 1.0/st_cfg.mot[m].steps_per_unit;
+
     // Scale TR so all the other values make sense
     // You could scale any one of the other values, but TR makes the most sense
-    st_cfg.mot[m].travel_rev = (360.0*st_cfg.mot[m].microsteps)/(st_cfg.mot[m].steps_per_unit*st_cfg.mot[m].step_angle);
-
+    st_cfg.mot[m].travel_rev = (360.0 * st_cfg.mot[m].microsteps) / 
+                               (st_cfg.mot[m].steps_per_unit * st_cfg.mot[m].step_angle);
     return(STAT_OK);
 }
 

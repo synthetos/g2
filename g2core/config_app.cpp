@@ -200,7 +200,7 @@ const cfgItem_t cfgArray[] = {
     { "1","1sa",_fip, 3, st_print_sa, st_get_sa, st_set_sa, (float *)&cs.null, M1_STEP_ANGLE },
     { "1","1tr",_fipc,4, st_print_tr, st_get_tr, st_set_tr, (float *)&cs.null, M1_TRAVEL_PER_REV },
     { "1","1mi",_fip, 0, st_print_mi, st_get_mi, st_set_mi, (float *)&cs.null, M1_MICROSTEPS },
-    { "1","1su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_1].steps_per_unit, M1_STEPS_PER_UNIT },
+    { "1","1su",_fipi,5, st_print_su, st_get_su, st_set_su, (float *)&st_cfg.mot[MOTOR_1].steps_per_unit, M1_STEPS_PER_UNIT },
     { "1","1po",_fip, 0, st_print_po, get_ui8, set_01,      (float *)&st_cfg.mot[MOTOR_1].polarity,       M1_POLARITY },
     { "1","1pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null, M1_POWER_MODE },
     { "1","1pl",_fip, 3, st_print_pl, get_flt, st_set_pl,   (float *)&st_cfg.mot[MOTOR_1].power_level,    M1_POWER_LEVEL },
@@ -211,7 +211,7 @@ const cfgItem_t cfgArray[] = {
     { "2","2sa",_fip, 3, st_print_sa, st_get_sa, st_set_sa, (float *)&cs.null, M2_STEP_ANGLE },
     { "2","2tr",_fipc,4, st_print_tr, st_get_tr, st_set_tr, (float *)&cs.null, M2_TRAVEL_PER_REV },
     { "2","2mi",_fip, 0, st_print_mi, st_get_mi, st_set_mi, (float *)&cs.null, M2_MICROSTEPS },
-    { "2","2su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_2].steps_per_unit, M2_STEPS_PER_UNIT },
+    { "2","2su",_fipi,5, st_print_su, st_get_su, st_set_su, (float *)&cs.null, M2_STEPS_PER_UNIT },
     { "2","2po",_fip, 0, st_print_po, get_ui8, set_01,      (float *)&st_cfg.mot[MOTOR_2].polarity,       M2_POLARITY },
     { "2","2pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null, M2_POWER_MODE },
     { "2","2pl",_fip, 3, st_print_pl, get_flt, st_set_pl,   (float *)&st_cfg.mot[MOTOR_2].power_level,    M2_POWER_LEVEL},
@@ -223,7 +223,7 @@ const cfgItem_t cfgArray[] = {
     { "3","3sa",_fip, 3, st_print_sa, st_get_sa, st_set_sa, (float *)&cs.null, M3_STEP_ANGLE },
     { "3","3tr",_fipc,4, st_print_tr, st_get_tr, st_set_tr, (float *)&cs.null, M3_TRAVEL_PER_REV },
     { "3","3mi",_fip, 0, st_print_mi, st_get_mi, st_set_mi, (float *)&cs.null, M3_MICROSTEPS },
-    { "3","3su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_3].steps_per_unit, M3_STEPS_PER_UNIT },
+    { "3","3su",_fipi,5, st_print_su, st_get_su, st_set_su, (float *)&cs.null, M3_STEPS_PER_UNIT },
     { "3","3po",_fip, 0, st_print_po, get_ui8, set_01,      (float *)&st_cfg.mot[MOTOR_3].polarity,       M3_POLARITY },
     { "3","3pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null, M3_POWER_MODE },
     { "3","3pl",_fip, 3, st_print_pl, get_flt, st_set_pl,   (float *)&st_cfg.mot[MOTOR_3].power_level,    M3_POWER_LEVEL },
@@ -235,7 +235,7 @@ const cfgItem_t cfgArray[] = {
     { "4","4sa",_fip, 3, st_print_sa, st_get_sa, st_set_sa, (float *)&cs.null, M4_STEP_ANGLE },
     { "4","4tr",_fipc,4, st_print_tr, st_get_tr, st_set_tr, (float *)&cs.null, M4_TRAVEL_PER_REV },
     { "4","4mi",_fip, 0, st_print_mi, st_get_mi, st_set_mi, (float *)&cs.null, M4_MICROSTEPS },
-    { "4","4su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_4].steps_per_unit, M4_STEPS_PER_UNIT },
+    { "4","4su",_fipi,5, st_print_su, st_get_su, st_set_su, (float *)&cs.null, M4_STEPS_PER_UNIT },
     { "4","4po",_fip, 0, st_print_po, get_ui8, set_01,      (float *)&st_cfg.mot[MOTOR_4].polarity,       M4_POLARITY },
     { "4","4pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null, M4_POWER_MODE },
     { "4","4pl",_fip, 3, st_print_pl, get_flt, st_set_pl,   (float *)&st_cfg.mot[MOTOR_4].power_level,    M4_POWER_LEVEL },
@@ -247,7 +247,7 @@ const cfgItem_t cfgArray[] = {
     { "5","5sa",_fip, 3, st_print_sa, st_get_sa, st_set_sa, (float *)&cs.null, M5_STEP_ANGLE },
     { "5","5tr",_fipc,4, st_print_tr, st_get_tr, st_set_tr, (float *)&cs.null, M5_TRAVEL_PER_REV },
     { "5","5mi",_fip, 0, st_print_mi, st_get_mi, st_set_mi, (float *)&cs.null, M5_MICROSTEPS },
-    { "5","5su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_5].steps_per_unit, M5_STEPS_PER_UNIT },
+    { "5","5su",_fipi,5, st_print_su, st_get_su, st_set_su, (float *)&cs.null, M5_STEPS_PER_UNIT },
     { "5","5po",_fip, 0, st_print_po, get_ui8, set_01,      (float *)&st_cfg.mot[MOTOR_5].polarity,       M5_POLARITY },
     { "5","5pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null, M5_POWER_MODE },
     { "5","5pl",_fip, 3, st_print_pl, get_flt, st_set_pl,   (float *)&st_cfg.mot[MOTOR_5].power_level,    M5_POWER_LEVEL },
@@ -259,7 +259,7 @@ const cfgItem_t cfgArray[] = {
     { "6","6sa",_fip, 3, st_print_sa, st_get_sa, st_set_sa, (float *)&cs.null, M6_STEP_ANGLE },
     { "6","6tr",_fipc,4, st_print_tr, st_get_tr, st_set_tr, (float *)&cs.null, M6_TRAVEL_PER_REV },
     { "6","6mi",_fip, 0, st_print_mi, st_get_mi, st_set_mi, (float *)&cs.null, M6_MICROSTEPS },
-    { "6","6su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_6].steps_per_unit, M6_STEPS_PER_UNIT },
+    { "6","6su",_fipi,5, st_print_su, st_get_su, st_set_su, (float *)&cs.null, M6_STEPS_PER_UNIT },
     { "6","6po",_fip, 0, st_print_po, get_ui8, set_01,      (float *)&st_cfg.mot[MOTOR_6].polarity,       M6_POLARITY },
     { "6","6pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null, M6_POWER_MODE },
     { "6","6pl",_fip, 3, st_print_pl, get_flt, st_set_pl,   (float *)&st_cfg.mot[MOTOR_6].power_level,    M6_POWER_LEVEL },
@@ -997,28 +997,22 @@ stat_t set_flu(nvObj_t *nv)
 /*
  * process_incoming_float() - pre-process an incoming floating point number for canonical units
  * process_outgoing_float() - pre-process an outgoing floating point number for units display
- * get_float()              - boilerplate for retrieving raw floating point value
- * set_float()              - boilerplate for setting a floating point value with unit conversion
- * set_float_range()        - set a floating point value with inclusive range check
  *
- *  get_float() returns a raw float value in internal canonical units (e.g. mm, degrees)
- *  without units conversion. If conversion is required call preprocess_outgoing_float() 
- *  afterwards. The text mode and JSON display routines do this, so you generally don't
- *  have to worry about this.
- *
- *  set_float() is designed to capture incoming float values, so it performs unit conversion.
- *  set_float_range() perfoems an inclusive range test on the CONVERTED value
+ *  Incoming floats are destined for SET operations.perform conditional unit conversion if
+ *  the flags indicate. Note that SU (inverse conversion) is not converted here, but in the
+ *  set_su function.
+ * 
+ *  Outgoing floats are the raw values from GET operations, destined for text or JSON display. 
+ *  These are conditionally unit converted, including SU.
  */
 
 void process_incoming_float(nvObj_t *nv)
 {
     if (nv->valuetype != TYPE_FLOAT) { return; } // can be called non-destructively for any value type
 
-    uint8_t f;
-    f = GET_TABLE_BYTE(flags);
-//   if (f & (F_CONVERT | F_ICONVERT)) {		// unit conversion required?
-    if (f & F_CONVERT) {		                    // unit conversion required?
-        if (cm_get_units_mode(MODEL) == INCHES) {                   // If inn inches mode
+    uint8_t flags = GET_TABLE_BYTE(flags);
+    if (flags & F_CONVERT) {		                                // is unit conversion required?
+        if (cm_get_units_mode(MODEL) == INCHES) {                   // if in inches mode
             if (cm_get_axis_type(nv->index) == AXIS_TYPE_LINEAR) {  // ...and a linear axis...
                 nv->value *= MM_PER_INCH;                           // convert to canonical millimeter units
             }
@@ -1032,20 +1026,36 @@ void process_outgoing_float(nvObj_t *nv)
     if (isnan((double)nv->value) || isinf((double)nv->value)) { return; } // trap illegal float values
     ///+++ transform these checks into NaN or INF strings with an error return?
 
-    uint8_t f;
-    f = GET_TABLE_BYTE(flags);
-    if (f & (F_CONVERT | F_ICONVERT)) {		// unit conversion required?
-        if (cm_get_units_mode(MODEL) == INCHES) {
-            if(f & F_ICONVERT) {
-                nv->value *= MM_PER_INCH;
- 			} else {
+    // We may need one of two types of units conversion, but only if in inches mode
+    if (cm_get_units_mode(MODEL) == INCHES) {
+        uint8_t flags = GET_TABLE_BYTE(flags);
+        if (flags & F_CONVERT) {                                // standard units conversion
+            if (cm_get_axis_type(nv->index) == AXIS_TYPE_LINEAR) {
  				nv->value *= INCHES_PER_MM;
-			}
- 		}
+            }
+ 		} else if (flags & F_ICONVERT) {                        // inverse units conversion
+            if (st_get_axis_type_by_motor(nv->index) == AXIS_TYPE_LINEAR) { // axis motor is mapped to
+                nv->value *= MM_PER_INCH;
+            }                
+		}
  	}
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
 }
+
+/*
+ * get_float()       - boilerplate for retrieving raw floating point value
+ * set_float()       - boilerplate for setting a floating point value with unit conversion
+ * set_float_range() - set a floating point value with inclusive range check
+ *
+ *  get_float() returns a raw float value in internal canonical units (e.g. mm, degrees)
+ *  without units conversion. If conversion is required call preprocess_outgoing_float()
+ *  afterwards. The text mode and JSON display routines do this, so you generally don't
+ *  have to worry about this.
+ *
+ *  set_float() is designed to capture incoming float values, so it performs unit conversion.
+ *  set_float_range() perfoems an inclusive range test on the CONVERTED value
+ */
 
 stat_t get_float(nvObj_t *nv, const float value) {
     nv->value = value;

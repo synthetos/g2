@@ -576,8 +576,9 @@ void st_prep_null(void);
 void st_prep_command(void *bf);        // use a void pointer since we don't know about mpBuf_t yet)
 void st_prep_dwell(float microseconds);
 void st_request_out_of_band_dwell(float microseconds);
-//stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time);
 stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time);
+
+cmAxisType st_get_axis_type_by_motor(const index_t index);
 
 stat_t st_get_ma(nvObj_t *nv);
 stat_t st_set_ma(nvObj_t *nv);
@@ -588,10 +589,13 @@ stat_t st_set_tr(nvObj_t *nv);
 stat_t st_get_mi(nvObj_t *nv);
 stat_t st_set_mi(nvObj_t *nv);
 
+stat_t st_get_su(nvObj_t *nv);
 stat_t st_set_su(nvObj_t *nv);
-stat_t st_set_pm(nvObj_t *nv);
 stat_t st_get_pm(nvObj_t *nv);
+stat_t st_set_pm(nvObj_t *nv);
+stat_t st_get_pl(nvObj_t *nv);
 stat_t st_set_pl(nvObj_t *nv);
+
 stat_t st_get_pwr(nvObj_t *nv);
 
 stat_t st_get_mt(nvObj_t *nv);

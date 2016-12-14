@@ -2084,6 +2084,7 @@ static const char *const msg_frmo[] = { msg_g93, msg_g94, msg_g95 };
  * _coord()           - return coordinate system number or -1 if error
  * cm_get_axis_char() - return ASCII char for axis given the axis number
  * cm_get_axis_type() - return axis type (0 if axis is linear, 1 if rotary, -1 if NA)
+ * cm_get_axis_type_by_axis() - return axis type (0 if axis is linear, 1 if rotary, -1 if NA)
  */
 
 static int8_t _axis(const index_t index)
@@ -2121,9 +2122,13 @@ char cm_get_axis_char(const int8_t axis)
 
 cmAxisType cm_get_axis_type(const index_t index)
 {
-    int8_t axis = _axis(index);
-    if (axis >= AXIS_A) return (AXIS_TYPE_ROTARY);
-    if (axis == -1) return (AXIS_TYPE_UNDEFINED);
+    return (cm_get_axis_type_by_axis(_axis(index)));
+}
+
+cmAxisType cm_get_axis_type_by_axis(const int8_t axis)
+{
+    if (axis >= AXIS_A) { return (AXIS_TYPE_ROTARY); }
+    if (axis == -1) { return (AXIS_TYPE_UNDEFINED); }
     return (AXIS_TYPE_LINEAR);
 }
 
