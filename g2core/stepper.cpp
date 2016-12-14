@@ -935,50 +935,43 @@ stat_t st_set_su(nvObj_t *nv)
     return(STAT_OK);
 }
 
-stat_t st_set_pm(nvObj_t *nv)            // set motor power mode
+// polarity
+stat_t st_get_po(nvObj_t *nv) { return(get_int(nv, st_cfg.mot[_motor(nv->index)].polarity)); }
+stat_t st_set_po(nvObj_t *nv) { return(set_int(nv, st_cfg.mot[_motor(nv->index)].polarity, 0, 1)); }
+
+// power management mode
+stat_t st_get_pm(nvObj_t *nv)
 {
-    if (nv->value >= MOTOR_POWER_MODE_MAX_VALUE) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
-
-    uint8_t motor = _motor(nv->index);
-    if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
-
-    Motors[motor]->setPowerMode((stPowerMode)nv->value);
-    // We do this *here* in order for this to take effect immediately.
-    // setPowerMode() sets the value and also executes it.
-    return (STAT_OK);
-}
-
-stat_t st_get_pm(nvObj_t *nv)            // get motor power mode
-{
-    if (nv->value >= MOTOR_POWER_MODE_MAX_VALUE) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
-
-    uint8_t motor = _motor(nv->index);
-    if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
-
-    nv->value = (float)Motors[motor]->getPowerMode();
+    nv->value = (float)Motors[_motor(nv->index)]->getPowerMode();
     nv->valuetype = TYPE_INT;
     return (STAT_OK);
 }
 
+stat_t st_set_pm(nvObj_t *nv)
+{
+    // Test the value without setting it, then setPowerMode() now
+    // to both set and take effect immediately.
+    ritorno(set_int(nv, (uint8_t &)cs.null, 0, MOTOR_POWER_MODE_MAX_VALUE ));
+    Motors[_motor(nv->index)]->setPowerMode((stPowerMode)nv->value);
+    return (STAT_OK);
+}
+
 /*
+ * st_get_pl() - get motor power level
  * st_set_pl() - set motor power level
  *
  *  Input value may vary from 0.000 to 1.000 The setting is scaled to allowable PWM range.
  *  This function sets both the scaled and dynamic power levels, and applies the
  *  scaled value to the vref.
  */
-stat_t st_set_pl(nvObj_t *nv)    // motor power level
+stat_t st_get_pl(nvObj_t *nv) { return(get_float(nv, st_cfg.mot[_motor(nv->index)].power_level)); }
+stat_t st_set_pl(nvObj_t *nv)
 {
-    if ((nv->value < (float)0.0) || (nv->value > (float)1.0)) {
-        return (STAT_INPUT_VALUE_RANGE_ERROR);
-    }
-    set_flt(nv);    // set power_setting value in the motor config struct (st)
-
-    uint8_t motor = _motor(nv->index);
-    st_cfg.mot[motor].power_level_scaled = (nv->value * POWER_LEVEL_SCALE_FACTOR);
-    st_run.mot[motor].power_level_dynamic = (st_cfg.mot[motor].power_level_scaled);
-    Motors[motor]->setPowerLevel(st_cfg.mot[motor].power_level_scaled);
-
+    uint8_t m = _motor(nv->index);
+    ritorno(set_float_range(nv, st_cfg.mot[m].power_level, 0.0, 1.0));
+    st_cfg.mot[m].power_level_scaled = (nv->value * POWER_LEVEL_SCALE_FACTOR);
+    st_run.mot[m].power_level_dynamic = (st_cfg.mot[m].power_level_scaled);
+    Motors[m]->setPowerLevel(st_cfg.mot[m].power_level_scaled);
     return(STAT_OK);
 }
 
@@ -1017,13 +1010,7 @@ stat_t st_get_mt(nvObj_t *nv) { return(get_float(nv, st_cfg.motor_power_timeout)
 stat_t st_set_mt(nvObj_t *nv) { return(set_float_range(nv, st_cfg.motor_power_timeout,
                                                            MOTOR_TIMEOUT_SECONDS_MAX,
                                                            MOTOR_TIMEOUT_SECONDS_MIN)); }
-/*
-stat_t st_set_mt(nvObj_t *nv)
-{
-    st_cfg.motor_power_timeout = min(MOTOR_TIMEOUT_SECONDS_MAX, max(nv->value, MOTOR_TIMEOUT_SECONDS_MIN));
-    return (STAT_OK);
-}
-*/
+
 stat_t st_set_me(nvObj_t *nv)    // Make sure this function is not part of initialization --> f00
 {
     for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {

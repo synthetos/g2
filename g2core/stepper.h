@@ -278,9 +278,9 @@ typedef enum {
     MOTOR_DISABLED = 0,                 // motor enable is deactivated
     MOTOR_ALWAYS_POWERED,               // motor is always powered while machine is ON
     MOTOR_POWERED_IN_CYCLE,             // motor fully powered during cycles, de-powered out of cycle
-    MOTOR_POWERED_ONLY_WHEN_MOVING,     // motor only powered while moving - idles shortly after it's stopped - even in cycle
-    MOTOR_POWER_MODE_MAX_VALUE          // for input range checking
+    MOTOR_POWERED_ONLY_WHEN_MOVING      // motor only powered while moving - idles shortly after it's stopped - even in cycle
 } stPowerMode;
+#define MOTOR_POWER_MODE_MAX_VALUE    MOTOR_POWERED_ONLY_WHEN_MOVING
 
 // Stepper power management settings
 #define Vcc         3.3                 // volts
@@ -591,6 +591,8 @@ stat_t st_set_mi(nvObj_t *nv);
 
 stat_t st_get_su(nvObj_t *nv);
 stat_t st_set_su(nvObj_t *nv);
+stat_t st_get_po(nvObj_t *nv);
+stat_t st_set_po(nvObj_t *nv);
 stat_t st_get_pm(nvObj_t *nv);
 stat_t st_set_pm(nvObj_t *nv);
 stat_t st_get_pl(nvObj_t *nv);
