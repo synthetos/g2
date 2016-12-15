@@ -862,13 +862,13 @@
 // *** PWM Settings *** //
 
 #ifndef P1_PWM_FREQUENCY
-#define P1_PWM_FREQUENCY            100.0                   // in Hz
+#define P1_PWM_FREQUENCY            100                   // in Hz
 #endif
 #ifndef P1_CW_SPEED_LO
-#define P1_CW_SPEED_LO              7900.0                  // in RPM (arbitrary units)
+#define P1_CW_SPEED_LO              7900                  // in RPM (arbitrary units)
 #endif
 #ifndef P1_CW_SPEED_HI
-#define P1_CW_SPEED_HI              12800.0
+#define P1_CW_SPEED_HI              12800
 #endif
 #ifndef P1_CW_PHASE_LO
 #define P1_CW_PHASE_LO              0.13                    // phase [0..1]
