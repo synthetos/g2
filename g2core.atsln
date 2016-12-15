@@ -3,9 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "g2core", "g2core\g2core.cppproj", "{44EA8FEC-55D7-4149-8A78-A574FC26BF51}"
-	ProjectSection(ProjectDependencies) = postProject
-		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0} = {D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}
-	EndProjectSection
 EndProject
 Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "Motate", "Motate\Motate.cppproj", "{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}"
 EndProject
@@ -22,6 +19,7 @@ Global
 		Shapeoko2|ARM = Shapeoko2|ARM
 		shopbotShield|ARM = shopbotShield|ARM
 		Stub|ARM = Stub|ARM
+		TestQuadratic|ARM = TestQuadratic|ARM
 		TestQuintic|ARM = TestQuintic|ARM
 		TestV9|ARM = TestV9|ARM
 		Ultimakerv9k|ARM = Ultimakerv9k|ARM
@@ -49,6 +47,8 @@ Global
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.shopbotShield|ARM.ActiveCfg = shopbotShield|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.shopbotShield|ARM.Build.0 = shopbotShield|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Stub|ARM.ActiveCfg = Shapeoko2|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.TestQuadratic|ARM.ActiveCfg = TestQuadratic|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.TestQuadratic|ARM.Build.0 = TestQuadratic|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.TestQuintic|ARM.ActiveCfg = TestQuintic|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.TestQuintic|ARM.Build.0 = TestQuintic|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.TestV9|ARM.ActiveCfg = TestV9|ARM
@@ -68,6 +68,7 @@ Global
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.Shapeoko2|ARM.ActiveCfg = Stub|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.shopbotShield|ARM.ActiveCfg = Stub|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.Stub|ARM.ActiveCfg = Stub|ARM
+		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.TestQuadratic|ARM.ActiveCfg = Stub|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.TestQuintic|ARM.ActiveCfg = Stub|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.TestV9|ARM.ActiveCfg = Stub|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.Ultimakerv9k|ARM.ActiveCfg = Stub|ARM

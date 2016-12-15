@@ -30,6 +30,7 @@
 
 #include "hardware.h"  // for MOTORS
 #include "step_dir_driver.h"
+#include "step_dir_hobbyservo.h"
 
 extern StepDirStepper<Motate::kSocket1_StepPinNumber,
                       Motate::kSocket1_DirPinNumber,
@@ -49,24 +50,8 @@ extern StepDirStepper<Motate::kSocket2_StepPinNumber,
                       Motate::kSocket2_VrefPinNumber>
     motor_2;
 
-// extern StepDirStepper<
-//    Motate::kSocket3_StepPinNumber,
-//    Motate::kSocket3_DirPinNumber,
-//    Motate::kSocket3_EnablePinNumber,
-//    Motate::kSocket3_Microstep_0PinNumber,
-//    Motate::kSocket3_Microstep_1PinNumber,
-//    Motate::kSocket3_Microstep_2PinNumber,
-//    Motate::kSocket3_VrefPinNumber> motor_3;
-//
-// extern StepDirStepper<
-//    Motate::kSocket4_StepPinNumber,
-//    Motate::kSocket4_DirPinNumber,
-//    Motate::kSocket4_EnablePinNumber,
-//    Motate::kSocket4_Microstep_0PinNumber,
-//    Motate::kSocket4_Microstep_1PinNumber,
-//    Motate::kSocket4_Microstep_2PinNumber,
-//    Motate::kSocket4_VrefPinNumber> motor_4;
-//
+ extern StepDirHobbyServo<Motate::kServo1_PinNumber> motor_3;
+
 // extern StepDirStepper<
 //    Motate::kSocket5_StepPinNumber,
 //    Motate::kSocket5_DirPinNumber,

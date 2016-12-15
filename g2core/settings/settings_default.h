@@ -58,6 +58,11 @@
 
 // *** Machine configuration settings *** //
 
+#ifndef USB_SERIAL_PORTS_EXPOSED
+#define USB_SERIAL_PORTS_EXPOSED   1        // Valid options are 1 or 2, only!
+#endif
+
+
 #ifndef JUNCTION_INTEGRATION_TIME
 #define JUNCTION_INTEGRATION_TIME   0.75    // {jt: cornering - between 0.05 and 2.00 (max)
 #endif
@@ -82,7 +87,7 @@
 #endif
 
 #ifndef SPINDLE_ENABLE_POLARITY
-#define SPINDLE_ENABLE_POLARITY     1       // {spep: 0=active low, 1=active high
+#define SPINDLE_ENABLE_POLARITY     SPINDLE_ACTIVE_HIGH  // {spep: 0=active low, 1=active high
 #endif
 
 #ifndef SPINDLE_DIR_POLARITY
@@ -134,6 +139,10 @@
 
 #ifndef XIO_ENABLE_FLOW_CONTROL
 #define XIO_ENABLE_FLOW_CONTROL     FLOW_CONTROL_RTS        // FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
+#endif
+
+#ifndef XIO_UART_MUTES_WHEN_USB_CONNECTED
+#define XIO_UART_MUTES_WHEN_USB_CONNECTED  0                // UART will be muted when USB connected (off by default)
 #endif
 
 #ifndef JSON_VERBOSITY

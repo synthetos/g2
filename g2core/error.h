@@ -204,7 +204,7 @@ char *get_status_message(stat_t status);
 #define STAT_MAX_DEPTH_EXCEEDED 115             // JSON exceeded maximum nesting depth
 #define STAT_VALUE_TYPE_ERROR 116               // JSON value does not agree with variable type
 
-#define STAT_ERROR_117 117
+#define STAT_INPUT_FROM_MUTED_CHANNEL_ERROR 117               // input from a muted channel was ignored
 #define STAT_ERROR_118 118
 #define STAT_ERROR_119 119
 

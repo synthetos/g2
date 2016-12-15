@@ -4,7 +4,7 @@ target remote | /usr/local/bin/openocd -c "set CHIPNAME ${CHIP}" -f ${MOTATE_PAT
 source ./board/g2_default.gdb
 
 define boot_from_flash
-  monitor at91sam4 gpnvm set 1
+    monitor atsamv gpnvm set 1
 end
 
 source -s arm.gdb

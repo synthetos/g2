@@ -57,7 +57,8 @@ typedef enum {
 typedef enum {                      // json output print modes
     JSON_NO_PRINT = 0,              // don't print anything if you find yourself in JSON mode
     JSON_OBJECT_FORMAT,             // print just the body as a json object
-    JSON_RESPONSE_FORMAT            // print the header/body/footer as a response object
+    JSON_RESPONSE_FORMAT,           // print the header/body/footer as a response object
+    JSON_RESPONSE_TO_MUTED_FORMAT   // print the header/body/footer as a response object, only to muted channels
 } jsonFormats;
 
 typedef struct jsSingleton {
@@ -85,7 +86,7 @@ void json_parser(char *str);
 void json_parse_for_exec(char *str, bool execute);
 uint16_t json_serialize(nvObj_t *nv, char *out_buf, uint16_t size);
 void json_print_object(nvObj_t *nv);
-void json_print_response(uint8_t status);
+void json_print_response(uint8_t status, const bool only_to_muted = false);
 void json_print_list(stat_t status, uint8_t flags);
 
 stat_t json_set_jv(nvObj_t *nv);

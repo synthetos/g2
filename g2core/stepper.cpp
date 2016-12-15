@@ -40,6 +40,20 @@
 #include "controller.h"
 #include "xio.h"
 
+/**** Debugging output with semihosting ****/
+
+#include "MotateDebug.h"
+
+// Unless debugging, this should always read "#if 0 && ..."
+// DON'T COMMIT with anything else!
+#if 0 && (IN_DEBUGGER == 1)
+template<int32_t len>
+void stepper_debug(const char (&str)[len]) { Motate::debug.write(str); };
+#else
+template<int32_t len>
+void stepper_debug(const char (&str)[len]) { ; };
+#endif
+
 /**** Allocate structures ****/
 
 stConfig_t st_cfg;
@@ -62,10 +76,18 @@ extern OutputPin<kDebug3_PinNumber> debug_pin3;
 //extern OutputPin<kDebug4_PinNumber> debug_pin4;
 
 dda_timer_type dda_timer     {kTimerUpToMatch, FREQUENCY_DDA};      // stepper pulse generation
-dwell_timer_type dwell_timer {kTimerUpToMatch, FREQUENCY_DWELL};    // dwell timer
 load_timer_type load_timer;         // triggers load of next stepper segment
 exec_timer_type exec_timer;         // triggers calculation of next+1 stepper segment
 fwd_plan_timer_type fwd_plan_timer; // triggers planning of next block
+
+// SystickEvent for handling dweels (must be registered before it is active)
+Motate::SysTickEvent dwell_systick_event {[&] {
+    if (--st_run.dwell_ticks_downcount == 0) {
+        SysTickTimer.unregisterEvent(&dwell_systick_event);
+        _load_move();       // load the next move at the current interrupt level
+    }
+}, nullptr};
+
 
 /************************************************************************************
  **** CODE **************************************************************************
@@ -103,18 +125,15 @@ void stepper_init()
     // If you need more pulse width you need to drop the DDA clock rate
     dda_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
 
-    // setup DWELL timer
-    dwell_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
-
     // setup software interrupt load timer
-    load_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityMedium);
+    load_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityHigh);
 
     // setup software interrupt exec timer & initial condition
-    exec_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityLow);
+    exec_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityMedium);
     st_pre.buffer_state = PREP_BUFFER_OWNED_BY_EXEC;
 
     // setup software interrupt forward plan timer & initial condition
-    fwd_plan_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityLowest);
+    fwd_plan_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityLow);
 
     // setup motor power levels and apply power level to stepper drivers
     for (uint8_t motor=0; motor<MOTORS; motor++) {
@@ -134,8 +153,8 @@ void stepper_init()
 void stepper_reset()
 {
     dda_timer.stop();                                   // stop all movement
-    dwell_timer.stop();
     st_run.dda_ticks_downcount = 0;                     // signal the runtime is not busy
+    st_run.dwell_ticks_downcount = 0;
     st_pre.buffer_state = PREP_BUFFER_OWNED_BY_EXEC;    // set to EXEC or it won't restart
 
     for (uint8_t motor=0; motor<MOTORS; motor++) {
@@ -179,7 +198,7 @@ stat_t stepper_test_assertions()
 
 bool st_runtime_isbusy()
 {
-    return (st_run.dda_ticks_downcount);    // returns false if down count is zero
+    return (st_run.dda_ticks_downcount || st_run.dwell_ticks_downcount);    // returns false if down count is zero
 }
 
 /*
@@ -240,7 +259,7 @@ namespace Motate {            // Must define timer interrupts inside the Motate 
 template<>
 void dda_timer_type::interrupt()
 {
-    dda_timer.getInterruptCause();        // clear interrupt condition
+    dda_timer.getInterruptCause();  // clear interrupt condition
 
     // clear all steps from the previous interrupt
 	// for (uint8_t motor=0; motor<MOTORS; motor++) {
@@ -268,7 +287,7 @@ void dda_timer_type::interrupt()
         return;
     }
 
-//  The following code would work, but it's faster to loop unroll it
+//  The following code would work, but it's faster on the M3 to loop unroll it. Perhaps not on the M7
 //    for (uint8_t motor=0; motor<MOTORS; motor++) {
 //        if  ((st_run.mot[motor].substep_accumulator += st_run.mot[motor].substep_increment) > 0) {
 //            Motors[motor]->stepStart();        // turn step bit on
@@ -279,65 +298,50 @@ void dda_timer_type::interrupt()
 
     // process DDAs for each motor
         if  ((st_run.mot[MOTOR_1].substep_accumulator += st_run.mot[MOTOR_1].substep_increment) > 0) {
-        motor_1.stepStart();        // turn step bit on
+            motor_1.stepStart();        // turn step bit on
             st_run.mot[MOTOR_1].substep_accumulator -= st_run.dda_ticks_X_substeps;
             INCREMENT_ENCODER(MOTOR_1);
         }
         if ((st_run.mot[MOTOR_2].substep_accumulator += st_run.mot[MOTOR_2].substep_increment) > 0) {
-        motor_2.stepStart();        // turn step bit on
+            motor_2.stepStart();        // turn step bit on
             st_run.mot[MOTOR_2].substep_accumulator -= st_run.dda_ticks_X_substeps;
             INCREMENT_ENCODER(MOTOR_2);
         }
 #if MOTORS > 2
         if ((st_run.mot[MOTOR_3].substep_accumulator += st_run.mot[MOTOR_3].substep_increment) > 0) {
-        motor_3.stepStart();        // turn step bit on
+            motor_3.stepStart();        // turn step bit on
             st_run.mot[MOTOR_3].substep_accumulator -= st_run.dda_ticks_X_substeps;
             INCREMENT_ENCODER(MOTOR_3);
         }
 #endif
 #if MOTORS > 3
         if ((st_run.mot[MOTOR_4].substep_accumulator += st_run.mot[MOTOR_4].substep_increment) > 0) {
-        motor_4.stepStart();        // turn step bit on
+            motor_4.stepStart();        // turn step bit on
             st_run.mot[MOTOR_4].substep_accumulator -= st_run.dda_ticks_X_substeps;
             INCREMENT_ENCODER(MOTOR_4);
         }
 #endif
 #if MOTORS > 4
         if ((st_run.mot[MOTOR_5].substep_accumulator += st_run.mot[MOTOR_5].substep_increment) > 0) {
-        motor_5.stepStart();        // turn step bit on
+            motor_5.stepStart();        // turn step bit on
             st_run.mot[MOTOR_5].substep_accumulator -= st_run.dda_ticks_X_substeps;
             INCREMENT_ENCODER(MOTOR_5);
         }
 #endif
 #if MOTORS > 5
         if ((st_run.mot[MOTOR_6].substep_accumulator += st_run.mot[MOTOR_6].substep_increment) > 0) {
-        motor_6.stepStart();        // turn step bit on
+            motor_6.stepStart();        // turn step bit on
             st_run.mot[MOTOR_6].substep_accumulator -= st_run.dda_ticks_X_substeps;
             INCREMENT_ENCODER(MOTOR_6);
         }
 #endif
 
-    // process end of segment
+    // Process end of segment. 
+    // One more interrupt will occur to turn of any pulses set in this pass.
     if (--st_run.dda_ticks_downcount == 0) {
-        _load_move();                            // load the next move at the current interrupt level
+        _load_move();       // load the next move at the current interrupt level
     }
 } // MOTATE_TIMER_INTERRUPT
-} // namespace Motate
-
-/***** Dwell Interrupt Service Routine **************************************************
- * ISR - DDA timer interrupt routine - service ticks from DDA timer
- */
-
-namespace Motate {            // Must define timer interrupts inside the Motate namespace
-    template<>
-    void dwell_timer_type::interrupt()
-{
-    dwell_timer.getInterruptCause(); // read SR to clear interrupt condition
-    if (--st_run.dda_ticks_downcount == 0) {
-        dwell_timer.stop();
-        _load_move();
-    }
-}
 } // namespace Motate
 
 /****************************************************************************************
@@ -348,9 +352,12 @@ namespace Motate {            // Must define timer interrupts inside the Motate 
 
 void st_request_exec_move()
 {
+    stepper_debug("e");
     if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_EXEC) { // bother interrupting
         exec_timer.setInterruptPending();
+        return;
     }
+    stepper_debug("!\n");
 }
 
 namespace Motate {    // Define timer inside Motate namespace
@@ -359,16 +366,21 @@ namespace Motate {    // Define timer inside Motate namespace
     {
         exec_timer.getInterruptCause();                    // clears the interrupt condition
         if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_EXEC) {
+            stepper_debug("E>");
             if (mp_exec_move() != STAT_NOOP) {
+                stepper_debug("E+\n");
                 st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER; // flip it back
                 st_request_load_move();
+                return;
             }
+            stepper_debug("E-\n");
         }
     }
 } // namespace Motate
 
-void st_request_plan_move()
+void st_request_forward_plan()
 {
+    stepper_debug("p");
     fwd_plan_timer.setInterruptPending();
 }
 
@@ -376,10 +388,14 @@ namespace Motate {    // Define timer inside Motate namespace
     template<>
     void fwd_plan_timer_type::interrupt()
     {
-        fwd_plan_timer.getInterruptCause();       // clears the interrupt condition
-        if (mp_plan_move() != STAT_NOOP) { // We now have a move to exec.
+        fwd_plan_timer.getInterruptCause();     // clears the interrupt condition
+        stepper_debug("P>");
+        if (mp_forward_plan() != STAT_NOOP) {   // We now have a move to exec.
+            stepper_debug("P+\n");
             st_request_exec_move();
+            return;
         }
+        stepper_debug("P-\n");
     }
 } // namespace Motate
 
@@ -398,7 +414,9 @@ void st_request_load_move()
     if (st_runtime_isbusy()) {                                      // don't request a load if the runtime is busy
         return;
     }
+    stepper_debug("l");
     if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_LOADER) {       // bother interrupting
+        stepper_debug("_");
         load_timer.setInterruptPending();
     }
 }
@@ -408,7 +426,9 @@ namespace Motate {    // Define timer inside Motate namespace
     void load_timer_type::interrupt()
     {
         load_timer.getInterruptCause();                             // read SR to clear interrupt condition
+        stepper_debug("L>");
         _load_move();
+        stepper_debug("L+\n");
     }
 } // namespace Motate
 
@@ -453,8 +473,11 @@ static void _load_move()
 #if (MOTORS > 5)
         motor_6.motionStopped();    // ...start motor power timeouts
 #endif
+        stepper_debug("•");
         return;
-    }
+    } // if (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_LOADER)
+
+    stepper_debug("^");
 
     // handle aline loads first (most common case)  NB: there are no more lines, only alines
     if (st_pre.block_type == BLOCK_TYPE_ALINE) {
@@ -499,7 +522,7 @@ static void _load_move()
 
         } else {  // Motor has 0 steps; might need to energize motor for power mode processing
             motor_1.motionStopped();
-            }
+        }
         // accumulate counted steps to the step position and zero out counted steps for the segment currently being loaded
         ACCUMULATE_ENCODER(MOTOR_1);
 
@@ -596,23 +619,25 @@ static void _load_move()
 
         //**** do this last ****
 
-        dda_timer.start();                                    // start the DDA timer if not already running
+        dda_timer.start();                              // start the DDA timer if not already running
 
-    // handle dwells
+    // handle dwells and commands
     } else if (st_pre.block_type == BLOCK_TYPE_DWELL) {
-        st_run.dda_ticks_downcount = st_pre.dda_ticks;
-        dwell_timer.start();
+        st_run.dwell_ticks_downcount = st_pre.dwell_ticks;
 
-    // handle synchronous commands
+        // We now use SysTick events to handle dwells
+        SysTickTimer.registerEvent(&dwell_systick_event);
+
+        // handle synchronous commands
     } else if (st_pre.block_type == BLOCK_TYPE_COMMAND) {
         mp_runtime_command(st_pre.bf);
-
-    } // else null - WARNING - We cannot printf from here!! Causes crashes.
+        
+    } // else null - which is okay in many cases
 
     // all other cases drop to here (e.g. Null moves after Mcodes skip to here)
     st_pre.block_type = BLOCK_TYPE_NULL;
     st_pre.buffer_state = PREP_BUFFER_OWNED_BY_EXEC;    // we are done with the prep buffer - flip the flag back
-    st_request_exec_move();                                // exec and prep next move
+    st_request_exec_move();                             // exec and prep next move
 }
 
 /***********************************************************************************
@@ -641,6 +666,7 @@ static void _load_move()
 
 stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time)
 {
+    stepper_debug("😶");
     // trap assertion failures and other conditions that would prevent queuing the line
     if (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_EXEC) {     // never supposed to happen
         return (cm_panic(STAT_INTERNAL_ERROR, "st_prep_line() prep sync error"));
@@ -719,6 +745,7 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
     }
     st_pre.block_type = BLOCK_TYPE_ALINE;
     st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;    // signal that prep buffer is ready
+    stepper_debug("👍🏻");
     return (STAT_OK);
 }
 
@@ -750,8 +777,8 @@ void st_prep_command(void *bf)
 void st_prep_dwell(float microseconds)
 {
     st_pre.block_type = BLOCK_TYPE_DWELL;
-    //st_pre.dda_period = _f_to_period(FREQUENCY_DWELL);
-    st_pre.dda_ticks = (uint32_t)((microseconds/1000000) * FREQUENCY_DWELL);
+    // we need dwell_ticks to be at least 1
+    st_pre.dwell_ticks = std::max((uint32_t)((microseconds/1000000) * FREQUENCY_DWELL), 1UL);
     st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;    // signal that prep buffer is ready
 }
 
