@@ -21,7 +21,7 @@
 #ifndef G2CORE_INFO_H_ONCE
 #define G2CORE_INFO_H_ONCE
 
-#define G2CORE_FIRMWARE_BUILD			100.14  // fix for 198, uart can be muted when USB connects 
+#define G2CORE_FIRMWARE_BUILD			100.15  // fix for #200 and other USB issues  
 #ifdef GIT_VERSION
 #define G2CORE_FIRMWARE_BUILD_STRING	GIT_VERSION
 #else
