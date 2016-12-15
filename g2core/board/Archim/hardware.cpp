@@ -42,6 +42,7 @@
 
 void hardware_init()
 {
+    board_hardware_init();
 	return;
 }
 
