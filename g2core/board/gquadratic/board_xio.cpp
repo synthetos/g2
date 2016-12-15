@@ -44,14 +44,10 @@ const Motate::USBSettings_t Motate::USBSettings = {
 
 XIOUSBDevice_t usb;
 
-extern decltype(usb.mixin<0>::Serial)& SerialUSB;
-#if USB_SERIAL_PORTS_EXPOSED == 2
-extern decltype(usb.mixin<1>::Serial)& SerialUSB1;
-#endif
-
-
 decltype(usb.mixin<0>::Serial) &SerialUSB = usb.mixin<0>::Serial;
-//decltype(usb.mixin<1>::Serial) &SerialUSB1 = usb.mixin<1>::Serial;
+#if USB_SERIAL_PORTS_EXPOSED == 2
+decltype(usb.mixin<1>::Serial) &SerialUSB1 = usb.mixin<1>::Serial;
+#endif
 
 MOTATE_SET_USB_VENDOR_STRING( u"Synthetos" )
 MOTATE_SET_USB_PRODUCT_STRING( u"TinyG v2" )
