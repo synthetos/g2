@@ -72,9 +72,6 @@ stat_t pwm_set_freq(uint8_t chan, float freq)
     //if (freq > PWM_MAX_FREQ) { return (STAT_INPUT_EXCEEDS_MAX_VALUE);}
 
     if (chan == PWM_1) {
-        if (spindle_pwm_pin.canPWM()) {
-            cm_alarm(STAT_ALARM, "BOOM");
-        }
         spindle_pwm_pin.setFrequency(freq);
     } else if (chan == PWM_2) {
         secondary_pwm_pin.setFrequency(freq);
