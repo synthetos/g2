@@ -634,7 +634,7 @@ struct Trinamic2130 final : Stepper {
             IOIN_needs_read = true;
             CHOPCONF_needs_read = true;
             DRV_STATUS_needs_read = true;
-            _startNextReadWrite();
         }
+        _startNextReadWrite();
     };
 };
