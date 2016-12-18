@@ -817,20 +817,8 @@ static void _set_hw_microsteps(const uint8_t motor, const uint8_t microsteps)
 
 static int8_t _motor(const index_t index)
 {
-    char *ptr;
-    char motors[] = {"123456"};
-    char tmp[GROUP_LEN+1];
-
-    strcpy(tmp, cfgArray[index].group);
-    if ((ptr = strchr(motors, tmp[0])) == NULL) {
-        return (-1);
-    }
-    return (ptr - motors);
-}
-
-cmAxisType st_get_axis_type_by_motor(const index_t index)
-{
-    return (cm_get_axis_type_by_axis(st_cfg.mot[_motor(index)].motor_map));
+    char c = cfgArray[index].token[0];
+    return (isdigit(c) ? c-0x31 : -1 ); // 0x30 + 1 offsets motor 1 to == 0
 }
 
 /*
@@ -918,13 +906,12 @@ stat_t st_set_su(nvObj_t *nv)
     }
 
     // Do unit conversion here because it's a reciprocal value (rather than process_incoming_float())
-    uint8_t m = _motor(nv->index);
     if (cm_get_units_mode(MODEL) == INCHES) {
-        uint8_t a = st_cfg.mot[m].motor_map;
-        if (cm_get_axis_type_by_axis(a) == AXIS_TYPE_LINEAR) {
+        if (cm_get_axis_type(nv->index) == AXIS_TYPE_LINEAR) {
             nv->value *= INCHES_PER_MM;
         }
     }    
+    uint8_t m = _motor(nv->index);
     st_cfg.mot[m].steps_per_unit = nv->value;
     st_cfg.mot[m].units_per_step = 1.0/st_cfg.mot[m].steps_per_unit;
 
@@ -1008,8 +995,8 @@ stat_t st_get_pwr(nvObj_t *nv)
 
 stat_t st_get_mt(nvObj_t *nv) { return(get_float(nv, st_cfg.motor_power_timeout)); }
 stat_t st_set_mt(nvObj_t *nv) { return(set_float_range(nv, st_cfg.motor_power_timeout,
-                                                           MOTOR_TIMEOUT_SECONDS_MAX,
-                                                           MOTOR_TIMEOUT_SECONDS_MIN)); }
+                                                           MOTOR_TIMEOUT_SECONDS_MIN,
+                                                           MOTOR_TIMEOUT_SECONDS_MAX)); }
 
 stat_t st_set_me(nvObj_t *nv)    // Make sure this function is not part of initialization --> f00
 {

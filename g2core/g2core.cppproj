@@ -73,7 +73,7 @@
         <InterfaceName>SWD</InterfaceName>
       </ToolOptions>
       <ToolType>com.atmel.avrdbg.tool.atmelice</ToolType>
-      <ToolNumber>J41800030015</ToolNumber>
+      <ToolNumber>J41800036434</ToolNumber>
       <ToolName>Atmel-ICE</ToolName>
     </com_atmel_avrdbg_tool_atmelice>
     <UseGdb>True</UseGdb>
@@ -100,7 +100,7 @@
       <HWProgramCounterSampling>True</HWProgramCounterSampling>
     </PercepioTrace>
     <preserveEEPROM>true</preserveEEPROM>
-    <avrtoolserialnumber>J41800030015</avrtoolserialnumber>
+    <avrtoolserialnumber>J41800036434</avrtoolserialnumber>
     <avrdeviceexpectedsignature>0x284E0A60</avrdeviceexpectedsignature>
     <avrtoolinterfaceclock>10000000</avrtoolinterfaceclock>
     <custom>

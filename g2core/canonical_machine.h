@@ -463,7 +463,6 @@ float cm_get_jogging_dest(void);                                // get jogging d
 
 char cm_get_axis_char(const int8_t axis);
 cmAxisType cm_get_axis_type(const index_t index);
-cmAxisType cm_get_axis_type_by_axis(const int8_t axis);
 
 stat_t cm_get_mline(nvObj_t *nv);       // get model line number
 stat_t cm_get_line(nvObj_t *nv);        // get active (model or runtime) line number

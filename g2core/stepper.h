@@ -578,8 +578,6 @@ void st_prep_dwell(float microseconds);
 void st_request_out_of_band_dwell(float microseconds);
 stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time);
 
-cmAxisType st_get_axis_type_by_motor(const index_t index);
-
 stat_t st_get_ma(nvObj_t *nv);
 stat_t st_set_ma(nvObj_t *nv);
 stat_t st_get_sa(nvObj_t *nv);

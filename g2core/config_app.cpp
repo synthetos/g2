@@ -1035,7 +1035,8 @@ void process_outgoing_float(nvObj_t *nv)
  				nv->value *= INCHES_PER_MM;
             }
  		} else if (flags & F_ICONVERT) {                        // inverse units conversion
-            if (st_get_axis_type_by_motor(nv->index) == AXIS_TYPE_LINEAR) { // axis motor is mapped to
+//            if (st_get_axis_type_by_motor(nv->index) == AXIS_TYPE_LINEAR) { // axis motor is mapped to
+            if (cm_get_axis_type(nv->index) == AXIS_TYPE_LINEAR) { // axis motor is mapped to
                 nv->value *= MM_PER_INCH;
             }                
 		}

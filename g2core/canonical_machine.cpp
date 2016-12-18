@@ -2080,22 +2080,26 @@ static const char *const msg_frmo[] = { msg_g93, msg_g94, msg_g95 };
 
 
 /***** AXIS HELPERS *****************************************************************
- * _axis()            - return axis number or -1 if not an axis
+ * _axis()            - return axis number or -1 if not an axis 9works for mapped motors as well)
  * _coord()           - return coordinate system number or -1 if error
  * cm_get_axis_char() - return ASCII char for axis given the axis number
  * cm_get_axis_type() - return axis type (0 if axis is linear, 1 if rotary, -1 if NA)
- * cm_get_axis_type_by_axis() - return axis type (0 if axis is linear, 1 if rotary, -1 if NA)
+ *                      Works for Axis parameters, and motors. Maps from motor to axis
  */
 
 static int8_t _axis(const index_t index)
 {
+    // if the leading character of the token is a number it's a motor
+    char c = cfgArray[index].token[0];
+    if (isdigit(cfgArray[index].token[0])) {
+        return(st_cfg.mot[c-0x31].motor_map);
+    }
+    
+    // otherwise it's an axis. Or an error.
     char *ptr;
-    char tmp[TOKEN_LEN+1];
     char axes[] = {"xyzabc"};
-
-    strncpy(tmp, cfgArray[index].token, TOKEN_LEN);     // kind of a hack. Looks for an axis
-    if ((ptr = strchr(axes, tmp[0])) == NULL) {         // character in the 0 and 3 positions
-        if ((ptr = strchr(axes, tmp[3])) == NULL) {     // to accommodate 'xam' and 'g54x' styles
+    if ((ptr = strchr(axes, c)) == NULL) {              // test the character in the 0 and 3 positions
+        if ((ptr = strchr(axes, cfgArray[index].token[3])) == NULL) { // to accommodate 'xam' and 'g54x' styles
             return (-1);
         }
     }
@@ -2122,16 +2126,16 @@ char cm_get_axis_char(const int8_t axis)
 
 cmAxisType cm_get_axis_type(const index_t index)
 {
-    return (cm_get_axis_type_by_axis(_axis(index)));
-}
-
-cmAxisType cm_get_axis_type_by_axis(const int8_t axis)
-{
+    uint8_t axis = _axis(index);
     if (axis >= AXIS_A) { return (AXIS_TYPE_ROTARY); }
     if (axis == -1) { return (AXIS_TYPE_UNDEFINED); }
     return (AXIS_TYPE_LINEAR);
 }
-
+/*
+cmAxisType cm_get_axis_type_by_axis(const int8_t axis)
+{
+}
+*/
 /**** Functions called directly from cfgArray table - mostly wrappers ****
  * _get_msg_helper() - helper to get string values
  *
