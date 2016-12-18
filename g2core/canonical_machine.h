@@ -176,6 +176,43 @@ typedef struct cmAxis {
     float zero_backoff;                     // backoff from switches for machine zero
 } cfgAxis_t;
 
+typedef struct arArcSingleton {                 // persistent planner and runtime variables
+    magic_t magic_start;
+    uint8_t run_state;              // runtime state machine sequence
+
+    float position[AXES];           // accumulating runtime position
+    float offset[3];                // arc IJK offsets
+
+    float length;                   // length of line or helix in mm
+    float radius;                   // Raw R value, or computed via offsets
+    float theta;                    // starting angle of arc
+    float angular_travel;           // travel along the arc in radians
+    float planar_travel;            // travel in arc plane in mm
+    float linear_travel;            // travel along linear axis of arc in mm
+    bool  full_circle;              // True if full circle arcs specified
+    float rotations;                // number of full rotations to add (P value + sign)
+
+    cmAxes plane_axis_0;            // arc plane axis 0 - e.g. X for G17
+    cmAxes plane_axis_1;            // arc plane axis 1 - e.g. Y for G17
+    cmAxes linear_axis;             // linear axis (normal to plane)
+
+    float   segments;               // number of segments in arc or blend
+    int32_t segment_count;          // count of running segments
+    float   segment_theta;          // angular motion per segment
+    float   segment_linear_travel;  // linear motion per segment
+    float   center_0;               // center of circle at plane axis 0 (e.g. X for G17)
+    float   center_1;               // center of circle at plane axis 1 (e.g. Y for G17)
+
+    GCodeState_t gm;                // Gcode state struct is passed for each arc segment.
+    //    Usage:
+    //    uint32_t linenum;            // line number of the arc feed move - same for each segment
+    //    float target[AXES];            // arc segment target
+    //  float work_offset[AXES];        // offset from machine coord system for reporting (same for each segment)
+    //  float block_time;               // segment_time: constant time per aline segment
+
+    magic_t magic_end;
+} arc_t;
+
 typedef struct cmMachine {                  // struct to manage canonical machine globals and state
     magic_t magic_start;                    // magic number to test memory integrity
 
@@ -230,7 +267,8 @@ typedef struct cmMachine {                  // struct to manage canonical machin
 
     float jogging_dest;                     // jogging destination as a relative move from current position
 
-  /**** Model states ****/
+  /**** Model state structures ****/
+    arc_t arc;                              // arc parameters
     GCodeState_t *am;                       // active Gcode model is maintained by state management
     GCodeState_t  gm;                       // core gcode model state
     GCodeStateX_t gmx;                      // extended gcode model state
@@ -243,6 +281,7 @@ typedef struct cmMachine {                  // struct to manage canonical machin
 extern cmMachine_t *cm;         // pointer to active canonical machine
 extern cmMachine_t cm0;         // canonical machine primary machine
 extern cmMachine_t cm1;         // canonical machine secondary machine
+//extern arc_t arc;
 
 /*****************************************************************************
  * FUNCTION PROTOTYPES

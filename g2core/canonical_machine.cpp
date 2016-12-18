@@ -767,15 +767,15 @@ void canonical_machine_init_assertions(void)
     cm->magic_end = MAGICNUM;
     cm->gmx.magic_start = MAGICNUM;
     cm->gmx.magic_end = MAGICNUM;
-    arc.magic_start = MAGICNUM;
-    arc.magic_end = MAGICNUM;
+    cm->arc.magic_start = MAGICNUM;
+    cm->arc.magic_end = MAGICNUM;
 }
 
 stat_t canonical_machine_test_assertions(void)
 {
     if ((BAD_MAGIC(cm->magic_start)) || (BAD_MAGIC(cm->magic_end)) ||
         (BAD_MAGIC(cm->gmx.magic_start)) || (BAD_MAGIC(cm->gmx.magic_end)) ||
-        (BAD_MAGIC(arc.magic_start)) || (BAD_MAGIC(arc.magic_end))) {
+        (BAD_MAGIC(cm->arc.magic_start)) || (BAD_MAGIC(cm->arc.magic_end))) {
         return(cm_panic(STAT_CANONICAL_MACHINE_ASSERTION_FAILURE, "canonical_machine_test_assertions()"));
     }
     return (STAT_OK);
