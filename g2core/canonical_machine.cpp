@@ -698,8 +698,8 @@ stat_t cm_test_soft_limits(const float target[])
 
 void canonical_machine_init()
 {
+    // NoteL cm* was assignd in main()
     // If you can assume all memory has been zeroed by a hard reset you don't need this code:
-//    memset(&cm, 0, sizeof(cm));                 // do not reset canonicalMachineSingleton once it's been initialized
     memset(cm, 0, sizeof(cm0));                 // do not reset canonicalMachineSingleton once it's been initialized
     memset(&cm->gm, 0, sizeof(GCodeState_t));    // clear all values, pointers and status
     memset(&gc.gn, 0, sizeof(GCodeInput_t));
@@ -2131,11 +2131,7 @@ cmAxisType cm_get_axis_type(const index_t index)
     if (axis == -1) { return (AXIS_TYPE_UNDEFINED); }
     return (AXIS_TYPE_LINEAR);
 }
-/*
-cmAxisType cm_get_axis_type_by_axis(const int8_t axis)
-{
-}
-*/
+
 /**** Functions called directly from cfgArray table - mostly wrappers ****
  * _get_msg_helper() - helper to get string values
  *
