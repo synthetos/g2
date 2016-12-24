@@ -568,10 +568,13 @@ void json_print_response(uint8_t status, const bool only_to_muted /*= false*/)
                     nv->valuetype = TYPE_EMPTY;
                 }
             }
-        } while ((nv = nv->nx) != NULL);
+        } while ((nv = nv->nx) != NULL);                    // Emergency escape
     }
 
-    // Footer processing
+    // Footer processing - wind to the end of the populated blocks
+    if (nv == NULL) {                                       // this can happen when processing a stale list
+        return;                                             //...that already has a null-terminated footer
+    }
     while(nv->valuetype != TYPE_EMPTY) {                    // find a free nvObj at end of the list...
         if ((nv = nv->nx) == NULL) {                        // oops! No free nvObj!
             rpt_exception(STAT_JSON_OUTPUT_TOO_LONG, "json_print_response() json too long"); // report this as an exception
