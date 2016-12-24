@@ -5,7 +5,7 @@
     <ProjectVersion>7.0</ProjectVersion>
     <ToolchainName>com.Atmel.ARMGCC.CPP</ToolchainName>
     <ProjectGuid>{44ea8fec-55d7-4149-8a78-a574fc26bf51}</ProjectGuid>
-    <avrdevice>ATSAMS70N19</avrdevice>
+    <avrdevice>ATSAM3X8C</avrdevice>
     <avrdeviceseries>none</avrdeviceseries>
     <OutputType>Executable</OutputType>
     <Language>CPP</Language>
@@ -68,12 +68,12 @@
     <com_atmel_avrdbg_tool_atmelice>
       <ToolOptions>
         <InterfaceProperties>
-          <SwdClock>2000000</SwdClock>
+          <SwdClock>10000000</SwdClock>
         </InterfaceProperties>
         <InterfaceName>SWD</InterfaceName>
       </ToolOptions>
       <ToolType>com.atmel.avrdbg.tool.atmelice</ToolType>
-      <ToolNumber>J41800019454</ToolNumber>
+      <ToolNumber>J41800036434</ToolNumber>
       <ToolName>Atmel-ICE</ToolName>
     </com_atmel_avrdbg_tool_atmelice>
     <UseGdb>True</UseGdb>
@@ -100,9 +100,9 @@
       <HWProgramCounterSampling>True</HWProgramCounterSampling>
     </PercepioTrace>
     <preserveEEPROM>true</preserveEEPROM>
-    <avrtoolserialnumber>J41800019454</avrtoolserialnumber>
-    <avrdeviceexpectedsignature>0xA11D0A00</avrdeviceexpectedsignature>
-    <avrtoolinterfaceclock>2000000</avrtoolinterfaceclock>
+    <avrtoolserialnumber>J41800036434</avrtoolserialnumber>
+    <avrdeviceexpectedsignature>0x284E0A60</avrdeviceexpectedsignature>
+    <avrtoolinterfaceclock>10000000</avrtoolinterfaceclock>
     <custom>
       <ToolOptions xmlns="">
         <InterfaceProperties>
