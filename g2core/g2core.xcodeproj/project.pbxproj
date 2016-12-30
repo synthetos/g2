@@ -53,6 +53,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D41997401DF9D6A800E0FB51 /* settings */ = {isa = PBXFileReference; lastKnownFileType = folder; path = settings; sourceTree = "<group>"; };
 		D43FF6F51D52C8AF00FB5B53 /* board */ = {isa = PBXFileReference; lastKnownFileType = folder; path = board; sourceTree = "<group>"; };
 		D44E72C01D663B0300ECD5DD /* coolant.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = coolant.cpp; sourceTree = "<group>"; };
 		D44E72C21D663B0F00ECD5DD /* coolant.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = coolant.h; sourceTree = "<group>"; };
@@ -98,25 +99,10 @@
 		D48F5A7F172CB21100D0E055 /* g2core.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = g2core.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D48F5A80172CB21100D0E055 /* util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = util.h; sourceTree = "<group>"; };
 		D48F5A81172CB21100D0E055 /* xio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = xio.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		D49177A11D21CFC50029CDEB /* settings_Printrbot_Simple_1403.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Printrbot_Simple_1403.h; sourceTree = "<group>"; };
-		D49177A21D21CFDB0029CDEB /* settings_Printrbot_Simple_1608.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_Printrbot_Simple_1608.h; sourceTree = "<group>"; };
 		D4922F3F1CB8361B00A565FF /* boards.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = boards.mk; sourceTree = "<group>"; };
 		D49367D71B87CA8A000BB759 /* temperature.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = temperature.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D49367D81B87CA8A000BB759 /* temperature.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = temperature.h; sourceTree = "<group>"; };
 		D49367DB1B8E0AF1000BB759 /* error.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = error.h; sourceTree = "<group>"; };
-		D4AC39081C77C1F20098D685 /* settings_default.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = settings_default.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		D4AC39091C77C1F20098D685 /* settings_makeblock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = settings_makeblock.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		D4AC390A1C77C1F20098D685 /* settings_othermill_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = settings_othermill_test.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		D4AC390B1C77C1F20098D685 /* settings_othermill.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = settings_othermill.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		D4AC390C1C77C1F20098D685 /* settings_Printrbot_Play.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = settings_Printrbot_Play.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		D4AC390D1C77C1F20098D685 /* settings_Printrbot_Plus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = settings_Printrbot_Plus.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		D4AC390F1C77C1F20098D685 /* settings_probotixV90.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = settings_probotixV90.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		D4AC39101C77C1F20098D685 /* settings_shapeoko2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = settings_shapeoko2.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		D4AC39111C77C1F20098D685 /* settings_shopbot_sbv300.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = settings_shopbot_sbv300.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		D4AC39121C77C1F20098D685 /* settings_shopbot_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = settings_shopbot_test.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		D4AC39131C77C1F20098D685 /* settings_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_test.h; sourceTree = "<group>"; };
-		D4AC39141C77C1F20098D685 /* settings_Ultimaker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = settings_Ultimaker.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		D4AC39151C77C1F20098D685 /* settings_zen7x12.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = settings_zen7x12.h; sourceTree = "<group>"; };
 		D4B6579C18B5C1DE00F8616C /* plan_exec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = plan_exec.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D4B6579E18B5C21500F8616C /* cycle_jogging.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = cycle_jogging.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D4B6579F18B5C21500F8616C /* cycle_probing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = cycle_probing.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
@@ -142,28 +128,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		D41D13F617374B7D00D522D9 /* settings */ = {
-			isa = PBXGroup;
-			children = (
-				D4AC39081C77C1F20098D685 /* settings_default.h */,
-				D4AC39091C77C1F20098D685 /* settings_makeblock.h */,
-				D4AC390A1C77C1F20098D685 /* settings_othermill_test.h */,
-				D4AC390B1C77C1F20098D685 /* settings_othermill.h */,
-				D4AC390C1C77C1F20098D685 /* settings_Printrbot_Play.h */,
-				D4AC390D1C77C1F20098D685 /* settings_Printrbot_Plus.h */,
-				D49177A11D21CFC50029CDEB /* settings_Printrbot_Simple_1403.h */,
-				D49177A21D21CFDB0029CDEB /* settings_Printrbot_Simple_1608.h */,
-				D4AC390F1C77C1F20098D685 /* settings_probotixV90.h */,
-				D4AC39101C77C1F20098D685 /* settings_shapeoko2.h */,
-				D4AC39111C77C1F20098D685 /* settings_shopbot_sbv300.h */,
-				D4AC39121C77C1F20098D685 /* settings_shopbot_test.h */,
-				D4AC39131C77C1F20098D685 /* settings_test.h */,
-				D4AC39141C77C1F20098D685 /* settings_Ultimaker.h */,
-				D4AC39151C77C1F20098D685 /* settings_zen7x12.h */,
-			);
-			path = settings;
-			sourceTree = "<group>";
-		};
 		D45710B7170532AC00EA19A8 = {
 			isa = PBXGroup;
 			children = (
@@ -227,7 +191,7 @@
 				D4922F3F1CB8361B00A565FF /* boards.mk */,
 				D43FF6F51D52C8AF00FB5B53 /* board */,
 				D47B744C1D4925B4004FAB53 /* device */,
-				D41D13F617374B7D00D522D9 /* settings */,
+				D41997401DF9D6A800E0FB51 /* settings */,
 				D4FEBFF81B0A65E30042EA32 /* index */,
 			);
 			sourceTree = "<group>";
@@ -291,6 +255,34 @@
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
+		D4782AAE1D9B16BE00B32136 /* G2 Probotix */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=ProbotixV90 DEBUG=1";
+			buildConfigurationList = D4782AAF1D9B16BE00B32136 /* Build configuration list for PBXLegacyTarget "G2 Probotix" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "G2 Probotix";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
+		D4782AB61D9E39EC00B32136 /* G2 EggBot */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=EggBot DEBUG=1";
+			buildConfigurationList = D4782AB71D9E39EC00B32136 /* Build configuration list for PBXLegacyTarget "G2 EggBot" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "G2 EggBot";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
 		D4AC391A1C7BAB8E0098D685 /* G2 sbv300 */ = {
 			isa = PBXLegacyTarget;
 			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=sbv300 DEBUG=2";
@@ -349,7 +341,7 @@
 		};
 		D4F226F31D088A48008ED57C /* G2 gQuintic PrintrbotPlus */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=PrintrbotPlus BOARD=gquintic-a DEBUG=2";
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=PrintrbotPlus BOARD=gquintic-b DEBUG=2";
 			buildConfigurationList = D4F226F41D088A48008ED57C /* Build configuration list for PBXLegacyTarget "G2 gQuintic PrintrbotPlus" */;
 			buildPhases = (
 			);
@@ -411,7 +403,9 @@
 				D4AC391A1C7BAB8E0098D685 /* G2 sbv300 */,
 				D4F226F31D088A48008ED57C /* G2 gQuintic PrintrbotPlus */,
 				D43FF7141D537A5C00FB5B53 /* G2 gQuadratic Test */,
+				D4782AAE1D9B16BE00B32136 /* G2 Probotix */,
 				D457112317053BFB00EA19A8 /* index */,
+				D4782AB61D9E39EC00B32136 /* G2 EggBot */,
 			);
 		};
 /* End PBXProject section */
@@ -653,6 +647,38 @@
 			};
 			name = Release;
 		};
+		D4782AB01D9B16BE00B32136 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		D4782AB11D9B16BE00B32136 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		D4782AB81D9E39EC00B32136 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		D4782AB91D9E39EC00B32136 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		D4AC391C1C7BAB8E0098D685 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -786,6 +812,24 @@
 			buildConfigurations = (
 				D457112B17053BFB00EA19A8 /* Debug */,
 				D457112C17053BFB00EA19A8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4782AAF1D9B16BE00B32136 /* Build configuration list for PBXLegacyTarget "G2 Probotix" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4782AB01D9B16BE00B32136 /* Debug */,
+				D4782AB11D9B16BE00B32136 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4782AB71D9E39EC00B32136 /* Build configuration list for PBXLegacyTarget "G2 EggBot" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4782AB81D9E39EC00B32136 /* Debug */,
+				D4782AB91D9E39EC00B32136 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

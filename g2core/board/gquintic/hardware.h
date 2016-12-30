@@ -120,18 +120,19 @@ using Motate::OutputPin;
 /**** Stepper DDA and dwell timer settings ****/
 
 //#define FREQUENCY_DDA    200000UL    // Hz step frequency. Interrupts actually fire at 2x (400 KHz)
-#define FREQUENCY_DDA    150000UL    // Hz step frequency. Interrupts actually fire at 2x (300 KHz)
+#define FREQUENCY_DDA    300000UL    // Hz step frequency. Interrupts actually fire at 2x (300 KHz)
 #define FREQUENCY_DWELL    1000UL
 #define FREQUENCY_SGI    200000UL    // 200,000 Hz means software interrupts will fire 5 uSec after being called
 
 /**** Motate Definitions ****/
 
 // Timer definitions. See stepper.h and other headers for setup
-typedef TimerChannel<0,0> dda_timer_type;  // stepper pulse generation in stepper.cpp
-typedef TimerChannel<1,0> dwell_timer_type;  // dwell timing in stepper.cpp
-typedef ServiceCall<0> load_timer_type;  // request load timer in stepper.cpp
-typedef ServiceCall<1> exec_timer_type;  // request exec timer in stepper.cpp
-typedef ServiceCall<2> fwd_plan_timer_type;  // request exec timer in stepper.cpp
+typedef TimerChannel<9, 0> dda_timer_type;    // stepper pulse generation in stepper.cpp
+typedef TimerChannel<10, 0> load_timer_type;       // request load timer in stepper.cpp
+typedef ServiceCall<1> exec_timer_type;       // request exec timer in stepper.cpp
+typedef ServiceCall<2> fwd_plan_timer_type;   // request exec timer in stepper.cpp
+
+Motate::service_call_number kSPI_ServiceCallNumber = 3;
 
 // Pin assignments
 

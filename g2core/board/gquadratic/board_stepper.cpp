@@ -47,15 +47,8 @@ StepDirStepper<Motate::kSocket2_StepPinNumber,
                Motate::kSocket2_VrefPinNumber>
     motor_2{};
 
-// StepDirStepper<
-//    Motate::kSocket3_StepPinNumber,
-//    Motate::kSocket3_DirPinNumber,
-//    Motate::kSocket3_EnablePinNumber,
-//    Motate::kSocket3_Microstep_0PinNumber,
-//    Motate::kSocket3_Microstep_1PinNumber,
-//    Motate::kSocket3_Microstep_2PinNumber,
-//    Motate::kSocket3_VrefPinNumber> motor_3 {};
-//
+StepDirHobbyServo<Motate::kServo1_PinNumber> motor_3;
+
 // StepDirStepper<
 //    Motate::kSocket4_StepPinNumber,
 //    Motate::kSocket4_DirPinNumber,
@@ -83,7 +76,7 @@ StepDirStepper<Motate::kSocket2_StepPinNumber,
 //    Motate::kSocket6_Microstep_2PinNumber,
 //    Motate::kSocket6_VrefPinNumber> motor_6 {};
 
-Stepper* Motors[MOTORS] = {&motor_1, &motor_2};
+Stepper* Motors[MOTORS] = {&motor_1, &motor_2, &motor_3};
 
 void board_stepper_init() {
     for (uint8_t motor = 0; motor < MOTORS; motor++) { Motors[motor]->init(); }

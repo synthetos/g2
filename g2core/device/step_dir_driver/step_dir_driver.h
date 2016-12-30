@@ -49,7 +49,7 @@ template <pin_number step_num,  // Setup a stepper template to hold our pins
           pin_number ms1_num,
           pin_number ms2_num,
           pin_number vref_num>
-struct StepDirStepper : Stepper {
+struct StepDirStepper final : Stepper  {
     /* stepper pin assignments */
 
     OutputPin<step_num>    _step;

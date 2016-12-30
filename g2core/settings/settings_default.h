@@ -58,6 +58,11 @@
 
 // *** Machine configuration settings *** //
 
+#ifndef USB_SERIAL_PORTS_EXPOSED
+#define USB_SERIAL_PORTS_EXPOSED   1        // Valid options are 1 or 2, only!
+#endif
+
+
 #ifndef JUNCTION_INTEGRATION_TIME
 #define JUNCTION_INTEGRATION_TIME   0.75    // {jt: cornering - between 0.05 and 2.00 (max)
 #endif
@@ -134,6 +139,10 @@
 
 #ifndef XIO_ENABLE_FLOW_CONTROL
 #define XIO_ENABLE_FLOW_CONTROL     FLOW_CONTROL_RTS        // FLOW_CONTROL_OFF, FLOW_CONTROL_XON, FLOW_CONTROL_RTS
+#endif
+
+#ifndef XIO_UART_MUTES_WHEN_USB_CONNECTED
+#define XIO_UART_MUTES_WHEN_USB_CONNECTED  0                // UART will be muted when USB connected (off by default)
 #endif
 
 #ifndef JSON_VERBOSITY
@@ -853,13 +862,13 @@
 // *** PWM Settings *** //
 
 #ifndef P1_PWM_FREQUENCY
-#define P1_PWM_FREQUENCY            100.0                   // in Hz
+#define P1_PWM_FREQUENCY            100                   // in Hz
 #endif
 #ifndef P1_CW_SPEED_LO
-#define P1_CW_SPEED_LO              7900.0                  // in RPM (arbitrary units)
+#define P1_CW_SPEED_LO              7900                  // in RPM (arbitrary units)
 #endif
 #ifndef P1_CW_SPEED_HI
-#define P1_CW_SPEED_HI              12800.0
+#define P1_CW_SPEED_HI              12800
 #endif
 #ifndef P1_CW_PHASE_LO
 #define P1_CW_PHASE_LO              0.13                    // phase [0..1]

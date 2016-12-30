@@ -1382,7 +1382,7 @@ static stat_t _do_outputs(nvObj_t *nv)  // print parameters for all output group
     }
     return (STAT_COMPLETE);
 }
-/*
+
 static stat_t _do_heaters(nvObj_t *nv)  // print parameters for all heater groups
 {
     char group[GROUP_LEN];
@@ -1392,7 +1392,7 @@ static stat_t _do_heaters(nvObj_t *nv)  // print parameters for all heater group
     }
     return (STAT_COMPLETE);
 }
-*/
+
 static stat_t _do_all(nvObj_t *nv)  // print all parameters
 {
     _do_group(nv, (char *)"sys");   // System group
@@ -1400,10 +1400,10 @@ static stat_t _do_all(nvObj_t *nv)  // print all parameters
     _do_axes(nv);
     _do_inputs(nv);
     _do_outputs(nv);
-//    _do_heaters(nv);              // there are no text mode prints for heaters
+    _do_heaters(nv);              // there are no text mode prints for heaters
     _do_group(nv, (char *)"p1");    // PWM group
     _do_offsets(nv);                // coordinate system offsets
-    return (STAT_OK);
+    return (STAT_COMPLETE);         // STAT_COMPLETE suppresses a second JSON write that would cause a fault
 }
 
 /***********************************************************************************

@@ -215,6 +215,12 @@ struct RGB_Color_t : NeopixelColorTag {
     float green;
     float blue;
 
+    enum ColorFilter {
+        Set = 0,
+        Lighten,
+        Darken
+    };
+
     const uint32_t _update_timeout_ms;
 
     Motate::Timeout _update_timeout;
@@ -233,7 +239,18 @@ struct RGB_Color_t : NeopixelColorTag {
         _update_timeout.set(0);
     };
 
-    void startTransition(uint32_t milliseconds, float to_red, float to_green, float to_blue) {
+    void startTransition(uint32_t milliseconds, float to_red, float to_green, float to_blue, ColorFilter cf = Set) {
+        if (cf == Lighten) {
+            to_red = std::max(to_red, red);
+            to_green = std::max(to_green, green);
+            to_blue = std::max(to_blue, blue);
+        }
+        else if (cf == Darken) {
+            to_red = std::min(to_red, red);
+            to_green = std::min(to_green, green);
+            to_blue = std::min(to_blue, blue);
+        }
+
         _transition_steps_left = 0.5 + (milliseconds / _update_timeout_ms);
         float h                = 1.0 / _transition_steps_left;
         float h_2              = h * h;
@@ -418,6 +435,10 @@ struct NeoPixel {
     };
 
     void setPixel(uint8_t pixel, uint8_t red, uint8_t green, uint8_t blue, int16_t white = -1) {
+        uint8_t data_width = 32;
+        if (!_has_white) {
+            data_width = 24;
+        }
         if (_has_white && (white == -1)) {
             // Adjust all of the RGB to accomodate white
             white = std::min(red, std::min(green, blue));
@@ -425,32 +446,32 @@ struct NeoPixel {
             // green -= white;
             // blue -= white;
         }
-        _period_buffer[0 + 1 + _red_offset + (pixel * 32)] = (red & 0b10000000) ? led_ON : led_OFF;
-        _period_buffer[1 + 1 + _red_offset + (pixel * 32)] = (red & 0b01000000) ? led_ON : led_OFF;
-        _period_buffer[2 + 1 + _red_offset + (pixel * 32)] = (red & 0b00100000) ? led_ON : led_OFF;
-        _period_buffer[3 + 1 + _red_offset + (pixel * 32)] = (red & 0b00010000) ? led_ON : led_OFF;
-        _period_buffer[4 + 1 + _red_offset + (pixel * 32)] = (red & 0b00001000) ? led_ON : led_OFF;
-        _period_buffer[5 + 1 + _red_offset + (pixel * 32)] = (red & 0b00000100) ? led_ON : led_OFF;
-        _period_buffer[6 + 1 + _red_offset + (pixel * 32)] = (red & 0b00000010) ? led_ON : led_OFF;
-        _period_buffer[7 + 1 + _red_offset + (pixel * 32)] = (red & 0b00000001) ? led_ON : led_OFF;
+        _period_buffer[0 + 1 + _red_offset + (pixel * data_width)] = (red & 0b10000000) ? led_ON : led_OFF;
+        _period_buffer[1 + 1 + _red_offset + (pixel * data_width)] = (red & 0b01000000) ? led_ON : led_OFF;
+        _period_buffer[2 + 1 + _red_offset + (pixel * data_width)] = (red & 0b00100000) ? led_ON : led_OFF;
+        _period_buffer[3 + 1 + _red_offset + (pixel * data_width)] = (red & 0b00010000) ? led_ON : led_OFF;
+        _period_buffer[4 + 1 + _red_offset + (pixel * data_width)] = (red & 0b00001000) ? led_ON : led_OFF;
+        _period_buffer[5 + 1 + _red_offset + (pixel * data_width)] = (red & 0b00000100) ? led_ON : led_OFF;
+        _period_buffer[6 + 1 + _red_offset + (pixel * data_width)] = (red & 0b00000010) ? led_ON : led_OFF;
+        _period_buffer[7 + 1 + _red_offset + (pixel * data_width)] = (red & 0b00000001) ? led_ON : led_OFF;
 
-        _period_buffer[0 + 1 + _green_offset + (pixel * 32)] = (green & 0b10000000) ? led_ON : led_OFF;
-        _period_buffer[1 + 1 + _green_offset + (pixel * 32)] = (green & 0b01000000) ? led_ON : led_OFF;
-        _period_buffer[2 + 1 + _green_offset + (pixel * 32)] = (green & 0b00100000) ? led_ON : led_OFF;
-        _period_buffer[3 + 1 + _green_offset + (pixel * 32)] = (green & 0b00010000) ? led_ON : led_OFF;
-        _period_buffer[4 + 1 + _green_offset + (pixel * 32)] = (green & 0b00001000) ? led_ON : led_OFF;
-        _period_buffer[5 + 1 + _green_offset + (pixel * 32)] = (green & 0b00000100) ? led_ON : led_OFF;
-        _period_buffer[6 + 1 + _green_offset + (pixel * 32)] = (green & 0b00000010) ? led_ON : led_OFF;
-        _period_buffer[7 + 1 + _green_offset + (pixel * 32)] = (green & 0b00000001) ? led_ON : led_OFF;
+        _period_buffer[0 + 1 + _green_offset + (pixel * data_width)] = (green & 0b10000000) ? led_ON : led_OFF;
+        _period_buffer[1 + 1 + _green_offset + (pixel * data_width)] = (green & 0b01000000) ? led_ON : led_OFF;
+        _period_buffer[2 + 1 + _green_offset + (pixel * data_width)] = (green & 0b00100000) ? led_ON : led_OFF;
+        _period_buffer[3 + 1 + _green_offset + (pixel * data_width)] = (green & 0b00010000) ? led_ON : led_OFF;
+        _period_buffer[4 + 1 + _green_offset + (pixel * data_width)] = (green & 0b00001000) ? led_ON : led_OFF;
+        _period_buffer[5 + 1 + _green_offset + (pixel * data_width)] = (green & 0b00000100) ? led_ON : led_OFF;
+        _period_buffer[6 + 1 + _green_offset + (pixel * data_width)] = (green & 0b00000010) ? led_ON : led_OFF;
+        _period_buffer[7 + 1 + _green_offset + (pixel * data_width)] = (green & 0b00000001) ? led_ON : led_OFF;
 
-        _period_buffer[0 + 1 + _blue_offset + (pixel * 32)] = (blue & 0b10000000) ? led_ON : led_OFF;
-        _period_buffer[1 + 1 + _blue_offset + (pixel * 32)] = (blue & 0b01000000) ? led_ON : led_OFF;
-        _period_buffer[2 + 1 + _blue_offset + (pixel * 32)] = (blue & 0b00100000) ? led_ON : led_OFF;
-        _period_buffer[3 + 1 + _blue_offset + (pixel * 32)] = (blue & 0b00010000) ? led_ON : led_OFF;
-        _period_buffer[4 + 1 + _blue_offset + (pixel * 32)] = (blue & 0b00001000) ? led_ON : led_OFF;
-        _period_buffer[5 + 1 + _blue_offset + (pixel * 32)] = (blue & 0b00000100) ? led_ON : led_OFF;
-        _period_buffer[6 + 1 + _blue_offset + (pixel * 32)] = (blue & 0b00000010) ? led_ON : led_OFF;
-        _period_buffer[7 + 1 + _blue_offset + (pixel * 32)] = (blue & 0b00000001) ? led_ON : led_OFF;
+        _period_buffer[0 + 1 + _blue_offset + (pixel * data_width)] = (blue & 0b10000000) ? led_ON : led_OFF;
+        _period_buffer[1 + 1 + _blue_offset + (pixel * data_width)] = (blue & 0b01000000) ? led_ON : led_OFF;
+        _period_buffer[2 + 1 + _blue_offset + (pixel * data_width)] = (blue & 0b00100000) ? led_ON : led_OFF;
+        _period_buffer[3 + 1 + _blue_offset + (pixel * data_width)] = (blue & 0b00010000) ? led_ON : led_OFF;
+        _period_buffer[4 + 1 + _blue_offset + (pixel * data_width)] = (blue & 0b00001000) ? led_ON : led_OFF;
+        _period_buffer[5 + 1 + _blue_offset + (pixel * data_width)] = (blue & 0b00000100) ? led_ON : led_OFF;
+        _period_buffer[6 + 1 + _blue_offset + (pixel * data_width)] = (blue & 0b00000010) ? led_ON : led_OFF;
+        _period_buffer[7 + 1 + _blue_offset + (pixel * data_width)] = (blue & 0b00000001) ? led_ON : led_OFF;
 
         if (_has_white) {
             _period_buffer[0 + 1 + _white_offset + (pixel * 32)] = (white & 0b10000000) ? led_ON : led_OFF;

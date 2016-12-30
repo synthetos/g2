@@ -123,7 +123,6 @@ _MAKE_MOTATE_PIN(kSpindle_EnablePinNumber, 'A', 5);           // Spindle_EnableP
 _MAKE_MOTATE_PIN(kSocket1_DirPinNumber, 'A', 6);              // Socket1_DirPinNumber
 _MAKE_MOTATE_PIN(kSpindle_DirPinNumber, 'A', 7);              // Spindle_DirPinNumber
 _MAKE_MOTATE_PIN(kSpindle_PwmPinNumber, 'A', 8);              // Spindle_PwmPinNumber
-
 _MAKE_MOTATE_PIN(kInput2_PinNumber, 'A', 9);                  // XAxis_MaxPinNumber
 _MAKE_MOTATE_PIN(kInput3_PinNumber, 'A', 10);                 // YAxis_MinPinNumber
 _MAKE_MOTATE_PIN(kInput4_PinNumber, 'A', 11);                 // YAxis_MaxPinNumber
