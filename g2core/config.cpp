@@ -274,27 +274,39 @@ stat_t set_int8(nvObj_t *nv)
 
 stat_t set_01(nvObj_t *nv)
 {
-    if ((nv->value < 0) || (nv->value > 1)) {
+    if (nv->value < 0) {
         nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_VALUE_RANGE_ERROR);
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    if (nv->value > 1) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
     return (set_ui8(nv));
 }
 
 stat_t set_012(nvObj_t *nv)
 {
-    if ((nv->value < 0) || (nv->value > 2)) {
+    if (nv->value < 0) {
         nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_VALUE_RANGE_ERROR);
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    if (nv->value > 2) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
     return (set_ui8(nv));
 }
 
 stat_t set_0123(nvObj_t *nv)
 {
-    if ((nv->value < 0) || (nv->value > 3)) {
+    if (nv->value < 0) {
         nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_VALUE_RANGE_ERROR);
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    if (nv->value > 3) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
     return (set_ui8(nv));
 }

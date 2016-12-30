@@ -646,9 +646,13 @@ stat_t json_set_jv(nvObj_t *nv)
 
 stat_t json_set_ej(nvObj_t *nv)
 {
-    if ((nv->value < TEXT_MODE) || (nv->value > AUTO_MODE)) {
+    if (nv->value < TEXT_MODE) {
         nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_VALUE_RANGE_ERROR);
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    if (nv->value > AUTO_MODE) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
     
     // set json_mode to 0 or 1, but don't change it if comm_mode == 2
