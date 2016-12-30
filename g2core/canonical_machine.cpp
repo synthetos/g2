@@ -2445,8 +2445,6 @@ void _cm_recalc_max_junction_accel(const uint8_t axis) {
 void cm_set_axis_jerk(const uint8_t axis, const float jerk)
 {
     cm.a[axis].jerk_max = jerk;
-    //cm.a[axis].recip_jerk = 1/(jerk * JERK_MULTIPLIER);
-
     // Must recalculate the max_junction_accel now that the jerk has changed.
     _cm_recalc_max_junction_accel(axis);
 }
@@ -2455,9 +2453,9 @@ stat_t cm_set_vm(nvObj_t *nv)
 {
     uint8_t axis = _get_axis(nv->index);
     if ((axis == AXIS_A) || (axis == AXIS_B) || (axis == AXIS_C)) {
-        set_flt(nv);
+        ritorno(set_fltp(nv));
     } else {
-        set_flu(nv);
+        ritorno(set_flup(nv));
     }
     cm.a[axis].recip_velocity_max = 1/nv->value;
     return(STAT_OK);
@@ -2467,9 +2465,9 @@ stat_t cm_set_fr(nvObj_t *nv)
 {
     uint8_t axis = _get_axis(nv->index);
     if ((axis == AXIS_A) || (axis == AXIS_B) || (axis == AXIS_C)) {
-        set_flt(nv);
+        ritorno(set_fltp(nv));
     } else {
-        set_flu(nv);
+        ritorno(set_flup(nv));
     }
     cm.a[axis].recip_feedrate_max = 1/nv->value;
     return(STAT_OK);
@@ -2477,7 +2475,14 @@ stat_t cm_set_fr(nvObj_t *nv)
 
 stat_t cm_set_jm(nvObj_t *nv)
 {
-//    if (nv->value > JERK_MULTIPLIER) nv->value /= JERK_MULTIPLIER;
+    if (nv->value < JERK_INPUT_MIN) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    if (nv->value > JERK_INPUT_MAX) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+    }
     set_flu(nv);
     cm_set_axis_jerk(_get_axis(nv->index), nv->value);
     return(STAT_OK);
@@ -2485,7 +2490,14 @@ stat_t cm_set_jm(nvObj_t *nv)
 
 stat_t cm_set_jh(nvObj_t *nv)
 {
-//    if (nv->value > JERK_MULTIPLIER) nv->value /= JERK_MULTIPLIER;
+    if (nv->value < JERK_INPUT_MIN) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    if (nv->value > JERK_INPUT_MAX) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+    }
     set_flu(nv);
     return(STAT_OK);
 }
@@ -2508,7 +2520,6 @@ stat_t cm_set_jt(nvObj_t *nv)
     for (uint8_t axis=0; axis<AXES; axis++) {
         _cm_recalc_max_junction_accel(axis);
     }
-
     return(status);
 }
 

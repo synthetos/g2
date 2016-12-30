@@ -283,8 +283,8 @@ const cfgItem_t cfgArray[] = {
     { "x","xjh",_fipc, 0, cm_print_jh, get_flt,   cm_set_jh, (float *)&cm.a[AXIS_X].jerk_high,      X_JERK_HIGH_SPEED },
     { "x","xhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_X].homing_input,   X_HOMING_INPUT },
     { "x","xhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_X].homing_dir,     X_HOMING_DIRECTION },
-    { "x","xsv",_fipc, 0, cm_print_sv, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].search_velocity,X_SEARCH_VELOCITY },
-    { "x","xlv",_fipc, 2, cm_print_lv, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].latch_velocity, X_LATCH_VELOCITY },
+    { "x","xsv",_fipc, 0, cm_print_sv, get_flt,   set_flup,  (float *)&cm.a[AXIS_X].search_velocity,X_SEARCH_VELOCITY },
+    { "x","xlv",_fipc, 2, cm_print_lv, get_flt,   set_flup,  (float *)&cm.a[AXIS_X].latch_velocity, X_LATCH_VELOCITY },
     { "x","xlb",_fipc, 3, cm_print_lb, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].latch_backoff,  X_LATCH_BACKOFF },
     { "x","xzb",_fipc, 3, cm_print_zb, get_flt,   set_flu,   (float *)&cm.a[AXIS_X].zero_backoff,   X_ZERO_BACKOFF },
 
@@ -297,8 +297,8 @@ const cfgItem_t cfgArray[] = {
     { "y","yjh",_fipc, 0, cm_print_jh, get_flt,   cm_set_jh, (float *)&cm.a[AXIS_Y].jerk_high,      Y_JERK_HIGH_SPEED },
     { "y","yhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_Y].homing_input,   Y_HOMING_INPUT },
     { "y","yhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_Y].homing_dir,     Y_HOMING_DIRECTION },
-    { "y","ysv",_fipc, 0, cm_print_sv, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].search_velocity,Y_SEARCH_VELOCITY },
-    { "y","ylv",_fipc, 2, cm_print_lv, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].latch_velocity, Y_LATCH_VELOCITY },
+    { "y","ysv",_fipc, 0, cm_print_sv, get_flt,   set_flup,  (float *)&cm.a[AXIS_Y].search_velocity,Y_SEARCH_VELOCITY },
+    { "y","ylv",_fipc, 2, cm_print_lv, get_flt,   set_flup,  (float *)&cm.a[AXIS_Y].latch_velocity, Y_LATCH_VELOCITY },
     { "y","ylb",_fipc, 3, cm_print_lb, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].latch_backoff,  Y_LATCH_BACKOFF },
     { "y","yzb",_fipc, 3, cm_print_zb, get_flt,   set_flu,   (float *)&cm.a[AXIS_Y].zero_backoff,   Y_ZERO_BACKOFF },
 
@@ -311,8 +311,8 @@ const cfgItem_t cfgArray[] = {
     { "z","zjh",_fipc, 0, cm_print_jh, get_flt,   cm_set_jh, (float *)&cm.a[AXIS_Z].jerk_high,      Z_JERK_HIGH_SPEED },
     { "z","zhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_Z].homing_input,   Z_HOMING_INPUT },
     { "z","zhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_Z].homing_dir,     Z_HOMING_DIRECTION },
-    { "z","zsv",_fipc, 0, cm_print_sv, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].search_velocity,Z_SEARCH_VELOCITY },
-    { "z","zlv",_fipc, 2, cm_print_lv, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].latch_velocity, Z_LATCH_VELOCITY },
+    { "z","zsv",_fipc, 0, cm_print_sv, get_flt,   set_flup,  (float *)&cm.a[AXIS_Z].search_velocity,Z_SEARCH_VELOCITY },
+    { "z","zlv",_fipc, 2, cm_print_lv, get_flt,   set_flup,  (float *)&cm.a[AXIS_Z].latch_velocity, Z_LATCH_VELOCITY },
     { "z","zlb",_fipc, 3, cm_print_lb, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].latch_backoff,  Z_LATCH_BACKOFF },
     { "z","zzb",_fipc, 3, cm_print_zb, get_flt,   set_flu,   (float *)&cm.a[AXIS_Z].zero_backoff,   Z_ZERO_BACKOFF },
 
@@ -326,8 +326,8 @@ const cfgItem_t cfgArray[] = {
     { "a","ara",_fipc, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].radius,         A_RADIUS},
     { "a","ahi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_A].homing_input,   A_HOMING_INPUT },
     { "a","ahd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_A].homing_dir,     A_HOMING_DIRECTION },
-    { "a","asv",_fip,  0, cm_print_sv, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].search_velocity,A_SEARCH_VELOCITY },
-    { "a","alv",_fip,  2, cm_print_lv, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].latch_velocity, A_LATCH_VELOCITY },
+    { "a","asv",_fip,  0, cm_print_sv, get_flt,   set_fltp,  (float *)&cm.a[AXIS_A].search_velocity,A_SEARCH_VELOCITY },
+    { "a","alv",_fip,  2, cm_print_lv, get_flt,   set_fltp,  (float *)&cm.a[AXIS_A].latch_velocity, A_LATCH_VELOCITY },
     { "a","alb",_fip,  3, cm_print_lb, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].latch_backoff,  A_LATCH_BACKOFF },
     { "a","azb",_fip,  3, cm_print_zb, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].zero_backoff,   A_ZERO_BACKOFF },
 
@@ -341,8 +341,8 @@ const cfgItem_t cfgArray[] = {
     { "b","bra",_fipc, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].radius,         B_RADIUS },
     { "b","bhi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_B].homing_input,   B_HOMING_INPUT },
     { "b","bhd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_B].homing_dir,     B_HOMING_DIRECTION },
-    { "b","bsv",_fip,  0, cm_print_sv, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].search_velocity,B_SEARCH_VELOCITY },
-    { "b","blv",_fip,  2, cm_print_lv, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].latch_velocity, B_LATCH_VELOCITY },
+    { "b","bsv",_fip,  0, cm_print_sv, get_flt,   set_fltp,  (float *)&cm.a[AXIS_B].search_velocity,B_SEARCH_VELOCITY },
+    { "b","blv",_fip,  2, cm_print_lv, get_flt,   set_fltp,  (float *)&cm.a[AXIS_B].latch_velocity, B_LATCH_VELOCITY },
     { "b","blb",_fip,  3, cm_print_lb, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].latch_backoff,  B_LATCH_BACKOFF },
     { "b","bzb",_fip,  3, cm_print_zb, get_flt,   set_flt,   (float *)&cm.a[AXIS_B].zero_backoff,   B_ZERO_BACKOFF },
 
@@ -356,8 +356,8 @@ const cfgItem_t cfgArray[] = {
     { "c","cra",_fipc, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].radius,         C_RADIUS },
     { "c","chi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_C].homing_input,   C_HOMING_INPUT },
     { "c","chd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_C].homing_dir,     C_HOMING_DIRECTION },
-    { "c","csv",_fip,  0, cm_print_sv, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].search_velocity,C_SEARCH_VELOCITY },
-    { "c","clv",_fip,  2, cm_print_lv, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].latch_velocity, C_LATCH_VELOCITY },
+    { "c","csv",_fip,  0, cm_print_sv, get_flt,   set_fltp,  (float *)&cm.a[AXIS_C].search_velocity,C_SEARCH_VELOCITY },
+    { "c","clv",_fip,  2, cm_print_lv, get_flt,   set_fltp,  (float *)&cm.a[AXIS_C].latch_velocity, C_LATCH_VELOCITY },
     { "c","clb",_fip,  3, cm_print_lb, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].latch_backoff,  C_LATCH_BACKOFF },
     { "c","czb",_fip,  3, cm_print_zb, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].zero_backoff,   C_ZERO_BACKOFF },
 
@@ -1236,7 +1236,9 @@ bool nv_index_lt_groups(index_t index) { return ((index <= NV_INDEX_START_GROUPS
 /***** APPLICATION SPECIFIC CONFIGS AND EXTENSIONS TO GENERIC FUNCTIONS *****/
 
 /*
- * set_flu() - set floating point number with G20/G21 units conversion
+ * set_flu()  - set floating point number with G20/G21 units conversion
+ * set_flup() - set positive floating point number with G20/G21 units conversion
+ * set_fltp() - set positive floating point number with no units conversion
  *
  * The number 'setted' will have been delivered in external units (inches or mm).
  * It is written to the target memory location in internal canonical units (mm).
@@ -1255,6 +1257,24 @@ stat_t set_flu(nvObj_t *nv)
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
     return(STAT_OK);
+}
+
+stat_t set_flup(nvObj_t *nv)
+{
+    if (nv->value < 0) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    return (set_flu(nv));
+}
+
+stat_t set_fltp(nvObj_t *nv)
+{
+    if (nv->value < 0) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    return (set_flt(nv));
 }
 
 /*

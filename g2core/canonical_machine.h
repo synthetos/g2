@@ -46,6 +46,8 @@
 
 #define JOGGING_START_VELOCITY ((float)10.0)
 #define DISABLE_SOFT_LIMIT (999999)
+#define JERK_INPUT_MIN (0.01)               // minimum allowable jerk setting in millions mm/min^3
+#define JERK_INPUT_MAX (100000)             // maximum allowable jerk setting in millions mm/min^3
 #define PROBES_STORED 3                     // we store three probes for coordinate rotation computation
 
 

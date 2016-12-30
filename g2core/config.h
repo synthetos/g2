@@ -354,6 +354,8 @@ void nv_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags);
 
 // application specific helpers and functions (config_app.c)
 stat_t set_flu(nvObj_t *nv);            // set floating point number with G20/G21 units conversion
+stat_t set_flup(nvObj_t *nv);           // set positive floating point number with G20/G21 units conversion
+stat_t set_fltp(nvObj_t *nv);           // set positive floating point number with no units conversion
 void preprocess_float(nvObj_t *nv);     // pre-process float values for units and illegal values
 
 // diagnostics
