@@ -89,8 +89,7 @@ void json_parser(char *str)
 {
     nvObj_t *nv = nv_reset_nv_list();               // get a fresh nvObj list
     stat_t status = _json_parser_kernal(nv, str);
-    if (status == STAT_OK) {
-        // execute the command
+    if (status == STAT_OK) {                        // execute the command
         nv = nv_body;
         status = _json_parser_execute(nv);
     }
@@ -98,7 +97,6 @@ void json_parser(char *str)
         return;
     }
     nv_print_list(status, TEXT_NO_PRINT, JSON_RESPONSE_FORMAT);
-
     sr_request_status_report(SR_REQUEST_TIMED);     // generate incremental status report to show any changes
 }
 
