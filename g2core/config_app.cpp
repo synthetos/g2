@@ -102,14 +102,14 @@ static stat_t get_tick(nvObj_t *nv);        // get system tick count
  *    the %f in the corresponding format string to set text mode display precision
  */
 const cfgItem_t cfgArray[] = {
-    // group token flags p, print_func,   get_func,  set_func, target for get/set,       default value
-    { "sys", "fb", _fipn,2, hw_print_fb, get_flt,   set_nul,  (float *)&cs.fw_build,    G2CORE_FIRMWARE_BUILD }, // MUST BE FIRST!
-    { "sys", "fbs",_fn,  2, hw_print_fbs,hw_get_fbs,set_nul,  (float *)&cs.null, 0 },
-    { "sys", "fbc",_fn,  2, hw_print_fbc,hw_get_fbc,set_nul,  (float *)&cs.null, 0 },
-    { "sys", "fv", _fipn,2, hw_print_fv, get_flt,   set_nul,  (float *)&cs.fw_version,  G2CORE_FIRMWARE_VERSION },
-    { "sys", "hp", _fipn,0, hw_print_hp, get_flt,   set_flt,  (float *)&cs.hw_platform, G2CORE_HARDWARE_PLATFORM },
-    { "sys", "hv", _fipn,0, hw_print_hv, get_flt,   hw_set_hv,(float *)&cs.hw_version,  G2CORE_HARDWARE_VERSION },
-    { "sys", "id", _fn,  0, hw_print_id, hw_get_id, set_nul,  (float *)&cs.null, 0 },   // device ID (ASCII signature)
+    // group token flags p, print_func,  get_func,  set_func, target for get/set,       default value
+    { "sys", "fb", _fipn,2, hw_print_fb, get_flt,   set_ro,   (float *)&cs.fw_build,    G2CORE_FIRMWARE_BUILD }, // MUST BE FIRST!
+    { "sys", "fbs",_fn,  2, hw_print_fbs,hw_get_fbs,set_ro,   (float *)&cs.null, 0 },
+    { "sys", "fbc",_fn,  2, hw_print_fbc,hw_get_fbc,set_ro,   (float *)&cs.null, 0 },
+    { "sys", "fv", _fipn,2, hw_print_fv, get_flt,   set_ro,   (float *)&cs.fw_version,  G2CORE_FIRMWARE_VERSION },
+    { "sys", "hp", _fipn,0, hw_print_hp, get_flt,   set_ro,   (float *)&cs.hw_platform, G2CORE_HARDWARE_PLATFORM },
+    { "sys", "hv", _fipn,0, hw_print_hv, get_flt,   set_ro,   (float *)&cs.hw_version,  G2CORE_HARDWARE_VERSION },
+    { "sys", "id", _fn,  0, hw_print_id, hw_get_id, set_ro,   (float *)&cs.null, 0 },   // device ID (ASCII signature)
 
     // dynamic model attributes for reporting purposes (up front for speed)
     { "",   "stat",_f0, 0, cm_print_stat, cm_get_stat, set_nul,(float *)&cs.null, 0 },      // combined machine state

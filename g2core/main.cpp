@@ -154,7 +154,7 @@ void loop() {
 }
 
 /*
- * Traps for debugging. These must be in mail.cpp for proper linker ordering
+ * Traps for debugging. These must be in main.cpp for proper linker ordering
  */
 
 void MemManage_Handler  ( void ) { __asm__("BKPT"); }
