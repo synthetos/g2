@@ -2377,9 +2377,15 @@ stat_t cm_get_am(nvObj_t *nv)
 stat_t cm_set_am(nvObj_t *nv)        // axis mode
 {
     if (_get_axis_type(nv->index) == 0) {    // linear
-        if (nv->value > AXIS_MODE_MAX_LINEAR) { return (STAT_INPUT_VALUE_RANGE_ERROR);}
+        if (nv->value > AXIS_MODE_MAX_LINEAR) { 
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+        }
     } else {
-        if (nv->value > AXIS_MODE_MAX_ROTARY) { return (STAT_INPUT_VALUE_RANGE_ERROR);}
+        if (nv->value > AXIS_MODE_MAX_ROTARY) { 
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+        }
     }
     set_ui8(nv);
     return(STAT_OK);
@@ -2387,8 +2393,13 @@ stat_t cm_set_am(nvObj_t *nv)        // axis mode
 
 stat_t cm_set_hi(nvObj_t *nv)
 {
-    if ((nv->value < 0) || (nv->value > D_IN_CHANNELS)) {
-        return (STAT_INPUT_VALUE_RANGE_ERROR);
+    if (nv->value < 0) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    if (nv->value > D_IN_CHANNELS) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
     set_ui8(nv);
     return (STAT_OK);
