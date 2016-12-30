@@ -2507,12 +2507,12 @@ stat_t cm_set_jt(nvObj_t *nv)
     stat_t status = STAT_OK;
 
     if (nv->value < JUNCTION_INTEGRATION_MIN) {
-        nv->value = JUNCTION_INTEGRATION_MIN;
-        status = STAT_INPUT_LESS_THAN_MIN_VALUE;
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
     }
     if (nv->value > JUNCTION_INTEGRATION_MAX) {
-        nv->value = JUNCTION_INTEGRATION_MAX;
-        status = STAT_INPUT_EXCEEDS_MAX_VALUE;
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
     set_flt(nv);
 
@@ -2531,9 +2531,11 @@ stat_t cm_set_jt(nvObj_t *nv)
 stat_t cm_set_mfo(nvObj_t *nv)
 {
     if (nv->value < FEED_OVERRIDE_MIN) {
+        nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_LESS_THAN_MIN_VALUE);
     }
     if (nv->value > FEED_OVERRIDE_MAX) {
+        nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
     set_flt(nv);
@@ -2543,9 +2545,11 @@ stat_t cm_set_mfo(nvObj_t *nv)
 stat_t cm_set_mto(nvObj_t *nv)
 {
     if (nv->value < TRAVERSE_OVERRIDE_MIN) {
+        nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_LESS_THAN_MIN_VALUE);
     }
     if (nv->value > TRAVERSE_OVERRIDE_MAX) {
+        nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
     set_flt(nv);
