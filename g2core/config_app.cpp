@@ -158,14 +158,7 @@ const cfgItem_t cfgArray[] = {
     { "ofs","ofsa",_f0, 3, cm_print_ofs, cm_get_ofs, set_ro, (float *)&cs.null, 0 },        // A work offset
     { "ofs","ofsb",_f0, 3, cm_print_ofs, cm_get_ofs, set_ro, (float *)&cs.null, 0 },        // B work offset
     { "ofs","ofsc",_f0, 3, cm_print_ofs, cm_get_ofs, set_ro, (float *)&cs.null, 0 },        // C work offset
-/*
-    { "tof","tofx",_f0, 3, cm_print_tof, cm_get_tof, set_ro, (float *)&cs.null, 0 },        // X tool offset
-    { "tof","tofy",_f0, 3, cm_print_tof, cm_get_tof, set_ro, (float *)&cs.null, 0 },        // Y tool offset
-    { "tof","tofz",_f0, 3, cm_print_tof, cm_get_tof, set_ro, (float *)&cs.null, 0 },        // Z tool offset
-    { "tof","tofa",_f0, 3, cm_print_tof, cm_get_tof, set_ro, (float *)&cs.null, 0 },        // A tool offset
-    { "tof","tofb",_f0, 3, cm_print_tof, cm_get_tof, set_ro, (float *)&cs.null, 0 },        // B tool offset
-    { "tof","tofc",_f0, 3, cm_print_tof, cm_get_tof, set_ro, (float *)&cs.null, 0 },        // C tool offset
-*/
+
     { "hom","home",_f0, 0, cm_print_home,cm_get_home,set_01,(float *)&cm.homing_state, 0 },     // homing state, invoke homing cycle
     { "hom","homx",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_X], false },  // X homed - Homing status group
     { "hom","homy",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_Y], false },  // Y homed
@@ -205,22 +198,22 @@ const cfgItem_t cfgArray[] = {
 #endif
 
     // Motor parameters
-    { "1","1ma",_fip, 0, st_print_ma, get_ui8, set_ui8,     (float *)&st_cfg.mot[MOTOR_1].motor_map,      M1_MOTOR_MAP },
+    { "1","1ma",_fip, 0, st_print_ma, get_ui8, st_set_ma,   (float *)&st_cfg.mot[MOTOR_1].motor_map,      M1_MOTOR_MAP },
     { "1","1sa",_fip, 3, st_print_sa, get_flt, st_set_sa,   (float *)&st_cfg.mot[MOTOR_1].step_angle,     M1_STEP_ANGLE },
     { "1","1tr",_fipc,4, st_print_tr, get_flt, st_set_tr,   (float *)&st_cfg.mot[MOTOR_1].travel_rev,     M1_TRAVEL_PER_REV },
     { "1","1mi",_fip, 0, st_print_mi, get_ui8, st_set_mi,   (float *)&st_cfg.mot[MOTOR_1].microsteps,     M1_MICROSTEPS },
-    { "1","1su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_1].steps_per_unit,	M1_STEPS_PER_UNIT },
+    { "1","1su",_fipi,5, st_print_su, st_get_su,st_set_su,  (float *)&st_cfg.mot[MOTOR_1].steps_per_unit,	M1_STEPS_PER_UNIT },
     { "1","1po",_fip, 0, st_print_po, get_ui8, set_01,      (float *)&st_cfg.mot[MOTOR_1].polarity,       M1_POLARITY },
     { "1","1pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null,                            M1_POWER_MODE },
     { "1","1pl",_fip, 3, st_print_pl, get_flt, st_set_pl,   (float *)&st_cfg.mot[MOTOR_1].power_level,    M1_POWER_LEVEL },
 //  { "1","1pi",_fip, 3, st_print_pi, get_flt, st_set_pi,   (float *)&st_cfg.mot[MOTOR_1].power_idle,     M1_POWER_IDLE },
 //  { "1","1mt",_fip, 2, st_print_mt, get_flt, st_set_mt,   (float *)&st_cfg.mot[MOTOR_1].motor_timeout,  M1_MOTOR_TIMEOUT },
 #if (MOTORS >= 2)
-    { "2","2ma",_fip, 0, st_print_ma, get_ui8, set_ui8,     (float *)&st_cfg.mot[MOTOR_2].motor_map,      M2_MOTOR_MAP },
+    { "2","2ma",_fip, 0, st_print_ma, get_ui8, st_set_ma,   (float *)&st_cfg.mot[MOTOR_2].motor_map,      M2_MOTOR_MAP },
     { "2","2sa",_fip, 3, st_print_sa, get_flt, st_set_sa,   (float *)&st_cfg.mot[MOTOR_2].step_angle,     M2_STEP_ANGLE },
     { "2","2tr",_fipc,4, st_print_tr, get_flt, st_set_tr,   (float *)&st_cfg.mot[MOTOR_2].travel_rev,     M2_TRAVEL_PER_REV },
     { "2","2mi",_fip, 0, st_print_mi, get_ui8, st_set_mi,   (float *)&st_cfg.mot[MOTOR_2].microsteps,     M2_MICROSTEPS },
-    { "2","2su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_2].steps_per_unit,	M2_STEPS_PER_UNIT },
+    { "2","2su",_fipi,5, st_print_su, st_get_su,st_set_su,  (float *)&st_cfg.mot[MOTOR_2].steps_per_unit,	M2_STEPS_PER_UNIT },
     { "2","2po",_fip, 0, st_print_po, get_ui8, set_01,      (float *)&st_cfg.mot[MOTOR_2].polarity,       M2_POLARITY },
     { "2","2pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null,                            M2_POWER_MODE },
     { "2","2pl",_fip, 3, st_print_pl, get_flt, st_set_pl,   (float *)&st_cfg.mot[MOTOR_2].power_level,    M2_POWER_LEVEL},
@@ -228,11 +221,11 @@ const cfgItem_t cfgArray[] = {
 //  { "2","2mt",_fip, 2, st_print_mt, get_flt, st_set_mt,   (float *)&st_cfg.mot[MOTOR_2].motor_timeout,  M2_MOTOR_TIMEOUT },
 #endif
 #if (MOTORS >= 3)
-    { "3","3ma",_fip, 0, st_print_ma, get_ui8, set_ui8,     (float *)&st_cfg.mot[MOTOR_3].motor_map,      M3_MOTOR_MAP },
+    { "3","3ma",_fip, 0, st_print_ma, get_ui8, st_set_ma,   (float *)&st_cfg.mot[MOTOR_3].motor_map,      M3_MOTOR_MAP },
     { "3","3sa",_fip, 3, st_print_sa, get_flt, st_set_sa,   (float *)&st_cfg.mot[MOTOR_3].step_angle,     M3_STEP_ANGLE },
     { "3","3tr",_fipc,4, st_print_tr, get_flt, st_set_tr,   (float *)&st_cfg.mot[MOTOR_3].travel_rev,     M3_TRAVEL_PER_REV },
     { "3","3mi",_fip, 0, st_print_mi, get_ui8, st_set_mi,   (float *)&st_cfg.mot[MOTOR_3].microsteps,     M3_MICROSTEPS },
-    { "3","3su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_3].steps_per_unit,	M3_STEPS_PER_UNIT },
+    { "3","3su",_fipi,5, st_print_su, st_get_su,st_set_su,  (float *)&st_cfg.mot[MOTOR_3].steps_per_unit,	M3_STEPS_PER_UNIT },
     { "3","3po",_fip, 0, st_print_po, get_ui8, set_01,      (float *)&st_cfg.mot[MOTOR_3].polarity,       M3_POLARITY },
     { "3","3pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null,                            M3_POWER_MODE },
     { "3","3pl",_fip, 3, st_print_pl, get_flt, st_set_pl,   (float *)&st_cfg.mot[MOTOR_3].power_level,    M3_POWER_LEVEL },
@@ -240,11 +233,11 @@ const cfgItem_t cfgArray[] = {
 //  { "3","3mt",_fip, 2, st_print_mt, get_flt, st_set_mt,   (float *)&st_cfg.mot[MOTOR_3].motor_timeout,  M3_MOTOR_TIMEOUT },
 #endif
 #if (MOTORS >= 4)
-    { "4","4ma",_fip, 0, st_print_ma, get_ui8, set_ui8,     (float *)&st_cfg.mot[MOTOR_4].motor_map,      M4_MOTOR_MAP },
+    { "4","4ma",_fip, 0, st_print_ma, get_ui8, st_set_ma,   (float *)&st_cfg.mot[MOTOR_4].motor_map,      M4_MOTOR_MAP },
     { "4","4sa",_fip, 3, st_print_sa, get_flt, st_set_sa,   (float *)&st_cfg.mot[MOTOR_4].step_angle,     M4_STEP_ANGLE },
     { "4","4tr",_fipc,4, st_print_tr, get_flt, st_set_tr,   (float *)&st_cfg.mot[MOTOR_4].travel_rev,     M4_TRAVEL_PER_REV },
     { "4","4mi",_fip, 0, st_print_mi, get_ui8, st_set_mi,   (float *)&st_cfg.mot[MOTOR_4].microsteps,     M4_MICROSTEPS },
-    { "4","4su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_4].steps_per_unit,	M4_STEPS_PER_UNIT },
+    { "4","4su",_fipi,5, st_print_su, st_get_su,st_set_su,  (float *)&st_cfg.mot[MOTOR_4].steps_per_unit,	M4_STEPS_PER_UNIT },
     { "4","4po",_fip, 0, st_print_po, get_ui8, set_01,      (float *)&st_cfg.mot[MOTOR_4].polarity,       M4_POLARITY },
     { "4","4pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null,                            M4_POWER_MODE },
     { "4","4pl",_fip, 3, st_print_pl, get_flt, st_set_pl,   (float *)&st_cfg.mot[MOTOR_4].power_level,    M4_POWER_LEVEL },
@@ -252,11 +245,11 @@ const cfgItem_t cfgArray[] = {
 //  { "4","4mt",_fip, 2, st_print_mt, get_flt, st_set_mt,   (float *)&st_cfg.mot[MOTOR_4].motor_timeout,  M4_MOTOR_TIMEOUT },
 #endif
 #if (MOTORS >= 5)
-    { "5","5ma",_fip, 0, st_print_ma, get_ui8, set_ui8,     (float *)&st_cfg.mot[MOTOR_5].motor_map,      M5_MOTOR_MAP },
+    { "5","5ma",_fip, 0, st_print_ma, get_ui8, st_set_ma,   (float *)&st_cfg.mot[MOTOR_5].motor_map,      M5_MOTOR_MAP },
     { "5","5sa",_fip, 3, st_print_sa, get_flt, st_set_sa,   (float *)&st_cfg.mot[MOTOR_5].step_angle,     M5_STEP_ANGLE },
     { "5","5tr",_fipc,4, st_print_tr, get_flt, st_set_tr,   (float *)&st_cfg.mot[MOTOR_5].travel_rev,     M5_TRAVEL_PER_REV },
     { "5","5mi",_fip, 0, st_print_mi, get_ui8, st_set_mi,   (float *)&st_cfg.mot[MOTOR_5].microsteps,     M5_MICROSTEPS },
-    { "5","5su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_5].steps_per_unit,	M5_STEPS_PER_UNIT },
+    { "5","5su",_fipi,5, st_print_su, st_get_su,st_set_su,  (float *)&st_cfg.mot[MOTOR_5].steps_per_unit,	M5_STEPS_PER_UNIT },
     { "5","5po",_fip, 0, st_print_po, get_ui8, set_01,      (float *)&st_cfg.mot[MOTOR_5].polarity,       M5_POLARITY },
     { "5","5pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null,                            M5_POWER_MODE },
     { "5","5pl",_fip, 3, st_print_pl, get_flt, st_set_pl,   (float *)&st_cfg.mot[MOTOR_5].power_level,    M5_POWER_LEVEL },
@@ -264,11 +257,11 @@ const cfgItem_t cfgArray[] = {
 //  { "5","5mt",_fip, 2, st_print_mt, get_flt, st_set_mt,   (float *)&st_cfg.mot[MOTOR_5].motor_timeout,  M5_MOTOR_TIMEOUT },
 #endif
 #if (MOTORS >= 6)
-    { "6","6ma",_fip, 0, st_print_ma, get_ui8, set_ui8,     (float *)&st_cfg.mot[MOTOR_6].motor_map,      M6_MOTOR_MAP },
+    { "6","6ma",_fip, 0, st_print_ma, get_ui8, st_set_ma,   (float *)&st_cfg.mot[MOTOR_6].motor_map,      M6_MOTOR_MAP },
     { "6","6sa",_fip, 3, st_print_sa, get_flt, st_set_sa,   (float *)&st_cfg.mot[MOTOR_6].step_angle,     M6_STEP_ANGLE },
     { "6","6tr",_fipc,4, st_print_tr, get_flt, st_set_tr,   (float *)&st_cfg.mot[MOTOR_6].travel_rev,     M6_TRAVEL_PER_REV },
     { "6","6mi",_fip, 0, st_print_mi, get_ui8, st_set_mi,   (float *)&st_cfg.mot[MOTOR_6].microsteps,     M6_MICROSTEPS },
-    { "6","6su",_fipi,5, st_print_su, get_flt, st_set_su,   (float *)&st_cfg.mot[MOTOR_6].steps_per_unit,	M6_STEPS_PER_UNIT },
+    { "6","6su",_fipi,5, st_print_su, st_get_su,st_set_su,  (float *)&st_cfg.mot[MOTOR_6].steps_per_unit,	M6_STEPS_PER_UNIT },
     { "6","6po",_fip, 0, st_print_po, get_ui8, set_01,      (float *)&st_cfg.mot[MOTOR_6].polarity,       M6_POLARITY },
     { "6","6pm",_fip, 0, st_print_pm, st_get_pm, st_set_pm, (float *)&cs.null,                            M6_POWER_MODE },
     { "6","6pl",_fip, 3, st_print_pl, get_flt, st_set_pl,   (float *)&st_cfg.mot[MOTOR_6].power_level,    M6_POWER_LEVEL },
@@ -1252,10 +1245,10 @@ bool nv_index_lt_groups(index_t index) { return ((index <= NV_INDEX_START_GROUPS
 
 stat_t set_flu(nvObj_t *nv)
 {
-    if (cm_get_units_mode(MODEL) == INCHES) {   // if in inches...
-        nv->value *= MM_PER_INCH;               // convert to canonical millimeter units
+    if (cm_get_units_mode(MODEL) == INCHES) {       // if in inches...
+        nv->value *= MM_PER_INCH;                   // convert to canonical millimeter units
     }
-    *((float *)GET_TABLE_WORD(target)) = nv->value;  // write value as millimeters or degrees
+    *((float *)GET_TABLE_WORD(target)) = nv->value; // write value as millimeters or degrees
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
     return(STAT_OK);
@@ -1281,32 +1274,39 @@ stat_t set_fltp(nvObj_t *nv)
 
 /*
  * preprocess_float() - pre-process floating point number for units display
+ *
+ *  Apologies in advance for this twisty little function. This function is used to 
+ *  convert the native, canonical form of a parameter (mm, or whatever), into a display
+ *  format appropriate to the units mode in effect. It uses the flags in the config table
+ *  to determine what type of conversion to perform. It's complicated by the fact that  
+ *  only linear axes actually convert - rotaries do not. Plus, determining the axis for 
+ *  a motor requires unraveling the motor mapping (handled in cm_get_axis_type()). 
+ *  Also, there are global SYS group values that are not associated with any axis.
+ *  Lastly, the steps-per-unit value (1su) is actually kept in inverse conversion form, 
+ *  as its native form would be units-per-step.
  */
 
 void preprocess_float(nvObj_t *nv)
-/*
 {
-    if (isnan((double)nv->value) || isinf((double)nv->value)) return; // illegal float values
-    if (GET_TABLE_BYTE(flags) & F_CONVERT) {    // unit conversion required?
-        if (cm_get_units_mode(MODEL) == INCHES) {
-            nv->value *= INCHES_PER_MM;
+    if (nv->valuetype != TYPE_FLOAT) { return; } // can be called non-destructively for any value type
+    if (isnan((double)nv->value) || isinf((double)nv->value)) { return; } // trap illegal float values
+    ///+++ transform these checks into NaN or INF strings with an error return?
+
+    // We may need one of two types of units conversion, but only if in inches mode
+    if (cm_get_units_mode(MODEL) == INCHES) {
+        cmAxisType type = cm_get_axis_type(nv->index);      // linear, rotary or global
+        if (cfgArray[nv->index].flags & F_CONVERT) {        // standard units conversion
+            if ((type == AXIS_TYPE_LINEAR) || (type == AXIS_TYPE_SYSTEM)) {
+                nv->value *= INCHES_PER_MM;
+            }
+        } else if (cfgArray[nv->index].flags & F_ICONVERT) {// inverse units conversion
+            if ((type == AXIS_TYPE_LINEAR) || (type == AXIS_TYPE_SYSTEM)) {
+                nv->value *= MM_PER_INCH;
+            }
         }
     }
-}
-*/
-{
-    uint8_t f;
-    if (isnan((double)nv->value) || isinf((double)nv->value)) return; // illegal float values
-    f = GET_TABLE_BYTE(flags);
-    if (f & (F_CONVERT | F_ICONVERT)) {		// unit conversion required?
-        if (cm_get_units_mode(MODEL) == INCHES) {
-            if(f & F_ICONVERT) {
-                nv->value *= MM_PER_INCH;
- 			} else {
- 				nv->value *= INCHES_PER_MM;
-			}
- 		}
- 	}
+    nv->precision = GET_TABLE_WORD(precision);
+    nv->valuetype = TYPE_FLOAT;
 }
 
 /*
@@ -1317,7 +1317,7 @@ void preprocess_float(nvObj_t *nv)
  */
 bool nv_group_is_prefixed(char *group)
 {
-    if (strcmp("sys", group) == 0) {
+    if (strcmp("sys", group) == 0) {    // =0 means its a match
         return (false);
     }
     if (strcmp("sr", group) == 0) {
@@ -1422,7 +1422,7 @@ static stat_t _do_all(nvObj_t *nv)  // print all parameters
     _do_axes(nv);
     _do_inputs(nv);
     _do_outputs(nv);
-    _do_heaters(nv);              // there are no text mode prints for heaters
+    _do_heaters(nv);                // there are no text mode prints for heaters
     _do_group(nv, (char *)"p1");    // PWM group
     _do_offsets(nv);                // coordinate system offsets
     return (STAT_COMPLETE);         // STAT_COMPLETE suppresses a second JSON write that would cause a fault

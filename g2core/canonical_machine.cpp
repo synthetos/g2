@@ -126,7 +126,6 @@ static void _exec_absolute_origin(float *value, bool *flag);
 static void _exec_program_finalize(float *value, bool *flag);
 
 static int8_t _get_axis(const index_t index);
-static int8_t _get_axis_type(const index_t index);
 
 /***********************************************************************************
  **** CODE *************************************************************************
@@ -2171,10 +2170,63 @@ static const char *const msg_frmo[] = { msg_g93, msg_g94, msg_g95 };
 
 
 /***** AXIS HELPERS *****************************************************************
- * cm_get_axis_char()   - return ASCII char for axis given the axis number
- * _get_axis()          - return axis number or -1 if NA
- * _get_axis_type()     - return 0 -f axis is linear, 1 if rotary, -1 if NA
+ * _get_axis()        - return axis # or -1 if not an axis (works for mapped motors as well)
+ * _coord()           - return coordinate system number or -1 if error
+ * cm_get_axis_char() - return ASCII char for axis given the axis number
+ * cm_get_axis_type() - return linear axis (0), rotary axis (1) or error (-1)
  */
+
+/* _get_axis()
+ *
+ *  Cases that are handled by _get_axis():
+ *    - sys/... value is a system parameter (global), there is no axis
+ *    - xam     any axis parameter will return the axis number
+ *    - 1ma     any motor parameter will return the mapped axis for that motor
+ *    - 1su     an example of the above
+ *    - mpox    readouts
+ *    - g54x    offsets
+ *    - tlx     tool length offset
+ *    - tt1x    tool table
+ *    - tt32x   tool table
+ *    - _tex    diagnostic parameters
+ */
+
+static int8_t _get_axis(const index_t index)
+{
+    // test if this is a SYS parameter (global), in which case there will be no axis    
+    if (strcmp("sys", cfgArray[index].group) == 0) {
+        return (AXIS_TYPE_SYSTEM);
+    }
+
+    // if the leading character of the token is a number it's a motor
+    char c = cfgArray[index].token[0];
+    if (isdigit(cfgArray[index].token[0])) {
+        return(st_cfg.mot[c-0x31].motor_map);
+    }
+        
+    // otherwise it's an axis. Or undefined, which is usually a global.
+    char *ptr;
+    char axes[] = {"xyzabc"};
+    if ((ptr = strchr(axes, c)) == NULL) {              // test the character in the 0 and 3 positions
+        if ((ptr = strchr(axes, cfgArray[index].token[3])) == NULL) { // to accommodate 'xam' and 'g54x' styles
+            return (AXIS_TYPE_UNDEFINED);
+        }
+    }
+    return (ptr - axes);
+}
+
+/**** not used yet ****
+static int8_t _coord(char *token) // extract coordinate system from 3rd character
+{
+    char *ptr;
+    char coord_list[] = {"456789"};
+
+    if ((ptr = strchr(coord_list, token[2])) == NULL) { // test the 3rd character against the string
+        return (-1);
+    }
+    return (ptr - coord_list);
+}
+*/
 
 char cm_get_axis_char(const int8_t axis)
 {
@@ -2183,45 +2235,13 @@ char cm_get_axis_char(const int8_t axis)
     return (axis_char[axis]);
 }
 
-/*
- * _get_axis()      - return axis number or -1 if no match 
- * _get_axis_type() - return linear axis (0), rotary axis (1) or error (-1)
- *
- *  It's possible top get a false positive if a non-axis token is passed
- *  This function should only be called from functions that process axis commands
- *
- *  Cases that are handled:
- *      - xam   ( axis parameters )
- *      - mpox  ( readouts)
- *      - g54x  ( offsets )
- *      - tlx   ( tool length offset )
- *      - tt1x  ( tool table )
- *      - tt16x ( tool table )
- *      - _tex  ( diagnostic parameters )
- */
-
-static int8_t _get_axis(const index_t index)
-{
-    char *ptr;
-    char axes[] = {"xyzabc"};
-
-    // test first character cases - e.g. xam
-    if ((ptr = strchr(axes, cfgArray[index].token[0])) != NULL) {   
-        return (ptr - axes);
-    }
-    // test last character cases - e.g. g54x
-    if ((ptr = strchr(axes, cfgArray[index].token[strlen(cfgArray[index].token)-1])) != NULL) {
-        return (ptr - axes);
-    }
-    return (-1);       
-}
-
-static int8_t _get_axis_type(const index_t index)
+cmAxisType cm_get_axis_type(const index_t index)
 {
     int8_t axis = _get_axis(index);
-    if (axis >= AXIS_A) return (1);
-    if (axis == -1) return (-1);
-    return (0);
+    if (axis == AXIS_TYPE_UNDEFINED) { return (AXIS_TYPE_UNDEFINED); }
+    if (axis == AXIS_TYPE_SYSTEM) { return (AXIS_TYPE_SYSTEM); }
+    if (axis >= AXIS_A) { return (AXIS_TYPE_ROTARY); }
+    return (AXIS_TYPE_LINEAR);
 }
 
 /**** Functions called directly from cfgArray table - mostly wrappers ****
@@ -2376,7 +2396,7 @@ stat_t cm_get_am(nvObj_t *nv)
 
 stat_t cm_set_am(nvObj_t *nv)        // axis mode
 {
-    if (_get_axis_type(nv->index) == 0) {    // linear
+    if (cm_get_axis_type(nv->index) == 0) {    // linear
         if (nv->value > AXIS_MODE_MAX_LINEAR) { 
             nv->valuetype = TYPE_NULL;
             return (STAT_INPUT_EXCEEDS_MAX_VALUE);
@@ -2791,7 +2811,7 @@ static void _print_axis_ui8(nvObj_t *nv, const char *format)
 static void _print_axis_flt(nvObj_t *nv, const char *format)
 {
     char *units;
-    if (_get_axis_type(nv->index) == 0) {    // linear
+    if (cm_get_axis_type(nv->index) == 0) {    // linear
         units = (char *)GET_UNITS(MODEL);
     } else {
         units = (char *)GET_TEXT_ITEM(msg_units, DEGREE_INDEX);
@@ -2803,7 +2823,7 @@ static void _print_axis_flt(nvObj_t *nv, const char *format)
 static void _print_axis_coord_flt(nvObj_t *nv, const char *format)
 {
     char *units;
-    if (_get_axis_type(nv->index) == 0) {    // linear
+    if (cm_get_axis_type(nv->index) == 0) {    // linear
         units = (char *)GET_UNITS(MODEL);
     } else {
         units = (char *)GET_TEXT_ITEM(msg_units, DEGREE_INDEX);

@@ -280,6 +280,13 @@ typedef enum {              // used for spindle and arc dir
     DIRECTION_CCW
 } cmDirection;
 
+typedef enum {              // axis types
+    AXIS_TYPE_UNDEFINED=-2, // invalid type
+    AXIS_TYPE_SYSTEM=-1,    // token is global system token, not axis
+    AXIS_TYPE_LINEAR,       // linear axis
+    AXIS_TYPE_ROTARY        // rotary axis
+} cmAxisType;
+
 typedef enum {              // axis modes (ordered: see _cm_get_feed_time())
     AXIS_DISABLED = 0,      // kill axis
     AXIS_STANDARD,          // axis in coordinated motion w/standard behaviors
@@ -773,6 +780,7 @@ float cm_get_jogging_dest(void);
 /*--- cfgArray interface functions ---*/
 
 char cm_get_axis_char(const int8_t axis);
+cmAxisType cm_get_axis_type(const index_t index);
 
 stat_t cm_get_mline(nvObj_t *nv);       // get model line number
 stat_t cm_get_line(nvObj_t *nv);        // get active (model or runtime) line number

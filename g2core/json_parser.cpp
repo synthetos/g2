@@ -617,7 +617,10 @@ void json_print_response(uint8_t status, const bool only_to_muted /*= false*/)
 
 stat_t json_set_jv(nvObj_t *nv)
 {
-    if ((uint8_t)nv->value >= JV_MAX_VALUE) { return (STAT_INPUT_EXCEEDS_MAX_VALUE);}
+    if ((uint8_t)nv->value >= JV_MAX_VALUE) { 
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+    }    
     js.json_verbosity = (jsonVerbosity)nv->value;
 
     js.echo_json_footer = false;
