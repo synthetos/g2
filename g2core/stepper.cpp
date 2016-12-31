@@ -943,6 +943,10 @@ stat_t st_set_su(nvObj_t *nv)			// motor steps per unit (direct)
 
 stat_t st_set_pm(nvObj_t *nv)            // set motor power mode
 {
+    if (nv->value < 0) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
     if (nv->value >= MOTOR_POWER_MODE_MAX_VALUE) { 
         nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_EXCEEDS_MAX_VALUE); 
@@ -961,10 +965,6 @@ stat_t st_set_pm(nvObj_t *nv)            // set motor power mode
 
 stat_t st_get_pm(nvObj_t *nv)            // get motor power mode
 {
-    if (nv->value >= MOTOR_POWER_MODE_MAX_VALUE) { 
-        nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_EXCEEDS_MAX_VALUE); 
-    }
     uint8_t motor = _get_motor(nv->index);
     if (motor > MOTORS) {
         nv->valuetype = TYPE_NULL;
@@ -991,7 +991,7 @@ stat_t st_set_pl(nvObj_t *nv)    // motor power level
     }
     if (nv->value > (float)1.0) {
         nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_VALUE_RANGE_ERROR);
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
     set_flt(nv);    // set power_setting value in the motor config struct (st)
 
@@ -1024,9 +1024,9 @@ stat_t st_get_pwr(nvObj_t *nv)
 
 /* GLOBAL FUNCTIONS (SYSTEM LEVEL)
  *
- * st_set_mt() - set motor timeout in seconds
- * st_set_md() - disable motor power
+ * st_set_mt() - set global motor timeout in seconds
  * st_set_me() - enable motor power
+ * st_set_md() - disable motor power
  *
  * Calling me or md with NULL will enable or disable all motors
  * Setting a value of 0 will enable or disable all motors
@@ -1035,11 +1035,21 @@ stat_t st_get_pwr(nvObj_t *nv)
 
 stat_t st_set_mt(nvObj_t *nv)
 {
-    st_cfg.motor_power_timeout = min(MOTOR_TIMEOUT_SECONDS_MAX, max(nv->value, MOTOR_TIMEOUT_SECONDS_MIN));
+    if (nv->value < MOTOR_TIMEOUT_SECONDS_MIN) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    if (nv->value > MOTOR_TIMEOUT_SECONDS_MAX) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+    }
+    st_cfg.motor_power_timeout = nv->value;
     return (STAT_OK);
 }
 
-stat_t st_set_me(nvObj_t *nv)    // Make sure this function is not part of initialization --> f00
+// Make sure this function is not part of initialization --> f00
+// nv->value is seconds of timeout
+stat_t st_set_me(nvObj_t *nv)    
 {
     for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
         Motors[motor]->enable(nv->value);   // nv->value is the timeout or 0 for default
@@ -1047,8 +1057,18 @@ stat_t st_set_me(nvObj_t *nv)    // Make sure this function is not part of initi
     return (STAT_OK);
 }
 
-stat_t st_set_md(nvObj_t *nv)    // Make sure this function is not part of initialization --> f00
+// Make sure this function is not part of initialization --> f00
+// nv-value is motor to disable, or 0 for all motors
+stat_t st_set_md(nvObj_t *nv)    
 {
+    if (nv->value < 0) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    if (nv->value > MOTORS) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+    }    
     // de-energize all motors
     if ((uint8_t)nv->value == 0) {      // 0 means all motors
         for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
