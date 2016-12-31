@@ -2675,7 +2675,7 @@ stat_t cm_run_joga(nvObj_t *nv)
 
 static const char fmt_vel[]  = "Velocity:%17.3f%s/min\n";
 static const char fmt_feed[] = "Feed rate:%16.3f%s/min\n";
-static const char fmt_line[] = "Line number:%10.0f\n";
+static const char fmt_line[] = "Line number:%10lu\n";
 static const char fmt_stat[] = "Machine state:       %s\n"; // combined machine state
 static const char fmt_macs[] = "Raw machine state:   %s\n"; // raw machine state
 static const char fmt_cycs[] = "Cycle state:         %s\n";
