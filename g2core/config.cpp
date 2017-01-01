@@ -251,9 +251,15 @@ stat_t get_flt(nvObj_t *nv)
  *  set_flt()  - set value as float
  */
 
-stat_t set_nul(nvObj_t *nv) { return (STAT_OK); }
+stat_t set_nul(nvObj_t *nv) { 
+    return (STAT_OK); 
+}
 
-stat_t set_ro(nvObj_t *nv) { 
+stat_t set_ro(nvObj_t *nv) {
+    // hack. If setting an SR it doesn't fail
+    if (strcmp(nv_body->token, "sr") == 0) {    
+        return (STAT_OK); 
+    }
     nv->valuetype = TYPE_NULL;
     return (STAT_PARAMETER_IS_READ_ONLY); 
 }
