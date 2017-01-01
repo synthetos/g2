@@ -49,13 +49,14 @@ static void _logger(const char *msg, const mpBuf_t *bf)         // LOG_RETURN wi
 #define LOG_RETURN(msg) { _logger(msg, bf); }
 */
 
-//#define TRAP_ZERO(t,m)
+#define TRAP_ZERO(t,m)
+/*
 #define TRAP_ZERO(t, m)                             \
     if (fp_ZERO(t)) {                               \
         rpt_exception(STAT_MINIMUM_LENGTH_MOVE, m); \
         _debug_trap(m);                             \
     }
-
+*/
 //+++++ END DIAGNOSTICS
 
 /* local functions */

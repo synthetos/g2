@@ -178,7 +178,8 @@ static stat_t _plan_move(mpBuf_t *bf, float entry_velocity)
     mp_calculate_ramps(block, bf, entry_velocity);  // (which it will if you don't do this)
 
     // diagnostic traps
-#ifdef IN_DEBUGGER
+
+#if IN_DEBUGGER == 1
     if (block->exit_velocity > block->cruise_velocity)  {
         __asm__("BKPT");                            // exit > cruise after calculate_block
     }
@@ -186,6 +187,7 @@ static stat_t _plan_move(mpBuf_t *bf, float entry_velocity)
         __asm__("BKPT");                            // zero or negative length block
     }
 #endif
+
     bf->buffer_state = MP_BUFFER_PLANNED;           //...here
     bf->plannable = false;
     return (STAT_OK);                               // report that we planned something...
@@ -256,7 +258,7 @@ stat_t mp_exec_move()
         // first-time operations
         if (bf->buffer_state != MP_BUFFER_RUNNING) {
             if ((bf->buffer_state < MP_BUFFER_PREPPED) && (cm.motion_state == MOTION_RUN)) {
-#ifdef IN_DEBUGGER
+#if IN_DEBUGGER == 1
                 __asm__("BKPT");    // mp_exec_move() buffer is not prepped
 #endif
                 // IMPORTANT: We can't rpt_exception from here!
@@ -271,7 +273,7 @@ stat_t mp_exec_move()
 
             if (bf->buffer_state == MP_BUFFER_PREPPED) {
                 if (cm.motion_state == MOTION_RUN) {
-#ifdef IN_DEBUGGER
+#if IN_DEBUGGER == 1
                     __asm__("BKPT"); // we are running but don't have a block planned
 #endif
                 }
