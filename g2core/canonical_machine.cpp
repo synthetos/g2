@@ -2,8 +2,8 @@
  * canonical_machine.cpp - rs274/ngc canonical machine.
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S Hart, Jr.
- * Copyright (c) 2014 - 2016 Robert Giseburt
+ * Copyright (c) 2010 - 2017 Alden S Hart, Jr.
+ * Copyright (c) 2014 - 2017 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -300,7 +300,6 @@ float cm_get_active_coord_offset(const uint8_t axis)
         return (0.0);
     }
     float offset = cm.offset[cm.gm.coord_system][axis] + cm.tl_offset[axis];
-//    float offset = cm.offset[cm.gm.coord_system][axis];
     if (cm.gmx.origin_offset_enable == true) {
         offset += cm.gmx.origin_offset[axis];               // includes G5x and G92 components
     }
@@ -466,11 +465,10 @@ stat_t cm_set_tram(nvObj_t *nv)
             (cm.probe_state[2] == PROBE_SUCCEEDED))
         {
 
-            // Step 1: Get the normal of the plane formed by the three probes
-            // naming:
-            //  d0_{xyz} is the delta between point 0 and point 1
-            //  d2_{xyz} is the delta between point 2 and point 1
-            //  n_{xyz} is the unit normal
+            // Step 1: Get the normal of the plane formed by the three probes. Naming:
+            //    d0_{xyz} is the delta between point 0 and point 1
+            //    d2_{xyz} is the delta between point 2 and point 1
+            //    n_{xyz} is the unit normal
 
             // Step 1a: get the deltas
             float d0_x = cm.probe_results[0][0] - cm.probe_results[1][0];
@@ -480,7 +478,7 @@ stat_t cm_set_tram(nvObj_t *nv)
             float d2_y = cm.probe_results[2][1] - cm.probe_results[1][1];
             float d2_z = cm.probe_results[2][2] - cm.probe_results[1][2];
 
-            // Step 1b: compute the combined magnitde
+            // Step 1b: compute the combined magnitude
             // since sqrt(a)*sqrt(b) = sqrt(a*b), we can save a sqrt in making the unit normal
             float combined_magnitude_inv = 1.0/sqrt(
                                             (d0_x*d0_x + d0_y*d0_y + d0_z*d0_z)*
@@ -492,7 +490,7 @@ stat_t cm_set_tram(nvObj_t *nv)
             float n_y = (d0_x*d2_z - d0_z*d2_x)*combined_magnitude_inv;
             float n_z = (d0_y*d2_x - d0_x*d2_y)*combined_magnitude_inv;
 
-            // Step 1d: flip the nromal if it's negative
+            // Step 1d: flip the normal if it's negative
             if (n_z < 0.0) {
                 n_x = -n_x;
                 n_y = -n_y;
@@ -539,12 +537,9 @@ stat_t cm_set_tram(nvObj_t *nv)
         } else {
             return (STAT_COMMAND_NOT_ACCEPTED);
         }
-
-
     } else {
         return (STAT_INPUT_VALUE_RANGE_ERROR);
     }
-
     return (STAT_OK);
 }
 
@@ -563,10 +558,8 @@ stat_t cm_get_tram(nvObj_t *nv)
         fp_NE(1.0,  cm.rotation_matrix[1][1]) ||
         fp_NE(1.0,  cm.rotation_matrix[2][2]))
     {
-
         nv->value = false;
     }
-
     nv->valuetype = TYPE_BOOL;
     return (STAT_OK);
 }
@@ -581,10 +574,10 @@ stat_t cm_get_tram(nvObj_t *nv)
  *    - translation of work coordinates to machine coordinates (internal canonical form)
  *    - computation and application of axis modes as so:
  *
- *  DISABLED    - Incoming value is ignored. Target value is not changed
- *  ENABLED     - Convert axis values to canonical format and store as target
- *  INHIBITED   - Same processing as ENABLED, but axis will not actually be run
- *  RADIUS      - ABC axis value is provided in Gcode block in linear units
+ *    DISABLED  - Incoming value is ignored. Target value is not changed
+ *    ENABLED   - Convert axis values to canonical format and store as target
+ *    INHIBITED - Same processing as ENABLED, but axis will not actually be run
+ *    RADIUS    - ABC axis value is provided in Gcode block in linear units
  *              - Target is set to degrees based on axis' Radius value
  *              - Radius mode is only processed for ABC axes. Application to XYZ is ignored.
  *
@@ -1113,38 +1106,26 @@ stat_t cm_set_tl_offset(const uint8_t H_word, bool apply_additional)
     uint8_t tool;
     if (cm.gf.H_word)
     {
-        if (cm.gn.H_word > TOOLS)
-        {
+        if (cm.gn.H_word > TOOLS) {
             return (STAT_H_WORD_IS_INVALID);
         }
-        if (cm.gn.H_word == 0)
-        {
-            // interpret H0 as "current tool", just like no H at all.
+        if (cm.gn.H_word == 0) {    // interpret H0 as "current tool", just like no H at all.
             tool = cm.gm.tool;
-        }
-        else
-        {
+        } else {
             tool = cm.gn.H_word;
         }
-    }
-    else
-    {
+    } else {
         tool = cm.gm.tool;
     }
-
-    if (apply_additional)
-    {
+    if (apply_additional) {
         for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
             cm.tl_offset[axis] += cm.tt_offset[tool][axis];
         }
-    }
-    else
-    {
+    } else {
         for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
             cm.tl_offset[axis] = cm.tt_offset[tool][axis];
         }
     }
-
     float value[] = { (float)cm.gm.coord_system,0,0,0,0,0 };// pass coordinate system in value[0] element
     bool flags[]  = { 1,0,0,0,0,0 };
     mp_queue_command(_exec_offset, value, flags);			// second vector (flags) is not used, so fake it
@@ -1156,14 +1137,13 @@ stat_t cm_cancel_tl_offset()
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         cm.tl_offset[axis] = 0;
     }
-
     float value[] = { (float)cm.gm.coord_system,0,0,0,0,0 };// pass coordinate system in value[0] element
     bool flags[]  = { 1,0,0,0,0,0 };
     mp_queue_command(_exec_offset, value, flags);			// second vector (flags) is not used, so fake it
     return (STAT_OK);
 }
 
-stat_t cm_set_coord_system(const uint8_t coord_system)
+stat_t cm_set_coord_system(const uint8_t coord_system)      // set coordinate system sync'd with planner
 {
     cm.gm.coord_system = (cmCoordSystem)coord_system;
 
@@ -1181,7 +1161,6 @@ static void _exec_offset(float *value, bool *flag)
 
         offsets[axis] = cm.offset[coord_system][axis] + cm.tl_offset[axis] + 
                         (cm.gmx.origin_offset[axis] * cm.gmx.origin_offset_enable);
-//        offsets[axis] = cm.offset[coord_system][axis] + (cm.gmx.origin_offset[axis] * cm.gmx.origin_offset_enable);
     }
     mp_set_runtime_work_offset(offsets);
     cm_set_work_offsets(MODEL);                             // set work offsets in the Gcode model
@@ -1356,8 +1335,9 @@ stat_t cm_straight_traverse(const float target[], const bool flags[])
 
 stat_t _goto_stored_position(float target2[], const float target[], const bool flags[])
 {
-    cm_straight_traverse(target, flags);            // Go through intermediate point if provided
-    cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_ON);// Position was stored in absolute coords
+    // Go through intermediate point if one is provided
+    while (mp_planner_is_full());                   // Make sure you have available buffers
+    ritorno(cm_straight_traverse(target, flags));
 
     if (cm.gm.units_mode == INCHES) {               // If G28 or G30 are called while in inches mode
         for (uint8_t i=0; i<AXES; i++) {            // (G20) the stored position must be adjusted
@@ -1369,10 +1349,13 @@ stat_t _goto_stored_position(float target2[], const float target[], const bool f
             target2[i] -= target[i];
         }
     }
-    while (mp_planner_is_full());                   // Make sure you have available buffers
-
     bool flags2[] = { 1,1,1,1,1,1 };
-    return (cm_straight_traverse(target2, flags2)); // Go to programmed endpoint
+
+    while (mp_planner_is_full());                           // Make sure you have available buffers
+    cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_ON);  // Position was stored in absolute coords
+    ritorno(cm_straight_traverse(target2, flags2));         // Go to programmed endpoint
+    cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_OFF);
+    return (STAT_OK);
 }
 
 stat_t cm_set_g28_position(void)
