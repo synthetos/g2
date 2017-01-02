@@ -1333,29 +1333,34 @@ stat_t cm_straight_traverse(const float target[], const bool flags[])
  * cm_goto_g30_position() - G30
  */
 
-stat_t _goto_stored_position(float target2[], const float target[], const bool flags[])
+stat_t _goto_stored_position(const float stored_position[],         // always in mm
+                             const float intermediate_target[],     // in current units
+                             const bool flags[])                    // all false if no intermediate move
 {
     // Go through intermediate point if one is provided
     while (mp_planner_is_full());                   // Make sure you have available buffers
-    ritorno(cm_straight_traverse(target, flags));
+    ritorno(cm_straight_traverse(intermediate_target, flags));
 
-    if (cm.gm.units_mode == INCHES) {               // If G28 or G30 are called while in inches mode
-        for (uint8_t i=0; i<AXES; i++) {            // (G20) the stored position must be adjusted
-            target2[i] *= INCHES_PER_MM;            // to inches so the traverse will behave.
+    float target[AXES];                             // need a local stored position as it gets modified
+    copy_vector(target, stored_position);
+    
+    if (cm.gm.units_mode == INCHES) {               // If G28 or G30 are called in inches mode (G20)
+        for (uint8_t i=0; i<AXES; i++) {            // ...the stored position must be adjusted
+            target[i] *= INCHES_PER_MM;             // ...to inches so the traverse will be correct.
         }
     }
     if (cm.gm.distance_mode == INCREMENTAL_MODE) {  // Subtract out any movement already performed
         for (uint8_t i=0; i<AXES; i++) {            // if in incremental distance mode
-            target2[i] -= target[i];
+            target[i] -= intermediate_target[i];
         }
     }
     bool flags2[] = { 1,1,1,1,1,1 };
 
     while (mp_planner_is_full());                           // Make sure you have available buffers
     cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_ON);  // Position was stored in absolute coords
-    ritorno(cm_straight_traverse(target2, flags2));         // Go to programmed endpoint
+    stat_t status = cm_straight_traverse(target, flags2);  // Go to programmed endpoint
     cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_OFF);
-    return (STAT_OK);
+    return (status);
 }
 
 stat_t cm_set_g28_position(void)
