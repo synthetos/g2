@@ -34,8 +34,9 @@
 
 //+++++ DIAGNOSTICS
 
+#if IN_DEBUGGER < 1
 #define LOG_RETURN(msg)  // LOG_RETURN with no action (production)
-/*
+#else
 #include "xio.h"
 static char logbuf[128];
 static void _logger(const char *msg, const mpBuf_t *bf)         // LOG_RETURN with full state dump
@@ -47,14 +48,17 @@ static void _logger(const char *msg, const mpBuf_t *bf)         // LOG_RETURN wi
     xio_writeline(logbuf);
 }
 #define LOG_RETURN(msg) { _logger(msg, bf); }
-*/
+#endif
 
-//#define TRAP_ZERO(t,m)
+#if IN_DEBUGGER < 1
+#define TRAP_ZERO(t,m)
+#else
 #define TRAP_ZERO(t, m)                             \
     if (fp_ZERO(t)) {                               \
         rpt_exception(STAT_MINIMUM_LENGTH_MOVE, m); \
         _debug_trap(m);                             \
     }
+#endif
 
 //+++++ END DIAGNOSTICS
 

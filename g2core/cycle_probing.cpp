@@ -228,7 +228,7 @@ static uint8_t _probing_init() {
     pb.saved_distance_mode = cm_get_distance_mode(ACTIVE_MODEL);
 
     // set working values
-    cm_set_distance_mode(ABSOLUTE_MODE);
+    cm_set_distance_mode(ABSOLUTE_DISTANCE_MODE);
     cm_set_coord_system(ABSOLUTE_COORDS);  // probing is done in machine coordinates
 
     // initialize the axes - save the jerk settings & switch to the jerk_homing settings
@@ -319,7 +319,7 @@ static stat_t _probe_axis_move(const float target[], bool exact_position) {
     if (exact_position) {
         cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_ON);  // Position was stored in absolute coords
         cm.gm.units_mode    = MILLIMETERS;
-        cm.gm.distance_mode = ABSOLUTE_MODE;
+        cm.gm.distance_mode = ABSOLUTE_DISTANCE_MODE;
     }
 
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {  // set all positions

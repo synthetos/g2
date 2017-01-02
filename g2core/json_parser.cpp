@@ -89,8 +89,7 @@ void json_parser(char *str)
 {
     nvObj_t *nv = nv_reset_nv_list();               // get a fresh nvObj list
     stat_t status = _json_parser_kernal(nv, str);
-    if (status == STAT_OK) {
-        // execute the command
+    if (status == STAT_OK) {                        // execute the command
         nv = nv_body;
         status = _json_parser_execute(nv);
     }
@@ -98,7 +97,6 @@ void json_parser(char *str)
         return;
     }
     nv_print_list(status, TEXT_NO_PRINT, JSON_RESPONSE_FORMAT);
-
     sr_request_status_report(SR_REQUEST_TIMED);     // generate incremental status report to show any changes
 }
 
@@ -619,7 +617,10 @@ void json_print_response(uint8_t status, const bool only_to_muted /*= false*/)
 
 stat_t json_set_jv(nvObj_t *nv)
 {
-    if ((uint8_t)nv->value >= JV_MAX_VALUE) { return (STAT_INPUT_EXCEEDS_MAX_VALUE);}
+    if ((uint8_t)nv->value >= JV_MAX_VALUE) { 
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+    }    
     js.json_verbosity = (jsonVerbosity)nv->value;
 
     js.echo_json_footer = false;
@@ -648,9 +649,13 @@ stat_t json_set_jv(nvObj_t *nv)
 
 stat_t json_set_ej(nvObj_t *nv)
 {
-    if ((nv->value < TEXT_MODE) || (nv->value > AUTO_MODE)) {
+    if (nv->value < TEXT_MODE) {
         nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_VALUE_RANGE_ERROR);
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    if (nv->value > AUTO_MODE) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
     
     // set json_mode to 0 or 1, but don't change it if comm_mode == 2

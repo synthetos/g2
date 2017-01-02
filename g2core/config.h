@@ -317,7 +317,8 @@ bool nv_index_lt_groups(index_t index); // (see config_app.c)
 bool nv_group_is_prefixed(char *group);
 
 // generic internal functions and accessors
-stat_t set_nul(nvObj_t *nv);            // set nothing
+stat_t set_nul(nvObj_t *nv);            // set nothing, return OK
+stat_t set_ro(nvObj_t *nv);             // set nothing, return read-only error
 stat_t set_ui8(nvObj_t *nv);            // set uint8_t value
 stat_t set_int8(nvObj_t *nv);           // set signed 8 bit integer
 stat_t set_01(nvObj_t *nv);             // set a 0 or 1 value with validation
@@ -353,6 +354,8 @@ void nv_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags);
 
 // application specific helpers and functions (config_app.c)
 stat_t set_flu(nvObj_t *nv);            // set floating point number with G20/G21 units conversion
+stat_t set_flup(nvObj_t *nv);           // set positive floating point number with G20/G21 units conversion
+stat_t set_fltp(nvObj_t *nv);           // set positive floating point number with no units conversion
 void preprocess_float(nvObj_t *nv);     // pre-process float values for units and illegal values
 
 // diagnostics

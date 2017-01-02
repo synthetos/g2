@@ -93,7 +93,7 @@ stat_t cm_jogging_cycle_start(uint8_t axis) {
 
     // set working values
     cm_set_units_mode(MILLIMETERS);
-    cm_set_distance_mode(ABSOLUTE_MODE);
+    cm_set_distance_mode(ABSOLUTE_DISTANCE_MODE);
     cm_set_coord_system(ABSOLUTE_COORDS);  // jogging is done in machine coordinates
     cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);
 

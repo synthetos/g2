@@ -45,7 +45,10 @@ typedef enum {  // spindle direction state
     SPINDLE_CCW
 } cmSpindleDir;
 
-typedef enum { SPINDLE_ACTIVE_LOW = 0, SPINDLE_ACTIVE_HIGH } cmSpindlePolarity;
+typedef enum { 
+    SPINDLE_ACTIVE_LOW = 0, 
+    SPINDLE_ACTIVE_HIGH 
+} cmSpindlePolarity;
 
 typedef enum {
     ESC_ONLINE = 0,
@@ -88,8 +91,8 @@ extern cmSpindleton_t spindle;
  * Global Scope Functions
  */
 
-void   spindle_init();
-void   spindle_reset();
+void spindle_init();
+void spindle_reset();
 stat_t cm_set_spindle_speed(float speed);       // S parameter
 stat_t cm_spindle_control(uint8_t control);     // M3, M4, M5 integrated spindle control
 void cm_spindle_off_immediate(void);

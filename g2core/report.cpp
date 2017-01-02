@@ -430,7 +430,8 @@ stat_t sr_set(nvObj_t *nv)
 stat_t sr_set_si(nvObj_t *nv)
 {
     if (nv->value < STATUS_REPORT_MIN_MS) {
-        nv->value = STATUS_REPORT_MIN_MS;
+        nv->valuetype = TYPE_NULL;
+        return(STAT_INPUT_LESS_THAN_MIN_VALUE);
     }
     set_int(nv);
     return(STAT_OK);
@@ -499,7 +500,8 @@ void qr_request_queue_report(int8_t buffers)
     }
 
     // time-throttle requests while generating arcs
-    qr.motion_mode = cm_get_motion_mode(ACTIVE_MODEL);
+//    qr.motion_mode = cm_get_motion_mode(ACTIVE_MODEL);
+    qr.motion_mode = cm_get_motion_mode((GCodeState_t *)&cm.gm);
     if ((qr.motion_mode == MOTION_MODE_CW_ARC) || (qr.motion_mode == MOTION_MODE_CCW_ARC)) {
         uint32_t tick = SysTickTimer_getValue();
         if (tick - qr.init_tick < MIN_ARC_QR_INTERVAL) {
