@@ -501,16 +501,16 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
                 case 80: SET_MODAL (MODAL_GROUP_G1, motion_mode,  MOTION_MODE_CANCEL_MOTION_MODE);
                 case 90: {
                     switch (_point(value)) {
-                        case 0: SET_MODAL (MODAL_GROUP_G3, distance_mode, ABSOLUTE_MODE);
-                        case 1: SET_MODAL (MODAL_GROUP_G3, arc_distance_mode, ABSOLUTE_MODE);
+                        case 0: SET_MODAL (MODAL_GROUP_G3, distance_mode, ABSOLUTE_DISTANCE_MODE);
+                        case 1: SET_MODAL (MODAL_GROUP_G3, arc_distance_mode, ABSOLUTE_DISTANCE_MODE);
                         default: status = STAT_GCODE_COMMAND_UNSUPPORTED;
                     }
                     break;
                 }
                 case 91: {
                     switch (_point(value)) {
-                        case 0: SET_MODAL (MODAL_GROUP_G3, distance_mode, INCREMENTAL_MODE);
-                        case 1: SET_MODAL (MODAL_GROUP_G3, arc_distance_mode, INCREMENTAL_MODE);
+                        case 0: SET_MODAL (MODAL_GROUP_G3, distance_mode, INCREMENTAL_DISTANCE_MODE);
+                        case 1: SET_MODAL (MODAL_GROUP_G3, arc_distance_mode, INCREMENTAL_DISTANCE_MODE);
                         default: status = STAT_GCODE_COMMAND_UNSUPPORTED;
                     }
                     break;

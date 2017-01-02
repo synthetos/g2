@@ -253,8 +253,8 @@ typedef enum {              // G Modal Group 13
 } cmPathControl;
 
 typedef enum {
-    ABSOLUTE_MODE = 0,      // G90 / G90.1
-    INCREMENTAL_MODE        // G91 / G91.1
+    ABSOLUTE_DISTANCE_MODE = 0, // G90 / G90.1
+    INCREMENTAL_DISTANCE_MODE   // G91 / G91.1
 } cmDistanceMode;
 
 typedef enum {
@@ -368,8 +368,8 @@ typedef struct GCodeState {             // Gcode model state - used by model, pl
         select_plane = CANON_PLANE_XY;
         units_mode = INCHES;
         path_control = PATH_EXACT_PATH;
-        distance_mode = ABSOLUTE_MODE;
-        arc_distance_mode = ABSOLUTE_MODE;
+        distance_mode = ABSOLUTE_DISTANCE_MODE;
+        arc_distance_mode = ABSOLUTE_DISTANCE_MODE;
         absolute_override = ABSOLUTE_OVERRIDE_OFF;
         coord_system = ABSOLUTE_COORDS;
         tool = 0;

@@ -610,7 +610,7 @@ void cm_set_model_target(const float target[], const bool flags[])
         if (!flags[axis] || cm.a[axis].axis_mode == AXIS_DISABLED) {
             continue;        // skip axis if not flagged for update or its disabled
         } else if ((cm.a[axis].axis_mode == AXIS_STANDARD) || (cm.a[axis].axis_mode == AXIS_INHIBITED)) {
-            if (cm.gm.distance_mode == ABSOLUTE_MODE) {
+            if (cm.gm.distance_mode == ABSOLUTE_DISTANCE_MODE) {
                 cm.gm.target[axis] = cm_get_active_coord_offset(axis) + _to_millimeters(target[axis]);
             } else {
                 cm.gm.target[axis] += _to_millimeters(target[axis]);
@@ -624,7 +624,7 @@ void cm_set_model_target(const float target[], const bool flags[])
         } else {
             tmp = _calc_ABC(axis, target);
         }
-        if (cm.gm.distance_mode == ABSOLUTE_MODE) {
+        if (cm.gm.distance_mode == ABSOLUTE_DISTANCE_MODE) {
             cm.gm.target[axis] = tmp + cm_get_active_coord_offset(axis); // sacidu93's fix to Issue #22
         } else {
             cm.gm.target[axis] += tmp;
@@ -719,7 +719,7 @@ void canonical_machine_reset()
     cm_select_plane(cm.default_select_plane);
     cm_set_path_control(MODEL, cm.default_path_control);
     cm_set_distance_mode(cm.default_distance_mode);
-    cm_set_arc_distance_mode(INCREMENTAL_MODE);     // always the default
+    cm_set_arc_distance_mode(INCREMENTAL_DISTANCE_MODE); // always the default
     cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);   // always the default
     cm_reset_overrides();                           // set overrides to initial conditions
 
@@ -1327,39 +1327,41 @@ stat_t cm_straight_traverse(const float target[], const bool flags[])
 }
 
 /*
- * cm_set_g28_position()  - G28.1
- * cm_goto_g28_position() - G28
- * cm_set_g30_position()  - G30.1
- * cm_goto_g30_position() - G30
+ * cm_set_g28_position()   - G28.1
+ * cm_goto_g28_position()  - G28
+ * cm_set_g30_position()   - G30.1
+ * cm_goto_g30_position()  - G30
+ * _goto_stored_position() - helper
  */
 
-stat_t _goto_stored_position(const float stored_position[],         // always in mm
-                             const float intermediate_target[],     // in current units
-                             const bool flags[])                    // all false if no intermediate move
+stat_t _goto_stored_position(const float stored_position[],     // always in mm
+                             const float intermediate_target[], // in current units (G20/G21)
+                             const bool flags[])                // all false if no intermediate move
 {
     // Go through intermediate point if one is provided
-    while (mp_planner_is_full());                   // Make sure you have available buffers
-    ritorno(cm_straight_traverse(intermediate_target, flags));
+    while (mp_planner_is_full());                               // Make sure you have available buffers
+    ritorno(cm_straight_traverse(intermediate_target, flags));  // w/no action if no axis flags
 
-    float target[AXES];                             // need a local stored position as it gets modified
+    // If G20 adjust stored position (always in mm) to inches so traverse will be correct
+    float target[AXES]; // make a local stored position as it may be modified
     copy_vector(target, stored_position);
+    if (cm.gm.units_mode == INCHES) {
+        for (uint8_t i=0; i<AXES; i++) {
+            target[i] *= INCHES_PER_MM;
+        }
+    }
     
-    if (cm.gm.units_mode == INCHES) {               // If G28 or G30 are called in inches mode (G20)
-        for (uint8_t i=0; i<AXES; i++) {            // ...the stored position must be adjusted
-            target[i] *= INCHES_PER_MM;             // ...to inches so the traverse will be correct.
-        }
-    }
-    if (cm.gm.distance_mode == INCREMENTAL_MODE) {  // Subtract out any movement already performed
-        for (uint8_t i=0; i<AXES; i++) {            // if in incremental distance mode
-            target[i] -= intermediate_target[i];
-        }
-    }
-    bool flags2[] = { 1,1,1,1,1,1 };
-
+    // Run the stored position move
     while (mp_planner_is_full());                           // Make sure you have available buffers
+
+    uint8_t saved_distance_mode = cm_get_distance_mode(MODEL);
     cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_ON);  // Position was stored in absolute coords
-    stat_t status = cm_straight_traverse(target, flags2);  // Go to programmed endpoint
+    cm_set_distance_mode(ABSOLUTE_DISTANCE_MODE);           // Must run in absolute distance mode
+
+    bool flags2[] = { 1,1,1,1,1,1 };
+    stat_t status = cm_straight_traverse(target, flags2);   // Go to stored position
     cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_OFF);
+    cm_set_distance_mode(saved_distance_mode);              // Restore distance mode
     return (status);
 }
 
@@ -1928,7 +1930,7 @@ static void _exec_program_finalize(float *value, bool *flag)
         cm_set_coord_system(cm.default_coord_system);   // reset to default coordinate system
         cm_select_plane(cm.default_select_plane);       // reset to default arc plane
         cm_set_distance_mode(cm.default_distance_mode);
-        cm_set_arc_distance_mode(INCREMENTAL_MODE);     // always the default
+        cm_set_arc_distance_mode(INCREMENTAL_DISTANCE_MODE); // always the default
         cm_spindle_off_immediate();                     // M5
         cm_coolant_off_immediate();                     // M9
         cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);   // G94
