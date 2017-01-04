@@ -264,8 +264,6 @@ pin_number kGRBL_ResetPinNumber      = 54;
 pin_number kGRBL_FeedHoldPinNumber   = 55;
 pin_number kGRBL_CycleStartPinNumber = 56;
 
-pin_number kGRBL_CommonEnablePinNumber = 8;
-
 /** NOTE: When adding pin definitions here, they must be
  *        added to ALL board pin assignment files, even if
  *        they are defined as -1.

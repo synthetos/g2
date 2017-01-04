@@ -4,8 +4,8 @@
  *
  * This file is part of the g2core project
  *
- * Copyright (c) 2013 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2016 Robert Giseburt
+ * Copyright (c) 2013 - 2017 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2017 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -157,7 +157,6 @@ static OutputPin<Motate::kGRBL_ResetPinNumber> grbl_reset_pin;
 static OutputPin<Motate::kGRBL_FeedHoldPinNumber> grbl_feedhold_pin;
 static OutputPin<Motate::kGRBL_CycleStartPinNumber> grbl_cycle_start_pin;
 
-static OutputPin<Motate::kGRBL_CommonEnablePinNumber> motor_common_enable_pin;
 static OutputPin<Motate::kSpindle_EnablePinNumber> spindle_enable_pin;
 static OutputPin<Motate::kSpindle_DirPinNumber> spindle_dir_pin;
 

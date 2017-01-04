@@ -167,8 +167,7 @@ pin_number kLEDPWM_PinNumber       = 123;
 pin_number kGRBL_ResetPinNumber        = -1;
 pin_number kGRBL_FeedHoldPinNumber     = -1;
 pin_number kGRBL_CycleStartPinNumber   = -1;
-pin_number kGRBL_CommonEnablePinNumber = -1;
-
+\
 // g2ref extensions
 // These first 5 may replace the Spindle and Coolant pins, above
 pin_number kOutput1_PinNumber = 130;  // DO_1: Extruder1_PWM

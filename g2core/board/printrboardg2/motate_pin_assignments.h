@@ -174,7 +174,6 @@ pin_number kLED_RGBWPixelPinNumber    = 125;  // 117;
 pin_number kGRBL_ResetPinNumber        = -1;
 pin_number kGRBL_FeedHoldPinNumber     = -1;
 pin_number kGRBL_CycleStartPinNumber   = -1;
-pin_number kGRBL_CommonEnablePinNumber = -1;
 
 // g2ref extensions
 // These first 5 may replace the Spindle and Coolant pins, above

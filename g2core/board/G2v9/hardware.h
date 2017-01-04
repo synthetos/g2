@@ -157,7 +157,6 @@ static OutputPin<Motate::kGRBL_ResetPinNumber> grbl_reset_pin;
 static OutputPin<Motate::kGRBL_FeedHoldPinNumber> grbl_feedhold_pin;
 static OutputPin<Motate::kGRBL_CycleStartPinNumber> grbl_cycle_start_pin;
 
-static OutputPin<Motate::kGRBL_CommonEnablePinNumber> motor_common_enable_pin;
 static OutputPin<Motate::kSpindle_EnablePinNumber> spindle_enable_pin;
 static OutputPin<Motate::kSpindle_DirPinNumber> spindle_dir_pin;
 
