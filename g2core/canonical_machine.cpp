@@ -2169,11 +2169,22 @@ static const char *const msg_frmo[] = { msg_g93, msg_g94, msg_g95 };
 
 
 /***** AXIS HELPERS *****************************************************************
- * _axis()          - return axis # or -1 if not an axis (works for mapped motors as well)
  * _coord()           - return coordinate system number or -1 if error
- * cm_get_axis_char() - return ASCII char for axis given the axis number
+ * _axis()            - return axis # or -1 if not an axis (works for mapped motors as well)
  * cm_get_axis_type() - return linear axis (0), rotary axis (1) or error (-1)
+ * cm_get_axis_char() - return ASCII char for axis given the axis number
  */
+
+static int8_t _coord(char *token) // extract coordinate system from 3rd character
+{
+    char *ptr;
+    char coord_list[] = {"456789"};
+
+    if ((ptr = strchr(coord_list, token[2])) == NULL) { // test the 3rd character against the string
+        return (-1);
+    }
+    return (ptr - coord_list);
+}
 
 /* _axis()
  *
@@ -2214,15 +2225,16 @@ static int8_t _axis(const index_t index)
     return (ptr - axes);
 }
 
-static int8_t _coord(char *token) // extract coordinate system from 3rd character
+cmAxisType cm_get_axis_type(const index_t index)
 {
-    char *ptr;
-    char coord_list[] = {"456789"};
-
-    if ((ptr = strchr(coord_list, token[2])) == NULL) { // test the 3rd character against the string
-        return (-1);
+    int8_t axis = _axis(index);
+    if (axis <= AXIS_TYPE_UNDEFINED) {
+        return ((cmAxisType)axis);
     }
-    return (ptr - coord_list);
+    if (axis >= AXIS_A) {
+        return (AXIS_TYPE_ROTARY);
+    }
+    return (AXIS_TYPE_LINEAR);
 }
 
 char cm_get_axis_char(const int8_t axis)
@@ -2230,15 +2242,6 @@ char cm_get_axis_char(const int8_t axis)
     char axis_char[] = "XYZABC";
     if ((axis < 0) || (axis > AXES)) return (' ');
     return (axis_char[axis]);
-}
-
-cmAxisType cm_get_axis_type(const index_t index)
-{
-    int8_t axis = _axis(index);
-    if (axis == AXIS_TYPE_UNDEFINED) { return (AXIS_TYPE_UNDEFINED); }
-    if (axis == AXIS_TYPE_SYSTEM) { return (AXIS_TYPE_SYSTEM); }
-    if (axis >= AXIS_A) { return (AXIS_TYPE_ROTARY); }
-    return (AXIS_TYPE_LINEAR);
 }
 
 /**** Functions called directly from cfgArray table - mostly wrappers ****
