@@ -99,14 +99,14 @@ stat_t pwm_set_duty(uint8_t chan, float duty)
     if (duty > 1.0) { return (STAT_INPUT_EXCEEDS_MAX_VALUE);}
 
     if (chan == PWM_1) {
-        if (spindle_pwm_pin.isNull()) {
-            cm_alarm(STAT_ALARM, "attempt to turn on a non-existant spindle");
-        }
+//        if (spindle_pwm_pin.isNull()) {
+//            cm_alarm(STAT_ALARM, "attempt to turn on a non-existant spindle");
+//        }
         spindle_pwm_pin = duty;
     } else if (chan == PWM_2) {
-        if (secondary_pwm_pin.isNull()) {
-            cm_alarm(STAT_ALARM, "attempt to turn on a non-existant spindle");
-        }
+//        if (secondary_pwm_pin.isNull()) {
+//            cm_alarm(STAT_ALARM, "attempt to turn on a non-existant spindle");
+//        }
         secondary_pwm_pin = duty;
     }
 
