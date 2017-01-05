@@ -2,7 +2,7 @@
  * text_parser.cpp - text parser
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -196,7 +196,7 @@ void text_print_multiline_formatted(nvObj_t *nv)
 {
     for (uint8_t i=0; i<NV_BODY_LEN-1; i++) {
         if (nv->valuetype != TYPE_PARENT) {
-            process_outgoing_float(nv);
+            convert_outgoing_float(nv);
             nv_print(nv);
         }
         if ((nv = nv->nx) == NULL) return;

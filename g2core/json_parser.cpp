@@ -2,8 +2,8 @@
  * json_parser.cpp - JSON parser
  * This file is part of the g2core project
  *
- * Copyright (c) 2011 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2016 Rob Giseburt
+ * Copyright (c) 2011 - 2017 Alden S. Hart, Jr.
+ * Copyright (c) 2016 - 2017 Rob Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -420,7 +420,7 @@ uint16_t json_serialize(nvObj_t *nv, char *out_buf, uint16_t size)
                                         need_a_comma = false;
                                         break;
                                     }
-                case (TYPE_FLOAT):  {   process_outgoing_float(nv);
+                case (TYPE_FLOAT):  {   convert_outgoing_float(nv);
                                         str += floattoa(str, nv->value, nv->precision);
                                         break;
                                     }

@@ -2,7 +2,7 @@
  * gcode.h - rs274/ngc Gcode model and parser support
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -157,7 +157,7 @@ typedef enum {              // used for spindle and arc dir
     DIRECTION_CCW
 } cmDirection;
 
-typedef enum {              // axis types
+typedef enum {              // axis types. Enum must be in this order
     AXIS_TYPE_SYSTEM=-2,    // no axis, system parameter
     AXIS_TYPE_UNDEFINED=-1, // invalid type
     AXIS_TYPE_LINEAR,       // linear axis
@@ -276,12 +276,7 @@ typedef struct GCodeStateExtended {     // Gcode dynamic state extensions - used
     bool origin_offset_enable;          // G92 offsets enabled/disabled.  0=disabled, 1=enabled
     bool block_delete_switch;           // set true to enable block deletes (true is default)
 
-// unimplemented gcode parameters
-//  float cutter_radius;                // D - cutter radius compensation (0 is off)
-//  float cutter_length;                // H - cutter length compensation (0 is off)
-
     uint16_t magic_end;
-
 } GCodeStateX_t;
 
 
@@ -327,11 +322,6 @@ typedef struct GCodeInput {             // Gcode model inputs - meaning depends 
     float spindle_speed;                // in RPM
     float spindle_override_factor;      // 1.0000 x S spindle speed. Go up or down from there
     uint8_t  spindle_override_enable;   // TRUE = override enabled
-
-    // unimplemented gcode parameters
-    //  float cutter_radius;                // D - cutter radius compensation (0 is off)
-    //  float cutter_length;                // H - cutter length compensation (0 is off)
-
 } GCodeInput_t;
 
 typedef struct GCodeFlags {             // Gcode model input flags

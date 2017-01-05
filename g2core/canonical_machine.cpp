@@ -2395,26 +2395,15 @@ stat_t cm_get_am(nvObj_t *nv)
 
 stat_t cm_set_am(nvObj_t *nv)        // axis mode
 {
-    nv->valuetype = TYPE_NULL;
     if (cm_get_axis_type(nv->index) == AXIS_TYPE_LINEAR) {
         if (nv->value > AXIS_MODE_LINEAR_MAX) { 
-            return (STAT_INPUT_VALUE_RANGE_ERROR);
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_EXCEEDS_MAX_VALUE);
         }
     } else {
         if (nv->value > AXIS_MODE_ROTARY_MAX) { 
-            return (STAT_INPUT_VALUE_RANGE_ERROR);
-/*=======
-    if (cm_get_axis_type(nv->index) == 0) {    // linear
-        if (nv->value > AXIS_MODE_MAX_LINEAR) { 
             nv->valuetype = TYPE_NULL;
             return (STAT_INPUT_EXCEEDS_MAX_VALUE);
-        }
-    } else {
-        if (nv->value > AXIS_MODE_MAX_ROTARY) { 
-            nv->valuetype = TYPE_NULL;
-            return (STAT_INPUT_EXCEEDS_MAX_VALUE);
->>>>>>> refs/heads/edge
-*/
         }
     }
     nv->valuetype = TYPE_INT;
@@ -2428,21 +2417,6 @@ stat_t cm_get_tm(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].tr
 stat_t cm_set_tm(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv->index)].travel_max)); }
 stat_t cm_get_ra(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].radius)); }
 stat_t cm_set_ra(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].radius)); }
-/*
-stat_t cm_set_hi(nvObj_t *nv)
-{
-    if (nv->value < 0) {
-        nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
-    }
-    if (nv->value > D_IN_CHANNELS) {
-        nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
-    }
-    set_ui8(nv);
-    return (STAT_OK);
-}
-*/
 
 /**** Axis Jerk Primitives
  * cm_get_axis_jerk() - returns jerk for an axis
@@ -2493,7 +2467,7 @@ stat_t cm_get_vm(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].ve
 stat_t cm_set_vm(nvObj_t *nv) 
 { 
     uint8_t axis = _axis(nv->index);
-    set_float(nv, cm->a[axis].velocity_max); 
+    ritorno(set_float_range(nv, cm->a[axis].velocity_max, 0, MAX_LONG)); 
     cm->a[axis].recip_velocity_max = 1/nv->value;
     return(STAT_OK);
 }
@@ -2502,7 +2476,7 @@ stat_t cm_get_fr(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].fe
 stat_t cm_set_fr(nvObj_t *nv) 
 {
     uint8_t axis = _axis(nv->index);
-    set_float(nv, cm->a[axis].feedrate_max);
+    ritorno(set_float_range(nv, cm->a[axis].feedrate_max, 0, MAX_LONG));
     cm->a[axis].recip_feedrate_max = 1/nv->value;
     return(STAT_OK);
 }
@@ -2540,9 +2514,9 @@ stat_t cm_set_hi(nvObj_t *nv) { return (set_int(nv, cm->a[_axis(nv->index)].homi
 stat_t cm_get_hd(nvObj_t *nv) { return (get_int(nv, cm->a[_axis(nv->index)].homing_dir)); }
 stat_t cm_set_hd(nvObj_t *nv) { return (set_int(nv, cm->a[_axis(nv->index)].homing_dir, 0, 1)); }
 stat_t cm_get_sv(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].search_velocity)); }
-stat_t cm_set_sv(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv->index)].search_velocity)); }
+stat_t cm_set_sv(nvObj_t *nv) { return (set_float_range(nv, cm->a[_axis(nv->index)].search_velocity, 0, MAX_LONG)); }
 stat_t cm_get_lv(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].latch_velocity)); }
-stat_t cm_set_lv(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv->index)].latch_velocity)); }
+stat_t cm_set_lv(nvObj_t *nv) { return (set_float_range(nv, cm->a[_axis(nv->index)].latch_velocity, 0, MAX_LONG)); }
 stat_t cm_get_lb(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].latch_backoff)); }
 stat_t cm_set_lb(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv->index)].latch_backoff)); }
 stat_t cm_get_zb(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].zero_backoff)); }
@@ -2816,7 +2790,7 @@ static void _print_axis_ui8(nvObj_t *nv, const char *format)
 static void _print_axis_flt(nvObj_t *nv, const char *format)
 {
     char *units;
-    if (cm_get_axis_type(nv->index) == 0) {    // linear
+    if (cm_get_axis_type(nv->index) == AXIS_TYPE_LINEAR) {
         units = (char *)GET_UNITS(MODEL);
     } else {
         units = (char *)GET_TEXT_ITEM(msg_units, DEGREE_INDEX);
@@ -2828,7 +2802,7 @@ static void _print_axis_flt(nvObj_t *nv, const char *format)
 static void _print_axis_coord_flt(nvObj_t *nv, const char *format)
 {
     char *units;
-    if (cm_get_axis_type(nv->index) == 0) {    // linear
+    if (cm_get_axis_type(nv->index) == AXIS_TYPE_LINEAR) {
         units = (char *)GET_UNITS(MODEL);
     } else {
         units = (char *)GET_TEXT_ITEM(msg_units, DEGREE_INDEX);
