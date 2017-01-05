@@ -878,8 +878,12 @@ stat_t st_set_tr(nvObj_t *nv)
 stat_t st_get_mi(nvObj_t *nv) { return(get_int(nv, st_cfg.mot[_motor(nv->index)].microsteps)); }
 stat_t st_set_mi(nvObj_t *nv)
 {
-    uint8_t mi = (uint8_t)nv->value;
+    if (nv->value <= 0) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
 
+    uint8_t mi = (uint8_t)nv->value;
     if ((mi != 1) && (mi != 2) && (mi != 4) && (mi != 8) && (mi != 16) && (mi != 32)) {
         nv_add_conditional_message((const char *)"*** WARNING *** Setting non-standard microstep value");
     }
@@ -987,6 +991,7 @@ stat_t st_get_pwr(nvObj_t *nv)
  * st_set_mt() - set motor timeout in seconds
  * st_set_md() - disable motor power
  * st_set_me() - enable motor power
+ * st_set_md() - disable motor power
  *
  * Calling me or md with NULL will enable or disable all motors
  * Setting a value of 0 will enable or disable all motors
@@ -998,7 +1003,9 @@ stat_t st_set_mt(nvObj_t *nv) { return(set_float_range(nv, st_cfg.motor_power_ti
                                                            MOTOR_TIMEOUT_SECONDS_MIN,
                                                            MOTOR_TIMEOUT_SECONDS_MAX)); }
 
-stat_t st_set_me(nvObj_t *nv)    // Make sure this function is not part of initialization --> f00
+// Make sure this function is not part of initialization --> f00
+// nv->value is seconds of timeout
+stat_t st_set_me(nvObj_t *nv)    
 {
     for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
         Motors[motor]->enable(nv->value);   // nv->value is the timeout or 0 for default
@@ -1006,8 +1013,18 @@ stat_t st_set_me(nvObj_t *nv)    // Make sure this function is not part of initi
     return (STAT_OK);
 }
 
-stat_t st_set_md(nvObj_t *nv)    // Make sure this function is not part of initialization --> f00
+// Make sure this function is not part of initialization --> f00
+// nv-value is motor to disable, or 0 for all motors
+stat_t st_set_md(nvObj_t *nv)    
 {
+    if (nv->value < 0) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    if (nv->value > MOTORS) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+    }    
     // de-energize all motors
     if ((uint8_t)nv->value == 0) {      // 0 means all motors
         for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {

@@ -31,26 +31,28 @@
 
 typedef enum {                          // these are in order to optimized CASE statement
     NEXT_ACTION_DEFAULT = 0,            // Must be zero (invokes motion modes)
+    NEXT_ACTION_DWELL,                  // G4
+    NEXT_ACTION_SET_G10_DATA,           // G10
+    NEXT_ACTION_GOTO_G28_POSITION,      // G28 go to machine position
+    NEXT_ACTION_SET_G28_POSITION,       // G28.1 set position in abs coordinates
     NEXT_ACTION_SEARCH_HOME,            // G28.2 homing cycle
     NEXT_ACTION_SET_ABSOLUTE_ORIGIN,    // G28.3 origin set
     NEXT_ACTION_HOMING_NO_SET,          // G28.4 homing cycle with no coordinate setting
-    NEXT_ACTION_SET_G28_POSITION,       // G28.1 set position in abs coordinates
-    NEXT_ACTION_GOTO_G28_POSITION,      // G28 go to machine position
-    NEXT_ACTION_SET_G30_POSITION,       // G30.1
-    NEXT_ACTION_GOTO_G30_POSITION,      // G30
-    NEXT_ACTION_SET_COORD_DATA,         // G10
-    NEXT_ACTION_SET_ORIGIN_OFFSETS,     // G92
-    NEXT_ACTION_RESET_ORIGIN_OFFSETS,   // G92.1
-    NEXT_ACTION_SUSPEND_ORIGIN_OFFSETS, // G92.2
-    NEXT_ACTION_RESUME_ORIGIN_OFFSETS,  // G92.3
-    NEXT_ACTION_DWELL,                  // G4
+    NEXT_ACTION_GOTO_G30_POSITION,      // G30 go to machine position
+    NEXT_ACTION_SET_G30_POSITION,       // G30.1 set position in abs coordinates
     NEXT_ACTION_STRAIGHT_PROBE_ERR,     // G38.2
     NEXT_ACTION_STRAIGHT_PROBE,         // G38.3
     NEXT_ACTION_STRAIGHT_PROBE_AWAY_ERR,// G38.4
     NEXT_ACTION_STRAIGHT_PROBE_AWAY,    // G38.5
+    NEXT_ACTION_SET_TL_OFFSET,          // G43
+    NEXT_ACTION_SET_ADDITIONAL_TL_OFFSET,// G43.2
+    NEXT_ACTION_CANCEL_TL_OFFSET,       // G49
+    NEXT_ACTION_SET_ORIGIN_OFFSETS,     // G92
+    NEXT_ACTION_RESET_ORIGIN_OFFSETS,   // G92.1
+    NEXT_ACTION_SUSPEND_ORIGIN_OFFSETS, // G92.2
+    NEXT_ACTION_RESUME_ORIGIN_OFFSETS,  // G92.3
     NEXT_ACTION_JSON_COMMAND_SYNC,      // M100
-    NEXT_ACTION_JSON_COMMAND_IMMEDIATE, // M101
-    NEXT_ACTION_JSON_WAIT               // M102
+    NEXT_ACTION_JSON_WAIT               // M101
 } cmNextAction;
 
 typedef enum {                          // G Modal Group 1
@@ -128,8 +130,8 @@ typedef enum {              // G Modal Group 13
 } cmPathControl;
 
 typedef enum {
-    ABSOLUTE_MODE = 0,      // G90 / G90.1
-    INCREMENTAL_MODE        // G91 / G91.1
+    ABSOLUTE_DISTANCE_MODE = 0, // G90 / G90.1
+    INCREMENTAL_DISTANCE_MODE   // G91 / G91.1
 } cmDistanceMode;
 
 typedef enum {
@@ -156,6 +158,7 @@ typedef enum {              // used for spindle and arc dir
 } cmDirection;
 
 typedef enum {              // axis types
+    AXIS_TYPE_SYSTEM=-2,    // no axis, system parameter
     AXIS_TYPE_UNDEFINED=-1, // invalid type
     AXIS_TYPE_LINEAR,       // linear axis
     AXIS_TYPE_ROTARY        // rotary axis
@@ -244,8 +247,8 @@ typedef struct GCodeState {             // Gcode model state - used by model, pl
         select_plane = CANON_PLANE_XY;
         units_mode = INCHES;
         path_control = PATH_EXACT_PATH;
-        distance_mode = ABSOLUTE_MODE;
-        arc_distance_mode = ABSOLUTE_MODE;
+        distance_mode = ABSOLUTE_DISTANCE_MODE;
+        arc_distance_mode = ABSOLUTE_DISTANCE_MODE;
         absolute_override = ABSOLUTE_OVERRIDE_OFF;
         coord_system = ABSOLUTE_COORDS;
         tool = 0;
@@ -292,6 +295,7 @@ typedef struct GCodeInput {             // Gcode model inputs - meaning depends 
     uint32_t linenum;                   // N word
     float target[AXES];                 // XYZABC where the move should go
 
+    uint8_t H_word;                     // H word - used by G43s
     uint8_t L_word;                     // L word - used by G10s
 
     float feed_rate;                    // F - normalized to millimeters/minute
@@ -338,6 +342,7 @@ typedef struct GCodeFlags {             // Gcode model input flags
     bool linenum;
     bool target[AXES];
 
+    bool H_word;
     bool L_word;
     bool feed_rate;
     bool feed_rate_mode;

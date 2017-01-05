@@ -49,6 +49,7 @@
 #define MOTORS 4       // number of motors on the board
 #define COORDS 6       // number of supported coordinate systems (1-6)
 #define PWMS 2         // number of supported PWM channels
+#define TOOLS 32        // number of entries in tool table (index starts at 1)
 
 /*************************
  * Motate Setup          *

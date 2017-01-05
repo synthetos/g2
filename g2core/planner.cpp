@@ -788,6 +788,14 @@ mpBuf_t * mp_get_write_buffer()     // get & clear a buffer
         q->w->buffer_state = MP_BUFFER_INITIALIZING;
         q->buffers_available--;
         return (mp_get_w(ACTIVE_Q));
+/*=======
+    if (mb.w->buffer_state == MP_BUFFER_EMPTY) {
+        _clear_buffer(mb.w);        // ++++RG this is redundant, it was just cleared in mp_free_run_buffer
+        mb.w->buffer_state = MP_BUFFER_INITIALIZING;
+        mb.buffers_available--;
+        return (mb.w);
+>>>>>>> refs/heads/edge
+*/
     }
     // The no buffer condition always causes a panic - invoked by the caller
     rpt_exception(STAT_FAILED_TO_GET_PLANNER_BUFFER, "mp_get_write_buffer()");

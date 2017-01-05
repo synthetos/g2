@@ -59,6 +59,7 @@
 
 #define COMM_MODE                   JSON_MODE               // one of: TEXT_MODE, JSON_MODE
 #define XIO_ENABLE_FLOW_CONTROL FLOW_CONTROL_RTS            // FLOW_CONTROL_OFF, FLOW_CONTROL_RTS
+#define XIO_UART_MUTES_WHEN_USB_CONNECTED 1                 // Mute the UART when USB connects
 
 #define TEXT_VERBOSITY              TV_VERBOSE              // one of: TV_SILENT, TV_VERBOSE
 #define JSON_VERBOSITY              JV_LINENUM              // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
@@ -83,7 +84,7 @@
 #define GCODE_DEFAULT_PLANE         CANON_PLANE_XY          // CANON_PLANE_XY, CANON_PLANE_XZ, or CANON_PLANE_YZ
 #define GCODE_DEFAULT_COORD_SYSTEM  G54                     // G54, G55, G56, G57, G58 or G59
 #define GCODE_DEFAULT_PATH_CONTROL  PATH_CONTINUOUS
-#define GCODE_DEFAULT_DISTANCE_MODE ABSOLUTE_MODE
+#define GCODE_DEFAULT_DISTANCE_MODE ABSOLUTE_DISTANCE_MODE
 
 
 // *** motor settings ************************************************************************************

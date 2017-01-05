@@ -175,7 +175,7 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
         }
     } 
     else {  // test that center format absolute distance mode arcs have both offsets specified
-        if (cm->gm.arc_distance_mode == ABSOLUTE_MODE) {
+        if (cm->gm.arc_distance_mode == ABSOLUTE_DISTANCE_MODE) {
             if (!(offset_f[cm->arc.plane_axis_0] && offset_f[cm->arc.plane_axis_1])) {  // if one or both offsets are missing
                 return (STAT_ARC_OFFSETS_MISSING_FOR_SELECTED_PLANE);
             }
@@ -222,7 +222,7 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
     cm->arc.offset[OFS_J] = _to_millimeters(offset[OFS_J]);
     cm->arc.offset[OFS_K] = _to_millimeters(offset[OFS_K]);
 
-    if (cm->arc.gm.arc_distance_mode == ABSOLUTE_MODE) {    // adjust offsets if in absolute mode
+    if (cm->arc.gm.arc_distance_mode == ABSOLUTE_DISTANCE_MODE) { // adjust offsets if in absolute mode
          cm->arc.offset[OFS_I] -= cm->arc.position[AXIS_X];
          cm->arc.offset[OFS_J] -= cm->arc.position[AXIS_Y];
          cm->arc.offset[OFS_K] -= cm->arc.position[AXIS_Z];

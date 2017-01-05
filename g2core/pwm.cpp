@@ -31,6 +31,8 @@
 #include "spindle.h"
 #include "text_parser.h"
 #include "pwm.h"
+#include "canonical_machine.h"
+#include "settings.h"
 
 /***** PWM defines, structures and memory allocation *****/
 
@@ -38,37 +40,8 @@ pwmSingleton_t pwm;
 
 
 // Setup motate PWM pins
-static Motate::PWMOutputPin<Motate::kSpindle_PwmPinNumber>  spindle_pwm_pin;
-static Motate::PWMOutputPin<Motate::kSpindle_Pwm2PinNumber> secondary_pwm_pin;
-
-// defines common to all PWM channels
-//#define PWM_TIMER_TYPE    TC1_struct      // PWM uses TC1's
-#define PWM_TIMER_t    TC1_t                // PWM uses TC1's
-#define PWM_TIMER_DISABLE 0                 // turn timer off (clock = 0 Hz)
-//#define PWM_MAX_FREQ (F_CPU/256)            // max frequency with 8-bits duty cycle precision
-//#define PWM_MIN_FREQ (F_CPU/64/65536)       // min frequency with supported prescaling
-
-// channel specific defines
-/* CLKSEL is used to configure default PWM clock operating ranges
- * These can be changed by pwm_freq() depending on the PWM frequency selected
- *
- * The useful ranges (assuming a 32 Mhz system clock) are:
- *   TC_CLKSEL_DIV1_gc  - good for about 500 Hz to 125 Khz practical upper limit
- *   TC_CLKSEL_DIV2_gc  - good for about 250 Hz to  62 KHz
- *   TC_CLKSEL_DIV4_gc  - good for about 125 Hz to  31 KHz
- *   TC_CLKSEL_DIV8_gc  - good for about  62 Hz to  16 KHz
- *   TC_CLKSEL_DIV64_gc - good for about   8 Hz to   2 Khz
- */
-#define PWM1_CTRLA_CLKSEL    TC_CLKSEL_DIV1_gc      // starting clock select value
-#define PWM1_CTRLB           (3 | TC0_CCBEN_bm)     // single slope PWM enabled on channel B
-#define PWM1_ISR_vect        TCD1_CCB_vect          // must match timer assignments in system.h
-#define PWM1_INTCTRLB        0                      // timer interrupt level (0=off, 1=lo, 2=med, 3=hi)
-
-#define PWM2_CTRLA_CLKSEL    TC_CLKSEL_DIV1_gc
-#define PWM2_CTRLB           3                      // single slope PWM enabled, no output channel
-//#define PWM2_CTRLB         (3 | TC0_CCBEN_bm)     // single slope PWM enabled on channel B
-#define PWM2_ISR_vect        TCE1_CCB_vect          // must match timer assignments in system.h
-#define PWM2_INTCTRLB        0                      // timer interrupt level (0=off, 1=lo, 2=med, 3=hi)
+Motate::PWMOutputPin<Motate::kSpindle_PwmPinNumber>  spindle_pwm_pin {Motate::kNormal, P1_PWM_FREQUENCY};
+Motate::PWMOutputPin<Motate::kSpindle_Pwm2PinNumber> secondary_pwm_pin {Motate::kNormal, P1_PWM_FREQUENCY}; // assume the same frequency, to start with at least
 
 /***** PWM code *****/
 /*
@@ -126,8 +99,14 @@ stat_t pwm_set_duty(uint8_t chan, float duty)
     if (duty > 1.0) { return (STAT_INPUT_EXCEEDS_MAX_VALUE);}
 
     if (chan == PWM_1) {
+        if (spindle_pwm_pin.isNull()) {
+            cm_alarm(STAT_ALARM, "attempt to turn on a non-existant spindle");
+        }
         spindle_pwm_pin = duty;
     } else if (chan == PWM_2) {
+        if (secondary_pwm_pin.isNull()) {
+            cm_alarm(STAT_ALARM, "attempt to turn on a non-existant spindle");
+        }
         secondary_pwm_pin = duty;
     }
 

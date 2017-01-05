@@ -65,17 +65,19 @@
 typedef uint16_t devflags_t;                // might need to bump to 32 be 16 or 32
 
 // device capabilities flags
-#define DEV_CAN_BE_CTRL     (0x0001)        // device can be a control channel
-#define DEV_CAN_BE_DATA     (0x0002)        // device can be a data channel
-#define DEV_IS_ALWAYS_BOTH  (0x0004)        // device is always a control and a data channel
-#define DEV_CAN_READ        (0x0010)
-#define DEV_CAN_WRITE       (0x0020)
+#define DEV_CAN_BE_CTRL       (0x0001)        // device can be a control channel
+#define DEV_CAN_BE_DATA       (0x0002)        // device can be a data channel
+#define DEV_IS_ALWAYS_BOTH    (0x0004)        // device is always a control and a data channel
+#define DEV_IS_MUTE_SECONDARY (0x0008)        // device is "muted" as a non-primary device
+#define DEV_CAN_READ          (0x0010)
+#define DEV_CAN_WRITE         (0x0020)
 
 // Device state flags
 // channel state
 #define DEV_IS_CTRL         (0x0001)        // device is set as a control channel
 #define DEV_IS_DATA         (0x0002)        // device is set as a data channel
 #define DEV_IS_PRIMARY      (0x0004)        // device is the primary control channel
+#define DEV_IS_MUTED        (0x0008)        // device is muted as it is currently the non-primary device
 
 // device connection state
 #define DEV_IS_CONNECTED    (0x0020)        // device is connected (e.g. USB)
@@ -113,9 +115,9 @@ enum xioSPIMode {
 void xio_init(void);
 stat_t xio_test_assertions(void);
 
-size_t xio_write(const uint8_t *buffer, size_t size);
+size_t xio_write(const char *buffer, size_t size, bool only_to_muted = false);
 char *xio_readline(devflags_t &flags, uint16_t &size);
-int16_t xio_writeline(const char *buffer);
+int16_t xio_writeline(const char *buffer, bool only_to_muted = false);
 bool xio_connected();
 
 stat_t xio_set_spi(nvObj_t *nv);

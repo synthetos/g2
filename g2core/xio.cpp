@@ -116,14 +116,18 @@ struct xioDeviceWrapperBase {                // C++ base class for device primit
 //  bool canWrite() { return caps & DEV_CAN_WRITE; }
 //  bool canBeCtrl() { return caps & DEV_CAN_BE_CTRL; }
 //  bool canBeData() { return caps & DEV_CAN_BE_DATA; }
-    bool isAlwaysDataAndCtrl() { return caps & DEV_IS_ALWAYS_BOTH; }
     bool isCtrl() { return flags & DEV_IS_CTRL; }    // called externally:      DeviceWrappers[i]->isCtrl()
     bool isData() { return flags & DEV_IS_DATA; }    // subclasses can call directly (no pointer): isCtrl()
     bool isPrimary() { return flags & DEV_IS_PRIMARY; }
+
+    bool isAlwaysDataAndCtrl() { return caps & DEV_IS_ALWAYS_BOTH; }
+    bool isMuteAsSecondary() { return caps & DEV_IS_MUTE_SECONDARY; }
+
     bool isConnected() { return flags & DEV_IS_CONNECTED; }
     bool isNotConnected() { return !(flags & DEV_IS_CONNECTED); }
     bool isReady() { return flags & DEV_IS_READY; }
     bool isActive() { return flags & DEV_IS_ACTIVE; }
+    bool isMuted() { return flags & DEV_IS_MUTED; }
 
     // Combination checks
     bool isCtrlAndActive() { return ((flags & (DEV_IS_CTRL|DEV_IS_ACTIVE)) == (DEV_IS_CTRL|DEV_IS_ACTIVE)); }
@@ -143,13 +147,16 @@ struct xioDeviceWrapperBase {                // C++ base class for device primit
 
     void setAsConnectedAndReady() { flags |= ( DEV_IS_CONNECTED | DEV_IS_READY); };
     void setAsPrimaryActiveDualRole() {
-        if (isAlwaysDataAndCtrl()) {
-            flags |= (DEV_IS_CTRL | DEV_IS_DATA | DEV_IS_ACTIVE);
+        if (isAlwaysDataAndCtrl() || isMuteAsSecondary()) {
+            // In both cases, it cannot be a PRIMARY
+            // Also, we remove a MUTED flag
+            flags = (flags & ~DEV_IS_MUTED) | (DEV_IS_CTRL | DEV_IS_DATA | DEV_IS_ACTIVE);
         } else {
             flags |= (DEV_IS_CTRL | DEV_IS_DATA | DEV_IS_PRIMARY | DEV_IS_ACTIVE);
         }
     };
     void setAsActiveData() { flags |= ( DEV_IS_DATA | DEV_IS_ACTIVE); };
+    void setAsMuted() { flags = (flags & ~(DEV_IS_PRIMARY | DEV_IS_DATA | DEV_IS_CTRL)) | DEV_IS_MUTED; };
     void clearFlags() { flags = DEV_FLAGS_CLEAR; }
 
     xioDeviceWrapperBase(uint8_t _caps) : caps(_caps),
@@ -201,6 +208,7 @@ struct xio_t {
     };
 
     void remove_data_from_primary() {
+        // Why is this first pass here? -RG
         for (int8_t i = 0; i < _dev_count; ++i) {
             if (DeviceWrappers[i]->isDataAndActive()) {
                 return;
@@ -214,10 +222,28 @@ struct xio_t {
         }
     };
 
-    void deactivate_all_channels() {
-        for(int8_t i = 0; i < _dev_count; ++i) {
-            DeviceWrappers[i]->clearActive();
+    bool check_muted_secondary_channels() {
+        bool muted_something = false;
+        for (int8_t i = 0; i < _dev_count; ++i) {
+            if (DeviceWrappers[i]->isMuteAsSecondary()) {
+                DeviceWrappers[i]->setAsMuted();
+                muted_something = true;
+            }
         }
+        return muted_something;
+    }
+
+    bool deactivate_and_unmute_channels() {
+        bool unmuted_something = false;
+        for(int8_t i = 0; i < _dev_count; ++i) {
+            if (DeviceWrappers[i]->isMuted()) {
+                unmuted_something = true;
+                DeviceWrappers[i]->setAsPrimaryActiveDualRole(); // NOTE: muted secondary devices won't be set PRIMARY
+            } else {
+                DeviceWrappers[i]->clearActive();
+            }
+        }
+        return unmuted_something;
     };
 
     // ##### Cross-Device read/write/etc. functions
@@ -232,11 +258,17 @@ struct xio_t {
      * In the current environment, these are not foreseen to cause trouble since these
      * are blocking writes and we expect to only really be writing to one device.
      */
-    size_t write(const char *buffer, size_t size)
+    size_t write(const char *buffer, size_t size, bool only_to_muted)
     {
         size_t total_written = -1;
         for (int8_t i = 0; i < _dev_count; ++i) {
-            if (DeviceWrappers[i]->isCtrlAndActive()) {
+            bool ok_channel = false;
+            if (!only_to_muted) {
+                ok_channel = DeviceWrappers[i]->isCtrlAndActive();
+            } else {
+                ok_channel = DeviceWrappers[i]->isMuted();
+            }
+            if (ok_channel) {
                 const char *buf = buffer;
                 int16_t to_write = size;
                 while (to_write > 0) {
@@ -256,10 +288,10 @@ struct xio_t {
      * The input buffer must be NUL terminated
      */
 
-    int16_t writeline(const char *buffer)
+    int16_t writeline(const char *buffer, bool only_to_muted)
     {
         int16_t len = strlen(buffer);
-        return write(buffer, len);
+        return write(buffer, len, only_to_muted);
     };
 
     /*
@@ -557,6 +589,8 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 
             if (c == 0) {
                 _debug_trap("scan ran into NULL");
+                flush(); // consider the connection and all data trashed
+                return false;
             }
 
             // Look for line endings
@@ -884,29 +918,60 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
     void connectedStateChanged(bool connected) {
             if (connected) {
                 if (isNotConnected()) {
-                    //USB0 or UART has just connected
-                    //Case 1: This is the first channel to connect -
-                    //  set it as CTRL+DATA+PRIMARY channel
-                    //Case 2: This is the second (or later) channel to connect -
-                    //  set it as DATA channel, remove DATA flag from PRIMARY channel
-                    //... inactive channels are counted as closed
+                    // USB0 or UART has just connected
+                    // If one of the devices isAlwaysDataAndCtrl():
+                    //    We treat *it* as if it's the only device connected.
+                    //    We treat *the other devices* as if it's NOT connected.
+                    // Case 1: This is the first channel to connect -
+                    //   set it as CTRL+DATA+PRIMARY channel
+                    //     mark all isMutedAsSecondary() as MUTED, and call controller_set_muted(true) if needed
+                    // Case 2: This is the second (or later) channel to connect -
+                    // Case 2a: This device is !isMuteAsSecondary()
+                    //     set it as DATA channel, remove DATA flag from PRIMARY channel
+                    //     mark all isMutedAsSecondary() as MUTED, and call controller_set_muted(true) if needed
+                    //     ... inactive channels are counted as closed
+                    // Case 2b: This devices isMuteAsSecondary(), and needs to be "muted."
+                    //     set it as a MUTED channel, call controller_set_connected(true)
+                    //       then controller_set_muted(true)
+
 
                     setAsConnectedAndReady();
 
                     if (isAlwaysDataAndCtrl()) {
+                        // Case 1 (ignoring others)
                         setActive();
                         controller_set_connected(true);
+
+                        // Case 2b (not ignoring others)
+                        if (isMuteAsSecondary() && xio.others_connected(this)) {
+                            controller_set_muted(true); // something was muted
+                        }
+
                         return;
                     }
 
                     if(!xio.others_connected(this)) {
                         // Case 1
                         setAsPrimaryActiveDualRole();
-                        // report that we now have a connection (only for the first one)
+                        // report that there is now have a connection (only for the first one)
                         controller_set_connected(true);
-                    } else {
-                        // Case 2
+                        // make sure secondary channels (that don't show up in isConnected) are muted
+                        if (xio.check_muted_secondary_channels()) {
+                            controller_set_muted(true); // something was muted
+                        }
+                    }
+                    else if (isMuteAsSecondary()) {
+                        // Case 2b
+                        setAsMuted();
+                        controller_set_connected(true); // it DID just just get connected
+                        controller_set_muted(true);     // but it muted it too
+                    }
+                    else {
+                        // Case 2a
                         xio.remove_data_from_primary();
+                        if (xio.check_muted_secondary_channels()) {
+                            controller_set_muted(true); // something was muted
+                        }
                         setAsActiveData();
                     }
                 } // flags & DEV_IS_DISCONNECTED
@@ -916,9 +981,9 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
 
                     //USB0 has just disconnected
                     //Case 1: This channel disconnected while it was a ctrl+data channel (and no other channels are open) -
-                    //  finalize this channel
+                    //  finalize this channel, unmute muted channels
                     //Case 2: This channel disconnected while it was a primary ctrl channel (and other channels are open) -
-                    //  finalize this channel, deactivate other channels
+                    //  finalize this channel, unmute muted channels, deactivate other channels
                     //Case 3: This channel disconnected while it was a non-primary ctrl channel (and other channels are open) -
                     //  finalize this channel, leave other channels alone
                     //Case 4: This channel disconnected while it was a data channel (and other channels are open, including a primary)
@@ -933,20 +998,23 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
                     flush();
                     flushRead();
 
-                    if(checkForNotActive(oldflags) || isAlwaysDataAndCtrl()) {
+                    if (checkForNotActive(oldflags) || isAlwaysDataAndCtrl()) {
                         // Case 5a, 5b
-                    } else if(checkForCtrlAndData(oldflags) || !xio.others_connected(this)) {
+                    } else if (checkForCtrlAndData(oldflags) || !xio.others_connected(this)) {
                         // Case 1
-                        if(!checkForCtrlAndData(oldflags) || xio.others_connected(this)) {
-                            rpt_exception(STAT_XIO_ASSERTION_FAILURE, "xio_dev() assertion error"); // where is this supposed to go!?
+                        if (xio.deactivate_and_unmute_channels()) {
+                            controller_set_muted(false);  // something was unmuted
+                        } else {
+                            controller_set_connected(false);
                         }
-                        controller_set_connected(false);
-                    } else if(checkForCtrlAndPrimary(oldflags)) {
+                    } else if (checkForCtrlAndPrimary(oldflags)) {
                         // Case 2
-                        xio.deactivate_all_channels();
-                    } else if(checkForCtrl(oldflags)) {
+                        if (xio.deactivate_and_unmute_channels()) {
+                            controller_set_muted(false);  // something was unmuted
+                        }
+                    } else if (checkForCtrl(oldflags)) {
                         // Case 3
-                    } else if(checkForData(oldflags)) {
+                    } else if (checkForData(oldflags)) {
                         // Case 4
                         xio.remove_data_from_primary();
                     }
@@ -970,9 +1038,14 @@ xioDeviceWrapper<decltype(&SerialUSB1)> serialUSB1Wrapper {
 #endif
 #endif // XIO_HAS_USB
 #if XIO_HAS_UART==1
+#if defined(XIO_UART_MUTES_WHEN_USB_CONNECTED) && (XIO_UART_MUTES_WHEN_USB_CONNECTED==1)
+constexpr devflags_t _serial0ExtraFlags = DEV_IS_ALWAYS_BOTH | DEV_IS_MUTE_SECONDARY;
+#else
+constexpr devflags_t _serial0ExtraFlags = DEV_IS_ALWAYS_BOTH;
+#endif
 xioDeviceWrapper<decltype(&Serial)> serial0Wrapper {
     &Serial,
-    (DEV_CAN_READ | DEV_CAN_WRITE | DEV_IS_ALWAYS_BOTH)
+    (DEV_CAN_READ | DEV_CAN_WRITE | _serial0ExtraFlags)
 };
 #endif // XIO_HAS_UART
 
@@ -1032,9 +1105,9 @@ stat_t xio_test_assertions()
  * write() - write a buffer to a device
  */
 
-size_t xio_write(const char *buffer, size_t size)
+size_t xio_write(const char *buffer, size_t size, bool only_to_muted /*= false*/)
 {
-    return xio.write(buffer, size);
+    return xio.write(buffer, size, only_to_muted);
 }
 
 /*
@@ -1049,9 +1122,9 @@ char *xio_readline(devflags_t &flags, uint16_t &size)
     return xio.readline(flags, size);
 }
 
-int16_t xio_writeline(const char *buffer)
+int16_t xio_writeline(const char *buffer, bool only_to_muted /*= false*/)
 {
-    return xio.writeline(buffer);
+    return xio.writeline(buffer, only_to_muted);
 }
 
 bool xio_connected()

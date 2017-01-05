@@ -586,7 +586,6 @@ stat_t st_get_tr(nvObj_t *nv);
 stat_t st_set_tr(nvObj_t *nv);
 stat_t st_get_mi(nvObj_t *nv);
 stat_t st_set_mi(nvObj_t *nv);
-
 stat_t st_get_su(nvObj_t *nv);
 stat_t st_set_su(nvObj_t *nv);
 stat_t st_get_po(nvObj_t *nv);
