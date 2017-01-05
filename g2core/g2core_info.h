@@ -21,7 +21,7 @@
 #ifndef G2CORE_INFO_H_ONCE
 #define G2CORE_INFO_H_ONCE
 
-#define G2CORE_FIRMWARE_BUILD			100.17  // Added tool offsets (PR #211) 
+#define G2CORE_FIRMWARE_BUILD			100.18  // fix startup alarm state 
 #ifdef GIT_VERSION
 #define G2CORE_FIRMWARE_BUILD_STRING	GIT_VERSION
 #else
