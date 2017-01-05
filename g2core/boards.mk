@@ -124,7 +124,7 @@ ifeq ("$(CONFIG)","PrintrbotPlay")
     ifeq ("$(BOARD)","NONE")
         BOARD=printrboardG2v3
     endif
-    SETTINGS_FILE="settings_printrbot_play.h"
+    SETTINGS_FILE="settings_Printrbot_Play.h"
 endif
 
 ##########
