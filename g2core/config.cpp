@@ -68,7 +68,6 @@ stat_t nv_set(nvObj_t *nv)
         return(STAT_INTERNAL_RANGE_ERROR);
     }
     return (((fptrCmd)cfgArray[nv->index].set)(nv));
-//    return (((fptrCmd)GET_TABLE_WORD(set))(nv));
 }
 
 stat_t nv_get(nvObj_t *nv)
@@ -77,7 +76,6 @@ stat_t nv_get(nvObj_t *nv)
         return(STAT_INTERNAL_RANGE_ERROR);
     }
     return (((fptrCmd)cfgArray[nv->index].get)(nv));
-//    return (((fptrCmd)GET_TABLE_WORD(get))(nv));
 }
 
 void nv_print(nvObj_t *nv)
@@ -86,7 +84,6 @@ void nv_print(nvObj_t *nv)
         return;
     }
     ((fptrCmd)cfgArray[nv->index].print)(nv);
-//    ((fptrCmd)GET_TABLE_WORD(print))(nv);
 }
 
 stat_t nv_persist(nvObj_t *nv)
@@ -128,13 +125,19 @@ void config_init()
 
 static void _set_defa(nvObj_t *nv, bool print)
 {
-    cm_set_units_mode(MILLIMETERS);                // must do inits in MM mode
+    cm_set_units_mode(MILLIMETERS);         // must do inits in MM mode
     for (nv->index=0; nv_index_is_single(nv->index); nv->index++) {
-        if (GET_TABLE_BYTE(flags) & F_INITIALIZE) {
-            nv->value = cfgArray[nv->index].def_value;
+        if (cfgArray[nv->index].flags & F_INITIALIZE) {
+            if (cfgArray[nv->index].flags & F_ZERO) {
+                nv->value = 0;
+            } else {
+                nv->value = cfgArray[nv->index].def_value;
+            }
             strncpy(nv->token, cfgArray[nv->index].token, TOKEN_LEN);
-            nv_set(nv);
-            nv_persist(nv);
+            cfgArray[nv->index].set(nv);    // run the set method, nv_set(nv);
+            if (cfgArray[nv->index].flags & F_PERSIST) {
+                nv_persist(nv);
+            }            
         }
     }
     sr_init_status_report();                    // reset status reports

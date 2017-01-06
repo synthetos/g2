@@ -2,7 +2,7 @@
  * settings_makeblock.h - makeblock engraving table
  * This file is part of the g2core project
  *
- * Copyright (c) 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2016 - 2017 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -52,7 +52,7 @@
 
 // Communications and reporting settings
 
-#define USB_SERIAL_PORTS_EXPOSED   1        // Valid options are 1 or 2, only!
+#define USB_SERIAL_PORTS_EXPOSED 1          // Valid options are 1 or 2, only!
 #define COMM_MODE JSON_MODE                 // one of: TEXT_MODE, JSON_MODE
 
 #define TEXT_VERBOSITY TV_VERBOSE           // one of: TV_SILENT, TV_VERBOSE
@@ -153,3 +153,54 @@
 #define Z_LATCH_VELOCITY 25
 #define Z_LATCH_BACKOFF 4
 #define Z_ZERO_BACKOFF 2
+
+#define A_AXIS_MODE AXIS_STANDARD
+#define A_VELOCITY_MAX (360 * 25.4)
+#define A_FEEDRATE_MAX A_VELOCITY_MAX
+#define A_TRAVEL_MIN -1  // degrees
+#define A_TRAVEL_MAX -1  // same value means infinite, no limit
+#define A_JERK_MAX (2 * 25.4)
+#define A_JERK_HIGH_SPEED A_JERK_MAX
+#define A_RADIUS 1.0
+#define A_HOMING_INPUT 0
+#define A_HOMING_DIRECTION 0
+#define A_SEARCH_VELOCITY (60 * 25.4)
+#define A_LATCH_VELOCITY (30 * 25.4)
+#define A_LATCH_BACKOFF (0.125 * 25.4)
+#define A_ZERO_BACKOFF (0.375 * 25.4)
+#define A_HOMING_INPUT 0
+#define A_HOMING_DIR 0
+
+#define B_AXIS_MODE AXIS_DISABLED
+#define B_VELOCITY_MAX (360 * 25.4)
+#define B_FEEDRATE_MAX B_VELOCITY_MAX
+#define B_TRAVEL_MAX -1
+#define B_TRAVEL_MIN -1
+#define B_JERK_MAX (2 * 25.4)
+#define B_JERK_HIGH_SPEED B_JERK_MAX
+#define B_RADIUS 1
+#define B_HOMING_INPUT 0
+#define B_HOMING_DIRECTION 0
+#define B_SEARCH_VELOCITY (60 * 25.4)
+#define B_LATCH_VELOCITY (30 * 25.4)
+#define B_LATCH_BACKOFF (0.125 * 25.4)
+#define B_ZERO_BACKOFF (0.375 * 25.4)
+#define B_HOMING_INPUT 0
+#define B_HOMING_DIR 0
+
+#define C_AXIS_MODE AXIS_DISABLED
+#define C_VELOCITY_MAX (360 * 25.4)
+#define C_FEEDRATE_MAX C_VELOCITY_MAX
+#define C_TRAVEL_MAX -1
+#define C_TRAVEL_MIN -1
+#define C_JERK_MAX (2 * 25.4)
+#define C_JERK_HIGH_SPEED C_JERK_MAX
+#define C_RADIUS 1
+#define C_HOMING_INPUT 0
+#define C_HOMING_DIRECTION 0
+#define C_SEARCH_VELOCITY (60 * 25.4)
+#define C_LATCH_VELOCITY (30 * 25.4)
+#define C_LATCH_BACKOFF (0.125 * 25.4)
+#define C_ZERO_BACKOFF (0.375 * 25.4)
+#define C_HOMING_INPUT 0
+#define C_HOMING_DIR 0

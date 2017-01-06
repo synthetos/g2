@@ -169,7 +169,6 @@
  ***********************************************************************************/
 
 // Sizing and footprints                // chose one based on # of elements in cfgArray
-//typedef uint8_t index_t;              // use this if there are < 256 indexed objects
 typedef uint16_t index_t;               // use this if there are > 255 indexed objects
 
                                         // defines allocated from stack (not-pre-allocated)
@@ -223,6 +222,7 @@ typedef enum {                          // value typing for config and JSON
 #define F_NOSTRIP       0x04            // do not strip the group prefix from the token
 #define F_CONVERT       0x08            // set if unit conversion is required
 #define F_ICONVERT      0x10            // set if unit conversion is required AND value is an inverse quantity
+#define F_ZERO          0x20            // initialize to zero (requires F_INITIALIZE set as well)
 
 #define _f0             0x00
 #define _fi             (F_INITIALIZE)
@@ -231,6 +231,8 @@ typedef enum {                          // value typing for config and JSON
 #define _fc             (F_CONVERT)
 #define _fic            (F_INITIALIZE | F_CONVERT)
 #define _fip            (F_INITIALIZE | F_PERSIST)
+#define _fiz            (F_INITIALIZE | F_ZERO)
+#define _fizc           (F_INITIALIZE | F_ZERO | F_CONVERT)
 #define _fipc           (F_INITIALIZE | F_PERSIST | F_CONVERT)
 #define _fipn           (F_INITIALIZE | F_PERSIST | F_NOSTRIP)
 #define _fipi           (F_INITIALIZE | F_PERSIST | F_ICONVERT)
