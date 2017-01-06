@@ -63,9 +63,8 @@ extern Motate::SPI<Motate::kSocket4_SPISlaveSelectPinNumber> spi;
 extern Motate::UART<Motate::kSerial_RXPinNumber, Motate::kSerial_TXPinNumber, Motate::kSerial_RTSPinNumber, Motate::kSerial_CTSPinNumber> Serial;
 #endif
 
-
-
 //******* Generic Functions *******
-void board_xio_init(void);
+void board_hardware_init(void);  // called 1st
+void board_xio_init(void);       // called later
 
 #endif  // board_xio_h

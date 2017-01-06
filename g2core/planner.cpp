@@ -758,7 +758,6 @@ mpBuf_t * mp_get_write_buffer()     // get & clear a buffer
         _clear_buffer(mb.w);        // ++++RG this is redundant, it was just cleared in mp_free_run_buffer
         mb.w->buffer_state = MP_BUFFER_INITIALIZING;
         mb.buffers_available--;
-
         return (mb.w);
     }
     // The no buffer condition always causes a panic - invoked by the caller

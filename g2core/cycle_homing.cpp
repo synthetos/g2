@@ -162,7 +162,7 @@ stat_t cm_homing_cycle_start(void) {
 
     // set working values
     cm_set_units_mode(MILLIMETERS);
-    cm_set_distance_mode(INCREMENTAL_MODE);
+    cm_set_distance_mode(INCREMENTAL_DISTANCE_MODE);
     cm_set_coord_system(ABSOLUTE_COORDS);  // homing is done in machine coordinates
     cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);
     hm.set_coordinates = true;

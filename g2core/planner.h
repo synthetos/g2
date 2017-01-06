@@ -243,8 +243,8 @@ typedef enum {
 
 /*** Most of these factors are the result of a lot of tweaking. Change with caution.***/
 
-#define PLANNER_BUFFER_POOL_SIZE    ((uint8_t)48)       // Suggest 12 min. Limit is 255
-#define PLANNER_BUFFER_HEADROOM     ((uint8_t)4)        // Buffers to reserve in planner before processing new input line
+#define PLANNER_BUFFER_POOL_SIZE    (48)                // Suggest 12 min. Limit is 255
+#define PLANNER_BUFFER_HEADROOM     (4)                 // Buffers to reserve in planner before processing new input line
 #define JERK_MULTIPLIER             ((float)1000000)    // DO NOT CHANGE - must always be 1 million
 
 #define JUNCTION_INTEGRATION_MIN    (0.05)              // minimum allowable setting

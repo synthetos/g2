@@ -139,15 +139,15 @@ pin_number kInput10_PinNumber = 109;
 pin_number kInput11_PinNumber = 110;
 pin_number kInput12_PinNumber = 111;
 
+pin_number kSpindle_EnablePinNumber = 112;
+pin_number kSpindle_DirPinNumber    = 113;
+pin_number kSpindle_PwmPinNumber    = 114;
+pin_number kSpindle_Pwm2PinNumber   = 115;
+pin_number kCoolant_EnablePinNumber = 116;
+
 // START DEBUG PINS - Convenient pins to hijack for hardware debugging
 // To reuse a pin for debug change the original pin number to -1
 // and uncomment the corresponding debug pin
-pin_number kSpindle_EnablePinNumber = 112;  // Spindle ON implemented in g2ref
-pin_number kSpindle_DirPinNumber    = 113;  // Spindle ON implemented in g2ref
-pin_number kSpindle_PwmPinNumber    = -1;   // 114; // Not implemented (superseded by Extruder1_PWM)
-pin_number kSpindle_Pwm2PinNumber   = -1;   // 115; // Not implemented (superseded by Fan1B_PWM)
-pin_number kCoolant_EnablePinNumber = 116;  // Spindle ON implemented in g2ref
-
 pin_number kDebug1_PinNumber = -1;  // 112;
 pin_number kDebug2_PinNumber = -1;  // 113;
 pin_number kDebug3_PinNumber = -1;  // 116; // Note the out-of-order numbering & 115 missing
@@ -183,7 +183,7 @@ pin_number kOutput8_PinNumber  = -1;   // 137;     // See Coolant Enable
 pin_number kOutput9_PinNumber  = 138;  // <unassigned, available out>
 pin_number kOutput10_PinNumber = 139;  // DO_10: Fan2B_PWM
 
-pin_number kOutput11_PinNumber = 140;  // DO_11: Heted Bed FET
+pin_number kOutput11_PinNumber = 140;  // DO_11: Heated Bed FET
 pin_number kOutput12_PinNumber = 141;  // DO_12: Indicator_LED
 pin_number kOutput13_PinNumber = -1;   // 142;
 pin_number kOutput14_PinNumber = -1;   // 143;

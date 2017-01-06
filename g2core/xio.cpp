@@ -589,6 +589,8 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 
             if (c == 0) {
                 _debug_trap("scan ran into NULL");
+                flush(); // consider the connection and all data trashed
+                return false;
             }
 
             // Look for line endings

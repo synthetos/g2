@@ -2,8 +2,8 @@
  * error.h - g2core status codes
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2010 - 2016 Robert Giseburt
+ * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2017 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -204,7 +204,7 @@ char *get_status_message(stat_t status);
 #define STAT_MAX_DEPTH_EXCEEDED 115             // JSON exceeded maximum nesting depth
 #define STAT_VALUE_TYPE_ERROR 116               // JSON value does not agree with variable type
 
-#define STAT_INPUT_FROM_MUTED_CHANNEL_ERROR 117               // input from a muted channel was ignored
+#define STAT_INPUT_FROM_MUTED_CHANNEL_ERROR 117 // input from a muted channel was ignored
 #define STAT_ERROR_118 118
 #define STAT_ERROR_119 119
 

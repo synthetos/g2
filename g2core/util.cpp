@@ -185,10 +185,13 @@ char *escape_string(char *dst, char *src)
     char c;
     char *start_dst = dst;
 
-    while ((c = *(src++)) != 0) {    // NUL
+    while ((c = *(src++)) != 0) {           // NUL
         if (c == '"') { *(dst++) = '\\'; }
+        if (c == 0x0d) { continue; }        // CR happens in some pathological malformed input cases
+        if (c == 0x0a) { continue; }        // LF happens in some pathological malformed input cases
         *(dst++) = c;
     }
+    *dst = 0;
     return (start_dst);
 }
 

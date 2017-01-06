@@ -239,7 +239,8 @@ stat_t get_flt(nvObj_t *nv)
 }
 
 /* Generic sets()
- *  set_nul()  - set nothing
+ *  set_nul()  - set nothing, return OK
+ *  set_ro()   - set nothing, return read-only error
  *  set_ui8()  - set value as 8 bit uint8_t value
  *  set_int8() - set value as an 8 bit int8_t value
  *  set_01()   - set a 0 or 1 uint8_t value with validation
@@ -249,8 +250,19 @@ stat_t get_flt(nvObj_t *nv)
  *  set_data() - set value as 32 bit integer blind cast
  *  set_flt()  - set value as float
  */
-//stat_t set_nul(nvObj_t *nv) { return (STAT_PARAMETER_IS_READ_ONLY); }
-stat_t set_nul(nvObj_t *nv) { return (STAT_OK); }   // hack until JSON is refactored
+
+stat_t set_nul(nvObj_t *nv) { 
+    return (STAT_OK); 
+}
+
+stat_t set_ro(nvObj_t *nv) {
+    // hack. If setting an SR it doesn't fail
+    if (strcmp(nv_body->token, "sr") == 0) {    
+        return (STAT_OK); 
+    }
+    nv->valuetype = TYPE_NULL;
+    return (STAT_PARAMETER_IS_READ_ONLY); 
+}
 
 stat_t set_ui8(nvObj_t *nv)
 {
@@ -268,27 +280,39 @@ stat_t set_int8(nvObj_t *nv)
 
 stat_t set_01(nvObj_t *nv)
 {
-    if ((nv->value < 0) || (nv->value > 1)) {
+    if (nv->value < 0) {
         nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_VALUE_RANGE_ERROR);
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    if (nv->value > 1) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
     return (set_ui8(nv));
 }
 
 stat_t set_012(nvObj_t *nv)
 {
-    if ((nv->value < 0) || (nv->value > 2)) {
+    if (nv->value < 0) {
         nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_VALUE_RANGE_ERROR);
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    if (nv->value > 2) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
     return (set_ui8(nv));
 }
 
 stat_t set_0123(nvObj_t *nv)
 {
-    if ((nv->value < 0) || (nv->value > 3)) {
+    if (nv->value < 0) {
         nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_VALUE_RANGE_ERROR);
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    if (nv->value > 3) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
     return (set_ui8(nv));
 }

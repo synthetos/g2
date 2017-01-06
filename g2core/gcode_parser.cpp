@@ -437,7 +437,7 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
                 case 2:  SET_MODAL (MODAL_GROUP_G1, motion_mode, MOTION_MODE_CW_ARC);
                 case 3:  SET_MODAL (MODAL_GROUP_G1, motion_mode, MOTION_MODE_CCW_ARC);
                 case 4:  SET_NON_MODAL (next_action, NEXT_ACTION_DWELL);
-                case 10: SET_MODAL (MODAL_GROUP_G0, next_action, NEXT_ACTION_SET_COORD_DATA);
+                case 10: SET_MODAL (MODAL_GROUP_G0, next_action, NEXT_ACTION_SET_G10_DATA);
                 case 17: SET_MODAL (MODAL_GROUP_G2, select_plane, CANON_PLANE_XY);
                 case 18: SET_MODAL (MODAL_GROUP_G2, select_plane, CANON_PLANE_XZ);
                 case 19: SET_MODAL (MODAL_GROUP_G2, select_plane, CANON_PLANE_YZ);
@@ -473,7 +473,15 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
                     break;
                 }
                 case 40: break;    // ignore cancel cutter radius compensation
-                case 49: break;    // ignore cancel tool length offset comp.
+                case 43: {
+                    switch (_point(value)) {
+                        case 0: SET_NON_MODAL (next_action, NEXT_ACTION_SET_TL_OFFSET);
+                        case 2: SET_NON_MODAL (next_action, NEXT_ACTION_SET_ADDITIONAL_TL_OFFSET);
+                        default: status = STAT_GCODE_COMMAND_UNSUPPORTED;
+                    }
+                    break;
+                }
+				case 49: SET_NON_MODAL (next_action, NEXT_ACTION_CANCEL_TL_OFFSET);
                 case 53: SET_NON_MODAL (absolute_override, true);
                 case 54: SET_MODAL (MODAL_GROUP_G12, coord_system, G54);
                 case 55: SET_MODAL (MODAL_GROUP_G12, coord_system, G55);
@@ -493,16 +501,16 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
                 case 80: SET_MODAL (MODAL_GROUP_G1, motion_mode,  MOTION_MODE_CANCEL_MOTION_MODE);
                 case 90: {
                     switch (_point(value)) {
-                        case 0: SET_MODAL (MODAL_GROUP_G3, distance_mode, ABSOLUTE_MODE);
-                        case 1: SET_MODAL (MODAL_GROUP_G3, arc_distance_mode, ABSOLUTE_MODE);
+                        case 0: SET_MODAL (MODAL_GROUP_G3, distance_mode, ABSOLUTE_DISTANCE_MODE);
+                        case 1: SET_MODAL (MODAL_GROUP_G3, arc_distance_mode, ABSOLUTE_DISTANCE_MODE);
                         default: status = STAT_GCODE_COMMAND_UNSUPPORTED;
                     }
                     break;
                 }
                 case 91: {
                     switch (_point(value)) {
-                        case 0: SET_MODAL (MODAL_GROUP_G3, distance_mode, INCREMENTAL_MODE);
-                        case 1: SET_MODAL (MODAL_GROUP_G3, arc_distance_mode, INCREMENTAL_MODE);
+                        case 0: SET_MODAL (MODAL_GROUP_G3, distance_mode, INCREMENTAL_DISTANCE_MODE);
+                        case 1: SET_MODAL (MODAL_GROUP_G3, arc_distance_mode, INCREMENTAL_DISTANCE_MODE);
                         default: status = STAT_GCODE_COMMAND_UNSUPPORTED;
                     }
                     break;
@@ -543,7 +551,6 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
                 case 51: SET_MODAL (MODAL_GROUP_M9, sso_enable, true);
                 case 100: SET_NON_MODAL (next_action, NEXT_ACTION_JSON_COMMAND_SYNC);
                 case 101: SET_NON_MODAL (next_action, NEXT_ACTION_JSON_WAIT);
-//              case 102: SET_NON_MODAL (next_action, NEXT_ACTION_JSON_COMMAND_IMMEDIATE);
                 default: status = STAT_MCODE_COMMAND_UNSUPPORTED;
             }
             break;
@@ -561,6 +568,7 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
         //  case 'U': SET_NON_MODAL (target[AXIS_U], value);        // reserved
         //  case 'V': SET_NON_MODAL (target[AXIS_V], value);        // reserved
         //  case 'W': SET_NON_MODAL (target[AXIS_W], value);        // reserved
+            case 'H': SET_NON_MODAL (H_word, value);
             case 'I': SET_NON_MODAL (arc_offset[0], value);
             case 'J': SET_NON_MODAL (arc_offset[1], value);
             case 'K': SET_NON_MODAL (arc_offset[2], value);
@@ -648,9 +656,24 @@ static stat_t _execute_gcode_block(char *active_comment)
     EXEC_FUNC(cm_select_plane, select_plane);               // G17, G18, G19
     EXEC_FUNC(cm_set_units_mode, units_mode);               // G20, G21
     //--> cutter radius compensation goes here
-    //--> cutter length compensation goes here
+
+    switch (cm.gn.next_action) {                            // Tool length offsets
+        case NEXT_ACTION_SET_TL_OFFSET: {                   // G43
+            ritorno(cm_set_tl_offset(cm.gn.H_word, false)); 
+            break; 
+        }
+        case NEXT_ACTION_SET_ADDITIONAL_TL_OFFSET: {        // G43.2
+            ritorno(cm_set_tl_offset(cm.gn.H_word, true)); 
+            break; 
+        }
+        case NEXT_ACTION_CANCEL_TL_OFFSET: {                // G49
+            ritorno(cm_cancel_tl_offset()); 
+            break; 
+        }
+    }
+
     EXEC_FUNC(cm_set_coord_system, coord_system);           // G54, G55, G56, G57, G58, G59
-//    EXEC_FUNC(cm_set_path_control, path_control);         // G61, G61.1, G64
+//  EXEC_FUNC(cm_set_path_control, path_control);         // G61, G61.1, G64
     if(cm.gf.path_control) { status = cm_set_path_control(MODEL, cm.gn.path_control); }
 
     EXEC_FUNC(cm_set_distance_mode, distance_mode);         // G90, G91
@@ -672,7 +695,7 @@ static stat_t _execute_gcode_block(char *active_comment)
         case NEXT_ACTION_STRAIGHT_PROBE_AWAY_ERR:{ status = cm_straight_probe(cm.gn.target, cm.gf.target, true, false); break;}   // G38.4
         case NEXT_ACTION_STRAIGHT_PROBE_AWAY:    { status = cm_straight_probe(cm.gn.target, cm.gf.target, false, false); break;}  // G38.5
 
-        case NEXT_ACTION_SET_COORD_DATA:         { status = cm_set_coord_offsets(cm.gn.parameter, cm.gn.L_word, cm.gn.target, cm.gf.target); break;}
+        case NEXT_ACTION_SET_G10_DATA:           { status = cm_set_g10_data(cm.gn.parameter, cm.gn.L_word, cm.gn.target, cm.gf.target); break;}
         case NEXT_ACTION_SET_ORIGIN_OFFSETS:     { status = cm_set_origin_offsets(cm.gn.target, cm.gf.target); break;}// G92
         case NEXT_ACTION_RESET_ORIGIN_OFFSETS:   { status = cm_reset_origin_offsets(); break;}                      // G92.1
         case NEXT_ACTION_SUSPEND_ORIGIN_OFFSETS: { status = cm_suspend_origin_offsets(); break;}                    // G92.2

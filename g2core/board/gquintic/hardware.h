@@ -59,8 +59,9 @@ enum hwPlatform {
 #define AXES        6           // number of axes supported in this version
 #define HOMING_AXES 4           // number of axes that can be homed (assumes Zxyabc sequence)
 #define MOTORS      5           // number of motors on the board
-#define COORDS      6           // number of supported coordinate systems (1-6)
+#define COORDS      6           // number of supported coordinate systems (index starts at 1)
 #define PWMS        2           // number of supported PWM channels
+#define TOOLS       32          // number of entries in tool table (index starts at 1)
 
 
 ////////////////////////////
@@ -85,7 +86,7 @@ using Motate::OutputPin;
 
 #define MILLISECONDS_PER_TICK 1     // MS for system tick (systick * N)
 #define SYS_ID_DIGITS 12            // actual digits in system ID (up to 16)
-#define SYS_ID_LEN 16               // total length including dashes and NUL
+#define SYS_ID_LEN 24               // total length including dashes and NUL
 
 /************************************************************************************
  **** ARM SAM3X8E SPECIFIC HARDWARE *************************************************
