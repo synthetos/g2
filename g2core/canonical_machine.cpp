@@ -2360,9 +2360,9 @@ stat_t cm_get_g28(nvObj_t *nv)   { return (get_float(nv, cm->gmx.g28_position[_a
 stat_t cm_get_g30(nvObj_t *nv)   { return (get_float(nv, cm->gmx.g30_position[_axis(nv->index)]));}
 
 
-/************************************
- **** AXIS GET AND SET FUNCTIONS ****
- ************************************/
+/*****************************************************
+ **** TOOL TABLE AND OFFSET GET AND SET FUNCTIONS ****
+ *****************************************************/
 
 stat_t cm_get_tof(nvObj_t *nv)
 {
@@ -2377,6 +2377,10 @@ stat_t cm_set_tof(nvObj_t *nv)
     cm->tl_offset[_axis(nv->index)] = nv->value;
     return (STAT_OK);
 }
+
+/************************************
+ **** AXIS GET AND SET FUNCTIONS ****
+ ************************************/
 
 /*
  * AXIS GET AND SET FUNCTIONS

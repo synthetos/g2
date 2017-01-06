@@ -612,12 +612,12 @@ const cfgItem_t cfgArray[] = {
     { "tl","tlb",_fip,  3, cm_print_cofs, cm_get_tof, set_flt,(float *)&cm.tl_offset[AXIS_B], 0 },
     { "tl","tlc",_fip,  3, cm_print_cofs, cm_get_tof, set_flt,(float *)&cm.tl_offset[AXIS_C], 0 },
 */
-    { "tl","tlx",_fipc, 3, cm_print_cofs, cm_get_tof, cm_set_tof,(float *)&cs.null, 0 },
-    { "tl","tly",_fipc, 3, cm_print_cofs, cm_get_tof, cm_set_tof,(float *)&cs.null, 0 },
-    { "tl","tlz",_fipc, 3, cm_print_cofs, cm_get_tof, cm_set_tof,(float *)&cs.null, 0 },
-    { "tl","tla",_fip,  3, cm_print_cofs, cm_get_tof, cm_set_tof,(float *)&cs.null, 0 },
-    { "tl","tlb",_fip,  3, cm_print_cofs, cm_get_tof, cm_set_tof,(float *)&cs.null, 0 },
-    { "tl","tlc",_fip,  3, cm_print_cofs, cm_get_tof, cm_set_tof,(float *)&cs.null, 0 },
+    { "tof","tofx",_fipc, 3, cm_print_cofs, cm_get_tof, cm_set_tof,(float *)&cs.null, 0 },
+    { "tof","tofy",_fipc, 3, cm_print_cofs, cm_get_tof, cm_set_tof,(float *)&cs.null, 0 },
+    { "tof","tofz",_fipc, 3, cm_print_cofs, cm_get_tof, cm_set_tof,(float *)&cs.null, 0 },
+    { "tof","tofa",_fip,  3, cm_print_cofs, cm_get_tof, cm_set_tof,(float *)&cs.null, 0 },
+    { "tof","tofb",_fip,  3, cm_print_cofs, cm_get_tof, cm_set_tof,(float *)&cs.null, 0 },
+    { "tof","tofc",_fip,  3, cm_print_cofs, cm_get_tof, cm_set_tof,(float *)&cs.null, 0 },
 
     // Tool table offsets
     { "tt1","tt1x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&tt.tt_offset[1][AXIS_X], TT1_X_OFFSET },
@@ -1130,7 +1130,7 @@ const cfgItem_t cfgArray[] = {
     { "","g28",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // g28 home position
     { "","g30",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // g30 home position
     // +9 = 45
-    { "","tl",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },     // tl offsets
+    { "","tof",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // curren tool offsets
     { "","tt1",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
     { "","tt2",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
     { "","tt3",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
@@ -1140,13 +1140,13 @@ const cfgItem_t cfgArray[] = {
     { "","tt7",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
     { "","tt8",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
     { "","tt9",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
-    { "","tt10",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
-    { "","tt11",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
-    { "","tt12",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
-    { "","tt13",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
-    { "","tt14",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
-    { "","tt15",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
-    { "","tt16",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
+    { "","tt10",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // tt offsets
+    { "","tt11",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // tt offsets
+    { "","tt12",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // tt offsets
+    { "","tt13",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // tt offsets
+    { "","tt14",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // tt offsets
+    { "","tt15",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // tt offsets
+    { "","tt16",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // tt offsets
     // +17 = 62
     { "","mpo",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // machine position group
     { "","pos",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // work position group

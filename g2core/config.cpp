@@ -2,7 +2,7 @@
  * config.cpp - application independent configuration handling
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -67,7 +67,8 @@ stat_t nv_set(nvObj_t *nv)
     if (nv->index >= nv_index_max()) {
         return(STAT_INTERNAL_RANGE_ERROR);
     }
-    return (((fptrCmd)GET_TABLE_WORD(set))(nv));
+    return (((fptrCmd)cfgArray[nv->index].set)(nv));
+//    return (((fptrCmd)GET_TABLE_WORD(set))(nv));
 }
 
 stat_t nv_get(nvObj_t *nv)
@@ -75,7 +76,8 @@ stat_t nv_get(nvObj_t *nv)
     if (nv->index >= nv_index_max()) {
         return(STAT_INTERNAL_RANGE_ERROR);
     }
-    return (((fptrCmd)GET_TABLE_WORD(get))(nv));
+    return (((fptrCmd)cfgArray[nv->index].get)(nv));
+//    return (((fptrCmd)GET_TABLE_WORD(get))(nv));
 }
 
 void nv_print(nvObj_t *nv)
@@ -83,7 +85,8 @@ void nv_print(nvObj_t *nv)
     if (nv->index >= nv_index_max()) {
         return;
     }
-    ((fptrCmd)GET_TABLE_WORD(print))(nv);
+    ((fptrCmd)cfgArray[nv->index].print)(nv);
+//    ((fptrCmd)GET_TABLE_WORD(print))(nv);
 }
 
 stat_t nv_persist(nvObj_t *nv)
@@ -128,7 +131,7 @@ static void _set_defa(nvObj_t *nv, bool print)
     cm_set_units_mode(MILLIMETERS);                // must do inits in MM mode
     for (nv->index=0; nv_index_is_single(nv->index); nv->index++) {
         if (GET_TABLE_BYTE(flags) & F_INITIALIZE) {
-            nv->value = GET_TABLE_FLOAT(def_value);
+            nv->value = cfgArray[nv->index].def_value;
             strncpy(nv->token, cfgArray[nv->index].token, TOKEN_LEN);
             nv_set(nv);
             nv_persist(nv);

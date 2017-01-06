@@ -2,7 +2,7 @@
  * settings_default.h - default machine profile - Set for Shapeoko2
  * This file is part of the g2core project
  *
- * Copyright (c) 2012 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2012 - 2017 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
