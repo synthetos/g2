@@ -39,6 +39,9 @@
 //Motate::ClockOutputPin<Motate::kExternalClock1_PinNumber> external_clk_pin {16000000}; // 16MHz optimally
 //Motate::OutputPin<Motate::kExternalClock1_PinNumber> external_clk_pin {Motate::kStartLow};
 
+#define EXPERIMENTAL_NEOPIXEL_SUPPORT 0
+
+#if EXPERIMENTAL_NEOPIXEL_SUPPORT == 1
 #include "neopixel.h"
 #include "canonical_machine.h"
 
@@ -68,6 +71,7 @@ namespace LEDs {
     cmMachineState last_see_machine_state;
     float old_x_pos = 0.0;
 }
+#endif // EXPERIMENTAL_NEOPIXEL_SUPPORT
 
 /*
  * hardware_init() - lowest level hardware init
@@ -78,11 +82,13 @@ void hardware_init()
     board_hardware_init();
 //    external_clk_pin = 0; // Force external clock to 0 for now.
 
+#if EXPERIMENTAL_NEOPIXEL_SUPPORT == 1
     for (uint8_t pixel = 0; pixel < LEDs::rgbw_leds.count; pixel++) {
         LEDs::display_color[pixel].startTransition(100, 0, 0, 0);
         LEDs::rgbw_leds.setPixel(pixel, LEDs::display_color[pixel]);
     }
     LEDs::rgbw_leds.update();
+#endif // EXPERIMENTAL_NEOPIXEL_SUPPORT
 }
 
 /*
@@ -91,6 +97,7 @@ void hardware_init()
 
 stat_t hardware_periodic()
 {
+#if EXPERIMENTAL_NEOPIXEL_SUPPORT == 1
     float x_pos = cm_get_work_position(ACTIVE_MODEL, AXIS_X);
     if (fabs(LEDs::old_x_pos - x_pos) > 0.01) {
         LEDs::old_x_pos = x_pos;
@@ -120,6 +127,7 @@ stat_t hardware_periodic()
     }
 
     LEDs::rgbw_leds.update();
+#endif // EXPERIMENTAL_NEOPIXEL_SUPPORT
 
     return STAT_OK;
 }
