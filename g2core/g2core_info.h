@@ -21,7 +21,7 @@
 #ifndef G2CORE_INFO_H_ONCE
 #define G2CORE_INFO_H_ONCE
 
-#define G2CORE_FIRMWARE_BUILD			100.18  // fix startup alarm state 
+#define G2CORE_FIRMWARE_BUILD			100.19  // fix Issue #209 Random Pauses
 #ifdef GIT_VERSION
 #define G2CORE_FIRMWARE_BUILD_STRING	GIT_VERSION
 #else
