@@ -21,7 +21,7 @@
 #ifndef G2CORE_INFO_H_ONCE
 #define G2CORE_INFO_H_ONCE
 
-#define G2CORE_FIRMWARE_BUILD           100.17  // Added tool offsets (PR #211) 
+#define G2CORE_FIRMWARE_BUILD           100.18  // This branch has been merged to edge 100.18 
 #define G2CORE_FIRMWARE_VERSION         0.99
 
 #ifdef GIT_VERSION

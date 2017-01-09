@@ -905,8 +905,8 @@ const cfgItem_t cfgArray[] = {
     { "", "tram", _f0,0, cm_print_tram,cm_get_tram,cm_set_tram,(float *)&cs.null, 0 },  // SET to attempt setting rotation matrix from probes
     { "", "defa",_f0, 0, tx_print_nul,  help_defa,set_defaults,(float *)&cs.null,0 },   // set/print defaults / help screen
     { "", "flash",_f0,0, tx_print_nul,  help_flash,hw_flash,  (float *)&cs.null,0 },
-    { "", "switch",_f0,0, tx_print_nul, get_nul, mp_switch_q, (float *)&cs.null,0 },
-    { "", "return",_f0,0, tx_print_nul, get_nul, mp_return_q, (float *)&cs.null,0 },
+    { "", "switch",_f0,0, tx_print_nul, get_nul,   cm_switch, (float *)&cs.null,0 },
+    { "", "return",_f0,0, tx_print_nul, get_nul,   cm_return, (float *)&cs.null,0 },
 
 #ifdef __HELP_SCREENS
     { "", "help",_f0, 0, tx_print_nul, help_config, set_nul, (float *)&cs.null,0 }, // prints config help screen

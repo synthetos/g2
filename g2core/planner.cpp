@@ -2,8 +2,8 @@
  * planner.cpp - Cartesian trajectory planning and motion execution
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2012 - 2016 Rob Giseburt
+ * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
+ * Copyright (c) 2012 - 2017 Rob Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -625,26 +625,6 @@ void mp_planner_time_accounting()
         mp.plannable_time += bf->block_time;
     }
     UPDATE_MP_DIAGNOSTICS //+++++
-}
-
-/*
- *  mp_switch_q() - switch planner to different quue
- *  mp_return_q() - return from a planner queue switch
- */
-stat_t mp_switch_q(nvObj_t *nv)
-{
-    if ((nv->value < PRIMARY_Q) || (nv->value < SECONDARY_Q)) {
-        return (STAT_INPUT_VALUE_RANGE_ERROR);
-    }
-    mb.return_q = mb.active_q;
-    mb.active_q = (uint8_t)nv->value;
-    return (STAT_OK);
-}
-
-stat_t mp_return_q(nvObj_t *nv)     // if value == true return with offset corrections
-{
-    mb.active_q = mb.return_q;
-    return (STAT_OK);
 }
 
 /**** PLANNER BUFFER PRIMITIVES ************************************************************

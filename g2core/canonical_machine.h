@@ -222,7 +222,6 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     // Coordinate systems and offsets
     float offset[COORDS+1][AXES];           // persistent coordinate offsets: absolute (G53) + G54,G55,G56,G57,G58,G59
     float tl_offset[AXES];                  // current tool length offset
-//    float tt_offset[TOOLS+1][AXES];         // persistent tool table offsets
 
     // Axis settings
     cfgAxis_t a[AXES];
@@ -299,6 +298,9 @@ cmFeedholdState cm_get_hold_state(void);
 cmHomingState cm_get_homing_state(void);
 cmProbeState cm_get_probe_state(void);
 uint8_t cm_get_jogging_state(void);
+
+stat_t cm_switch(nvObj_t *nv);
+stat_t cm_return(nvObj_t *nv);
 
 void cm_set_motion_state(const cmMotionState motion_state);
 

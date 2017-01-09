@@ -265,6 +265,33 @@ void cm_set_model_linenum(const uint32_t linenum)
     nv_add_object((const char *)"n");   // then add the line number to the nv list
 }
 
+/*
+ *  cm_switch() - switch canonical machine to a different machine
+ *  cm_return() - return canoncial machine to origincal machine
+ */
+stat_t cm_switch(nvObj_t *nv)
+{
+/*
+    if (nv->value < PRIMARY_Q) {
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    if (nv->value < SECONDARY_Q) {
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+    }
+    mb.return_q = mb.active_q;
+    mb.active_q = (uint8_t)nv->value;
+*/
+    return (STAT_OK);
+}
+
+stat_t cm_return(nvObj_t *nv)     // if value == true return with offset corrections
+{
+/*
+    mb.active_q = mb.return_q;
+*/
+    return (STAT_OK);
+}
+
 /***********************************************************************************
  * COORDINATE SYSTEMS AND OFFSETS
  * Functions to get, set and report coordinate systems and work offsets

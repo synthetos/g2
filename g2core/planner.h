@@ -2,8 +2,8 @@
  * planner.h - cartesian trajectory planning and motion execution
  * This file is part of the g2core project
  *
- * Copyright (c) 2013 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2016 Robert Giseburt
+ * Copyright (c) 2013 - 2017 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2017 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -250,12 +250,12 @@ typedef enum {
 /*** Most of these factors are the result of a lot of tweaking. Change with caution.***/
 
 #define PLANNER_BUFFER_POOL_SIZE    ((uint8_t)48)       // Suggest 12 min. Limit is 255
-#define SECONDARY_BUFFER_POOL_SIZE  ((uint8_t)4)        // Secondary planner queue for feedhold operations
+#define SECONDARY_BUFFER_POOL_SIZE  ((uint8_t)12)       // Secondary planner queue for feedhold operations
 #define PLANNER_BUFFER_HEADROOM     ((uint8_t)4)        // Buffers to reserve in planner before processing new input line
 #define JERK_MULTIPLIER             ((float)1000000)    // DO NOT CHANGE - must always be 1 million
 
-#define JUNCTION_INTEGRATION_MIN    (0.05)              // minimum allowable setting
-#define JUNCTION_INTEGRATION_MAX    (5.00)              // maximum allowable setting
+#define JUNCTION_INTEGRATION_MIN    (0.05)              // JT minimum allowable setting
+#define JUNCTION_INTEGRATION_MAX    (5.00)              // JT maximum allowable setting
 
 #define MIN_SEGMENT_MS              ((float)0.75)       // minimum segment milliseconds
 #define NOM_SEGMENT_MS              ((float)1.5)        // nominal segment ms (at LEAST MIN_SEGMENT_MS * 2)
@@ -293,6 +293,8 @@ typedef enum {
 #define Veq2_lo 1.0
 #define VELOCITY_ROUGHLY_EQ(v0,v1) ( (v0 > Vthr2) ? fabs(v0-v1) < Veq2_hi : fabs(v0-v1) < Veq2_lo )
 
+/* Diagnostics */
+
 //#define ASCII_ART(s)            xio_writeline(s)
 #define ASCII_ART(s)
 //#define UPDATE_BF_DIAGNOSTICS(bf) { bf->block_time_ms = bf->block_time*60000; bf->plannable_time_ms = bf->plannable_time*60000; }
@@ -301,12 +303,12 @@ typedef enum {
 /*
  *  Planner structures
  *
- *  You should be aware of the distinction between 'buffers' and 'blocks'
+ *  Be aware of the distinction between 'buffers' and 'blocks'
  *  Please refer to header comments in for important details on buffers and blocks
  *    - plan_zoid.cpp / mp_calculate_ramps()
  *    - plan_exec.cpp / mp_exec_aline()
  */
-
+/*
 struct mpBuffer_to_clear {
     stat_t (*bf_func)(struct mpBuffer *bf); // callback to buffer exec function
     cm_exec_t cm_func;              // callback to canonical machine execution function
@@ -359,7 +361,7 @@ struct mpBuffer_to_clear {
 
     GCodeState_t gm;                // Gcode model state - passed from model, used by planner and runtime
 
-    // cleasr the above structure
+    // clears the above structure
     void reset() {
         //memset((void *)(this), 0, sizeof(mpBuffer_to_clear)); // slower on the M3. Test for M7
 
@@ -402,13 +404,110 @@ struct mpBuffer_to_clear {
         gm.reset();
     }
 };
+*/
 
-typedef struct mpBuffer : mpBuffer_to_clear { // See Planning Velocity Notes for variable usage
+//typedef struct mpBuffer : mpBuffer_to_clear { // See Planning Velocity Notes for variable usage
+typedef struct mpBuffer {
 
     // *** CAUTION *** These two pointers are not reset by _clear_buffer()
     struct mpBuffer *pv;            // static pointer to previous buffer
     struct mpBuffer *nx;            // static pointer to next buffer
     uint8_t buffer_number;          //+++++ DIAGNOSTIC for easier debugging
+
+    stat_t (*bf_func)(struct mpBuffer *bf); // callback to buffer exec function
+    cm_exec_t cm_func;              // callback to canonical machine execution function
+
+    //+++++ DIAGNOSTICS for easier debugging
+    uint32_t linenum;               // mirror of bf->gm.linenum
+    int iterations;
+    float block_time_ms;
+    float plannable_time_ms;        // time in planner
+    float plannable_length;         // length in planner
+    uint8_t meet_iterations;        // iterations needed in _get_meet_velocity
+    //+++++ to here
+
+    bufferState buffer_state;       // used to manage queuing/dequeuing
+    blockType block_type;           // used to dispatch to run routine
+    blockState block_state;         // move state machine sequence
+    blockHint hint;                 // hint the block for zoid and other planning operations. Must be accurate or NO_HINT
+
+    // block parameters
+    float unit[AXES];               // unit vector for axis scaling & planning
+    bool axis_flags[AXES];          // set true for axes participating in the move & for command parameters
+
+    bool plannable;                 // set true when this block can be used for planning
+
+    float length;                   // total length of line or helix in mm
+    float block_time;               // computed move time for entire block (move)
+    float override_factor;          // feed rate or rapid override factor for this block ("override" is a reserved word)
+
+    // *** SEE NOTES ON THESE VARIABLES, in aline() ***
+    // We removed all entry_* values.
+    // To get the entry_* values, look at pv->exit_* or mr.exit_*
+    float cruise_velocity;          // cruise velocity requested & achieved
+    float exit_velocity;            // exit velocity requested for the move
+    // is also the entry velocity of the *next* move
+
+    float cruise_vset;              // cruise velocity requested for move - prior to overrides
+    float cruise_vmax;              // cruise max velocity adjusted for overrides
+    float exit_vmax;                // max exit velocity possible for this move
+    // is also the maximum entry velocity of the next move
+
+    float absolute_vmax;            // fastest this block can move w/o exceeding constraints
+    float junction_vmax;            // maximum the exit velocity can be to go through the junction
+    // between the NEXT BLOCK AND THIS ONE
+
+    float jerk;                     // maximum linear jerk term for this move
+    float jerk_sq;                  // Jm^2 is used for planning (computed and cached)
+    float recip_jerk;               // 1/Jm used for planning (computed and cached)
+    float sqrt_j;                   // sqrt(jM) used for planning (computed and cached)
+    float q_recip_2_sqrt_j;         // (q/(2 sqrt(jM))) where q = (sqrt(10)/(3^(1/4))), used in length computations (computed and cached)
+
+    GCodeState_t gm;                // Gcode model state - passed from model, used by planner and runtime
+
+    // clears the above structure
+    void reset() {
+        //memset((void *)(this), 0, sizeof(mpBuffer_to_clear)); // slower on the M3. Test for M7
+
+        bf_func = nullptr;
+        cm_func = nullptr;
+
+        linenum = 0;
+        iterations = 0;
+        block_time_ms = 0;
+        plannable_time_ms = 0;
+        plannable_length = 0;
+        meet_iterations = 0;
+
+        buffer_state = MP_BUFFER_EMPTY;
+        block_type = BLOCK_TYPE_NULL;
+        block_state = BLOCK_INACTIVE;
+        hint = NO_HINT;
+
+        for (uint8_t i = 0; i< AXES; i++) {
+            unit[i] = 0;
+            axis_flags[i] = 0;
+        }
+
+        plannable = false;
+        length  = 0.0;
+        block_time = 0.0;
+        override_factor = 0.0;
+        cruise_velocity = 0.0;
+        exit_velocity = 0.0;
+        cruise_vset = 0.0;
+        cruise_vmax = 0.0;
+        exit_vmax = 0.0;
+        absolute_vmax = 0.0;
+        junction_vmax = 0.0;
+        jerk = 0.0;
+        jerk_sq = 0.0;
+        recip_jerk = 0.0;
+        sqrt_j = 0.0;
+        q_recip_2_sqrt_j = 0.0;
+        gm.reset();
+    }
+
 } mpBuf_t;
 
 typedef struct mpQueue {            // a planner buffer queue
@@ -565,9 +664,6 @@ void mp_replan_queue(mpBuf_t *bf);
 void mp_start_feed_override(const float ramp_time, const float override);
 void mp_end_feed_override(const float ramp_time);
 void mp_planner_time_accounting(void);
-
-stat_t mp_switch_q(nvObj_t *nv);
-stat_t mp_return_q(nvObj_t *nv);
 
 // planner buffer primitives
 void mp_init_buffers(void);

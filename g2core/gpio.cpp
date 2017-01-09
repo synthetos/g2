@@ -2,8 +2,8 @@
  * gpio.cpp - digital IO handling functions
  * This file is part of the g2core project
  *
- * Copyright (c) 2015 - 2106 Alden S. Hart, Jr.
- * Copyright (c) 2015 - 2016 Robert Giseburt
+ * Copyright (c) 2015 - 2107 Alden S. Hart, Jr.
+ * Copyright (c) 2015 - 2017 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -481,10 +481,8 @@ static stat_t _output_set_helper(nvObj_t *nv, const int8_t lower_bound, const in
     return (STAT_OK);
 }
 
-
 stat_t io_set_mo(nvObj_t *nv)            // input type or disabled
 {
-//    return (_io_set_helper(nv, IO_MODE_DISABLED, IO_MODE_MAX));
     return (_input_set_helper(nv, IO_ACTIVE_LOW, IO_MODE_MAX));
 }
 
