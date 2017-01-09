@@ -207,7 +207,7 @@ typedef struct arArcSingleton {                 // persistent planner and runtim
     magic_t magic_end;
 } arc_t;
 
-typedef struct cmCanonicalMachine {         // struct to manage canonical machine globals and state
+typedef struct cmMachine {                  // struct to manage canonical machine globals and state
     magic_t magic_start;                    // magic number to test memory integrity
 
     /**** Config variables (PUBLIC) ****/
@@ -269,7 +269,7 @@ typedef struct cmCanonicalMachine {         // struct to manage canonical machin
     GCodeStateX_t gmx;                      // extended gcode model state
 
     magic_t magic_end;
-} cmCanonicalMachine_t;
+} cmMachine_t;
 
 typedef struct cmToolTable {                // struct to keep a global tool table
     float tt_offset[TOOLS+1][AXES];         // persistent tool table offsets
@@ -277,9 +277,9 @@ typedef struct cmToolTable {                // struct to keep a global tool tabl
 
 /**** Externs - See canonical_machine.cpp for allocation ****/
 
-extern cmCanonicalMachine_t *cm;            // pointer to active canonical machine
-extern cmCanonicalMachine_t cm0;            // canonical machine primary machine
-extern cmCanonicalMachine_t cm1;            // canonical machine secondary machine
+extern cmMachine_t *cm;     // pointer to active canonical machine
+extern cmMachine_t cm0;     // canonical machine primary machine
+extern cmMachine_t cm1;     // canonical machine secondary machine
 extern cmToolTable_t tt;
 
 /*****************************************************************************
@@ -340,11 +340,11 @@ stat_t cm_test_soft_limits(const float target[]);
 /*--- Canonical machining functions (loosely) defined by NIST [organized by NIST Gcode doc] ---*/
 
 // Initialization and termination (4.3.2)
-void canonical_machine_init(void);
-void canonical_machine_reset_rotation(void);                    // NOT in NIST
-void canonical_machine_reset(void);
-void canonical_machine_init_assertions(void);
-stat_t canonical_machine_test_assertions(void);
+void canonical_machine_init(cmMachine_t *machine);
+void canonical_machine_reset_rotation(cmMachine_t *machine);  // NOT in NIST
+void canonical_machine_reset(cmMachine_t *machine);
+void canonical_machine_init_assertions(cmMachine_t *machine);
+stat_t canonical_machine_test_assertions(cmMachine_t *machine);
 
 // Alarms and state management
 stat_t cm_alrm(nvObj_t *nv);                                    // trigger alarm from command input

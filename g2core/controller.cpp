@@ -201,7 +201,7 @@ static stat_t _dispatch_command()
 {
     if (cs.controller_state != CONTROLLER_PAUSED) {
         devflags_t flags = DEV_IS_BOTH | DEV_IS_MUTED; // expressly state we'll handle muted devices
-        if ((!mp_planner_is_full(ACTIVE_Q)) && (cs.bufp = xio_readline(flags, cs.linelen)) != NULL) {
+        if ((!mp_planner_is_full(mp)) && (cs.bufp = xio_readline(flags, cs.linelen)) != NULL) { //+++++
             _dispatch_kernel(flags);
         }
     }
@@ -377,7 +377,7 @@ static stat_t _sync_to_tx_buffer()
 
 static stat_t _sync_to_planner()
 {
-    if (mp_planner_is_full(ACTIVE_Q)) {   // allow up to N planner buffers for this line
+    if (mp_planner_is_full(mp)) {   // allow up to N planner buffers for this line  //+++++
         return (STAT_EAGAIN);
     }
     return (STAT_OK);
@@ -475,8 +475,8 @@ stat_t _test_system_assertions()
     // these functions will panic if an assertion fails
     _test_assertions();                     // controller assertions (local)
     config_test_assertions();
-    canonical_machine_test_assertions();
-    planner_test_assertions();
+    canonical_machine_test_assertions(&cm0);    // +++++ cleanup later
+    planner_test_assertions(&mp0);              // +++++ cleanup later
     stepper_test_assertions();
     encoder_test_assertions();
     xio_test_assertions();

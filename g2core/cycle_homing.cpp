@@ -168,7 +168,7 @@ stat_t cm_homing_cycle_start(void) {
     hm.set_coordinates = true;
 
     // clear rotation matrix
-    canonical_machine_reset_rotation();
+    canonical_machine_reset_rotation(cm);   //+++++ cleanup
 
     hm.axis          = -1;                  // set to retrieve initial axis
     hm.func          = _homing_axis_start;  // bind initial processing function

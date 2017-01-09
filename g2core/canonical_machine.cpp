@@ -113,10 +113,10 @@
  **** STRUCTURE ALLOCATIONS ********************************************************
  ***********************************************************************************/
 
-cmCanonicalMachine_t *cm;   // pointer to active canonical machine
-cmCanonicalMachine_t cm0;   // canonical machine primary machine
-cmCanonicalMachine_t cm1;   // canonical machine secondary machine
-cmToolTable_t tt;           // global tool table
+cmMachine_t *cm;    // pointer to active canonical machine
+cmMachine_t cm0;    // canonical machine primary machine
+cmMachine_t cm1;    // canonical machine secondary machine
+cmToolTable_t tt;   // global tool table
 
 /***********************************************************************************
  **** GENERIC STATIC FUNCTIONS AND VARIABLES ***************************************
@@ -488,7 +488,7 @@ stat_t cm_set_tram(nvObj_t *nv)
 
         // if passed false/0, we will clear the rotation matrix
         if (!do_set) {
-            canonical_machine_reset_rotation();
+            canonical_machine_reset_rotation(cm);   //++++++ cleanup on aisle 5
             return (STAT_OK);
         }
 
@@ -722,30 +722,22 @@ stat_t cm_test_soft_limits(const float target[])
  *                             run profile initialization beforehand
  */
 
-void canonical_machine_init()
+void canonical_machine_init(cmMachine_t *m)
 {
     // NoteL cm* was assignd in main()
     // If you can assume all memory has been zeroed by a hard reset you don't need this code:
-    memset(cm, 0, sizeof(cm0));                 // do not reset canonicalMachineSingleton once it's been initialized
-    memset(&cm->gm, 0, sizeof(GCodeState_t));    // clear all values, pointers and status
-    memset(&gc.gn, 0, sizeof(GCodeInput_t));
+    memset(m, 0, sizeof(cmMachine_t));          // do not reset canonicalMachine once it's been initialized
+    memset(&m->gm, 0, sizeof(GCodeState_t));    // clear all values, pointers and status
+    
+    memset(&gc.gn, 0, sizeof(GCodeInput_t));    // reset the Gcode inputs
     memset(&gc.gf, 0, sizeof(GCodeFlags_t));
 
-    canonical_machine_init_assertions();        // establish assertions
+    canonical_machine_init_assertions(m);       // establish assertions
     ACTIVE_MODEL = MODEL;                       // setup initial Gcode model pointer
     cm_arc_init();                              // Note: spindle and coolant inits are independent
 }
 
-void canonical_machine_reset_rotation() {
-    memset(&cm->rotation_matrix, 0, sizeof(float)*3*3);
-    // We must make it an identity matrix for no rotation
-    cm->rotation_matrix[0][0] = 1.0;
-    cm->rotation_matrix[1][1] = 1.0;
-    cm->rotation_matrix[2][2] = 1.0;
-    cm->rotation_z_offset = 0.0;
-}
-
-void canonical_machine_reset()
+void canonical_machine_reset(cmMachine_t *m)
 {
     // set gcode defaults
     cm_set_units_mode(gc.default_units_mode);
@@ -760,26 +752,35 @@ void canonical_machine_reset()
     // NOTE: Should unhome axes here
 
     // reset request flags
-    cm->queue_flush_state = FLUSH_OFF;
-    cm->end_hold_requested = false;
-    cm->limit_requested = 0;                     // resets switch closures that occurred during initialization
-    cm->safety_interlock_disengaged = 0;         // ditto
-    cm->safety_interlock_reengaged = 0;          // ditto
-    cm->shutdown_requested = 0;                  // ditto
+    m->queue_flush_state = FLUSH_OFF;
+    m->end_hold_requested = false;
+    m->limit_requested = 0;                         // resets switch closures that occurred during initialization
+    m->safety_interlock_disengaged = 0;             // ditto
+    m->safety_interlock_reengaged = 0;              // ditto
+    m->shutdown_requested = 0;                      // ditto
 
     // set initial state and signal that the machine is ready for action
-    cm->cycle_state = CYCLE_OFF;
-    cm->motion_state = MOTION_STOP;
-    cm->hold_state = FEEDHOLD_OFF;
-    cm->esc_boot_timer = SysTickTimer_getValue();
-    cm->gmx.block_delete_switch = true;
-    cm->gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE; // never start in a motion mode
-    cm->machine_state = MACHINE_READY;
+    m->cycle_state = CYCLE_OFF;
+    m->motion_state = MOTION_STOP;
+    m->hold_state = FEEDHOLD_OFF;
+    m->esc_boot_timer = SysTickTimer_getValue();
+    m->gmx.block_delete_switch = true;
+    m->gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE; // never start in a motion mode
+    m->machine_state = MACHINE_READY;
 
-    canonical_machine_reset_rotation();
+    canonical_machine_reset_rotation(m);
+    memset(&m->probe_state, 0, sizeof(cmProbeState)*PROBES_STORED);
+    memset(&m->probe_results, 0, sizeof(float)*PROBES_STORED*AXES);
+}
 
-    memset(&cm->probe_state, 0, sizeof(cmProbeState)*PROBES_STORED);
-    memset(&cm->probe_results, 0, sizeof(float)*PROBES_STORED*AXES);
+void canonical_machine_reset_rotation(cmMachine_t *m) {
+    memset(&cm->rotation_matrix, 0, sizeof(float)*3*3);
+    
+    // We must make it an identity matrix for no rotation
+    m->rotation_matrix[0][0] = 1.0;
+    m->rotation_matrix[1][1] = 1.0;
+    m->rotation_matrix[2][2] = 1.0;
+    m->rotation_z_offset = 0.0;
 }
 
 /*
@@ -787,21 +788,21 @@ void canonical_machine_reset()
  * canonical_machine_test_assertions() - test assertions, return error code if violation exists
  */
 
-void canonical_machine_init_assertions(void)
+void canonical_machine_init_assertions(cmMachine_t *m)
 {
-    cm->magic_start = MAGICNUM;
-    cm->magic_end = MAGICNUM;
-    cm->gmx.magic_start = MAGICNUM;
-    cm->gmx.magic_end = MAGICNUM;
-    cm->arc.magic_start = MAGICNUM;
-    cm->arc.magic_end = MAGICNUM;
+    m->magic_start = MAGICNUM;
+    m->magic_end = MAGICNUM;
+    m->gmx.magic_start = MAGICNUM;
+    m->gmx.magic_end = MAGICNUM;
+    m->arc.magic_start = MAGICNUM;
+    m->arc.magic_end = MAGICNUM;
 }
 
-stat_t canonical_machine_test_assertions(void)
+stat_t canonical_machine_test_assertions(cmMachine_t *m)
 {
-    if ((BAD_MAGIC(cm->magic_start)) || (BAD_MAGIC(cm->magic_end)) ||
-        (BAD_MAGIC(cm->gmx.magic_start)) || (BAD_MAGIC(cm->gmx.magic_end)) ||
-        (BAD_MAGIC(cm->arc.magic_start)) || (BAD_MAGIC(cm->arc.magic_end))) {
+    if ((BAD_MAGIC(m->magic_start))     || (BAD_MAGIC(m->magic_end)) ||
+        (BAD_MAGIC(m->gmx.magic_start)) || (BAD_MAGIC(m->gmx.magic_end)) ||
+        (BAD_MAGIC(m->arc.magic_start)) || (BAD_MAGIC(m->arc.magic_end))) {
         return(cm_panic(STAT_CANONICAL_MACHINE_ASSERTION_FAILURE, "canonical_machine_test_assertions()"));
     }
     return (STAT_OK);
@@ -904,8 +905,8 @@ void cm_halt_all(void)
 void cm_halt_motion(void)
 {
     mp_halt_runtime();                  // stop the runtime. Do this immediately. (Reset is in cm_clear)
-    canonical_machine_reset();          // reset Gcode model
-    cm->cycle_state = CYCLE_OFF;         // Note: leaves machine_state alone
+    canonical_machine_reset(cm);    //++++++        // reset Gcode model
+    cm->cycle_state = CYCLE_OFF;        // Note: leaves machine_state alone
     cm->motion_state = MOTION_STOP;
     cm->hold_state = FEEDHOLD_OFF;
 }
@@ -1347,12 +1348,12 @@ stat_t cm_straight_traverse(const float target[], const bool flags[])
     }
 
     cm_set_model_target(target, flags);
-    ritorno (cm_test_soft_limits(cm->gm.target));    // test soft limits; exit if thrown
-    cm_set_work_offsets(&cm->gm);                    // capture the fully resolved offsets to the state
+    ritorno (cm_test_soft_limits(cm->gm.target));   // test soft limits; exit if thrown
+    cm_set_work_offsets(&cm->gm);                   // capture the fully resolved offsets to the state
     cm_cycle_start();                               // required for homing & other cycles
-    stat_t status = mp_aline(&cm->gm);               // send the move to the planner
+    stat_t status = mp_aline(&cm->gm);              // send the move to the planner
     cm_finalize_move();
-    if (status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer(ACTIVE_Q)) {
+    if (status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer(mp)) {    //+++++
         cm_cycle_end();
         return (STAT_OK);
     }
@@ -1372,7 +1373,7 @@ stat_t _goto_stored_position(const float stored_position[],     // always in mm
                              const bool flags[])                // all false if no intermediate move
 {
     // Go through intermediate point if one is provided
-    while (mp_planner_is_full(ACTIVE_Q));                       // Make sure you have available buffers
+    while (mp_planner_is_full(mp));  //+++++                     // Make sure you have available buffers
     ritorno(cm_straight_traverse(intermediate_target, flags));  // w/no action if no axis flags
 
     // If G20 adjust stored position (always in mm) to inches so traverse will be correct
@@ -1385,7 +1386,7 @@ stat_t _goto_stored_position(const float stored_position[],     // always in mm
     }
     
     // Run the stored position move
-    while (mp_planner_is_full(ACTIVE_Q));                   // Make sure you have available buffers
+    while (mp_planner_is_full(mp));   //+++++                // Make sure you have available buffers
 
     uint8_t saved_distance_mode = cm_get_distance_mode(MODEL);
     cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_ON);  // Position was stored in absolute coords
@@ -1510,7 +1511,7 @@ stat_t cm_straight_feed(const float target[], const bool flags[])
 
     cm_finalize_move(); // <-- ONLY safe because we don't care about status...
 
-    if (status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer(ACTIVE_Q)) {
+    if (status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer(mp)) {    //+++++
         cm_cycle_end();
         return (STAT_OK);
     }
@@ -1839,7 +1840,7 @@ bool cm_has_hold()
 
 void cm_start_hold()
 {
-    if (mp_has_runnable_buffer(ACTIVE_Q)) {                 // meaning there's something running
+    if (mp_has_runnable_buffer(mp)) {         //+++++           // meaning there's something running
         cm_spindle_optional_pause(spindle.pause_on_hold);   // pause if this option is selected
         cm_coolant_optional_pause(coolant.pause_on_hold);   // pause if this option is selected
         cm_set_motion_state(MOTION_HOLD);
@@ -1875,7 +1876,7 @@ void cm_end_hold()
 void cm_queue_flush()
 {
     if (mp_runtime_is_idle()) {                     // can't flush planner during movement
-        mp_flush_planner();
+        mp_flush_planner(mp);       // +++++ Active planner. Potential cleanup
 
         for (uint8_t axis = AXIS_X; axis < AXES; axis++) { // set all positions
             cm_set_position(axis, mp_get_runtime_absolute_position(axis));

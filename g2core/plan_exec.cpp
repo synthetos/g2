@@ -564,7 +564,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                 mp_free_run_buffer();
             }
 
-            mp_replan_queue(mp_get_r(ACTIVE_Q));                        // make it replan all the blocks
+            mp_replan_queue(mp_get_r());                                // make it replan all the blocks
 //            mp_replan_queue(mb.r);                                      // make it replan all the blocks
 
             return (STAT_OK);
@@ -654,7 +654,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     } else {
         mr.block_state = BLOCK_INACTIVE;                        // invalidate mr buffer (reset)
         mr.section_state = SECTION_OFF;
-        mp.run_time_remaining = 0.0;                    // it's done, so time goes to zero
+        mp->run_time_remaining = 0.0;                    // it's done, so time goes to zero
 
         mr.entry_velocity     = mr.r->exit_velocity;     // feed the old exit into the entry.
 
@@ -694,7 +694,7 @@ stat_t mp_plan_feedhold_move()
 void mp_exit_hold_state()
 {
     cm->hold_state = FEEDHOLD_OFF;
-    if (mp_has_runnable_buffer(ACTIVE_Q)) {
+    if (mp_has_runnable_buffer(mp)) {   //+++++
         cm_set_motion_state(MOTION_RUN);
         sr_request_status_report(SR_REQUEST_IMMEDIATE);
     } else {
@@ -1074,9 +1074,9 @@ static stat_t _exec_aline_segment()
     }
 
     // Update the mb->run_time_remaining -- we know it's missing the current segment's time before it's loaded, that's ok.
-    mp.run_time_remaining -= mr.segment_time;
-    if (mp.run_time_remaining < 0) {
-        mp.run_time_remaining = 0.0;
+    mp->run_time_remaining -= mr.segment_time;
+    if (mp->run_time_remaining < 0) {
+        mp->run_time_remaining = 0.0;
     }
 
     // Call the stepper prep function

@@ -65,10 +65,12 @@
 #include "xio.h"    //+++++ DIAGNOSTIC - only needed if xio_writeline() direct prints are used
 
 // Allocate planner structures
-mpBufferQueue_t mb;                           // buffer pool management
-mpBuf_t mb_pool0[PLANNER_BUFFER_POOL_SIZE];   // storage allocation for primary planner queue buffers
-mpBuf_t mb_pool1[SECONDARY_BUFFER_POOL_SIZE]; // storage allocation for secondary planner queue buffers
-mpMotionPlannerHead_t mp;                     // context for block planning
+//mpPlannerQueue_t mb;                           // buffer pool management
+mpPlanner_t *mp;                            // currently active planner (global variable)
+mpPlanner_t mp0;                            // primary planning context
+mpPlanner_t mp1;                            // secondary planning context
+mpBuf_t mp0_pool[PLANNER_BUFFER_POOL_SIZE];     // storage allocation for primary planner queue buffers
+mpBuf_t mp1_pool[SECONDARY_BUFFER_POOL_SIZE];   // storage allocation for secondary planner queue buffers
 
 //mpMotionPlannerHead_t *mp;          // pointer to motion planner
 //mpMotionPlannerHead_t mp0;          // primary motion planner
@@ -142,20 +144,71 @@ static stat_t _exec_json_wait(mpBuf_t *bf);
 /*
  * planner_init()
  * planner_reset()
+ * runtime_init()
  */
-void planner_init()
+
+// initialize a planner queue
+void _init_planner_queue(mpPlanner_t *mpl, mpBuf_t *pool, uint8_t size)
+{
+    mpBuf_t *pv, *nx;
+    uint8_t i, nx_i;
+//    mpQueue_t *b = &mb.q[q];
+    mpPlannerQueue_t *q = &(mpl->q);
+
+    memset(q, 0, sizeof(mpPlannerQueue_t)); // clear values, pointers and status
+    q->magic_start = MAGICNUM;
+    q->magic_end = MAGICNUM;
+
+    memset(pool, 0, sizeof(mpBuf_t)*size);  // clear all buffers in pool
+    q->bf = pool;                           // link the buffer pool first
+    q->w = pool;                            // init all buffer pointers
+    q->r = pool;
+    q->queue_size = size-1;
+    q->buffers_available = size;
+    
+    pv = &q->bf[size-1];
+    for (i=0; i < size; i++) {
+        q->bf[i].buffer_number = i;         // number is for diagnostics only (otherwise not used)
+        nx_i = ((i<size-1) ? (i+1) : 0);    // buffer increment & wrap
+        nx = &q->bf[nx_i];
+        q->bf[i].nx = nx;                   // setup circular list pointers
+        q->bf[i].pv = pv;
+        pv = &q->bf[i];
+    }
+    q->bf[size-1].nx = pool;
+}
+
+void planner_init(mpPlanner_t *mpl)
 {
 // If you know all memory has been zeroed by a hard reset you don't need these next 2 lines
     memset(&mp, 0, sizeof(mp));     // clear all values, pointers and status
-    memset(&mr, 0, sizeof(mr));     // clear all values, pointers and status
-    planner_init_assertions();
-    mp_init_buffers();
-    mp.mfo_factor = 1.00;
+//    memset(&mr, 0, sizeof(mr));     // clear all values, pointers and status
+
+    mp = &mp0;                      // install the primary planner
+    _init_planner_queue(mp, mp0_pool, PLANNER_BUFFER_POOL_SIZE);
+
+    planner_init_assertions(mpl);
+    
+    mpl->mfo_factor = 1.00;
+    
+//    mr.bf[0].nx = &mr.bf[1];        // Handle the two "stub blocks" in the runtime structure.
+//    mr.bf[1].nx = &mr.bf[0];
+//    mr.r = &mr.bf[0];
+//    mr.p = &mr.bf[1];
 }
 
-void planner_reset()
+void planner_reset(mpPlanner_t *mpl)
 {
-    planner_init();
+    planner_init(mpl);
+}
+
+void runtime_init() {
+    memset(&mr, 0, sizeof(mr));     // clear all values, pointers and status
+
+    mr.bf[0].nx = &mr.bf[1];        // Handle the two "stub blocks" in the runtime structure.
+    mr.bf[1].nx = &mr.bf[0];
+    mr.r = &mr.bf[0];
+    mr.p = &mr.bf[1];
 }
 
 /*
@@ -163,21 +216,19 @@ void planner_reset()
  * planner_test_assertions() - test assertions, PANIC if violation exists
  */
 
-void planner_init_assertions()
+void planner_init_assertions(mpPlanner_t *mpl)
 {
     // Note: mb magic numbers set up by mp_init_buffers()
-    mp.magic_start = MAGICNUM;
-    mp.magic_end = MAGICNUM;
+    mpl->magic_start = MAGICNUM;
+    mpl->magic_end = MAGICNUM;
     mr.magic_start = MAGICNUM;
     mr.magic_end = MAGICNUM;
 }
 
-stat_t planner_test_assertions()
+stat_t planner_test_assertions(mpPlanner_t *mpl)
 {
     if (
-//        (BAD_MAGIC(mb.q[0].magic_start)) || (BAD_MAGIC(mb.q[0].magic_end)) ||   // kind of a hack
-//        (BAD_MAGIC(mb.q[1].magic_start)) || (BAD_MAGIC(mb.q[1].magic_end)) ||   // this one, too
-        (BAD_MAGIC(mp.magic_start)) || (BAD_MAGIC(mp.magic_end)) ||
+        (BAD_MAGIC(mpl->magic_start)) || (BAD_MAGIC(mpl->magic_end)) ||
         (BAD_MAGIC(mr.magic_start)) || (BAD_MAGIC(mr.magic_end))
         ) {
         return(cm_panic(STAT_PLANNER_ASSERTION_FAILURE, "planner_test_assertions()"));
@@ -199,7 +250,7 @@ stat_t planner_test_assertions()
 void mp_halt_runtime()
 {
     stepper_reset();                // stop the steppers and dwells
-    planner_reset();                // reset the planner queues
+    planner_reset(mp);              // reset the active planner
 }
 
 /*
@@ -210,10 +261,11 @@ void mp_halt_runtime()
  *    This function is designed to be called during a hold to reset the planner
  *    This function should not generally be called; call cm_queue_flush() instead
  */
-void mp_flush_planner()
+void mp_flush_planner(mpPlanner_t *mpl)
 {
     cm_abort_arc();
-    mp_init_buffers();
+//    mp_init_planner_buffers(mpl);     //+++++
+    planner_init(mpl);
     mr.block_state = BLOCK_INACTIVE;   // invalidate mr buffer to prevent subsequent motion
 }
 
@@ -242,7 +294,7 @@ void mp_flush_planner()
  *  still close to the starting point.
  */
 
-void mp_set_planner_position(uint8_t axis, const float position) { mp.position[axis] = position; }
+void mp_set_planner_position(uint8_t axis, const float position) { mp->position[axis] = position; } //+++++
 void mp_set_runtime_position(uint8_t axis, const float position) { mr.position[axis] = position; }
 
 void mp_set_steps_to_runtime_position()
@@ -450,6 +502,7 @@ stat_t mp_exec_out_of_band_dwell(void)
  * mp_has_runnable_buffer()  - true if next buffer is runnable, indicating motion has not stopped.
  * mp_is_it_phat_city_time() - test if there is time for non-essential processes
  */
+/*
 uint8_t mp_get_planner_buffers(int8_t q) // which queue are you interested in?
 {
     if (q == ACTIVE_Q) { q = mb.active_q; };
@@ -468,13 +521,29 @@ bool mp_has_runnable_buffer(int8_t q)   // which queue are you interested in?)
     if (q == ACTIVE_Q) { q = mb.active_q; };
     return (mb.q[q].r->buffer_state);    // anything other than MP_BUFFER_EMPTY returns true
 }
+*/
+uint8_t mp_get_planner_buffers(mpPlanner_t *mpl)  // which planner are you interested in?
+{
+    return (mpl->q.buffers_available);
+}
+
+bool mp_planner_is_full(mpPlanner_t *mpl)         // which planner are you interested in?
+{
+    // We also need to ensure we have room for another JSON command
+    return ((mpl->q.buffers_available < PLANNER_BUFFER_HEADROOM) || (jc.available == 0));
+}
+
+bool mp_has_runnable_buffer(mpPlanner_t *mpl)     // which planner are you interested in?)
+{
+    return (mpl->q.r->buffer_state);    // anything other than MP_BUFFER_EMPTY returns true
+}
 
 bool mp_is_phat_city_time()
 {
     if(cm->hold_state == FEEDHOLD_HOLD) {
         return true;
     }
-    return ((mp.plannable_time <= 0.0) || (PHAT_CITY_TIME < mp.plannable_time));
+    return ((mp->plannable_time <= 0.0) || (PHAT_CITY_TIME < mp->plannable_time));
 }
 
 /*
@@ -514,32 +583,32 @@ bool mp_is_phat_city_time()
 stat_t mp_planner_callback()
 {
     // Test if the planner has transitioned to an IDLE state
-    if ((mp_get_planner_buffers(ACTIVE_Q) == PLANNER_BUFFER_POOL_SIZE) &&   // detect and set IDLE state
+    if ((mp_get_planner_buffers(mp) == PLANNER_BUFFER_POOL_SIZE) &&   //+++++ // detect and set IDLE state
         (cm->motion_state == MOTION_STOP) &&
         (cm->hold_state == FEEDHOLD_OFF)) {
-        mp.planner_state = PLANNER_IDLE;
+        mp->planner_state = PLANNER_IDLE;
         return (STAT_OK);
     }
 
-    bool _timed_out = mp.block_timeout.isPast();
+    bool _timed_out = mp->block_timeout.isPast();
     if (_timed_out) {
-        mp.block_timeout.clear();                   // timer is set on commit_write_buffer()
+        mp->block_timeout.clear();                   // timer is set on commit_write_buffer()
     }
 
-    if (!mp.request_planning && !_timed_out) {      // Exit if no request or timeout
+    if (!mp->request_planning && !_timed_out) {      // Exit if no request or timeout
         return (STAT_OK);
     }
 
     // Process a planner request or timeout
-    if (mp.planner_state == PLANNER_IDLE) {
-        mp.p = mp_get_r(ACTIVE_Q);                  // initialize planner pointer to run buffer
-        mp.planner_state = PLANNER_STARTUP;
+    if (mp->planner_state == PLANNER_IDLE) {
+        mp->p = mp_get_r();                  //+++++ // initialize planner pointer to run buffer
+        mp->planner_state = PLANNER_STARTUP;
     }
-    if (mp.planner_state == PLANNER_STARTUP) {
-        if (!mp_planner_is_full(ACTIVE_Q) && !_timed_out) {
+    if (mp->planner_state == PLANNER_STARTUP) {
+        if (!mp_planner_is_full(mp) && !_timed_out) {   //+++++
             return (STAT_OK);                       // remain in STARTUP
         }
-        mp.planner_state = PLANNER_PRIMING;
+        mp->planner_state = PLANNER_PRIMING;
     }
     mp_plan_block_list();
     return (STAT_OK);
@@ -559,9 +628,9 @@ void mp_replan_queue(mpBuf_t *bf)
         } else {                                        // If it's not "planned" then it's either PREPPED or earlier.
             break;                                      // We don't need to adjust it.           
         }
-    } while ((bf = mp_get_next_buffer(bf)) != mp_get_r(ACTIVE_Q));
+    } while ((bf = mp_get_next_buffer(bf)) != mp_get_r());  //+++++
 
-    mp.request_planning = true;
+    mp->request_planning = true;
 }
 
 /*
@@ -587,21 +656,21 @@ void mp_start_feed_override(const float ramp_time, const float override_factor)
 {
     cm->mfo_state = MFO_REQUESTED;
 
-    if (mp.planner_state == PLANNER_IDLE) {
-        mp.mfo_factor = override_factor;             // that was easy
+    if (mp->planner_state == PLANNER_IDLE) {
+        mp->mfo_factor = override_factor;             // that was easy
         return;
     }
 
     // Assume that the min and max values for override_factor have been validated upstream
     // SUVAT: V = U+AT ==> A = (V-U)/T
-    mp.ramp_target = override_factor;
-    mp.ramp_dvdt = (override_factor - mp.c->override_factor) / ramp_time;
-    mp.mfo_active = true;
+    mp->ramp_target = override_factor;
+    mp->ramp_dvdt = (override_factor - mp->c->override_factor) / ramp_time;
+    mp->mfo_active = true;
 
-    if (fp_NOT_ZERO(mp.ramp_dvdt)) {    // do these things only if you actually have a ramp to run
-        mp.p = mp.c;                    // re-position the planner pointer
-        mp.ramp_active = true;
-        mp.request_planning = true;
+    if (fp_NOT_ZERO(mp->ramp_dvdt)) {    // do these things only if you actually have a ramp to run
+        mp->p = mp->c;                    // re-position the planner pointer
+        mp->ramp_active = true;
+        mp->request_planning = true;
     }
 }
 
@@ -616,18 +685,18 @@ void mp_end_feed_override(const float ramp_time)
 
 void mp_planner_time_accounting()
 {
-    mpBuf_t *bf = mp_get_r(ACTIVE_Q);               // start with run buffer
+    mpBuf_t *bf = mp_get_r();     //+++++          // start with run buffer
 
     // check the run buffer to see if anything is running. Might not be
     if (bf->buffer_state != MP_BUFFER_RUNNING) {    // this is not an error condition
         return;
     }
-    mp.plannable_time = 0; //UPDATE_BF_MS(bf); //+++++
-    while ((bf = bf->nx) != mp_get_r(ACTIVE_Q)) {
+    mp->plannable_time = 0; //UPDATE_BF_MS(bf); //+++++
+    while ((bf = bf->nx) != mp_get_r()) {       //+++++
         if (bf->buffer_state == MP_BUFFER_EMPTY || bf->plannable == true) {
             break;
         }
-        mp.plannable_time += bf->block_time;
+        mp->plannable_time += bf->block_time;
     }
     UPDATE_MP_DIAGNOSTICS //+++++
 }
@@ -714,46 +783,18 @@ static inline void _clear_buffer(mpBuf_t *bf)
     bf->reset();    // Call a reset method on the buffer object.
 }                   // We'll need something else for C - like bring the method code back into this function.
 
-// initialize a single planner queue
-void _init_planner_queue(uint8_t q, mpBuf_t *pool, uint8_t size)
+/*
+void mp_init_planner_buffers(void)
 {
-    mpBuf_t *pv, *nx;
-    uint8_t i, nx_i;
-    mpQueue_t *b = &mb.q[q];
+//    _init_planner_queue(0, mb_pool0, PLANNER_BUFFER_POOL_SIZE);
+//    _init_planner_queue(1, mb_pool1, SECONDARY_BUFFER_POOL_SIZE);
 
-    memset(b, 0, sizeof(mpQueue_t)); // clear values, pointers and status
-    b->magic_start = MAGICNUM;
-    b->magic_end = MAGICNUM;
-
-    memset(pool, 0, sizeof(mpBuf_t)*size);  // clear all buffers in pool
-    b->bf = pool;                           // link the buffer pool first
-    b->w = pool;                            // init all buffer pointers
-    b->r = pool;
-    b->queue_size = size-1;
-    b->buffers_available = size;
-    
-    pv = &b->bf[size-1];
-    for (i=0; i < size; i++) {
-        b->bf[i].buffer_number = i;         // number is for diagnostics only (otherwise not used)
-        nx_i = ((i<size-1) ? (i+1) : 0);    // buffer increment & wrap
-        nx = &b->bf[nx_i];
-        b->bf[i].nx = nx;                   // setup circular list pointers
-        b->bf[i].pv = pv;
-        pv = &b->bf[i];
-    }
-    b->bf[size-1].nx = pool;
-}
-
-void mp_init_buffers(void)
-{
-    _init_planner_queue(0, mb_pool0, PLANNER_BUFFER_POOL_SIZE);
-    _init_planner_queue(1, mb_pool1, SECONDARY_BUFFER_POOL_SIZE);
-
-    mr.bf[0].nx = &mr.bf[1];        // Now handle the two "stub blocks" in the runtime structure.
-    mr.bf[1].nx = &mr.bf[0];
-    mr.r = &mr.bf[0];
-    mr.p = &mr.bf[1];
+//    mr.bf[0].nx = &mr.bf[1];        // Now handle the two "stub blocks" in the runtime structure.
+//    mr.bf[1].nx = &mr.bf[0];
+//    mr.r = &mr.bf[0];
+//    mr.p = &mr.bf[1];
  }
+*/
 
 /*
  * These GET functions are defined here but we use the macros in planner.h instead
@@ -761,26 +802,22 @@ mpBuf_t * mp_get_prev_buffer(const mpBuf_t *bf) { return (bf->pv); }
 mpBuf_t * mp_get_next_buffer(const mpBuf_t *bf) { return (bf->nx); }
  */
 
-mpBuf_t * mp_get_w(int8_t q) { return ((q == ACTIVE_Q) ? mb.q[mb.active_q].w : mb.q[q].w); }
-mpBuf_t * mp_get_r(int8_t q) { return ((q == ACTIVE_Q) ? mb.q[mb.active_q].r : mb.q[q].r); }
+//mpBuf_t * mp_get_w(int8_t q) { return ((q == ACTIVE_Q) ? mb.q[mb.active_q].w : mb.q[q].w); }
+//mpBuf_t * mp_get_r(int8_t q) { return ((q == ACTIVE_Q) ? mb.q[mb.active_q].r : mb.q[q].r); }
+
+mpBuf_t * mp_get_w() { return (mp->q.w); }  //++++ should this be a DI function?
+mpBuf_t * mp_get_r() { return (mp->q.r); }  //+++++ ditto
 
 mpBuf_t * mp_get_write_buffer()     // get & clear a buffer
 {
-    mpQueue_t *q = &mb.q[mb.active_q];
+//    mpQueue_t *q = &mb.q[mb.active_q];
+    mpPlannerQueue_t *q = &(mp->q);
        
     if (q->w->buffer_state == MP_BUFFER_EMPTY) {
         _clear_buffer(q->w);        // ++++RG this is redundant, it was just cleared in mp_free_run_buffer
         q->w->buffer_state = MP_BUFFER_INITIALIZING;
         q->buffers_available--;
-        return (mp_get_w(ACTIVE_Q));
-/*=======
-    if (mb.w->buffer_state == MP_BUFFER_EMPTY) {
-        _clear_buffer(mb.w);        // ++++RG this is redundant, it was just cleared in mp_free_run_buffer
-        mb.w->buffer_state = MP_BUFFER_INITIALIZING;
-        mb.buffers_available--;
-        return (mb.w);
->>>>>>> refs/heads/edge
-*/
+        return (mp_get_w());
     }
     // The no buffer condition always causes a panic - invoked by the caller
     rpt_exception(STAT_FAILED_TO_GET_PLANNER_BUFFER, "mp_get_write_buffer()");
@@ -789,7 +826,8 @@ mpBuf_t * mp_get_write_buffer()     // get & clear a buffer
 
 void mp_unget_write_buffer()        // mark buffer as empty and adjust free buffer count
 {
-    mpQueue_t *q = &mb.q[mb.active_q];
+//    mpQueue_t *q = &mb.q[mb.active_q];
+    mpPlannerQueue_t *q = &(mp->q);
 
     if (q->w->buffer_state != MP_BUFFER_EMPTY) {  // safety. Can't unget an empty buffer
         q->w->buffer_state = MP_BUFFER_EMPTY;
@@ -804,7 +842,8 @@ void mp_unget_write_buffer()        // mark buffer as empty and adjust free buff
 
 void mp_commit_write_buffer(const blockType block_type)
 {
-    mpQueue_t *q = &mb.q[mb.active_q];
+//    mpQueue_t *q = &mb.q[mb.active_q];
+    mpPlannerQueue_t *q = &(mp->q);
 
     q->w->block_type = block_type;
     q->w->block_state = BLOCK_INITIAL_ACTION;
@@ -814,16 +853,16 @@ void mp_commit_write_buffer(const blockType block_type)
             cm_set_motion_state(MOTION_PLANNING);
         }
     } else {
-        if ((mp.planner_state > PLANNER_STARTUP) && (cm->hold_state == FEEDHOLD_OFF)) {
+        if ((mp->planner_state > PLANNER_STARTUP) && (cm->hold_state == FEEDHOLD_OFF)) {
             // NB: BEWARE! the requested exec may result in the planner buffer being
             // processed IMMEDIATELY and then freed - invalidating the contents
             st_request_forward_plan();      // request an exec if the runtime is not busy
         }
     }
     q->w->plannable = true;                 // enable block for planning
-    mp.request_planning = true;
+    mp->request_planning = true;
     q->w = q->w->nx;                        // advance write buffer pointer
-    mp.block_timeout.set(BLOCK_TIMEOUT_MS); // reset the block timer
+    mp->block_timeout.set(BLOCK_TIMEOUT_MS); // reset the block timer
     qr_request_queue_report(+1);            // request QR and add to "added buffers" count
 }
 
@@ -834,7 +873,8 @@ void mp_commit_write_buffer(const blockType block_type)
 //  (2) is the buffer in error - i.e. not yet ready for running?
 mpBuf_t * mp_get_run_buffer()
 {
-    mpBuf_t *r = mb.q[mb.active_q].r;
+//    mpBuf_t *r = mb.q[mb.active_q].r;
+    mpBuf_t *r = mp->q.r;
 
     if (r->buffer_state == MP_BUFFER_EMPTY) {
         return (NULL);
@@ -846,7 +886,9 @@ mpBuf_t * mp_get_run_buffer()
 // Clearing and advancing must be done atomically as other interrupts may be using the run buffer
 bool mp_free_run_buffer()           // EMPTY current run buffer & advance to the next
 {
-    mpQueue_t *q = &mb.q[mb.active_q];
+//    mpQueue_t *q = &mb.q[mb.active_q];
+    mpPlannerQueue_t *q = &(mp->q);
+    
     mpBuf_t *r_now = q->r;          // save this pointer is to avoid a race condition when clearing the buffer
 
     _audit_buffers();               // ++++diagnostic audit for buffer chain integrity (only runs in DEBUG mode)

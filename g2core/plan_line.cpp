@@ -115,7 +115,7 @@ bool mp_get_runtime_busy()
     }
     if ((st_runtime_isbusy() == true) || 
         (mr.block_state == BLOCK_ACTIVE) || 
-        (mp_get_r(ACTIVE_Q)->buffer_state > MP_BUFFER_EMPTY)) {
+        (mp_get_r()->buffer_state > MP_BUFFER_EMPTY)) {
         return (true);
     }
     return (false);
@@ -186,7 +186,7 @@ stat_t mp_aline(GCodeState_t* gm_in)
     target_rotated[5] = gm_in->target[5];
 
     for (uint8_t axis = 0; axis < AXES; axis++) {
-        axis_length[axis] = target_rotated[axis] - mp.position[axis];
+        axis_length[axis] = target_rotated[axis] - mp->position[axis];
         if ((flags[axis] = fp_NOT_ZERO(axis_length[axis]))) {  // yes, this supposed to be = not ==
             axis_square[axis] = square(axis_length[axis]);
             length_square += axis_square[axis];
@@ -225,7 +225,7 @@ stat_t mp_aline(GCodeState_t* gm_in)
     _set_bf_diagnostics(bf);                            //+++++DIAGNOSTIC
 
     // Note: these next lines must remain in exact order. Position must update before committing the buffer.
-    copy_vector(mp.position, bf->gm.target);            // set the planner position
+    copy_vector(mp->position, bf->gm.target);            // set the planner position
     mp_commit_write_buffer(BLOCK_TYPE_ALINE);           // commit current block (must follow the position update)
     return (STAT_OK);
 }
@@ -245,8 +245,8 @@ stat_t mp_aline(GCodeState_t* gm_in)
 
 void mp_plan_block_list() 
 {
-    mpBuf_t* bf                = mp.p;
-    bool     planned_something = false;
+    mpBuf_t* bf = mp->p;
+    bool planned_something = false;
 
     while (true) {
         // unconditional exit condition
@@ -256,21 +256,21 @@ void mp_plan_block_list()
 
         // OK to replan running buffer during feedhold, but no other times (not supposed to happen)
         if ((cm->hold_state == FEEDHOLD_OFF) && (bf->buffer_state == MP_BUFFER_RUNNING)) {
-            mp.p = mp.p->nx;
+            mp->p = mp->p->nx;
             return;
         }
 
         bf = _plan_block(bf);  // returns next block to plan
 
         planned_something = true;
-        mp.p              = bf;  //+++++ DIAGNOSTIC - this is not needed but is set here for debugging purposes
+        mp->p = bf;  //+++++ DIAGNOSTIC - this is not needed but is set here for debugging purposes
     }
-    if (mp.planner_state > PLANNER_STARTUP) {
+    if (mp->planner_state > PLANNER_STARTUP) {
         if (planned_something && (cm->hold_state != FEEDHOLD_HOLD)) {
             st_request_forward_plan();  // start motion if runtime is not already busy
         }
     }
-    mp.p = bf;  // update planner pointer
+    mp->p = bf;  // update planner pointer
 }
 
 /*
@@ -281,7 +281,7 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
 {
     // First time blocks - set vmaxes for as many blocks as possible (forward loading of priming blocks)
     // Note: cruise_vmax was computed in _calculate_vmaxes() in aline()
-    if (mp.planner_state == PLANNER_PRIMING) {
+    if (mp->planner_state == PLANNER_PRIMING) {
         // Timings from *here*
 
         if (bf->pv->plannable) {
@@ -304,8 +304,8 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
         if (bf->nx->plannable) {  // read in new buffers until EMPTY
             return (bf->nx);
         }
-        mp.planning_return = bf->nx;                 // where to return after planning is complete
-        mp.planner_state   = PLANNER_BACK_PLANNING;  // start backplanning
+        mp->planning_return = bf->nx;                 // where to return after planning is complete
+        mp->planner_state   = PLANNER_BACK_PLANNING;  // start backplanning
     }
 
     // Backward Planning Pass
@@ -314,7 +314,7 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
     // Note: Vmax's are already set by the time you get here
     // Hint options from back-planning: COMMAND_BLOCK, PERFECT_DECELERATION, PERFECT_CRUISE, MIXED_DECELERATION
 
-    if (mp.planner_state == PLANNER_BACK_PLANNING) {
+    if (mp->planner_state == PLANNER_BACK_PLANNING) {
         // NOTE: We stop when the previous block is no longer plannable.
         // We will alter the previous block's exit_velocity.
         float braking_velocity = 0;  // we use this to stre the previous entry velocity, start at 0
@@ -434,8 +434,8 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
         }  // for loop
     }      // exits with bf pointing to a locked or EMPTY block
 
-    mp.planner_state = PLANNER_PRIMING;  // revert to initial state
-    return (mp.planning_return);
+    mp->planner_state = PLANNER_PRIMING;  // revert to initial state
+    return (mp->planning_return);
 }
 
 /***** ALINE HELPERS *****
@@ -455,22 +455,22 @@ static void _calculate_override(mpBuf_t* bf)  // execute ramp to adjust cruise v
     bf->cruise_vmax     = bf->override_factor * bf->cruise_vset;
 
     // generate ramp term is a ramp is active
-    if (mp.ramp_active) {
-        bf->override_factor += mp.ramp_dvdt * bf->block_time;
-        if (mp.ramp_dvdt > 0) {  // positive is an acceleration ramp
-            if (bf->override_factor > mp.ramp_target) {
-                bf->override_factor = mp.ramp_target;
-                mp.ramp_active      = false;  // detect end of ramp
+    if (mp->ramp_active) {
+        bf->override_factor += mp->ramp_dvdt * bf->block_time;
+        if (mp->ramp_dvdt > 0) {  // positive is an acceleration ramp
+            if (bf->override_factor > mp->ramp_target) {
+                bf->override_factor = mp->ramp_target;
+                mp->ramp_active      = false;  // detect end of ramp
             }
             bf->cruise_velocity *= bf->override_factor;
             if (bf->cruise_velocity > bf->absolute_vmax) {  // test max cruise_velocity
                 bf->cruise_velocity = bf->absolute_vmax;
-                mp.ramp_active      = false;  // don't allow exceeding absolute_vmax
+                mp->ramp_active      = false;  // don't allow exceeding absolute_vmax
             }
         } else {  // negative is deceleration ramp
-            if (bf->override_factor < mp.ramp_target) {
-                bf->override_factor = mp.ramp_target;
-                mp.ramp_active      = false;
+            if (bf->override_factor < mp->ramp_target) {
+                bf->override_factor = mp->ramp_target;
+                mp->ramp_active      = false;
             }
             bf->cruise_velocity *= bf->override_factor;  // +++++ this is probably wrong
             //  bf->exit_velocity *= bf->mfo_factor;        //...but I'm not sure this is right,

@@ -241,12 +241,13 @@ typedef enum {
     ZOID_EXIT_3a2
 } zoidExitPoint;
 
+/* +++++ REMOVE
 typedef enum {
     ACTIVE_Q = -1,                  // Must be -1
     PRIMARY_Q,                      // must line up with structure indexes
     SECONDARY_Q
 } queueType;
-
+*/
 /*** Most of these factors are the result of a lot of tweaking. Change with caution.***/
 
 #define PLANNER_BUFFER_POOL_SIZE    ((uint8_t)48)       // Suggest 12 min. Limit is 255
@@ -298,7 +299,7 @@ typedef enum {
 //#define ASCII_ART(s)            xio_writeline(s)
 #define ASCII_ART(s)
 //#define UPDATE_BF_DIAGNOSTICS(bf) { bf->block_time_ms = bf->block_time*60000; bf->plannable_time_ms = bf->plannable_time*60000; }
-#define UPDATE_MP_DIAGNOSTICS     { mp.plannable_time_ms = mp.plannable_time*60000; }
+#define UPDATE_MP_DIAGNOSTICS     { mp->plannable_time_ms = mp->plannable_time*60000; }
 
 /*
  *  Planner structures
@@ -411,7 +412,7 @@ typedef struct mpBuffer {
 
 } mpBuf_t;
 
-typedef struct mpQueue {            // a planner buffer queue
+typedef struct mpPlannerQueue {     // control structure for queue
     magic_t magic_start;            // magic number to test memory integrity
     mpBuf_t *r;                     // run buffer pointer
     mpBuf_t *w;                     // write buffer pointer
@@ -419,15 +420,17 @@ typedef struct mpQueue {            // a planner buffer queue
     uint8_t buffers_available;      // running count of available buffers in queue
     mpBuf_t *bf;                    // pointer to buffer storage array
     magic_t magic_end;
-} mpQueue_t;
+} mpPlannerQueue_t;
 
+/*
 typedef struct mpBufferQueue {      // one or more planner buffer queues
     uint8_t active_q;               // index of currently active queue
     uint8_t return_q;               // index of queue to return to
     mpQueue_t q[2];                 // number of queues
 } mpBufferQueue_t;
+*/
 
-typedef struct mpMotionPlannerHead {// common variables for planning (move master)
+typedef struct mpPlanner {          // common variables for a planner context
     magic_t magic_start;            // magic number to test memory integrity
 
     //+++++ DIAGNOSTICS
@@ -463,10 +466,10 @@ typedef struct mpMotionPlannerHead {// common variables for planning (move maste
     mpBuf_t *planning_return;       // buffer to return to once back-planning is complete
     
     // queue manager
-    mpBufferQueue_t q;              // embed a buffer queue manager
+    mpPlannerQueue_t q;             // embed a planner buffer queue manager
     
     magic_t magic_end;
-} mpMotionPlannerHead_t;
+} mpPlanner_t;
 
 typedef struct mpBlockRuntimeBuf {  // Data structure for just the parts of RunTime that we need to plan a BLOCK
     struct mpBlockRuntimeBuf *nx;   // singly-linked-list
@@ -525,8 +528,14 @@ typedef struct mpMotionRuntimeSingleton {    // persistent runtime variables
 } mpMotionRuntimeSingleton_t;
 
 // Reference global scope structures
-extern mpBufferQueue_t mb;              // planner buffer queue management
-extern mpMotionPlannerHead_t mp;        // context for block planning
+//extern mpPlannerQueue_t mb;             // planner buffer queue management
+
+extern mpPlanner_t *mp;                                 // currently active planner (global variable)
+extern mpPlanner_t mp0;                                 // primary planning context
+extern mpPlanner_t mp1;                                 // secondary planning context
+extern mpBuf_t mp0_pool[PLANNER_BUFFER_POOL_SIZE];      // storage allocation for primary planner queue buffers
+extern mpBuf_t mp1_pool[SECONDARY_BUFFER_POOL_SIZE];    // storage allocation for secondary planner queue buffers
+
 extern mpMotionRuntimeSingleton_t mr;   // context for block runtime
 
 /*
@@ -535,13 +544,14 @@ extern mpMotionRuntimeSingleton_t mr;   // context for block runtime
 
 //planner.cpp functions
 
-void planner_init(void);
-void planner_reset(void);
-void planner_init_assertions(void);
-stat_t planner_test_assertions(void);
+void planner_init(mpPlanner_t *mpl);
+void planner_reset(mpPlanner_t *mpl);
+void planner_init_assertions(mpPlanner_t *mpl);
+stat_t planner_test_assertions(mpPlanner_t *mpl);
+void runtime_init(void);
 
 void mp_halt_runtime(void);
-void mp_flush_planner(void);
+void mp_flush_planner(mpPlanner_t *mpl);
 void mp_set_planner_position(uint8_t axis, const float position);
 void mp_set_runtime_position(uint8_t axis, const float position);
 void mp_set_steps_to_runtime_position(void);
@@ -558,9 +568,9 @@ void mp_request_out_of_band_dwell(float seconds);
 stat_t mp_exec_out_of_band_dwell(void);
 
 // planner functions and helpers
-uint8_t mp_get_planner_buffers(int8_t q);
-bool mp_planner_is_full(int8_t q);
-bool mp_has_runnable_buffer(int8_t q);
+uint8_t mp_get_planner_buffers(mpPlanner_t *mpl);
+bool mp_planner_is_full(mpPlanner_t *mpl);
+bool mp_has_runnable_buffer(mpPlanner_t *mpl);
 bool mp_is_phat_city_time(void);
 
 stat_t mp_planner_callback();
@@ -570,9 +580,11 @@ void mp_end_feed_override(const float ramp_time);
 void mp_planner_time_accounting(void);
 
 // planner buffer primitives
-void mp_init_buffers(void);
-mpBuf_t * mp_get_w(int8_t q);
-mpBuf_t * mp_get_r(int8_t q);
+//void mp_init_planner_buffers(void);
+//mpBuf_t * mp_get_w(int8_t q);
+//mpBuf_t * mp_get_r(int8_t q);
+mpBuf_t * mp_get_w(void);
+mpBuf_t * mp_get_r(void);
 
 //mpBuf_t * mp_get_prev_buffer(const mpBuf_t *bf);      // Use the following macro instead
 //mpBuf_t * mp_get_next_buffer(const mpBuf_t *bf);      // Use the following macro instead

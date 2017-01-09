@@ -483,7 +483,7 @@ void qr_init_queue_report()
 void qr_request_queue_report(int8_t buffers)
 {
     // get buffer depth and added/removed count
-    qr.buffers_available = mp_get_planner_buffers(ACTIVE_Q);
+    qr.buffers_available = mp_get_planner_buffers(mp);  //+++++
     if (buffers > 0) {
         qr.buffers_added += buffers;
     } else {
@@ -567,7 +567,7 @@ stat_t qr_queue_report_callback()         // called by controller dispatcher
  */
 stat_t qr_get(nvObj_t *nv)
 {
-    nv->value = (float)mp_get_planner_buffers(ACTIVE_Q); // ensure that manually requested QR count is always up to date
+    nv->value = (float)mp_get_planner_buffers(mp); //+++++ // ensure that manually requested QR count is always up to date
     nv->valuetype = TYPE_INT;
     return (STAT_OK);
 }
