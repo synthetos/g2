@@ -207,7 +207,7 @@ typedef struct arArcSingleton {                 // persistent planner and runtim
     magic_t magic_end;
 } arc_t;
 
-typedef struct cmMachine {                  // struct to manage canonical machine globals and state
+typedef struct cmCanonicalMachine {         // struct to manage canonical machine globals and state
     magic_t magic_start;                    // magic number to test memory integrity
 
     /**** Config variables (PUBLIC) ****/
@@ -269,7 +269,7 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     GCodeStateX_t gmx;                      // extended gcode model state
 
     magic_t magic_end;
-} cmMachine_t;
+} cmCanonicalMachine_t;
 
 typedef struct cmToolTable {                // struct to keep a global tool table
     float tt_offset[TOOLS+1][AXES];         // persistent tool table offsets
@@ -277,9 +277,9 @@ typedef struct cmToolTable {                // struct to keep a global tool tabl
 
 /**** Externs - See canonical_machine.cpp for allocation ****/
 
-extern cmMachine_t *cm;         // pointer to active canonical machine
-extern cmMachine_t cm0;         // canonical machine primary machine
-extern cmMachine_t cm1;         // canonical machine secondary machine
+extern cmCanonicalMachine_t *cm;            // pointer to active canonical machine
+extern cmCanonicalMachine_t cm0;            // canonical machine primary machine
+extern cmCanonicalMachine_t cm1;            // canonical machine secondary machine
 extern cmToolTable_t tt;
 
 /*****************************************************************************

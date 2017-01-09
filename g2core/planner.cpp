@@ -65,11 +65,16 @@
 #include "xio.h"    //+++++ DIAGNOSTIC - only needed if xio_writeline() direct prints are used
 
 // Allocate planner structures
-mpBufferQueue_t mb;                         // buffer pool management
-mpBuf_t mb_pool0[PLANNER_BUFFER_POOL_SIZE]; // storage allocation for primary planner queue buffers
+mpBufferQueue_t mb;                           // buffer pool management
+mpBuf_t mb_pool0[PLANNER_BUFFER_POOL_SIZE];   // storage allocation for primary planner queue buffers
 mpBuf_t mb_pool1[SECONDARY_BUFFER_POOL_SIZE]; // storage allocation for secondary planner queue buffers
-mpMotionPlannerSingleton_t mp;              // context for block planning
-mpMotionRuntimeSingleton_t mr;              // context for block runtime
+mpMotionPlannerHead_t mp;                     // context for block planning
+
+//mpMotionPlannerHead_t *mp;          // pointer to motion planner
+//mpMotionPlannerHead_t mp0;          // primary motion planner
+//mpMotionPlannerHead_t mp1;          // secondary motion planner
+mpMotionRuntimeSingleton_t mr;      // context for block runtime
+
 
 #define JSON_COMMAND_BUFFER_SIZE 3
 

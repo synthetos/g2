@@ -113,10 +113,10 @@
  **** STRUCTURE ALLOCATIONS ********************************************************
  ***********************************************************************************/
 
-cmMachine_t *cm;        // pointer to active canonical machine
-cmMachine_t cm0;        // canonical machine primary machine
-cmMachine_t cm1;        // canonical machine secondary machine
-cmToolTable_t tt;       // global tool table
+cmCanonicalMachine_t *cm;   // pointer to active canonical machine
+cmCanonicalMachine_t cm0;   // canonical machine primary machine
+cmCanonicalMachine_t cm1;   // canonical machine secondary machine
+cmToolTable_t tt;           // global tool table
 
 /***********************************************************************************
  **** GENERIC STATIC FUNCTIONS AND VARIABLES ***************************************
