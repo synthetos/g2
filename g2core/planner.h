@@ -416,7 +416,7 @@ typedef struct mpPlannerQueue {         // control structure for queue
     magic_t magic_start;                // magic number to test memory integrity
     mpBuf_t *r;                         // run buffer pointer
     mpBuf_t *w;                         // write buffer pointer
-    uint8_t queue_size;                 // total number of buffers, zero-based (e.g. 47 not 48)
+    uint8_t queue_size;                 // total number of buffers, one-based (e.g. 48 not 47)
     uint8_t buffers_available;          // running count of available buffers in queue
     mpBuf_t *bf;                        // pointer to buffer pool (storage array)
     magic_t magic_end;
@@ -528,28 +528,29 @@ typedef struct mpPlanner {              // common variables for a planner contex
 
 // Reference global scope structures
 
-extern mpPlanner_t *mp;                                 // currently active planner (global variable)
-extern mpPlanner_t mp0;                                 // primary planning context
-extern mpPlanner_t mp1;                                 // secondary planning context
-extern mpBuf_t mp0_pool[PLANNER_BUFFER_POOL_SIZE];      // storage allocation for primary planner queue buffers
-extern mpBuf_t mp1_pool[SECONDARY_BUFFER_POOL_SIZE];    // storage allocation for secondary planner queue buffers
+extern mpPlanner_t *mp;                 // currently active planner (global variable)
+extern mpPlanner_t mp1;                 // primary planning context
+extern mpPlanner_t mp2;                 // secondary planning context
 
-extern mpPlannerRuntime_t *mr;                          // context for block runtime
-extern mpPlannerRuntime_t mr0;                          // runtime context for primary planner
-extern mpPlannerRuntime_t mr1;                          // runtime context for secondary planner
+extern mpPlannerRuntime_t *mr;          // context for block runtime
+extern mpPlannerRuntime_t mr1;          // primary planner runtime context
+extern mpPlannerRuntime_t mr2;          // secondary planner runtime context
+
+extern mpBuf_t mp1_pool[PLANNER_BUFFER_POOL_SIZE];   // storage allocation for primary planner queue buffers
+extern mpBuf_t mp2_pool[SECONDARY_BUFFER_POOL_SIZE]; // storage allocation for secondary planner queue buffers
 
 /*
  * Global Scope Functions
  */
 
-//planner.cpp functions
+//**** planner.cpp functions
 
-void planner_init(mpPlanner_t *mpl, mpBuf_t *pool, mpPlannerRuntime_t *mrl);
-void planner_reset(mpPlanner_t *mpl);
-stat_t planner_test_assertions(mpPlanner_t *mpl);
+void planner_init(mpPlanner_t *_mp, mpPlannerRuntime_t *_mr, mpBuf_t *_pool, uint8_t _queue_size);
+void planner_reset(mpPlanner_t *_mp);
+stat_t planner_test_assertions(mpPlanner_t *_mp);
 
 void mp_halt_runtime(void);
-void mp_flush_planner(mpPlanner_t *mpl);
+void mp_flush_planner(mpPlanner_t *_mp);
 void mp_set_planner_position(uint8_t axis, const float position);
 void mp_set_runtime_position(uint8_t axis, const float position);
 void mp_set_steps_to_runtime_position(void);
@@ -565,10 +566,10 @@ void mp_end_dwell(void);
 void mp_request_out_of_band_dwell(float seconds);
 stat_t mp_exec_out_of_band_dwell(void);
 
-// planner functions and helpers
-uint8_t mp_get_planner_buffers(mpPlanner_t *mpl);
-bool mp_planner_is_full(mpPlanner_t *mpl);
-bool mp_has_runnable_buffer(mpPlanner_t *mpl);
+//**** planner functions and helpers
+uint8_t mp_get_planner_buffers(mpPlanner_t *_mp);
+bool mp_planner_is_full(mpPlanner_t *_mp);
+bool mp_has_runnable_buffer(mpPlanner_t *_mp);
 bool mp_is_phat_city_time(void);
 
 stat_t mp_planner_callback();
@@ -577,7 +578,7 @@ void mp_start_feed_override(const float ramp_time, const float override);
 void mp_end_feed_override(const float ramp_time);
 void mp_planner_time_accounting(void);
 
-// planner buffer primitives
+//**** planner buffer primitives
 //void mp_init_planner_buffers(void);
 //mpBuf_t * mp_get_w(int8_t q);
 //mpBuf_t * mp_get_r(int8_t q);
@@ -594,7 +595,7 @@ void mp_commit_write_buffer(const blockType block_type);
 mpBuf_t * mp_get_run_buffer(void);
 bool mp_free_run_buffer(void);
 
-// plan_line.c functions
+//**** plan_line.c functions
 void mp_zero_segment_velocity(void);                    // getters and setters...
 float mp_get_runtime_velocity(void);
 float mp_get_runtime_absolute_position(uint8_t axis);
@@ -607,7 +608,7 @@ stat_t mp_aline(GCodeState_t *gm_in);                   // line planning...
 void mp_plan_block_list(void);
 void mp_plan_block_forward(mpBuf_t *bf);
 
-// plan_zoid.c functions
+//**** plan_zoid.c functions
 void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float entry_velocity);
 float mp_get_target_length(const float v_0, const float v_1, const mpBuf_t *bf);
 float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t *bf); // acceleration ONLY
@@ -619,7 +620,7 @@ float mp_calc_a(const float t, const float v_0, const float v_1, const float T);
 float mp_calc_j(const float t, const float v_0, const float v_1, const float T); // compute jerk over curve accelerating from v_0 to v_1, at position t=[0,1], total time T
 //float mp_calc_l(const float t, const float v_0, const float v_1, const float T); // compute length over curve accelerating from v_0 to v_1, at position t=[0,1], total time T
 
-// plan_exec.c functions
+//**** plan_exec.c functions
 stat_t mp_forward_plan(void);
 stat_t mp_exec_move(void);
 stat_t mp_exec_aline(mpBuf_t *bf);

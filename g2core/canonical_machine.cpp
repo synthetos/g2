@@ -114,8 +114,8 @@
  ***********************************************************************************/
 
 cmMachine_t *cm;    // pointer to active canonical machine
-cmMachine_t cm0;    // canonical machine primary machine
-cmMachine_t cm1;    // canonical machine secondary machine
+cmMachine_t cm1;    // canonical machine primary machine
+cmMachine_t cm2;    // canonical machine secondary machine
 cmToolTable_t tt;   // global tool table
 
 /***********************************************************************************
@@ -724,13 +724,13 @@ stat_t cm_test_soft_limits(const float target[])
 
 void canonical_machine_init(cmMachine_t *m)
 {
-    // NoteL cm* was assignd in main()
+    // Note cm* was assignd in main()
     // If you can assume all memory has been zeroed by a hard reset you don't need this code:
     memset(m, 0, sizeof(cmMachine_t));          // do not reset canonicalMachine once it's been initialized
-    memset(&m->gm, 0, sizeof(GCodeState_t));    // clear all values, pointers and status
+//    memset(&m->gm, 0, sizeof(GCodeState_t));    // clear all values, pointers and status
     
-    memset(&gc.gn, 0, sizeof(GCodeInput_t));    // reset the Gcode inputs
-    memset(&gc.gf, 0, sizeof(GCodeFlags_t));
+//    memset(&gc.gn, 0, sizeof(GCodeInput_t));    // reset the Gcode inputs
+//    memset(&gc.gf, 0, sizeof(GCodeFlags_t));
 
     canonical_machine_init_assertions(m);       // establish assertions
     ACTIVE_MODEL = MODEL;                       // setup initial Gcode model pointer
@@ -739,6 +739,9 @@ void canonical_machine_init(cmMachine_t *m)
 
 void canonical_machine_reset(cmMachine_t *m)
 {
+    // reset canonical machine assertions
+    canonical_machine_init_assertions(m);
+
     // set gcode defaults
     cm_set_units_mode(gc.default_units_mode);
     cm_set_coord_system(gc.default_coord_system);   // NB: queues a block to the planner with the coordinates

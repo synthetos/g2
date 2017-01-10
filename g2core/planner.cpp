@@ -67,15 +67,15 @@
 // Allocate planner structures
 
 mpPlanner_t *mp;            // currently active planner (global variable)
-mpPlanner_t mp0;            // primary planning context
-mpPlanner_t mp1;            // secondary planning context
+mpPlanner_t mp1;            // primary planning context
+mpPlanner_t mp2;            // secondary planning context
 
 mpPlannerRuntime_t *mr;     // context for planner block runtime
-mpPlannerRuntime_t mr0;     // runtime context for primary planner
-mpPlannerRuntime_t mr1;     // runtime context for secondary planner
+mpPlannerRuntime_t mr1;     // primary planner runtime context
+mpPlannerRuntime_t mr2;     // secondary planner runtime context
 
-mpBuf_t mp0_pool[PLANNER_BUFFER_POOL_SIZE];     // storage allocation for primary planner queue buffers
-mpBuf_t mp1_pool[SECONDARY_BUFFER_POOL_SIZE];   // storage allocation for secondary planner queue buffers
+mpBuf_t mp1_pool[PLANNER_BUFFER_POOL_SIZE];     // storage allocation for primary planner queue buffers
+mpBuf_t mp2_pool[SECONDARY_BUFFER_POOL_SIZE];   // storage allocation for secondary planner queue buffers
 
 #define JSON_COMMAND_BUFFER_SIZE 3
 
@@ -143,15 +143,15 @@ static stat_t _exec_json_wait(mpBuf_t *bf);
 /*
  * planner_init()
  * planner_reset()
- * runtime_init()
+ * planner_test_assertions() - test assertions, PANIC if violation exists
  */
 
 // initialize a planner queue
-void _init_planner_queue(mpPlanner_t *mpl, mpBuf_t *pool, uint8_t size)
+void _init_planner_queue(mpPlanner_t *_mp, mpBuf_t *pool, uint8_t size)
 {
     mpBuf_t *pv, *nx;
     uint8_t i, nx_i;
-    mpPlannerQueue_t *q = &(mpl->q);
+    mpPlannerQueue_t *q = &(_mp->q);
 
     memset(q, 0, sizeof(mpPlannerQueue_t)); // clear values, pointers and status
     q->magic_start = MAGICNUM;
@@ -161,7 +161,7 @@ void _init_planner_queue(mpPlanner_t *mpl, mpBuf_t *pool, uint8_t size)
     q->bf = pool;                           // link the buffer pool first
     q->w = pool;                            // init all buffer pointers
     q->r = pool;
-    q->queue_size = size-1;
+    q->queue_size = size;
     q->buffers_available = size;
     
     pv = &q->bf[size-1];
@@ -176,46 +176,42 @@ void _init_planner_queue(mpPlanner_t *mpl, mpBuf_t *pool, uint8_t size)
     q->bf[size-1].nx = pool;
 }
 
-void planner_init(mpPlanner_t *mpl, mpBuf_t *pool, mpPlannerRuntime_t *mrl)
+void planner_init(mpPlanner_t *_mp, mpPlannerRuntime_t *_mr, mpBuf_t *_pool, uint8_t _queue_size)
 {
-    mp = &mp0;                          // set global pointer to the primary planner
-    mr = &mr0;                          // and primary runtime
+    mp = &mp1;                          // set global pointer to the primary planner
+    mr = &mr1;                          // and primary runtime
 
     // init planner master structure
-    memset(mpl, 0, sizeof(mpPlanner_t));// clear all values, pointers and status    
-    mpl->magic_start = MAGICNUM;        // set boundary condition assertions
-    mpl->magic_end = MAGICNUM;
-    mpl->mfo_factor = 1.00;
+    memset(_mp, 0, sizeof(mpPlanner_t));// clear all values, pointers and status    
+    _mp->magic_start = MAGICNUM;        // set boundary condition assertions
+    _mp->magic_end = MAGICNUM;
+    _mp->mfo_factor = 1.00;
    
     // init planner queues
-    mpl->q.bf = pool;                   // assign puffer pool to queue manager structure
-    _init_planner_queue(mpl, pool, PLANNER_BUFFER_POOL_SIZE);
+    _mp->q.bf = _pool;                  // assign puffer pool to queue manager structure
+    _init_planner_queue(_mp, _pool, _queue_size);
  
     // init runtime structs
-    mpl->mr = mrl;
-    memset(mrl, 0, sizeof(mpPlannerRuntime_t));    // clear all values, pointers and status
-    mrl->bf[0].nx = &mrl->bf[1];        // Handle the two "stub blocks" in the runtime structure.
-    mrl->bf[1].nx = &mrl->bf[0];
-    mrl->r = &mrl->bf[0];
-    mrl->p = &mrl->bf[1];
-    mpl->mr->magic_start = MAGICNUM;    // assertions
-    mpl->mr->magic_end = MAGICNUM;
+    _mp->mr = _mr;
+    memset(_mr, 0, sizeof(mpPlannerRuntime_t));    // clear all values, pointers and status
+    _mr->bf[0].nx = &_mr->bf[1];        // Handle the two "stub blocks" in the runtime structure.
+    _mr->bf[1].nx = &_mr->bf[0];
+    _mr->r = &_mr->bf[0];
+    _mr->p = &_mr->bf[1];
+    _mp->mr->magic_start = MAGICNUM;    // assertions
+    _mp->mr->magic_end = MAGICNUM;
 }
 
-void planner_reset(mpPlanner_t *mpl)
+void planner_reset(mpPlanner_t *_mp)
 {
-    planner_init(mpl, mpl->q.bf, mpl->mr);  // reset parent planner and linked Q and MR
+    planner_init(_mp, _mp->mr, _mp->q.bf, _mp->q.queue_size);  // reset parent planner and linked Q and MR
 }
 
-/*
- * planner_test_assertions() - test assertions, PANIC if violation exists
- */
-
-stat_t planner_test_assertions(mpPlanner_t *mpl)
+stat_t planner_test_assertions(mpPlanner_t *_mp)
 {
     if (
-        (BAD_MAGIC(mpl->magic_start))     || (BAD_MAGIC(mpl->magic_end)) ||
-        (BAD_MAGIC(mpl->mr->magic_start)) || (BAD_MAGIC(mpl->mr->magic_end))
+        (BAD_MAGIC(_mp->magic_start))     || (BAD_MAGIC(_mp->magic_end)) ||
+        (BAD_MAGIC(_mp->mr->magic_start)) || (BAD_MAGIC(_mp->mr->magic_end))
         ) {
         return(cm_panic(STAT_PLANNER_ASSERTION_FAILURE, "planner_test_assertions()"));
     }
@@ -247,12 +243,12 @@ void mp_halt_runtime()
  *    This function is designed to be called during a hold to reset the planner
  *    This function should not generally be called; call cm_queue_flush() instead
  */
-void mp_flush_planner(mpPlanner_t *mpl)
+void mp_flush_planner(mpPlanner_t *_mp)
 {
     cm_abort_arc();
-//    mp_init_planner_buffers(mpl);     //+++++
-//    planner_init(mpl);                //+++++
-    planner_reset(mpl);
+//    mp_init_planner_buffers(_mp);     //+++++
+//    planner_init(_mp);                //+++++
+    planner_reset(_mp);
     mr->block_state = BLOCK_INACTIVE;   // invalidate mr buffer to prevent subsequent motion
 }
 
@@ -509,20 +505,20 @@ bool mp_has_runnable_buffer(int8_t q)   // which queue are you interested in?)
     return (mb.q[q].r->buffer_state);    // anything other than MP_BUFFER_EMPTY returns true
 }
 */
-uint8_t mp_get_planner_buffers(mpPlanner_t *mpl)  // which planner are you interested in?
+uint8_t mp_get_planner_buffers(mpPlanner_t *_mp)  // which planner are you interested in?
 {
-    return (mpl->q.buffers_available);
+    return (_mp->q.buffers_available);
 }
 
-bool mp_planner_is_full(mpPlanner_t *mpl)         // which planner are you interested in?
+bool mp_planner_is_full(mpPlanner_t *_mp)         // which planner are you interested in?
 {
     // We also need to ensure we have room for another JSON command
-    return ((mpl->q.buffers_available < PLANNER_BUFFER_HEADROOM) || (jc.available == 0));
+    return ((_mp->q.buffers_available < PLANNER_BUFFER_HEADROOM) || (jc.available == 0));
 }
 
-bool mp_has_runnable_buffer(mpPlanner_t *mpl)     // which planner are you interested in?)
+bool mp_has_runnable_buffer(mpPlanner_t *_mp)     // which planner are you interested in?)
 {
-    return (mpl->q.r->buffer_state);    // anything other than MP_BUFFER_EMPTY returns true
+    return (_mp->q.r->buffer_state);    // anything other than MP_BUFFER_EMPTY returns true
 }
 
 bool mp_is_phat_city_time()

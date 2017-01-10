@@ -475,8 +475,10 @@ stat_t _test_system_assertions()
     // these functions will panic if an assertion fails
     _test_assertions();                     // controller assertions (local)
     config_test_assertions();
-    canonical_machine_test_assertions(&cm0);    // +++++ cleanup later
-    planner_test_assertions(&mp0);              // +++++ cleanup later
+    canonical_machine_test_assertions(&cm1);    // +++++ cleanup later
+//    canonical_machine_test_assertions(&cm2);    // +++++ cleanup later
+    planner_test_assertions(&mp1);              // +++++ cleanup later
+//    planner_test_assertions(&mp2);              // +++++ cleanup later
     stepper_test_assertions();
     encoder_test_assertions();
     xio_test_assertions();

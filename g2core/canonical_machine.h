@@ -278,8 +278,8 @@ typedef struct cmToolTable {                // struct to keep a global tool tabl
 /**** Externs - See canonical_machine.cpp for allocation ****/
 
 extern cmMachine_t *cm;     // pointer to active canonical machine
-extern cmMachine_t cm0;     // canonical machine primary machine
-extern cmMachine_t cm1;     // canonical machine secondary machine
+extern cmMachine_t cm1;     // canonical machine primary machine
+extern cmMachine_t cm2;     // canonical machine secondary machine
 extern cmToolTable_t tt;
 
 /*****************************************************************************

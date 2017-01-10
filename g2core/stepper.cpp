@@ -2,8 +2,8 @@
  * stepper.cpp - stepper motor controls
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2016 Robert Giseburt
+ * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2017 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -80,7 +80,7 @@ load_timer_type load_timer;         // triggers load of next stepper segment
 exec_timer_type exec_timer;         // triggers calculation of next+1 stepper segment
 fwd_plan_timer_type fwd_plan_timer; // triggers planning of next block
 
-// SystickEvent for handling dweels (must be registered before it is active)
+// SystickEvent for handling dwells (must be registered before it is active)
 Motate::SysTickEvent dwell_systick_event {[&] {
     if (--st_run.dwell_ticks_downcount == 0) {
         SysTickTimer.unregisterEvent(&dwell_systick_event);
@@ -800,11 +800,10 @@ void st_request_out_of_band_dwell(float microseconds)
  */
 static void _set_hw_microsteps(const uint8_t motor, const uint8_t microsteps)
 {
-    if (motor >= MOTORS) {return;}
+    if (motor >= MOTORS) { return; }
 
     Motors[motor]->setMicrosteps(microsteps);
-    }
-
+}
 
 /***********************************************************************************
  * CONFIGURATION AND INTERFACE FUNCTIONS

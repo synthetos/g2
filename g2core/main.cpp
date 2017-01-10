@@ -101,17 +101,17 @@ void application_init_services(void)
 
 void application_init_machine(void)
 {
-    cm = &cm0;                          // set global canonical machine pointer to primary machine
+    cm = &cm1;                          // set global canonical machine pointer to primary machine
     cm->machine_state = MACHINE_INITIALIZING;
 
     stepper_init();                     // stepper subsystem
     encoder_init();                     // virtual encoders
     gpio_init();                        // inputs and outputs
     pwm_init();                         // pulse width modulation drivers
-    planner_init(&mp0, mp0_pool, &mr0);    //+++++ //primary  motion planner
-//    planner_init(&mp1, mp1_pool, &mr1);    //+++++ //secondary  motion planner
-    canonical_machine_init(&cm0);       //+++++ cleanup required       // canonical machine
-//    canonical_machine_init(&cm1);   //+++++ cleanup required       // canonical machine
+    planner_init(&mp1, &mr1, mp1_pool, PLANNER_BUFFER_POOL_SIZE); // primary motion planner
+    planner_init(&mp2, &mr2, mp2_pool, SECONDARY_BUFFER_POOL_SIZE); // secondary motion planner
+    canonical_machine_init(&cm1);       // primary canonical machine
+//    canonical_machine_init(&cm2);       // secondary canonical machine
 }
 
 void application_init_startup(void)
@@ -119,8 +119,8 @@ void application_init_startup(void)
     // start the application
     controller_init();                  // should be first startup init (requires xio_init())
     config_init();					    // apply the config settings from persistence
-    canonical_machine_reset(&cm0);      // +++++
-//    canonical_machine_reset(&cm1);    // +++++
+    canonical_machine_reset(&cm1);
+//    canonical_machine_reset(&cm2);
     spindle_init();                     // should be after PWM and canonical machine inits and config_init()
     spindle_reset();
     temperature_init();
