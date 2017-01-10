@@ -2,7 +2,7 @@
  * plan_arc.c - arc planning and motion execution
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -47,10 +47,10 @@ static stat_t _test_arc_soft_limits(void);
 /*
  * cm_arc_init() - initialize arc structures
  */
-void cm_arc_init()
+void cm_arc_init(cmMachine_t *_cm)
 {
-    cm->arc.magic_start = MAGICNUM;
-    cm->arc.magic_end = MAGICNUM;
+    _cm->arc.magic_start = MAGICNUM;
+    _cm->arc.magic_end = MAGICNUM;
 }
 
 /*
@@ -59,9 +59,9 @@ void cm_arc_init()
  *  OK to call if no arc is running
  */
 
-void cm_abort_arc()
+void cm_abort_arc(cmMachine_t *_cm)
 {
-    cm->arc.run_state = BLOCK_INACTIVE;
+    _cm->arc.run_state = BLOCK_INACTIVE;
 }
 
 /*
@@ -73,26 +73,26 @@ void cm_abort_arc()
  *  Parts of this routine were informed by the grbl project.
  */
 
-stat_t cm_arc_callback()
+stat_t cm_arc_callback(cmMachine_t *_cm)
 {
-    if (cm->arc.run_state == BLOCK_INACTIVE) {
+    if (_cm->arc.run_state == BLOCK_INACTIVE) {
         return (STAT_NOOP);
     }
     if (mp_planner_is_full(mp)) {   //+++++
         return (STAT_EAGAIN);
     }
-    cm->arc.theta += cm->arc.segment_theta;
-    cm->arc.gm.target[cm->arc.plane_axis_0] = cm->arc.center_0 + sin(cm->arc.theta) * cm->arc.radius;
-    cm->arc.gm.target[cm->arc.plane_axis_1] = cm->arc.center_1 + cos(cm->arc.theta) * cm->arc.radius;
-    cm->arc.gm.target[cm->arc.linear_axis] += cm->arc.segment_linear_travel;
+    _cm->arc.theta += _cm->arc.segment_theta;
+    _cm->arc.gm.target[_cm->arc.plane_axis_0] = _cm->arc.center_0 + sin(_cm->arc.theta) * _cm->arc.radius;
+    _cm->arc.gm.target[_cm->arc.plane_axis_1] = _cm->arc.center_1 + cos(_cm->arc.theta) * _cm->arc.radius;
+    _cm->arc.gm.target[_cm->arc.linear_axis] += _cm->arc.segment_linear_travel;
 
-    mp_aline(&(cm->arc.gm));                            // run the line
-    copy_vector(cm->arc.position, cm->arc.gm.target);   // update arc current position
+    mp_aline(&(_cm->arc.gm));                            // run the line
+    copy_vector(_cm->arc.position, _cm->arc.gm.target);   // update arc current position
 
-    if (--(cm->arc.segment_count) > 0) {
+    if (--(_cm->arc.segment_count) > 0) {
         return (STAT_EAGAIN);
     }
-    cm->arc.run_state = BLOCK_INACTIVE;
+    _cm->arc.run_state = BLOCK_INACTIVE;
     return (STAT_OK);
 }
 

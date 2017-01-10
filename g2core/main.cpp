@@ -108,10 +108,11 @@ void application_init_machine(void)
     encoder_init();                     // virtual encoders
     gpio_init();                        // inputs and outputs
     pwm_init();                         // pulse width modulation drivers
-    planner_init(&mp1, &mr1, mp1_pool, PLANNER_BUFFER_POOL_SIZE); // primary motion planner
-    planner_init(&mp2, &mr2, mp2_pool, SECONDARY_BUFFER_POOL_SIZE); // secondary motion planner
+    
+    planner_init(&mp1, &mr1, mp1_queue, PLANNER_QUEUE_SIZE);
+    planner_init(&mp2, &mr2, mp2_queue, SECONDARY_QUEUE_SIZE);
     canonical_machine_init(&cm1);       // primary canonical machine
-//    canonical_machine_init(&cm2);       // secondary canonical machine
+    canonical_machine_init(&cm2);       // secondary canonical machine
 }
 
 void application_init_startup(void)
@@ -119,8 +120,8 @@ void application_init_startup(void)
     // start the application
     controller_init();                  // should be first startup init (requires xio_init())
     config_init();					    // apply the config settings from persistence
-    canonical_machine_reset(&cm1);
-//    canonical_machine_reset(&cm2);
+    canonical_machine_reset(&cm1);      // initialize both CMs but only reset the primary
+    gcode_parser_init();                // baseline Gcode parser
     spindle_init();                     // should be after PWM and canonical machine inits and config_init()
     spindle_reset();
     temperature_init();

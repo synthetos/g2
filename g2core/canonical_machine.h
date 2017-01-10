@@ -340,11 +340,11 @@ stat_t cm_test_soft_limits(const float target[]);
 /*--- Canonical machining functions (loosely) defined by NIST [organized by NIST Gcode doc] ---*/
 
 // Initialization and termination (4.3.2)
-void canonical_machine_init(cmMachine_t *machine);
-void canonical_machine_reset_rotation(cmMachine_t *machine);  // NOT in NIST
-void canonical_machine_reset(cmMachine_t *machine);
-void canonical_machine_init_assertions(cmMachine_t *machine);
-stat_t canonical_machine_test_assertions(cmMachine_t *machine);
+void canonical_machine_init(cmMachine_t *_cm);
+void canonical_machine_reset_rotation(cmMachine_t *_cm);        // NOT in NIST
+void canonical_machine_reset(cmMachine_t *_cm);
+void canonical_machine_init_assertions(cmMachine_t *_cm);
+stat_t canonical_machine_test_assertions(cmMachine_t *_cm);
 
 // Alarms and state management
 stat_t cm_alrm(nvObj_t *nv);                                    // trigger alarm from command input

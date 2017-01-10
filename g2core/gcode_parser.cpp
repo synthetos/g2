@@ -2,8 +2,8 @@
  * gcode_parser.cpp - rs274/ngc Gcode parser
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2016 Rob Giseburt
+ * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
+ * Copyright (c) 2016 - 2017 Rob Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -40,6 +40,16 @@ static stat_t _execute_gcode_block(char *active_comment);           // Execute t
 #define SET_MODAL(m,parm,val) ({gc.gn.parm=val; gc.gf.parm=true; gc.gf.modals[m]=true; break;})
 #define SET_NON_MODAL(parm,val) ({gc.gn.parm=val; gc.gf.parm=true; break;})
 #define EXEC_FUNC(f,v) if(gc.gf.v) { status=f(gc.gn.v);}
+
+/*
+ * gcode_parser_init()
+ */
+
+void gcode_parser_init()
+{
+    memset(&gc.gn, 0, sizeof(GCodeInput_t));    // reset the Gcode inputs
+    memset(&gc.gf, 0, sizeof(GCodeFlags_t));
+}
 
 /*
  * gcode_parser() - parse a block (line) of gcode

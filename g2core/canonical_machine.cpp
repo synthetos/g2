@@ -135,6 +135,100 @@ static int8_t _axis(const index_t index);
  **** CODE *************************************************************************
  ***********************************************************************************/
 
+/*
+ * canonical_machine_init()  - initialize cm struct
+ * canonical_machine_reset() - apply startup settings or reset to startup
+ * canonical_machine_reset_rotation()
+ */
+
+void canonical_machine_init(cmMachine_t *_cm)
+{
+    // Note cm* was assignd in main()
+    // If you can assume all memory has been zeroed by a hard reset you don't need this code:
+    memset(_cm, 0, sizeof(cmMachine_t));            // do not reset canonicalMachine once it's been initialized
+    memset(&_cm->gm, 0, sizeof(GCodeState_t));      // clear all values, pointers and status
+
+    canonical_machine_init_assertions(_cm);         // establish assertions
+    ACTIVE_MODEL = MODEL;                           // setup initial Gcode model pointer
+    cm_arc_init(_cm);                               // Note: spindle and coolant inits are independent
+}
+
+// Note: run canonical_machine_init and profile initializations beforehand
+void canonical_machine_reset(cmMachine_t *_cm)
+{
+    // reset canonical machine assertions
+    canonical_machine_init_assertions(_cm);
+
+    // set canonical machine gcode defaults
+    cm_set_units_mode(gc.default_units_mode);
+    cm_set_coord_system(gc.default_coord_system);   // NB: queues a block to the planner with the coordinates
+    cm_select_plane(gc.default_select_plane);
+    cm_set_path_control(MODEL, gc.default_path_control);
+    cm_set_distance_mode(gc.default_distance_mode);
+    cm_set_arc_distance_mode(INCREMENTAL_DISTANCE_MODE); // always the default
+    cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);   // always the default
+    cm_reset_overrides();                           // set overrides to initial conditions
+
+    // NOTE: Should unhome axes here
+
+    // reset request flags
+    _cm->queue_flush_state = FLUSH_OFF;
+    _cm->end_hold_requested = false;
+    _cm->limit_requested = 0;                         // resets switch closures that occurred during initialization
+    _cm->safety_interlock_disengaged = 0;             // ditto
+    _cm->safety_interlock_reengaged = 0;              // ditto
+    _cm->shutdown_requested = 0;                      // ditto
+
+    // set initial state and signal that the machine is ready for action
+    _cm->cycle_state = CYCLE_OFF;
+    _cm->motion_state = MOTION_STOP;
+    _cm->hold_state = FEEDHOLD_OFF;
+    _cm->esc_boot_timer = SysTickTimer_getValue();
+    _cm->gmx.block_delete_switch = true;
+    _cm->gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE; // never start in a motion mode
+    _cm->machine_state = MACHINE_READY;
+
+    canonical_machine_reset_rotation(_cm);
+    memset(&_cm->probe_state, 0, sizeof(cmProbeState)*PROBES_STORED);
+    memset(&_cm->probe_results, 0, sizeof(float)*PROBES_STORED*AXES);
+}
+
+void canonical_machine_reset_rotation(cmMachine_t *_cm) {
+
+    // We must make it an identity matrix for no rotation
+    memset(&_cm->rotation_matrix, 0, sizeof(float)*3*3);
+    _cm->rotation_matrix[0][0] = 1.0;
+    _cm->rotation_matrix[1][1] = 1.0;
+    _cm->rotation_matrix[2][2] = 1.0;
+    _cm->rotation_z_offset = 0.0;
+}
+
+/*
+ * canonical_machine_init_assertions()
+ * canonical_machine_test_assertions() - test assertions, return error code if violation exists
+ */
+
+void canonical_machine_init_assertions(cmMachine_t *_cm)
+{
+    _cm->magic_start = MAGICNUM;
+    _cm->magic_end = MAGICNUM;
+    _cm->gmx.magic_start = MAGICNUM;
+    _cm->gmx.magic_end = MAGICNUM;
+    _cm->arc.magic_start = MAGICNUM;
+    _cm->arc.magic_end = MAGICNUM;
+}
+
+stat_t canonical_machine_test_assertions(cmMachine_t *_cm)
+{
+    if ((BAD_MAGIC(_cm->magic_start))     || (BAD_MAGIC(_cm->magic_end)) ||
+        (BAD_MAGIC(_cm->gmx.magic_start)) || (BAD_MAGIC(_cm->gmx.magic_end)) ||
+        (BAD_MAGIC(_cm->arc.magic_start)) || (BAD_MAGIC(_cm->arc.magic_end))) {
+        return(cm_panic(STAT_CANONICAL_MACHINE_ASSERTION_FAILURE, "canonical_machine_test_assertions()"));
+    }
+    return (STAT_OK);
+}
+
+
 /*************************************
  * Internal getters and setters      *
  * Canonical Machine State functions *
@@ -713,103 +807,7 @@ stat_t cm_test_soft_limits(const float target[])
  *  found in NIST RS274 NGCv3
  ************************************************************************/
 
-/******************************************
- * Initialization and Termination (4.3.2) *
- ******************************************/
-/*
- * canonical_machine_init()  - initialize cm struct
- * canonical_machine_reset() - apply startup settings or reset to startup
- *                             run profile initialization beforehand
- */
 
-void canonical_machine_init(cmMachine_t *m)
-{
-    // Note cm* was assignd in main()
-    // If you can assume all memory has been zeroed by a hard reset you don't need this code:
-    memset(m, 0, sizeof(cmMachine_t));          // do not reset canonicalMachine once it's been initialized
-//    memset(&m->gm, 0, sizeof(GCodeState_t));    // clear all values, pointers and status
-    
-//    memset(&gc.gn, 0, sizeof(GCodeInput_t));    // reset the Gcode inputs
-//    memset(&gc.gf, 0, sizeof(GCodeFlags_t));
-
-    canonical_machine_init_assertions(m);       // establish assertions
-    ACTIVE_MODEL = MODEL;                       // setup initial Gcode model pointer
-    cm_arc_init();                              // Note: spindle and coolant inits are independent
-}
-
-void canonical_machine_reset(cmMachine_t *m)
-{
-    // reset canonical machine assertions
-    canonical_machine_init_assertions(m);
-
-    // set gcode defaults
-    cm_set_units_mode(gc.default_units_mode);
-    cm_set_coord_system(gc.default_coord_system);   // NB: queues a block to the planner with the coordinates
-    cm_select_plane(gc.default_select_plane);
-    cm_set_path_control(MODEL, gc.default_path_control);
-    cm_set_distance_mode(gc.default_distance_mode);
-    cm_set_arc_distance_mode(INCREMENTAL_DISTANCE_MODE); // always the default
-    cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);   // always the default
-    cm_reset_overrides();                           // set overrides to initial conditions
-
-    // NOTE: Should unhome axes here
-
-    // reset request flags
-    m->queue_flush_state = FLUSH_OFF;
-    m->end_hold_requested = false;
-    m->limit_requested = 0;                         // resets switch closures that occurred during initialization
-    m->safety_interlock_disengaged = 0;             // ditto
-    m->safety_interlock_reengaged = 0;              // ditto
-    m->shutdown_requested = 0;                      // ditto
-
-    // set initial state and signal that the machine is ready for action
-    m->cycle_state = CYCLE_OFF;
-    m->motion_state = MOTION_STOP;
-    m->hold_state = FEEDHOLD_OFF;
-    m->esc_boot_timer = SysTickTimer_getValue();
-    m->gmx.block_delete_switch = true;
-    m->gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE; // never start in a motion mode
-    m->machine_state = MACHINE_READY;
-
-    canonical_machine_reset_rotation(m);
-    memset(&m->probe_state, 0, sizeof(cmProbeState)*PROBES_STORED);
-    memset(&m->probe_results, 0, sizeof(float)*PROBES_STORED*AXES);
-}
-
-void canonical_machine_reset_rotation(cmMachine_t *m) {
-    memset(&cm->rotation_matrix, 0, sizeof(float)*3*3);
-    
-    // We must make it an identity matrix for no rotation
-    m->rotation_matrix[0][0] = 1.0;
-    m->rotation_matrix[1][1] = 1.0;
-    m->rotation_matrix[2][2] = 1.0;
-    m->rotation_z_offset = 0.0;
-}
-
-/*
- * canonical_machine_init_assertions()
- * canonical_machine_test_assertions() - test assertions, return error code if violation exists
- */
-
-void canonical_machine_init_assertions(cmMachine_t *m)
-{
-    m->magic_start = MAGICNUM;
-    m->magic_end = MAGICNUM;
-    m->gmx.magic_start = MAGICNUM;
-    m->gmx.magic_end = MAGICNUM;
-    m->arc.magic_start = MAGICNUM;
-    m->arc.magic_end = MAGICNUM;
-}
-
-stat_t canonical_machine_test_assertions(cmMachine_t *m)
-{
-    if ((BAD_MAGIC(m->magic_start))     || (BAD_MAGIC(m->magic_end)) ||
-        (BAD_MAGIC(m->gmx.magic_start)) || (BAD_MAGIC(m->gmx.magic_end)) ||
-        (BAD_MAGIC(m->arc.magic_start)) || (BAD_MAGIC(m->arc.magic_end))) {
-        return(cm_panic(STAT_CANONICAL_MACHINE_ASSERTION_FAILURE, "canonical_machine_test_assertions()"));
-    }
-    return (STAT_OK);
-}
 
 /**************************
  * Alarms                 *

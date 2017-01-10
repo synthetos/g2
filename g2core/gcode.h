@@ -386,6 +386,7 @@ extern GCodeSingleton_t gc;         // gcode structs
 /*
  * Global Scope Functions
  */
+void gcode_parser_init(void);
 stat_t gcode_parser(char* block);
 stat_t gc_get_gc(nvObj_t* nv);
 stat_t gc_run_gc(nvObj_t* nv);

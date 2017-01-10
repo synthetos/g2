@@ -250,8 +250,8 @@ typedef enum {
 */
 /*** Most of these factors are the result of a lot of tweaking. Change with caution.***/
 
-#define PLANNER_BUFFER_POOL_SIZE    ((uint8_t)48)       // Suggest 12 min. Limit is 255
-#define SECONDARY_BUFFER_POOL_SIZE  ((uint8_t)12)       // Secondary planner queue for feedhold operations
+#define PLANNER_QUEUE_SIZE          ((uint8_t)48)       // Suggest 12 min. Limit is 255
+#define SECONDARY_QUEUE_SIZE        ((uint8_t)12)       // Secondary planner queue for feedhold operations
 #define PLANNER_BUFFER_HEADROOM     ((uint8_t)4)        // Buffers to reserve in planner before processing new input line
 #define JERK_MULTIPLIER             ((float)1000000)    // DO NOT CHANGE - must always be 1 million
 
@@ -536,8 +536,8 @@ extern mpPlannerRuntime_t *mr;          // context for block runtime
 extern mpPlannerRuntime_t mr1;          // primary planner runtime context
 extern mpPlannerRuntime_t mr2;          // secondary planner runtime context
 
-extern mpBuf_t mp1_pool[PLANNER_BUFFER_POOL_SIZE];   // storage allocation for primary planner queue buffers
-extern mpBuf_t mp2_pool[SECONDARY_BUFFER_POOL_SIZE]; // storage allocation for secondary planner queue buffers
+extern mpBuf_t mp1_queue[PLANNER_QUEUE_SIZE];   // storage allocation for primary planner queue buffers
+extern mpBuf_t mp2_queue[SECONDARY_QUEUE_SIZE]; // storage allocation for secondary planner queue buffers
 
 /*
  * Global Scope Functions
@@ -545,9 +545,9 @@ extern mpBuf_t mp2_pool[SECONDARY_BUFFER_POOL_SIZE]; // storage allocation for s
 
 //**** planner.cpp functions
 
-void planner_init(mpPlanner_t *_mp, mpPlannerRuntime_t *_mr, mpBuf_t *_pool, uint8_t _queue_size);
+void planner_init(mpPlanner_t *_mp, mpPlannerRuntime_t *_mr, mpBuf_t *queue, uint8_t queue_size);
 void planner_reset(mpPlanner_t *_mp);
-stat_t planner_test_assertions(mpPlanner_t *_mp);
+stat_t planner_test_assertions(const mpPlanner_t *_mp);
 
 void mp_halt_runtime(void);
 void mp_flush_planner(mpPlanner_t *_mp);
@@ -567,9 +567,9 @@ void mp_request_out_of_band_dwell(float seconds);
 stat_t mp_exec_out_of_band_dwell(void);
 
 //**** planner functions and helpers
-uint8_t mp_get_planner_buffers(mpPlanner_t *_mp);
-bool mp_planner_is_full(mpPlanner_t *_mp);
-bool mp_has_runnable_buffer(mpPlanner_t *_mp);
+uint8_t mp_get_planner_buffers(const mpPlanner_t *_mp);
+bool mp_planner_is_full(const mpPlanner_t *_mp);
+bool mp_has_runnable_buffer(const mpPlanner_t *_mp);
 bool mp_is_phat_city_time(void);
 
 stat_t mp_planner_callback();

@@ -74,8 +74,8 @@ mpPlannerRuntime_t *mr;     // context for planner block runtime
 mpPlannerRuntime_t mr1;     // primary planner runtime context
 mpPlannerRuntime_t mr2;     // secondary planner runtime context
 
-mpBuf_t mp1_pool[PLANNER_BUFFER_POOL_SIZE];     // storage allocation for primary planner queue buffers
-mpBuf_t mp2_pool[SECONDARY_BUFFER_POOL_SIZE];   // storage allocation for secondary planner queue buffers
+mpBuf_t mp1_queue[PLANNER_QUEUE_SIZE];     // storage allocation for primary planner queue buffers
+mpBuf_t mp2_queue[SECONDARY_QUEUE_SIZE];   // storage allocation for secondary planner queue buffers
 
 #define JSON_COMMAND_BUFFER_SIZE 3
 
@@ -147,7 +147,7 @@ static stat_t _exec_json_wait(mpBuf_t *bf);
  */
 
 // initialize a planner queue
-void _init_planner_queue(mpPlanner_t *_mp, mpBuf_t *pool, uint8_t size)
+void _init_planner_queue(mpPlanner_t *_mp, mpBuf_t *queue, uint8_t size)
 {
     mpBuf_t *pv, *nx;
     uint8_t i, nx_i;
@@ -157,10 +157,10 @@ void _init_planner_queue(mpPlanner_t *_mp, mpBuf_t *pool, uint8_t size)
     q->magic_start = MAGICNUM;
     q->magic_end = MAGICNUM;
 
-    memset(pool, 0, sizeof(mpBuf_t)*size);  // clear all buffers in pool
-    q->bf = pool;                           // link the buffer pool first
-    q->w = pool;                            // init all buffer pointers
-    q->r = pool;
+    memset(queue, 0, sizeof(mpBuf_t)*size); // clear all buffers in queue
+    q->bf = queue;                          // link the buffer pool first
+    q->w = queue;                           // init all buffer pointers
+    q->r = queue;
     q->queue_size = size;
     q->buffers_available = size;
     
@@ -173,10 +173,10 @@ void _init_planner_queue(mpPlanner_t *_mp, mpBuf_t *pool, uint8_t size)
         q->bf[i].pv = pv;
         pv = &q->bf[i];
     }
-    q->bf[size-1].nx = pool;
+    q->bf[size-1].nx = queue;
 }
 
-void planner_init(mpPlanner_t *_mp, mpPlannerRuntime_t *_mr, mpBuf_t *_pool, uint8_t _queue_size)
+void planner_init(mpPlanner_t *_mp, mpPlannerRuntime_t *_mr, mpBuf_t *queue, uint8_t queue_size)
 {
     mp = &mp1;                          // set global pointer to the primary planner
     mr = &mr1;                          // and primary runtime
@@ -188,8 +188,8 @@ void planner_init(mpPlanner_t *_mp, mpPlannerRuntime_t *_mr, mpBuf_t *_pool, uin
     _mp->mfo_factor = 1.00;
    
     // init planner queues
-    _mp->q.bf = _pool;                  // assign puffer pool to queue manager structure
-    _init_planner_queue(_mp, _pool, _queue_size);
+    _mp->q.bf = queue;                  // assign puffer pool to queue manager structure
+    _init_planner_queue(_mp, queue, queue_size);
  
     // init runtime structs
     _mp->mr = _mr;
@@ -207,22 +207,19 @@ void planner_reset(mpPlanner_t *_mp)
     planner_init(_mp, _mp->mr, _mp->q.bf, _mp->q.queue_size);  // reset parent planner and linked Q and MR
 }
 
-stat_t planner_test_assertions(mpPlanner_t *_mp)
+stat_t planner_test_assertions(const mpPlanner_t *_mp)
 {
     if (
         (BAD_MAGIC(_mp->magic_start))     || (BAD_MAGIC(_mp->magic_end)) ||
         (BAD_MAGIC(_mp->mr->magic_start)) || (BAD_MAGIC(_mp->mr->magic_end))
         ) {
-        return(cm_panic(STAT_PLANNER_ASSERTION_FAILURE, "planner_test_assertions()"));
+        return (cm_panic(STAT_PLANNER_ASSERTION_FAILURE, "planner_test_assertions()"));
     }
-//    for (uint8_t i=0; i < PLANNER_BUFFER_POOL_SIZE; i++) {
-//        if (mb.bf[i].nx == nullptr) {
-//            _debug_trap("buffer has nullptr for nx");
-//        }
-//        if (mb.bf[i].pv == nullptr) {
-//            _debug_trap("buffer has nullptr for pv");
-//        }
-//    }
+    for (uint8_t i=0; i < _mp->q.queue_size; i++) {
+        if ((_mp->q.bf[i].nx == nullptr) || (_mp->q.bf[i].pv == nullptr)) {
+            return (cm_panic(STAT_PLANNER_ASSERTION_FAILURE, "planner buffer is corrupted"));
+        }
+    }
     return (STAT_OK);
 }
 
@@ -245,9 +242,7 @@ void mp_halt_runtime()
  */
 void mp_flush_planner(mpPlanner_t *_mp)
 {
-    cm_abort_arc();
-//    mp_init_planner_buffers(_mp);     //+++++
-//    planner_init(_mp);                //+++++
+    cm_abort_arc(cm);
     planner_reset(_mp);
     mr->block_state = BLOCK_INACTIVE;   // invalidate mr buffer to prevent subsequent motion
 }
@@ -485,38 +480,19 @@ stat_t mp_exec_out_of_band_dwell(void)
  * mp_has_runnable_buffer()  - true if next buffer is runnable, indicating motion has not stopped.
  * mp_is_it_phat_city_time() - test if there is time for non-essential processes
  */
-/*
-uint8_t mp_get_planner_buffers(int8_t q) // which queue are you interested in?
-{
-    if (q == ACTIVE_Q) { q = mb.active_q; };
-    return (mb.q[q].buffers_available);
-}
 
-bool mp_planner_is_full(int8_t q)       // which queue are you interested in?
-{
-    if (q == ACTIVE_Q) { q = mb.active_q; };
-    return ((mb.q[q].buffers_available < PLANNER_BUFFER_HEADROOM) 
-            || (jc.available == 0));    // We also need to ensure we have room for another JSON command
-}
-
-bool mp_has_runnable_buffer(int8_t q)   // which queue are you interested in?)
-{
-    if (q == ACTIVE_Q) { q = mb.active_q; };
-    return (mb.q[q].r->buffer_state);    // anything other than MP_BUFFER_EMPTY returns true
-}
-*/
-uint8_t mp_get_planner_buffers(mpPlanner_t *_mp)  // which planner are you interested in?
+uint8_t mp_get_planner_buffers(const mpPlanner_t *_mp)  // which planner are you interested in?
 {
     return (_mp->q.buffers_available);
 }
 
-bool mp_planner_is_full(mpPlanner_t *_mp)         // which planner are you interested in?
+bool mp_planner_is_full(const mpPlanner_t *_mp)         // which planner are you interested in?
 {
     // We also need to ensure we have room for another JSON command
     return ((_mp->q.buffers_available < PLANNER_BUFFER_HEADROOM) || (jc.available == 0));
 }
 
-bool mp_has_runnable_buffer(mpPlanner_t *_mp)     // which planner are you interested in?)
+bool mp_has_runnable_buffer(const mpPlanner_t *_mp)     // which planner are you interested in?)
 {
     return (_mp->q.r->buffer_state);    // anything other than MP_BUFFER_EMPTY returns true
 }
@@ -566,7 +542,8 @@ bool mp_is_phat_city_time()
 stat_t mp_planner_callback()
 {
     // Test if the planner has transitioned to an IDLE state
-    if ((mp_get_planner_buffers(mp) == PLANNER_BUFFER_POOL_SIZE) &&   //+++++ // detect and set IDLE state
+//    if ((mp_get_planner_buffers(mp) == PLANNER_BUFFER_POOL_SIZE) &&   //+++++ // detect and set IDLE state
+    if ((mp_get_planner_buffers(mp) == mp->q.queue_size) &&   //+++++ // detect and set IDLE state
         (cm->motion_state == MOTION_STOP) &&
         (cm->hold_state == FEEDHOLD_OFF)) {
         mp->planner_state = PLANNER_IDLE;

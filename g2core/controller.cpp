@@ -2,8 +2,8 @@
  * controller.cpp - g2core controller and top level parser
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2016 Robert Giseburt
+ * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2017 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -161,7 +161,7 @@ static void _controller_HSM()
 
     DISPATCH(cm_feedhold_sequencing_callback());// feedhold state machine runner
     DISPATCH(mp_planner_callback());            // motion planner
-    DISPATCH(cm_arc_callback());                // arc generation runs as a cycle above lines
+    DISPATCH(cm_arc_callback(cm));              // arc generation runs as a cycle above lines
     DISPATCH(cm_homing_cycle_callback());       // homing cycle operation (G28.2)
     DISPATCH(cm_probing_cycle_callback());      // probing cycle operation (G38.2)
     DISPATCH(cm_jogging_cycle_callback());      // jog cycle operation
