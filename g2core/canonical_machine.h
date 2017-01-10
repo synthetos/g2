@@ -82,15 +82,15 @@ typedef enum {                  // check alignment with messages in config.c / m
 //### END CRITICAL REGION ###
 
 typedef enum {
-    MACHINE_INITIALIZING = 0,   // machine is initializing
-    MACHINE_READY,              // machine is ready for use
-    MACHINE_ALARM,              // machine in alarm state
-    MACHINE_PROGRAM_STOP,       // no blocks to run; like PROGRAM_END but without the M2 to reset gcode state
-    MACHINE_PROGRAM_END,        // program end (same as MACHINE_READY, really...)
-    MACHINE_CYCLE,              // machine is running; blocks still to run, or steppers are busy
-    MACHINE_INTERLOCK,          // machine in interlock state
-    MACHINE_SHUTDOWN,           // machine in shutdown state
-    MACHINE_PANIC               // machine in panic state
+    MACHINE_INITIALIZING = 0,   // [0] machine is initializing
+    MACHINE_READY,              // [1] machine is ready for use
+    MACHINE_ALARM,              // [2] machine in alarm state
+    MACHINE_PROGRAM_STOP,       // [3] no blocks to run; like PROGRAM_END but without the M2 to reset gcode state
+    MACHINE_PROGRAM_END,        // [4] program end (same as MACHINE_READY, really...)
+    MACHINE_CYCLE,              // [5] machine is running; blocks still to run, or steppers are busy
+    MACHINE_INTERLOCK,          // [6] machine in interlock state
+    MACHINE_SHUTDOWN,           // [7] machine in shutdown state
+    MACHINE_PANIC               // [8] machine in panic state
 } cmMachineState;
 
 typedef enum {

@@ -802,7 +802,7 @@ static void _set_hw_microsteps(const uint8_t motor, const uint8_t microsteps)
     if (motor >= MOTORS) {return;}
 
     Motors[motor]->setMicrosteps(microsteps);
-    }
+}
 
 
 /***********************************************************************************
