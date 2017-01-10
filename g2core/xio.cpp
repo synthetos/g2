@@ -169,6 +169,7 @@ struct xioDeviceWrapperBase {                // C++ base class for device primit
     virtual int16_t readchar() { return -1; };
     virtual void flush() {};
     virtual void flushRead() {};       // This should call _flushLine() before flushing the device.
+    virtual bool flushToCommand() { return false; };
     virtual int16_t write(const char *buffer, int16_t len) { return -1; };
 
     virtual char *readline(devflags_t limit_flags, uint16_t &size) { return nullptr; };
@@ -314,6 +315,21 @@ struct xio_t {
     }
 
     /*
+     * flushToCommand() - flush all readable devices' read buffers up to the last returned command
+     *
+     * Note that only one device will flush.
+     *
+     */
+    void flushToCommand()
+    {
+        for (int8_t i = 0; i < _dev_count; ++i) {
+            if (DeviceWrappers[i]->flushToCommand()) {
+                return; // we only care to flush the one that last returned a control.
+            }
+        }
+    }
+
+    /*
      * readline() - read a complete line from a device
      *
      *    Reads a line of text from the next active device that has one ready. With some exceptions.
@@ -428,6 +444,8 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
     uint16_t _lines_found;          // count of complete non-control lines that were found during scanning.
 
     volatile uint16_t _last_scan_offset;  // DEBUGGING
+
+    bool _last_returned_a_control = false;
 
     LineRXBuffer(owner_type owner) : parent_type{owner} {};
 
@@ -677,6 +695,8 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 
         _restartTransfer();
 
+        _last_returned_a_control = found_control;
+
         char *dst_ptr = _line_buffer;
         line_size = 0;
 
@@ -728,33 +748,34 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 
             if (ctrl_is_at_beginning_of_data) {
                 _read_offset = _scan_offset;
-            } else {
-                // special case: if the return value is '%'
-                // then we actually consider everything before it to be read
-
-                if ('%' == _line_buffer[0]) {
-                    // Things that must be managed here:
-                    // * _read_offset -- we're skipping data
-                    // * _lines_found -- we shouldn't have any lines "left"
-                    // * _skip_sections -- there's nothing to skip, we just did
-
-                    // Things that won't be changed (further):
-                    // * _scan_offset -- we're not changing past where it's scanned
-                    // * _line_start_offset -- we've already adjusted it
-                    // * _at_start_of_line -- should always be true when we're here
-
-                    // move the read buffer up to where we're scanning
-                    _read_offset = _scan_offset;
-
-                    // record that we have 0 lines (of data) in the buffer
-                    _lines_found = 0;
-
-                    // and clear out any skip sections we have
-                    while (!_skip_sections.is_empty()) {
-                        _skip_sections.pop_skip();
-                    }
-                }
             }
+//            else {
+//                // special case: if the return value is '%'
+//                // then we actually consider everything before it to be read
+//
+//                if ('%' == _line_buffer[0]) {
+//                    // Things that must be managed here:
+//                    // * _read_offset -- we're skipping data
+//                    // * _lines_found -- we shouldn't have any lines "left"
+//                    // * _skip_sections -- there's nothing to skip, we just did
+//
+//                    // Things that won't be changed (further):
+//                    // * _scan_offset -- we're not changing past where it's scanned
+//                    // * _line_start_offset -- we've already adjusted it
+//                    // * _at_start_of_line -- should always be true when we're here
+//
+//                    // move the read buffer up to where we're scanning
+//                    _read_offset = _scan_offset;
+//
+//                    // record that we have 0 lines (of data) in the buffer
+//                    _lines_found = 0;
+//
+//                    // and clear out any skip sections we have
+//                    while (!_skip_sections.is_empty()) {
+//                        _skip_sections.pop_skip();
+//                    }
+//                }
+//            }
 
 //            if (ctrl_is_at_beginning_of_data) {
 //                // attempt to request more data
@@ -830,6 +851,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
         return _line_buffer;
     }; // readline
 
+
     // this is called from flushRead()
     void flush() {
         parent_type::flush();
@@ -846,6 +868,41 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
         while (!_skip_sections.is_empty()) {
             _skip_sections.pop_skip();
         }
+    }; // flush
+
+    bool flushToCommand() {
+        if (!_last_returned_a_control) {
+            return false;
+        }
+
+        // Things that must be managed here:
+        // * _read_offset -- we're skipping data
+        // * _lines_found -- we shouldn't have any lines "left"
+        // * _skip_sections -- there's nothing to skip, we just did
+
+        // Things that won't be changed (further):
+        // * _scan_offset -- we're not changing past where it's scanned
+        // * _line_start_offset -- we've already adjusted it
+        // * _at_start_of_line -- should always be true when we're here
+
+        // Note that we DO NOT call parent::flush() here. That will toss data
+        // we haven't scanned yet, beyond where we got the command we want to
+        // flush to.
+
+        // move the read buffer up to where we ended scanning
+        _read_offset = _scan_offset;
+
+        // record that we have 0 lines (of data) in the buffer
+        _lines_found = 0;
+
+        // and clear out any skip sections we have
+        while (!_skip_sections.is_empty()) {
+            _skip_sections.pop_skip();
+        }
+
+        _last_returned_a_control = false;
+
+        return true;
     }; // flush
 
 }; // LineRXBuffer
@@ -893,11 +950,19 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
         return _dev->flush();
     }
 
-    virtual void flushRead() final {
+    void flushRead() final {
         // Flush out any partially or wholly read lines being stored:
         _rx_buffer.flush();
         _flushLine();
         return _dev->flushRead();
+    }
+
+    void _flushLine() {
+        // TODO: Call to flush the RX buffer line structures
+    };
+
+    bool flushToCommand() final {
+        return _rx_buffer.flushToCommand();
     }
 
     virtual int16_t write(const char *buffer, int16_t len) final {
@@ -914,10 +979,6 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
 
         size = 0;
         return NULL;
-    };
-
-    void _flushLine() {
-        // TODO: Call to flush the RX buffer line structures
     };
 
     void connectedStateChanged(bool connected) {
@@ -1203,15 +1264,30 @@ int16_t xio_writeline(const char *buffer, bool only_to_muted /*= false*/)
     return xio.writeline(buffer, only_to_muted);
 }
 
+/*
+ * write() - return true of the device is currently "connected" (there's a fair bit of interpretation)
+ */
+
 bool xio_connected()
 {
     return xio.connected();
 }
 
+/*
+ * xio_send_file() - send the contents of a xio_flash_file - returns false if there's already one sending
+ */
+
 bool xio_send_file(xio_flash_file &file) {
     return flashFileWrapper.sendFile(file);
 }
 
+/*
+ * xio_flush_to_command() - clear the last read channel up until the command that was read
+ */
+
+void xio_flush_to_command() {
+    return xio.flushToCommand();
+}
 
 /***********************************************************************************
  * newlib-nano support functions

@@ -823,6 +823,7 @@ void cm_clear()
 {
     if (cm.machine_state == MACHINE_ALARM) {
         cm.machine_state = MACHINE_PROGRAM_STOP;
+        xio_flush_to_command();
     } else if (cm.machine_state == MACHINE_SHUTDOWN) {
         cm.machine_state = MACHINE_READY;
     }
