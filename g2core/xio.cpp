@@ -33,7 +33,6 @@
 #include "g2core.h"
 #include "config.h"
 #include "hardware.h"
-#include "canonical_machine.h"  // needs cm_has_hold()
 #include "xio.h"
 #include "report.h"
 #include "controller.h"
@@ -851,6 +850,20 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 
 }; // LineRXBuffer
 
+/* xioDeviceWrapper<typename Device>
+ * Implements a xioDeviceWrapperBase around a Device. The Device must implement:
+ *   For RXBuffer:
+ *     const base_type* getRXTransferPosition()
+ *     void setRXTransferDoneCallback(std::function<void()> &&callback)
+ *     bool startRXTransfer(char *&buffer, uint16_t length)
+ *   For TXBuffer:
+ *     const base_type* getTXTransferPosition()
+ *     void setTXTransferDoneCallback(std::function<void()> &&callback)
+ *     bool startTXTransfer(char *&buffer, uint16_t length)
+ *   For xioDeviceWrapper:
+ *     void setConnectionCallback(std::function<void(bool)> &&callback)
+ */
+
 template<typename Device>
 struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for reading and writing
     Device _dev;
@@ -873,14 +886,6 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
 
         _rx_buffer.init();
         _tx_buffer.init();
-    };
-
-    virtual int16_t readchar() final {
-        if (!isConnected()) {
-            return -1;
-        }
-        return _rx_buffer.read();
-//        return _dev->readByte();                    // readByte calls the USB endpoint's read function
     };
 
     void flush() final {
@@ -916,112 +921,182 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
     };
 
     void connectedStateChanged(bool connected) {
-            if (connected) {
-                if (isNotConnected()) {
-                    // USB0 or UART has just connected
-                    // If one of the devices isAlwaysDataAndCtrl():
-                    //    We treat *it* as if it's the only device connected.
-                    //    We treat *the other devices* as if it's NOT connected.
-                    // Case 1: This is the first channel to connect -
-                    //   set it as CTRL+DATA+PRIMARY channel
-                    //     mark all isMutedAsSecondary() as MUTED, and call controller_set_muted(true) if needed
-                    // Case 2: This is the second (or later) channel to connect -
-                    // Case 2a: This device is !isMuteAsSecondary()
-                    //     set it as DATA channel, remove DATA flag from PRIMARY channel
-                    //     mark all isMutedAsSecondary() as MUTED, and call controller_set_muted(true) if needed
-                    //     ... inactive channels are counted as closed
-                    // Case 2b: This devices isMuteAsSecondary(), and needs to be "muted."
-                    //     set it as a MUTED channel, call controller_set_connected(true)
-                    //       then controller_set_muted(true)
+        if (connected) {
+            if (isNotConnected()) {
+                // USB0 or UART has just connected
+                // If one of the devices isAlwaysDataAndCtrl():
+                //    We treat *it* as if it's the only device connected.
+                //    We treat *the other devices* as if it's NOT connected.
+                // Case 1: This is the first channel to connect -
+                //   set it as CTRL+DATA+PRIMARY channel
+                //     mark all isMutedAsSecondary() as MUTED, and call controller_set_muted(true) if needed
+                // Case 2: This is the second (or later) channel to connect -
+                // Case 2a: This device is !isMuteAsSecondary()
+                //     set it as DATA channel, remove DATA flag from PRIMARY channel
+                //     mark all isMutedAsSecondary() as MUTED, and call controller_set_muted(true) if needed
+                //     ... inactive channels are counted as closed
+                // Case 2b: This devices isMuteAsSecondary(), and needs to be "muted."
+                //     set it as a MUTED channel, call controller_set_connected(true)
+                //       then controller_set_muted(true)
 
 
-                    setAsConnectedAndReady();
+                setAsConnectedAndReady();
 
-                    if (isAlwaysDataAndCtrl()) {
-                        // Case 1 (ignoring others)
-                        setActive();
-                        controller_set_connected(true);
+                if (isAlwaysDataAndCtrl()) {
+                    // Case 1 (ignoring others)
+                    setActive();
+                    controller_set_connected(true);
 
-                        // Case 2b (not ignoring others)
-                        if (isMuteAsSecondary() && xio.others_connected(this)) {
-                            controller_set_muted(true); // something was muted
-                        }
-
-                        return;
+                    // Case 2b (not ignoring others)
+                    if (isMuteAsSecondary() && xio.others_connected(this)) {
+                        controller_set_muted(true); // something was muted
                     }
 
-                    if(!xio.others_connected(this)) {
-                        // Case 1
-                        setAsPrimaryActiveDualRole();
-                        // report that there is now have a connection (only for the first one)
-                        controller_set_connected(true);
-                        // make sure secondary channels (that don't show up in isConnected) are muted
-                        if (xio.check_muted_secondary_channels()) {
-                            controller_set_muted(true); // something was muted
-                        }
-                    }
-                    else if (isMuteAsSecondary()) {
-                        // Case 2b
-                        setAsMuted();
-                        controller_set_connected(true); // it DID just just get connected
-                        controller_set_muted(true);     // but it muted it too
-                    }
-                    else {
-                        // Case 2a
-                        xio.remove_data_from_primary();
-                        if (xio.check_muted_secondary_channels()) {
-                            controller_set_muted(true); // something was muted
-                        }
-                        setAsActiveData();
-                    }
-                } // flags & DEV_IS_DISCONNECTED
+                    return;
+                }
 
-            } else { // disconnected
-                if (isConnected()) {
-
-                    //USB0 has just disconnected
-                    //Case 1: This channel disconnected while it was a ctrl+data channel (and no other channels are open) -
-                    //  finalize this channel, unmute muted channels
-                    //Case 2: This channel disconnected while it was a primary ctrl channel (and other channels are open) -
-                    //  finalize this channel, unmute muted channels, deactivate other channels
-                    //Case 3: This channel disconnected while it was a non-primary ctrl channel (and other channels are open) -
-                    //  finalize this channel, leave other channels alone
-                    //Case 4: This channel disconnected while it was a data channel (and other channels are open, including a primary)
-                    //  finalize this channel, set primary channel as a CTRL+DATA channel if this was the last data channel
-                    //Case 5a: This channel disconnected while it was inactive
-                    //Case 5b: This channel disconnected when it's always present
-                    //  don't need to do anything!
-                    //... inactive channels are counted as closed
-
-                    devflags_t oldflags = flags;
-                    clearFlags();
-                    flush();
-                    flushRead();
-
-                    if (checkForNotActive(oldflags) || isAlwaysDataAndCtrl()) {
-                        // Case 5a, 5b
-                    } else if (checkForCtrlAndData(oldflags) || !xio.others_connected(this)) {
-                        // Case 1
-                        if (xio.deactivate_and_unmute_channels()) {
-                            controller_set_muted(false);  // something was unmuted
-                        } else {
-                            controller_set_connected(false);
-                        }
-                    } else if (checkForCtrlAndPrimary(oldflags)) {
-                        // Case 2
-                        if (xio.deactivate_and_unmute_channels()) {
-                            controller_set_muted(false);  // something was unmuted
-                        }
-                    } else if (checkForCtrl(oldflags)) {
-                        // Case 3
-                    } else if (checkForData(oldflags)) {
-                        // Case 4
-                        xio.remove_data_from_primary();
+                if(!xio.others_connected(this)) {
+                    // Case 1
+                    setAsPrimaryActiveDualRole();
+                    // report that there is now have a connection (only for the first one)
+                    controller_set_connected(true);
+                    // make sure secondary channels (that don't show up in isConnected) are muted
+                    if (xio.check_muted_secondary_channels()) {
+                        controller_set_muted(true); // something was muted
                     }
-                } // flags & DEV_IS_CONNECTED
-            }
+                }
+                else if (isMuteAsSecondary()) {
+                    // Case 2b
+                    setAsMuted();
+                    controller_set_connected(true); // it DID just just get connected
+                    controller_set_muted(true);     // but it muted it too
+                }
+                else {
+                    // Case 2a
+                    xio.remove_data_from_primary();
+                    if (xio.check_muted_secondary_channels()) {
+                        controller_set_muted(true); // something was muted
+                    }
+                    setAsActiveData();
+                }
+            } // flags & DEV_IS_DISCONNECTED
+
+        } else { // disconnected
+            if (isConnected()) {
+
+                //USB0 has just disconnected
+                //Case 1: This channel disconnected while it was a ctrl+data channel (and no other channels are open) -
+                //  finalize this channel, unmute muted channels
+                //Case 2: This channel disconnected while it was a primary ctrl channel (and other channels are open) -
+                //  finalize this channel, unmute muted channels, deactivate other channels
+                //Case 3: This channel disconnected while it was a non-primary ctrl channel (and other channels are open) -
+                //  finalize this channel, leave other channels alone
+                //Case 4: This channel disconnected while it was a data channel (and other channels are open, including a primary)
+                //  finalize this channel, set primary channel as a CTRL+DATA channel if this was the last data channel
+                //Case 5a: This channel disconnected while it was inactive
+                //Case 5b: This channel disconnected when it's always present
+                //  don't need to do anything!
+                //... inactive channels are counted as closed
+
+                devflags_t oldflags = flags;
+                clearFlags();
+                flush();
+                flushRead();
+
+                if (checkForNotActive(oldflags) || isAlwaysDataAndCtrl()) {
+                    // Case 5a, 5b
+                } else if (checkForCtrlAndData(oldflags) || !xio.others_connected(this)) {
+                    // Case 1
+                    if (xio.deactivate_and_unmute_channels()) {
+                        controller_set_muted(false);  // something was unmuted
+                    } else {
+                        controller_set_connected(false);
+                    }
+                } else if (checkForCtrlAndPrimary(oldflags)) {
+                    // Case 2
+                    if (xio.deactivate_and_unmute_channels()) {
+                        controller_set_muted(false);  // something was unmuted
+                    }
+                } else if (checkForCtrl(oldflags)) {
+                    // Case 3
+                } else if (checkForData(oldflags)) {
+                    // Case 4
+                    xio.remove_data_from_primary();
+                }
+            } // flags & DEV_IS_CONNECTED
+        }
     };
 };
+
+
+// Specialization for xio_flash_file -- we don't need most of the structure around a Device for xio_flash_file
+template<uint16_t _line_buffer_size = 255>
+struct xioFlashFileDeviceWrapper : xioDeviceWrapperBase {    // describes a device for reading and writing
+    xio_flash_file *_current_file = nullptr;
+
+    char _line_buffer[_line_buffer_size]; // hold exactly one line to return -- flash files are read-only, so we copy it
+
+    xioFlashFileDeviceWrapper() : xioDeviceWrapperBase(DEV_CAN_READ | DEV_IS_ALWAYS_BOTH)
+    {
+    };
+
+    bool sendFile(xio_flash_file &new_file) {
+        if (nullptr != _current_file) {
+            return false; // we're still sending a file
+        }
+
+        _current_file = &new_file;
+        _current_file->reset();
+        setActive();
+        return true;
+    }
+
+    void init() {
+    };
+
+    void flush() final {
+        // nothing to do
+    }
+
+    void flushRead() final {
+        // to flush the file, just forget about it
+        // next time it's used it'll get reset
+        _current_file = nullptr;
+    }
+
+    int16_t write(const char *buffer, int16_t len) final {
+        return -1;
+    }
+
+    char *readline(devflags_t limit_flags, uint16_t &line_size) final {
+        if (nullptr == _current_file) {
+            line_size = 0;
+            return nullptr;
+        }
+
+        const char *from = _current_file->readline(!(limit_flags & DEV_IS_DATA), line_size);
+        if ((nullptr == from) && (_current_file->isDone())) {
+            // all done sending this file, "close" it
+            _current_file = nullptr;
+            clearActive();
+            return nullptr;
+        }
+        char *dst_ptr = _line_buffer;
+
+        uint16_t count = std::min(line_size, uint16_t(_line_buffer_size - 2));
+
+        while (count--) {
+            *dst_ptr++ = *from++;
+        }
+
+        // null-terminate the string
+        *dst_ptr = 0;
+
+        return _line_buffer;
+    };
+};
+
+xioFlashFileDeviceWrapper<> flashFileWrapper {};
 
 // ALLOCATIONS
 // Declare a device wrapper class for SerialUSB and SerialUSB1
@@ -1052,6 +1127,7 @@ xioDeviceWrapper<decltype(&Serial)> serial0Wrapper {
 // Define the xio singleton (and initialize it to hold our two deviceWrappers)
 //xio_t xio = { &serialUSB0Wrapper, &serialUSB1Wrapper };
 xio_t xio = {
+    &flashFileWrapper,
 #if XIO_HAS_USB == 1
     &serialUSB0Wrapper,
 #if USB_SERIAL_PORTS_EXPOSED == 2
@@ -1071,7 +1147,7 @@ xio_t xio = {
  *  A lambda function closure is provided for trapping connection state changes from USB devices.
  *  The function is installed as a callback from the lower USB layers. It is called only on edges
  *  (connect/disconnect transitions). 'Connected' is true if the USB channel has just connected,
- *  false if it has just disconnected. It is only called on an edge � when it changes - so you
+ *  false if it has just disconnected. It is only called on an edge when it changes - so you
  *  shouldn't see two back-to-back connected=true calls with the same callback.
  *
  *  See here for some good info on lambda functions in C++
@@ -1130,6 +1206,10 @@ int16_t xio_writeline(const char *buffer, bool only_to_muted /*= false*/)
 bool xio_connected()
 {
     return xio.connected();
+}
+
+bool xio_send_file(xio_flash_file &file) {
+    return flashFileWrapper.sendFile(file);
 }
 
 
