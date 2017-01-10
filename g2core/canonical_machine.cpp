@@ -39,7 +39,7 @@
  *
  *  There are 3 temporal contexts for system state:
  *      - The gcode model in the canonical machine (the MODEL context, held in gm)
- *      - The gcode model used by the planner (PLANNER context, held in bf's and mm)
+ *      - The gcode model used by the planner (PLANNER context, held in bf's and mp)
  *      - The gcode model used during motion for reporting (RUNTIME context, held in mr)
  *
  *  It's a bit more complicated than this. The 'gm' struct contains the core Gcode model
@@ -141,7 +141,7 @@ static int8_t _axis(const index_t index);
  * canonical_machine_reset_rotation()
  */
 
-void canonical_machine_init(cmMachine_t *_cm)
+void canonical_machine_init(cmMachine_t *_cm, void *_mp)
 {
     // Note cm* was assignd in main()
     // If you can assume all memory has been zeroed by a hard reset you don't need this code:
@@ -149,11 +149,12 @@ void canonical_machine_init(cmMachine_t *_cm)
     memset(&_cm->gm, 0, sizeof(GCodeState_t));      // clear all values, pointers and status
 
     canonical_machine_init_assertions(_cm);         // establish assertions
+    cm_arc_init(_cm);                               // setup arcs. Note: spindle and coolant inits are independent
+    _cm->mp = _mp;                                  // point to associated planner
     ACTIVE_MODEL = MODEL;                           // setup initial Gcode model pointer
-    cm_arc_init(_cm);                               // Note: spindle and coolant inits are independent
 }
 
-// Note: run canonical_machine_init and profile initializations beforehand
+// *** Note: Run canonical_machine_init and profile initializations beforehand ***
 void canonical_machine_reset(cmMachine_t *_cm)
 {
     // reset canonical machine assertions
@@ -200,6 +201,9 @@ void canonical_machine_reset_rotation(cmMachine_t *_cm) {
     _cm->rotation_matrix[0][0] = 1.0;
     _cm->rotation_matrix[1][1] = 1.0;
     _cm->rotation_matrix[2][2] = 1.0;
+
+    // Separately handle a z-offset so that the new plane maintains a consistent 
+    // distance from the old one. We only need z, since we are rotating to the z axis.
     _cm->rotation_z_offset = 0.0;
 }
 
@@ -582,7 +586,7 @@ stat_t cm_set_tram(nvObj_t *nv)
 
         // if passed false/0, we will clear the rotation matrix
         if (!do_set) {
-            canonical_machine_reset_rotation(cm);   //++++++ cleanup on aisle 5
+            canonical_machine_reset_rotation(cm);   //++++++
             return (STAT_OK);
         }
 
@@ -906,7 +910,7 @@ void cm_halt_all(void)
 void cm_halt_motion(void)
 {
     mp_halt_runtime();                  // stop the runtime. Do this immediately. (Reset is in cm_clear)
-    canonical_machine_reset(cm);    //++++++        // reset Gcode model
+    canonical_machine_reset(cm);        // halt the currently active machine
     cm->cycle_state = CYCLE_OFF;        // Note: leaves machine_state alone
     cm->motion_state = MOTION_STOP;
     cm->hold_state = FEEDHOLD_OFF;
@@ -1354,7 +1358,7 @@ stat_t cm_straight_traverse(const float target[], const bool flags[])
     cm_cycle_start();                               // required for homing & other cycles
     stat_t status = mp_aline(&cm->gm);              // send the move to the planner
     cm_finalize_move();
-    if (status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer(mp)) {    //+++++
+    if (status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer(mp)) { //applies to currently active machine
         cm_cycle_end();
         return (STAT_OK);
     }
@@ -1374,7 +1378,7 @@ stat_t _goto_stored_position(const float stored_position[],     // always in mm
                              const bool flags[])                // all false if no intermediate move
 {
     // Go through intermediate point if one is provided
-    while (mp_planner_is_full(mp));  //+++++                     // Make sure you have available buffers
+    while (mp_planner_is_full(mp));                             // Make sure you have available buffers
     ritorno(cm_straight_traverse(intermediate_target, flags));  // w/no action if no axis flags
 
     // If G20 adjust stored position (always in mm) to inches so traverse will be correct
@@ -1387,7 +1391,7 @@ stat_t _goto_stored_position(const float stored_position[],     // always in mm
     }
     
     // Run the stored position move
-    while (mp_planner_is_full(mp));   //+++++                // Make sure you have available buffers
+    while (mp_planner_is_full(mp));                         // Make sure you have available buffers
 
     uint8_t saved_distance_mode = cm_get_distance_mode(MODEL);
     cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_ON);  // Position was stored in absolute coords
@@ -1512,7 +1516,7 @@ stat_t cm_straight_feed(const float target[], const bool flags[])
 
     cm_finalize_move(); // <-- ONLY safe because we don't care about status...
 
-    if (status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer(mp)) {    //+++++
+    if (status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer(mp)) {
         cm_cycle_end();
         return (STAT_OK);
     }

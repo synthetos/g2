@@ -111,8 +111,8 @@ void application_init_machine(void)
     
     planner_init(&mp1, &mr1, mp1_queue, PLANNER_QUEUE_SIZE);
     planner_init(&mp2, &mr2, mp2_queue, SECONDARY_QUEUE_SIZE);
-    canonical_machine_init(&cm1);       // primary canonical machine
-    canonical_machine_init(&cm2);       // secondary canonical machine
+    canonical_machine_init(&cm1, &mp1); // primary canonical machine
+    canonical_machine_init(&cm2, &mp2); // secondary canonical machine
 }
 
 void application_init_startup(void)

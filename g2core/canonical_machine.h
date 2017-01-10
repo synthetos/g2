@@ -176,36 +176,36 @@ typedef struct cmAxis {
     float zero_backoff;                     // backoff from switches for machine zero
 } cfgAxis_t;
 
-typedef struct arArcSingleton {                 // persistent planner and runtime variables
+typedef struct cmArc {                      // planner and runtime variables for arc generation
     magic_t magic_start;
-    uint8_t run_state;              // runtime state machine sequence
+    uint8_t run_state;                      // runtime state machine sequence
 
-    float position[AXES];           // accumulating runtime position
-    float offset[3];                // arc IJK offsets
+    float position[AXES];                   // accumulating runtime position
+    float offset[3];                        // arc IJK offsets
 
-    float length;                   // length of line or helix in mm
-    float radius;                   // Raw R value, or computed via offsets
-    float theta;                    // starting angle of arc
-    float angular_travel;           // travel along the arc in radians
-    float planar_travel;            // travel in arc plane in mm
-    float linear_travel;            // travel along linear axis of arc in mm
-    bool  full_circle;              // True if full circle arcs specified
-    float rotations;                // number of full rotations to add (P value + sign)
+    float length;                           // length of line or helix in mm
+    float radius;                           // Raw R value, or computed via offsets
+    float theta;                            // starting angle of arc
+    float angular_travel;                   // travel along the arc in radians
+    float planar_travel;                    // travel in arc plane in mm
+    float linear_travel;                    // travel along linear axis of arc in mm
+    bool  full_circle;                      // True if full circle arcs specified
+    float rotations;                        // number of full rotations to add (P value + sign)
 
-    cmAxes plane_axis_0;            // arc plane axis 0 - e.g. X for G17
-    cmAxes plane_axis_1;            // arc plane axis 1 - e.g. Y for G17
-    cmAxes linear_axis;             // linear axis (normal to plane)
+    cmAxes plane_axis_0;                    // arc plane axis 0 - e.g. X for G17
+    cmAxes plane_axis_1;                    // arc plane axis 1 - e.g. Y for G17
+    cmAxes linear_axis;                     // linear axis (normal to plane)
 
-    float   segments;               // number of segments in arc or blend
-    int32_t segment_count;          // count of running segments
-    float   segment_theta;          // angular motion per segment
-    float   segment_linear_travel;  // linear motion per segment
-    float   center_0;               // center of circle at plane axis 0 (e.g. X for G17)
-    float   center_1;               // center of circle at plane axis 1 (e.g. Y for G17)
+    float   segments;                       // number of segments in arc or blend
+    int32_t segment_count;                  // count of running segments
+    float   segment_theta;                  // angular motion per segment
+    float   segment_linear_travel;          // linear motion per segment
+    float   center_0;                       // center of circle at plane axis 0 (e.g. X for G17)
+    float   center_1;                       // center of circle at plane axis 1 (e.g. Y for G17)
 
-    GCodeState_t gm;                // Gcode state struct is passed for each arc segment.
+    GCodeState_t gm;                        // Gcode state struct is passed for each arc segment.
     magic_t magic_end;
-} arc_t;
+} cmArc_t;
 
 typedef struct cmMachine {                  // struct to manage canonical machine globals and state
     magic_t magic_start;                    // magic number to test memory integrity
@@ -229,6 +229,8 @@ typedef struct cmMachine {                  // struct to manage canonical machin
   /**** Runtime variables (PRIVATE) ****/
 
     // Global state variables and requestors
+
+    void *mp;                               // linked mpPlanner_t - use a void pointer to avoid circular header files
 
     cmMachineState machine_state;           // macs: machine/cycle/motion is the actual machine state
     cmCycleState cycle_state;               // cycs
@@ -256,14 +258,11 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     float probe_results[PROBES_STORED][AXES];   // probing results
 
     float rotation_matrix[3][3];            // three-by-three rotation matrix. We ignore rotary axes.
-    float rotation_z_offset;                // separately handle a z-offset, so that the new plane
-                                            // maintains a consistent distance from the old one.
-                                            // We only need z, since we are rotating to the z axis.
-
+    float rotation_z_offset;                // separately handle a z-offset to maintain consistent distance to bed
     float jogging_dest;                     // jogging destination as a relative move from current position
 
   /**** Model state structures ****/
-    arc_t arc;                              // arc parameters
+    cmArc_t arc;                            // arc parameters
     GCodeState_t *am;                       // active Gcode model is maintained by state management
     GCodeState_t  gm;                       // core gcode model state
     GCodeStateX_t gmx;                      // extended gcode model state
@@ -340,7 +339,7 @@ stat_t cm_test_soft_limits(const float target[]);
 /*--- Canonical machining functions (loosely) defined by NIST [organized by NIST Gcode doc] ---*/
 
 // Initialization and termination (4.3.2)
-void canonical_machine_init(cmMachine_t *_cm);
+void canonical_machine_init(cmMachine_t *_cm, void *_mp);
 void canonical_machine_reset_rotation(cmMachine_t *_cm);        // NOT in NIST
 void canonical_machine_reset(cmMachine_t *_cm);
 void canonical_machine_init_assertions(cmMachine_t *_cm);

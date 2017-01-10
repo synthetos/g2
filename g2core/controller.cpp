@@ -410,12 +410,11 @@ static stat_t _shutdown_handler(void)
 static stat_t _limit_switch_handler(void)
 {
     auto machine_state = cm_get_machine_state();
-    if ((machine_state != MACHINE_ALARM) && (machine_state != MACHINE_PANIC) && (machine_state != MACHINE_SHUTDOWN)) {
+    if ((machine_state != MACHINE_ALARM) && 
+        (machine_state != MACHINE_PANIC) && 
+        (machine_state != MACHINE_SHUTDOWN)) {
         safe_pin.toggle();
     }
-
-//    safe_pin = 1;
-
     if ((cm->limit_enable == true) && (cm->limit_requested != 0)) {
         char msg[10];
         sprintf(msg, "input %d", (int)cm->limit_requested);
@@ -475,10 +474,10 @@ stat_t _test_system_assertions()
     // these functions will panic if an assertion fails
     _test_assertions();                     // controller assertions (local)
     config_test_assertions();
-    canonical_machine_test_assertions(&cm1);    // +++++ cleanup later
-//    canonical_machine_test_assertions(&cm2);    // +++++ cleanup later
-    planner_test_assertions(&mp1);              // +++++ cleanup later
-//    planner_test_assertions(&mp2);              // +++++ cleanup later
+    canonical_machine_test_assertions(&cm1);
+    canonical_machine_test_assertions(&cm2);
+    planner_test_assertions(&mp1);
+    planner_test_assertions(&mp2);
     stepper_test_assertions();
     encoder_test_assertions();
     xio_test_assertions();
