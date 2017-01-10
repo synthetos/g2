@@ -65,18 +65,17 @@
 #include "xio.h"    //+++++ DIAGNOSTIC - only needed if xio_writeline() direct prints are used
 
 // Allocate planner structures
-//mpPlannerQueue_t mb;                           // buffer pool management
-mpPlanner_t *mp;                            // currently active planner (global variable)
-mpPlanner_t mp0;                            // primary planning context
-mpPlanner_t mp1;                            // secondary planning context
+
+mpPlanner_t *mp;            // currently active planner (global variable)
+mpPlanner_t mp0;            // primary planning context
+mpPlanner_t mp1;            // secondary planning context
+
+mpPlannerRuntime_t *mr;     // context for planner block runtime
+mpPlannerRuntime_t mr0;     // runtime context for primary planner
+mpPlannerRuntime_t mr1;     // runtime context for secondary planner
+
 mpBuf_t mp0_pool[PLANNER_BUFFER_POOL_SIZE];     // storage allocation for primary planner queue buffers
 mpBuf_t mp1_pool[SECONDARY_BUFFER_POOL_SIZE];   // storage allocation for secondary planner queue buffers
-
-//mpMotionPlannerHead_t *mp;          // pointer to motion planner
-//mpMotionPlannerHead_t mp0;          // primary motion planner
-//mpMotionPlannerHead_t mp1;          // secondary motion planner
-mpMotionRuntimeSingleton_t mr;      // context for block runtime
-
 
 #define JSON_COMMAND_BUFFER_SIZE 3
 
@@ -152,7 +151,6 @@ void _init_planner_queue(mpPlanner_t *mpl, mpBuf_t *pool, uint8_t size)
 {
     mpBuf_t *pv, *nx;
     uint8_t i, nx_i;
-//    mpQueue_t *b = &mb.q[q];
     mpPlannerQueue_t *q = &(mpl->q);
 
     memset(q, 0, sizeof(mpPlannerQueue_t)); // clear values, pointers and status
@@ -178,58 +176,46 @@ void _init_planner_queue(mpPlanner_t *mpl, mpBuf_t *pool, uint8_t size)
     q->bf[size-1].nx = pool;
 }
 
-void planner_init(mpPlanner_t *mpl)
+void planner_init(mpPlanner_t *mpl, mpBuf_t *pool, mpPlannerRuntime_t *mrl)
 {
-// If you know all memory has been zeroed by a hard reset you don't need these next 2 lines
-    memset(&mp, 0, sizeof(mp));     // clear all values, pointers and status
-//    memset(&mr, 0, sizeof(mr));     // clear all values, pointers and status
+    mp = &mp0;                          // set global pointer to the primary planner
+    mr = &mr0;                          // and primary runtime
 
-    mp = &mp0;                      // install the primary planner
-    _init_planner_queue(mp, mp0_pool, PLANNER_BUFFER_POOL_SIZE);
-
-    planner_init_assertions(mpl);
-    
+    // init planner master structure
+    memset(mpl, 0, sizeof(mpPlanner_t));// clear all values, pointers and status    
+    mpl->magic_start = MAGICNUM;        // set boundary condition assertions
+    mpl->magic_end = MAGICNUM;
     mpl->mfo_factor = 1.00;
-    
-//    mr.bf[0].nx = &mr.bf[1];        // Handle the two "stub blocks" in the runtime structure.
-//    mr.bf[1].nx = &mr.bf[0];
-//    mr.r = &mr.bf[0];
-//    mr.p = &mr.bf[1];
+   
+    // init planner queues
+    mpl->q.bf = pool;                   // assign puffer pool to queue manager structure
+    _init_planner_queue(mpl, pool, PLANNER_BUFFER_POOL_SIZE);
+ 
+    // init runtime structs
+    mpl->mr = mrl;
+    memset(mrl, 0, sizeof(mpPlannerRuntime_t));    // clear all values, pointers and status
+    mrl->bf[0].nx = &mrl->bf[1];        // Handle the two "stub blocks" in the runtime structure.
+    mrl->bf[1].nx = &mrl->bf[0];
+    mrl->r = &mrl->bf[0];
+    mrl->p = &mrl->bf[1];
+    mpl->mr->magic_start = MAGICNUM;    // assertions
+    mpl->mr->magic_end = MAGICNUM;
 }
 
 void planner_reset(mpPlanner_t *mpl)
 {
-    planner_init(mpl);
-}
-
-void runtime_init() {
-    memset(&mr, 0, sizeof(mr));     // clear all values, pointers and status
-
-    mr.bf[0].nx = &mr.bf[1];        // Handle the two "stub blocks" in the runtime structure.
-    mr.bf[1].nx = &mr.bf[0];
-    mr.r = &mr.bf[0];
-    mr.p = &mr.bf[1];
+    planner_init(mpl, mpl->q.bf, mpl->mr);  // reset parent planner and linked Q and MR
 }
 
 /*
- * planner_init_assertions()
  * planner_test_assertions() - test assertions, PANIC if violation exists
  */
-
-void planner_init_assertions(mpPlanner_t *mpl)
-{
-    // Note: mb magic numbers set up by mp_init_buffers()
-    mpl->magic_start = MAGICNUM;
-    mpl->magic_end = MAGICNUM;
-    mr.magic_start = MAGICNUM;
-    mr.magic_end = MAGICNUM;
-}
 
 stat_t planner_test_assertions(mpPlanner_t *mpl)
 {
     if (
-        (BAD_MAGIC(mpl->magic_start)) || (BAD_MAGIC(mpl->magic_end)) ||
-        (BAD_MAGIC(mr.magic_start)) || (BAD_MAGIC(mr.magic_end))
+        (BAD_MAGIC(mpl->magic_start))     || (BAD_MAGIC(mpl->magic_end)) ||
+        (BAD_MAGIC(mpl->mr->magic_start)) || (BAD_MAGIC(mpl->mr->magic_end))
         ) {
         return(cm_panic(STAT_PLANNER_ASSERTION_FAILURE, "planner_test_assertions()"));
     }
@@ -256,7 +242,7 @@ void mp_halt_runtime()
 /*
  * mp_flush_planner() - flush all moves in the planner and all arcs
  *
- *    Does not affect the move currently running in mr.
+ *    Does not affect the move currently running in mr->
  *    Does not affect mm or gm model positions
  *    This function is designed to be called during a hold to reset the planner
  *    This function should not generally be called; call cm_queue_flush() instead
@@ -265,8 +251,9 @@ void mp_flush_planner(mpPlanner_t *mpl)
 {
     cm_abort_arc();
 //    mp_init_planner_buffers(mpl);     //+++++
-    planner_init(mpl);
-    mr.block_state = BLOCK_INACTIVE;   // invalidate mr buffer to prevent subsequent motion
+//    planner_init(mpl);                //+++++
+    planner_reset(mpl);
+    mr->block_state = BLOCK_INACTIVE;   // invalidate mr buffer to prevent subsequent motion
 }
 
 /*
@@ -282,9 +269,9 @@ void mp_flush_planner(mpPlanner_t *mpl)
  *  Keeping track of position is complicated by the fact that moves exist in several reference
  *  frames. The scheme to keep this straight is:
  *
- *     - mm.position    - start and end position for planning
- *     - mr.position    - current position of runtime segment
- *     - mr.target    - target position of runtime segment
+ *     - mp->position - start and end position for planning
+ *     - mr->position - current position of runtime segment
+ *     - mr->target   - target position of runtime segment
  *
  *  The runtime keeps a lot more data, such as waypoints, step vectors, etc.
  *  See struct mpMoveRuntimeSingleton for details.
@@ -295,21 +282,21 @@ void mp_flush_planner(mpPlanner_t *mpl)
  */
 
 void mp_set_planner_position(uint8_t axis, const float position) { mp->position[axis] = position; } //+++++
-void mp_set_runtime_position(uint8_t axis, const float position) { mr.position[axis] = position; }
+void mp_set_runtime_position(uint8_t axis, const float position) { mr->position[axis] = position; }
 
 void mp_set_steps_to_runtime_position()
 {
     float step_position[MOTORS];
-    kn_inverse_kinematics(mr.position, step_position);      // convert lengths to steps in floating point
+    kn_inverse_kinematics(mr->position, step_position);      // convert lengths to steps in floating point
     for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
-        mr.target_steps[motor] = step_position[motor];
-        mr.position_steps[motor] = step_position[motor];
-        mr.commanded_steps[motor] = step_position[motor];
+        mr->target_steps[motor] = step_position[motor];
+        mr->position_steps[motor] = step_position[motor];
+        mr->commanded_steps[motor] = step_position[motor];
         en_set_encoder_steps(motor, step_position[motor]);  // write steps to encoder register
-        mr.encoder_steps[motor] = en_read_encoder(motor);
+        mr->encoder_steps[motor] = en_read_encoder(motor);
 
         // These must be zero:
-        mr.following_error[motor] = 0;
+        mr->following_error[motor] = 0;
         st_pre.mot[motor].corrected_steps = 0;
     }
 }
@@ -485,12 +472,12 @@ static stat_t _exec_dwell(mpBuf_t *bf)
 //++++ stubbed ++++
 void mp_request_out_of_band_dwell(float seconds)
 {
-//    mr.out_of_band_dwell_time = seconds;
+//    mr->out_of_band_dwell_time = seconds;
 }
 //++++ stubbed ++++
 stat_t mp_exec_out_of_band_dwell(void)
 {
-//    return _advance_dwell(mr.out_of_band_dwell_time);
+//    return _advance_dwell(mr->out_of_band_dwell_time);
     return 0;
 }
 
@@ -782,19 +769,6 @@ static inline void _clear_buffer(mpBuf_t *bf)
 {
     bf->reset();    // Call a reset method on the buffer object.
 }                   // We'll need something else for C - like bring the method code back into this function.
-
-/*
-void mp_init_planner_buffers(void)
-{
-//    _init_planner_queue(0, mb_pool0, PLANNER_BUFFER_POOL_SIZE);
-//    _init_planner_queue(1, mb_pool1, SECONDARY_BUFFER_POOL_SIZE);
-
-//    mr.bf[0].nx = &mr.bf[1];        // Now handle the two "stub blocks" in the runtime structure.
-//    mr.bf[1].nx = &mr.bf[0];
-//    mr.r = &mr.bf[0];
-//    mr.p = &mr.bf[1];
- }
-*/
 
 /*
  * These GET functions are defined here but we use the macros in planner.h instead

@@ -74,10 +74,10 @@ static void _set_bf_diagnostics(mpBuf_t* bf) {
  *                                      that were in effect at move planning time
  */
 
-void  mp_zero_segment_velocity() { mr.segment_velocity = 0; }
-float mp_get_runtime_velocity(void) { return (mr.segment_velocity); }
-float mp_get_runtime_absolute_position(uint8_t axis) { return (mr.position[axis]); }
-void mp_set_runtime_work_offset(float offset[]) { copy_vector(mr.gm.work_offset, offset); }
+void  mp_zero_segment_velocity() { mr->segment_velocity = 0; }
+float mp_get_runtime_velocity(void) { return (mr->segment_velocity); }
+float mp_get_runtime_absolute_position(uint8_t axis) { return (mr->position[axis]); }
+void mp_set_runtime_work_offset(float offset[]) { copy_vector(mr->gm.work_offset, offset); }
 
 // We have to handle rotation - "rotate" by the transverse of the matrix to got "normal" coordinates
 float mp_get_runtime_work_position(uint8_t axis) {
@@ -87,17 +87,17 @@ float mp_get_runtime_work_position(uint8_t axis) {
     // target_rotated[2] = a z_1 + b z_2 + c z_3 + z_offset
 
     if (axis == AXIS_X) {
-        return mr.position[0] * cm->rotation_matrix[0][0] + mr.position[1] * cm->rotation_matrix[1][0] +
-               mr.position[2] * cm->rotation_matrix[2][0] - mr.gm.work_offset[0];
+        return mr->position[0] * cm->rotation_matrix[0][0] + mr->position[1] * cm->rotation_matrix[1][0] +
+               mr->position[2] * cm->rotation_matrix[2][0] - mr->gm.work_offset[0];
     } else if (axis == AXIS_Y) {
-        return mr.position[0] * cm->rotation_matrix[0][1] + mr.position[1] * cm->rotation_matrix[1][1] +
-               mr.position[2] * cm->rotation_matrix[2][1] - mr.gm.work_offset[1];
+        return mr->position[0] * cm->rotation_matrix[0][1] + mr->position[1] * cm->rotation_matrix[1][1] +
+               mr->position[2] * cm->rotation_matrix[2][1] - mr->gm.work_offset[1];
     } else if (axis == AXIS_Z) {
-        return mr.position[0] * cm->rotation_matrix[0][2] + mr.position[1] * cm->rotation_matrix[1][2] +
-               mr.position[2] * cm->rotation_matrix[2][2] - cm->rotation_z_offset - mr.gm.work_offset[2];
+        return mr->position[0] * cm->rotation_matrix[0][2] + mr->position[1] * cm->rotation_matrix[1][2] +
+               mr->position[2] * cm->rotation_matrix[2][2] - cm->rotation_z_offset - mr->gm.work_offset[2];
     } else {
         // ABC, UVW, we don't rotate them
-        return (mr.position[axis] - mr.gm.work_offset[axis]);
+        return (mr->position[axis] - mr->gm.work_offset[axis]);
     }
 }
 
@@ -114,7 +114,7 @@ bool mp_get_runtime_busy()
         return (false);
     }
     if ((st_runtime_isbusy() == true) || 
-        (mr.block_state == BLOCK_ACTIVE) || 
+        (mr->block_state == BLOCK_ACTIVE) || 
         (mp_get_r()->buffer_state > MP_BUFFER_EMPTY)) {
         return (true);
     }
