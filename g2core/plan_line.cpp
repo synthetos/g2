@@ -2,8 +2,8 @@
  * plan_line.c - acceleration managed line planning and motion execution
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2012 - 2016 Rob Giseburt
+ * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
+ * Copyright (c) 2012 - 2017 Rob Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -699,11 +699,10 @@ static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const floa
 
 static void _calculate_junction_vmax(mpBuf_t* bf) 
 {
-    // ++++ RG If we change cruise_vmax, we'll need to recompute junction_vmax, if we do this:
+    // If we change cruise_vmax, we'll need to recompute junction_vmax, if we do this:
     float velocity = min(bf->cruise_vmax, bf->nx->cruise_vmax);  // start with our maximum possible velocity
 
-    // uint8_t jerk_axis = AXIS_X;
-    // cmAxes jerk_axis = AXIS_X;
+    // cmAxes jerk_axis = AXIS_X;   // a diagnostic in case you want to find the limiting axis
 
     for (uint8_t axis = 0; axis < AXES; axis++) {
         if (bf->axis_flags[axis] || bf->nx->axis_flags[axis]) {       // skip axes with no movement

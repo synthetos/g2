@@ -171,14 +171,15 @@ void canonical_machine_reset(cmMachine_t *_cm)
     cm_reset_overrides();                           // set overrides to initial conditions
 
     // NOTE: Should unhome axes here
+    _cm->homing_state = HOMING_NOT_HOMED;
 
     // reset request flags
     _cm->queue_flush_state = FLUSH_OFF;
     _cm->end_hold_requested = false;
-    _cm->limit_requested = 0;                         // resets switch closures that occurred during initialization
-    _cm->safety_interlock_disengaged = 0;             // ditto
-    _cm->safety_interlock_reengaged = 0;              // ditto
-    _cm->shutdown_requested = 0;                      // ditto
+    _cm->limit_requested = 0;                       // resets switch closures that occurred during initialization
+    _cm->safety_interlock_disengaged = 0;           // ditto
+    _cm->safety_interlock_reengaged = 0;            // ditto
+    _cm->shutdown_requested = 0;                    // ditto
 
     // set initial state and signal that the machine is ready for action
     _cm->cycle_state = CYCLE_OFF;
@@ -232,6 +233,56 @@ stat_t canonical_machine_test_assertions(cmMachine_t *_cm)
     return (STAT_OK);
 }
 
+/*
+ *  cm_switch() - switch canonical machine to secondary machine
+ *  cm_return() - return secondary canoncial machine to primary machine
+ *
+ *  Doing a Switch is only safe when the machine has complete stopped during a feedhold
+ */
+
+stat_t cm_switch(nvObj_t *nv)
+{
+    // Test for:
+    //  - must be in the correct CM
+    //  - must be fully stopped in a hold
+    if ((cm != &cm1) || (cm->hold_state != FEEDHOLD_HOLD)) {
+        return (STAT_COMMAND_NOT_ACCEPTED);
+    }
+    
+    // initialize the secondary context to agree with the primary
+    memcpy(&cm2, &cm1, sizeof(cmMachine_t));
+    cm2.mp = &mp2;
+    planner_reset((mpPlanner_t *)cm2.mp);   // mp is a void pointer
+
+    // now make the changes so you can actually use it
+    cmMachine_t *_cm = &cm2;
+    _cm->motion_state = MOTION_STOP;
+    _cm->hold_state = FEEDHOLD_OFF;
+    _cm->hold_disabled = true;
+
+    // setup the gm and gmx
+    _cm->gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;
+    _cm->gm.absolute_override = ABSOLUTE_OVERRIDE_OFF;
+    _cm->gm.feed_rate = 0;
+    memset(&(_cm->gm.target), 0 , sizeof(_cm->gm.target));
+    memset(&(_cm->gm.target_comp), 0 , sizeof(_cm->gm.target_comp));
+    copy_vector(_cm->gmx.position, mr->position);   // get the current holding position
+
+    // reassign the globals to the secondary planner (this must be last)
+    cm = &cm2;
+    mp = (mpPlanner_t *)cm->mp;     // cm->mp is a void pointer
+    mr = mp->mr;
+    return (STAT_OK);
+}
+
+stat_t cm_return(nvObj_t *nv)     // if value == true return with offset corrections
+{
+    // reset the globals to the primary planner
+    cm = &cm1;
+    mp = (mpPlanner_t *)cm->mp;     // cm->mp is a void pointer
+    mr = mp->mr;
+    return (STAT_OK);
+}
 
 /*************************************
  * Internal getters and setters      *
@@ -361,33 +412,6 @@ void cm_set_model_linenum(const uint32_t linenum)
 {
     cm->gm.linenum = linenum;            // you must first set the model line number,
     nv_add_object((const char *)"n");   // then add the line number to the nv list
-}
-
-/*
- *  cm_switch() - switch canonical machine to a different machine
- *  cm_return() - return canoncial machine to origincal machine
- */
-stat_t cm_switch(nvObj_t *nv)
-{
-/*
-    if (nv->value < PRIMARY_Q) {
-        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
-    }
-    if (nv->value < SECONDARY_Q) {
-        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
-    }
-    mb.return_q = mb.active_q;
-    mb.active_q = (uint8_t)nv->value;
-*/
-    return (STAT_OK);
-}
-
-stat_t cm_return(nvObj_t *nv)     // if value == true return with offset corrections
-{
-/*
-    mb.active_q = mb.return_q;
-*/
-    return (STAT_OK);
 }
 
 /***********************************************************************************
@@ -810,8 +834,6 @@ stat_t cm_test_soft_limits(const float target[])
  *  These are organized by section number (x.x.x) in the order they are
  *  found in NIST RS274 NGCv3
  ************************************************************************/
-
-
 
 /**************************
  * Alarms                 *

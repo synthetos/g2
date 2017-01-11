@@ -178,9 +178,6 @@ void _init_planner_queue(mpPlanner_t *_mp, mpBuf_t *queue, uint8_t size)
 
 void planner_init(mpPlanner_t *_mp, mpPlannerRuntime_t *_mr, mpBuf_t *queue, uint8_t queue_size)
 {
-    mp = &mp1;                          // set global pointer to the primary planner
-    mr = &mr1;                          // and primary runtime
-
     // init planner master structure
     memset(_mp, 0, sizeof(mpPlanner_t));// clear all values, pointers and status    
     _mp->magic_start = MAGICNUM;        // set boundary condition assertions
@@ -194,12 +191,13 @@ void planner_init(mpPlanner_t *_mp, mpPlannerRuntime_t *_mr, mpBuf_t *queue, uin
     // init runtime structs
     _mp->mr = _mr;
     memset(_mr, 0, sizeof(mpPlannerRuntime_t));    // clear all values, pointers and status
+    _mr->magic_start = MAGICNUM;        // mr assertions 
+    _mr->magic_end = MAGICNUM;
+
     _mr->bf[0].nx = &_mr->bf[1];        // Handle the two "stub blocks" in the runtime structure.
     _mr->bf[1].nx = &_mr->bf[0];
     _mr->r = &_mr->bf[0];
     _mr->p = &_mr->bf[1];
-    _mp->mr->magic_start = MAGICNUM;    // assertions
-    _mp->mr->magic_end = MAGICNUM;
 }
 
 void planner_reset(mpPlanner_t *_mp)

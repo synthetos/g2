@@ -230,8 +230,6 @@ typedef struct cmMachine {                  // struct to manage canonical machin
 
     // Global state variables and requestors
 
-    void *mp;                               // linked mpPlanner_t - use a void pointer to avoid circular header files
-
     cmMachineState machine_state;           // macs: machine/cycle/motion is the actual machine state
     cmCycleState cycle_state;               // cycs
     cmMotionState motion_state;             // momo
@@ -244,9 +242,10 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     cmSafetyState safety_interlock_state;   // safety interlock state
     uint32_t esc_boot_timer;                // timer for Electronic Speed Control (Spindle electronics) to boot
 
-    bool g28_flag;                          // true = complete a G28 move
-    bool g30_flag;                          // true = complete a G30 move
+//    bool g28_flag;                          // true = complete a G28 move (transient state)
+//    bool g30_flag;                          // true = complete a G30 move
     bool deferred_write_flag;               // G10 data has changed (e.g. offsets) - flag to persist them
+    bool hold_disabled;                     // set true when in secondary planner to disable feedhold requests
     bool end_hold_requested;                // request restart after feedhold
     uint8_t limit_requested;                // set non-zero to request limit switch processing (value is input number)
     uint8_t shutdown_requested;             // set non-zero to request shutdown in support of external estop (value is input number)
@@ -262,6 +261,7 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     float jogging_dest;                     // jogging destination as a relative move from current position
 
   /**** Model state structures ****/
+    void *mp;                               // linked mpPlanner_t - use a void pointer to avoid circular header files
     cmArc_t arc;                            // arc parameters
     GCodeState_t *am;                       // active Gcode model is maintained by state management
     GCodeState_t  gm;                       // core gcode model state

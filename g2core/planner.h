@@ -155,8 +155,7 @@ using Motate::Timeout;
 
 /*
  * Enums and other type definitions
- *
- * All the enums that equal zero must be zero. Don't change them
+ * All the enums that equal some starting value must be that value. Don't change them
  */
 
 typedef void (*cm_exec_t)(float[], bool[]); // callback to canonical_machine execution function
@@ -241,13 +240,6 @@ typedef enum {
     ZOID_EXIT_3a2
 } zoidExitPoint;
 
-/* +++++ REMOVE
-typedef enum {
-    ACTIVE_Q = -1,                  // Must be -1
-    PRIMARY_Q,                      // must line up with structure indexes
-    SECONDARY_Q
-} queueType;
-*/
 /*** Most of these factors are the result of a lot of tweaking. Change with caution.***/
 
 #define PLANNER_QUEUE_SIZE          ((uint8_t)48)       // Suggest 12 min. Limit is 255
@@ -516,12 +508,8 @@ typedef struct mpPlanner {              // common variables for a planner contex
     mpBuf_t *p;                         // planner buffer pointer
     mpBuf_t *c;                         // pointer to buffer immediately following critical region
     mpBuf_t *planning_return;           // buffer to return to once back-planning is complete
-    
-    // planner queue manager
-    mpPlannerQueue_t q;                 // embed a planner buffer queue manager
-
-    // planner runtime
     mpPlannerRuntime_t *mr;             // bind to mr associated with this planner
+    mpPlannerQueue_t q;                 // embed a planner buffer queue manager
     
     magic_t magic_end;
 } mpPlanner_t;

@@ -34,7 +34,8 @@
 
 // Machine configuration settings
 
-#define JUNCTION_INTEGRATION_TIME 0.75      // cornering - between 0.10 and 2.00 (higher is faster)
+//#define JUNCTION_INTEGRATION_TIME 0.75      // cornering - between 0.10 and 2.00 (higher is faster)
+#define JUNCTION_INTEGRATION_TIME 1.25      // cornering - between 0.10 and 2.00 (higher is faster)
 #define CHORDAL_TOLERANCE 0.1               // chordal tolerance for arcs (in mm)
 
 #define SOFT_LIMIT_ENABLE 0                 // 0=off, 1=on
@@ -110,7 +111,7 @@
 
 // *** axis settings **********************************************************************************
 
-#define JERK_MAX 5000
+#define JERK_MAX 20000
 
 #define X_AXIS_MODE AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
 #define X_VELOCITY_MAX 40000                // xvm  G0 max velocity in mm/min
@@ -145,7 +146,7 @@
 #define Z_FEEDRATE_MAX Z_VELOCITY_MAX
 #define Z_TRAVEL_MAX 0
 #define Z_TRAVEL_MIN -95
-#define Z_JERK_MAX 500
+#define Z_JERK_MAX 1000
 #define Z_JERK_HIGH_SPEED 1000
 #define Z_HOMING_INPUT 6
 #define Z_HOMING_DIRECTION 1

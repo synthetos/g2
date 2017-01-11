@@ -22,7 +22,7 @@
 
 #include "hardware.h"
 
-/* Gcode-specific definitions */
+/**** Gcode-specific definitions ****/
 
 /* The difference between NextAction and MotionMode is that NextAction is
  * used by the current block, and may carry non-modal commands, whereas
@@ -280,6 +280,8 @@ typedef struct GCodeStateExtended {     // Gcode dynamic state extensions - used
 } GCodeStateX_t;
 
 
+// Structures used by Gcode parser
+
 typedef struct GCodeInput {             // Gcode model inputs - meaning depends on context
 
     uint8_t next_action;                // handles G modal group 1 moves & non-modals
@@ -366,7 +368,7 @@ typedef struct GCodeFlags {             // Gcode model input flags
     bool arc_offset[3];
 } GCodeFlags_t;
     
-typedef struct GCodeSingleton {
+typedef struct GCodeParser {
 
     // gcode power-on default settings - defaults are not the same as the gm state
     cmCoordSystem default_coord_system;     // G10 active coordinate system default
@@ -378,9 +380,9 @@ typedef struct GCodeSingleton {
     GCodeInput_t  gn;               // gcode input values - transient
     GCodeFlags_t  gf;               // gcode input flags - transient
 
-} GCodeSingleton_t;
+} GCodeParser_t;
 
-extern GCodeSingleton_t gc;         // gcode structs
+extern GCodeParser_t gc;
 
 
 /*

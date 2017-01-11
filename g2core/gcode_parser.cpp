@@ -27,7 +27,7 @@
 #include "util.h"
 #include "xio.h"            // for char definitions
 
-GCodeSingleton_t gc;        // gcode structs
+GCodeParser gc;
 
 // local helper functions and macros
 static void _normalize_gcode_block(char *str, char **active_comment, uint8_t *block_delete_flag);
