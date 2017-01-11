@@ -151,7 +151,7 @@ void canonical_machine_init(cmMachine_t *_cm, void *_mp)
     canonical_machine_init_assertions(_cm);         // establish assertions
     cm_arc_init(_cm);                               // setup arcs. Note: spindle and coolant inits are independent
     _cm->mp = _mp;                                  // point to associated planner
-    ACTIVE_MODEL = MODEL;                           // setup initial Gcode model pointer
+    _cm->am = MODEL;                                // setup initial Gcode model pointer
 }
 
 // *** Note: Run canonical_machine_init and profile initializations beforehand ***
@@ -244,37 +244,39 @@ stat_t canonical_machine_test_assertions(cmMachine_t *_cm)
 
 stat_t cm_switch(nvObj_t *nv)
 {
-    // Test for:
-    //  - must be in the correct CM
-    //  - must be fully stopped in a hold
+    // Must be in the correct CM and must be fully stopped in a hold
     if ((cm != &cm1) || (cm->hold_state != FEEDHOLD_HOLD)) {
         nv->valuetype = TYPE_NULL;
         return (STAT_COMMAND_NOT_ACCEPTED);
     }
     
-    // initialize the secondary context to agree with the primary
+    // copy the primary canonical machine to the secondary, 
+    // fix the planner pointer, and reset the secondary planner
     memcpy(&cm2, &cm1, sizeof(cmMachine_t));
     cm2.mp = &mp2;
     planner_reset((mpPlanner_t *)cm2.mp);   // mp is a void pointer
 
-    // now make the changes so you can actually use it
+    // set parameters in cm, gm and gmx so you can actually use it
     cmMachine_t *_cm = &cm2;
-    _cm->motion_state = MOTION_STOP;
     _cm->hold_state = FEEDHOLD_OFF;
     _cm->hold_disabled = true;
-
-    // setup the gm and gmx
     _cm->gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;
     _cm->gm.absolute_override = ABSOLUTE_OVERRIDE_OFF;
     _cm->gm.feed_rate = 0;
-    memset(&(_cm->gm.target), 0 , sizeof(_cm->gm.target));
-    memset(&(_cm->gm.target_comp), 0 , sizeof(_cm->gm.target_comp));
-    copy_vector(_cm->gmx.position, mr->position);   // get the current holding position
+    
+    // clear the target and set the positions to the current hold position
+    memset(&(_cm->gm.target), 0, sizeof(_cm->gm.target));
+    memset(&(_cm->gm.target_comp), 0, sizeof(_cm->gm.target_comp));
+    copy_vector(_cm->gmx.position, mr->position);
+    copy_vector(mp2.position, mr->position);
 
-    // reassign the globals to the secondary planner (this must be last)
+    // reassign the globals to the secondary planner (this must be next-to-last)
     cm = &cm2;
-    mp = (mpPlanner_t *)cm->mp;     // cm->mp is a void pointer
+    mp = (mpPlanner_t *)cm->mp;     // mp is a void pointer
     mr = mp->mr;
+
+    // finally, set motion state and ACTIVE_MODEL. This must be performed after cm is set to cm2
+    cm_set_motion_state(MOTION_STOP);
     return (STAT_OK);
 }
 
@@ -377,7 +379,6 @@ cmCombinedState cm_get_combined_state()
 
 /*  These getters and setters will work on any gm model with inputs:
  *    MODEL         (GCodeState_t *)&cm->gm          // absolute pointer from canonical machine gm model
- *    PLANNER       (GCodeState_t *)&bf->gm         // relative to buffer *bf is currently pointing to
  *    RUNTIME       (GCodeState_t *)&mr->gm          // absolute pointer from runtime mm struct
  *    ACTIVE_MODEL   cm->am                          // active model pointer is maintained by state management
  */
@@ -465,27 +466,14 @@ float cm_get_active_coord_offset(const uint8_t axis)
 }
 
 /*
- * cm_get_work_offset() - return a coord offset from the gcode_state
- *
- *    MODEL         (GCodeState_t *)&cm->gm         // absolute pointer from canonical machine gm model
- *    PLANNER       (GCodeState_t *)&bf->gm         // relative to buffer *bf is currently pointing to
- *    RUNTIME       (GCodeState_t *)&mr->gm         // absolute pointer from runtime mm struct
- *    ACTIVE_MODEL   cm->am                         // active model pointer is maintained by state management
+ * cm_get_work_offset() - return a coord offset from the active Gcode dynamic model
+ * cm_set_work_offsets() - capture coord offsets from the model into absolute values in the active Gcode dynamic model
  */
 
 float cm_get_work_offset(const GCodeState_t *gcode_state, const uint8_t axis)
 {
     return (gcode_state->work_offset[axis]);
 }
-
-/*
- * cm_set_work_offsets() - capture coord offsets from the model into absolute values in the gcode_state
- *
- *    MODEL         (GCodeState_t *)&cm->gm         // absolute pointer from canonical machine gm model
- *    PLANNER       (GCodeState_t *)&bf->gm         // relative to buffer *bf is currently pointing to
- *    RUNTIME       (GCodeState_t *)&mr->gm         // absolute pointer from runtime mm struct
- *    ACTIVE_MODEL   cm->am                         // active model pointer is maintained by state management
- */
 
 void cm_set_work_offsets(GCodeState_t *gcode_state)
 {
@@ -495,14 +483,9 @@ void cm_set_work_offsets(GCodeState_t *gcode_state)
 }
 
 /*
- * cm_get_absolute_position() - get position of axis in absolute coordinates
+ * cm_get_absolute_position() - get position of axis in absolute coordinates from the active Gcode dynamic model
  *
- *  This function accepts as input:
- *    MODEL         (GCodeState_t *)&cm->gm     // absolute pointer from canonical machine gm model
- *    RUNTIME       (GCodeState_t *)&mr->gm     // absolute pointer from runtime mm struct
- *
- *    NOTE: Only MODEL and RUNTIME are supported (no PLANNER or bf's)
- *    NOTE: Machine position is always returned in mm mode. No units conversion is performed
+ *      ... machine position is always returned in mm mode. No units conversion is performed
  */
 
 float cm_get_absolute_position(const GCodeState_t *gcode_state, const uint8_t axis)
@@ -514,18 +497,9 @@ float cm_get_absolute_position(const GCodeState_t *gcode_state, const uint8_t ax
 }
 
 /*
- * cm_get_work_position() - return work position in external form
+ * cm_get_work_position() - return work position in external form from the active Gcode dynamic model
  *
  *    ... that means in prevailing units (mm/inch) and with all offsets applied
- *
- * NOTE: This function only works after the gcode_state struct as had the work_offsets setup by
- *       calling cm_get_model_coord_offset_vector() first.
- *
- *  This function accepts as input:
- *    MODEL         (GCodeState_t *)&cm->gm          // absolute pointer from canonical machine gm model
- *    RUNTIME       (GCodeState_t *)&mr->gm          // absolute pointer from runtime mm struct
- *
- * NOTE: Only MODEL and RUNTIME are supported (no PLANNER or bf's)
  */
 
 float cm_get_work_position(const GCodeState_t *gcode_state, const uint8_t axis)

@@ -39,9 +39,8 @@
 /* Defines, Macros, and Assorted Parameters */
 
 #define MODEL   (GCodeState_t *)&cm->gm     // absolute pointer from canonical machine gm model
-#define PLANNER (GCodeState_t *)&bf->gm     // relative to buffer *bf is currently pointing to
 #define RUNTIME (GCodeState_t *)&mr->gm     // absolute pointer from runtime mm struct
-#define ACTIVE_MODEL cm->am                 // active model pointer is maintained by state management
+#define ACTIVE_MODEL cm->am                 // active model pointer is maintained by cm_set_motion_state()
 
 #define _to_millimeters(a) ((cm->gm.units_mode == INCHES) ? (a * MM_PER_INCH) : a)
 

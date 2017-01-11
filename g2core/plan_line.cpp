@@ -180,7 +180,7 @@ stat_t mp_aline(GCodeState_t* gm_in)
                         gm_in->target[2] * cm->rotation_matrix[2][2] + 
                         cm->rotation_z_offset;
 
-    // copy rotation axes ABC
+    // copy rotation axes for ABC (no changes)
     target_rotated[3] = gm_in->target[3];
     target_rotated[4] = gm_in->target[4];
     target_rotated[5] = gm_in->target[5];
@@ -204,13 +204,13 @@ stat_t mp_aline(GCodeState_t* gm_in)
 
     // get a cleared buffer and copy in the Gcode model state
     mpBuf_t* bf = mp_get_write_buffer(); 
+    
     if (bf == NULL) {                                   // never supposed to fail
-//    if ((bf = mp_get_write_buffer()) == NULL) {         // never supposed to fail
         return (cm_panic(STAT_FAILED_GET_PLANNER_BUFFER, "aline()"));
     }
     memcpy(&bf->gm, gm_in, sizeof(GCodeState_t));
     // Since bf->gm.target is being used all over the place, we'll make it the rotated target
-    copy_vector(bf->gm.target, target_rotated);         // copy the rotated taget in place
+    copy_vector(bf->gm.target, target_rotated);         // copy the rotated target in place
 
     // setup the buffer
     bf->bf_func = mp_exec_aline;                        // register the callback to the exec function
@@ -225,7 +225,7 @@ stat_t mp_aline(GCodeState_t* gm_in)
     _set_bf_diagnostics(bf);                            //+++++DIAGNOSTIC
 
     // Note: these next lines must remain in exact order. Position must update before committing the buffer.
-    copy_vector(mp->position, bf->gm.target);            // set the planner position
+    copy_vector(mp->position, bf->gm.target);           // set the planner position
     mp_commit_write_buffer(BLOCK_TYPE_ALINE);           // commit current block (must follow the position update)
     return (STAT_OK);
 }
@@ -304,8 +304,8 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
         if (bf->nx->plannable) {  // read in new buffers until EMPTY
             return (bf->nx);
         }
-        mp->planning_return = bf->nx;                 // where to return after planning is complete
-        mp->planner_state   = PLANNER_BACK_PLANNING;  // start backplanning
+        mp->planning_return = bf->nx;                   // where to return after planning is complete
+        mp->planner_state   = PLANNER_BACK_PLANNING;    // start backplanning
     }
 
     // Backward Planning Pass

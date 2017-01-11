@@ -747,15 +747,12 @@ mpBuf_t * mp_get_prev_buffer(const mpBuf_t *bf) { return (bf->pv); }
 mpBuf_t * mp_get_next_buffer(const mpBuf_t *bf) { return (bf->nx); }
  */
 
-//mpBuf_t * mp_get_w(int8_t q) { return ((q == ACTIVE_Q) ? mb.q[mb.active_q].w : mb.q[q].w); }
-//mpBuf_t * mp_get_r(int8_t q) { return ((q == ACTIVE_Q) ? mb.q[mb.active_q].r : mb.q[q].r); }
-
 mpBuf_t * mp_get_w() { return (mp->q.w); }  //++++ should this be a DI function?
 mpBuf_t * mp_get_r() { return (mp->q.r); }  //+++++ ditto
 
 mpBuf_t * mp_get_write_buffer()     // get & clear a buffer
 {
-//    mpQueue_t *q = &mb.q[mb.active_q];
+
     mpPlannerQueue_t *q = &(mp->q);
        
     if (q->w->buffer_state == MP_BUFFER_EMPTY) {
