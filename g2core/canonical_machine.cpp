@@ -161,11 +161,11 @@ void canonical_machine_reset(cmMachine_t *_cm)
     canonical_machine_init_assertions(_cm);
 
     // set canonical machine gcode defaults
-    cm_set_units_mode(gc.default_units_mode);
-    cm_set_coord_system(gc.default_coord_system);   // NB: queues a block to the planner with the coordinates
-    cm_select_plane(gc.default_select_plane);
-    cm_set_path_control(MODEL, gc.default_path_control);
-    cm_set_distance_mode(gc.default_distance_mode);
+    cm_set_units_mode(cm->default_units_mode);
+    cm_set_coord_system(cm->default_coord_system);   // NB: queues a block to the planner with the coordinates
+    cm_select_plane(cm->default_select_plane);
+    cm_set_path_control(MODEL, cm->default_path_control);
+    cm_set_distance_mode(cm->default_distance_mode);
     cm_set_arc_distance_mode(INCREMENTAL_DISTANCE_MODE); // always the default
     cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);   // always the default
     cm_reset_overrides();                           // set overrides to initial conditions
@@ -237,7 +237,9 @@ stat_t canonical_machine_test_assertions(cmMachine_t *_cm)
  *  cm_switch() - switch canonical machine to secondary machine
  *  cm_return() - return secondary canoncial machine to primary machine
  *
- *  Doing a Switch is only safe when the machine has complete stopped during a feedhold
+ *  Doing a Switch is only safe when the machine has completely stopped during a feedhold
+ *  Switch works to switch from the primary planer to the secondary planner
+ *  Use Return to return to the primary planner
  */
 
 stat_t cm_switch(nvObj_t *nv)
@@ -246,6 +248,7 @@ stat_t cm_switch(nvObj_t *nv)
     //  - must be in the correct CM
     //  - must be fully stopped in a hold
     if ((cm != &cm1) || (cm->hold_state != FEEDHOLD_HOLD)) {
+        nv->valuetype = TYPE_NULL;
         return (STAT_COMMAND_NOT_ACCEPTED);
     }
     
@@ -1102,7 +1105,7 @@ stat_t cm_set_arc_distance_mode(const uint8_t mode)
 stat_t cm_set_g10_data(const uint8_t P_word, const uint8_t L_word,
                        const float offset[], const bool flag[])
 {
-    if (!gc.gf.L_word) {
+    if (!gp.gf.L_word) {
         return (STAT_L_WORD_IS_MISSING);
     }
 
@@ -1166,15 +1169,15 @@ stat_t cm_set_g10_data(const uint8_t P_word, const uint8_t L_word,
 stat_t cm_set_tl_offset(const uint8_t H_word, bool apply_additional)
 {
     uint8_t tool;
-    if (gc.gf.H_word)
+    if (gp.gf.H_word)
     {
-        if (gc.gn.H_word > TOOLS) {
+        if (gp.gn.H_word > TOOLS) {
             return (STAT_H_WORD_IS_INVALID);
         }
-        if (gc.gn.H_word == 0) {    // interpret H0 as "current tool", just like no H at all.
+        if (gp.gn.H_word == 0) {    // interpret H0 as "current tool", just like no H at all.
             tool = cm->gm.tool;
         } else {
-            tool = gc.gn.H_word;
+            tool = gp.gn.H_word;
         }
     } else {
         tool = cm->gm.tool;
@@ -1699,17 +1702,17 @@ stat_t cm_mfo_enable(uint8_t enable)            // M50
 {
     bool new_enable = true;
     bool new_override = false;
-    if (gc.gf.parameter) {                      // if parameter is present in Gcode block
-        if (fp_ZERO(gc.gn.parameter)) {
+    if (gp.gf.parameter) {                      // if parameter is present in Gcode block
+        if (fp_ZERO(gp.gn.parameter)) {
             new_enable = false;                 // P0 disables override
         } else {
-            if (gc.gn.parameter < FEED_OVERRIDE_MIN) {
+            if (gp.gn.parameter < FEED_OVERRIDE_MIN) {
                 return (STAT_INPUT_LESS_THAN_MIN_VALUE);
             }
-            if (gc.gn.parameter > FEED_OVERRIDE_MAX) {
+            if (gp.gn.parameter > FEED_OVERRIDE_MAX) {
                 return (STAT_INPUT_EXCEEDS_MAX_VALUE);
             }
-            cm->gmx.mfo_factor = gc.gn.parameter; // it validates - store it.
+            cm->gmx.mfo_factor = gp.gn.parameter; // it validates - store it.
             new_override = true;
         }
     }
@@ -1988,9 +1991,9 @@ static void _exec_program_finalize(float *value, bool *flag)
     if (((uint8_t)value[0]) == MACHINE_PROGRAM_END) {
         cm_suspend_origin_offsets();                        // G92.2 - as per NIST
 //      cm_reset_origin_offsets();                          // G92.1 - alternative to above
-        cm_set_coord_system(gc.default_coord_system);       // reset to default coordinate system
-        cm_select_plane(gc.default_select_plane);           // reset to default arc plane
-        cm_set_distance_mode(gc.default_distance_mode);
+        cm_set_coord_system(cm->default_coord_system);      // reset to default coordinate system
+        cm_select_plane(cm->default_select_plane);          // reset to default arc plane
+        cm_set_distance_mode(cm->default_distance_mode);
         cm_set_arc_distance_mode(INCREMENTAL_DISTANCE_MODE);// always the default
         cm_spindle_off_immediate();                         // M5
         cm_coolant_off_immediate();                         // M9
@@ -2632,6 +2635,21 @@ stat_t cm_get_troe(nvObj_t *nv) { return(get_int(nv, cm->gmx.mto_enable)); }
 stat_t cm_set_troe(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->gmx.mto_enable, 0, 1)); }
 stat_t cm_get_tro(nvObj_t *nv)  { return(get_float(nv, cm->gmx.mto_factor)); }
 stat_t cm_set_tro(nvObj_t *nv)  { return(set_float_range(nv, cm->gmx.mto_factor, TRAVERSE_OVERRIDE_MIN, TRAVERSE_OVERRIDE_MAX)); }
+
+stat_t cm_get_gpl(nvObj_t *nv) { return(get_int(nv, cm->default_select_plane)); }
+stat_t cm_set_gpl(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->default_select_plane, CANON_PLANE_XY, CANON_PLANE_YZ)); }
+
+stat_t cm_get_gun(nvObj_t *nv) { return(get_int(nv, cm->default_units_mode)); }
+stat_t cm_set_gun(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->default_units_mode, INCHES, MILLIMETERS)); }
+
+stat_t cm_get_gco(nvObj_t *nv) { return(get_int(nv, cm->default_coord_system)); }
+stat_t cm_set_gco(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->default_coord_system, G54, G59)); }
+
+stat_t cm_get_gpa(nvObj_t *nv) { return(get_int(nv, cm->default_path_control)); }
+stat_t cm_set_gpa(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->default_path_control, PATH_EXACT_PATH, PATH_CONTINUOUS)); }
+
+stat_t cm_get_gdi(nvObj_t *nv) { return(get_int(nv, cm->default_distance_mode)); }
+stat_t cm_set_gdi(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->default_distance_mode, ABSOLUTE_DISTANCE_MODE, INCREMENTAL_DISTANCE_MODE)); }
 
 /*
  * Run Commands

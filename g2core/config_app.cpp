@@ -880,12 +880,12 @@ const cfgItem_t cfgArray[] = {
 
     // Gcode defaults
     // NOTE: The ordering within the gcode defaults is important for token resolution. gc must follow gco
-    { "sys","gpl", _fipn, 0, cm_print_gpl, get_ui8, set_012, (float *)&gc.default_select_plane,     GCODE_DEFAULT_PLANE },
-    { "sys","gun", _fipn, 0, cm_print_gun, get_ui8, set_01,  (float *)&gc.default_units_mode,       GCODE_DEFAULT_UNITS },
-    { "sys","gco", _fipn, 0, cm_print_gco, get_ui8, set_ui8, (float *)&gc.default_coord_system,     GCODE_DEFAULT_COORD_SYSTEM },
-    { "sys","gpa", _fipn, 0, cm_print_gpa, get_ui8, set_012, (float *)&gc.default_path_control,     GCODE_DEFAULT_PATH_CONTROL },
-    { "sys","gdi", _fipn, 0, cm_print_gdi, get_ui8, set_01,  (float *)&gc.default_distance_mode,    GCODE_DEFAULT_DISTANCE_MODE },
-    { "",   "gc",  _f0,   0, tx_print_nul, gc_get_gc,gc_run_gc,(float *)&cs.null, 0 },              // gcode block - must be last in this group
+    { "sys","gpl", _fipn, 0, cm_print_gpl, cm_get_gpl, cm_set_gpl, (float *)&cs.null, GCODE_DEFAULT_PLANE },
+    { "sys","gun", _fipn, 0, cm_print_gun, cm_get_gun, cm_set_gun, (float *)&cs.null, GCODE_DEFAULT_UNITS },
+    { "sys","gco", _fipn, 0, cm_print_gco, cm_get_gco, cm_set_gco, (float *)&cs.null, GCODE_DEFAULT_COORD_SYSTEM },
+    { "sys","gpa", _fipn, 0, cm_print_gpa, cm_get_gpa, cm_set_gpa, (float *)&cs.null, GCODE_DEFAULT_PATH_CONTROL },
+    { "sys","gdi", _fipn, 0, cm_print_gdi, cm_get_gdi, cm_set_gdi, (float *)&cs.null, GCODE_DEFAULT_DISTANCE_MODE },
+    { "",   "gc",  _f0,   0, tx_print_nul, gc_get_gc,  gc_run_gc,  (float *)&cs.null, 0 },  // gcode block - must be last in this group
 
     // Actions and Reports
     { "", "sr",  _f0, 0, sr_print_sr,   sr_get,    sr_set,    (float *)&cs.null, 0 },   // request and set status reports

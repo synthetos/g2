@@ -2,8 +2,8 @@
  * cycle_homing.cpp - homing cycle extension to canonical_machine
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2016 Robert Giseburt
+ * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2017 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -407,38 +407,38 @@ static stat_t _homing_finalize_exit(int8_t axis)  // third part of return to hom
 static int8_t _get_next_axis(int8_t axis) {
 #if (HOMING_AXES <= 4)
     if (axis == -1) {  // inelegant brute force solution
-        if (gc.gf.target[AXIS_Z]) {
+        if (gp.gf.target[AXIS_Z]) {
             return (AXIS_Z);
         }
-        if (gc.gf.target[AXIS_X]) {
+        if (gp.gf.target[AXIS_X]) {
             return (AXIS_X);
         }
-        if (gc.gf.target[AXIS_Y]) {
+        if (gp.gf.target[AXIS_Y]) {
             return (AXIS_Y);
         }
-        if (gc.gf.target[AXIS_A]) {
+        if (gp.gf.target[AXIS_A]) {
             return (AXIS_A);
         }
         return (-2);  // error
     } else if (axis == AXIS_Z) {
-        if (gc.gf.target[AXIS_X]) {
+        if (gp.gf.target[AXIS_X]) {
             return (AXIS_X);
         }
-        if (gc.gf.target[AXIS_Y]) {
+        if (gp.gf.target[AXIS_Y]) {
             return (AXIS_Y);
         }
-        if (gc.gf.target[AXIS_A]) {
+        if (gp.gf.target[AXIS_A]) {
             return (AXIS_A);
         }
     } else if (axis == AXIS_X) {
-        if (gc.gf.target[AXIS_Y]) {
+        if (gp.gf.target[AXIS_Y]) {
             return (AXIS_Y);
         }
-        if (gc.gf.target[AXIS_A]) {
+        if (gp.gf.target[AXIS_A]) {
             return (AXIS_A);
         }
     } else if (axis == AXIS_Y) {
-        if (gc.gf.target[AXIS_A]) {
+        if (gp.gf.target[AXIS_A]) {
             return (AXIS_A);
         }
     }
@@ -446,73 +446,73 @@ static int8_t _get_next_axis(int8_t axis) {
 
 #else
     if (axis == -1) {
-        if (gc.gf.target[AXIS_Z]) {
+        if (gp.gf.target[AXIS_Z]) {
             return (AXIS_Z);
         }
-        if (gc.gf.target[AXIS_X]) {
+        if (gp.gf.target[AXIS_X]) {
             return (AXIS_X);
         }
-        if (gc.gf.target[AXIS_Y]) {
+        if (gp.gf.target[AXIS_Y]) {
             return (AXIS_Y);
         }
-        if (gc.gf.target[AXIS_A]) {
+        if (gp.gf.target[AXIS_A]) {
             return (AXIS_A);
         }
-        if (gc.gf.target[AXIS_B]) {
+        if (gp.gf.target[AXIS_B]) {
             return (AXIS_B);
         }
-        if (gc.gf.target[AXIS_C]) {
+        if (gp.gf.target[AXIS_C]) {
             return (AXIS_C);
         }
         return (-2);  // error
     } else if (axis == AXIS_Z) {
-        if (gc.gf.target[AXIS_X]) {
+        if (gp.gf.target[AXIS_X]) {
             return (AXIS_X);
         }
-        if (gc.gf.target[AXIS_Y]) {
+        if (gp.gf.target[AXIS_Y]) {
             return (AXIS_Y);
         }
-        if (gc.gf.target[AXIS_A]) {
+        if (gp.gf.target[AXIS_A]) {
             return (AXIS_A);
         }
-        if (gc.gf.target[AXIS_B]) {
+        if (gp.gf.target[AXIS_B]) {
             return (AXIS_B);
         }
-        if (gc.gf.target[AXIS_C]) {
+        if (gp.gf.target[AXIS_C]) {
             return (AXIS_C);
         }
     } else if (axis == AXIS_X) {
-        if (gc.gf.target[AXIS_Y]) {
+        if (gp.gf.target[AXIS_Y]) {
             return (AXIS_Y);
         }
-        if (gc.gf.target[AXIS_A]) {
+        if (gp.gf.target[AXIS_A]) {
             return (AXIS_A);
         }
-        if (gc.gf.target[AXIS_B]) {
+        if (gp.gf.target[AXIS_B]) {
             return (AXIS_B);
         }
-        if (gc.gf.target[AXIS_C]) {
+        if (gp.gf.target[AXIS_C]) {
             return (AXIS_C);
         }
     } else if (axis == AXIS_Y) {
-        if (gc.gf.target[AXIS_A]) {
+        if (gp.gf.target[AXIS_A]) {
             return (AXIS_A);
         }
-        if (gc.gf.target[AXIS_B]) {
+        if (gp.gf.target[AXIS_B]) {
             return (AXIS_B);
         }
-        if (gc.gf.target[AXIS_C]) {
+        if (gp.gf.target[AXIS_C]) {
             return (AXIS_C);
         }
     } else if (axis == AXIS_A) {
-        if (gc.gf.target[AXIS_B]) {
+        if (gp.gf.target[AXIS_B]) {
             return (AXIS_B);
         }
-        if (gc.gf.target[AXIS_C]) {
+        if (gp.gf.target[AXIS_C]) {
             return (AXIS_C);
         }
     } else if (axis == AXIS_B) {
-        if (gc.gf.target[AXIS_C]) {
+        if (gp.gf.target[AXIS_C]) {
             return (AXIS_C);
         }
     }

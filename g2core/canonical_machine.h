@@ -226,6 +226,13 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     // Axis settings
     cfgAxis_t a[AXES];
 
+    // gcode power-on default settings - defaults are not the same as the gm state
+    cmCoordSystem       default_coord_system;   // G10 active coordinate system default
+    cmCanonicalPlane    default_select_plane;   // G17,G18,G19 reset default
+    cmUnitsMode         default_units_mode;     // G20,G21 reset default
+    cmPathControl       default_path_control;   // G61,G61.1,G64 reset default
+    cmDistanceMode      default_distance_mode;  // G90,G91 reset default
+
   /**** Runtime variables (PRIVATE) ****/
 
     // Global state variables and requestors
@@ -562,13 +569,24 @@ stat_t cm_set_froe(nvObj_t *nv);        // set feedrate override enable
 stat_t cm_get_fro(nvObj_t *nv);         // get feedrate override factor
 stat_t cm_set_fro(nvObj_t *nv);         // set feedrate override factor
 
-stat_t cm_get_troe(nvObj_t *nv);         // get traverse override enable
-stat_t cm_set_troe(nvObj_t *nv);         // set traverse override enable
-stat_t cm_get_tro(nvObj_t *nv);          // get traverse override factor
-stat_t cm_set_tro(nvObj_t *nv);          // set traverse override factor
+stat_t cm_get_troe(nvObj_t *nv);        // get traverse override enable
+stat_t cm_set_troe(nvObj_t *nv);        // set traverse override enable
+stat_t cm_get_tro(nvObj_t *nv);         // get traverse override factor
+stat_t cm_set_tro(nvObj_t *nv);         // set traverse override factor
 
 stat_t cm_set_tram(nvObj_t *nv);        // attempt setting the rotation matrix
 stat_t cm_get_tram(nvObj_t *nv);        // return if the rotation matrix is non-identity
+
+stat_t cm_get_gpl(nvObj_t *nv);         // get gcode default plane
+stat_t cm_set_gpl(nvObj_t *nv);         // set gcode default plane
+stat_t cm_get_gun(nvObj_t *nv);         // get gcode default units mode
+stat_t cm_set_gun(nvObj_t *nv);         // set gcode default units mode
+stat_t cm_get_gco(nvObj_t *nv);         // get gcode default coordinate system
+stat_t cm_set_gco(nvObj_t *nv);         // set gcode default coordinate system
+stat_t cm_get_gpa(nvObj_t *nv);         // get gcode default path control mode
+stat_t cm_set_gpa(nvObj_t *nv);         // set gcode default path control mode
+stat_t cm_get_gdi(nvObj_t *nv);         // get gcode default distance mode
+stat_t cm_set_gdi(nvObj_t *nv);         // set gcode default distance mode
 
 /*--- text_mode support functions ---*/
 

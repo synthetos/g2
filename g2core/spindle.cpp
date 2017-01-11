@@ -2,7 +2,7 @@
  * spindle.cpp - canonical machine spindle driver
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -228,7 +228,7 @@ static float _get_spindle_pwm (cmSpindleEnable enable, cmSpindleDir direction)
 /*
 stat_t cm_spindle_override_enable(uint8_t flag)        // M51.1
 {
-    if (fp_TRUE(gc.gf.parameter) && fp_ZERO(gc.gn.parameter)) {
+    if (fp_TRUE(gp.gf.parameter) && fp_ZERO(gp.gn.parameter)) {
         spindle.override_enable = false;
     } else {
         spindle.override_enable = true;
@@ -239,7 +239,7 @@ stat_t cm_spindle_override_enable(uint8_t flag)        // M51.1
 stat_t cm_spindle_override_factor(uint8_t flag)        // M50.1
 {
     spindle.override_enable = flag;
-    spindle.override_factor = gc.gn.parameter;
+    spindle.override_factor = gp.gn.parameter;
 //    change spindle speed
     return (STAT_OK);
 }

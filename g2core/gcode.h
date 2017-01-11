@@ -198,7 +198,7 @@ typedef enum {              // axis modes (ordered: see _cm_get_feed_time())
  *   some state elements are necessarily restored from gm.
  *
  * - gf is used by the gcode parser interpreter to hold flags for any data
- *   that has changed in gn during the parse. gc.gf.target[] values are also used
+ *   that has changed in gn during the parse. gp.gf.target[] values are also used
  *   by the canonical machine during set_target().
  *
  * - cfg (config struct in config.h) is also used heavily and contains some
@@ -278,7 +278,6 @@ typedef struct GCodeStateExtended {     // Gcode dynamic state extensions - used
 
     uint16_t magic_end;
 } GCodeStateX_t;
-
 
 // Structures used by Gcode parser
 
@@ -369,21 +368,11 @@ typedef struct GCodeFlags {             // Gcode model input flags
 } GCodeFlags_t;
     
 typedef struct GCodeParser {
-
-    // gcode power-on default settings - defaults are not the same as the gm state
-    cmCoordSystem default_coord_system;     // G10 active coordinate system default
-    cmCanonicalPlane default_select_plane;  // G17,G18,G19 reset default
-    cmUnitsMode default_units_mode;         // G20,G21 reset default
-    cmPathControl default_path_control;     // G61,G61.1,G64 reset default
-    cmDistanceMode default_distance_mode;   // G90,G91 reset default
-
     GCodeInput_t  gn;               // gcode input values - transient
     GCodeFlags_t  gf;               // gcode input flags - transient
-
 } GCodeParser_t;
 
-extern GCodeParser_t gc;
-
+extern GCodeParser_t gp;
 
 /*
  * Global Scope Functions
