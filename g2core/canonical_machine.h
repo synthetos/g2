@@ -145,6 +145,13 @@ typedef enum {                  // queue flush state machine
     FLUSH_REQUESTED,            // flush has been requested but not started yet
 } cmQueueFlushState;
 
+typedef enum {
+    CM_NOT_INIT = 0,            // planners need initialization
+    CM_PRIMARY,                 // in primary machine/planner
+    CM_SECONDARY,               // in secondary machine/planner
+    CM_SECONDARY_RETURN         // in return move from secondary planner
+} cmMachineSelect;
+
 /*****************************************************************************
  * CANONICAL MACHINE STRUCTURES
  */
@@ -248,11 +255,9 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     cmSafetyState safety_interlock_state;   // safety interlock state
     uint32_t esc_boot_timer;                // timer for Electronic Speed Control (Spindle electronics) to boot
 
-//    bool g28_flag;                          // true = complete a G28 move (transient state)
-//    bool g30_flag;                          // true = complete a G30 move
-    bool deferred_write_flag;               // G10 data has changed (e.g. offsets) - flag to persist them
-    bool hold_disabled;                     // set true when in secondary planner to disable feedhold requests
+    bool waiting_for_motion_end;            // set true during a return-to-primary planner operation (G30 is completing)
     bool end_hold_requested;                // request restart after feedhold
+    bool deferred_write_flag;               // G10 data has changed (e.g. offsets) - flag to persist them
     uint8_t limit_requested;                // set non-zero to request limit switch processing (value is input number)
     uint8_t shutdown_requested;             // set non-zero to request shutdown in support of external estop (value is input number)
 
@@ -345,6 +350,7 @@ stat_t cm_test_soft_limits(const float target[]);
 /*--- Canonical machining functions (loosely) defined by NIST [organized by NIST Gcode doc] ---*/
 
 // Initialization and termination (4.3.2)
+void canonical_machine_inits(void);
 void canonical_machine_init(cmMachine_t *_cm, void *_mp);
 void canonical_machine_reset_rotation(cmMachine_t *_cm);        // NOT in NIST
 void canonical_machine_reset(cmMachine_t *_cm);
@@ -430,6 +436,7 @@ void cm_request_end_hold(void);
 void cm_request_queue_flush(void);
 void cm_request_end_queue_flush(void);
 stat_t cm_feedhold_sequencing_callback(void);                   // process feedhold, cycle start and queue flush requests
+stat_t cm_return_callback(void);                                // return from secondary planner
 
 bool cm_has_hold(void);
 void cm_start_hold(void);

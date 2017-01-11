@@ -142,7 +142,7 @@ uint8_t cm_straight_probe(float target[], bool flags[], bool failure_is_fatal, b
         return (STAT_AXIS_IS_MISSING);
     }
 
-    pb.failure_is_fatal     = failure_is_fatal;
+    pb.failure_is_fatal = failure_is_fatal;
     pb.moving_toward_switch = moving_toward_switch;
 
     copy_vector(pb.target, target);     // set probe move endpoint
@@ -158,7 +158,7 @@ uint8_t cm_straight_probe(float target[], bool flags[], bool failure_is_fatal, b
     clear_vector(cm->probe_results[0]);     // clear the old probe position
 
     // NOTE: relying on probe_result will not detect a probe to 0,0,0.
-    cm->probe_state[0]         = PROBE_WAITING;  // wait until planner queue empties before completing initialization
+    cm->probe_state[0] = PROBE_WAITING;  // wait until planner queue empties before completing initialization
     pb.waiting_for_motion_end = true;
 
     // queue a function to let us know when we can start probing
@@ -332,7 +332,10 @@ static stat_t _probe_axis_move(const float target[], bool exact_position) {
     return (STAT_EAGAIN);
 }
 
-static void _probe_axis_move_callback(float* vect, bool* flag) { pb.waiting_for_motion_end = false; }
+static void _probe_axis_move_callback(float* vect, bool* flag) 
+{
+    pb.waiting_for_motion_end = false; 
+}
 
 /*
  * _probing_finish() - report probe results and clean up

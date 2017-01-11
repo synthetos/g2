@@ -24,10 +24,6 @@
 #include "planner.h"
 #include "util.h"
 
-// Allocate arc planner singleton structure
-
-//arc_t arc;
-
 // Local functions
 
 static stat_t _compute_arc(const bool radius_f);
@@ -69,8 +65,6 @@ void cm_abort_arc(cmMachine_t *_cm)
  *
  *  cm_arc_cycle_callback() is called from the controller main loop. Each time it's called
  *  it queues as many arc segments (lines) as it can before it blocks, then returns.
- *
- *  Parts of this routine were informed by the grbl project.
  */
 
 stat_t cm_arc_callback(cmMachine_t *_cm)

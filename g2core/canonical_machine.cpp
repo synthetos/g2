@@ -37,9 +37,9 @@
  *
  *  Useful reference for doing C callbacks http://www.newty.de/fpt/fpt.html
  *
- *  There are 3 temporal contexts for system state:
- *      - The gcode model in the canonical machine (the MODEL context, held in gm)
- *      - The gcode model used by the planner (PLANNER context, held in bf's and mp)
+ *  There are 3 layered contexts for dynamic system state ("gcode model"):
+ *      - The gcode model in the canonical machine (the MODEL context, held in cm->gm)
+ *      - The gcode model used by the planner (PLANNER context, held in mp & its buffers)
  *      - The gcode model used during motion for reporting (RUNTIME context, held in mr)
  *
  *  It's a bit more complicated than this. The 'gm' struct contains the core Gcode model
@@ -110,9 +110,10 @@
 #include "xio.h"            // for serial queue flush
 
 /***********************************************************************************
- **** STRUCTURE ALLOCATIONS ********************************************************
+ **** CM GLOBALS & STRUCTURE ALLOCATIONS *******************************************
  ***********************************************************************************/
 
+cmMachineSelect cm_select;
 cmMachine_t *cm;    // pointer to active canonical machine
 cmMachine_t cm1;    // canonical machine primary machine
 cmMachine_t cm2;    // canonical machine secondary machine
@@ -136,10 +137,23 @@ static int8_t _axis(const index_t index);
  ***********************************************************************************/
 
 /*
+ * canonical_machine_inits() - combined cm inits
  * canonical_machine_init()  - initialize cm struct
  * canonical_machine_reset() - apply startup settings or reset to startup
  * canonical_machine_reset_rotation()
  */
+
+void canonical_machine_inits()
+{
+    planner_init(&mp1, &mr1, mp1_queue, PLANNER_QUEUE_SIZE);
+    planner_init(&mp2, &mr2, mp2_queue, SECONDARY_QUEUE_SIZE);
+    canonical_machine_init(&cm1, &mp1); // primary canonical machine
+    canonical_machine_init(&cm2, &mp2); // secondary canonical machine
+    cm = &cm1;                          // set global canonical machine pointer to primary machine
+    mp = &mp1;                          // set global pointer to the primary planner
+    mr = &mr1;                          // and primary runtime
+    cm_select = CM_PRIMARY;
+}    
 
 void canonical_machine_init(cmMachine_t *_cm, void *_mp)
 {
@@ -244,7 +258,7 @@ stat_t canonical_machine_test_assertions(cmMachine_t *_cm)
 
 stat_t cm_switch(nvObj_t *nv)
 {
-    // Must be in the correct CM and must be fully stopped in a hold
+    // Must be in the primary CM and fully stopped in a hold
     if ((cm != &cm1) || (cm->hold_state != FEEDHOLD_HOLD)) {
         nv->valuetype = TYPE_NULL;
         return (STAT_COMMAND_NOT_ACCEPTED);
@@ -259,35 +273,80 @@ stat_t cm_switch(nvObj_t *nv)
     // set parameters in cm, gm and gmx so you can actually use it
     cmMachine_t *_cm = &cm2;
     _cm->hold_state = FEEDHOLD_OFF;
-    _cm->hold_disabled = true;
     _cm->gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;
     _cm->gm.absolute_override = ABSOLUTE_OVERRIDE_OFF;
     _cm->gm.feed_rate = 0;
+
     
     // clear the target and set the positions to the current hold position
     memset(&(_cm->gm.target), 0, sizeof(_cm->gm.target));
-    memset(&(_cm->gm.target_comp), 0, sizeof(_cm->gm.target_comp));
+//  memset(&(_cm->gm.target_comp), 0, sizeof(_cm->gm.target_comp));
+    copy_vector(_cm->gm.target_comp, cm->gm.target_comp); // preserve original Kahan compensation
     copy_vector(_cm->gmx.position, mr->position);
     copy_vector(mp2.position, mr->position);
+    copy_vector(mr2.position, mr->position);
 
-    // reassign the globals to the secondary planner (this must be next-to-last)
+    // reassign the globals to the secondary CM (this must be next-to-last)
     cm = &cm2;
     mp = (mpPlanner_t *)cm->mp;     // mp is a void pointer
     mr = mp->mr;
+    cm_select = CM_SECONDARY;
 
     // finally, set motion state and ACTIVE_MODEL. This must be performed after cm is set to cm2
+    cm_set_g30_position();
     cm_set_motion_state(MOTION_STOP);
     return (STAT_OK);
 }
 
-stat_t cm_return(nvObj_t *nv)     // if value == true return with offset corrections
+static void _return_move_callback(float* vect, bool* flag)
 {
-    // reset the globals to the primary planner
-    cm = &cm1;
-    mp = (mpPlanner_t *)cm->mp;     // cm->mp is a void pointer
-    mr = mp->mr;
+    cm2.waiting_for_motion_end = false;
+}
+
+stat_t cm_return(nvObj_t *nv)     // LATER: if value == true return with offset corrections
+{
+    // Must be in the secondary CM and fully stopped
+    if ((cm != &cm2) || (cm->motion_state != MOTION_STOP)) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_COMMAND_NOT_ACCEPTED);
+    }
+    
+    // while still in secondary, perform the G30 move and queue a wait
+    float target[] = { 0,0,0,0,0,0 };
+    bool flags[]   = { 0,0,0,0,0,0 };
+    cm_goto_g30_position(target, flags);    // initiate a return move
+    cm->waiting_for_motion_end = true;      // indicates running the final G30 move in the secondary
+    mp_queue_command(_return_move_callback, nullptr, nullptr);
+    cm_select = CM_SECONDARY_RETURN;
     return (STAT_OK);
 }
+
+stat_t cm_return_callback()
+{
+    if (cm_select != CM_SECONDARY_RETURN) { // exit if not in secondary planner
+        return (STAT_NOOP);
+    }
+    if (cm->waiting_for_motion_end) {       // sync to planner move ends (using callback)
+        return (STAT_EAGAIN);
+    }
+    
+    // return to primary CM
+    cm = &cm1;
+    mp = (mpPlanner_t *)cm->mp;             // cm->mp is a void pointer
+    mr = mp->mr;
+    cm_select = CM_PRIMARY;
+    cm_set_motion_state(MOTION_STOP);       // sets active model to primary
+
+    cm_end_hold();
+    return (STAT_OK);
+}
+
+/*
+stat_t cm_return_from_hold_callback()
+{
+    
+}
+*/
 
 /*************************************
  * Internal getters and setters      *
@@ -1828,6 +1887,13 @@ stat_t cm_feedhold_sequencing_callback()
             cm_end_hold();
         }
     }
+/*
+    if (cm->return_hold_requested) {
+        if (cm->queue_flush_state == FLUSH_OFF) {    // either no flush or wait until it's done flushing
+            cm_end_hold();
+        }
+    }
+*/
     return (STAT_OK);
 }
 

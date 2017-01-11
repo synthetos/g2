@@ -768,7 +768,6 @@ mpBuf_t * mp_get_write_buffer()     // get & clear a buffer
 
 void mp_unget_write_buffer()        // mark buffer as empty and adjust free buffer count
 {
-//    mpQueue_t *q = &mb.q[mb.active_q];
     mpPlannerQueue_t *q = &(mp->q);
 
     if (q->w->buffer_state != MP_BUFFER_EMPTY) {  // safety. Can't unget an empty buffer
@@ -784,7 +783,6 @@ void mp_unget_write_buffer()        // mark buffer as empty and adjust free buff
 
 void mp_commit_write_buffer(const blockType block_type)
 {
-//    mpQueue_t *q = &mb.q[mb.active_q];
     mpPlannerQueue_t *q = &(mp->q);
 
     q->w->block_type = block_type;
@@ -815,7 +813,6 @@ void mp_commit_write_buffer(const blockType block_type)
 //  (2) is the buffer in error - i.e. not yet ready for running?
 mpBuf_t * mp_get_run_buffer()
 {
-//    mpBuf_t *r = mb.q[mb.active_q].r;
     mpBuf_t *r = mp->q.r;
 
     if (r->buffer_state == MP_BUFFER_EMPTY) {

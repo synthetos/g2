@@ -180,7 +180,7 @@ stat_t cm_homing_cycle_start(void) {
 
 stat_t cm_homing_cycle_start_no_set(void) {
     cm_homing_cycle_start();
-    hm.set_coordinates = false;  // set flag to not update position variables at the end of the cycle
+    hm.set_coordinates = false;             // set flag to not update position variables at the end of the cycle
     return (STAT_OK);
 }
 
@@ -188,10 +188,10 @@ stat_t cm_homing_cycle_callback(void) {
     if (cm->cycle_state != CYCLE_HOMING) {  // exit if not in a homing cycle
         return (STAT_NOOP);
     }
-    if (hm.waiting_for_motion_end) {  // sync to planner move ends (using callback)
+    if (hm.waiting_for_motion_end) {        // sync to planner move ends (using callback)
         return (STAT_EAGAIN);
     }
-    return (hm.func(hm.axis));  // execute the current homing move
+    return (hm.func(hm.axis));              // execute the current homing move
 }
 
 /*

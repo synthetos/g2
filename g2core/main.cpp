@@ -108,19 +108,11 @@ void application_init_machine(void)
     encoder_init();                     // virtual encoders
     gpio_init();                        // inputs and outputs
     pwm_init();                         // pulse width modulation drivers
-    
-    planner_init(&mp1, &mr1, mp1_queue, PLANNER_QUEUE_SIZE);
-    planner_init(&mp2, &mr2, mp2_queue, SECONDARY_QUEUE_SIZE);
-    canonical_machine_init(&cm1, &mp1); // primary canonical machine
-    canonical_machine_init(&cm2, &mp2); // secondary canonical machine
+    canonical_machine_inits();          // combined inits for CMs and planner    
 }
 
 void application_init_startup(void)
 {
-    cm = &cm1;                          // set global canonical machine pointer to primary machine
-    mp = &mp1;                          // set global pointer to the primary planner
-    mr = &mr1;                          // and primary runtime
-
     // start the application
     controller_init();                  // should be first startup init (requires xio_init())
     config_init();					    // apply the config settings from persistence
