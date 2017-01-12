@@ -221,6 +221,7 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     // System group settings
     float junction_integration_time;        // how aggressively will the machine corner? 1.6 or so is about the upper limit
     float chordal_tolerance;                // arc chordal accuracy setting in mm
+    float feedhold_z_lift;                  // mm to move Z axis on feedhold, or 0 to disable
     bool soft_limit_enable;                 // true to enable soft limit testing on Gcode inputs
     bool limit_enable;                      // true to enable limit switches (disabled is same as override)
     bool safety_interlock_enable;           // true to enable safety interlock system
@@ -568,6 +569,8 @@ stat_t cm_get_jt(nvObj_t *nv);          // get junction integration time constan
 stat_t cm_set_jt(nvObj_t *nv);          // set junction integration time constant
 stat_t cm_get_ct(nvObj_t *nv);          // get chordal tolerance
 stat_t cm_set_ct(nvObj_t *nv);          // set chordal tolerance
+stat_t cm_get_zl(nvObj_t *nv);          // get feedhold Z lift
+stat_t cm_set_zl(nvObj_t *nv);          // set feedhold Z lift
 stat_t cm_get_sl(nvObj_t *nv);          // get soft limit enable
 stat_t cm_set_sl(nvObj_t *nv);          // set soft limit enable
 stat_t cm_get_lim(nvObj_t *nv);         // get hard limit enable
@@ -575,6 +578,8 @@ stat_t cm_set_lim(nvObj_t *nv);         // set hard limit enable
 stat_t cm_get_saf(nvObj_t *nv);         // get safety interlock enable
 stat_t cm_set_saf(nvObj_t *nv);         // set safety interlock enable
 
+stat_t cm_get_m48(nvObj_t *nv);         // get M48 value (enable/disable overrides)
+stat_t cm_set_m48(nvObj_t *nv);         // set M48 value (enable/disable overrides)
 stat_t cm_get_froe(nvObj_t *nv);        // get feedrate override enable
 stat_t cm_set_froe(nvObj_t *nv);        // set feedrate override enable
 stat_t cm_get_fro(nvObj_t *nv);         // get feedrate override factor
@@ -637,11 +642,12 @@ stat_t cm_set_gdi(nvObj_t *nv);         // set gcode default distance mode
 
   void cm_print_jt(nvObj_t *nv);    // global CM settings
   void cm_print_ct(nvObj_t *nv);
+  void cm_print_zl(nvObj_t *nv);
   void cm_print_sl(nvObj_t *nv);
   void cm_print_lim(nvObj_t *nv);
   void cm_print_saf(nvObj_t *nv);
 
-//  void cm_print_m48e(nvObj_t *nv);
+  void cm_print_m48(nvObj_t *nv);
   void cm_print_froe(nvObj_t *nv);
   void cm_print_fro(nvObj_t *nv);
   void cm_print_troe(nvObj_t *nv);
@@ -703,15 +709,17 @@ stat_t cm_set_gdi(nvObj_t *nv);         // set gcode default distance mode
 
     #define cm_print_jt tx_print_stub       // global CM settings
     #define cm_print_ct tx_print_stub
+    #define cm_print_zl tx_print_stub
     #define cm_print_sl tx_print_stub
     #define cm_print_lim tx_print_stub
     #define cm_print_saf tx_print_stub
 
-    #define cm_print_m48e tx_print_stub
-    #define cm_print_mfoe tx_print_stub
-    #define cm_print_mfo tx_print_stub
-    #define cm_print_mtoe tx_print_stub
-    #define cm_print_mto tx_print_stub
+    #define cm_print_m48 tx_print_stub
+    #define cm_print_froe tx_print_stub
+    #define cm_print_fro tx_print_stub
+    #define cm_print_troe tx_print_stub
+    #define cm_print_tro tx_print_stub
+    #define cm_print_tram tx_print_stub
 
     #define cm_print_am tx_print_stub    // axis print functions
     #define cm_print_fr tx_print_stub

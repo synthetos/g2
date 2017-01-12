@@ -836,20 +836,20 @@ const cfgItem_t cfgArray[] = {
     { "jid","jidd",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[3], 0},
 
     // General system parameters
-    { "sys","jt", _fipn, 2, cm_print_jt,  cm_get_jt,  cm_set_jt,  (float *)&cs.null, JUNCTION_INTEGRATION_TIME },
-    { "sys","ct", _fipnc,4, cm_print_ct,  cm_get_ct,  cm_set_ct,  (float *)&cs.null, CHORDAL_TOLERANCE },
-    { "sys","sl", _fipn, 0, cm_print_sl,  cm_get_sl,  cm_set_sl,  (float *)&cs.null, SOFT_LIMIT_ENABLE },
-    { "sys","lim", _fipn,0, cm_print_lim, cm_get_lim, cm_set_lim, (float *)&cs.null, HARD_LIMIT_ENABLE },
-    { "sys","saf", _fipn,0, cm_print_saf, cm_get_saf, cm_set_saf, (float *)&cs.null, SAFETY_INTERLOCK_ENABLE },
-    { "sys","froe",_fipn,0, cm_print_froe,cm_get_froe,cm_get_froe,(float *)&cs.null, FEED_OVERRIDE_ENABLE},
-    { "sys","fro", _fipn,3, cm_print_fro, cm_get_fro, cm_set_fro, (float *)&cs.null, FEED_OVERRIDE_FACTOR},
-    { "sys","troe",_fipn,0, cm_print_troe,cm_get_troe,cm_get_troe,(float *)&cs.null, TRAVERSE_OVERRIDE_ENABLE},
-    { "sys","tro", _fipn,3, cm_print_tro, cm_get_tro, cm_set_tro, (float *)&cs.null, TRAVERSE_OVERRIDE_FACTOR},
-//    { "sys","zl",  _fipn,3, cm_print_zl,  cm_get_zl,  cm_set_zl,  (float *)&cs.null, FEEDHOLD_Z_LIFT},        
-    { "sys","mt",  _fipn,2, st_print_mt,  st_get_mt,  st_set_mt,  (float *)&cs.null, MOTOR_POWER_TIMEOUT},
-    { "",   "me",  _f0,  0, st_print_me,  get_nul,    st_set_me,  (float *)&cs.null, 0 },    // SET to enable motors
-    { "",   "md",  _f0,  0, st_print_md,  get_nul,    st_set_md,  (float *)&cs.null, 0 },    // SET to disable motors
-//    { "sys","m48e",_fipn,0, cm_print_m48e,get_ui8,   set_01,      (float *)&cm->gmx.m48_enable, 0 },   // M48/M49 feedrate & spindle override enable
+    { "sys","jt",  _fipn, 2, cm_print_jt,  cm_get_jt,  cm_set_jt,  (float *)&cs.null, JUNCTION_INTEGRATION_TIME },
+    { "sys","ct",  _fipnc,4, cm_print_ct,  cm_get_ct,  cm_set_ct,  (float *)&cs.null, CHORDAL_TOLERANCE },
+    { "sys","zl",  _fipnc,3, cm_print_zl,  cm_get_zl,  cm_set_zl,  (float *)&cs.null, FEEDHOLD_Z_LIFT},
+    { "sys","sl",  _fipn, 0, cm_print_sl,  cm_get_sl,  cm_set_sl,  (float *)&cs.null, SOFT_LIMIT_ENABLE },
+    { "sys","lim", _fipn, 0, cm_print_lim, cm_get_lim, cm_set_lim, (float *)&cs.null, HARD_LIMIT_ENABLE },
+    { "sys","saf", _fipn, 0, cm_print_saf, cm_get_saf, cm_set_saf, (float *)&cs.null, SAFETY_INTERLOCK_ENABLE },
+    { "sys","m48", _fipn, 0, cm_print_m48, cm_get_m48, cm_get_m48, (float *)&cs.null, 0 },   // M48/M49 feedrate & spindle override enable
+    { "sys","froe",_fipn, 0, cm_print_froe,cm_get_froe,cm_get_froe,(float *)&cs.null, FEED_OVERRIDE_ENABLE},
+    { "sys","fro", _fipn, 3, cm_print_fro, cm_get_fro, cm_set_fro, (float *)&cs.null, FEED_OVERRIDE_FACTOR},
+    { "sys","troe",_fipn, 0, cm_print_troe,cm_get_troe,cm_get_troe,(float *)&cs.null, TRAVERSE_OVERRIDE_ENABLE},
+    { "sys","tro", _fipn, 3, cm_print_tro, cm_get_tro, cm_set_tro, (float *)&cs.null, TRAVERSE_OVERRIDE_FACTOR},
+    { "sys","mt",  _fipn, 2, st_print_mt,  st_get_mt,  st_set_mt,  (float *)&cs.null, MOTOR_POWER_TIMEOUT},
+    { "",   "me",  _f0,   0, st_print_me,  get_nul,    st_set_me,  (float *)&cs.null, 0 },    // SET to enable motors
+    { "",   "md",  _f0,   0, st_print_md,  get_nul,    st_set_md,  (float *)&cs.null, 0 },    // SET to disable motors
 
     // Spindle functions
     { "sys","spep",_fipn,0, cm_print_spep,get_ui8, set_01,   (float *)&spindle.enable_polarity,     SPINDLE_ENABLE_POLARITY },

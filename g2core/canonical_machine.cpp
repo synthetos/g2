@@ -2682,6 +2682,9 @@ stat_t cm_set_jt(nvObj_t *nv)
 stat_t cm_get_ct(nvObj_t *nv) { return(get_float(nv, cm->chordal_tolerance)); }
 stat_t cm_set_ct(nvObj_t *nv) { return(set_float_range(nv, cm->chordal_tolerance, CHORDAL_TOLERANCE_MIN, 10000000)); }
 
+stat_t cm_get_zl(nvObj_t *nv) { return(get_float(nv, cm->feedhold_z_lift)); }
+stat_t cm_set_zl(nvObj_t *nv) { return(set_float(nv, cm->feedhold_z_lift)); }
+
 stat_t cm_get_sl(nvObj_t *nv) { return(get_int(nv, cm->soft_limit_enable)); }
 stat_t cm_set_sl(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->soft_limit_enable, 0, 1)); }
 
@@ -2690,6 +2693,9 @@ stat_t cm_set_lim(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->limit_enable,
 
 stat_t cm_get_saf(nvObj_t *nv) { return(get_int(nv, cm->safety_interlock_enable)); }
 stat_t cm_set_saf(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->safety_interlock_enable, 0, 1)); }
+
+stat_t cm_get_m48(nvObj_t *nv) { return(get_int(nv, cm->gmx.m48_enable)); }
+stat_t cm_set_m48(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->gmx.m48_enable, 0, 1)); }
 
 stat_t cm_get_froe(nvObj_t *nv) { return(get_int(nv, cm->gmx.mfo_enable)); }
 stat_t cm_set_froe(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->gmx.mfo_enable, 0, 1)); }
@@ -2853,26 +2859,28 @@ void cm_print_gdi(nvObj_t *nv) { text_print(nv, fmt_gdi);}  // TYPE_INT
 
 /* system parameter print functions */
 
-static const char fmt_jt[] = "[jt]  junction integrgation time%6.2f\n";
+static const char fmt_jt[] = "[jt]  junction integration time%7.2f\n";
 static const char fmt_ct[] = "[ct]  chordal tolerance%17.4f%s\n";
+static const char fmt_zl[] = "[zl]  Z lift on feedhold%16.3f%s\n";
 static const char fmt_sl[] = "[sl]  soft limit enable%12d [0=disable,1=enable]\n";
 static const char fmt_lim[] ="[lim] limit switch enable%10d [0=disable,1=enable]\n";
 static const char fmt_saf[] ="[saf] safety interlock enable%6d [0=disable,1=enable]\n";
 
 void cm_print_jt(nvObj_t *nv) { text_print(nv, fmt_jt);}        // TYPE FLOAT
 void cm_print_ct(nvObj_t *nv) { text_print_flt_units(nv, fmt_ct, GET_UNITS(ACTIVE_MODEL));}
+void cm_print_zl(nvObj_t *nv) { text_print_flt_units(nv, fmt_zl, GET_UNITS(ACTIVE_MODEL));}
 void cm_print_sl(nvObj_t *nv) { text_print(nv, fmt_sl);}        // TYPE_INT
 void cm_print_lim(nvObj_t *nv){ text_print(nv, fmt_lim);}       // TYPE_INT
 void cm_print_saf(nvObj_t *nv){ text_print(nv, fmt_saf);}       // TYPE_INT
 
-//static const char fmt_m48e[] = "[m48e] overrides enabled%11d [0=disable,1=enable]\n";
+static const char fmt_m48[]  = "[m48] overrides enabled%12d [0=disable,1=enable]\n";
 static const char fmt_froe[] = "[froe] feed override enable%8d [0=disable,1=enable]\n";
 static const char fmt_fro[]  = "[fro]  feedrate override%15.3f [0.05 < mfo < 2.00]\n";
 static const char fmt_troe[] = "[troe] traverse over enable%8d [0=disable,1=enable]\n";
 static const char fmt_tro[]  = "[tro]  traverse override%15.3f [0.05 < mto < 1.00]\n";
 static const char fmt_tram[] = "[tram] is coordinate space rotated to be tram %s\n";
 
-//void cm_print_m48e(nvObj_t *nv) { text_print(nv, fmt_m48e);}    // TYPE_INT
+void cm_print_m48(nvObj_t *nv)  { text_print(nv, fmt_m48);}    // TYPE_INT
 void cm_print_froe(nvObj_t *nv) { text_print(nv, fmt_froe);}    // TYPE INT
 void cm_print_fro(nvObj_t *nv)  { text_print(nv, fmt_fro);}     // TYPE FLOAT
 void cm_print_troe(nvObj_t *nv) { text_print(nv, fmt_troe);}    // TYPE INT
