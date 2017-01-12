@@ -310,9 +310,6 @@ cmHomingState cm_get_homing_state(void);
 cmProbeState cm_get_probe_state(void);
 uint8_t cm_get_jogging_state(void);
 
-stat_t cm_switch(nvObj_t *nv);
-stat_t cm_return(nvObj_t *nv);
-
 void cm_set_motion_state(const cmMotionState motion_state);
 
 uint32_t cm_get_linenum(const GCodeState_t *gcode_state);
@@ -377,7 +374,6 @@ stat_t cm_select_plane(const uint8_t plane);                                // G
 stat_t cm_set_units_mode(const uint8_t mode);                               // G20, G21
 stat_t cm_set_distance_mode(const uint8_t mode);                            // G90, G91
 stat_t cm_set_arc_distance_mode(const uint8_t mode);                        // G90.1, G91.1
-//stat_t cm_set_tl_offset(const uint8_t H_word, bool apply_additional);       // G43, G43.2
 stat_t cm_set_tl_offset(const uint8_t H_word, const bool H_flag,            // G43, G43.2
                         const bool apply_additional);
 stat_t cm_cancel_tl_offset(void);                                           // G49
@@ -444,12 +440,18 @@ void cm_request_end_queue_flush(void);
 stat_t cm_feedhold_sequencing_callback(void);                   // process feedhold, cycle start and queue flush requests
 stat_t cm_return_callback(void);                                // return from secondary planner
 
+// Feedhold and related functions
 bool cm_has_hold(void);
 void cm_start_hold(void);
 void cm_end_hold(void);
 
 void cm_queue_flush(void);                                      // flush serial and planner queues with coordinate resets
 void cm_end_queue_flush(void);
+
+stat_t cm_switch(nvObj_t *nv);
+stat_t cm_switch_to_secondary(void);
+stat_t cm_return(nvObj_t *nv);
+stat_t cm_return_to_primary(void);
 
 void cm_cycle_start(void);                                      // (no Gcode)
 void cm_cycle_end(void);                                        // (no Gcode)

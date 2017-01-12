@@ -247,107 +247,6 @@ stat_t canonical_machine_test_assertions(cmMachine_t *_cm)
     return (STAT_OK);
 }
 
-/*
- *  cm_switch() - switch canonical machine to secondary machine
- *  cm_return() - return secondary canoncial machine to primary machine
- *
- *  Doing a Switch is only safe when the machine has completely stopped during a feedhold
- *  Switch works to switch from the primary planer to the secondary planner
- *  Use Return to return to the primary planner
- */
-
-stat_t cm_switch(nvObj_t *nv)
-{
-    // Must be in the primary CM and fully stopped in a hold
-    if ((cm != &cm1) || (cm->hold_state != FEEDHOLD_HOLD)) {
-        nv->valuetype = TYPE_NULL;
-        return (STAT_COMMAND_NOT_ACCEPTED);
-    }
-    
-    // copy the primary canonical machine to the secondary, 
-    // fix the planner pointer, and reset the secondary planner
-    memcpy(&cm2, &cm1, sizeof(cmMachine_t));
-    cm2.mp = &mp2;
-    planner_reset((mpPlanner_t *)cm2.mp);   // mp is a void pointer
-
-    // set parameters in cm, gm and gmx so you can actually use it
-    cmMachine_t *_cm = &cm2;
-    _cm->hold_state = FEEDHOLD_OFF;
-    _cm->gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;
-    _cm->gm.absolute_override = ABSOLUTE_OVERRIDE_OFF;
-    _cm->gm.feed_rate = 0;
-
-    
-    // clear the target and set the positions to the current hold position
-    memset(&(_cm->gm.target), 0, sizeof(_cm->gm.target));
-//  memset(&(_cm->gm.target_comp), 0, sizeof(_cm->gm.target_comp));
-    copy_vector(_cm->gm.target_comp, cm->gm.target_comp); // preserve original Kahan compensation
-    copy_vector(_cm->gmx.position, mr->position);
-    copy_vector(mp2.position, mr->position);
-    copy_vector(mr2.position, mr->position);
-
-    // reassign the globals to the secondary CM (this must be next-to-last)
-    cm = &cm2;
-    mp = (mpPlanner_t *)cm->mp;     // mp is a void pointer
-    mr = mp->mr;
-    cm_select = CM_SECONDARY;
-
-    // finally, set motion state and ACTIVE_MODEL. This must be performed after cm is set to cm2
-    cm_set_g30_position();
-    cm_set_motion_state(MOTION_STOP);
-    return (STAT_OK);
-}
-
-static void _return_move_callback(float* vect, bool* flag)
-{
-    cm2.waiting_for_motion_end = false;
-}
-
-stat_t cm_return(nvObj_t *nv)     // LATER: if value == true return with offset corrections
-{
-    // Must be in the secondary CM and fully stopped
-    if ((cm != &cm2) || (cm->motion_state != MOTION_STOP)) {
-        nv->valuetype = TYPE_NULL;
-        return (STAT_COMMAND_NOT_ACCEPTED);
-    }
-    
-    // while still in secondary, perform the G30 move and queue a wait
-    float target[] = { 0,0,0,0,0,0 };
-    bool flags[]   = { 0,0,0,0,0,0 };
-    cm_goto_g30_position(target, flags);    // initiate a return move
-    cm->waiting_for_motion_end = true;      // indicates running the final G30 move in the secondary
-    mp_queue_command(_return_move_callback, nullptr, nullptr);
-    cm_select = CM_SECONDARY_RETURN;
-    return (STAT_OK);
-}
-
-stat_t cm_return_callback()
-{
-    if (cm_select != CM_SECONDARY_RETURN) { // exit if not in secondary planner
-        return (STAT_NOOP);
-    }
-    if (cm->waiting_for_motion_end) {       // sync to planner move ends (using callback)
-        return (STAT_EAGAIN);
-    }
-    
-    // return to primary CM
-    cm = &cm1;
-    mp = (mpPlanner_t *)cm->mp;             // cm->mp is a void pointer
-    mr = mp->mr;
-    cm_select = CM_PRIMARY;
-    cm_set_motion_state(MOTION_STOP);       // sets active model to primary
-
-    cm_end_hold();
-    return (STAT_OK);
-}
-
-/*
-stat_t cm_return_from_hold_callback()
-{
-    
-}
-*/
-
 /*************************************
  * Internal getters and setters      *
  * Canonical Machine State functions *
@@ -1912,13 +1811,6 @@ stat_t cm_feedhold_sequencing_callback()
             cm_end_hold();
         }
     }
-/*
-    if (cm->return_hold_requested) {
-        if (cm->queue_flush_state == FLUSH_OFF) {    // either no flush or wait until it's done flushing
-            cm_end_hold();
-        }
-    }
-*/
     return (STAT_OK);
 }
 
@@ -1982,6 +1874,128 @@ void cm_queue_flush()
         cm->queue_flush_state = FLUSH_OFF;
         qr_request_queue_report(0);                 // request a queue report, since we've changed the number of buffers available
     }
+}
+
+/*
+ *  cm_switch() - switch canonical machine to secondary machine
+ *  cm_return() - return secondary canoncial machine to primary machine
+ *
+ *  Doing a Switch is only safe when the machine has completely stopped during a feedhold
+ *  Switch works to switch from the primary planer to the secondary planner
+ *  Use Return to return to the primary planner
+ */
+
+stat_t cm_switch(nvObj_t *nv)
+{
+    stat_t status = cm_switch_to_secondary();
+    if (status != STAT_OK) {
+        nv->valuetype = TYPE_NULL;
+    }
+    return (status);
+}
+
+stat_t cm_return(nvObj_t *nv)
+{
+    stat_t status = cm_return_to_primary();
+    if (status != STAT_OK) {
+        nv->valuetype = TYPE_NULL;
+    }
+    return (status);
+}
+
+stat_t cm_switch_to_secondary()
+{
+    // Must be in the primary CM and fully stopped in a hold
+    if ((cm != &cm1) || (cm->hold_state != FEEDHOLD_HOLD)) {
+        return (STAT_COMMAND_NOT_ACCEPTED);
+    }
+    
+    // copy the primary canonical machine to the secondary, 
+    // fix the planner pointer, and reset the secondary planner
+    memcpy(&cm2, &cm1, sizeof(cmMachine_t));
+    cm2.mp = &mp2;
+    planner_reset((mpPlanner_t *)cm2.mp);   // mp is a void pointer
+
+    // set parameters in cm, gm and gmx so you can actually use it
+    cmMachine_t *_cm = &cm2;
+    _cm->hold_state = FEEDHOLD_OFF;
+    _cm->gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;
+    _cm->gm.absolute_override = ABSOLUTE_OVERRIDE_OFF;
+    _cm->gm.feed_rate = 0;
+
+    // clear the target and set the positions to the current hold position
+    memset(&(_cm->gm.target), 0, sizeof(_cm->gm.target));
+//  memset(&(_cm->gm.target_comp), 0, sizeof(_cm->gm.target_comp)); // to zero out compensation terms
+    copy_vector(_cm->gm.target_comp, cm->gm.target_comp); // preserve original Kahan compensation
+    copy_vector(_cm->gmx.position, mr->position);
+    copy_vector(mp2.position, mr->position);
+    copy_vector(mr2.position, mr->position);
+
+    // reassign the globals to the secondary CM
+    cm = &cm2;
+    mp = (mpPlanner_t *)cm->mp;     // mp is a void pointer
+    mr = mp->mr;
+    cm_select = CM_SECONDARY;
+
+    // set motion state and ACTIVE_MODEL. This must be performed after cm is set to cm2
+    cm_set_g30_position();
+    cm_set_motion_state(MOTION_STOP);
+
+    // perform Z lift
+    if (fp_ZERO(cm->feedhold_z_lift)) {     // skip this if the lift is zero
+        return (STAT_OK);
+    }
+    float stored_distance_mode = cm_get_distance_mode(MODEL);
+    cm_set_distance_mode(INCREMENTAL_DISTANCE_MODE);
+    bool flags[AXES] = { 0,0,1,0,0,0 };
+    float target[AXES] = { 0,0, cm->feedhold_z_lift, 0,0,0 };
+    cm_straight_traverse(target, flags);
+    cm_set_distance_mode(stored_distance_mode);
+
+    return (STAT_OK);
+}
+
+// Callback to run at when the G30 return move is finished
+static void _return_move_callback(float* vect, bool* flag)
+{
+    cm2.waiting_for_motion_end = false;
+}
+
+stat_t cm_return_to_primary()     // LATER: if value == true return with offset corrections
+{
+    // Must be in the secondary CM and fully stopped
+    if ((cm != &cm2) || (cm->motion_state != MOTION_STOP)) {
+        return (STAT_COMMAND_NOT_ACCEPTED);
+    }
+    
+    // while still in secondary, perform the G30 move and queue a wait
+    float target[] = { 0,0,0,0,0,0 };       // LATER: Make this move return through XY, then Z
+    bool flags[]   = { 0,0,0,0,0,0 };
+    cm_goto_g30_position(target, flags);    // initiate a return move
+    cm->waiting_for_motion_end = true;      // indicates running the final G30 move in the secondary
+    mp_queue_command(_return_move_callback, nullptr, nullptr);
+    cm_select = CM_SECONDARY_RETURN;
+    return (STAT_OK);
+}
+
+stat_t cm_return_callback()
+{
+    if (cm_select != CM_SECONDARY_RETURN) { // exit if not in secondary planner
+        return (STAT_NOOP);
+    }
+    if (cm->waiting_for_motion_end) {       // sync to planner move ends (using callback)
+        return (STAT_EAGAIN);
+    }
+    
+    // return to primary CM
+    cm = &cm1;
+    mp = (mpPlanner_t *)cm->mp;             // cm->mp is a void pointer
+    mr = mp->mr;
+    cm_select = CM_PRIMARY;
+    cm_set_motion_state(MOTION_STOP);       // sets active model to primary
+
+    cm_end_hold();
+    return (STAT_OK);
 }
 
 /******************************

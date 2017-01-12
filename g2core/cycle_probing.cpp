@@ -2,7 +2,7 @@
  * cycle_probing.c - probing cycle extension to canonical_machine.c
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S Hart, Jr., Sarah Tappon, Tom Cauchois, Robert Giseburt
+ * Copyright (c) 2010 - 2017 Alden S Hart, Jr., Sarah Tappon, Tom Cauchois, Robert Giseburt
  * With contributions from Other Machine Company.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
