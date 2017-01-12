@@ -1200,6 +1200,7 @@ stat_t cm_set_g10_data(const uint8_t P_word, const bool P_flag,
  * cm_set_coord_system() - G54-G59
  * _exec_offset() - callback from planner
  */
+
 stat_t cm_set_tl_offset(const uint8_t H_word, const bool H_flag, const bool apply_additional)
 {
     uint8_t tool;
