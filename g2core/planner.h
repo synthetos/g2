@@ -553,6 +553,8 @@ stat_t mp_planner_callback();
 void mp_replan_queue(mpBuf_t *bf);
 void mp_start_feed_override(const float ramp_time, const float override);
 void mp_end_feed_override(const float ramp_time);
+void mp_start_traverse_override(const float ramp_time, const float override);
+void mp_end_traverse_override(const float ramp_time);
 void mp_planner_time_accounting(void);
 
 // planner buffer primitives
