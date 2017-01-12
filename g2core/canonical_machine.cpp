@@ -1135,10 +1135,12 @@ stat_t cm_set_arc_distance_mode(const uint8_t mode)
  *  cm_set_work_offsets() immediately afterwards.
  */
 
-stat_t cm_set_g10_data(const uint8_t P_word, const uint8_t L_word,
+stat_t cm_set_g10_data(const uint8_t P_word, const bool P_flag,
+                       const uint8_t L_word, const bool L_flag,
                        const float offset[], const bool flag[])
 {
-    if (!gp.gf.L_word) {
+//    if (!gp.gf.L_word) {
+    if (!L_flag) {
         return (STAT_L_WORD_IS_MISSING);
     }
 
@@ -1199,11 +1201,11 @@ stat_t cm_set_g10_data(const uint8_t P_word, const uint8_t L_word,
  * cm_set_coord_system() - G54-G59
  * _exec_offset() - callback from planner
  */
-stat_t cm_set_tl_offset(const uint8_t H_word, bool apply_additional)
+stat_t cm_set_tl_offset(const uint8_t H_word, const bool H_flag, const bool apply_additional)
 {
     uint8_t tool;
-    if (gp.gf.H_word)
-    {
+/*
+    if (gp.gf.H_word) {
         if (gp.gn.H_word > TOOLS) {
             return (STAT_H_WORD_IS_INVALID);
         }
@@ -1211,6 +1213,16 @@ stat_t cm_set_tl_offset(const uint8_t H_word, bool apply_additional)
             tool = cm->gm.tool;
         } else {
             tool = gp.gn.H_word;
+        }
+*/
+    if (H_flag) {
+        if (H_word > TOOLS) {
+            return (STAT_H_WORD_IS_INVALID);
+        }
+        if (H_word == 0) {    // interpret H0 as "current tool", just like no H at all.
+            tool = cm->gm.tool;
+        } else {
+            tool = H_word;
         }
     } else {
         tool = cm->gm.tool;
@@ -1692,7 +1704,7 @@ stat_t cm_m48_enable(uint8_t enable)        // M48, M49
 }
 
 /*
- * cm_feed_rate_override_enable() - M50
+ * cm_mfo_control() - M50 manual feed rate override comtrol
  *
  *  M50 enables manual feedrate override and the optional P override parameter.
  *  P is expressed as M% to N% of programmed feedrate, typically a value from 0.05 to 2.000.
@@ -1731,39 +1743,64 @@ stat_t cm_m48_enable(uint8_t enable)        // M48, M49
  *  ENABLE      ENABLE      M50 Pn    ENABLE        start ramp w/new P value; store P value
  *                                                  (Note: new ramp will supercede any existing ramp)
  */
-stat_t cm_mfo_enable(uint8_t enable)            // M50
+
+stat_t cm_mfo_control(const float P_word, const bool P_flag) // M50
 {
     bool new_enable = true;
     bool new_override = false;
-    if (gp.gf.parameter) {                      // if parameter is present in Gcode block
-        if (fp_ZERO(gp.gn.parameter)) {
-            new_enable = false;                 // P0 disables override
+    if (P_flag) {                           // if parameter is present in Gcode block
+        if (fp_ZERO(P_word)) {
+            new_enable = false;             // P0 disables override
         } else {
-            if (gp.gn.parameter < FEED_OVERRIDE_MIN) {
+            if (P_word < FEED_OVERRIDE_MIN) {
                 return (STAT_INPUT_LESS_THAN_MIN_VALUE);
             }
-            if (gp.gn.parameter > FEED_OVERRIDE_MAX) {
+            if (P_word > FEED_OVERRIDE_MAX) {
                 return (STAT_INPUT_EXCEEDS_MAX_VALUE);
             }
-            cm->gmx.mfo_factor = gp.gn.parameter; // it validates - store it.
+            cm->gmx.mfo_factor = P_word;    // P word is valid, store it.
             new_override = true;
         }
     }
-    if (cm->gmx.m48_enable) {                    // if master enable is ON
+    if (cm->gmx.m48_enable) {               // if master enable is ON
         if (new_enable && (new_override || !cm->gmx.mfo_enable)) {   // 3 cases to start a ramp
             mp_start_feed_override(FEED_OVERRIDE_RAMP_TIME, cm->gmx.mfo_factor);
         } else if (cm->gmx.mfo_enable && !new_enable) {              // case to turn off the ramp
             mp_end_feed_override(FEED_OVERRIDE_RAMP_TIME);
         }
     }
-    cm->gmx.mfo_enable = new_enable;             // always update the enable state
+    cm->gmx.mfo_enable = new_enable;        // always update the enable state
     return (STAT_OK);
 }
 
-//    if ((new_enable && new_override) || (new_enable && !cm->gmx.mfo_enable)) {
-//        if (!(cm->gmx.mfo_enable && new_override)) {
-
-
+stat_t cm_mto_control(const float P_word, const bool P_flag) // M50.1
+{
+    bool new_enable = true;
+    bool new_override = false;
+    if (P_flag) {                           // if parameter is present in Gcode block
+        if (fp_ZERO(P_word)) {
+            new_enable = false;             // P0 disables override
+        } else {
+            if (P_word < TRAVERSE_OVERRIDE_MIN) {
+                return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+            }
+            if (P_word > TRAVERSE_OVERRIDE_MAX) {
+                return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+            }
+            cm->gmx.mto_factor = P_word;    // P word is valid, store it.
+            new_override = true;
+        }
+    }
+    if (cm->gmx.m48_enable) {               // if master enable is ON
+        if (new_enable && (new_override || !cm->gmx.mfo_enable)) {   // 3 cases to start a ramp
+            mp_start_traverse_override(FEED_OVERRIDE_RAMP_TIME, cm->gmx.mto_factor);
+        } else if (cm->gmx.mto_enable && !new_enable) {              // case to turn off the ramp
+            mp_end_traverse_override(FEED_OVERRIDE_RAMP_TIME);
+        }
+    }
+    cm->gmx.mto_enable = new_enable;        // always update the enable state
+    return (STAT_OK);
+}
 /************************************************
  * Feedhold and Related Functions (no NIST ref) *
  ************************************************/
@@ -2707,7 +2744,9 @@ stat_t cm_run_qf(nvObj_t *nv)
 stat_t cm_run_home(nvObj_t *nv)
 {
     if (fp_TRUE(nv->value)) {
-        cm_homing_cycle_start();
+        float axes[] = { 1,1,1,1,1,1 };
+        bool flags[] = { 1,1,1,1,1,1 };
+        cm_homing_cycle_start(axes, flags);
     }
     return (STAT_OK);
 }

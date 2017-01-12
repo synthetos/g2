@@ -637,6 +637,16 @@ void mp_end_feed_override(const float ramp_time)
     mp_start_feed_override (FEED_OVERRIDE_RAMP_TIME, 1.00);
 }
 
+void mp_start_traverse_override(const float ramp_time, const float override_factor)
+{
+    return;
+}
+
+void mp_end_traverse_override(const float ramp_time)
+{
+    return;
+}
+
 /*
  * mp_planner_time_accounting() - gather time in planner
  */

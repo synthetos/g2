@@ -376,9 +376,12 @@ stat_t cm_select_plane(const uint8_t plane);                                // G
 stat_t cm_set_units_mode(const uint8_t mode);                               // G20, G21
 stat_t cm_set_distance_mode(const uint8_t mode);                            // G90, G91
 stat_t cm_set_arc_distance_mode(const uint8_t mode);                        // G90.1, G91.1
-stat_t cm_set_tl_offset(const uint8_t H_word, bool apply_additional);       // G43, G43.2
+//stat_t cm_set_tl_offset(const uint8_t H_word, bool apply_additional);       // G43, G43.2
+stat_t cm_set_tl_offset(const uint8_t H_word, const bool H_flag,            // G43, G43.2
+                        const bool apply_additional);
 stat_t cm_cancel_tl_offset(void);                                           // G49
-stat_t cm_set_g10_data(const uint8_t P_word, const uint8_t L_word,          // G10
+stat_t cm_set_g10_data(const uint8_t P_word, const bool P_flag,             // G10
+                       const uint8_t L_word, const bool L_flag,
                        const float offset[], const bool flag[]);
 
 void cm_set_position(const uint8_t axis, const float position);             // set absolute position - single axis
@@ -418,17 +421,19 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],             // G
 // see spindle.h for spindle functions - which would go right here
 
 // Tool Functions (4.3.8)
-stat_t cm_select_tool(const uint8_t tool);                                  // T parameter
-stat_t cm_change_tool(const uint8_t tool);                                  // M6
+stat_t cm_select_tool(const uint8_t tool);                      // T parameter
+stat_t cm_change_tool(const uint8_t tool);                      // M6
 
 // Miscellaneous Functions (4.3.9)
 // see coolant.h for coolant functions - which would go right here
 
-void cm_message(const char *message);                                       // msg to console (e.g. Gcode comments)
+void cm_message(const char *message);                           // msg to console (e.g. Gcode comments)
 
 void cm_reset_overrides(void);
-stat_t cm_m48_enable(uint8_t enable);                                       // M48, M49
-stat_t cm_mfo_enable(uint8_t enable);                                       // M50
+stat_t cm_m48_enable(uint8_t enable);                           // M48, M49
+stat_t cm_mfo_control(const float P_word, const bool P_flag);   // M50
+stat_t cm_mto_control(const float P_word, const bool P_flag);   // M50.1
+// See spindle.cpp for cm_sso_control()                         // M51        
 
 // Program Functions (4.3.10)
 void cm_request_feedhold(void);
@@ -458,8 +463,8 @@ stat_t cm_json_wait(char *json_string);                         // M102
 /*--- Cycles ---*/
 
 // Homing cycles
-stat_t cm_homing_cycle_start(void);                             // G28.2
-stat_t cm_homing_cycle_start_no_set(void);                      // G28.4
+stat_t cm_homing_cycle_start(const float axes[], const bool flags[]);        // G28.2
+stat_t cm_homing_cycle_start_no_set(const float axes[], const bool flags[]); // G28.4
 stat_t cm_homing_cycle_callback(void);                          // G28.2/.4 main loop callback
 
 // Probe cycles

@@ -279,6 +279,7 @@ typedef struct GCodeStateExtended {     // Gcode dynamic state extensions - used
     uint16_t magic_end;
 } GCodeStateX_t;
 
+/*
 // Structures used by Gcode parser
 
 typedef struct GCodeInput {             // Gcode model inputs - meaning depends on context
@@ -301,9 +302,9 @@ typedef struct GCodeInput {             // Gcode model inputs - meaning depends 
     float arc_offset[3];                // IJK - used by arc commands
 
     bool m48_enable;                    // M48/M49 input (enables for feed and spindle)
-    bool mfo_enable;                    // M50 feedrate override enable
-    bool mto_enable;                    // Mxx traverse override enable
-    bool sso_enable;                    // M51 spindle speed override enable
+    bool mfo_control;                   // M50 feedrate override control
+    bool mto_control;                   // M50.1 traverse override control
+    bool sso_control;                   // M51 spindle speed override control
 
     uint8_t select_plane;               // G17,G18,G19 - values to set plane to
     uint8_t units_mode;                 // G20,G21 - 0=inches (G20), 1 = mm (G21)
@@ -339,9 +340,9 @@ typedef struct GCodeFlags {             // Gcode model input flags
     bool feed_rate_mode;
 
     bool m48_enable;
-    bool mfo_enable;
-    bool mto_enable;
-    bool sso_enable;
+    bool mfo_control;
+    bool mto_control;
+    bool sso_control;
 
     bool select_plane;
     bool units_mode;
@@ -373,6 +374,7 @@ typedef struct GCodeParser {
 } GCodeParser_t;
 
 extern GCodeParser_t gp;
+*/
 
 /*
  * Global Scope Functions
