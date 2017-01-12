@@ -239,19 +239,6 @@ void cm_end_spindle_override(const float ramp_time)
 
 stat_t cm_sso_control(const float P_word, const bool P_flag) // M51
 {
-/*
-    if (fp_TRUE(gp.gf.parameter) && fp_ZERO(gp.gn.parameter)) {
-        spindle.override_enable = false;
-    } else {
-        spindle.override_enable = true;
-    }
-    return (STAT_OK);
-
-    spindle.override_enable = ;
-    spindle.override_factor = gp.gn.parameter;
-//    change spindle speed
-    return (STAT_OK);
-*/    
     bool new_enable = true;
     bool new_override = false;
     if (P_flag) {                           // if parameter is present in Gcode block

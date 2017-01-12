@@ -1139,7 +1139,6 @@ stat_t cm_set_g10_data(const uint8_t P_word, const bool P_flag,
                        const uint8_t L_word, const bool L_flag,
                        const float offset[], const bool flag[])
 {
-//    if (!gp.gf.L_word) {
     if (!L_flag) {
         return (STAT_L_WORD_IS_MISSING);
     }
@@ -1204,17 +1203,6 @@ stat_t cm_set_g10_data(const uint8_t P_word, const bool P_flag,
 stat_t cm_set_tl_offset(const uint8_t H_word, const bool H_flag, const bool apply_additional)
 {
     uint8_t tool;
-/*
-    if (gp.gf.H_word) {
-        if (gp.gn.H_word > TOOLS) {
-            return (STAT_H_WORD_IS_INVALID);
-        }
-        if (gp.gn.H_word == 0) {    // interpret H0 as "current tool", just like no H at all.
-            tool = cm->gm.tool;
-        } else {
-            tool = gp.gn.H_word;
-        }
-*/
     if (H_flag) {
         if (H_word > TOOLS) {
             return (STAT_H_WORD_IS_INVALID);
@@ -1549,7 +1537,6 @@ stat_t cm_set_path_control(GCodeState_t *gcode_state, const uint8_t mode)
 /*
  * cm_arc_feed() - SEE plan_arc.cpp
  */
-
 
 /*
  * cm_dwell() - G4, P parameter (seconds)

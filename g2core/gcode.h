@@ -198,7 +198,7 @@ typedef enum {              // axis modes (ordered: see _cm_get_feed_time())
  *   some state elements are necessarily restored from gm.
  *
  * - gf is used by the gcode parser interpreter to hold flags for any data
- *   that has changed in gn during the parse. gp.gf.target[] values are also used
+ *   that has changed in gn during the parse. gf.target[] values are also used
  *   by the canonical machine during set_target().
  *
  * - cfg (config struct in config.h) is also used heavily and contains some
