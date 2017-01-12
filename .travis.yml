@@ -10,8 +10,11 @@ script:
   - cd ${TRAVIS_BUILD_DIR}/g2core
   - make VERBOSE=1 COLOR=0 CONFIG=TestV9
   - make VERBOSE=1 COLOR=0 CONFIG=Othermill
-  - make VERBOSE=1 COLOR=0 CONFIG=PrintrbotSimple1608
   - make VERBOSE=1 COLOR=0 CONFIG=sbv300
+  - make VERBOSE=1 COLOR=0 CONFIG=PrintrbotPlus
+  - make VERBOSE=1 COLOR=0 CONFIG=PrintrbotSimple1403
+  - make VERBOSE=1 COLOR=0 CONFIG=PrintrbotSimple1608
+  - make VERBOSE=1 COLOR=0 CONFIG=PrintrbotPlay
 
 # The tools take a while to download, and are rarely changed,
 # so we'll cache them. This is also nicer on launchpad, who hosts the arm tools.
@@ -21,14 +24,20 @@ cache:
 
 before_deploy:
   - cd ${TRAVIS_BUILD_DIR}/g2core
-  - mv bin/Othermill-g2v9k/g2core.elf bin/g2core-Othermill-g2v9k.elf
-  - mv bin/Othermill-g2v9k/g2core.bin bin/g2core-Othermill-g2v9k.bin
-  - mv bin/PrintrbotSimple1608-printrboardG2v3/g2core.elf bin/g2core-PrintrbotSimple1608-printrboardG2v3.elf
-  - mv bin/PrintrbotSimple1608-printrboardG2v3/g2core.bin bin/g2core-PrintrbotSimple1608-printrboardG2v3.bin
-  - mv bin/TestV9-g2v9k/g2core.elf bin/g2core-TestV9-g2v9k.elf
-  - mv bin/TestV9-g2v9k/g2core.bin bin/g2core-TestV9-g2v9k.bin
-  - mv bin/sbv300-sbv300/g2core.elf bin/g2core-sbv300-sbv300.elf
-  - mv bin/sbv300-sbv300/g2core.bin bin/g2core-sbv300-sbv300.bin
+  - mv bin/Othermill-g2v9k/g2core.elf bin/g2core-Othermill-g2v9k-${TRAVIS_TAG}.elf
+  - mv bin/Othermill-g2v9k/g2core.bin bin/g2core-Othermill-g2v9k-${TRAVIS_TAG}.bin
+  - mv bin/TestV9-g2v9k/g2core.elf bin/g2core-TestV9-g2v9k-${TRAVIS_TAG}.elf
+  - mv bin/TestV9-g2v9k/g2core.bin bin/g2core-TestV9-g2v9k-${TRAVIS_TAG}.bin
+  - mv bin/sbv300-sbv300/g2core.elf bin/g2core-sbv300-sbv300-${TRAVIS_TAG}.elf
+  - mv bin/sbv300-sbv300/g2core.bin bin/g2core-sbv300-sbv300-${TRAVIS_TAG}.bin
+  - mv bin/PrintrbotPlus-printrboardG2v3/g2core.elf bin/g2core-PrintrbotPlus-printrboardG2v3-${TRAVIS_TAG}.elf
+  - mv bin/PrintrbotPlus-printrboardG2v3/g2core.bin bin/g2core-PrintrbotPlus-printrboardG2v3-${TRAVIS_TAG}.bin
+  - mv bin/PrintrbotSimple1403-printrboardG2v3/g2core.elf bin/g2core-PrintrbotSimple1403-printrboardG2v3-${TRAVIS_TAG}.elf
+  - mv bin/PrintrbotSimple1403-printrboardG2v3/g2core.bin bin/g2core-PrintrbotSimple1403-printrboardG2v3-${TRAVIS_TAG}.bin
+  - mv bin/PrintrbotSimple1608-printrboardG2v3/g2core.elf bin/g2core-PrintrbotSimple1608-printrboardG2v3-${TRAVIS_TAG}.elf
+  - mv bin/PrintrbotSimple1608-printrboardG2v3/g2core.bin bin/g2core-PrintrbotSimple1608-printrboardG2v3-${TRAVIS_TAG}.bin
+  - mv bin/PrintrbotPlay-printrboardG2v3/g2core.elf bin/g2core-PrintrbotPlay-printrboardG2v3-${TRAVIS_TAG}.elf
+  - mv bin/PrintrbotPlay-printrboardG2v3/g2core.bin bin/g2core-PrintrbotPlay-printrboardG2v3-${TRAVIS_TAG}.bin
 
 deploy:
   provider: releases
@@ -39,14 +48,20 @@ deploy:
     secure: hBB3dHzLM97onnpneoxpewDFYfmcDmeE6FPFRxplaGYROO7SjML8orFCGMLX1cEIlvn4lwzAB+NlE2kreujxiB/gEdZy5DNk8ts+QrbfRXax/VmCNgZYp0tOVn037UFi39rKzx8olbFTImdQypMVf5mdbusY64hTpWrrsZ4uBoU=
   skip_cleanup: true
   file:
-    - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-Othermill-g2v9k.elf
-    - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-Othermill-g2v9k.bin
-    - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-PrintrbotSimple1608-printrboardG2v3.elf
-    - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-PrintrbotSimple1608-printrboardG2v3.bin
-    - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-TestV9-g2v9k.elf
-    - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-TestV9-g2v9k.bin
-    - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-sbv300-sbv300.elf
-    - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-sbv300-sbv300.bin
+    - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-Othermill-g2v9k-${TRAVIS_TAG}.elf
+    - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-Othermill-g2v9k-${TRAVIS_TAG}.bin
+    - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-TestV9-g2v9k-${TRAVIS_TAG}.elf
+    - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-TestV9-g2v9k-${TRAVIS_TAG}.bin
+    - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-sbv300-sbv300-${TRAVIS_TAG}.elf
+    - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-sbv300-sbv300-${TRAVIS_TAG}.bin
+    - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-PrintrbotPlus-printrboardG2v3-${TRAVIS_TAG}.elf
+    - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-PrintrbotPlus-printrboardG2v3-${TRAVIS_TAG}.bin
+    - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-PrintrbotSimple1403-printrboardG2v3-${TRAVIS_TAG}.elf
+    - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-PrintrbotSimple1403-printrboardG2v3-${TRAVIS_TAG}.bin
+    - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-PrintrbotSimple1608-printrboardG2v3-${TRAVIS_TAG}.elf
+    - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-PrintrbotSimple1608-printrboardG2v3-${TRAVIS_TAG}.bin
+    - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-PrintrbotPlay-printrboardG2v3-${TRAVIS_TAG}.elf
+    - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-PrintrbotPlay-printrboardG2v3-${TRAVIS_TAG}.bin
   on:
     repo: synthetos/g2
     tags: true

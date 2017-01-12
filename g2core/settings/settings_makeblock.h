@@ -34,7 +34,6 @@
 
 // Machine configuration settings
 
-//#define JUNCTION_INTEGRATION_TIME 0.75      // cornering - between 0.10 and 2.00 (higher is faster)
 #define JUNCTION_INTEGRATION_TIME 1.25      // cornering - between 0.10 and 2.00 (higher is faster)
 #define CHORDAL_TOLERANCE 0.1               // chordal tolerance for arcs (in mm)
 
@@ -51,9 +50,12 @@
 #define COOLANT_FLOOD_POLARITY 1            // 0=active low, 1=active high
 #define COOLANT_PAUSE_ON_HOLD false
 
+#define FEEDHOLD_Z_LIFT 10                  // mm to lift Z on feedhold 
+
 // Communications and reporting settings
 
 #define USB_SERIAL_PORTS_EXPOSED 1          // Valid options are 1 or 2, only!
+
 #define COMM_MODE JSON_MODE                 // one of: TEXT_MODE, JSON_MODE
 
 #define TEXT_VERBOSITY TV_VERBOSE           // one of: TV_SILENT, TV_VERBOSE
@@ -74,11 +76,11 @@
 //#define STATUS_REPORT_DEFAULTS "_ts1","_cs1","_es1","_xs1","_fe1","line","posx","posy","posz","vel","stat"
 
 // Gcode startup defaults
-#define GCODE_DEFAULT_UNITS MILLIMETERS     // MILLIMETERS or INCHES
-#define GCODE_DEFAULT_PLANE CANON_PLANE_XY  // CANON_PLANE_XY, CANON_PLANE_XZ, or CANON_PLANE_YZ
-#define GCODE_DEFAULT_COORD_SYSTEM G54      // G54, G55, G56, G57, G58 or G59
-#define GCODE_DEFAULT_PATH_CONTROL PATH_CONTINUOUS
-#define GCODE_DEFAULT_DISTANCE_MODE ABSOLUTE_DISTANCE_MODE
+#define GCODE_DEFAULT_UNITS             MILLIMETERS         // MILLIMETERS or INCHES
+#define GCODE_DEFAULT_PLANE CANON_PLANE_XY                  // CANON_PLANE_XY, CANON_PLANE_XZ, or CANON_PLANE_YZ
+#define GCODE_DEFAULT_COORD_SYSTEM      G54                 // G54, G55, G56, G57, G58 or G59
+#define GCODE_DEFAULT_PATH_CONTROL      PATH_CONTINUOUS
+#define GCODE_DEFAULT_DISTANCE_MODE     ABSOLUTE_DISTANCE_MODE
 
 // *** motor settings ************************************************************************************
 
