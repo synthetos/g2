@@ -529,7 +529,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
     if (cm->motion_state == MOTION_HOLD) {
         // Case (7) - all motion has ceased
-        if (cm->hold_state == FEEDHOLD_HOLD) {
+        if (cm->hold_state >= FEEDHOLD_FINALIZING) {    // FINALIZING or FEEDHOLD_HOLD
             return (STAT_NOOP);                 // VERY IMPORTANT to exit as a NOOP. No more movement
         }
 
@@ -540,7 +540,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                     // when homing, we don't need to stay in HOLD
                     cm->hold_state = FEEDHOLD_OFF;
                 } else {
-                    cm->hold_state = FEEDHOLD_HOLD;
+                    cm->hold_state = FEEDHOLD_FINALIZING;
                 }
                 mp_zero_segment_velocity();                             // for reporting purposes
                 sr_request_status_report(SR_REQUEST_IMMEDIATE);         // was SR_REQUEST_TIMED
@@ -690,7 +690,7 @@ stat_t mp_plan_feedhold_move()
  *  Return from feedhold by calling cm_request_end_hold() or cm_end_hold directly.
  *  See canonical_macine.c for a more detailed explanation of feedhold operation.
  */
-
+/*
 void mp_exit_hold_state()
 {
     cm->hold_state = FEEDHOLD_OFF;
@@ -701,6 +701,7 @@ void mp_exit_hold_state()
         cm_set_motion_state(MOTION_STOP);
     }
 }
+*/
 
 /*
  * Forward difference math explained:

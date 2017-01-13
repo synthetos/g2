@@ -1723,10 +1723,10 @@ stat_t cm_mto_control(const float P_word, const bool P_flag) // M50.1
  *      then motion will stop in the current block. Otherwise the deceleration phase
  *      will extend across as many blocks necessary until one will stop.
  *
- *    - Once deceleration is complete hold state transitions to FEEDHOLD_HOLD and the
- *      distance remaining in the bf last block is replanned up from zero velocity.
- *      The move in the bf block is NOT released (unlike normal operation), as it
- *      will be used again to restart from hold.
+ *    - Once deceleration is complete hold state transitions to FEEDHOLD_FINALIZING and 
+ *      the distance remaining in the bf last block is replanned up from zero velocity.
+ *      The move in the bf block is NOT released (unlike normal operation), as it will
+ *      be used again to restart from hold.
  *
  *    - When cm_end_hold() is called it releases the hold, restarts the move and restarts
  *      the spindle if the spindle is active.
@@ -1803,11 +1803,15 @@ stat_t cm_feedhold_sequencing_callback()
     if (cm->hold_state == FEEDHOLD_REQUESTED) {
         cm_start_hold();                            // feed won't run unless the machine is moving
     }
+    if (cm->hold_state == FEEDHOLD_FINALIZING) {
+        cm->hold_state = FEEDHOLD_HOLD;
+        cm_switch_to_hold();                        // perform Z lift, spindle & coolant operations
+    }
     if (cm->queue_flush_state == FLUSH_REQUESTED) {
         cm_queue_flush();                           // queue flush won't run until runtime is idle
     }
     if (cm->end_hold_requested) {
-        if (cm->queue_flush_state == FLUSH_OFF) {    // either no flush or wait until it's done flushing
+        if (cm->queue_flush_state == FLUSH_OFF) {   // either no flush or wait until it's done flushing
             cm_end_hold();
         }
     }
@@ -1839,7 +1843,8 @@ void cm_end_hold()
 {
     if (cm->hold_state == FEEDHOLD_HOLD) {
         cm->end_hold_requested = false;
-        mp_exit_hold_state();
+        cm_return_from_hold();
+//        mp_exit_hold_state();
 
         // State machine cases:
         if (cm->machine_state == MACHINE_ALARM) {
@@ -1877,8 +1882,8 @@ void cm_queue_flush()
 }
 
 /*
- *  cm_switch() - switch canonical machine to secondary machine
- *  cm_return() - return secondary canoncial machine to primary machine
+ *  cm_switch_to_hold()   - switch canonical machine to secondary machine
+ *  cm_return_from_hold() - return secondary canoncial machine to primary machine
  *
  *  Doing a Switch is only safe when the machine has completely stopped during a feedhold
  *  Switch works to switch from the primary planer to the secondary planner
@@ -1887,7 +1892,7 @@ void cm_queue_flush()
 
 stat_t cm_switch(nvObj_t *nv)
 {
-    stat_t status = cm_switch_to_secondary();
+    stat_t status = cm_switch_to_hold();
     if (status != STAT_OK) {
         nv->valuetype = TYPE_NULL;
     }
@@ -1896,14 +1901,15 @@ stat_t cm_switch(nvObj_t *nv)
 
 stat_t cm_return(nvObj_t *nv)
 {
-    stat_t status = cm_return_to_primary();
+    stat_t status = cm_return_from_hold();
+    cm_end_hold();
     if (status != STAT_OK) {
         nv->valuetype = TYPE_NULL;
     }
     return (status);
 }
 
-stat_t cm_switch_to_secondary()
+stat_t cm_switch_to_hold()
 {
     // Must be in the primary CM and fully stopped in a hold
     if ((cm != &cm1) || (cm->hold_state != FEEDHOLD_HOLD)) {
@@ -1925,7 +1931,6 @@ stat_t cm_switch_to_secondary()
 
     // clear the target and set the positions to the current hold position
     memset(&(_cm->gm.target), 0, sizeof(_cm->gm.target));
-//  memset(&(_cm->gm.target_comp), 0, sizeof(_cm->gm.target_comp)); // to zero out compensation terms
     copy_vector(_cm->gm.target_comp, cm->gm.target_comp); // preserve original Kahan compensation
     copy_vector(_cm->gmx.position, mr->position);
     copy_vector(mp2.position, mr->position);
@@ -1941,17 +1946,20 @@ stat_t cm_switch_to_secondary()
     cm_set_g30_position();
     cm_set_motion_state(MOTION_STOP);
 
-    // perform Z lift
-    if (fp_ZERO(cm->feedhold_z_lift)) {     // skip this if the lift is zero
-        return (STAT_OK);
+    // optional Z lift
+    if (fp_NOT_ZERO(cm->feedhold_z_lift)) {
+        float stored_distance_mode = cm_get_distance_mode(MODEL);
+        cm_set_distance_mode(INCREMENTAL_DISTANCE_MODE);
+        bool flags[] = { 0,0,1,0,0,0 };
+        float target[] = { 0,0, cm->feedhold_z_lift, 0,0,0 };
+        cm_straight_traverse(target, flags);
+        cm_set_distance_mode(stored_distance_mode);
     }
-    float stored_distance_mode = cm_get_distance_mode(MODEL);
-    cm_set_distance_mode(INCREMENTAL_DISTANCE_MODE);
-    bool flags[AXES] = { 0,0,1,0,0,0 };
-    float target[AXES] = { 0,0, cm->feedhold_z_lift, 0,0,0 };
-    cm_straight_traverse(target, flags);
-    cm_set_distance_mode(stored_distance_mode);
-
+            
+    // optional spindle stop
+    if (spindle.pause_on_hold) {
+        
+    }
     return (STAT_OK);
 }
 
@@ -1961,14 +1969,20 @@ static void _return_move_callback(float* vect, bool* flag)
     cm2.waiting_for_motion_end = false;
 }
 
-stat_t cm_return_to_primary()     // LATER: if value == true return with offset corrections
+stat_t cm_return_from_hold()     // LATER: if value == true return with offset corrections
 {
     // Must be in the secondary CM and fully stopped
     if ((cm != &cm2) || (cm->motion_state != MOTION_STOP)) {
         return (STAT_COMMAND_NOT_ACCEPTED);
     }
+
+    // *** while still in secondary machine:
+
+    // restart spindle (with optional dwell)
     
-    // while still in secondary, perform the G30 move and queue a wait
+    // restart coolant
+    
+    //  perform the G30 move and queue a wait
     float target[] = { 0,0,0,0,0,0 };       // LATER: Make this move return through XY, then Z
     bool flags[]   = { 0,0,0,0,0,0 };
     cm_goto_g30_position(target, flags);    // initiate a return move
@@ -1976,25 +1990,36 @@ stat_t cm_return_to_primary()     // LATER: if value == true return with offset 
     mp_queue_command(_return_move_callback, nullptr, nullptr);
     cm_select = CM_SECONDARY_RETURN;
     return (STAT_OK);
+    
+    // return_to_primary completes in cm_return_callback() after the wait 
 }
 
-stat_t cm_return_callback()
+stat_t cm_return_from_hold_callback()
 {
     if (cm_select != CM_SECONDARY_RETURN) { // exit if not in secondary planner
         return (STAT_NOOP);
     }
-    if (cm->waiting_for_motion_end) {       // sync to planner move ends (using callback)
+    if (cm->waiting_for_motion_end) {       // sync to planner move ends (via _return_move_callback)
         return (STAT_EAGAIN);
     }
     
-    // return to primary CM
+    // return to primary machine
     cm = &cm1;
     mp = (mpPlanner_t *)cm->mp;             // cm->mp is a void pointer
     mr = mp->mr;
     cm_select = CM_PRIMARY;
-    cm_set_motion_state(MOTION_STOP);       // sets active model to primary
 
-    cm_end_hold();
+//    cm_set_motion_state(MOTION_STOP);       // sets active model to primary
+
+//    mp_exit_hold_state();
+
+    cm->hold_state = FEEDHOLD_OFF;
+    if (mp_has_runnable_buffer(mp)) {   //+++++
+        cm_set_motion_state(MOTION_RUN);
+        sr_request_status_report(SR_REQUEST_IMMEDIATE);
+    } else {
+        cm_set_motion_state(MOTION_STOP);
+    }
     return (STAT_OK);
 }
 
