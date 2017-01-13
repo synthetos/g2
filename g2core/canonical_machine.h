@@ -289,9 +289,10 @@ typedef struct cmToolTable {                // struct to keep a global tool tabl
 
 /**** Externs - See canonical_machine.cpp for allocation ****/
 
-extern cmMachine_t *cm;     // pointer to active canonical machine
-extern cmMachine_t cm1;     // canonical machine primary machine
-extern cmMachine_t cm2;     // canonical machine secondary machine
+extern cmMachineSelect cm_select;           // CM_PRIMARY, CM_SECONDARY, CM_SECONDARY_RETURN
+extern cmMachine_t *cm;                     // pointer to active canonical machine
+extern cmMachine_t cm1;                     // canonical machine primary machine
+extern cmMachine_t cm2;                     // canonical machine secondary machine
 extern cmToolTable_t tt;
 
 /*****************************************************************************
@@ -433,7 +434,20 @@ stat_t cm_mfo_control(const float P_word, const bool P_flag);   // M50
 stat_t cm_mto_control(const float P_word, const bool P_flag);   // M50.1
 // See spindle.cpp for cm_sso_control()                         // M51        
 
-// Feedhold and related functions
+// Program Functions (4.3.10)
+void cm_cycle_start(void);                                      // (no Gcode)
+void cm_cycle_end(void);                                        // (no Gcode)
+void cm_canned_cycle_end(void);                                 // end of canned cycle
+void cm_program_stop(void);                                     // M0
+void cm_optional_program_stop(void);                            // M1
+void cm_program_end(void);                                      // M2
+
+stat_t cm_json_command(char *json_string);                      // M100
+stat_t cm_json_wait(char *json_string);                         // M102
+
+/*--- Cycles ---*/
+
+// Feedhold and related functions (cycle_feedhold.cpp)
 void cm_request_feedhold(void);
 void cm_request_end_hold(void);
 void cm_request_queue_flush(void);
@@ -450,32 +464,19 @@ stat_t cm_return_from_hold_callback(void);                      // main loop cal
 void cm_queue_flush(void);                                      // flush serial and planner queues with coordinate resets
 void cm_end_queue_flush(void);
 
-// Program Functions (4.3.10)
-void cm_cycle_start(void);                                      // (no Gcode)
-void cm_cycle_end(void);                                        // (no Gcode)
-void cm_canned_cycle_end(void);                                 // end of canned cycle
-void cm_program_stop(void);                                     // M0
-void cm_optional_program_stop(void);                            // M1
-void cm_program_end(void);                                      // M2
-
-stat_t cm_json_command(char *json_string);                      // M100
-stat_t cm_json_wait(char *json_string);                         // M102
-
-/*--- Cycles ---*/
-
-// Homing cycles
+// Homing cycles (cycle_homing.cpp)
 stat_t cm_homing_cycle_start(const float axes[], const bool flags[]);        // G28.2
 stat_t cm_homing_cycle_start_no_set(const float axes[], const bool flags[]); // G28.4
 stat_t cm_homing_cycle_callback(void);                          // G28.2/.4 main loop callback
 
-// Probe cycles
+// Probe cycles (cycle_probing.cpp)
 stat_t cm_straight_probe(float target[],
                          bool flags[],
                          bool failure_is_fatal,
                          bool moving_toward_switch);            // G38.x
 stat_t cm_probing_cycle_callback(void);                         // G38.x main loop callback
 
-// Jogging cycle
+// Jogging cycle (cycle_jogging.cpp)
 stat_t cm_jogging_cycle_callback(void);                         // jogging cycle main loop
 stat_t cm_jogging_cycle_start(uint8_t axis);                    // {"jogx":-100.3}
 float cm_get_jogging_dest(void);                                // get jogging destination

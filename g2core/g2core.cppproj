@@ -1521,6 +1521,9 @@
     <OutputPath>bin\TestQuadratic\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="alarm.cpp">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="board\Archim\Archim-pinout.h">
       <SubType>compile</SubType>
     </Compile>
@@ -1690,6 +1693,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="board\sbv300\sbv300-pinout.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="cycle_feedhold.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="device\neopixel\neopixel.h">
