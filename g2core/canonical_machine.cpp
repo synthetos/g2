@@ -1555,7 +1555,7 @@ static void _exec_program_finalize(float *value, bool *flag)
         cm_select_plane(cm->default_select_plane);          // reset to default arc plane
         cm_set_distance_mode(cm->default_distance_mode);
         cm_set_arc_distance_mode(INCREMENTAL_DISTANCE_MODE);// always the default
-        cm_spindle_off_immediate();                         // M5
+        spindle_off_immediate();                            // M5
         cm_coolant_off_immediate();                         // M9
         cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);       // G94
         cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);// NIST specifies G1 (MOTION_MODE_STRAIGHT_FEED), but we cancel motion mode. Safer.
@@ -2261,7 +2261,6 @@ stat_t cm_run_jog(nvObj_t *nv)
     cm_jogging_cycle_start(_axis(nv->index));
     return (STAT_OK);
 }
-
 
 /***********************************************************************************
  * Debugging Commands

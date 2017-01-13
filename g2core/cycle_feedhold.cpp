@@ -37,11 +37,20 @@
 #include "util.h"
 
 /***********************************************************************************
- **** CODE *************************************************************************
+ **** Feedholds ********************************************************************
  ***********************************************************************************/
 /*
- * Feedholds, queue flushes and end_holds are all related. The request functions set flags
- * or change state to "REQUESTED". The sequencing callback interprets the flags as so:
+ *  Feedholds, queue flushes and end_holds are all related and are in this file.
+ *  Feedholds are implemented as a state machine (cmFeedholdState) that runs in the 
+ *  planner (plan_exec.cpp, see Feedhold Processing around line 500) and in this file.
+ *
+ *  Feedholds also use the dual planner (secondary context, or hold context) where a
+ *  new canonical machine and planner are spun up and entered when a feedhold is initiated. 
+ *  This allows (almost) all of the machine operations to be accessible during a feedhold.
+ *
+ *  Feedholds are initiated and ended by a series of request flags (requests).
+ *  The request functions set flags or change state to "REQUESTED". 
+ *  The sequencing callback interprets the flags as so:
  *    - A feedhold request received during motion should be honored
  *    - A feedhold request received during a feedhold should be ignored
  *    - A feedhold request received during a motion stop should be ignored
@@ -55,8 +64,8 @@
  *    - Said end_hold request received during a feedhold should be deferred until the
  *      feedhold enters a HOLD state (i.e. until deceleration is complete).
  *      If a queue flush request is also present the queue flush should be done first
- *
- *  Below the request level, feedholds work like this:
+ */
+/*  Below the request level, feedholds work like this:
  *    - The hold is initiated by calling cm_start_hold(). cm->hold_state is set to
  *      FEEDHOLD_SYNC, motion_state is set to MOTION_HOLD, and the spindle is turned off
  *      (if it it on). The remainder of feedhold
@@ -101,7 +110,7 @@
       - Machine alarm state is not (yet) taken into account in feedhold sequencing and restart
  */
 
-/*
+/***********************************************************************************
  * cm_request_feedhold()
  * cm_request_end_hold()
  * cm_request_queue_flush()
@@ -161,7 +170,7 @@ stat_t cm_feedhold_sequencing_callback()
     return (STAT_OK);
 }
 
-/*
+/***********************************************************************************
  * cm_has_hold()   - return true if a hold condition exists (or a pending hold request)
  * cm_start_hold() - start a feedhhold by signalling the exec
  * cm_end_hold()   - end a feedhold by returning the system to normal operation
@@ -187,7 +196,7 @@ void cm_end_hold()
     }
 }
 
-/*
+/***********************************************************************************
  *  cm_switch_to_hold_context()   - switch to secondary machine context
  *
  *  Moving between contexts is only safe when the machine is completely stopped 
@@ -248,7 +257,7 @@ stat_t cm_switch_to_hold_context()
     return (STAT_OK);
 }
 
-/*
+/***********************************************************************************
  *  cm_return_from_hold_context()  - initiate return from secondary context
  *  cm_return_from_hold_callback() - main loop callback to finsh return once moves are done 
  *  _planner_done_callback()       - callback to sync to end of planner operations 
@@ -320,7 +329,8 @@ stat_t cm_return_from_hold_callback()
     return (STAT_OK);
 }
 
-/* Queue Flush operation
+/***********************************************************************************
+ * Queue Flush operations
  *
  * This one's complicated. See here first:
  * https://github.com/synthetos/g2/wiki/Alarm-Processing
@@ -355,7 +365,8 @@ stat_t cm_return_from_hold_callback()
  *    to ensure that it either arrives on the data channel or that the data channel is
  *    empty before writing it to the control channel.
  */
-/*
+
+/***********************************************************************************
  * cm_queue_flush() - Flush planner queue and correct model positions
  */
 

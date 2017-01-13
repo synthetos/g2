@@ -53,6 +53,24 @@ typedef enum {
 #define NORMALLY_OPEN   IO_ACTIVE_LOW   // equivalent
 #define NORMALLY_CLOSED IO_ACTIVE_HIGH  // equivalent
 
+// *** NOTE: The active hi/low values currently agree with spindle and coolant values
+// The above will all need to be changed to ACTIVE_HIGH = 0, ACTIVE_LOW = 1
+// See: https://github.com/synthetos/g2_private/wiki/GPIO-Design-Discussion#settings-common-to-all-io-types
+
+/* The above will become:
+typedef enum {
+    IO_ACTIVE_HIGH = 0,                 // input is active high (aka normally closed)
+    IO_ACTIVE_LOW = 1                   // input is active low (aka normally open)
+} ioPolarity;
+#define NORMALLY_OPEN   IO_ACTIVE_LOW   // equivalent
+#define NORMALLY_CLOSED IO_ACTIVE_HIGH  // equivalent
+
+typedef enum {
+    IO_DISABLED = 0,                    // IO will not operate
+    IO_ENABLED                          // IO will operate
+} ioMode;
+*/
+
 typedef enum {                          // actions are initiated from within the input's ISR
     INPUT_ACTION_NONE = 0,
     INPUT_ACTION_STOP,                  // stop at normal jerk - preserves positional accuracy

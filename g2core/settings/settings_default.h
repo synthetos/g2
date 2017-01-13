@@ -81,6 +81,10 @@
 #define SAFETY_INTERLOCK_ENABLE     1       // {saf: 0=off, 1=on
 #endif
 
+#ifndef SPINDLE_MODE
+#define SPINDLE_MODE                1       // {spmo; 0=diabled, 1=plan to stop, 2=continuous
+#endif
+
 #ifndef SPINDLE_ENABLE_POLARITY
 #define SPINDLE_ENABLE_POLARITY     SPINDLE_ACTIVE_HIGH  // {spep: 0=active low, 1=active high
 #endif
@@ -95,6 +99,18 @@
 
 #ifndef SPINDLE_DWELL_TIME
 #define SPINDLE_DWELL_TIME          1.0     // {spdw:
+#endif
+
+#ifndef SPINDLE_DWELL_MAX
+#define SPINDLE_DWELL_MAX   10000000.0      // maximum allowable dwell time. May be overridden in settings files
+#endif
+
+#ifndef SPINDLE_SPEED_MIN
+#define SPINDLE_SPEED_MIN           0.0     // {spsn:
+#endif
+
+#ifndef SPINDLE_SPEED_MAX
+#define SPINDLE_SPEED_MAX     1000000.0     // {spsm:
 #endif
 
 #ifndef COOLANT_MIST_POLARITY
