@@ -1777,7 +1777,7 @@ stat_t cm_mto_control(const float P_word, const bool P_flag) // M50.1
    operations from within the secondary context.
    
    Oddities of the general solution:
-      - Should we allow a feedhold to be peformed if the tool is not moving? 
+      - Should we allow a feedhold to be performed if the tool is not moving? 
         Right now we don't, but with the secondary context this might be useful
    
     What you see here is a Q&D to only allow feedholds from the primary context. 
@@ -1801,7 +1801,11 @@ void cm_request_feedhold(void)
         return;
     }
     // only generate request if not already in a feedhold and the machine is in motion    
-    if ((cm1.hold_state == FEEDHOLD_OFF) && (cm1.motion_state != MOTION_STOP)) {
+//    if ((cm1.hold_state == FEEDHOLD_OFF) && (cm1.motion_state != MOTION_STOP)) {
+
+    // only generate request if not already in a feedhold
+    // It's OK if the machine is stopped - this just enters the feedhold context
+    if (cm1.hold_state == FEEDHOLD_OFF) {
         cm1.hold_state = FEEDHOLD_REQUESTED;
     }
 }
@@ -1834,7 +1838,7 @@ stat_t cm_feedhold_sequencing_callback()
     }
     if (cm1.hold_state == FEEDHOLD_FINALIZING) {
         cm1.hold_state = FEEDHOLD_HOLD;
-        cm_switch_to_hold();                        // perform Z lift, spindle & coolant operations
+        cm_switch_to_hold_context();                // perform Z lift, spindle & coolant operations
     }
     if (cm1.queue_flush_state == FLUSH_REQUESTED) {
         cm_queue_flush();                           // queue flush won't run until runtime is idle
@@ -1860,8 +1864,6 @@ bool cm_has_hold()
 void cm_start_hold()
 {
     if (mp_has_runnable_buffer(mp)) {         //+++++           // meaning there's something running
-//        cm_spindle_optional_pause(spindle.pause_on_hold);   // pause if this option is selected
-//        cm_coolant_optional_pause(coolant.pause_on_hold);   // pause if this option is selected
         cm_set_motion_state(MOTION_HOLD);
         cm->hold_state = FEEDHOLD_SYNC;                      // invokes hold from aline execution
     }
@@ -1871,39 +1873,18 @@ void cm_end_hold()
 {
     if (cm1.hold_state == FEEDHOLD_HOLD) {
         cm1.end_hold_requested = false;
-        cm_return_from_hold();
+        cm_return_from_hold_context();
     }
 }
 
 /*
- *  cm_switch_to_hold()   - switch canonical machine to secondary machine
- *  cm_return_from_hold() - return secondary canoncial machine to primary machine
+ *  cm_switch_to_hold_context()   - switch to secondary machine context
  *
- *  Doing a Switch is only safe when the machine has completely stopped during a feedhold
- *  Switch works to switch from the primary planer to the secondary planner
- *  Use Return to return to the primary planner
+ *  Moving between contexts is only safe when the machine is completely stopped 
+ *  either during a feedhold or when idle.
  */
 
-stat_t cm_switch(nvObj_t *nv)
-{
-    stat_t status = cm_switch_to_hold();
-    if (status != STAT_OK) {
-        nv->valuetype = TYPE_NULL;
-    }
-    return (status);
-}
-
-stat_t cm_return(nvObj_t *nv)
-{
-    stat_t status = cm_return_from_hold();
-    cm_end_hold();
-    if (status != STAT_OK) {
-        nv->valuetype = TYPE_NULL;
-    }
-    return (status);
-}
-
-stat_t cm_switch_to_hold()
+stat_t cm_switch_to_hold_context()
 {
     // Must be in the primary CM and fully stopped in a hold
     if ((cm != &cm1) || (cm->hold_state != FEEDHOLD_HOLD)) {
@@ -1957,13 +1938,22 @@ stat_t cm_switch_to_hold()
     return (STAT_OK);
 }
 
+/*
+ *  cm_return_from_hold_context()  - initiate return from secondary context
+ *  cm_return_from_hold_callback() - main loop callback to finsh return once moves are done 
+ *  _planner_done_callback()       - callback to sync to end of planner operations 
+ *
+ *  Moving between contexts is only safe when the machine is completely stopped 
+ *  either during a feedhold or when idle.
+ */
+
 // Callback to run at when the G30 return move is finished
-static void _return_move_callback(float* vect, bool* flag)
+static void _planner_done_callback(float* vect, bool* flag)
 {
-    cm2.waiting_for_motion_end = false;
+    cm2.waiting_for_planner_done = false;
 }
 
-stat_t cm_return_from_hold()     // LATER: if value == true return with offset corrections
+stat_t cm_return_from_hold_context()     // LATER: if value == true return with offset corrections
 {
     // Must be in the secondary CM and fully stopped
     if ((cm != &cm2) || (cm->motion_state != MOTION_STOP)) {
@@ -1984,8 +1974,8 @@ stat_t cm_return_from_hold()     // LATER: if value == true return with offset c
     float target[] = { 0,0,0,0,0,0 };       // LATER: Make this move return through XY, then Z
     bool flags[]   = { 0,0,0,0,0,0 };
     cm_goto_g30_position(target, flags);    // initiate a return move
-    cm->waiting_for_motion_end = true;      // indicates running the final G30 move in the secondary
-    mp_queue_command(_return_move_callback, nullptr, nullptr);
+    cm->waiting_for_planner_done = true;    // indicates running the final G30 move in the secondary
+    mp_queue_command(_planner_done_callback, nullptr, nullptr);
     cm_select = CM_SECONDARY_RETURN;
     return (STAT_OK);
     
@@ -1997,7 +1987,7 @@ stat_t cm_return_from_hold_callback()
     if (cm_select != CM_SECONDARY_RETURN) { // exit if not in secondary planner
         return (STAT_NOOP);
     }
-    if (cm->waiting_for_motion_end) {       // sync to planner move ends (via _return_move_callback)
+    if (cm->waiting_for_planner_done) {     // sync to planner move ends (via _return_move_callback)
         return (STAT_EAGAIN);
     }
     

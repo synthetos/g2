@@ -257,7 +257,7 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     cmSafetyState safety_interlock_state;   // safety interlock state
     uint32_t esc_boot_timer;                // timer for Electronic Speed Control (Spindle electronics) to boot
 
-    bool waiting_for_motion_end;            // set true during a return-to-primary planner operation (G30 is completing)
+    bool waiting_for_planner_done;          // cm_return_from_hold_context() uses this to tell when secondary planner finished
     bool end_hold_requested;                // request restart after feedhold
     bool deferred_write_flag;               // G10 data has changed (e.g. offsets) - flag to persist them
     uint8_t limit_requested;                // set non-zero to request limit switch processing (value is input number)
@@ -433,28 +433,24 @@ stat_t cm_mfo_control(const float P_word, const bool P_flag);   // M50
 stat_t cm_mto_control(const float P_word, const bool P_flag);   // M50.1
 // See spindle.cpp for cm_sso_control()                         // M51        
 
-// Program Functions (4.3.10)
+// Feedhold and related functions
 void cm_request_feedhold(void);
 void cm_request_end_hold(void);
 void cm_request_queue_flush(void);
-void cm_request_end_queue_flush(void);
 stat_t cm_feedhold_sequencing_callback(void);                   // process feedhold, cycle start and queue flush requests
-stat_t cm_return_callback(void);                                // return from secondary planner
 
-// Feedhold and related functions
 bool cm_has_hold(void);
 void cm_start_hold(void);
 void cm_end_hold(void);
 
+stat_t cm_switch_to_hold_context(void);                         // move to secondary planner for in-hold actions
+stat_t cm_return_from_hold_context(void);                       // return to primary planner
+stat_t cm_return_from_hold_callback(void);                      // main loop callback for synchronization
+
 void cm_queue_flush(void);                                      // flush serial and planner queues with coordinate resets
 void cm_end_queue_flush(void);
 
-stat_t cm_switch(nvObj_t *nv);
-stat_t cm_return(nvObj_t *nv);
-stat_t cm_switch_to_hold(void);
-stat_t cm_return_from_hold(void);
-stat_t cm_return_from_hold_callback(void);
-
+// Program Functions (4.3.10)
 void cm_cycle_start(void);                                      // (no Gcode)
 void cm_cycle_end(void);                                        // (no Gcode)
 void cm_canned_cycle_end(void);                                 // end of canned cycle
