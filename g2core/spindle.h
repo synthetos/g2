@@ -28,22 +28,6 @@
 #ifndef SPINDLE_H_ONCE
 #define SPINDLE_H_ONCE
 
-typedef enum {                  // how spindle controls are presented by the Gcode parser
-    SPINDLE_CONTROL_OFF = 0,    // M5
-    SPINDLE_CONTROL_CW,         // M3
-    SPINDLE_CONTROL_CCW         // M4
-} spControl;
-
-typedef enum {  // spindle direction state
-    SPINDLE_CW = 0,
-    SPINDLE_CCW
-} spDir;
-
-
-// *** NOTE: The spindle polarity active hi/low values currently agree with ioMode in gpio.h
-// These will all need to be changed to ACTIVE_HIGH = 0, ACTIVE_LOW = 1
-// See: https://github.com/synthetos/g2_private/wiki/GPIO-Design-Discussion#settings-common-to-all-io-types
-
 typedef enum {
     SPINDLE_DISABLED = 0,       // spindle will not operate
     SPINDLE_PLAN_TO_STOP,       // spindle operating, plans to stop
@@ -51,19 +35,32 @@ typedef enum {
 } spMode;
 #define SPINDLE_MODE_MAX SPINDLE_CONTINUOUS
 
+// Note on spControl:
+// This enum is used to both request the spindle operation (ON, CW, CCW), 
+// and to record spindle direction (1=CW, 2=CCW) in spindle.direction  
+typedef enum {                  // how spindle controls are presented by the Gcode parser
+    SPINDLE_CONTROL_OFF = 0,    // M5
+    SPINDLE_CONTROL_CW = 1,     // M3
+    SPINDLE_CONTROL_CCW = 2     // M4
+} spControl;
+
+// *** NOTE: The spindle polarity active hi/low values currently agree with ioMode in gpio.h
+// These will all need to be changed to ACTIVE_HIGH = 0, ACTIVE_LOW = 1
+// See: https://github.com/synthetos/g2_private/wiki/GPIO-Design-Discussion#settings-common-to-all-io-types
+
 typedef enum {                  // Note: These values agree with 
     SPINDLE_ACTIVE_LOW = 0,     // Will set output to 0 to enable the spindle or CW direction
     SPINDLE_ACTIVE_HIGH = 1,    // Will set output to 1 to enable the spindle or CW direction
 } spPolarity;
 
-typedef enum {                  // basic spindle state machine
+typedef enum {                  // basic spindle state machine. Do not change this enum
     SPINDLE_OFF = 0,
-    SPINDLE_ON,                 // spindle on and at speed
-    SPINDLE_PAUSE,              // meaning it was on and now it's off
-    SPINDLE_WAITING             // spindle not at speed yet
+    SPINDLE_ON = 1,             // spindle on and at speed
+    SPINDLE_PAUSE = 2,          // meaning it was on and now it's off
+    SPINDLE_WAITING = 3         // spindle not at speed yet
 } spState;
 
-typedef enum {
+typedef enum {                  // electronic speed controller for some spindles
     ESC_ONLINE = 0,
     ESC_OFFLINE,
     ESC_LOCKOUT,
@@ -73,22 +70,22 @@ typedef enum {
 
 #define SPINDLE_OVERRIDE_ENABLE false
 #define SPINDLE_OVERRIDE_FACTOR 1.00
-#define SPINDLE_OVERRIDE_MIN 0.05  // 5%
-#define SPINDLE_OVERRIDE_MAX 2.00  // 200%
+#define SPINDLE_OVERRIDE_MIN 0.05       // 5%
+#define SPINDLE_OVERRIDE_MAX 2.00       // 200%
 #define SPINDLE_OVERRIDE_RAMP_TIME 1    // change sped in seconds
 
 /*
  * Spindle control structure
  */
 
-typedef struct cmSpindleSingleton {
+typedef struct spSpindle {
 
     // Public and settable
     spMode      mode;               // spondle operating mode
     float       speed;              // S in RPM
     float       speed_min;          // minimum settable spindle speed
     float       speed_max;          // maximum settable spindle speed
-    spDir       direction;          // CW, CCW
+    spControl   direction;          // 1=CW, 2=CCW
     spPolarity  enable_polarity;    // 0=active low, 1=active high
     spPolarity  dir_polarity;       // 0=clockwise low, 1=clockwise high
     float       dwell_seconds;      // dwell on spindle resume
@@ -104,8 +101,8 @@ typedef struct cmSpindleSingleton {
     uint32_t    esc_boot_timer;     // When the ESC last booted up
     uint32_t    esc_lockout_timer;  // When the ESC lockout last triggered
 
-} cmSpindleton_t;
-extern cmSpindleton_t spindle;
+} spSpindle_t;
+extern spSpindle_t spindle;
 
 /*
  * Global Scope Functions
@@ -113,11 +110,17 @@ extern cmSpindleton_t spindle;
 
 void spindle_init();
 void spindle_reset();
-stat_t spindle_queue_speed(float speed);        // S parameter
-stat_t spindle_queue_control(uint8_t control);  // M3, M4, M5 integrated spindle control
-void spindle_off_immediate(void);
-void spindle_optional_pause(bool option);       // stop spindle based on system options selected
-void spindle_resume(float dwell_seconds);       // restart spindle after pause based on previous state
+
+void spindle_pause(void);
+void spindle_resume(void);
+stat_t spindle_control_immediate(uint8_t control, bool pause);
+stat_t spindle_control_sync(uint8_t control, bool pause);
+stat_t spindle_speed_immediate(float speed);    // S parameter
+stat_t spindle_speed_sync(float speed);         // S parameter
+
+//void spindle_off_immediate(void);
+//void spindle_optional_pause(bool option);       // stop spindle based on system options selected
+//void spindle_resume(float dwell_seconds);       // restart spindle after pause based on previous state
 
 stat_t spindle_override_control(const float P_word, const bool P_flag); // M51
 void spindle_start_override(const float ramp_time, const float override_factor);

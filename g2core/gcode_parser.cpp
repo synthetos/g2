@@ -733,14 +733,18 @@ static stat_t _execute_gcode_block(char *active_comment)
     cm_set_model_linenum(gv.linenum);
     EXEC_FUNC(cm_set_feed_rate_mode, feed_rate_mode);       // G93, G94
     EXEC_FUNC(cm_set_feed_rate, F_word);                    // F
-    EXEC_FUNC(spindle_queue_speed, S_word);                 // S
+    EXEC_FUNC(spindle_speed_sync, S_word);                  // S
+
     if (gf.sso_control) {                                   // spindle speed override
         ritorno(spindle_override_control(gv.P_word, gf.P_word));
     }
 
     EXEC_FUNC(cm_select_tool, tool_select);                 // tool_select is where it's written
     EXEC_FUNC(cm_change_tool, tool_change);                 // M6
-    EXEC_FUNC(spindle_queue_control, spindle_control);      // spindle CW, CCW, OFF
+
+    if (gf.spindle_control) {                               // spindle OFF, CW, CCW
+        ritorno(spindle_control_sync(gv.spindle_control, false));
+    }
 
     EXEC_FUNC(cm_mist_coolant_control, mist_coolant);       // M7, M9
     EXEC_FUNC(cm_flood_coolant_control, flood_coolant);     // M8, M9 also disables mist coolant if OFF
