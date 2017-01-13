@@ -113,11 +113,11 @@
  **** CM GLOBALS & STRUCTURE ALLOCATIONS *******************************************
  ***********************************************************************************/
 
-cmMachineSelect cm_select;
-cmMachine_t *cm;    // pointer to active canonical machine
-cmMachine_t cm1;    // canonical machine primary machine
-cmMachine_t cm2;    // canonical machine secondary machine
-cmToolTable_t tt;   // global tool table
+cmMachineSelect cm_select;  // CM_PRIMARY, CM_SECONDARY, CM_SECONDARY_RETURN
+cmMachine_t *cm;            // pointer to active canonical machine
+cmMachine_t cm1;            // canonical machine primary machine
+cmMachine_t cm2;            // canonical machine secondary machine
+cmToolTable_t tt;           // global tool table
 
 /***********************************************************************************
  **** GENERIC STATIC FUNCTIONS AND VARIABLES ***************************************
@@ -1766,52 +1766,81 @@ stat_t cm_mto_control(const float P_word, const bool P_flag) // M50.1
  *    to ensure that it either arrives on the data channel or that the data channel is
  *    empty before writing it to the control channel.
  */
+/* With the addition of the secondary CM, feedhold state management gets tricky.
+   What you see below is a temporary solution until we decide the general solution.
+   
+   The general solution causes a feedhold from the primary context to switch 
+   into the secondary context to perform feedhold actions. When in the secondary
+   context an additional feedhold will perform the usual STOP operation, but 
+   will remain in the secondary context, and therefore not perform any feedhold
+   actions (lifts, spindle, etc.). This is needed to support homing and probing 
+   operations from within the secondary context.
+   
+   Oddities of the general solution:
+      - Should we allow a feedhold to be peformed if the tool is not moving? 
+        Right now we don't, but with the secondary context this might be useful
+   
+    What you see here is a Q&D to only allow feedholds from the primary context. 
+    It has the following limitations:
+      - Feedhold requests are only honored form the primary context
+      - Queue flush requests are only honored form the primary context
+      - Machine alarm state is not (yet) taken into account in feedhold sequencing and restart
+ */
+
 /*
  * cm_request_feedhold()
- * cm_request_end_hold() - cycle restart
+ * cm_request_end_hold()
  * cm_request_queue_flush()
+ * cm_feedhold_sequencing_callback() - sequence feedhold, queue_flush, and end_hold requests
  */
-void cm_request_feedhold(void) {
-    // honor request if not already in a feedhold and you are moving
-    if ((cm->hold_state == FEEDHOLD_OFF) && (cm->motion_state != MOTION_STOP)) {
-        cm->hold_state = FEEDHOLD_REQUESTED;
+
+void cm_request_feedhold(void) 
+{
+    // do not generate a feedhold request from the secondary context
+    if (cm_select != CM_PRIMARY) {
+        return;
+    }
+    // only generate request if not already in a feedhold and the machine is in motion    
+    if ((cm1.hold_state == FEEDHOLD_OFF) && (cm1.motion_state != MOTION_STOP)) {
+        cm1.hold_state = FEEDHOLD_REQUESTED;
     }
 }
 
-void cm_request_end_hold(void)
+void cm_request_end_hold(void)  // This is usually requested form the secondary context
 {
-    if (cm->hold_state != FEEDHOLD_OFF) {
-        cm->end_hold_requested = true;
+    if (cm1.hold_state != FEEDHOLD_OFF) {
+        cm1.end_hold_requested = true;
     }
 }
 
 void cm_request_queue_flush()
 {
-    if ((cm->hold_state != FEEDHOLD_OFF) &&          // don't honor request unless you are in a feedhold
-        (cm->queue_flush_state == FLUSH_OFF)) {      // ...and only once
-        cm->queue_flush_state = FLUSH_REQUESTED;     // request planner flush once motion has stopped
+    // do not generate a queue flush request from the secondary context
+    if (cm_select != CM_PRIMARY) {
+        return;
+    }    
+    if ((cm1.hold_state != FEEDHOLD_OFF) &&          // don't honor request unless you are in a feedhold
+        (cm1.queue_flush_state == FLUSH_OFF)) {      // ...and only once
+        cm1.queue_flush_state = FLUSH_REQUESTED;     // request planner flush once motion has stopped
 
         // NOTE: we used to flush the input buffers, but this is handled in xio *prior* to queue flush now
     }
 }
 
-/*
- * cm_feedhold_sequencing_callback() - sequence feedhold, queue_flush, and end_hold requests
- */
 stat_t cm_feedhold_sequencing_callback()
 {
-    if (cm->hold_state == FEEDHOLD_REQUESTED) {
+    if (cm1.hold_state == FEEDHOLD_REQUESTED) {
         cm_start_hold();                            // feed won't run unless the machine is moving
     }
-    if (cm->hold_state == FEEDHOLD_FINALIZING) {
-        cm->hold_state = FEEDHOLD_HOLD;
+    if (cm1.hold_state == FEEDHOLD_FINALIZING) {
+        cm1.hold_state = FEEDHOLD_HOLD;
         cm_switch_to_hold();                        // perform Z lift, spindle & coolant operations
     }
-    if (cm->queue_flush_state == FLUSH_REQUESTED) {
+    if (cm1.queue_flush_state == FLUSH_REQUESTED) {
         cm_queue_flush();                           // queue flush won't run until runtime is idle
     }
-    if (cm->end_hold_requested) {
-        if (cm->queue_flush_state == FLUSH_OFF) {   // either no flush or wait until it's done flushing
+    if (cm1.end_hold_requested) {
+        if (cm1.queue_flush_state == FLUSH_OFF) {   // either no flush or wait until it's done flushing
             cm_end_hold();
         }
     }
@@ -1822,18 +1851,17 @@ stat_t cm_feedhold_sequencing_callback()
  * cm_has_hold()   - return true if a hold condition exists (or a pending hold request)
  * cm_start_hold() - start a feedhhold by signalling the exec
  * cm_end_hold()   - end a feedhold by returning the system to normal operation
- * cm_queue_flush() - Flush planner queue and correct model positions
  */
 bool cm_has_hold()
 {
-    return (cm->hold_state != FEEDHOLD_OFF);
+    return (cm1.hold_state != FEEDHOLD_OFF);
 }
 
 void cm_start_hold()
 {
     if (mp_has_runnable_buffer(mp)) {         //+++++           // meaning there's something running
-        cm_spindle_optional_pause(spindle.pause_on_hold);   // pause if this option is selected
-        cm_coolant_optional_pause(coolant.pause_on_hold);   // pause if this option is selected
+//        cm_spindle_optional_pause(spindle.pause_on_hold);   // pause if this option is selected
+//        cm_coolant_optional_pause(coolant.pause_on_hold);   // pause if this option is selected
         cm_set_motion_state(MOTION_HOLD);
         cm->hold_state = FEEDHOLD_SYNC;                      // invokes hold from aline execution
     }
@@ -1841,43 +1869,9 @@ void cm_start_hold()
 
 void cm_end_hold()
 {
-    if (cm->hold_state == FEEDHOLD_HOLD) {
-        cm->end_hold_requested = false;
+    if (cm1.hold_state == FEEDHOLD_HOLD) {
+        cm1.end_hold_requested = false;
         cm_return_from_hold();
-//        mp_exit_hold_state();
-
-        // State machine cases:
-        if (cm->machine_state == MACHINE_ALARM) {
-            cm_spindle_off_immediate();
-            cm_coolant_off_immediate();
-
-        } else if (cm->motion_state == MOTION_STOP) { // && (! MACHINE_ALARM)
-            cm_spindle_off_immediate();
-            cm_coolant_off_immediate();
-            cm_cycle_end();
-
-        } else {    // (MOTION_RUN || MOTION_PLANNING)  && (! MACHINE_ALARM)
-            cm_cycle_start();
-            cm_spindle_resume(spindle.dwell_seconds);
-            cm_coolant_resume();
-            st_request_exec_move();
-        }
-    }
-}
-
-void cm_queue_flush()
-{
-    if (mp_runtime_is_idle()) {                     // can't flush planner during movement
-        mp_flush_planner(mp);       // +++++ Active planner. Potential cleanup
-
-        for (uint8_t axis = AXIS_X; axis < AXES; axis++) { // set all positions
-            cm_set_position(axis, mp_get_runtime_absolute_position(axis));
-        }
-        if(cm->hold_state == FEEDHOLD_HOLD) {        // end feedhold if we're in one
-            cm_end_hold();
-        }
-        cm->queue_flush_state = FLUSH_OFF;
-        qr_request_queue_report(0);                 // request a queue report, since we've changed the number of buffers available
     }
 }
 
@@ -1976,13 +1970,17 @@ stat_t cm_return_from_hold()     // LATER: if value == true return with offset c
         return (STAT_COMMAND_NOT_ACCEPTED);
     }
 
-    // *** while still in secondary machine:
-
+    // *** While still in secondary machine:
+/*
+    if (cm->machine_state == MACHINE_ALARM) {
+        cm_spindle_off_immediate();
+        cm_coolant_off_immediate();
+*/
     // restart spindle (with optional dwell)
     
     // restart coolant
     
-    //  perform the G30 move and queue a wait
+    // perform the G30 move and queue a wait
     float target[] = { 0,0,0,0,0,0 };       // LATER: Make this move return through XY, then Z
     bool flags[]   = { 0,0,0,0,0,0 };
     cm_goto_g30_position(target, flags);    // initiate a return move
@@ -2009,18 +2007,37 @@ stat_t cm_return_from_hold_callback()
     mr = mp->mr;
     cm_select = CM_PRIMARY;
 
-//    cm_set_motion_state(MOTION_STOP);       // sets active model to primary
-
-//    mp_exit_hold_state();
-
     cm->hold_state = FEEDHOLD_OFF;
-    if (mp_has_runnable_buffer(mp)) {   //+++++
+    if (mp_has_runnable_buffer(mp)) {       //+++++ Should MP be passed or global?
         cm_set_motion_state(MOTION_RUN);
+        cm_cycle_start();
+        st_request_exec_move();
         sr_request_status_report(SR_REQUEST_IMMEDIATE);
     } else {
         cm_set_motion_state(MOTION_STOP);
+        cm_cycle_end();
     }
     return (STAT_OK);
+}
+
+/*
+ * cm_queue_flush() - Flush planner queue and correct model positions
+ */
+
+void cm_queue_flush()
+{
+    if (mp_runtime_is_idle()) {                     // can't flush planner during movement
+        mp_flush_planner(mp);       // +++++ Active planner. Potential cleanup
+
+        for (uint8_t axis = AXIS_X; axis < AXES; axis++) { // set all positions
+            cm_set_position(axis, mp_get_runtime_absolute_position(axis));
+        }
+        if(cm->hold_state == FEEDHOLD_HOLD) {        // end feedhold if we're in one
+            cm_end_hold();
+        }
+        cm->queue_flush_state = FLUSH_OFF;
+        qr_request_queue_report(0);                 // request a queue report, since we've changed the number of buffers available
+    }
 }
 
 /******************************

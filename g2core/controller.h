@@ -72,6 +72,9 @@ typedef struct controllerSingleton {    // main TG controller struct
     char out_buf[OUTPUT_BUFFER_LEN];    // output buffer
     char saved_buf[SAVED_BUFFER_LEN];   // save the input buffer
 
+    // Exceptions - some exceptions cannot be notified by an ER because they are in interrupts 
+    bool exec_aline_assertion_failure;  // record an exception deep inside mp_exec_aline()
+
     magic_t magic_end;
 } controller_t;
 
