@@ -892,16 +892,16 @@
 #define P1_CW_PHASE_HI              0.17
 #endif
 #ifndef P1_CCW_SPEED_LO
-#define P1_CCW_SPEED_LO             0.0
+#define P1_CCW_SPEED_LO             7900    // 0.0
 #endif
 #ifndef P1_CCW_SPEED_HI
-#define P1_CCW_SPEED_HI             0.0
+#define P1_CCW_SPEED_HI            12800    // 0.0
 #endif
 #ifndef P1_CCW_PHASE_LO
-#define P1_CCW_PHASE_LO             0.1
+#define P1_CCW_PHASE_LO             0.13    // 0.1
 #endif
 #ifndef P1_CCW_PHASE_HI
-#define P1_CCW_PHASE_HI             0.1
+#define P1_CCW_PHASE_HI             0.17    // 0.1
 #endif
 #ifndef P1_PWM_PHASE_OFF
 #define P1_PWM_PHASE_OFF            0.1

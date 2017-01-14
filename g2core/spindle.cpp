@@ -43,9 +43,7 @@ spSpindle_t spindle;
 
 /**** Static functions ****/
 
-static void _exec_spindle_speed(float *value, bool *flag);
-//static void _exec_spindle_control(float *value, bool *flag);
-static float _get_spindle_pwm (spControl state, spControl direction);
+static float _get_spindle_pwm (spSpindle_t &_spindle, pwmControl_t &_pwm);
 
 /***********************************************************************************
  * spindle_init()
@@ -62,9 +60,7 @@ void spindle_init()
 
 void spindle_reset()
 {
-    float value[AXES] = { 0,0,0,0,0,0 };        // set spindle speed to zero
-    bool flags[] = { 1,0,0,0,0,0 };
-   _exec_spindle_speed(value, flags);
+    spindle_speed_immediate(0);
     spindle_control_immediate(SPINDLE_OFF);
 }
 
@@ -148,7 +144,7 @@ static void _exec_spindle_control(float *value, bool *flag)
     } else {
         spindle_enable_pin.set();           // drive pin HI
     }
-    pwm_set_duty(PWM_1, _get_spindle_pwm(spindle.state, spindle.direction));
+    pwm_set_duty(PWM_1, _get_spindle_pwm(spindle, pwm));
 }
 
 stat_t spindle_control_immediate(spControl control)
@@ -160,7 +156,6 @@ stat_t spindle_control_immediate(spControl control)
 
 stat_t spindle_control_sync(spControl control)  // uses spControl arg: OFF, CW, CCW
 {
-//    float value[] = { (float)control, 0,0,0,0,0 };
     float value[] = { (float)control };
     mp_queue_command(_exec_spindle_control, value, nullptr);
     
@@ -179,13 +174,7 @@ stat_t spindle_control_sync(spControl control)  // uses spControl arg: OFF, CW, 
 static void _exec_spindle_speed(float *value, bool *flag)
 {
     spindle.speed = value[0];
-/*
-    if (flag[1]) {
-        spindle.direction = (spDir)value[1];
-    }
-*/
-    // update spindle speed if we're running
-    pwm_set_duty(PWM_1, _get_spindle_pwm(spindle.state, spindle.direction));
+    pwm_set_duty(PWM_1, _get_spindle_pwm(spindle, pwm));
 }
 
 static stat_t _casey_jones(float speed)
@@ -214,70 +203,71 @@ stat_t spindle_speed_sync(float speed)
 /***********************************************************************************
  * _get_spindle_pwm() - return PWM phase (duty cycle) for dir and speed
  */
+
+static float _get_spindle_pwm (spSpindle_t &_spindle, pwmControl_t &_pwm)
+{
+    float speed_lo, speed_hi, phase_lo, phase_hi;
+    if (_spindle.direction == SPINDLE_CW ) {
+        speed_lo = _pwm.c[PWM_1].cw_speed_lo;
+        speed_hi = _pwm.c[PWM_1].cw_speed_hi;
+        phase_lo = _pwm.c[PWM_1].cw_phase_lo;
+        phase_hi = _pwm.c[PWM_1].cw_phase_hi;
+    } else { // if (direction == SPINDLE_CCW ) {
+        speed_lo = _pwm.c[PWM_1].ccw_speed_lo;
+        speed_hi = _pwm.c[PWM_1].ccw_speed_hi;
+        phase_lo = _pwm.c[PWM_1].ccw_phase_lo;
+        phase_hi = _pwm.c[PWM_1].ccw_phase_hi;
+    }
+
+    if ((_spindle.state == SPINDLE_CW) || (_spindle.state == SPINDLE_CCW)) {
+        // clamp spindle speed to lo/hi range
+        if (_spindle.speed < speed_lo) {
+            _spindle.speed = speed_lo;
+        }
+        if (_spindle.speed > speed_hi) {
+            _spindle.speed = speed_hi;
+        }
+        // normalize speed to [0..1]
+        float speed = (_spindle.speed - speed_lo) / (speed_hi - speed_lo);
+        return ((speed * (phase_hi - phase_lo)) + phase_lo);
+    } else {
+        return (_pwm.c[PWM_1].phase_off);
+    }
+}
+
 /*
-static float _get_spindle_pwm (spSpindle_t *sp, pwmControl_t *pwm)
+static float _get_spindle_pwm (spSpindle_t *sp, pwmControl_t *_pwm)
 {
     float speed_lo, speed_hi, phase_lo, phase_hi;
     if (sp->direction == SPINDLE_CW ) {
-        speed_lo = pwm->c[PWM_1].cw_speed_lo;
-        speed_hi = pwm->c[PWM_1].cw_speed_hi;
-        phase_lo = pwm->c[PWM_1].cw_phase_lo;
-        phase_hi = pwm->c[PWM_1].cw_phase_hi;
-    } else { // if (direction == SPINDLE_CCW ) {
-        speed_lo = pwm->c[PWM_1].ccw_speed_lo;
-        speed_hi = pwm->c[PWM_1].ccw_speed_hi;
-        phase_lo = pwm->c[PWM_1].ccw_phase_lo;
-        phase_hi = pwm->c[PWM_1].ccw_phase_hi;
+        speed_lo = _pwm->c[PWM_1].cw_speed_lo;
+        speed_hi = _pwm->c[PWM_1].cw_speed_hi;
+        phase_lo = _pwm->c[PWM_1].cw_phase_lo;
+        phase_hi = _pwm->c[PWM_1].cw_phase_hi;
+        } else { // if (direction == SPINDLE_CCW ) {
+        speed_lo = _pwm->c[PWM_1].ccw_speed_lo;
+        speed_hi = _pwm->c[PWM_1].ccw_speed_hi;
+        phase_lo = _pwm->c[PWM_1].ccw_phase_lo;
+        phase_hi = _pwm->c[PWM_1].ccw_phase_hi;
     }
 
     if ((sp->state == SPINDLE_CW) || (sp->state == SPINDLE_CCW)) {
         // clamp spindle speed to lo/hi range
-        if (spindle->speed < speed_lo) {
-            spindle->speed = speed_lo;
+        if (sp->speed < speed_lo) {
+            sp->speed = speed_lo;
         }
-        if (spindle->speed > speed_hi) {
-            spindle->speed = speed_hi;
-        }
-        // normalize speed to [0..1]
-        float speed = (spindle->speed - speed_lo) / (speed_hi - speed_lo);
-        return (speed * (phase_hi - phase_lo)) + phase_lo;
-    } else {
-        return pwm->c[PWM_1].phase_off;
-    }
-}
-*/
-
-static float _get_spindle_pwm (spControl state, spControl direction)
-{
-    float speed_lo=0, speed_hi=0, phase_lo=0, phase_hi=0;
-    if (direction == SPINDLE_CW ) {
-        speed_lo = pwm.c[PWM_1].cw_speed_lo;
-        speed_hi = pwm.c[PWM_1].cw_speed_hi;
-        phase_lo = pwm.c[PWM_1].cw_phase_lo;
-        phase_hi = pwm.c[PWM_1].cw_phase_hi;
-        } else { // if (direction == SPINDLE_CCW ) {
-        speed_lo = pwm.c[PWM_1].ccw_speed_lo;
-        speed_hi = pwm.c[PWM_1].ccw_speed_hi;
-        phase_lo = pwm.c[PWM_1].ccw_phase_lo;
-        phase_hi = pwm.c[PWM_1].ccw_phase_hi;
-    }
-
-    if ((state == SPINDLE_CW) || (state == SPINDLE_CCW)) {
-        // clamp spindle speed to lo/hi range
-        if (spindle.speed < speed_lo) {
-            spindle.speed = speed_lo;
-        }
-        if (spindle.speed > speed_hi) {
-            spindle.speed = speed_hi;
+        if (sp->speed > speed_hi) {
+            sp->speed = speed_hi;
         }
         // normalize speed to [0..1]
-        float speed = (spindle.speed - speed_lo) / (speed_hi - speed_lo);
-        return (speed * (phase_hi - phase_lo)) + phase_lo;
+        float speed = (sp->speed - speed_lo) / (speed_hi - speed_lo);
+        return ((speed * (phase_hi - phase_lo)) + phase_lo);
         } else {
-        return pwm.c[PWM_1].phase_off;
+        return (_pwm->c[PWM_1].phase_off);
     }
 }
 
+*/
 /***********************************************************************************
  * spindle_override_control()
  * spindle_start_override()
