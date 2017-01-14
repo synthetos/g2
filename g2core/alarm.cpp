@@ -123,7 +123,7 @@ stat_t cm_is_alarmed()
 void cm_halt_all(void)
 {
     cm_halt_motion();
-    spindle_control_immediate(SPINDLE_OFF, false);
+    spindle_control_immediate(SPINDLE_OFF);
     cm_coolant_off_immediate();
 }
 

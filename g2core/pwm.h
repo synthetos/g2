@@ -45,12 +45,12 @@ typedef struct pwmChannel {
     // no data required in ARM
 } pwmChannel_t;
 
-typedef struct pwmSingleton {
+typedef struct pwmControl {
     pwmConfigChannel_t  c[PWMS];    // array of channel configs
     pwmChannel_t        p[PWMS];    // array of PWM channels
-} pwmSingleton_t;
+} pwmControl_t;
 
-extern pwmSingleton_t pwm;
+extern pwmControl_t pwm;
 
 /*** function prototypes ***/
 

@@ -44,8 +44,8 @@ spSpindle_t spindle;
 /**** Static functions ****/
 
 static void _exec_spindle_speed(float *value, bool *flag);
-static void _exec_spindle_control(float *value, bool *flag);
-static float _get_spindle_pwm (spState state, spControl direction);
+//static void _exec_spindle_control(float *value, bool *flag);
+static float _get_spindle_pwm (spState state, spState direction);
 
 /***********************************************************************************
  * spindle_init()
@@ -65,58 +65,35 @@ void spindle_reset()
     float value[AXES] = { 0,0,0,0,0,0 };        // set spindle speed to zero
     bool flags[] = { 1,0,0,0,0,0 };
    _exec_spindle_speed(value, flags);
-    spindle_control_immediate(SPINDLE_CONTROL_OFF, false); // turn spindle off
+    spindle_control_immediate(SPINDLE_OFF);
 }
 
 /***********************************************************************************
- * spindle_pause()             - pause spindle immediately if option is true
- * spindle_resume()            - restart a paused spindle with an optional dwell
  * spindle_control_immediate() - execute spindle control immediately
  * spindle_control_sync()      - queue a spindle control to the planner buffer
  * _exec_spindle_control()     - actually execute the spindle command
+ *
+ *  Basic operation: Spindle function is effected by _exec_spindle_control().
+ *  Spindle_control_immediate() runs command as soon as it's received. 
+ *  Spindle_control_sync() inserts spindle move into the planner, and handles optional dwells
+ *
+ *  Valid inputs to Spindle_control_immediate() and Spindle_control_sync() are:
+ *
+ *    - SPINDLE_OFF turns off spindle and sets spindle state to SPINDLE_OFF.
+ *      The spindle.direction value is not affected (although this doesn't really matter).
+ *
+ *    - SPINDLE_CW or SPINDLE_CCW turns spindle on and sets direction accordingly.
+ *      If spindle_control_sync() has a non-zero dwell a dwell move is added to the planner queue.
+ *      In this case spindle.state is SPINDLE_WAIT until move is "played", and dwell completes.
+ *      spindle_control_immediate() has no dwell behavior.
+ *
+ *    - SPINDLE_PAUSE, when in CW or CCW state, turns spindle OFF and preserves PAUSE in spindle.state.
+ *      If PAUSE is received when not in CW or CCW state it is ignored.
+ *
+ *    - SPINDLE_RESUME, if in a PAUSE state, reverts to previous SPINDLE_CW or SPINDLE_CCW.
+ *      If RESUME is received from spindle_control_sync() the same dwell and WAIT behavior occurs.
+ *      If RESUME is received when not in a PAUSED state it is ignored.
  */
-
-void spindle_pause()
-{
-    if (spindle.state == SPINDLE_ON) {
-        spindle_control_sync(SPINDLE_CONTROL_OFF, true);
-    }
-}
-
-void spindle_resume()
-{
-    if (spindle.state == SPINDLE_PAUSE) {
-        spindle_control_sync(SPINDLE_CONTROL_CW, false);
-    }
-}
-
-stat_t spindle_control_immediate(uint8_t control, bool pause)
-{
-    float value[] = { (float)SPINDLE_OFF, 0,0,0,0,0 };
-    bool flags[] =  { 1,0, pause, 0,0,0 };
-
-    if (control != SPINDLE_CONTROL_OFF) {
-        value[0] = SPINDLE_ON;
-        value[1] = control;
-        flags[1] = true;
-    }
-    _exec_spindle_control(value, flags);
-    return(STAT_OK);
-}
-
-stat_t spindle_control_sync(uint8_t control, bool pause)  // uses spControl arg: OFF, CW, CCW
-{
-    float value[] = { (float)SPINDLE_OFF, 0,0,0,0,0 };
-    bool flags[] =  { 1,0, pause, 0,0,0 };
-
-    if (control != SPINDLE_CONTROL_OFF) {
-        value[0] = SPINDLE_ON;
-        value[1] = control;
-        flags[1] = true;
-    }
-    mp_queue_command(_exec_spindle_control, value, flags);
-    return(STAT_OK);
-}
 
 #define _set_spindle_enable_bit_hi() spindle_enable_pin.set()
 #define _set_spindle_enable_bit_lo() spindle_enable_pin.clear()
@@ -125,26 +102,87 @@ stat_t spindle_control_sync(uint8_t control, bool pause)  // uses spControl arg:
 
 static void _exec_spindle_control(float *value, bool *flag)
 {
-    if (flag[1]) {      // set the direction first
-        spindle.direction = (spControl)value[1];                // record spindle direction in the struct
-        if ((spindle.direction-1) ^ spindle.dir_polarity) {     // take CW/CCW down to 0 or 1
+    spState control = (spState)value[0];
+    if (control > SPINDLE_RESUME) {
+        return;
+    }
+    
+    uint8_t on_bit = SPINDLE_OFF;
+    int8_t dir_bit = -1;                    // use this value to skip setting the direction
+
+    spindle.state = control;                // record spindle state
+    
+    if ((control == SPINDLE_CW) || (control == SPINDLE_CCW)) {
+        on_bit = 1;                         // use 1 (not true) to indicate this is a bitmask
+        dir_bit = control-1;                // adjust direction so it can be used as a bitmask
+        spindle.direction = control;
+//        spindle.state = control;
+    }
+    else if (control == SPINDLE_RESUME) {
+        on_bit = 1;
+        dir_bit = spindle.direction-1;      // Note: spindle direction is stored as 1 & 2
+        spindle.state = spindle.direction;
+    }
+    
+    // set the direction first
+    if (dir_bit >= 0) {
+        if (dir_bit ^ spindle.dir_polarity) {
             _set_spindle_direction_bit_hi();
         } else {
             _set_spindle_direction_bit_lo();
         }
     }
-    if (flag[0]) {      // set on/off
-        spindle.state = (spState)value[0];                      // record spindle state in the struct
-        if ((spindle.state & 0x01) ^ spindle.enable_polarity) { // mask out PAUSE bit and consider it to be OFF
-            _set_spindle_enable_bit_lo();
-        } else {
-            _set_spindle_enable_bit_hi();
-        }
+
+    // set on/off
+    if (on_bit ^ spindle.enable_polarity) {
+        _set_spindle_enable_bit_lo();
+    } else {
+        _set_spindle_enable_bit_hi();
     }
-    if (flag[2]) {      // set pause
-        spindle.state = SPINDLE_PAUSE;
-    }    
+
+//    if (flag[2]) {      // set pause
+//        spindle.state = SPINDLE_PAUSE;
+//    }
     pwm_set_duty(PWM_1, _get_spindle_pwm(spindle.state, spindle.direction));
+}
+
+stat_t spindle_control_immediate(spState control)
+{
+//    bool pause = (control == SPINDLE_PAUSE) ? true : false;
+    
+//    float value[] = { (float)control, 0,0,0,0,0 };
+    float value[] = { (float)control };
+//    bool flags[] =  { 1,0, pause, 0,0,0 };
+
+//    if (control != SPINDLE_CONTROL_OFF) {
+//        value[0] = SPINDLE_ON;
+//        value[1] = control;
+//        flags[1] = true;
+//    }
+    _exec_spindle_control(value, nullptr);
+    return(STAT_OK);
+}
+
+stat_t spindle_control_sync(spState control)  // uses spControl arg: OFF, CW, CCW
+{
+/*
+    bool pause = (control == SPINDLE_PAUSE) ? true : false;
+    float value[] = { (float)SPINDLE_OFF, 0,0,0,0,0 };
+    bool flags[] =  { 1,0, pause, 0,0,0 };
+
+    if (control != SPINDLE_CONTROL_OFF) {
+        value[0] = SPINDLE_ON;
+        value[1] = control;
+        flags[1] = true;
+    }
+*/
+    float value[] = { (float)control, 0,0,0,0,0 };
+    mp_queue_command(_exec_spindle_control, value, nullptr);
+    
+    if (fp_NOT_ZERO(spindle.dwell_seconds)) {
+//        mp_queue_command(dwell);
+    }
+    return(STAT_OK);
 }
 
 /***********************************************************************************
@@ -195,23 +233,55 @@ static void _exec_spindle_speed(float *value, bool *flag)
 /***********************************************************************************
  * _get_spindle_pwm() - return PWM phase (duty cycle) for dir and speed
  */
+/*
+static float _get_spindle_pwm (spSpindle_t *sp, pwmControl_t *pwm)
+{
+    float speed_lo, speed_hi, phase_lo, phase_hi;
+    if (sp->direction == SPINDLE_CW ) {
+        speed_lo = pwm->c[PWM_1].cw_speed_lo;
+        speed_hi = pwm->c[PWM_1].cw_speed_hi;
+        phase_lo = pwm->c[PWM_1].cw_phase_lo;
+        phase_hi = pwm->c[PWM_1].cw_phase_hi;
+    } else { // if (direction == SPINDLE_CCW ) {
+        speed_lo = pwm->c[PWM_1].ccw_speed_lo;
+        speed_hi = pwm->c[PWM_1].ccw_speed_hi;
+        phase_lo = pwm->c[PWM_1].ccw_phase_lo;
+        phase_hi = pwm->c[PWM_1].ccw_phase_hi;
+    }
 
-static float _get_spindle_pwm (spState state, spControl direction)
+    if ((sp->state == SPINDLE_CW) || (sp->state == SPINDLE_CCW)) {
+        // clamp spindle speed to lo/hi range
+        if (spindle->speed < speed_lo) {
+            spindle->speed = speed_lo;
+        }
+        if (spindle->speed > speed_hi) {
+            spindle->speed = speed_hi;
+        }
+        // normalize speed to [0..1]
+        float speed = (spindle->speed - speed_lo) / (speed_hi - speed_lo);
+        return (speed * (phase_hi - phase_lo)) + phase_lo;
+    } else {
+        return pwm->c[PWM_1].phase_off;
+    }
+}
+*/
+
+static float _get_spindle_pwm (spState state, spState direction)
 {
     float speed_lo=0, speed_hi=0, phase_lo=0, phase_hi=0;
-    if (direction == SPINDLE_CONTROL_CW ) {
+    if (direction == SPINDLE_CW ) {
         speed_lo = pwm.c[PWM_1].cw_speed_lo;
         speed_hi = pwm.c[PWM_1].cw_speed_hi;
         phase_lo = pwm.c[PWM_1].cw_phase_lo;
         phase_hi = pwm.c[PWM_1].cw_phase_hi;
-    } else { // if (direction == SPINDLE_CONTROL_CCW ) {
+        } else { // if (direction == SPINDLE_CCW ) {
         speed_lo = pwm.c[PWM_1].ccw_speed_lo;
         speed_hi = pwm.c[PWM_1].ccw_speed_hi;
         phase_lo = pwm.c[PWM_1].ccw_phase_lo;
         phase_hi = pwm.c[PWM_1].ccw_phase_hi;
     }
 
-    if (state == SPINDLE_ON) {
+    if ((state == SPINDLE_CW) || (state == SPINDLE_CCW)) {
         // clamp spindle speed to lo/hi range
         if (spindle.speed < speed_lo) {
             spindle.speed = speed_lo;
@@ -222,7 +292,7 @@ static float _get_spindle_pwm (spState state, spControl direction)
         // normalize speed to [0..1]
         float speed = (spindle.speed - speed_lo) / (speed_hi - speed_lo);
         return (speed * (phase_hi - phase_lo)) + phase_lo;
-    } else {
+        } else {
         return pwm.c[PWM_1].phase_off;
     }
 }

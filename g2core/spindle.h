@@ -35,14 +35,22 @@ typedef enum {
 } spMode;
 #define SPINDLE_MODE_MAX SPINDLE_CONTINUOUS
 
-// Note on spControl:
-// This enum is used to both request the spindle operation (ON, CW, CCW), 
-// and to record spindle direction (1=CW, 2=CCW) in spindle.direction  
+// spState is used for multiple purposes:
+//  - request the spindle operation (OFF, CW, CCW)
+//  - request PAUSE and RESUME
+//  - run the spindle state machine for spindle wait states
+//  - store current direction (1=CW, 2=CCW) in spindle.direction
 typedef enum {                  // how spindle controls are presented by the Gcode parser
-    SPINDLE_CONTROL_OFF = 0,    // M5
-    SPINDLE_CONTROL_CW = 1,     // M3
-    SPINDLE_CONTROL_CCW = 2     // M4
-} spControl;
+    SPINDLE_OFF = 0,            // M5
+    SPINDLE_CW = 1,             // M3 and store CW to spindle.direction
+    SPINDLE_CCW = 2,            // M4 and store CCW to spsindle.direction
+    SPINDLE_PAUSE,              // request PAUSE and store PAUSED state to spindle.state
+    SPINDLE_RESUME,             // request RESUME and revert spindle.state to CW, CCW
+    SPINDLE_WAIT                // handle transient WAIT states
+} spState;
+
+// SPINDLE_ON is either of SPINDLE_CW or SPINDLE_CCW
+//#define SPINDLE_ON(s) ((s == SPINDLE_CW) || (s == SPINDLE__CCW))  
 
 // *** NOTE: The spindle polarity active hi/low values currently agree with ioMode in gpio.h
 // These will all need to be changed to ACTIVE_HIGH = 0, ACTIVE_LOW = 1
@@ -53,12 +61,14 @@ typedef enum {                  // Note: These values agree with
     SPINDLE_ACTIVE_HIGH = 1,    // Will set output to 1 to enable the spindle or CW direction
 } spPolarity;
 
+/*
 typedef enum {                  // basic spindle state machine. Do not change this enum
     SPINDLE_OFF = 0,
     SPINDLE_ON = 1,             // spindle on and at speed
     SPINDLE_PAUSE = 2,          // meaning it was on and now it's off
     SPINDLE_WAITING = 3         // spindle not at speed yet
 } spState;
+*/
 
 typedef enum {                  // electronic speed controller for some spindles
     ESC_ONLINE = 0,
@@ -80,22 +90,22 @@ typedef enum {                  // electronic speed controller for some spindles
 
 typedef struct spSpindle {
 
-    // Public and settable
-    spMode      mode;               // spondle operating mode
+    spMode      mode;               // spindle operating mode
+    spState     state;              // OFF, ON, PAUSE, RESUME, WAIT
+    spState     direction;          // 1=CW, 2=CCW (subset of above state)
+
     float       speed;              // S in RPM
     float       speed_min;          // minimum settable spindle speed
     float       speed_max;          // maximum settable spindle speed
-    spControl   direction;          // 1=CW, 2=CCW
+
     spPolarity  enable_polarity;    // 0=active low, 1=active high
     spPolarity  dir_polarity;       // 0=clockwise low, 1=clockwise high
     float       dwell_seconds;      // dwell on spindle resume
     bool        pause_on_hold;      // pause on feedhold
+
     bool        sso_enable;         // TRUE = spindle speed override enabled (see also m48_enable in canonical machine)
     float       sso_factor;         // 1.0000 x S spindle speed. Go up or down from there
     
-    // Spindle internal state - not directly settable by user or program
-    spState     state;              // OFF, ON, PAUSE, WAITING
-
     // Spindle speed controller variables
     ESCState    esc_state;          // state management for ESC controller
     uint32_t    esc_boot_timer;     // When the ESC last booted up
@@ -111,10 +121,8 @@ extern spSpindle_t spindle;
 void spindle_init();
 void spindle_reset();
 
-void spindle_pause(void);
-void spindle_resume(void);
-stat_t spindle_control_immediate(uint8_t control, bool pause);
-stat_t spindle_control_sync(uint8_t control, bool pause);
+stat_t spindle_control_immediate(spState control);
+stat_t spindle_control_sync(spState control);
 stat_t spindle_speed_immediate(float speed);    // S parameter
 stat_t spindle_speed_sync(float speed);         // S parameter
 

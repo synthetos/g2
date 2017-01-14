@@ -251,7 +251,7 @@ static uint8_t _probing_init() {
     gpio_set_probing_mode(pb.probe_input, true);
 
     // turn off spindle and start the move
-    spindle_pause();                            // pause the spindle if it's on
+    spindle_control_immediate(SPINDLE_PAUSE);   // pause the spindle if it's on
     return (_set_pb_func(_probing_start));      // start the probe move
 }
 
@@ -391,7 +391,7 @@ static void _probe_restore_settings() {
     cm_set_distance_mode(pb.saved_distance_mode);
 
     // restart spindle if it was paused
-    spindle_resume();
+    spindle_control_immediate(SPINDLE_RESUME);
 
     // cancel the feed modes used during probing
     cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);

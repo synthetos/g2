@@ -36,7 +36,7 @@
 
 /***** PWM defines, structures and memory allocation *****/
 
-pwmSingleton_t pwm;
+pwmControl_t pwm;
 
 
 // Setup motate PWM pins

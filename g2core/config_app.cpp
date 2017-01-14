@@ -864,17 +864,7 @@ const cfgItem_t cfgArray[] = {
     { "",  "sps", _fiz,  0, sp_print_sps,  sp_get_sps,  sp_set_sps,  (float *)&cs.null, 0 },    // get spindle speed
     { "",  "spe", _fiz,  0, sp_print_spe,  sp_get_spe,  set_nul,     (float *)&cs.null, 0 },    // get spindle enable state
     { "",  "spd", _fiz,  0, sp_print_spd,  sp_get_spd,  sp_set_spd,  (float *)&cs.null, 0 },    // get spindle direction
-/*
-    { "sys","spep",_fipn,0, sp_print_spep, get_ui8, set_01,   (float *)&spindle.enable_polarity,     SPINDLE_ENABLE_POLARITY },
-    { "sys","spdp",_fipn,0, sp_print_spdp, get_ui8, set_01,   (float *)&spindle.dir_polarity,        SPINDLE_DIR_POLARITY },
-    { "sys","spph",_fipn,0, sp_print_spph, get_ui8, set_01,   (float *)&spindle.pause_on_hold,       SPINDLE_PAUSE_ON_HOLD },
-    { "sys","spdw",_fipn,2, sp_print_spdw, get_flt, set_flt,  (float *)&spindle.dwell_seconds,       SPINDLE_DWELL_TIME },
-    { "sys","ssoe",_fipn,0, sp_print_ssoe, get_ui8, set_01,   (float *)&spindle.sso_enable,          SPINDLE_OVERRIDE_ENABLE},
-    { "sys","sso", _fipn,3, sp_print_sso,  sp_get_sso,  sp_set_sso,(float *)&spindle.sso_factor,          SPINDLE_OVERRIDE_FACTOR},
-    { "",   "spe", _fiz, 0, sp_print_spe,  get_ui8, set_nul,  (float *)&spindle.state, 0 },          // get spindle enable state
-    { "",   "spd", _fiz, 0, sp_print_spd,  get_ui8,sp_set_dir,(float *)&spindle.direction, 0 },      // get spindle direction
-    { "",   "sps", _fiz, 0, sp_print_sps,  get_flt, set_nul,  (float *)&spindle.speed, 0 },          // get spindle speed
-*/
+
     // Coolant functions
     { "sys","cofp",_fipn,0, cm_print_cofp,get_ui8, set_01,   (float *)&coolant.flood_polarity,      COOLANT_FLOOD_POLARITY },
     { "sys","comp",_fipn,0, cm_print_comp,get_ui8, set_01,   (float *)&coolant.mist_polarity,       COOLANT_MIST_POLARITY },

@@ -634,9 +634,9 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
                         SET_MODAL (MODAL_GROUP_M4, program_flow, PROGRAM_STOP);
                 case 2: case 30:
                         SET_MODAL (MODAL_GROUP_M4, program_flow, PROGRAM_END);
-                case 3: SET_MODAL (MODAL_GROUP_M7, spindle_control, SPINDLE_CONTROL_CW);
-                case 4: SET_MODAL (MODAL_GROUP_M7, spindle_control, SPINDLE_CONTROL_CCW);
-                case 5: SET_MODAL (MODAL_GROUP_M7, spindle_control, SPINDLE_CONTROL_OFF);
+                case 3: SET_MODAL (MODAL_GROUP_M7, spindle_control, SPINDLE_CW);
+                case 4: SET_MODAL (MODAL_GROUP_M7, spindle_control, SPINDLE_CCW);
+                case 5: SET_MODAL (MODAL_GROUP_M7, spindle_control, SPINDLE_OFF);
                 case 6: SET_NON_MODAL (tool_change, true);
                 case 7: SET_MODAL (MODAL_GROUP_M8, mist_coolant, true);
                 case 8: SET_MODAL (MODAL_GROUP_M8, flood_coolant, true);
@@ -743,7 +743,7 @@ static stat_t _execute_gcode_block(char *active_comment)
     EXEC_FUNC(cm_change_tool, tool_change);                 // M6
 
     if (gf.spindle_control) {                               // spindle OFF, CW, CCW
-        ritorno(spindle_control_sync(gv.spindle_control, false));
+        ritorno(spindle_control_sync((spState)gv.spindle_control));
     }
 
     EXEC_FUNC(cm_mist_coolant_control, mist_coolant);       // M7, M9
