@@ -114,6 +114,10 @@ static void _exec_spindle_control(float *value, bool *flag)
     if ((control == SPINDLE_RESUME) && (spindle.state != SPINDLE_PAUSE)) {
         return;
     }
+    if ((control == SPINDLE_PAUSE) && (spindle.state != SPINDLE_OFF)) {
+        return;
+    }
+
     spindle.state = control;                // record new spindle state
     uint8_t on_bit = SPINDLE_OFF;           // default to off
     int8_t dir_bit = -1;                    // -1 will skip setting the direction
@@ -235,39 +239,6 @@ static float _get_spindle_pwm (spSpindle_t &_spindle, pwmControl_t &_pwm)
     }
 }
 
-/*
-static float _get_spindle_pwm (spSpindle_t *sp, pwmControl_t *_pwm)
-{
-    float speed_lo, speed_hi, phase_lo, phase_hi;
-    if (sp->direction == SPINDLE_CW ) {
-        speed_lo = _pwm->c[PWM_1].cw_speed_lo;
-        speed_hi = _pwm->c[PWM_1].cw_speed_hi;
-        phase_lo = _pwm->c[PWM_1].cw_phase_lo;
-        phase_hi = _pwm->c[PWM_1].cw_phase_hi;
-        } else { // if (direction == SPINDLE_CCW ) {
-        speed_lo = _pwm->c[PWM_1].ccw_speed_lo;
-        speed_hi = _pwm->c[PWM_1].ccw_speed_hi;
-        phase_lo = _pwm->c[PWM_1].ccw_phase_lo;
-        phase_hi = _pwm->c[PWM_1].ccw_phase_hi;
-    }
-
-    if ((sp->state == SPINDLE_CW) || (sp->state == SPINDLE_CCW)) {
-        // clamp spindle speed to lo/hi range
-        if (sp->speed < speed_lo) {
-            sp->speed = speed_lo;
-        }
-        if (sp->speed > speed_hi) {
-            sp->speed = speed_hi;
-        }
-        // normalize speed to [0..1]
-        float speed = (sp->speed - speed_lo) / (speed_hi - speed_lo);
-        return ((speed * (phase_hi - phase_lo)) + phase_lo);
-        } else {
-        return (_pwm->c[PWM_1].phase_off);
-    }
-}
-
-*/
 /***********************************************************************************
  * spindle_override_control()
  * spindle_start_override()

@@ -51,7 +51,8 @@ typedef enum {                  // how spindle controls are presented by the Gco
     SPINDLE_CCW = 2,            // M4 and store CCW to spsindle.direction
     SPINDLE_PAUSE,              // request PAUSE and store PAUSED state to spindle.state
     SPINDLE_RESUME,             // request RESUME and revert spindle.state to CW, CCW
-    SPINDLE_WAIT                // handle transient WAIT states (not an action state)
+    SPINDLE_SPINUP,             // spindle is coming up to speed
+    SPINDLE_SPINDOWN            // spindle is spinning down to stop
 } spControl;
 #define SPINDLE_ACTION_MAX SPINDLE_RESUME
 

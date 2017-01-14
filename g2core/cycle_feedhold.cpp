@@ -249,11 +249,10 @@ stat_t cm_switch_to_hold_context()
         cm_straight_traverse(target, flags);
         cm_set_distance_mode(stored_distance_mode);
     }
-            
-    // optional spindle stop
-    if (spindle.pause_on_hold) {
-        
-    }
+
+    spindle_control_sync(SPINDLE_PAUSE);        // optional spindle pause
+ //   coolant_control_sync(COOLANT_PAUSE);        // optional coolant pause
+
     return (STAT_OK);
 }
 
@@ -280,14 +279,9 @@ stat_t cm_return_from_hold_context()     // LATER: if value == true return with 
     }
 
     // *** While still in secondary machine:
-/*
-    if (cm->machine_state == MACHINE_ALARM) {
-        cm_spindle_off_immediate();
-        cm_coolant_off_immediate();
-*/
-    // restart spindle (with optional dwell)
-    
-    // restart coolant
+
+    spindle_control_sync(SPINDLE_RESUME);   // resume spindle if paused
+//    coolant_control_sync(COOLANT_RESUME);   // resume coolant if paused
     
     // perform the G30 move and queue a wait
     float target[] = { 0,0,0,0,0,0 };       // LATER: Make this move return through XY, then Z
