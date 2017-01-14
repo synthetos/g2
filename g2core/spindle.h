@@ -28,6 +28,12 @@
 #ifndef SPINDLE_H_ONCE
 #define SPINDLE_H_ONCE
 
+#define SPINDLE_OVERRIDE_ENABLE false
+#define SPINDLE_OVERRIDE_FACTOR 1.00
+#define SPINDLE_OVERRIDE_MIN 0.05       // 5%
+#define SPINDLE_OVERRIDE_MAX 2.00       // 200%
+#define SPINDLE_OVERRIDE_RAMP_TIME 1    // change sped in seconds
+
 typedef enum {
     SPINDLE_DISABLED = 0,       // spindle will not operate
     SPINDLE_PLAN_TO_STOP,       // spindle operating, plans to stop
@@ -35,22 +41,19 @@ typedef enum {
 } spMode;
 #define SPINDLE_MODE_MAX SPINDLE_CONTINUOUS
 
-// spState is used for multiple purposes:
-//  - request the spindle operation (OFF, CW, CCW)
-//  - request PAUSE and RESUME
+// spControl is used for multiple purposes:
+//  - request a spindle operation (OFF, CW, CCW, PAUSE, RESUME)
 //  - run the spindle state machine for spindle wait states
-//  - store current direction (1=CW, 2=CCW) in spindle.direction
+//  - CW and CCW values are stored as current direction in spindle.direction
 typedef enum {                  // how spindle controls are presented by the Gcode parser
     SPINDLE_OFF = 0,            // M5
     SPINDLE_CW = 1,             // M3 and store CW to spindle.direction
     SPINDLE_CCW = 2,            // M4 and store CCW to spsindle.direction
     SPINDLE_PAUSE,              // request PAUSE and store PAUSED state to spindle.state
     SPINDLE_RESUME,             // request RESUME and revert spindle.state to CW, CCW
-    SPINDLE_WAIT                // handle transient WAIT states
-} spState;
-
-// SPINDLE_ON is either of SPINDLE_CW or SPINDLE_CCW
-//#define SPINDLE_ON(s) ((s == SPINDLE_CW) || (s == SPINDLE__CCW))  
+    SPINDLE_WAIT                // handle transient WAIT states (not an action state)
+} spControl;
+#define SPINDLE_ACTION_MAX SPINDLE_RESUME
 
 // *** NOTE: The spindle polarity active hi/low values currently agree with ioMode in gpio.h
 // These will all need to be changed to ACTIVE_HIGH = 0, ACTIVE_LOW = 1
@@ -61,15 +64,6 @@ typedef enum {                  // Note: These values agree with
     SPINDLE_ACTIVE_HIGH = 1,    // Will set output to 1 to enable the spindle or CW direction
 } spPolarity;
 
-/*
-typedef enum {                  // basic spindle state machine. Do not change this enum
-    SPINDLE_OFF = 0,
-    SPINDLE_ON = 1,             // spindle on and at speed
-    SPINDLE_PAUSE = 2,          // meaning it was on and now it's off
-    SPINDLE_WAITING = 3         // spindle not at speed yet
-} spState;
-*/
-
 typedef enum {                  // electronic speed controller for some spindles
     ESC_ONLINE = 0,
     ESC_OFFLINE,
@@ -78,33 +72,29 @@ typedef enum {                  // electronic speed controller for some spindles
     ESC_LOCKOUT_AND_REBOOTING,
 } ESCState;
 
-#define SPINDLE_OVERRIDE_ENABLE false
-#define SPINDLE_OVERRIDE_FACTOR 1.00
-#define SPINDLE_OVERRIDE_MIN 0.05       // 5%
-#define SPINDLE_OVERRIDE_MAX 2.00       // 200%
-#define SPINDLE_OVERRIDE_RAMP_TIME 1    // change sped in seconds
-
 /*
  * Spindle control structure
  */
 
 typedef struct spSpindle {
 
-    spMode      mode;               // spindle operating mode
-    spState     state;              // OFF, ON, PAUSE, RESUME, WAIT
-    spState     direction;          // 1=CW, 2=CCW (subset of above state)
+    spMode      mode;               // {spm:} spindle operating mode
+    spControl   state;              // {spc:} OFF, ON, PAUSE, RESUME, WAIT
+    spControl   direction;          //        1=CW, 2=CCW (subset of above state)
 
-    float       speed;              // S in RPM
-    float       speed_min;          // minimum settable spindle speed
-    float       speed_max;          // maximum settable spindle speed
+    float       speed;              // {sps:}  S in RPM
+    float       speed_min;          // {spsn:} minimum settable spindle speed
+    float       speed_max;          // {spsm:} maximum settable spindle speed
 
-    spPolarity  enable_polarity;    // 0=active low, 1=active high
-    spPolarity  dir_polarity;       // 0=clockwise low, 1=clockwise high
-    float       dwell_seconds;      // dwell on spindle resume
-    bool        pause_on_hold;      // pause on feedhold
+    spPolarity  enable_polarity;    // {spep:} 0=active low, 1=active high
+    spPolarity  dir_polarity;       // {spdp:} 0=clockwise low, 1=clockwise high
+    bool        pause_on_hold;      // {spph:} pause on feedhold
+    float       spinup_delay;       // {spde:} optional delay on spindle start (set to 0 to disable)
+    float       spindown_delay;     // {spds:} optional delay on spindle stop (set to 0 to disable)
+    float       reversal_delay;     // {spdr:} optional delay on direction reversal (set to 0 to disable)
 
-    bool        sso_enable;         // TRUE = spindle speed override enabled (see also m48_enable in canonical machine)
-    float       sso_factor;         // 1.0000 x S spindle speed. Go up or down from there
+    bool        override_enable;    // {spoe:} TRUE = spindle speed override enabled (see also m48_enable in canonical machine)
+    float       override_factor;    // {spo:}  1.0000 x S spindle speed. Go up or down from there
     
     // Spindle speed controller variables
     ESCState    esc_state;          // state management for ESC controller
@@ -121,8 +111,8 @@ extern spSpindle_t spindle;
 void spindle_init();
 void spindle_reset();
 
-stat_t spindle_control_immediate(spState control);
-stat_t spindle_control_sync(spState control);
+stat_t spindle_control_immediate(spControl control);
+stat_t spindle_control_sync(spControl control);
 stat_t spindle_speed_immediate(float speed);    // S parameter
 stat_t spindle_speed_sync(float speed);         // S parameter
 
@@ -143,24 +133,22 @@ stat_t sp_set_spdp(nvObj_t *nv);
 stat_t sp_get_spph(nvObj_t *nv);
 stat_t sp_set_spph(nvObj_t *nv);
 
-stat_t sp_get_spdw(nvObj_t *nv);
-stat_t sp_set_spdw(nvObj_t *nv);
+stat_t sp_get_spde(nvObj_t *nv);
+stat_t sp_set_spde(nvObj_t *nv);
 stat_t sp_get_spsn(nvObj_t *nv);
 stat_t sp_set_spsn(nvObj_t *nv);
 stat_t sp_get_spsm(nvObj_t *nv);
 stat_t sp_set_spsm(nvObj_t *nv);
 
-stat_t sp_get_ssoe(nvObj_t* nv);
-stat_t sp_set_ssoe(nvObj_t* nv);
-stat_t sp_get_sso(nvObj_t* nv);
-stat_t sp_set_sso(nvObj_t* nv);
+stat_t sp_get_spoe(nvObj_t* nv);
+stat_t sp_set_spoe(nvObj_t* nv);
+stat_t sp_get_spo(nvObj_t* nv);
+stat_t sp_set_spo(nvObj_t* nv);
 
+stat_t sp_get_spc(nvObj_t* nv);
+stat_t sp_set_spc(nvObj_t* nv);
 stat_t sp_get_sps(nvObj_t* nv);
 stat_t sp_set_sps(nvObj_t* nv);
-stat_t sp_get_spe(nvObj_t* nv);
-stat_t sp_set_spe(nvObj_t* nv);
-stat_t sp_get_spd(nvObj_t* nv);
-stat_t sp_set_spd(nvObj_t* nv);
 
 /*--- text_mode support functions ---*/
 
@@ -170,14 +158,13 @@ stat_t sp_set_spd(nvObj_t* nv);
     void sp_print_spep(nvObj_t* nv);
     void sp_print_spdp(nvObj_t* nv);
     void sp_print_spph(nvObj_t* nv);
-    void sp_print_spdw(nvObj_t* nv);
+    void sp_print_spde(nvObj_t* nv);
     void sp_print_spsn(nvObj_t* nv);
     void sp_print_spsm(nvObj_t* nv);
-    void sp_print_ssoe(nvObj_t* nv);
-    void sp_print_sso(nvObj_t* nv);
+    void sp_print_spoe(nvObj_t* nv);
+    void sp_print_spo(nvObj_t* nv);
+    void sp_print_spc(nvObj_t* nv);
     void sp_print_sps(nvObj_t* nv);
-    void sp_print_spe(nvObj_t* nv);
-    void sp_print_spd(nvObj_t* nv);
 
 #else
 
@@ -185,14 +172,13 @@ stat_t sp_set_spd(nvObj_t* nv);
     #define sp_print_spep tx_print_stub
     #define sp_print_spdp tx_print_stub
     #define sp_print_spph tx_print_stub
-    #define sp_print_spdw tx_print_stub
+    #define sp_print_spde tx_print_stub
     #define sp_print_spsn tx_print_stub
     #define sp_print_spsm tx_print_stub
-    #define sp_print_ssoe tx_print_stub
-    #define sp_print_spe tx_print_stub
+    #define sp_print_spoe tx_print_stub
+    #define sp_print_spo tx_print_stub
+    #define sp_print_spc tx_print_stub
     #define sp_print_sps tx_print_stub
-    #define sp_print_sso tx_print_stub
-    #define sp_print_spd tx_print_stub
 
 #endif  // __TEXT_MODE
 

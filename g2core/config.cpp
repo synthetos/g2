@@ -532,13 +532,13 @@ void nv_get_nvObj(nvObj_t *nv)
 
     // special processing for system groups and stripping tokens for groups
     if (nv->group[0] != NUL) {
-        if (GET_TABLE_BYTE(flags) & F_NOSTRIP) {
+        if (cfgArray[nv->index].flags & F_NOSTRIP) {
             nv->group[0] = NUL;
         } else {
             strcpy(nv->token, &nv->token[strlen(nv->group)]); // strip group from the token
         }
     }
-    ((fptrCmd)GET_TABLE_WORD(get))(nv);         // populate the value
+    ((fptrCmd)cfgArray[nv->index].get)(nv);     // populate the value
 }
 
 nvObj_t *nv_reset_nv(nvObj_t *nv)               // clear a single nvObj structure

@@ -743,7 +743,7 @@ static stat_t _execute_gcode_block(char *active_comment)
     EXEC_FUNC(cm_change_tool, tool_change);                 // M6
 
     if (gf.spindle_control) {                               // spindle OFF, CW, CCW
-        ritorno(spindle_control_sync((spState)gv.spindle_control));
+        ritorno(spindle_control_sync((spControl)gv.spindle_control));
     }
 
     EXEC_FUNC(cm_mist_coolant_control, mist_coolant);       // M7, M9

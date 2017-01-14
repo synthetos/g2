@@ -1353,8 +1353,8 @@ static void _exec_feed_override(const bool m48_enable, const bool m50_enable, co
  * cm_m48_enable() - M48, M49
  *
  * M48 is the master enable for manual feedrate override and spindle override
- * If M48 is asserted M50 (mfo), M50.1 (mto) and M51 (sso) settings are in effect
- * If M49 is asserted M50 (mfo), M501. (mto) and M51 (sso) settings are in ignored
+ * If M48 is asserted M50 (mfo), M50.1 (mto) and M51 (spo) settings are in effect
+ * If M49 is asserted M50 (mfo), M501. (mto) and M51 (spo) settings are in ignored
  *
  * See http://linuxcnc.org/docs/html/gcode/m-code.html#sec:M48,-M49-Speed-and-Feed-Override-Control
  */

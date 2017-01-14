@@ -835,6 +835,28 @@ const cfgItem_t cfgArray[] = {
     { "jid","jidc",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[2], 0},
     { "jid","jidd",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[3], 0},
 
+    // Spindle functions
+    { "sp","spmo", _fip, 0, sp_print_spmo, sp_get_spmo, sp_set_spmo, (float *)&cs.null, SPINDLE_MODE },
+    { "sp","spph", _fip, 0, sp_print_spph, sp_get_spph, sp_set_spph, (float *)&cs.null, SPINDLE_PAUSE_ON_HOLD },
+    { "sp","spde", _fip, 2, sp_print_spde, sp_get_spde, sp_set_spde, (float *)&cs.null, SPINDLE_DWELL_TIME },  // spinup delay
+//  { "sp","spds", _fip, 2, sp_print_spds, sp_get_spds, sp_set_spds, (float *)&cs.null, SPINDLE_DWELL_TIME },  // spindown delay
+//  { "sp","spdr", _fip, 2, sp_print_spdr, sp_get_spdr, sp_set_spdr, (float *)&cs.null, SPINDLE_DWELL_TIME },  // direction reversal delay
+    { "sp","spsn", _fip, 2, sp_print_spsn, sp_get_spsn, sp_set_spsn, (float *)&cs.null, SPINDLE_SPEED_MIN},
+    { "sp","spsm", _fip, 2, sp_print_spsm, sp_get_spsm, sp_set_spsm, (float *)&cs.null, SPINDLE_SPEED_MAX},
+    { "sp","spep", _fip, 0, sp_print_spep, sp_get_spep, sp_set_spep, (float *)&cs.null, SPINDLE_ENABLE_POLARITY },
+    { "sp","spdp", _fip, 0, sp_print_spdp, sp_get_spdp, sp_set_spdp, (float *)&cs.null, SPINDLE_DIR_POLARITY },
+    { "sp","spoe", _fip, 0, sp_print_spoe, sp_get_spoe, sp_set_spoe, (float *)&cs.null, SPINDLE_OVERRIDE_ENABLE},
+    { "sp","spo",  _fip, 3, sp_print_spo,  sp_get_spo,  sp_set_spo,  (float *)&cs.null, SPINDLE_OVERRIDE_FACTOR},
+    { "sp","spc",  _f0,  0, sp_print_spc,  sp_get_spc,  sp_set_spc,  (float *)&cs.null, 0 },   // spindle state
+    { "sp","sps",  _f0,  0, sp_print_sps,  sp_get_sps,  sp_set_sps,  (float *)&cs.null, 0 },   // spindle speed
+
+    // Coolant functions
+    { "sys","cofp",_fipn,0, cm_print_cofp,get_ui8, set_01,   (float *)&coolant.flood_polarity,      COOLANT_FLOOD_POLARITY },
+    { "sys","comp",_fipn,0, cm_print_comp,get_ui8, set_01,   (float *)&coolant.mist_polarity,       COOLANT_MIST_POLARITY },
+    { "sys","coph",_fipn,0, cm_print_coph,get_ui8, set_01,   (float *)&coolant.pause_on_hold,       COOLANT_PAUSE_ON_HOLD },
+    { "",   "com", _fiz, 0, cm_print_com, get_ui8, set_nul,  (float *)&coolant.mist_enable, 0 },    // get mist coolant enable
+    { "",   "cof", _fiz, 0, cm_print_cof, get_ui8, set_nul,  (float *)&coolant.flood_enable, 0 },   // get flood coolant enable
+
     // General system parameters
     { "sys","jt",  _fipn, 2, cm_print_jt,  cm_get_jt,  cm_set_jt,  (float *)&cs.null, JUNCTION_INTEGRATION_TIME },
     { "sys","ct",  _fipnc,4, cm_print_ct,  cm_get_ct,  cm_set_ct,  (float *)&cs.null, CHORDAL_TOLERANCE },
@@ -850,27 +872,6 @@ const cfgItem_t cfgArray[] = {
     { "sys","mt",  _fipn, 2, st_print_mt,  st_get_mt,  st_set_mt,  (float *)&cs.null, MOTOR_POWER_TIMEOUT},
     { "",   "me",  _f0,   0, st_print_me,  get_nul,    st_set_me,  (float *)&cs.null, 0 },    // SET to enable motors
     { "",   "md",  _f0,   0, st_print_md,  get_nul,    st_set_md,  (float *)&cs.null, 0 },    // SET to disable motors
-
-    // Spindle functions
-    { "sp","spmo",_fipn, 0, sp_print_spmo, sp_get_spmo, sp_set_spmo, (float *)&cs.null, SPINDLE_MODE },
-    { "sp","spep",_fipn, 0, sp_print_spep, sp_get_spep, sp_set_spep, (float *)&cs.null, SPINDLE_ENABLE_POLARITY },
-    { "sp","spdp",_fipn, 0, sp_print_spdp, sp_get_spdp, sp_set_spdp, (float *)&cs.null, SPINDLE_DIR_POLARITY },
-    { "sp","spph",_fipn, 0, sp_print_spph, sp_get_spph, sp_set_spph, (float *)&cs.null, SPINDLE_PAUSE_ON_HOLD },
-    { "sp","spdw",_fipn, 2, sp_print_spdw, sp_get_spdw, sp_set_spdw, (float *)&cs.null, SPINDLE_DWELL_TIME },
-    { "sp","spsn",_fipn, 2, sp_print_spsn, sp_get_spsn, sp_set_spsn, (float *)&cs.null, SPINDLE_SPEED_MIN},
-    { "sp","spsm",_fipn, 2, sp_print_spsm, sp_get_spsm, sp_set_spsm, (float *)&cs.null, SPINDLE_SPEED_MAX},
-    { "sp","ssoe",_fipn, 0, sp_print_ssoe, sp_get_spep, sp_set_spep, (float *)&cs.null, SPINDLE_OVERRIDE_ENABLE},
-    { "sp","sso", _fipn, 3, sp_print_sso,  sp_get_sso,  sp_set_sso,  (float *)&cs.null, SPINDLE_OVERRIDE_FACTOR},
-    { "",  "sps", _fiz,  0, sp_print_sps,  sp_get_sps,  sp_set_sps,  (float *)&cs.null, 0 },    // get spindle speed
-    { "",  "spe", _fiz,  0, sp_print_spe,  sp_get_spe,  set_nul,     (float *)&cs.null, 0 },    // get spindle enable state
-    { "",  "spd", _fiz,  0, sp_print_spd,  sp_get_spd,  sp_set_spd,  (float *)&cs.null, 0 },    // get spindle direction
-
-    // Coolant functions
-    { "sys","cofp",_fipn,0, cm_print_cofp,get_ui8, set_01,   (float *)&coolant.flood_polarity,      COOLANT_FLOOD_POLARITY },
-    { "sys","comp",_fipn,0, cm_print_comp,get_ui8, set_01,   (float *)&coolant.mist_polarity,       COOLANT_MIST_POLARITY },
-    { "sys","coph",_fipn,0, cm_print_coph,get_ui8, set_01,   (float *)&coolant.pause_on_hold,       COOLANT_PAUSE_ON_HOLD },
-    { "",   "com", _fiz, 0, cm_print_com, get_ui8, set_nul,  (float *)&coolant.mist_enable, 0 },    // get mist coolant enable
-    { "",   "cof", _fiz, 0, cm_print_cof, get_ui8, set_nul,  (float *)&coolant.flood_enable, 0 },   // get flood coolant enable
 
     // Communications and reporting parameters
 #ifdef __TEXT_MODE

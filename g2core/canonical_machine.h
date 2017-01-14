@@ -432,7 +432,7 @@ void cm_reset_overrides(void);
 stat_t cm_m48_enable(uint8_t enable);                           // M48, M49
 stat_t cm_mfo_control(const float P_word, const bool P_flag);   // M50
 stat_t cm_mto_control(const float P_word, const bool P_flag);   // M50.1
-// See spindle.cpp for cm_sso_control()                         // M51        
+// See spindle.cpp for cm_spo_control()                         // M51        
 
 // Program Functions (4.3.10)
 void cm_cycle_start(void);                                      // (no Gcode)

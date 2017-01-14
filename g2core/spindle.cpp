@@ -45,7 +45,7 @@ spSpindle_t spindle;
 
 static void _exec_spindle_speed(float *value, bool *flag);
 //static void _exec_spindle_control(float *value, bool *flag);
-static float _get_spindle_pwm (spState state, spState direction);
+static float _get_spindle_pwm (spControl state, spControl direction);
 
 /***********************************************************************************
  * spindle_init()
@@ -87,36 +87,45 @@ void spindle_reset()
  *      In this case spindle.state is SPINDLE_WAIT until move is "played", and dwell completes.
  *      spindle_control_immediate() has no dwell behavior.
  *
- *    - SPINDLE_PAUSE, when in CW or CCW state, turns spindle OFF and preserves PAUSE in spindle.state.
- *      If PAUSE is received when not in CW or CCW state it is ignored.
+ *    - SPINDLE_PAUSE is only applicable to CW and CCW states. It forces the spindle OFF and 
+ *      sets spindle.state to PAUSE. If PAUSE is received when not in CW or CCW state it is ignored.
  *
  *    - SPINDLE_RESUME, if in a PAUSE state, reverts to previous SPINDLE_CW or SPINDLE_CCW.
- *      If RESUME is received from spindle_control_sync() the same dwell and WAIT behavior occurs.
- *      If RESUME is received when not in a PAUSED state it is ignored.
+ *      The SPEED is not changed, and if it were changed in the interim the "new" speed is used.
+ *      If RESUME is received from spindle_control_sync() the usual dwell and WAIT behavior occurs.
+ *      If RESUME is received when not in a PAUSED state it is ignored. This recognizes that the main
+ *      reason an immediate command would be issued - either manually by the user or by an alarm or
+ *      some other program function - is to stop a spindle. So the Resume should be ignored for safety.
+ *
+ *  Notes:
+ *    - Changes to polarities and other setup parameters take effect on the next spindle action.
+ *      There is no reason to make these occur instantly.
+ *  
+ *    - Since it's possible to queue a sync'd control, then set any control value with an 
+ *      immediate() before the queued command is reached, _exec_spindle_control() must gracefully 
+ *      handle any arbitrary state transition (not just the "legal" ones)
+ *  
+ *    - Do we need a spin-down for direction reversal?
+ *    - Should the JSON be able to pause and resume?
  */
-
-#define _set_spindle_enable_bit_hi() spindle_enable_pin.set()
-#define _set_spindle_enable_bit_lo() spindle_enable_pin.clear()
-#define _set_spindle_direction_bit_hi() spindle_dir_pin.set()
-#define _set_spindle_direction_bit_lo() spindle_dir_pin.clear()
 
 static void _exec_spindle_control(float *value, bool *flag)
 {
-    spState control = (spState)value[0];
-    if (control > SPINDLE_RESUME) {
+    spControl control = (spControl)value[0];
+    if (control >= SPINDLE_ACTION_MAX) {
         return;
     }
-    
-    uint8_t on_bit = SPINDLE_OFF;
-    int8_t dir_bit = -1;                    // use this value to skip setting the direction
-
-    spindle.state = control;                // record spindle state
+    if ((control == SPINDLE_RESUME) && (spindle.state != SPINDLE_PAUSE)) {
+        return;
+    }
+    spindle.state = control;                // record new spindle state
+    uint8_t on_bit = SPINDLE_OFF;           // default to off
+    int8_t dir_bit = -1;                    // -1 will skip setting the direction
     
     if ((control == SPINDLE_CW) || (control == SPINDLE_CCW)) {
         on_bit = 1;                         // use 1 (not true) to indicate this is a bitmask
         dir_bit = control-1;                // adjust direction so it can be used as a bitmask
         spindle.direction = control;
-//        spindle.state = control;
     }
     else if (control == SPINDLE_RESUME) {
         on_bit = 1;
@@ -127,96 +136,45 @@ static void _exec_spindle_control(float *value, bool *flag)
     // set the direction first
     if (dir_bit >= 0) {
         if (dir_bit ^ spindle.dir_polarity) {
-            _set_spindle_direction_bit_hi();
+            spindle_dir_pin.set();          // drive pin HI
         } else {
-            _set_spindle_direction_bit_lo();
+            spindle_dir_pin.clear();        // drive pin LO
         }
     }
 
     // set on/off
     if (on_bit ^ spindle.enable_polarity) {
-        _set_spindle_enable_bit_lo();
+        spindle_enable_pin.clear();         // drive pin LO
     } else {
-        _set_spindle_enable_bit_hi();
+        spindle_enable_pin.set();           // drive pin HI
     }
-
-//    if (flag[2]) {      // set pause
-//        spindle.state = SPINDLE_PAUSE;
-//    }
     pwm_set_duty(PWM_1, _get_spindle_pwm(spindle.state, spindle.direction));
 }
 
-stat_t spindle_control_immediate(spState control)
+stat_t spindle_control_immediate(spControl control)
 {
-//    bool pause = (control == SPINDLE_PAUSE) ? true : false;
-    
-//    float value[] = { (float)control, 0,0,0,0,0 };
     float value[] = { (float)control };
-//    bool flags[] =  { 1,0, pause, 0,0,0 };
-
-//    if (control != SPINDLE_CONTROL_OFF) {
-//        value[0] = SPINDLE_ON;
-//        value[1] = control;
-//        flags[1] = true;
-//    }
     _exec_spindle_control(value, nullptr);
     return(STAT_OK);
 }
 
-stat_t spindle_control_sync(spState control)  // uses spControl arg: OFF, CW, CCW
+stat_t spindle_control_sync(spControl control)  // uses spControl arg: OFF, CW, CCW
 {
-/*
-    bool pause = (control == SPINDLE_PAUSE) ? true : false;
-    float value[] = { (float)SPINDLE_OFF, 0,0,0,0,0 };
-    bool flags[] =  { 1,0, pause, 0,0,0 };
-
-    if (control != SPINDLE_CONTROL_OFF) {
-        value[0] = SPINDLE_ON;
-        value[1] = control;
-        flags[1] = true;
-    }
-*/
-    float value[] = { (float)control, 0,0,0,0,0 };
+//    float value[] = { (float)control, 0,0,0,0,0 };
+    float value[] = { (float)control };
     mp_queue_command(_exec_spindle_control, value, nullptr);
     
-    if (fp_NOT_ZERO(spindle.dwell_seconds)) {
+    if (fp_NOT_ZERO(spindle.spinup_delay)) {
 //        mp_queue_command(dwell);
     }
     return(STAT_OK);
 }
 
 /***********************************************************************************
- * spindle_queue_speed() - queue the S parameter to the planner buffer
- * _exec_spindle_speed() - spindle speed callback from planner queue
+ * spindle_speed_immediate() - execute spindle speed change immediately
+ * spindle_speed_sync()      - queue a spindle speed change to the planner buffer
+ * _exec_spindle_speed()     - actually execute the spindle speed command
  */
-
-stat_t spindle_speed_immediate(float speed)
-{
-    if (speed < spindle.speed_min) {
-        return (STAT_SPINDLE_SPEED_BELOW_MINIMUM);
-    }
-    if (speed > spindle.speed_max) {
-        return (STAT_SPINDLE_SPEED_MAX_EXCEEDED);
-    }
-    float value[AXES] = { speed, 0,0,0,0,0 };
-//    bool flags[]      = { 1,0,0,0,0,0 };
-    _exec_spindle_speed(value, nullptr);
-    return (STAT_OK);
-}
-
-stat_t spindle_speed_sync(float speed)
-{
-    if (speed < spindle.speed_min) {
-        return (STAT_SPINDLE_SPEED_BELOW_MINIMUM);
-    }
-    if (speed > spindle.speed_max) { 
-        return (STAT_SPINDLE_SPEED_MAX_EXCEEDED);
-    }
-    float value[AXES] = { speed, 0,0,0,0,0 };
-//    bool flags[]      = { 1,0,0,0,0,0 };
-    mp_queue_command(_exec_spindle_speed, value, nullptr);
-    return (STAT_OK);
-}
 
 static void _exec_spindle_speed(float *value, bool *flag)
 {
@@ -228,6 +186,29 @@ static void _exec_spindle_speed(float *value, bool *flag)
 */
     // update spindle speed if we're running
     pwm_set_duty(PWM_1, _get_spindle_pwm(spindle.state, spindle.direction));
+}
+
+static stat_t _casey_jones(float speed)
+{
+    if (speed < spindle.speed_min) { return (STAT_SPINDLE_SPEED_BELOW_MINIMUM); }
+    if (speed > spindle.speed_max) { return (STAT_SPINDLE_SPEED_MAX_EXCEEDED); }
+    return (STAT_OK);    
+}
+
+stat_t spindle_speed_immediate(float speed)
+{
+    ritorno(_casey_jones(speed));
+    float value[] = { speed };
+    _exec_spindle_speed(value, nullptr);
+    return (STAT_OK);
+}
+
+stat_t spindle_speed_sync(float speed)
+{
+    ritorno(_casey_jones(speed));
+    float value[] = { speed };
+    mp_queue_command(_exec_spindle_speed, value, nullptr);
+    return (STAT_OK);
 }
 
 /***********************************************************************************
@@ -266,7 +247,7 @@ static float _get_spindle_pwm (spSpindle_t *sp, pwmControl_t *pwm)
 }
 */
 
-static float _get_spindle_pwm (spState state, spState direction)
+static float _get_spindle_pwm (spControl state, spControl direction)
 {
     float speed_lo=0, speed_hi=0, phase_lo=0, phase_hi=0;
     if (direction == SPINDLE_CW ) {
@@ -317,18 +298,18 @@ stat_t spindle_override_control(const float P_word, const bool P_flag) // M51
             if (P_word > SPINDLE_OVERRIDE_MAX) {
                 return (STAT_INPUT_EXCEEDS_MAX_VALUE);
             }
-            spindle.sso_factor = P_word;    // P word is valid, store it.
+            spindle.override_factor = P_word;    // P word is valid, store it.
             new_override = true;
         }
     }
     if (cm->gmx.m48_enable) {               // if master enable is ON
-        if (new_enable && (new_override || !spindle.sso_enable)) {   // 3 cases to start a ramp
-            spindle_start_override(SPINDLE_OVERRIDE_RAMP_TIME, spindle.sso_factor);
-        } else if (spindle.sso_enable && !new_enable) {              // case to turn off the ramp
+        if (new_enable && (new_override || !spindle.override_enable)) {   // 3 cases to start a ramp
+            spindle_start_override(SPINDLE_OVERRIDE_RAMP_TIME, spindle.override_factor);
+        } else if (spindle.override_enable && !new_enable) {              // case to turn off the ramp
             spindle_end_override(SPINDLE_OVERRIDE_RAMP_TIME);
         }
     }
-    spindle.sso_enable = new_enable;        // always update the enable state
+    spindle.override_enable = new_enable;        // always update the enable state
     return (STAT_OK);
 }
 
@@ -366,53 +347,23 @@ stat_t sp_set_spdp(nvObj_t *nv) { return(set_int(nv, (uint8_t &)spindle.dir_pola
 stat_t sp_get_spph(nvObj_t *nv) { return(get_int(nv, spindle.dir_polarity)); }
 stat_t sp_set_spph(nvObj_t *nv) { return(set_int(nv, (uint8_t &)spindle.dir_polarity, 0, 1)); }
 
-stat_t sp_get_spdw(nvObj_t *nv) { return(get_float(nv, spindle.dwell_seconds)); }
-stat_t sp_set_spdw(nvObj_t *nv) { return(set_float_range(nv, spindle.dwell_seconds, 0, SPINDLE_DWELL_MAX)); }
+stat_t sp_get_spde(nvObj_t *nv) { return(get_float(nv, spindle.spinup_delay)); }
+stat_t sp_set_spde(nvObj_t *nv) { return(set_float_range(nv, spindle.spinup_delay, 0, SPINDLE_DWELL_MAX)); }
 stat_t sp_get_spsn(nvObj_t *nv) { return(get_float(nv, spindle.speed_min)); }
 stat_t sp_set_spsn(nvObj_t *nv) { return(set_float_range(nv, spindle.speed_min, SPINDLE_SPEED_MIN, SPINDLE_SPEED_MAX)); }
 stat_t sp_get_spsm(nvObj_t *nv) { return(get_float(nv, spindle.speed_max)); }
 stat_t sp_set_spsm(nvObj_t *nv) { return(set_float_range(nv, spindle.speed_max, SPINDLE_SPEED_MIN, SPINDLE_SPEED_MAX)); }
 
-stat_t sp_get_ssoe(nvObj_t *nv) { return(get_int(nv, spindle.sso_enable)); }
-stat_t sp_set_ssoe(nvObj_t *nv) { return(set_int(nv, (uint8_t &)spindle.sso_enable, 0, 1)); }
-stat_t sp_get_sso(nvObj_t *nv) { return(get_float(nv, spindle.sso_factor)); }
-stat_t sp_set_sso(nvObj_t *nv) { return(set_float_range(nv, spindle.sso_factor, SPINDLE_OVERRIDE_MIN, SPINDLE_OVERRIDE_MAX)); }
+stat_t sp_get_spoe(nvObj_t *nv) { return(get_int(nv, spindle.override_enable)); }
+stat_t sp_set_spoe(nvObj_t *nv) { return(set_int(nv, (uint8_t &)spindle.override_enable, 0, 1)); }
+stat_t sp_get_spo(nvObj_t *nv) { return(get_float(nv, spindle.override_factor)); }
+stat_t sp_set_spo(nvObj_t *nv) { return(set_float_range(nv, spindle.override_factor, SPINDLE_OVERRIDE_MIN, SPINDLE_OVERRIDE_MAX)); }
 
-/* These are provided as a way to set and clear spindle states without using M commands
- * SPD is useful because disabling a spindle (M5) does not change the direction, only the enable.
- */
-
+// These are provided as a way to view and control spindles without using M commands
+stat_t sp_get_spc(nvObj_t *nv) { return(get_int(nv, spindle.state)); }
+stat_t sp_set_spc(nvObj_t *nv) { return(spindle_control_immediate((spControl)nv->value)); }
 stat_t sp_get_sps(nvObj_t *nv) { return(get_float(nv, spindle.speed)); }
-stat_t sp_set_sps(nvObj_t *nv)
-{
-    set_float_range(nv, spindle.speed, spindle.speed_min, spindle.speed_max);
-    float value[] = { spindle.speed, 0,0,0,0,0 };
-    bool flags[] =  { 1,0,0,0,0,0 };
-    _exec_spindle_speed(value, flags);
-    return (STAT_OK);
-}
-
-stat_t sp_get_spe(nvObj_t *nv) { return(get_int(nv, spindle.state)); }
-/*
-stat_t sp_set_spe(nvObj_t *nv) 
-{
-//    set_int(nv, (uint8_t &)spindle.state, 0, 1);
-    float value[] = { (float)spindle.state, (float)spindle.direction, 0,0,0,0 };
-    bool flags[]  = { 1,1,0,0,0,0 };
-    _exec_spindle_control(value, flags);
-    return (STAT_OK);
-}
-*/
-
-stat_t sp_get_spd(nvObj_t *nv) { return(get_int(nv, spindle.direction)); }
-stat_t sp_set_spd(nvObj_t *nv)
-{
-    set_int(nv, (uint8_t &)spindle.direction, 0, 1);
-    float value[] = { (float)spindle.state, (float)spindle.direction, 0,0,0,0 };
-    bool flags[]  = { 1,1,0,0,0,0 };
-    _exec_spindle_control(value, flags);
-    return (STAT_OK);
-}
+stat_t sp_set_sps(nvObj_t *nv) { return(spindle_speed_immediate(nv->value)); }
 
 /***********************************************************************************
  * TEXT MODE SUPPORT
@@ -421,30 +372,28 @@ stat_t sp_set_spd(nvObj_t *nv)
 
 #ifdef __TEXT_MODE
 
+const char fmt_spc[]  = "[spc]  spindle control:%12d [0=OFF,1=CW,2=CCW]\n";
+const char fmt_sps[]  = "[sps]  spindle speed:%14.0f rpm\n";
 const char fmt_spmo[] = "[spmo] spindle mode%16d [0=disabled,1=plan-to-stop,2=continuous]\n";
 const char fmt_spep[] = "[spep] spindle enable polarity%5d [0=active_low,1=active_high]\n";
 const char fmt_spdp[] = "[spdp] spindle direction polarity%2d [0=CW_low,1=CW_high]\n";
 const char fmt_spph[] = "[spph] spindle pause on hold%7d [0=no,1=pause_on_hold]\n";
-const char fmt_spdw[] = "[spdw] spindle dwell time%12.1f seconds\n";
+const char fmt_spde[] = "[spde] spindle spinup delay%10.1f seconds\n";
 const char fmt_spsn[] = "[spsn] spindle speed min%14.2f rpm\n";
 const char fmt_spsm[] = "[spsm] spindle speed max%14.2f rpm\n";
-const char fmt_ssoe[] = "[ssoe] spindle speed override ena%2d [0=disable,1=enable]\n";
-const char fmt_sso[]  = "[sso]  spindle speed override%10.3f [0.050 < sso < 2.000]\n";
-const char fmt_sps[]  = "Spindle Speed: %7.0f rpm\n";
-const char fmt_spe[]  = "Spindle Enable:%7d [0=OFF,1=ON,2=PAUSE]\n";
-const char fmt_spd[]  = "Spindle Direction:%4d [0=CW,1=CCW]\n";
+const char fmt_spoe[] = "[spoe] spindle speed override ena%2d [0=disable,1=enable]\n";
+const char fmt_spo[]  = "[spo]  spindle speed override%10.3f [0.050 < spo < 2.000]\n";
 
+void sp_print_spc(nvObj_t *nv)  { text_print(nv, fmt_spc);}     // TYPE_INT
+void sp_print_sps(nvObj_t *nv)  { text_print(nv, fmt_sps);}     // TYPE_FLOAT
 void sp_print_spmo(nvObj_t *nv) { text_print(nv, fmt_spmo);}    // TYPE_INT
 void sp_print_spep(nvObj_t *nv) { text_print(nv, fmt_spep);}    // TYPE_INT
 void sp_print_spdp(nvObj_t *nv) { text_print(nv, fmt_spdp);}    // TYPE_INT
 void sp_print_spph(nvObj_t *nv) { text_print(nv, fmt_spph);}    // TYPE_INT
-void sp_print_spdw(nvObj_t *nv) { text_print(nv, fmt_spdw);}    // TYPE_FLOAT
+void sp_print_spde(nvObj_t *nv) { text_print(nv, fmt_spde);}    // TYPE_FLOAT
 void sp_print_spsn(nvObj_t *nv) { text_print(nv, fmt_spsn);}    // TYPE_FLOAT
 void sp_print_spsm(nvObj_t *nv) { text_print(nv, fmt_spsm);}    // TYPE_FLOAT
-void sp_print_ssoe(nvObj_t *nv) { text_print(nv, fmt_ssoe);}    // TYPE INT
-void sp_print_sso(nvObj_t *nv)  { text_print(nv, fmt_sso);}     // TYPE FLOAT
-void sp_print_spe(nvObj_t *nv)  { text_print(nv, fmt_spe);}     // TYPE_INT
-void sp_print_spd(nvObj_t *nv)  { text_print(nv, fmt_spd);}     // TYPE_INT
-void sp_print_sps(nvObj_t *nv)  { text_print(nv, fmt_sps);}     // TYPE_FLOAT
+void sp_print_spoe(nvObj_t *nv) { text_print(nv, fmt_spoe);}    // TYPE INT
+void sp_print_spo(nvObj_t *nv)  { text_print(nv, fmt_spo);}     // TYPE FLOAT
 
 #endif // __TEXT_MODE
