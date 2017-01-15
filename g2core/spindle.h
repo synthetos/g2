@@ -41,10 +41,11 @@ typedef enum {
 } spMode;
 #define SPINDLE_MODE_MAX SPINDLE_CONTINUOUS
 
-// spControl is used for multiple purposes:
+// spControl enum is used for multiple purposes:
 //  - request a spindle operation (OFF, CW, CCW, PAUSE, RESUME)
 //  - run the spindle state machine for spindle wait states
 //  - CW and CCW values are stored as current direction in spindle.direction
+//  - NOP, REVERSE and RELOAD are operations an are not stes or controls
 typedef enum {                  // how spindle controls are presented by the Gcode parser
     SPINDLE_OFF = 0,            // M5
     SPINDLE_CW = 1,             // M3 and store CW to spindle.direction
@@ -52,9 +53,18 @@ typedef enum {                  // how spindle controls are presented by the Gco
     SPINDLE_PAUSE,              // request PAUSE and store PAUSED state to spindle.state
     SPINDLE_RESUME,             // request RESUME and revert spindle.state to CW, CCW
     SPINDLE_SPINUP,             // spindle is coming up to speed
-    SPINDLE_SPINDOWN            // spindle is spinning down to stop
+    SPINDLE_SPINDOWN,           // spindle is spinning down to stop
+
+    SPINDLE_NOP,                // no operation
+    SPINDLE_NOPCW,              // no operation, starts from clockwise
+    SPINDLE_NOPCCW,             // no operation, starts from counterclockwise
+    SPINDLE_REV,                // operation to reverse spindle direction
+    SPINDLE_LOAD                // operation to reload spindle structure into spindle bits
+    
 } spControl;
 #define SPINDLE_ACTION_MAX SPINDLE_RESUME
+
+
 
 // *** NOTE: The spindle polarity active hi/low values currently agree with ioMode in gpio.h
 // These will all need to be changed to ACTIVE_HIGH = 0, ACTIVE_LOW = 1

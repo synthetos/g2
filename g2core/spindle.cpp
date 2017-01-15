@@ -104,9 +104,116 @@ void spindle_reset()
  *    - Do we need a spin-down for direction reversal?
  *    - Should the JSON be able to pause and resume?
  */
+/*  State/Control matrix. Read "If you are in state X and get control Y do action Z"
+ 
+    Control: OFF         CW          CCW        PAUSE      RESUME      SPINUP      SPINDN
+ State: |-----------|-----------|-----------|-----------|-----------|-----------|-----------|
+    OFF |  RELOAD   |    CW     |    CCW    |    OFF    |    NOP    | XXXXXXXXX | XXXXXXXXX |
+        |-----------|-----------|-----------|-----------|-----------|-----------|-----------|
+     CW |    OFF    |    NOP    |  REVERSE  |   PAUSE   |    NOP    | XXXXXXXXX | XXXXXXXXX |
+        |-----------|-----------|-----------|-----------|-----------|-----------|-----------|
+    CCW |    OFF    |  REVERSE  |    NOP    |   PAUSE   |    NOP    | XXXXXXXXX | XXXXXXXXX |
+        |-----------|-----------|-----------|-----------|-----------|-----------|-----------|
+  PAUSE |    OFF    |    CW     |    CCW    |    NOP    |   RESUME  | XXXXXXXXX | XXXXXXXXX |
+        |-----------|-----------|-----------|-----------|-----------|-----------|-----------|
+ RESUME | XXXXXXXXX | XXXXXXXXX | XXXXXXXXX | XXXXXXXXX | XXXXXXXXX | XXXXXXXXX | XXXXXXXXX |
+        |-----------|-----------|-----------|-----------|-----------|-----------|-----------|
+ SPINUP |    OFF    |  NOP|CW   |  NOP|CCW  |   PAUSE   |    NOP    | XXXXXXXXX | XXXXXXXXX |
+        |-----------|-----------|-----------|-----------|-----------|-----------|-----------|
+ SPINDN |    NOP    |  NOP|CW   |  NOP|CCW  |  NOP(OFF) |  NOP(OFF) | XXXXXXXXX | XXXXXXXXX |
+        |-----------|-----------|-----------|-----------|-----------|-----------|-----------|
+                                               NOP(OFF)s are effectively OFFs
+ Actions:
+    - NOP       No operation, ignore
+    - NOPCW     No-op if spinning up to CW. If the spinning to CCW perform a REVERSE
+    - NOPCCW    No-op if spinning up to CCW. If the spinning to CW perform a REVERSE
+    - OFF       Turn spindle off
+    - CW        Turn spindle on clockwise
+    - CCW       Turn spindle on counterclockwise
+    - PAUSE     Turn off spindle, enter PAUSE state    
+    - RESUME    Turn spindle n CW or CCW as before
+    - REV       Reverse spindle direction (implies a cycle)
+    - RELOAD    Reload (LOAD) settings from spindle structure to spindle bits
+    - XXXXXXX   Impossible state. RESUME is not a state and PSINOP/SPINDN are not inputs
+ */
 
 static void _exec_spindle_control(float *value, bool *flag)
 {
+    spControl control = (spControl)value[0];
+    if (control >= SPINDLE_ACTION_MAX) {
+        return;
+    }
+
+    uint matrix[35] = { SPINDLE_LOAD, SPINDLE_CW,    SPINDLE_CCW,    SPINDLE_OFF,   SPINDLE_NOP,
+                        SPINDLE_OFF,  SPINDLE_NOP,   SPINDLE_REV,    SPINDLE_PAUSE, SPINDLE_NOP,
+                        SPINDLE_OFF,  SPINDLE_REV,   SPINDLE_NOP,    SPINDLE_PAUSE, SPINDLE_NOP,
+                        SPINDLE_OFF,  SPINDLE_CW,    SPINDLE_CCW,    SPINDLE_NOP,   SPINDLE_RESUME,
+                        SPINDLE_NOP,  SPINDLE_NOP,   SPINDLE_NOP,    SPINDLE_NOP,   SPINDLE_NOP,
+                        SPINDLE_OFF,  SPINDLE_NOPCW, SPINDLE_NOPCCW, SPINDLE_PAUSE, SPINDLE_NOP,
+                        SPINDLE_OFF,  SPINDLE_NOPCW, SPINDLE_NOPCCW, SPINDLE_NOP,   SPINDLE_NOP
+                      };
+    uint8_t index = ((spindle.state & 0x07) * 5) + control;
+    uint8_t action = matrix[index];
+
+    spindle.state = control;                // record new spindle state
+    uint8_t on_bit = SPINDLE_OFF;           // default to off
+    int8_t dir_bit = -1;                    // -1 will skip setting the direction
+
+    switch (action) {
+        case SPINDLE_NOP: { return; }
+        case SPINDLE_OFF: { break; }        // on_nit and state are already set for this case
+        case SPINDLE_PAUSE : { break; }     // on_nit and state are also already set for this case
+
+        case SPINDLE_CW: case SPINDLE_CCW: {
+            on_bit = 1;                     // use 1 (not true) - this is a bitmask
+            dir_bit = control-1;            // adjust direction to be used as a bitmask
+            spindle.direction = control;
+            break; 
+        }
+        
+        case SPINDLE_RESUME: { 
+            on_bit = 1;
+            dir_bit = spindle.direction-1;  // Note: spindle direction was stored as '1' & '2'
+            spindle.state = spindle.direction;
+            break; 
+        }
+
+        case SPINDLE_LOAD: {                // can be used to change enable and dir polarities 
+            dir_bit = control-1;            // adjust direction to be used as a bitmask
+            break;
+        }
+        
+        case SPINDLE_REV: {                 // for now we treat this as a simple CW or CCW request
+            on_bit = 1;                     // use 1 (not true) - this is a bitmask
+            dir_bit = control-1;            // adjust direction to be used as a bitmask
+            spindle.direction = control;
+            break;
+        }
+        case SPINDLE_NOPCW: { return; }     // reversal case not handled yet
+        case SPINDLE_NOPCCW: { return; }    // reversal case not handled yet
+    }
+
+    // Apply the enable and direction bits and adjust the PWM as required
+
+    // set the direction first
+    if (dir_bit >= 0) {
+        if (dir_bit ^ spindle.dir_polarity) {
+            spindle_dir_pin.set();          // drive pin HI
+            } else {
+            spindle_dir_pin.clear();        // drive pin LO
+        }
+    }
+
+    // set on/off
+    if (on_bit ^ spindle.enable_polarity) {
+        spindle_enable_pin.clear();         // drive pin LO
+        } else {
+        spindle_enable_pin.set();           // drive pin HI
+    }
+    pwm_set_duty(PWM_1, _get_spindle_pwm(spindle, pwm));
+}
+
+/*
     spControl control = (spControl)value[0];
     if (control >= SPINDLE_ACTION_MAX) {
         return;
@@ -150,6 +257,7 @@ static void _exec_spindle_control(float *value, bool *flag)
     }
     pwm_set_duty(PWM_1, _get_spindle_pwm(spindle, pwm));
 }
+*/
 
 stat_t spindle_control_immediate(spControl control)
 {
