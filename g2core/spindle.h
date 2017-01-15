@@ -52,19 +52,15 @@ typedef enum {                  // how spindle controls are presented by the Gco
     SPINDLE_CCW = 2,            // M4 and store CCW to spsindle.direction
     SPINDLE_PAUSE,              // request PAUSE and store PAUSED state to spindle.state
     SPINDLE_RESUME,             // request RESUME and revert spindle.state to CW, CCW
+
     SPINDLE_SPINUP,             // spindle is coming up to speed
     SPINDLE_SPINDOWN,           // spindle is spinning down to stop
-
     SPINDLE_NOP,                // no operation
     SPINDLE_NOPCW,              // no operation, starts from clockwise
     SPINDLE_NOPCCW,             // no operation, starts from counterclockwise
-    SPINDLE_REV,                // operation to reverse spindle direction
-    SPINDLE_LOAD                // operation to reload spindle structure into spindle bits
-    
+    SPINDLE_REV                 // operation to reverse spindle direction    
 } spControl;
 #define SPINDLE_ACTION_MAX SPINDLE_RESUME
-
-
 
 // *** NOTE: The spindle polarity active hi/low values currently agree with ioMode in gpio.h
 // These will all need to be changed to ACTIVE_HIGH = 0, ACTIVE_LOW = 1
@@ -102,7 +98,6 @@ typedef struct spSpindle {
     bool        pause_on_hold;      // {spph:} pause on feedhold
     float       spinup_delay;       // {spde:} optional delay on spindle start (set to 0 to disable)
     float       spindown_delay;     // {spds:} optional delay on spindle stop (set to 0 to disable)
-    float       reversal_delay;     // {spdr:} optional delay on direction reversal (set to 0 to disable)
 
     bool        override_enable;    // {spoe:} TRUE = spindle speed override enabled (see also m48_enable in canonical machine)
     float       override_factor;    // {spo:}  1.0000 x S spindle speed. Go up or down from there
