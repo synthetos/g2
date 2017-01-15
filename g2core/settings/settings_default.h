@@ -94,11 +94,15 @@
 #endif
 
 #ifndef SPINDLE_PAUSE_ON_HOLD
-#define SPINDLE_PAUSE_ON_HOLD       true    // {spph:
+#define SPINDLE_PAUSE_ON_HOLD       false   // {spph:
 #endif
 
-#ifndef SPINDLE_DWELL_TIME
-#define SPINDLE_DWELL_TIME          1.0     // {spdw:
+#ifndef SPINDLE_SPINUP_DELAY
+#define SPINDLE_SPINUP_DELAY        0     // {spde:
+#endif
+
+#ifndef SPINDLE_SPINDOWN_DELAY
+#define SPINDLE_SPINDOWN_DELAY      0     // {spdn:
 #endif
 
 #ifndef SPINDLE_DWELL_MAX

@@ -34,36 +34,39 @@
 
 // Machine configuration settings
 
-#define JUNCTION_INTEGRATION_TIME 1.25      // cornering - between 0.10 and 2.00 (higher is faster)
-#define CHORDAL_TOLERANCE 0.1               // chordal tolerance for arcs (in mm)
+#define JUNCTION_INTEGRATION_TIME   1.25    // cornering - between 0.10 and 2.00 (higher is faster)
+#define CHORDAL_TOLERANCE           0.1     // chordal tolerance for arcs (in mm)
 
-#define SOFT_LIMIT_ENABLE 0                 // 0=off, 1=on
-#define HARD_LIMIT_ENABLE 0                 // 0=off, 1=on
-#define SAFETY_INTERLOCK_ENABLE 1           // 0=off, 1=on
+#define SOFT_LIMIT_ENABLE           0       // 0=off, 1=on
+#define HARD_LIMIT_ENABLE           0       // 0=off, 1=on
+#define SAFETY_INTERLOCK_ENABLE     1       // 0=off, 1=on
 
-#define SPINDLE_ENABLE_POLARITY 1           // 0=active low, 1=active high
-#define SPINDLE_DIR_POLARITY 0              // 0=clockwise is low, 1=clockwise is high
-#define SPINDLE_PAUSE_ON_HOLD true
-#define SPINDLE_DWELL_TIME 1.0
+#define SPINDLE_ENABLE_POLARITY     1       // 0=active low, 1=active high
+#define SPINDLE_DIR_POLARITY        0       // 0=clockwise is low, 1=clockwise is high
+#define SPINDLE_PAUSE_ON_HOLD       true
+#define SPINDLE_SPINUP_DELAY        2.0
+#define SPINDLE_SPINDOWN_DELAY      0.0
+#define SPINDLE_SPEED_MIN           0.0 
+#define SPINDLE_SPEED_MAX       20000.0 
 
-#define COOLANT_MIST_POLARITY 1             // 0=active low, 1=active high
-#define COOLANT_FLOOD_POLARITY 1            // 0=active low, 1=active high
-#define COOLANT_PAUSE_ON_HOLD false
+#define COOLANT_MIST_POLARITY       1       // 0=active low, 1=active high
+#define COOLANT_FLOOD_POLARITY      1       // 0=active low, 1=active high
+#define COOLANT_PAUSE_ON_HOLD       false
 
-#define FEEDHOLD_Z_LIFT 10                  // mm to lift Z on feedhold 
+#define FEEDHOLD_Z_LIFT             10      // mm to lift Z on feedhold 
 
 // Communications and reporting settings
 
-#define USB_SERIAL_PORTS_EXPOSED 1          // Valid options are 1 or 2, only!
+#define USB_SERIAL_PORTS_EXPOSED    1       // Valid options are 1 or 2, only!
 
-#define COMM_MODE JSON_MODE                 // one of: TEXT_MODE, JSON_MODE
+#define COMM_MODE               JSON_MODE   // one of: TEXT_MODE, JSON_MODE
 
-#define TEXT_VERBOSITY TV_VERBOSE           // one of: TV_SILENT, TV_VERBOSE
-#define JSON_VERBOSITY JV_MESSAGES          // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
-#define QUEUE_REPORT_VERBOSITY QR_OFF       // one of: QR_OFF, QR_SINGLE, QR_TRIPLE
+#define TEXT_VERBOSITY          TV_VERBOSE  // one of: TV_SILENT, TV_VERBOSE
+#define JSON_VERBOSITY          JV_MESSAGES // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
+#define QUEUE_REPORT_VERBOSITY  QR_OFF      // one of: QR_OFF, QR_SINGLE, QR_TRIPLE
 
 #define STATUS_REPORT_VERBOSITY SR_FILTERED // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
-#define STATUS_REPORT_MIN_MS 100            // milliseconds - enforces a viable minimum
+#define STATUS_REPORT_MIN_MS    100         // milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS 250       // milliseconds - set $SV=0 to disable
 
 //#define STATUS_REPORT_DEFAULTS

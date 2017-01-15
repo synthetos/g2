@@ -95,7 +95,7 @@ typedef struct spSpindle {
 
     spPolarity  enable_polarity;    // {spep:} 0=active low, 1=active high
     spPolarity  dir_polarity;       // {spdp:} 0=clockwise low, 1=clockwise high
-    bool        pause_on_hold;      // {spph:} pause on feedhold
+    bool        pause_enable;       // {spph:} pause on feedhold
     float       spinup_delay;       // {spde:} optional delay on spindle start (set to 0 to disable)
     float       spindown_delay;     // {spds:} optional delay on spindle stop (set to 0 to disable)
 
@@ -141,6 +141,9 @@ stat_t sp_set_spph(nvObj_t *nv);
 
 stat_t sp_get_spde(nvObj_t *nv);
 stat_t sp_set_spde(nvObj_t *nv);
+stat_t sp_get_spdn(nvObj_t *nv);
+stat_t sp_set_spdn(nvObj_t *nv);
+
 stat_t sp_get_spsn(nvObj_t *nv);
 stat_t sp_set_spsn(nvObj_t *nv);
 stat_t sp_get_spsm(nvObj_t *nv);
@@ -165,6 +168,7 @@ stat_t sp_set_sps(nvObj_t* nv);
     void sp_print_spdp(nvObj_t* nv);
     void sp_print_spph(nvObj_t* nv);
     void sp_print_spde(nvObj_t* nv);
+    void sp_print_spdn(nvObj_t* nv);
     void sp_print_spsn(nvObj_t* nv);
     void sp_print_spsm(nvObj_t* nv);
     void sp_print_spoe(nvObj_t* nv);
@@ -179,6 +183,7 @@ stat_t sp_set_sps(nvObj_t* nv);
     #define sp_print_spdp tx_print_stub
     #define sp_print_spph tx_print_stub
     #define sp_print_spde tx_print_stub
+    #define sp_print_spdn tx_print_stub
     #define sp_print_spsn tx_print_stub
     #define sp_print_spsm tx_print_stub
     #define sp_print_spoe tx_print_stub
