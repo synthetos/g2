@@ -290,7 +290,7 @@ void mp_set_steps_to_runtime_position()
     }
 }
 
-/************************************************************************************
+/***********************************************************************************
  * mp_queue_command() - queue a synchronous Mcode, program control, or other command
  * _exec_command()    - callback to execute command
  *
@@ -346,8 +346,7 @@ stat_t mp_runtime_command(mpBuf_t *bf)
     return (STAT_OK);
 }
 
-
-/*************************************************************************
+/***********************************************************************************
  * mp_json_command()    - queue a json command
  * _exec_json_command() - execute json string
  */
@@ -373,7 +372,7 @@ static void _exec_json_command(float *value, bool *flag)
 }
 
 
-/*************************************************************************
+/***********************************************************************************
  * mp_json_wait()    - queue a json wait command
  * _exec_json_wait() - execute json wait string
  */
@@ -427,7 +426,7 @@ static stat_t _exec_json_wait(mpBuf_t *bf)
 }
 
 
-/*************************************************************************
+/***********************************************************************************
  * mp_dwell()    - queue a dwell
  * _exec_dwell() - dwell execution
  *
@@ -435,6 +434,7 @@ static stat_t _exec_json_wait(mpBuf_t *bf)
  * When the stepper driver sees a dwell it times the dwell on a separate
  * timer than the stepper pulse timer.
  */
+
 stat_t mp_dwell(float seconds)
 {
     mpBuf_t *bf;
@@ -458,19 +458,23 @@ static stat_t _exec_dwell(mpBuf_t *bf)
     return (STAT_OK);
 }
 
-//++++ stubbed ++++
+/***********************************************************************************
+ * mp_request_out_of_band_dwell() - request that an out-of-band dwell be run
+ *
+ *  This command is used to request that a dwell be run outside of the planner. 
+ *  This is useful for queuing a dwell after a spindle change. The dwell will 
+ *  only run if the runtime has been stopped, otherwise it is skipped. 
+ *  This function is typically called from an exec such as _exec_spindle_control().
+ *  The request is executed from mp_exec_move().
+ */
+
 void mp_request_out_of_band_dwell(float seconds)
 {
-//    mr->out_of_band_dwell_time = seconds;
-}
-//++++ stubbed ++++
-stat_t mp_exec_out_of_band_dwell(void)
-{
-//    return _advance_dwell(mr->out_of_band_dwell_time);
-    return 0;
+    mr->out_of_band_dwell_flag = true;
+    mr->out_of_band_dwell_seconds = seconds;
 }
 
-/**********************************************************************************
+/***********************************************************************************
  * Planner helpers
  *
  * mp_get_planner_buffers()  - return # of available planner buffers

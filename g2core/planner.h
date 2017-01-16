@@ -438,6 +438,9 @@ typedef struct mpPlannerRuntime {       // persistent runtime variables
     moveSection section;                // what section is the move in?
     sectionState section_state;         // state within a move section
 
+    bool out_of_band_dwell_flag;        // set true to conditionally execute out-of-band dwell
+    float out_of_band_dwell_seconds;    // time for out-of-band dwell
+
     float unit[AXES];                   // unit vector for axis scaling & planning
     bool axis_flags[AXES];              // set true for axes participating in the move
     float target[AXES];                 // final target for bf (used to correct rounding errors)
@@ -552,7 +555,6 @@ stat_t mp_json_wait(char *json_string);
 stat_t mp_dwell(const float seconds);
 void mp_end_dwell(void);
 void mp_request_out_of_band_dwell(float seconds);
-stat_t mp_exec_out_of_band_dwell(void);
 
 //**** planner functions and helpers
 uint8_t mp_get_planner_buffers(const mpPlanner_t *_mp);

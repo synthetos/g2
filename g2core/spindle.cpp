@@ -76,9 +76,9 @@ void spindle_reset()
  * spindle_control_sync()      - queue a spindle control to the planner buffer
  * _exec_spindle_control()     - actually execute the spindle command
  *
- *  Basic operation: Spindle function is effected by _exec_spindle_control().
+ *  Basic operation: Spindle function is executed by _exec_spindle_control().
  *  Spindle_control_immediate() performs the control as soon as it's received. 
- *  Spindle_control_sync() inserts spindle move into the planner, and handles spinup and spindowns
+ *  Spindle_control_sync() inserts spindle move into the planner, and handles spinups.
  *
  *  Valid inputs to Spindle_control_immediate() and Spindle_control_sync() are:
  *
@@ -87,12 +87,13 @@ void spindle_reset()
  *      The spindle.direction value is not affected (although this doesn't really matter).
  *
  *    - SPINDLE_CW or SPINDLE_CCW turns sets direction accordingly and spindle on.
- *      In spindle_control_sync() a non-zero spinup delay puts a dwell in the planner queue.
- *      In this case spindle.state is SPINDLE_SPINUP until spindle command is "played", and dwell completes.
+ *      In spindle_control_sync() a non-zero spinup delay runs a dwell immediately following
+ *      the spindle change, but only if the planner had planned the spindle operation to zero.
+ *      (I.e. if the spindle controls / S words do not plan to zero the delay is not run).
  *      Spindle_control_immediate() has no spinup delay or dwell behavior.
  *
- *    - SPINDLE_PAUSE is only applicable to CW, CCW and SPINUP states. It forces the spindle OFF and 
- *      sets spindle.state to PAUSE. If PAUSE is received when not in CW or CCW state it is ignored.
+ *    - SPINDLE_PAUSE is only applicable to CW and CCW states. It forces the spindle OFF and 
+ *      sets spindle.state to PAUSE. A PAUSE received when not in CW or CCW state is ignored.
  *
  *    - SPINDLE_RESUME, if in a PAUSE state, reverts to previous SPINDLE_CW or SPINDLE_CCW.
  *      The SPEED is not changed, and if it were changed in the interim the "new" speed is used.
@@ -100,8 +101,8 @@ void spindle_reset()
  *      If RESUME is received when not in a PAUSED state it is ignored. This recognizes that the main
  *      reason an immediate command would be issued - either manually by the user or by an alarm or
  *      some other program function - is to stop a spindle. So the Resume should be ignored for safety.
- *
- *  Notes:
+ */
+/*  Notes:
  *    - Since it's possible to queue a sync'd control, and then set any spindle state  with an 
  *      immediate() before the queued command is reached, _exec_spindle_control() must gracefully
  *      handle any arbitrary state transition (not just the "legal" ones).
@@ -167,6 +168,7 @@ static void _exec_spindle_control(float *value, bool *flag)
     SPINDLE_DIRECTION_ASSERT;               // ensure that the spindle direction is sane
     int8_t enable_bit = 0;                  // default to 0=off
     int8_t dir_bit = -1;                    // -1 will skip setting the direction. 0 & 1 are valid values
+    bool spinup_delay = false;
 
     switch (action) {
         case SPINDLE_NOP: case SPINDLE_NOPCW: case SPINDLE_NOPCCW: { return; } // reversals not handled yet
@@ -181,6 +183,7 @@ static void _exec_spindle_control(float *value, bool *flag)
             dir_bit = control-1;            // adjust direction to be used as a bitmask
             spindle.direction = control;
             spindle.state = control;
+            spinup_delay = true;
             break; 
         }
         case SPINDLE_PAUSE : { 
@@ -191,6 +194,7 @@ static void _exec_spindle_control(float *value, bool *flag)
             enable_bit = 1;
             dir_bit = spindle.direction-1;  // spindle direction was stored as '1' & '2'
             spindle.state = spindle.direction;
+            spinup_delay = true;
             break; 
         }
         default: {}                         // keeps the compiler happy
@@ -214,33 +218,15 @@ static void _exec_spindle_control(float *value, bool *flag)
         spindle_enable_pin.set();           // drive pin HI
     }
     pwm_set_duty(PWM_1, _get_spindle_pwm(spindle, pwm));
+
+    if (spinup_delay) {
+        mp_request_out_of_band_dwell(spindle.spinup_delay);
+    }
 }
 
 /*
  * spindle_control_immediate() - execute spindle control immediately
  * spindle_control_sync()      - queue a spindle control to the planner buffer
- *
- * Spinup and Spindown delays
- *
- *  For starters, spinup and spindown delays are only meaningful for queued (sync'd) 
- *  spindle operations (M3/M4/M5) because they introduce delays before or after the 
- *  M code - relative to other Gcode commands. Immediate() spindle operations do not 
- *  observe these delays; that's the responsibility of the sender.
- *
- *  The "right" way to do spinup and spindown delays is to conditionally execute them
- *  in _exec_spindle_control() if you know you have an actual spindle state transition.
- *  This is hard because the delays would need to run "out of band" of the planner/runtime.
- *  This affects the planner, as it may or may not have already planned preceding/following
- *  moves to zero, and for other reasons.
- * 
- *  The easy way is to queue dwells to the planner in advance, before and after the 
- *  actual spindle command. The problem with this is that you don't always know beforehand 
- *  if the spindle command will run any real action. The S word might be zero. Or the
- *  feedhold PAUSE or RESUME might be executed, but no actual transition occurs because 
- *  the spindle might have been OFF when this happened.
- *
- *  Our (admittedly imperfect) hack is to best determine the conditions that will be seen
- *  when the queued delay is executed, and plan on that in spindle_control_sync().
  */
 
 stat_t spindle_control_immediate(spControl control)
@@ -260,17 +246,6 @@ stat_t spindle_control_sync(spControl control)  // uses spControl arg: OFF, CW, 
     // queue the spindle control
     float value[] = { (float)control };
     mp_queue_command(_exec_spindle_control, value, nullptr);
-
-    // conditionally queue a dwell for spinup delay
-    if ((spindle.mode == SPINDLE_PLAN_TO_STOP) && (fp_NOT_ZERO(spindle.spinup_delay))) {
-        if ((control == SPINDLE_CW) || (control == SPINDLE_CCW)) {
-            if (spindle.state != control) {
-                if (spindle.speed > 0) {
-                    mp_dwell(spindle.spinup_delay);
-                }
-            }
-        }
-    }
     return(STAT_OK);
 }
 
@@ -425,8 +400,8 @@ stat_t sp_set_spph(nvObj_t *nv) { return(set_int(nv, (uint8_t &)spindle.pause_en
 
 stat_t sp_get_spde(nvObj_t *nv) { return(get_float(nv, spindle.spinup_delay)); }
 stat_t sp_set_spde(nvObj_t *nv) { return(set_float_range(nv, spindle.spinup_delay, 0, SPINDLE_DWELL_MAX)); }
-stat_t sp_get_spdn(nvObj_t *nv) { return(get_float(nv, spindle.spindown_delay)); }
-stat_t sp_set_spdn(nvObj_t *nv) { return(set_float_range(nv, spindle.spindown_delay, 0, SPINDLE_DWELL_MAX)); }
+//stat_t sp_get_spdn(nvObj_t *nv) { return(get_float(nv, spindle.spindown_delay)); }
+//stat_t sp_set_spdn(nvObj_t *nv) { return(set_float_range(nv, spindle.spindown_delay, 0, SPINDLE_DWELL_MAX)); }
 
 stat_t sp_get_spsn(nvObj_t *nv) { return(get_float(nv, spindle.speed_min)); }
 stat_t sp_set_spsn(nvObj_t *nv) { return(set_float_range(nv, spindle.speed_min, SPINDLE_SPEED_MIN, SPINDLE_SPEED_MAX)); }
@@ -458,7 +433,7 @@ const char fmt_spep[] = "[spep] spindle enable polarity%5d [0=active_low,1=activ
 const char fmt_spdp[] = "[spdp] spindle direction polarity%2d [0=CW_low,1=CW_high]\n";
 const char fmt_spph[] = "[spph] spindle pause on hold%7d [0=no,1=pause_on_hold]\n";
 const char fmt_spde[] = "[spde] spindle spinup delay%10.1f seconds\n";
-const char fmt_spdn[] = "[spdn] spindle spindown delay%8.1f seconds\n";
+//const char fmt_spdn[] = "[spdn] spindle spindown delay%8.1f seconds\n";
 const char fmt_spsn[] = "[spsn] spindle speed min%14.2f rpm\n";
 const char fmt_spsm[] = "[spsm] spindle speed max%14.2f rpm\n";
 const char fmt_spoe[] = "[spoe] spindle speed override ena%2d [0=disable,1=enable]\n";
@@ -471,7 +446,7 @@ void sp_print_spep(nvObj_t *nv) { text_print(nv, fmt_spep);}    // TYPE_INT
 void sp_print_spdp(nvObj_t *nv) { text_print(nv, fmt_spdp);}    // TYPE_INT
 void sp_print_spph(nvObj_t *nv) { text_print(nv, fmt_spph);}    // TYPE_INT
 void sp_print_spde(nvObj_t *nv) { text_print(nv, fmt_spde);}    // TYPE_FLOAT
-void sp_print_spdn(nvObj_t *nv) { text_print(nv, fmt_spdn);}    // TYPE_FLOAT
+//void sp_print_spdn(nvObj_t *nv) { text_print(nv, fmt_spdn);}    // TYPE_FLOAT
 void sp_print_spsn(nvObj_t *nv) { text_print(nv, fmt_spsn);}    // TYPE_FLOAT
 void sp_print_spsm(nvObj_t *nv) { text_print(nv, fmt_spsm);}    // TYPE_FLOAT
 void sp_print_spoe(nvObj_t *nv) { text_print(nv, fmt_spoe);}    // TYPE INT

@@ -44,8 +44,10 @@
 
 #include "MotateDebug.h"
 
+/* Note: stepper_debug statements removed 1/16/17 in SHA ______. See earlier commits to recover
 // Unless debugging, this should always read "#if 0 && ..."
 // DON'T COMMIT with anything else!
+// 
 #if 0 && (IN_DEBUGGER == 1)
 template<int32_t len>
 void stepper_debug(const char (&str)[len]) { Motate::debug.write(str); };
@@ -53,6 +55,7 @@ void stepper_debug(const char (&str)[len]) { Motate::debug.write(str); };
 template<int32_t len>
 void stepper_debug(const char (&str)[len]) { ; };
 #endif
+*/
 
 /**** Allocate structures ****/
 
@@ -352,12 +355,10 @@ void dda_timer_type::interrupt()
 
 void st_request_exec_move()
 {
-    stepper_debug("e");
     if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_EXEC) { // bother interrupting
         exec_timer.setInterruptPending();
         return;
     }
-    stepper_debug("!\n");
 }
 
 namespace Motate {    // Define timer inside Motate namespace
@@ -366,21 +367,17 @@ namespace Motate {    // Define timer inside Motate namespace
     {
         exec_timer.getInterruptCause();                    // clears the interrupt condition
         if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_EXEC) {
-            stepper_debug("E>");
             if (mp_exec_move() != STAT_NOOP) {
-                stepper_debug("E+\n");
                 st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER; // flip it back
                 st_request_load_move();
                 return;
             }
-            stepper_debug("E-\n");
         }
     }
 } // namespace Motate
 
 void st_request_forward_plan()
 {
-    stepper_debug("p");
     fwd_plan_timer.setInterruptPending();
 }
 
@@ -389,13 +386,10 @@ namespace Motate {    // Define timer inside Motate namespace
     void fwd_plan_timer_type::interrupt()
     {
         fwd_plan_timer.getInterruptCause();     // clears the interrupt condition
-        stepper_debug("P>");
         if (mp_forward_plan() != STAT_NOOP) {   // We now have a move to exec.
-            stepper_debug("P+\n");
             st_request_exec_move();
             return;
         }
-        stepper_debug("P-\n");
     }
 } // namespace Motate
 
@@ -414,9 +408,7 @@ void st_request_load_move()
     if (st_runtime_isbusy()) {                                      // don't request a load if the runtime is busy
         return;
     }
-    stepper_debug("l");
     if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_LOADER) {       // bother interrupting
-        stepper_debug("_");
         load_timer.setInterruptPending();
     }
 }
@@ -426,9 +418,7 @@ namespace Motate {    // Define timer inside Motate namespace
     void load_timer_type::interrupt()
     {
         load_timer.getInterruptCause();                             // read SR to clear interrupt condition
-        stepper_debug("L>");
         _load_move();
-        stepper_debug("L+\n");
     }
 } // namespace Motate
 
@@ -474,11 +464,8 @@ static void _load_move()
 #if (MOTORS > 5)
         motor_6.motionStopped();
 #endif
-        stepper_debug("•");
         return;
     } // if (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_LOADER)
-
-    stepper_debug("^");
 
     // handle aline loads first (most common case)  NB: there are no more lines, only alines
     if (st_pre.block_type == BLOCK_TYPE_ALINE) {
@@ -667,7 +654,6 @@ static void _load_move()
 
 stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time)
 {
-    stepper_debug("😶");
     // trap assertion failures and other conditions that would prevent queuing the line
     if (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_EXEC) {     // never supposed to happen
         return (cm_panic(STAT_INTERNAL_ERROR, "st_prep_line() prep sync error"));
@@ -746,7 +732,6 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
     }
     st_pre.block_type = BLOCK_TYPE_ALINE;
     st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;    // signal that prep buffer is ready
-    stepper_debug("👍🏻");
     return (STAT_OK);
 }
 
@@ -784,20 +769,26 @@ void st_prep_dwell(float microseconds)
 }
 
 /*
- * st_request_out_of_band_dwell()
- * (only usable while exec isn't running, e.g. in feedhold or stopped states...)
- * add a dwell to the loader without going through the planner buffers
+ * st_prep_out_of_band_dwell()
+ *
+ * Add a dwell to the loader without going through the planner buffers.
+ * Only usable while exec isn't running, e.g. in feedhold or stopped states.
+ * Otherwise it is skipped.
  */
-void st_request_out_of_band_dwell(float microseconds)
+
+void st_prep_out_of_band_dwell(float microseconds)
 {
-    st_prep_dwell(microseconds);
-    st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;    // signal that prep buffer is ready
-    st_request_load_move();
+    if (!st_runtime_isbusy()) {
+        st_prep_dwell(microseconds);
+        st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;    // signal that prep buffer is ready
+        st_request_load_move();
+    }    
 }
 
 /*
  * _set_hw_microsteps() - set microsteps in hardware
  */
+
 static void _set_hw_microsteps(const uint8_t motor, const uint8_t microsteps)
 {
     if (motor >= MOTORS) { return; }

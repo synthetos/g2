@@ -247,7 +247,14 @@ stat_t mp_exec_move()
 {
     mpBuf_t *bf;
 
-    // NULL means nothing's running - this is OK
+    // Run an out of band dwell. It was probably set in the previous st_load_move()
+    if (mr->out_of_band_dwell_flag) {
+        mr->out_of_band_dwell_flag = false;
+        st_prep_out_of_band_dwell(mr->out_of_band_dwell_seconds * 1000000);
+        return (STAT_OK);
+    }
+
+    // Getting a NULL buffer means nothing's running in the queue - this is OK
     if ((bf = mp_get_run_buffer()) == NULL) {
         st_prep_null();
         return (STAT_NOOP);

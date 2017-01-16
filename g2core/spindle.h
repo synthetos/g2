@@ -97,7 +97,7 @@ typedef struct spSpindle {
     spPolarity  dir_polarity;       // {spdp:} 0=clockwise low, 1=clockwise high
     bool        pause_enable;       // {spph:} pause on feedhold
     float       spinup_delay;       // {spde:} optional delay on spindle start (set to 0 to disable)
-    float       spindown_delay;     // {spds:} optional delay on spindle stop (set to 0 to disable)
+//    float       spindown_delay;     // {spds:} optional delay on spindle stop (set to 0 to disable)
 
     bool        override_enable;    // {spoe:} TRUE = spindle speed override enabled (see also m48_enable in canonical machine)
     float       override_factor;    // {spo:}  1.0000 x S spindle speed. Go up or down from there
@@ -122,10 +122,6 @@ stat_t spindle_control_sync(spControl control);
 stat_t spindle_speed_immediate(float speed);    // S parameter
 stat_t spindle_speed_sync(float speed);         // S parameter
 
-//void spindle_off_immediate(void);
-//void spindle_optional_pause(bool option);       // stop spindle based on system options selected
-//void spindle_resume(float dwell_seconds);       // restart spindle after pause based on previous state
-
 stat_t spindle_override_control(const float P_word, const bool P_flag); // M51
 void spindle_start_override(const float ramp_time, const float override_factor);
 void spindle_end_override(const float ramp_time);
@@ -141,8 +137,8 @@ stat_t sp_set_spph(nvObj_t *nv);
 
 stat_t sp_get_spde(nvObj_t *nv);
 stat_t sp_set_spde(nvObj_t *nv);
-stat_t sp_get_spdn(nvObj_t *nv);
-stat_t sp_set_spdn(nvObj_t *nv);
+//stat_t sp_get_spdn(nvObj_t *nv);
+//stat_t sp_set_spdn(nvObj_t *nv);
 
 stat_t sp_get_spsn(nvObj_t *nv);
 stat_t sp_set_spsn(nvObj_t *nv);
@@ -168,7 +164,7 @@ stat_t sp_set_sps(nvObj_t* nv);
     void sp_print_spdp(nvObj_t* nv);
     void sp_print_spph(nvObj_t* nv);
     void sp_print_spde(nvObj_t* nv);
-    void sp_print_spdn(nvObj_t* nv);
+//    void sp_print_spdn(nvObj_t* nv);
     void sp_print_spsn(nvObj_t* nv);
     void sp_print_spsm(nvObj_t* nv);
     void sp_print_spoe(nvObj_t* nv);
@@ -183,7 +179,7 @@ stat_t sp_set_sps(nvObj_t* nv);
     #define sp_print_spdp tx_print_stub
     #define sp_print_spph tx_print_stub
     #define sp_print_spde tx_print_stub
-    #define sp_print_spdn tx_print_stub
+//    #define sp_print_spdn tx_print_stub
     #define sp_print_spsn tx_print_stub
     #define sp_print_spsm tx_print_stub
     #define sp_print_spoe tx_print_stub
