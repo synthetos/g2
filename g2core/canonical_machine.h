@@ -34,6 +34,7 @@
 
 #include "config.h"
 #include "hardware.h"                       // Note: hardware.h is specific to the hardware target selected
+#include "settings.h"
 
 /* Defines, Macros, and Assorted Parameters */
 
@@ -374,7 +375,6 @@ typedef struct GCodeState {             // Gcode model state - used by model, pl
         coord_system = ABSOLUTE_COORDS;
         tool = 0;
         tool_select = 0;
-
     };
 } GCodeState_t;
 
@@ -400,6 +400,10 @@ typedef struct GCodeStateExtended {     // Gcode dynamic state extensions - used
 // unimplemented gcode parameters
 //  float cutter_radius;                // D - cutter radius compensation (0 is off)
 //  float cutter_length;                // H - cutter length compensation (0 is off)
+
+#if MARLIN_COMPAT_ENABLED == true
+    bool marlin_flavor;
+#endif
 
     uint16_t magic_end;
 

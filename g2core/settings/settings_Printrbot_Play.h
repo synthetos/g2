@@ -103,13 +103,13 @@
 #define M1_POWER_LEVEL 0.4              // 1mp
 
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
-#define M3_MOTOR_MAP AXIS_Y
-#define M3_STEP_ANGLE 1.8
-#define M3_TRAVEL_PER_REV 40.64
-#define M3_MICROSTEPS 32
-#define M3_POLARITY 0
-#define M3_POWER_MODE MOTOR_POWER_MODE
-#define M3_POWER_LEVEL 0.4
+#define M5_MOTOR_MAP AXIS_Y
+#define M5_STEP_ANGLE 1.8
+#define M5_TRAVEL_PER_REV 40.64
+#define M5_MICROSTEPS 32
+#define M5_POLARITY 0
+#define M5_POWER_MODE MOTOR_POWER_MODE
+#define M5_POWER_LEVEL 0.4
 
 #define M2_MOTOR_MAP AXIS_Z
 #define M2_STEP_ANGLE 1.8
@@ -129,13 +129,13 @@
 #define M4_POWER_LEVEL 0.4
 
 // 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
-#define M5_MOTOR_MAP AXIS_B
-#define M5_STEP_ANGLE 1.8
-#define M5_TRAVEL_PER_REV 360  // degrees moved per motor rev
-#define M5_MICROSTEPS 32
-#define M5_POLARITY 0
-#define M5_POWER_MODE MOTOR_POWER_MODE
-#define M5_POWER_LEVEL 0.35
+#define M3_MOTOR_MAP AXIS_B
+#define M3_STEP_ANGLE 1.8
+#define M3_TRAVEL_PER_REV 360  // degrees moved per motor rev
+#define M3_MICROSTEPS 32
+#define M3_POLARITY 0
+#define M3_POWER_MODE MOTOR_POWER_MODE
+#define M3_POWER_LEVEL 0.35
 
 // *** axis settings **********************************************************************************
 

@@ -22,15 +22,20 @@
 #include "controller.h"
 #include "gcode_parser.h"
 #include "canonical_machine.h"
+#include "settings.h"
 #include "spindle.h"
 #include "coolant.h"
 #include "util.h"
 #include "xio.h"            // for char definitions
 
+#if MARLIN_COMPAT_ENABLED == true
+#include "marlin_compatibility.h"
+#endif
+
 // Structures used by Gcode parser
 
 typedef struct GCodeInputValue {    // Gcode inputs - meaning depends on context
-    
+
     uint8_t next_action;            // handles G modal group 1 moves & non-modals
     cmMotionMode motion_mode;       // Group1: G0, G1, G2, G3, G38.2, G80, G81, G82, G83, G84, G85, G86, G87, G88, G89
     uint8_t program_flow;           // used only by the gcode_parser
@@ -116,17 +121,18 @@ GCodeValue_t gv;    // gcode input values
 GCodeFlag_t gf;     // gcode input flags
 
 // local helper functions and macros
-static void _normalize_gcode_block(char *str, char **active_comment, uint8_t *block_delete_flag);
-static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value);
-static stat_t _point(float value);
-static stat_t _validate_gcode_block(char *active_comment);
-static stat_t _parse_gcode_block(char *line, char *active_comment); // Parse the block into the GN/GF structs
-static stat_t _execute_gcode_block(char *active_comment);           // Execute the gcode block
+void _normalize_gcode_block(char *str, char **active_comment, uint8_t *block_delete_flag);
+stat_t _get_next_gcode_word(char **pstr, char *letter, float *value);
+stat_t _point(float value);
+stat_t _verify_checksum(char *str);
+stat_t _validate_gcode_block(char *active_comment);
+stat_t _parse_gcode_block(char *line, char *active_comment); // Parse the block into the GN/GF structs
+stat_t _execute_gcode_block(char *active_comment);           // Execute the gcode block
 
 #define SET_MODAL(m,parm,val) ({gv.parm=val; gf.parm=true; gp.modals[m]=true; break;})
 #define SET_NON_MODAL(parm,val) ({gv.parm=val; gf.parm=true; break;})
 #define EXEC_FUNC(f,v) if(gf.v) { status=f(gv.v);}
- 
+
 /*
  * gcode_parser_init()
  */
@@ -150,6 +156,11 @@ stat_t gcode_parser(char *block)
     char *active_comment = &none;           // gcode comment or NUL string
     uint8_t block_delete_flag;
 
+    stat_t check_ret = _verify_checksum(str);
+    if (check_ret != STAT_OK) {
+        return check_ret;
+    }
+
     _normalize_gcode_block(str, &active_comment, &block_delete_flag);
 
     // TODO, now MSG is put in the active comment, handle that.
@@ -169,6 +180,24 @@ stat_t gcode_parser(char *block)
         return (STAT_NOOP);
     }
     return(_parse_gcode_block(block, active_comment));
+}
+
+/*
+ * _verify_checksum() - ensure that, if there is a checksum, that it's valid
+ *
+ * Returns STAT_OK is it's valid.
+ * Returns STAT_CHECKSUM_MATCH_FAILED if the checksum doesn't match.
+ */
+stat_t _verify_checksum(char *str)
+{
+#if MARLIN_COMPAT_ENABLED == true
+    if (true == cm.gmx.marlin_flavor) {
+        return marlin_verify_checksum(str);
+    }
+#endif
+
+    // for now, always assume it's ok
+    return STAT_OK;
 }
 
 /*
@@ -205,9 +234,9 @@ stat_t gcode_parser(char *block)
  *   - block_delete_flag is set true if block delete encountered, false otherwise
  */
 
-static char _normalize_scratch[RX_BUFFER_MIN_SIZE];
+char _normalize_scratch[RX_BUFFER_MIN_SIZE];
 
-static void _normalize_gcode_block(char *str, char **active_comment, uint8_t *block_delete_flag)
+void _normalize_gcode_block(char *str, char **active_comment, uint8_t *block_delete_flag)
 {
     _normalize_scratch[0] = 0;
 
@@ -435,7 +464,7 @@ static void _normalize_gcode_block(char *str, char **active_comment, uint8_t *bl
  *  G0X... is not interpreted as hexadecimal. This is trapped.
  */
 
-static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value)
+stat_t _get_next_gcode_word(char **pstr, char *letter, float *value)
 {
     if (**pstr == NUL) { return (STAT_COMPLETE); }    // no more words
 
@@ -467,7 +496,7 @@ static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value)
  * _point() - isolate the decimal point value as an integer
  */
 
-static uint8_t _point(float value)
+uint8_t _point(const float value)
 {
     return((uint8_t)(value*10 - trunc(value)*10));    // isolate the decimal point as an int
 }
@@ -476,7 +505,7 @@ static uint8_t _point(float value)
  * _validate_gcode_block() - check for some gross Gcode block semantic violations
  */
 
-static stat_t _validate_gcode_block(char *active_comment)
+stat_t _validate_gcode_block(char *active_comment)
 {
 //  Check for modal group violations. From NIST, section 3.4 "It is an error to put
 //  a G-code from group 1 and a G-code from group 0 on the same line if both of them
@@ -505,7 +534,7 @@ static stat_t _validate_gcode_block(char *active_comment)
  *  contain only uppercase characters and signed floats (no whitespace).
  */
 
-static stat_t _parse_gcode_block(char *buf, char *active_comment)
+stat_t _parse_gcode_block(char *buf, char *active_comment)
 {
     char *pstr = (char *)buf;                   // persistent pointer into gcode block for parsing words
     char letter;                                // parsed letter, eg.g. G or X or Y
@@ -678,7 +707,7 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
             case 'K': SET_NON_MODAL (arc_offset[2], value);
             case 'L': SET_NON_MODAL (L_word, value);
             case 'R': SET_NON_MODAL (arc_radius, value);
-            case 'N': SET_NON_MODAL (linenum,(uint32_t)value);        // line number
+            case 'N': SET_NON_MODAL (linenum,(uint32_t)value);      // line number
             default: status = STAT_GCODE_COMMAND_UNSUPPORTED;
         }
         if(status != STAT_OK) break;
@@ -728,7 +757,7 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
  *  to calling the canonical functions (which do the unit conversions)
  */
 
-static stat_t _execute_gcode_block(char *active_comment)
+stat_t _execute_gcode_block(char *active_comment)
 {
     stat_t status = STAT_OK;
 
@@ -754,7 +783,7 @@ static stat_t _execute_gcode_block(char *active_comment)
     if (gf.mto_control) {                                   // manual traverse override
         ritorno(cm_mto_control(gv.P_word, gf.P_word));
     }
-    
+
     if (gv.next_action == NEXT_ACTION_DWELL) {              // G4 - dwell
         ritorno(cm_dwell(gv.P_word));                       // return if error, otherwise complete the block
     }
@@ -764,23 +793,23 @@ static stat_t _execute_gcode_block(char *active_comment)
 
     switch (gv.next_action) {                               // Tool length offsets
         case NEXT_ACTION_SET_TL_OFFSET: {                   // G43
-            ritorno(cm_set_tl_offset(gv.H_word, gf.H_word, false)); 
-            break; 
+            ritorno(cm_set_tl_offset(gv.H_word, gf.H_word, false));
+            break;
         }
         case NEXT_ACTION_SET_ADDITIONAL_TL_OFFSET: {        // G43.2
-            ritorno(cm_set_tl_offset(gv.H_word, gf.H_word, true)); 
-            break; 
+            ritorno(cm_set_tl_offset(gv.H_word, gf.H_word, true));
+            break;
         }
         case NEXT_ACTION_CANCEL_TL_OFFSET: {                // G49
-            ritorno(cm_cancel_tl_offset()); 
-            break; 
+            ritorno(cm_cancel_tl_offset());
+            break;
         }
     }
 
     EXEC_FUNC(cm_set_coord_system, coord_system);           // G54, G55, G56, G57, G58, G59
 
     if (gf.path_control) {                                  // G61, G61.1, G64
-        status = cm_set_path_control(MODEL, gv.path_control); 
+        status = cm_set_path_control(MODEL, gv.path_control);
     }
 
     EXEC_FUNC(cm_set_distance_mode, distance_mode);         // G90, G91
@@ -802,10 +831,10 @@ static stat_t _execute_gcode_block(char *active_comment)
         case NEXT_ACTION_STRAIGHT_PROBE_AWAY_ERR:{ status = cm_straight_probe(gv.target, gf.target, true, false); break;} // G38.4
         case NEXT_ACTION_STRAIGHT_PROBE_AWAY:    { status = cm_straight_probe(gv.target, gf.target, false, false); break;}// G38.5
 
-        case NEXT_ACTION_SET_G10_DATA:           { status = cm_set_g10_data(gv.P_word, gf.P_word, 
+        case NEXT_ACTION_SET_G10_DATA:           { status = cm_set_g10_data(gv.P_word, gf.P_word,
                                                                             gv.L_word, gf.L_word,
                                                                             gv.target, gf.target); break;}
- 
+
         case NEXT_ACTION_SET_ORIGIN_OFFSETS:     { status = cm_set_origin_offsets(gv.target, gf.target); break;}// G92
         case NEXT_ACTION_RESET_ORIGIN_OFFSETS:   { status = cm_reset_origin_offsets(); break;}                  // G92.1
         case NEXT_ACTION_SUSPEND_ORIGIN_OFFSETS: { status = cm_suspend_origin_offsets(); break;}                // G92.2

@@ -205,8 +205,8 @@ char *get_status_message(stat_t status);
 #define STAT_VALUE_TYPE_ERROR 116               // JSON value does not agree with variable type
 
 #define STAT_INPUT_FROM_MUTED_CHANNEL_ERROR 117 // input from a muted channel was ignored
-#define STAT_ERROR_118 118
-#define STAT_ERROR_119 119
+#define STAT_CHECKSUM_MATCH_FAILED 118          // the provided checksum didn't match
+#define STAT_LINE_NUMBER_OUT_OF_SEQUENCE 119
 
 #define STAT_ERROR_120 120
 #define STAT_ERROR_121 121
