@@ -167,6 +167,7 @@ char *get_status_message(stat_t status);
 
 // Assertion failures - build down from 99 until they meet the system internal errors
 
+#define STAT_SPINDLE_ASSERTION_FAILURE 86
 #define STAT_EXEC_ALINE_ASSERTION_FAILURE 87
 #define STAT_BUFFER_FREE_ASSERTION_FAILURE 88
 #define STAT_STATE_MANAGEMENT_ASSERTION_FAILURE 89
@@ -468,8 +469,8 @@ static const char stat_82[] = "82";
 static const char stat_83[] = "83";
 static const char stat_84[] = "84";
 static const char stat_85[] = "85";
-static const char stat_86[] = "86";
 
+static const char stat_86[] = "Spindle assertion failure";
 static const char stat_87[] = "mp_exec_aline() assertion failure";
 static const char stat_88[] = "Buffer free assertion failure";
 static const char stat_89[] = "State management assertion failure";

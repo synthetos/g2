@@ -116,23 +116,19 @@ void spindle_reset()
  */
 /*  State/Control matrix. Read "If you are in state X and get control Y do action Z"
  
-    Control: OFF         CW          CCW        PAUSE      RESUME      SPINUP      SPINDN
- State: |-----------|-----------|-----------|-----------|-----------|-----------|-----------|
-    OFF |    OFF    |    CW     |    CCW    |    NOP    |    NOP    | XXXXXXXXX | XXXXXXXXX |
-        |-----------|-----------|-----------|-----------|-----------|-----------|-----------|
-     CW |    OFF    |    NOP    |  REVERSE  |   PAUSE   |    NOP    | XXXXXXXXX | XXXXXXXXX |
-        |-----------|-----------|-----------|-----------|-----------|-----------|-----------|
-    CCW |    OFF    |  REVERSE  |    NOP    |   PAUSE   |    NOP    | XXXXXXXXX | XXXXXXXXX |
-        |-----------|-----------|-----------|-----------|-----------|-----------|-----------|
-  PAUSE |    OFF    |    CW     |    CCW    |    NOP    |   RESUME  | XXXXXXXXX | XXXXXXXXX |
-        |-----------|-----------|-----------|-----------|-----------|-----------|-----------|
- RESUME | XXXXXXXXX | XXXXXXXXX | XXXXXXXXX | XXXXXXXXX | XXXXXXXXX | XXXXXXXXX | XXXXXXXXX |
-        |-----------|-----------|-----------|-----------|-----------|-----------|-----------|
- SPINUP |    OFF    |  NOP|CW   |  NOP|CCW  |   PAUSE   |    NOP    | XXXXXXXXX | XXXXXXXXX |
-        |-----------|-----------|-----------|-----------|-----------|-----------|-----------|
- SPINDN |    NOP    |  NOP|CW   |  NOP|CCW  |  NOP(OFF) |  NOP(OFF) | XXXXXXXXX | XXXXXXXXX |
-        |-----------|-----------|-----------|-----------|-----------|-----------|-----------|
-                                               NOP(OFF)s are effectively OFFs
+    Control: OFF         CW          CCW        PAUSE      RESUME     
+ State: |-----------|-----------|-----------|-----------|-----------|
+    OFF |    OFF    |    CW     |    CCW    |    NOP    |    NOP    |
+        |-----------|-----------|-----------|-----------|-----------|
+     CW |    OFF    |    NOP    |  REVERSE  |   PAUSE   |    NOP    |
+        |-----------|-----------|-----------|-----------|-----------|
+    CCW |    OFF    |  REVERSE  |    NOP    |   PAUSE   |    NOP    |
+        |-----------|-----------|-----------|-----------|-----------|
+  PAUSE |    OFF    |    CW     |    CCW    |    NOP    |   RESUME  |
+        |-----------|-----------|-----------|-----------|-----------|
+ RESUME |  invalid  |  invalid  |  invalid  |  invalid  |  invalid  |
+        |-----------|-----------|-----------|-----------|-----------|
+
  Actions:
     - OFF       Turn spindle off. Even if it's already off (reloads polarities)
     - CW        Turn spindle on clockwise
@@ -140,10 +136,7 @@ void spindle_reset()
     - PAUSE     Turn off spindle, enter PAUSE state    
     - RESUME    Turn spindle on CW or CCW as before
     - NOP       No operation, ignore
-    - NOPCW     No-op if spinning up to CW. If the spinning to CCW perform a REVERSE
-    - NOPCCW    No-op if spinning up to CCW. If the spinning to CW perform a REVERSE
-    - REV       Reverse spindle direction (Q: need a cycle to spin down then back up again?)
-    - XXXXXXX   Impossible box. RESUME is not a state and SPINUP/SPINDN are not inputs
+    - REVERSE   Reverse spindle direction (Q: need a cycle to spin down then back up again?)
  */
 
 static void _exec_spindle_control(float *value, bool *flag)
@@ -152,18 +145,18 @@ static void _exec_spindle_control(float *value, bool *flag)
     if (control > SPINDLE_ACTION_MAX) {
         return;
     }
-    spControl matrix[40] = { 
+    spControl state = spindle.state;
+    if (state >= SPINDLE_ACTION_MAX) {
+//        rpt_exception(STAT_SPINDLE_ASSERTION_FAILURE, "illegal spindle state");        
+        return;
+    }
+    spControl matrix[20] = {
         SPINDLE_OFF,  SPINDLE_CW,    SPINDLE_CCW,    SPINDLE_NOP,   SPINDLE_NOP,
         SPINDLE_OFF,  SPINDLE_NOP,   SPINDLE_REV,    SPINDLE_PAUSE, SPINDLE_NOP,
         SPINDLE_OFF,  SPINDLE_REV,   SPINDLE_NOP,    SPINDLE_PAUSE, SPINDLE_NOP,
-        SPINDLE_OFF,  SPINDLE_CW,    SPINDLE_CCW,    SPINDLE_NOP,   SPINDLE_RESUME,
-        SPINDLE_NOP,  SPINDLE_NOP,   SPINDLE_NOP,    SPINDLE_NOP,   SPINDLE_NOP,
-        SPINDLE_OFF,  SPINDLE_NOPCW, SPINDLE_NOPCCW, SPINDLE_PAUSE, SPINDLE_NOP,
-        SPINDLE_OFF,  SPINDLE_NOPCW, SPINDLE_NOPCCW, SPINDLE_NOP,   SPINDLE_NOP,
-        SPINDLE_NOP,  SPINDLE_NOP,   SPINDLE_NOP,    SPINDLE_NOP,   SPINDLE_NOP // impossible row added for safety
+        SPINDLE_OFF,  SPINDLE_CW,    SPINDLE_CCW,    SPINDLE_NOP,   SPINDLE_RESUME
     };
-    uint8_t index = ((spindle.state & 0x07) * 5) + control;
-    spControl action = matrix[index];
+    spControl action = matrix[(state*5)+control];
 
     SPINDLE_DIRECTION_ASSERT;               // ensure that the spindle direction is sane
     int8_t enable_bit = 0;                  // default to 0=off
@@ -171,7 +164,7 @@ static void _exec_spindle_control(float *value, bool *flag)
     bool spinup_delay = false;
 
     switch (action) {
-        case SPINDLE_NOP: case SPINDLE_NOPCW: case SPINDLE_NOPCCW: { return; } // reversals not handled yet
+        case SPINDLE_NOP: { return; }
             
         case SPINDLE_OFF: {                 // enable_bit already set for this case
             dir_bit = spindle.direction-1;  // spindle direction was stored as '1' & '2'
@@ -197,7 +190,7 @@ static void _exec_spindle_control(float *value, bool *flag)
             spinup_delay = true;
             break; 
         }
-        default: {}                         // keeps the compiler happy
+        default: {}                         // reversals not handled yet
     }
 
     // Apply the enable and direction bits and adjust the PWM as required
@@ -253,12 +246,21 @@ stat_t spindle_control_sync(spControl control)  // uses spControl arg: OFF, CW, 
  * spindle_speed_immediate() - execute spindle speed change immediately
  * spindle_speed_sync()      - queue a spindle speed change to the planner buffer
  * _exec_spindle_speed()     - actually execute the spindle speed command
+ *
+ *  Setting S0 is considered as turning spindle off. Setting S to non-zero from S0
+ *  will enable a spinup delay if spinups are npn-zero.
  */
 
 static void _exec_spindle_speed(float *value, bool *flag)
 {
+    float previous_speed = spindle.speed;
+
     spindle.speed = value[0];
     pwm_set_duty(PWM_1, _get_spindle_pwm(spindle, pwm));
+
+    if (fp_ZERO(previous_speed)) {
+        mp_request_out_of_band_dwell(spindle.spinup_delay);
+    }
 }
 
 static stat_t _casey_jones(float speed)

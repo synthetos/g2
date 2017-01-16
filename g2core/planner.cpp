@@ -459,19 +459,21 @@ static stat_t _exec_dwell(mpBuf_t *bf)
 }
 
 /***********************************************************************************
- * mp_request_out_of_band_dwell() - request that an out-of-band dwell be run
+ * mp_request_out_of_band_dwell() - request a dwell outside of the planner queue
  *
  *  This command is used to request that a dwell be run outside of the planner. 
- *  This is useful for queuing a dwell after a spindle change. The dwell will 
- *  only run if the runtime has been stopped, otherwise it is skipped. 
- *  This function is typically called from an exec such as _exec_spindle_control().
- *  The request is executed from mp_exec_move().
+ *  The dwell will only be queued if the time is non-zero, and will only be executed
+ *  if the runtime has been stopped. This function is typically called from an exec 
+ *  such as _exec_spindle_control(). The dwell move is executed from mp_exec_move(). 
+ *  This is useful for queuing a dwell after a spindle change. 
  */
 
 void mp_request_out_of_band_dwell(float seconds)
 {
-    mr->out_of_band_dwell_flag = true;
-    mr->out_of_band_dwell_seconds = seconds;
+    if (fp_NOT_ZERO(seconds)) {
+        mr->out_of_band_dwell_flag = true;
+        mr->out_of_band_dwell_seconds = seconds;
+    }
 }
 
 /***********************************************************************************
