@@ -42,10 +42,10 @@ typedef enum {
 #define SPINDLE_MODE_MAX SPINDLE_CONTINUOUS
 
 // spControl enum is used for multiple purposes:
-//  - request a spindle operation (OFF, CW, CCW, PAUSE, RESUME)
-//  - run the spindle state machine for spindle wait states
-//  - CW and CCW values are stored as current direction in spindle.direction
-//  - NOP, REVERSE and RELOAD are operations an are not stes or controls
+//  - request a spindle action (OFF, CW, CCW, PAUSE, RESUME)
+//  - keep current spindle state in spindle.state
+//  - store as current direction (CW/CCW) in spindle.direction
+//  - enumerate internal actions such as NOP, REV that are neither states nor controls
 typedef enum {                  // how spindle controls are presented by the Gcode parser
     SPINDLE_OFF = 0,            // M5
     SPINDLE_CW = 1,             // M3 and store CW to spindle.direction

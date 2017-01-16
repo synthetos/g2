@@ -1380,8 +1380,8 @@ stat_t cm_m48_enable(uint8_t enable)        // M48, M49
 }
 
 /***********************************************************************************
- * cm_mfo_control() - M50 manual feed rate override comtrol
- * cm_mto_control() - M50.1 manual traverse override comtrol
+ * cm_fro_control() - M50 feed rate override comtrol
+ * cm_tro_control() - M50.1 traverse override comtrol
  *
  *  M50 enables manual feedrate override and the optional P override parameter.
  *  P is expressed as M% to N% of programmed feedrate, typically a value from 0.05 to 2.000.
@@ -1421,7 +1421,7 @@ stat_t cm_m48_enable(uint8_t enable)        // M48, M49
  *                                                  (Note: new ramp will supercede any existing ramp)
  */
 
-stat_t cm_mfo_control(const float P_word, const bool P_flag) // M50
+stat_t cm_fro_control(const float P_word, const bool P_flag) // M50
 {
     bool new_enable = true;
     bool new_override = false;
@@ -1450,7 +1450,7 @@ stat_t cm_mfo_control(const float P_word, const bool P_flag) // M50
     return (STAT_OK);
 }
 
-stat_t cm_mto_control(const float P_word, const bool P_flag) // M50.1
+stat_t cm_tro_control(const float P_word, const bool P_flag) // M50.1
 {
     bool new_enable = true;
     bool new_override = false;

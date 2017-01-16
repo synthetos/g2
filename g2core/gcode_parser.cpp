@@ -63,9 +63,9 @@ typedef struct GCodeInputValue {    // Gcode inputs - meaning depends on context
     uint8_t spindle_control;        // 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
 
     bool m48_enable;                // M48/M49 input (enables for feed and spindle)
-    bool mfo_control;               // M50 feedrate override control
-    bool mto_control;               // M50.1 traverse override control
-    bool sso_control;               // M51 spindle speed override control
+    bool fro_control;               // M50 feedrate override control
+    bool tro_control;               // M50.1 traverse override control
+    bool spo_control;               // M51 spindle speed override control
 } GCodeValue_t;
 
 typedef struct GCodeFlags {         // Gcode input flags
@@ -102,9 +102,9 @@ typedef struct GCodeFlags {         // Gcode input flags
     bool spindle_control;
 
     bool m48_enable;
-    bool mfo_control;
-    bool mto_control;
-    bool sso_control;
+    bool fro_control;
+    bool tro_control;
+    bool spo_control;
 } GCodeFlag_t;
 
 typedef struct GCodeParser {
@@ -643,14 +643,14 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
                 case 9: SET_MODAL (MODAL_GROUP_M8, flood_coolant, false);
                 case 48: SET_MODAL (MODAL_GROUP_M9, m48_enable, true);
                 case 49: SET_MODAL (MODAL_GROUP_M9, m48_enable, false);
-                case 50: SET_MODAL (MODAL_GROUP_M9, mfo_control, true);
+                case 50:
                     switch (_point(value)) {
-                        case 0: SET_MODAL (MODAL_GROUP_M9, mfo_control, true);
-                        case 1: SET_MODAL (MODAL_GROUP_M9, mto_control, true);
+                        case 0: SET_MODAL (MODAL_GROUP_M9, fro_control, true);
+                        case 1: SET_MODAL (MODAL_GROUP_M9, tro_control, true);
                         default: status = STAT_GCODE_COMMAND_UNSUPPORTED;
                     }
                     break;
-                case 51: SET_MODAL (MODAL_GROUP_M9, sso_control, true);
+                case 51: SET_MODAL (MODAL_GROUP_M9, spo_control, true);
                 case 100: SET_NON_MODAL (next_action, NEXT_ACTION_JSON_COMMAND_SYNC);
                 case 101: SET_NON_MODAL (next_action, NEXT_ACTION_JSON_WAIT);
                 default: status = STAT_MCODE_COMMAND_UNSUPPORTED;
@@ -689,23 +689,23 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
 /*
  * _execute_gcode_block() - execute parsed block
  *
- *  Conditionally (based on whether a flag is set in gf) call the canonical
- *  machining functions in order of execution as per RS274NGC_3 table 8
- *  (below, with modifications):
+ *  Conditionally (based on whether a flag is set in gf) call the canonical machining
+ *  functions in order of execution. Derived from RS274NGC_3 table 8:
  *
  *    0. record the line number
  *    1. comment (includes message) [handled during block normalization]
+ *    1a. enable or disable overrides (M48, M49)
+ *    1b. set feed override rate (M50)
+ *    1c. set traverse override rate (M50.1)
+ *    1d. set spindle override rate (M51)
  *    2. set feed rate mode (G93, G94 - inverse time or per minute)
  *    3. set feed rate (F)
- *    3a. set feed override rate (M50.1)
- *    3a. set traverse override rate (M50.2)
  *    4. set spindle speed (S)
- *    4a. set spindle override rate (M51.1)
  *    5. select tool (T)
  *    6. change tool (M6)
  *    7. spindle on or off (M3, M4, M5)
  *    8. coolant on or off (M7, M8, M9)
- *    9. enable or disable overrides (M48, M49, M50, M51)
+ * // 9. enable or disable overrides (M48, M49, M50, M51) (see 1a)
  *    10. dwell (G4)
  *    11. set active plane (G17, G18, G19)
  *    12. set length units (G20, G21)
@@ -731,13 +731,22 @@ static stat_t _execute_gcode_block(char *active_comment)
     stat_t status = STAT_OK;
 
     cm_set_model_linenum(gv.linenum);
+
+    EXEC_FUNC(cm_m48_enable, m48_enable);
+    
+    if (gf.fro_control) {                                   // feedrate override
+        ritorno(cm_fro_control(gv.P_word, gf.P_word));
+    }
+    if (gf.tro_control) {                                   // traverse override
+        ritorno(cm_tro_control(gv.P_word, gf.P_word));
+    }
+    if (gf.spo_control) {                                   // spindle speed override
+        ritorno(spindle_override_control(gv.P_word, gf.P_word));
+    }
+
     EXEC_FUNC(cm_set_feed_rate_mode, feed_rate_mode);       // G93, G94
     EXEC_FUNC(cm_set_feed_rate, F_word);                    // F
     EXEC_FUNC(spindle_speed_sync, S_word);                  // S
-
-    if (gf.sso_control) {                                   // spindle speed override
-        ritorno(spindle_override_control(gv.P_word, gf.P_word));
-    }
 
     EXEC_FUNC(cm_select_tool, tool_select);                 // tool_select is where it's written
     EXEC_FUNC(cm_change_tool, tool_change);                 // M6
@@ -748,14 +757,6 @@ static stat_t _execute_gcode_block(char *active_comment)
 
     EXEC_FUNC(cm_mist_coolant_control, mist_coolant);       // M7, M9
     EXEC_FUNC(cm_flood_coolant_control, flood_coolant);     // M8, M9 also disables mist coolant if OFF
-    EXEC_FUNC(cm_m48_enable, m48_enable);
-
-    if (gf.mfo_control) {                                   // manual feedrate override
-        ritorno(cm_mfo_control(gv.P_word, gf.P_word));
-    }
-    if (gf.mto_control) {                                   // manual traverse override
-        ritorno(cm_mto_control(gv.P_word, gf.P_word));
-    }
     
     if (gv.next_action == NEXT_ACTION_DWELL) {              // G4 - dwell
         ritorno(cm_dwell(gv.P_word));                       // return if error, otherwise complete the block

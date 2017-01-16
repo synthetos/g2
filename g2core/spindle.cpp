@@ -216,6 +216,33 @@ static void _exec_spindle_control(float *value, bool *flag)
     pwm_set_duty(PWM_1, _get_spindle_pwm(spindle, pwm));
 }
 
+/*
+ * spindle_control_immediate() - execute spindle control immediately
+ * spindle_control_sync()      - queue a spindle control to the planner buffer
+ *
+ * Spinup and Spindown delays
+ *
+ *  For starters, spinup and spindown delays are only meaningful for queued (sync'd) 
+ *  spindle operations (M3/M4/M5) because they introduce delays before or after the 
+ *  M code - relative to other Gcode commands. Immediate() spindle operations do not 
+ *  observe these delays; that's the responsibility of the sender.
+ *
+ *  The "right" way to do spinup and spindown delays is to conditionally execute them
+ *  in _exec_spindle_control() if you know you have an actual spindle state transition.
+ *  This is hard because the delays would need to run "out of band" of the planner/runtime.
+ *  This affects the planner, as it may or may not have already planned preceding/following
+ *  moves to zero, and for other reasons.
+ * 
+ *  The easy way is to queue dwells to the planner in advance, before and after the 
+ *  actual spindle command. The problem with this is that you don't always know beforehand 
+ *  if the spindle command will run any real action. The S word might be zero. Or the
+ *  feedhold PAUSE or RESUME might be executed, but no actual transition occurs because 
+ *  the spindle might have been OFF when this happened.
+ *
+ *  Our (admittedly imperfect) hack is to best determine the conditions that will be seen
+ *  when the queued delay is executed, and plan on that in spindle_control_sync().
+ */
+
 stat_t spindle_control_immediate(spControl control)
 {
     float value[] = { (float)control };
@@ -230,11 +257,19 @@ stat_t spindle_control_sync(spControl control)  // uses spControl arg: OFF, CW, 
         return (STAT_OK);
     }
     
+    // queue the spindle control
     float value[] = { (float)control };
     mp_queue_command(_exec_spindle_control, value, nullptr);
-    
-    if (fp_NOT_ZERO(spindle.spinup_delay)) {
-        mp_dwell(spindle.spinup_delay);
+
+    // conditionally queue a dwell for spinup delay
+    if ((spindle.mode == SPINDLE_PLAN_TO_STOP) && (fp_NOT_ZERO(spindle.spinup_delay))) {
+        if ((control == SPINDLE_CW) || (control == SPINDLE_CCW)) {
+            if (spindle.state != control) {
+                if (spindle.speed > 0) {
+                    mp_dwell(spindle.spinup_delay);
+                }
+            }
+        }
     }
     return(STAT_OK);
 }

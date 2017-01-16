@@ -357,20 +357,6 @@ void canonical_machine_reset(cmMachine_t *_cm);
 void canonical_machine_init_assertions(cmMachine_t *_cm);
 stat_t canonical_machine_test_assertions(cmMachine_t *_cm);
 
-// Alarms and state management
-stat_t cm_alrm(nvObj_t *nv);                                    // trigger alarm from command input
-stat_t cm_shutd(nvObj_t *nv);                                   // trigger shutdown from command input
-stat_t cm_pnic(nvObj_t *nv);                                    // trigger panic from command input
-stat_t cm_clr(nvObj_t *nv);                                     // clear alarm and shutdown from command input
-void cm_clear(void);                                            // raw clear command
-void cm_parse_clear(const char *s);                             // parse gcode for M30 or M2 clear condition
-stat_t cm_is_alarmed(void);                                     // return non-zero status if alarm, shutdown or panic
-void cm_halt_all(void);                                         // halt motion, spindle and coolant
-void cm_halt_motion(void);                                      // halt motion (immediate stop) but not spindle & other IO
-stat_t cm_alarm(const stat_t status, const char *msg);          // enter alarm state - preserve Gcode state
-stat_t cm_shutdown(const stat_t status, const char *msg);       // enter shutdown state - dump all state
-stat_t cm_panic(const stat_t status, const char *msg);          // enter panic state - needs RESET
-
 // Representation (4.3.3)
 stat_t cm_select_plane(const uint8_t plane);                                // G17, G18, G19
 stat_t cm_set_units_mode(const uint8_t mode);                               // G20, G21
@@ -430,8 +416,8 @@ void cm_message(const char *message);                           // msg to consol
 
 void cm_reset_overrides(void);
 stat_t cm_m48_enable(uint8_t enable);                           // M48, M49
-stat_t cm_mfo_control(const float P_word, const bool P_flag);   // M50
-stat_t cm_mto_control(const float P_word, const bool P_flag);   // M50.1
+stat_t cm_fro_control(const float P_word, const bool P_flag);   // M50
+stat_t cm_tro_control(const float P_word, const bool P_flag);   // M50.1
 // See spindle.cpp for cm_spo_control()                         // M51        
 
 // Program Functions (4.3.10)
@@ -445,7 +431,7 @@ void cm_program_end(void);                                      // M2
 stat_t cm_json_command(char *json_string);                      // M100
 stat_t cm_json_wait(char *json_string);                         // M102
 
-/*--- Cycles ---*/
+/**** Cycles and External FIles ****/
 
 // Feedhold and related functions (cycle_feedhold.cpp)
 void cm_request_feedhold(void);
@@ -481,7 +467,21 @@ stat_t cm_jogging_cycle_callback(void);                         // jogging cycle
 stat_t cm_jogging_cycle_start(uint8_t axis);                    // {"jogx":-100.3}
 float cm_get_jogging_dest(void);                                // get jogging destination
 
-/*--- cfgArray interface functions ---*/
+// Alarm management (alarm.cpp)
+stat_t cm_alrm(nvObj_t *nv);                                    // trigger alarm from command input
+stat_t cm_shutd(nvObj_t *nv);                                   // trigger shutdown from command input
+stat_t cm_pnic(nvObj_t *nv);                                    // trigger panic from command input
+stat_t cm_clr(nvObj_t *nv);                                     // clear alarm and shutdown from command input
+void cm_clear(void);                                            // raw clear command
+void cm_parse_clear(const char *s);                             // parse gcode for M30 or M2 clear condition
+stat_t cm_is_alarmed(void);                                     // return non-zero status if alarm, shutdown or panic
+void cm_halt_all(void);                                         // halt motion, spindle and coolant
+void cm_halt_motion(void);                                      // halt motion (immediate stop) but not spindle & other IO
+stat_t cm_alarm(const stat_t status, const char *msg);          // enter alarm state - preserve Gcode state
+stat_t cm_shutdown(const stat_t status, const char *msg);       // enter shutdown state - dump all state
+stat_t cm_panic(const stat_t status, const char *msg);          // enter panic state - needs RESET
+
+/**** cfgArray interface functions ****/
 
 char cm_get_axis_char(const int8_t axis);
 cmAxisType cm_get_axis_type(const index_t index);
