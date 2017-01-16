@@ -44,7 +44,7 @@
 
 #include "MotateDebug.h"
 
-/* Note: stepper_debug statements removed 1/16/17 in SHA ______. See earlier commits to recover
+/* Note: stepper_debug statements removed 1/16/17 in SHA eb0905ccae03c04f99e6f471cbe029002f0324c6. See earlier commits to recover
 // Unless debugging, this should always read "#if 0 && ..."
 // DON'T COMMIT with anything else!
 // 
