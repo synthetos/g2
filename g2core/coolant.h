@@ -63,15 +63,8 @@ typedef struct coCoolantChannel {
 } coCoolantChannel_t;
 
 typedef struct coCoolant {
-
-//    coCoolantChannel_t mist;
-//    coCoolantChannel_t flood;
-    
-    bool        pause_enable;       // {coph:} pause on feedhold
-    coControl   mist_state;         // M7 coolant
-    coPolarity  mist_polarity;      // 0=active low, 1=active high
-    coControl   flood_state;        // M8 coolant
-    coPolarity  flood_polarity;     // 0=active low, 1=active high
+    coCoolantChannel_t mist;        // M7 - treated as the "master" for reading pause setting
+    coCoolantChannel_t flood;       // M8
 } coCoolant_t;
 extern coCoolant_t coolant;
 
