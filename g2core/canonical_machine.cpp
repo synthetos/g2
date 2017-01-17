@@ -1556,7 +1556,7 @@ static void _exec_program_finalize(float *value, bool *flag)
         cm_set_distance_mode(cm->default_distance_mode);
         cm_set_arc_distance_mode(INCREMENTAL_DISTANCE_MODE);// always the default
         spindle_control_immediate(SPINDLE_OFF);             // M5
-        cm_coolant_off_immediate();                         // M9
+        coolant_control_immediate(COOLANT_OFF, COOLANT_BOTH);// M9
         cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);       // G94
         cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);// NIST specifies G1 (MOTION_MODE_STRAIGHT_FEED), but we cancel motion mode. Safer.
         cm_reset_overrides();                               // reset feedrate the spindle overrides

@@ -45,13 +45,12 @@
 #define SPINDLE_DIR_POLARITY        0       // 0=clockwise is low, 1=clockwise is high
 #define SPINDLE_PAUSE_ON_HOLD       true
 #define SPINDLE_SPINUP_DELAY        2.0
-#define SPINDLE_SPINDOWN_DELAY      0.0
 #define SPINDLE_SPEED_MIN           0.0 
 #define SPINDLE_SPEED_MAX       20000.0 
 
 #define COOLANT_MIST_POLARITY       1       // 0=active low, 1=active high
 #define COOLANT_FLOOD_POLARITY      1       // 0=active low, 1=active high
-#define COOLANT_PAUSE_ON_HOLD       false
+#define COOLANT_PAUSE_ON_HOLD       true
 
 #define FEEDHOLD_Z_LIFT             10      // mm to lift Z on feedhold 
 

@@ -124,7 +124,7 @@ void cm_halt_all(void)
 {
     cm_halt_motion();
     spindle_control_immediate(SPINDLE_OFF);
-    cm_coolant_off_immediate();
+    coolant_control_immediate(COOLANT_OFF, COOLANT_BOTH);
 }
 
 void cm_halt_motion(void)

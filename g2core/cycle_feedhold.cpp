@@ -251,7 +251,7 @@ stat_t cm_switch_to_hold_context()
     }
 
     spindle_control_sync(SPINDLE_PAUSE);        // optional spindle pause
- //   coolant_control_sync(COOLANT_PAUSE);        // optional coolant pause
+    coolant_control_sync(COOLANT_PAUSE, COOLANT_BOTH);        // optional coolant pause
 
     return (STAT_OK);
 }
@@ -281,7 +281,7 @@ stat_t cm_return_from_hold_context()     // LATER: if value == true return with 
     // *** While still in secondary machine:
 
     spindle_control_sync(SPINDLE_RESUME);   // resume spindle if paused
-//    coolant_control_sync(COOLANT_RESUME);   // resume coolant if paused
+    coolant_control_sync(COOLANT_RESUME, COOLANT_BOTH);   // resume coolant if paused
     
     // perform the G30 move and queue a wait
     float target[] = { 0,0,0,0,0,0 };       // LATER: Make this move return through XY, then Z

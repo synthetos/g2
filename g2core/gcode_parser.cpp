@@ -754,10 +754,12 @@ static stat_t _execute_gcode_block(char *active_comment)
     if (gf.spindle_control) {                               // spindle OFF, CW, CCW
         ritorno(spindle_control_sync((spControl)gv.spindle_control));
     }
-
-    EXEC_FUNC(cm_mist_coolant_control, mist_coolant);       // M7, M9
-    EXEC_FUNC(cm_flood_coolant_control, flood_coolant);     // M8, M9 also disables mist coolant if OFF
-    
+    if (gf.mist_coolant) {
+        ritorno(coolant_control_sync((coControl)gv.mist_coolant, COOLANT_MIST));   // M7, M9 
+    }
+    if (gf.flood_coolant) {
+        ritorno(coolant_control_sync((coControl)gv.flood_coolant, COOLANT_FLOOD));  // M8, M9 also disables mist coolant if OFF
+    }
     if (gv.next_action == NEXT_ACTION_DWELL) {              // G4 - dwell
         ritorno(cm_dwell(gv.P_word));                       // return if error, otherwise complete the block
     }

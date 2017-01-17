@@ -850,11 +850,11 @@ const cfgItem_t cfgArray[] = {
     { "sp","sps",  _f0,  0, sp_print_sps,  sp_get_sps,  sp_set_sps,  (float *)&cs.null, 0 },   // spindle speed
 
     // Coolant functions
-    { "sys","cofp",_fipn,0, cm_print_cofp,get_ui8, set_01,   (float *)&coolant.flood_polarity,      COOLANT_FLOOD_POLARITY },
-    { "sys","comp",_fipn,0, cm_print_comp,get_ui8, set_01,   (float *)&coolant.mist_polarity,       COOLANT_MIST_POLARITY },
-    { "sys","coph",_fipn,0, cm_print_coph,get_ui8, set_01,   (float *)&coolant.pause_on_hold,       COOLANT_PAUSE_ON_HOLD },
-    { "",   "com", _fiz, 0, cm_print_com, get_ui8, set_nul,  (float *)&coolant.mist_enable, 0 },    // get mist coolant enable
-    { "",   "cof", _fiz, 0, cm_print_cof, get_ui8, set_nul,  (float *)&coolant.flood_enable, 0 },   // get flood coolant enable
+    { "co","coph", _fip, 0, co_print_coph, co_get_coph, co_set_coph, (float *)&cs.null, COOLANT_PAUSE_ON_HOLD },
+    { "co","comp", _fip, 0, co_print_comp, co_get_comp, co_set_comp, (float *)&cs.null, COOLANT_MIST_POLARITY },
+    { "co","cofp", _fip, 0, co_print_cofp, co_get_cofp, co_set_cofp, (float *)&cs.null, COOLANT_FLOOD_POLARITY },
+    { "co","com",  _f0,  0, co_print_com,  co_get_com,  co_set_com,  (float *)&cs.null, 0 },   // mist coolant enable
+    { "co","cof",  _f0,  0, co_print_cof,  co_get_com,  co_set_com,  (float *)&cs.null, 0 },   // flood coolant enable
 
     // General system parameters
     { "sys","jt",  _fipn, 2, cm_print_jt,  cm_get_jt,  cm_set_jt,  (float *)&cs.null, JUNCTION_INTEGRATION_TIME },
@@ -1062,10 +1062,11 @@ const cfgItem_t cfgArray[] = {
     //      - Optional DIAGNOSTIC_PARAMETERS
     //      - Uber groups (count these separately)
 
-#define FIXED_GROUPS 3
+#define FIXED_GROUPS 4
     { "","sys",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // system group
     { "","p1", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // PWM 1 group
     { "","sp", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // Spindle group
+    { "","co", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // Coolant group
 
 #define AXIS_GROUPS AXES
     { "","x",  _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // axis groups
