@@ -73,8 +73,9 @@ stat_t coolant_control_immediate(coControl control, coSelect select)
 
 stat_t coolant_control_sync(coControl control, coSelect select)
 {
-    // skip the PAUSE operation if pause-enable is not enabled (pause-on-hold)
-    if ((control == COOLANT_PAUSE) && (!coolant.mist.pause_enable)) {
+    // Skip the PAUSE operation if pause_enable is not enabled (pause-on-hold)
+    // The pause setting in mist coolant is treated as the master even though it's replicated in flood
+    if ((control == COOLANT_PAUSE) && (!coolant.mist.pause_enable)) {   
         return (STAT_OK);
     }
     
@@ -85,7 +86,6 @@ stat_t coolant_control_sync(coControl control, coSelect select)
     return(STAT_OK);
 }
 
-//static void _exec_coolant_helper(coControl control, coCoolantChannel_t *co, (*void)set(), (*void)clear()) {
 static void _exec_coolant_helper(coCoolantChannel_t &co, coControl control) {
 
     bool action = true;
