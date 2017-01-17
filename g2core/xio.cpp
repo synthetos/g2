@@ -324,9 +324,11 @@ struct xio_t {
     void flushToCommand()
     {
         for (int8_t i = 0; i < _dev_count; ++i) {
-            if (DeviceWrappers[i]->flushToCommand()) {
-                return; // we only care to flush the one that last returned a control.
-            }
+            DeviceWrappers[i]->flushToCommand();
+            //if (DeviceWrappers[i]->flushToCommand()) {
+            //    return; // we only care to flush the one that last returned a control.
+            //}
+
         }
     }
 
