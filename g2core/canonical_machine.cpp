@@ -1530,7 +1530,6 @@ static void _exec_program_finalize(float *value, bool *flag)
     if ((cm->cycle_state == CYCLE_MACHINING || cm->cycle_state == CYCLE_OFF) &&
 //      (cm->machine_state != MACHINE_ALARM) &&         // omitted by OMC (RAS)
         (cm->machine_state != MACHINE_SHUTDOWN)) {
-//        cm->machine_state = (cmMachineState)value[0];    // don't update macs/cycs if we're in the middle of a canned cycle,
         cm->machine_state = machine_state;              // don't update macs/cycs if we're in the middle of a canned cycle,
         cm->cycle_state = CYCLE_OFF;                    // or if we're in machine alarm/shutdown mode
     }
@@ -1541,7 +1540,6 @@ static void _exec_program_finalize(float *value, bool *flag)
     mp_zero_segment_velocity();                             // for reporting purposes
 
     // perform the following resets if it's a program END
-//    if (((uint8_t)value[0]) == MACHINE_PROGRAM_END) {
     if (machine_state == MACHINE_PROGRAM_END) {
         cm_suspend_origin_offsets();                        // G92.2 - as per NIST
 //      cm_reset_origin_offsets();                          // G92.1 - alternative to above
@@ -1632,6 +1630,163 @@ stat_t cm_json_wait(char *json_string)
  * These functions are not part of the NIST defined functions
  ***********************************************************************************/
 
+/***** AXIS HELPERS *****************************************************************
+ * _coord()           - return coordinate system number or -1 if error
+ * _axis()            - return axis # or -1 if not an axis (works for mapped motors as well)
+ * cm_get_axis_type() - return linear axis (0), rotary axis (1) or error (-1)
+ * cm_get_axis_char() - return ASCII char for axis given the axis number
+ */
+
+static int8_t _coord(char *token) // extract coordinate system from 3rd character
+{
+    char *ptr;
+    char coord_list[] = {"456789"};
+
+    if ((ptr = strchr(coord_list, token[2])) == NULL) { // test the 3rd character against the string
+        return (-1);
+    }
+    return (ptr - coord_list);
+}
+
+/* _axis()
+ *
+ *  Cases that are handled by _get_axis():
+ *    - sys/... value is a system parameter (global), there is no axis
+ *    - xam     any axis parameter will return the axis number
+ *    - 1ma     any motor parameter will return the mapped axis for that motor
+ *    - 1su     an example of the above
+ *    - mpox    readouts
+ *    - g54x    offsets
+ *    - tlx     tool length offset
+ *    - tt1x    tool table
+ *    - tt32x   tool table
+ *    - _tex    diagnostic parameters
+ *
+ *  Note that this function will return an erroneous value if called by a non-axis tag, 
+ *  such as 'coph' But it should not be called in these cases in any event.
+ */
+
+static int8_t _axis(const index_t index)
+{
+    // test if this is a SYS parameter (global), in which case there will be no axis    
+    if (strcmp("sys", cfgArray[index].group) == 0) {
+        return (AXIS_TYPE_SYSTEM);
+    }
+
+    // if the leading character of the token is a number it's a motor
+    char c = cfgArray[index].token[0];
+    if (isdigit(cfgArray[index].token[0])) {
+        return(st_cfg.mot[c-0x31].motor_map);
+    }
+
+    // otherwise it's an axis. Or undefined, which is usually a global.
+    char *ptr;
+    char axes[] = {"xyzabc"};
+
+    if ((ptr = strchr(axes, c)) == NULL) {                               // test for prefixed axis
+        c = *(cfgArray[index].token + strlen(cfgArray[index].token) -1); // test for postfixed axis
+        if ((ptr = strchr(axes, c)) == NULL) {
+            return (AXIS_TYPE_UNDEFINED);
+        }
+    }
+    return (ptr - axes);
+}
+
+cmAxisType cm_get_axis_type(const index_t index)
+{
+    int8_t axis = _axis(index);
+    if (axis <= AXIS_TYPE_UNDEFINED) {
+        return ((cmAxisType)axis);
+    }
+    if (axis >= AXIS_A) {
+        return (AXIS_TYPE_ROTARY);
+    }
+    return (AXIS_TYPE_LINEAR);
+}
+
+char cm_get_axis_char(const int8_t axis)
+{
+    char axis_char[] = "XYZABC";
+    if ((axis < 0) || (axis > AXES)) return (' ');
+    return (axis_char[axis]);
+}
+
+/***********************************************************************************
+ * Run Commands
+ *
+ * cm_run_qf() - flush planner queue
+ * cm_run_home() - run homing sequence
+ */
+
+stat_t cm_run_qf(nvObj_t *nv)
+{
+    cm_request_queue_flush();
+    return (STAT_OK);
+}
+
+stat_t cm_run_home(nvObj_t *nv)
+{
+    if (fp_TRUE(nv->value)) {
+        float axes[] = { 1,1,1,1,1,1 };
+        bool flags[] = { 1,1,1,1,1,1 };
+        cm_homing_cycle_start(axes, flags);
+    }
+    return (STAT_OK);
+}
+
+/*
+ * Jogging Commands
+ *
+ * cm_get_jogging_dest()
+ * cm_run_jog()
+ */
+
+float cm_get_jogging_dest(void)
+{
+    return cm->jogging_dest;
+}
+
+stat_t cm_run_jog(nvObj_t *nv)
+{
+    set_float(nv, cm->jogging_dest);
+    cm_jogging_cycle_start(_axis(nv->index));
+    return (STAT_OK);
+}
+
+/**** Functions called directly from cfgArray table - mostly wrappers ****
+ * _get_msg_helper() - helper to get string values
+ *
+ * cm_get_stat() - get combined machine state as value and string
+ * cm_get_macs() - get raw machine state as value and string
+ * cm_get_cycs() - get raw cycle state as value and string
+ * cm_get_mots() - get raw motion state as value and string
+ * cm_get_hold() - get raw hold state as value and string
+ * cm_get_home() - get raw homing state as value and string
+ *
+ * cm_get_unit() - get units mode as integer and display string
+ * cm_get_coor() - get goodinate system
+ * cm_get_momo() - get runtime motion mode
+ * cm_get_plan() - get model plane select
+ * cm_get_path() - get model path control mode
+ * cm_get_dist() - get model distance mode
+ * cm_get_admo() - get model arc distance mode
+ * cm_get_frmo() - get model feed rate mode
+ * cm_get_tool() - get tool
+ * cm_get_feed() - get feed rate
+ * cm_get_mline()- get model line number for status reports
+ * cm_get_line() - get active (model or runtime) line number for status reports
+ * cm_get_vel()  - get runtime velocity
+ * cm_get_ofs()  - get current work offset (runtime)
+ * cm_get_pos()  - get current work position (runtime)
+ * cm_get_mpos() - get current machine position (runtime)
+ *
+ * cm_print_pos()- print work position (with proper units)
+ * cm_print_mpos()- print machine position (always mm units)
+ * cm_print_coor()- print coordinate offsets with linear units
+ * cm_print_corr()- print coordinate offsets with rotary units
+ */
+
+
 // Strings for writing settings as nvObj string values
 // Ref: http://www.avrfreaks.net/index.php?name=PNphpBB2&file=printview&t=120881&start=0
 
@@ -1668,9 +1823,9 @@ static const char msg_stat11[] = "Interlock";
 static const char msg_stat12[] = "Shutdown";
 static const char msg_stat13[] = "Panic";
 static const char *const msg_stat[] = { msg_stat0, msg_stat1, msg_stat2, msg_stat3,
-                                                msg_stat4, msg_stat5, msg_stat6, msg_stat7,
-                                                msg_stat8, msg_stat9, msg_stat10, msg_stat11,
-                                                msg_stat12, msg_stat13 };
+                                        msg_stat4, msg_stat5, msg_stat6, msg_stat7,
+                                        msg_stat8, msg_stat9, msg_stat10, msg_stat11,
+                                        msg_stat12, msg_stat13 };
 static const char msg_macs0[] = "Initializing";
 static const char msg_macs1[] = "Ready";
 static const char msg_macs2[] = "Alarm";
@@ -1681,8 +1836,8 @@ static const char msg_macs6[] = "Interlock";
 static const char msg_macs7[] = "SHUTDOWN";
 static const char msg_macs8[] = "PANIC";
 static const char *const msg_macs[] = { msg_macs0, msg_macs1, msg_macs2, msg_macs3,
-                                                msg_macs4, msg_macs5, msg_macs6, msg_macs7,
-                                                msg_macs8 };
+                                        msg_macs4, msg_macs5, msg_macs6, msg_macs7,
+                                        msg_macs8 };
 static const char msg_cycs0[] = "Off";
 static const char msg_cycs1[] = "Machining";
 static const char msg_cycs2[] = "Homing";
@@ -1705,7 +1860,7 @@ static const char msg_hold5[] = "Decel Done";
 static const char msg_hold6[] = "Pending";
 static const char msg_hold7[] = "Hold";
 static const char *const msg_hold[] = { msg_hold0, msg_hold1, msg_hold2, msg_hold3,
-                                                msg_hold4, msg_hold5, msg_hold6, msg_hold7 };
+                                        msg_hold4, msg_hold5, msg_hold6, msg_hold7 };
 
 static const char msg_home0[] = "Not Homed";
 static const char msg_home1[] = "Homed";
@@ -1777,116 +1932,6 @@ static const char *const msg_frmo[] = { msg_g93, msg_g94, msg_g95 };
 
 #endif // __TEXT_MODE
 
-
-/***** AXIS HELPERS *****************************************************************
- * _coord()           - return coordinate system number or -1 if error
- * _axis()            - return axis # or -1 if not an axis (works for mapped motors as well)
- * cm_get_axis_type() - return linear axis (0), rotary axis (1) or error (-1)
- * cm_get_axis_char() - return ASCII char for axis given the axis number
- */
-
-static int8_t _coord(char *token) // extract coordinate system from 3rd character
-{
-    char *ptr;
-    char coord_list[] = {"456789"};
-
-    if ((ptr = strchr(coord_list, token[2])) == NULL) { // test the 3rd character against the string
-        return (-1);
-    }
-    return (ptr - coord_list);
-}
-
-/* _axis()
- *
- *  Cases that are handled by _get_axis():
- *    - sys/... value is a system parameter (global), there is no axis
- *    - xam     any axis parameter will return the axis number
- *    - 1ma     any motor parameter will return the mapped axis for that motor
- *    - 1su     an example of the above
- *    - mpox    readouts
- *    - g54x    offsets
- *    - tlx     tool length offset
- *    - tt1x    tool table
- *    - tt32x   tool table
- *    - _tex    diagnostic parameters
- */
-
-static int8_t _axis(const index_t index)
-{
-    // test if this is a SYS parameter (global), in which case there will be no axis    
-    if (strcmp("sys", cfgArray[index].group) == 0) {
-        return (AXIS_TYPE_SYSTEM);
-    }
-
-    // if the leading character of the token is a number it's a motor
-    char c = cfgArray[index].token[0];
-    if (isdigit(cfgArray[index].token[0])) {
-        return(st_cfg.mot[c-0x31].motor_map);
-    }
-        
-    // otherwise it's an axis. Or undefined, which is usually a global.
-    char *ptr;
-    char axes[] = {"xyzabc"};
-    if ((ptr = strchr(axes, c)) == NULL) {              // test the character in the 0 and 3 positions
-        if ((ptr = strchr(axes, cfgArray[index].token[3])) == NULL) { // to accommodate 'xam' and 'g54x' styles
-            return (AXIS_TYPE_UNDEFINED);
-        }
-    }
-    return (ptr - axes);
-}
-
-cmAxisType cm_get_axis_type(const index_t index)
-{
-    int8_t axis = _axis(index);
-    if (axis <= AXIS_TYPE_UNDEFINED) {
-        return ((cmAxisType)axis);
-    }
-    if (axis >= AXIS_A) {
-        return (AXIS_TYPE_ROTARY);
-    }
-    return (AXIS_TYPE_LINEAR);
-}
-
-char cm_get_axis_char(const int8_t axis)
-{
-    char axis_char[] = "XYZABC";
-    if ((axis < 0) || (axis > AXES)) return (' ');
-    return (axis_char[axis]);
-}
-
-/**** Functions called directly from cfgArray table - mostly wrappers ****
- * _get_msg_helper() - helper to get string values
- *
- * cm_get_stat() - get combined machine state as value and string
- * cm_get_macs() - get raw machine state as value and string
- * cm_get_cycs() - get raw cycle state as value and string
- * cm_get_mots() - get raw motion state as value and string
- * cm_get_hold() - get raw hold state as value and string
- * cm_get_home() - get raw homing state as value and string
- *
- * cm_get_unit() - get units mode as integer and display string
- * cm_get_coor() - get goodinate system
- * cm_get_momo() - get runtime motion mode
- * cm_get_plan() - get model plane select
- * cm_get_path() - get model path control mode
- * cm_get_dist() - get model distance mode
- * cm_get_admo() - get model arc distance mode
- * cm_get_frmo() - get model feed rate mode
- * cm_get_tool() - get tool
- * cm_get_feed() - get feed rate
- * cm_get_mline()- get model line number for status reports
- * cm_get_line() - get active (model or runtime) line number for status reports
- * cm_get_vel()  - get runtime velocity
- * cm_get_ofs()  - get current work offset (runtime)
- * cm_get_pos()  - get current work position (runtime)
- * cm_get_mpos() - get current machine position (runtime)
- *
- * cm_print_pos()- print work position (with proper units)
- * cm_print_mpos()- print machine position (always mm units)
- * cm_print_coor()- print coordinate offsets with linear units
- * cm_print_corr()- print coordinate offsets with rotary units
- */
-
 // Add the string for the enum to the nv, but leave it as a TYPE_INT
 stat_t _get_msg_helper(nvObj_t *nv, const char *const msg_array[], uint8_t value)
 {
@@ -1913,28 +1958,7 @@ stat_t cm_get_frmo(nvObj_t *nv) { return(_get_msg_helper(nv, msg_frmo, cm_get_fe
 stat_t cm_get_toolv(nvObj_t *nv) { return(get_int(nv, cm_get_tool(ACTIVE_MODEL))); }
 stat_t cm_get_mline(nvObj_t *nv) { return(get_int(nv, cm_get_linenum(MODEL))); }
 stat_t cm_get_line(nvObj_t *nv)  { return(get_int(nv, cm_get_linenum(ACTIVE_MODEL))); }
-/*
-stat_t cm_get_toolv(nvObj_t *nv)
-{
-    nv->value = (float)cm_get_tool(ACTIVE_MODEL);
-    nv->valuetype = TYPE_INT;
-    return (STAT_OK);
-}
 
-stat_t cm_get_mline(nvObj_t *nv)
-{
-    nv->value = (float)cm_get_linenum(MODEL);
-    nv->valuetype = TYPE_INT;
-    return (STAT_OK);
-}
-
-stat_t cm_get_line(nvObj_t *nv)
-{
-    nv->value = (float)cm_get_linenum(ACTIVE_MODEL);
-    nv->valuetype = TYPE_INT;
-    return (STAT_OK);
-}
-*/
 stat_t cm_get_vel(nvObj_t *nv)
 {
     if (cm_get_motion_state() == MOTION_STOP) {
@@ -1974,18 +1998,33 @@ stat_t cm_get_g30(nvObj_t *nv)   { return (get_float(nv, cm->gmx.g30_position[_a
  **** TOOL TABLE AND OFFSET GET AND SET FUNCTIONS ****
  *****************************************************/
 
-stat_t cm_get_tof(nvObj_t *nv)
+static uint8_t _tool(nvObj_t *nv) 
 {
-    nv->value = cm->tl_offset[_axis(nv->index)];
-    nv->precision = GET_TABLE_WORD(precision);
-    nv->valuetype = TYPE_FLOAT;
-    return (STAT_OK);
+    if (nv->group[0] != 0) {
+        return (atoi(&nv->group[2]));   // ttNN is the group, axis is in the token
+    }
+    return (atoi(&nv->token[2]));       // ttNNx is all in the token
 }
 
-stat_t cm_set_tof(nvObj_t *nv)
+stat_t cm_get_tof(nvObj_t *nv) { return (get_float(nv, cm->tl_offset[_axis(nv->index)])); }
+stat_t cm_set_tof(nvObj_t *nv) { return (set_float(nv, cm->tl_offset[_axis(nv->index)])); }
+
+stat_t cm_get_tt(nvObj_t *nv)
+{   
+    uint8_t toolnum = _tool(nv);
+    if (toolnum > TOOLS) {
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+    }
+    return (get_float(nv, tt.tt_offset[toolnum][_axis(nv->index)]));
+}
+
+stat_t cm_set_tt(nvObj_t *nv)
 {
-    cm->tl_offset[_axis(nv->index)] = nv->value;
-    return (STAT_OK);
+    uint8_t toolnum = _tool(nv);
+    if (toolnum > TOOLS) {
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+    }
+    return(set_float(nv, tt.tt_offset[toolnum][_axis(nv->index)]));
 }
 
 /************************************
@@ -2209,48 +2248,6 @@ stat_t cm_set_gpa(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->default_path_
 stat_t cm_get_gdi(nvObj_t *nv) { return(get_int(nv, cm->default_distance_mode)); }
 stat_t cm_set_gdi(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->default_distance_mode, ABSOLUTE_DISTANCE_MODE, INCREMENTAL_DISTANCE_MODE)); }
 
-/*
- * Run Commands
- *
- * cm_run_qf() - flush planner queue
- * cm_run_home() - run homing sequence
- */
-
-stat_t cm_run_qf(nvObj_t *nv)
-{
-    cm_request_queue_flush();
-    return (STAT_OK);
-}
-
-stat_t cm_run_home(nvObj_t *nv)
-{
-    if (fp_TRUE(nv->value)) {
-        float axes[] = { 1,1,1,1,1,1 };
-        bool flags[] = { 1,1,1,1,1,1 };
-        cm_homing_cycle_start(axes, flags);
-    }
-    return (STAT_OK);
-}
-
-/*
- * Jogging Commands
- *
- * cm_get_jogging_dest()
- * cm_run_jog()
- */
-
-float cm_get_jogging_dest(void)
-{
-    return cm->jogging_dest;
-}
-
-stat_t cm_run_jog(nvObj_t *nv)
-{
-    set_float(nv, cm->jogging_dest);
-    cm_jogging_cycle_start(_axis(nv->index));
-    return (STAT_OK);
-}
-
 /***********************************************************************************
  * Debugging Commands
  ***********************************************************************************/
@@ -2395,8 +2392,8 @@ void cm_print_tram(nvObj_t *nv) { text_print(nv, fmt_tram);};   // TYPE BOOL
  *    cm_print_zb()
  *
  *    cm_print_pos() - print position with unit displays for MM or Inches
- *     cm_print_mpo() - print position with fixed unit display - always in Degrees or MM
- *     cm_print_tram() - print if the coordinate system is rotated
+ *    cm_print_mpo() - print position with fixed unit display - always in Degrees or MM
+ *    cm_print_tram() - print if the coordinate system is rotated
  */
 
 static const char fmt_Xam[] = "[%s%s] %s axis mode%18d %s\n";

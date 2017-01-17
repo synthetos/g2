@@ -531,6 +531,8 @@ stat_t cm_run_home(nvObj_t *nv);        // start homing cycle
 
 stat_t cm_get_tof(nvObj_t *nv);         // get tool offset
 stat_t cm_set_tof(nvObj_t *nv);         // set tool offset
+stat_t cm_get_tt(nvObj_t *nv);          // get tool table value
+stat_t cm_set_tt(nvObj_t *nv);          // set tool table value
 
 stat_t cm_get_am(nvObj_t *nv);          // get axis mode
 stat_t cm_set_am(nvObj_t *nv);          // set axis mode

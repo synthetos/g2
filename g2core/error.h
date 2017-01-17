@@ -262,7 +262,7 @@ char *get_status_message(stat_t status);
 #define STAT_P_WORD_IS_ZERO 162
 #define STAT_P_WORD_IS_NEGATIVE 163                 // dwells require positive P values
 #define STAT_P_WORD_IS_NOT_AN_INTEGER 164           // G10s and other commands require integer P numbers
-#define STAT_P_WORD_IS_NOT_VALID_TOOL_NUMBER 165
+#define STAT_P_WORD_IS_NOT_VALID_TOOL_NUMBER 165    // invalid tool number
 #define STAT_D_WORD_IS_MISSING 166
 #define STAT_D_WORD_IS_INVALID 167
 #define STAT_E_WORD_IS_MISSING 168
