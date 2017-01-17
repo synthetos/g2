@@ -153,6 +153,11 @@ static void _exec_coolant_control(float* value, bool* flag) {
  **** Coolant Settings *************************************************************
  ***********************************************************************************/
 
+stat_t co_get_com(nvObj_t *nv) { return(get_int(nv, coolant.mist.state)); }
+stat_t co_set_com(nvObj_t *nv) { return(coolant_control_immediate((coControl)nv->value, COOLANT_MIST)); }
+stat_t co_get_cof(nvObj_t *nv) { return(get_int(nv, coolant.flood.state)); }
+stat_t co_set_cof(nvObj_t *nv) { return(coolant_control_immediate((coControl)nv->value, COOLANT_FLOOD)); }
+
 stat_t co_get_coph(nvObj_t *nv) { return(get_int(nv, coolant.mist.pause_enable)); }
 stat_t co_set_coph(nvObj_t *nv) { 
     ritorno(set_int(nv, (uint8_t &)coolant.mist.pause_enable, 0, 1));
@@ -163,11 +168,6 @@ stat_t co_get_comp(nvObj_t *nv) { return(get_int(nv, coolant.mist.polarity)); }
 stat_t co_set_comp(nvObj_t *nv) { return(set_int(nv, (uint8_t &)coolant.mist.polarity, 0, 1)); }
 stat_t co_get_cofp(nvObj_t *nv) { return(get_int(nv, coolant.flood.polarity)); }
 stat_t co_set_cofp(nvObj_t *nv) { return(set_int(nv, (uint8_t &)coolant.flood.polarity, 0, 1)); }
-
-stat_t co_get_com(nvObj_t *nv) { return(get_int(nv, coolant.flood.state)); }
-stat_t co_set_com(nvObj_t *nv) { return(coolant_control_immediate((coControl)nv->value, COOLANT_MIST)); }
-stat_t co_get_cof(nvObj_t *nv) { return(get_float(nv, coolant.mist.state)); }
-stat_t co_set_cof(nvObj_t *nv) { return(coolant_control_immediate((coControl)nv->value, COOLANT_FLOOD)); }
 
 /***********************************************************************************
  * TEXT MODE SUPPORT

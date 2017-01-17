@@ -597,6 +597,117 @@ const cfgItem_t cfgArray[] = {
     { "g30","g30b",_fizc, 3, cm_print_cpos, cm_get_g30, set_ro, (float *)&cs.null, 0 },
     { "g30","g30c",_fizc, 3, cm_print_cpos, cm_get_g30, set_ro, (float *)&cs.null, 0 },
 
+    // this is a 128bit UUID for identifying a previously committed job state
+    { "jid","jida",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[0], 0},
+    { "jid","jidb",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[1], 0},
+    { "jid","jidc",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[2], 0},
+    { "jid","jidd",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[3], 0},
+
+    // Spindle functions
+    { "sp","spmo", _fip, 0, sp_print_spmo, sp_get_spmo, sp_set_spmo, (float *)&cs.null, SPINDLE_MODE },
+    { "sp","spph", _fip, 0, sp_print_spph, sp_get_spph, sp_set_spph, (float *)&cs.null, SPINDLE_PAUSE_ON_HOLD },
+    { "sp","spde", _fip, 2, sp_print_spde, sp_get_spde, sp_set_spde, (float *)&cs.null, SPINDLE_SPINUP_DELAY },
+    //    { "sp","spdn", _fip, 2, sp_print_spdn, sp_get_spdn, sp_set_spdn, (float *)&cs.null, SPINDLE_SPINDOWN_DELAY },
+    { "sp","spsn", _fip, 2, sp_print_spsn, sp_get_spsn, sp_set_spsn, (float *)&cs.null, SPINDLE_SPEED_MIN},
+    { "sp","spsm", _fip, 2, sp_print_spsm, sp_get_spsm, sp_set_spsm, (float *)&cs.null, SPINDLE_SPEED_MAX},
+    { "sp","spep", _fip, 0, sp_print_spep, sp_get_spep, sp_set_spep, (float *)&cs.null, SPINDLE_ENABLE_POLARITY },
+    { "sp","spdp", _fip, 0, sp_print_spdp, sp_get_spdp, sp_set_spdp, (float *)&cs.null, SPINDLE_DIR_POLARITY },
+    { "sp","spoe", _fip, 0, sp_print_spoe, sp_get_spoe, sp_set_spoe, (float *)&cs.null, SPINDLE_OVERRIDE_ENABLE},
+    { "sp","spo",  _fip, 3, sp_print_spo,  sp_get_spo,  sp_set_spo,  (float *)&cs.null, SPINDLE_OVERRIDE_FACTOR},
+    { "sp","spc",  _f0,  0, sp_print_spc,  sp_get_spc,  sp_set_spc,  (float *)&cs.null, 0 },   // spindle state
+    { "sp","sps",  _f0,  0, sp_print_sps,  sp_get_sps,  sp_set_sps,  (float *)&cs.null, 0 },   // spindle speed
+
+    // Coolant functions
+    { "co","coph", _fip, 0, co_print_coph, co_get_coph, co_set_coph, (float *)&cs.null, COOLANT_PAUSE_ON_HOLD },
+    { "co","comp", _fip, 0, co_print_comp, co_get_comp, co_set_comp, (float *)&cs.null, COOLANT_MIST_POLARITY },
+    { "co","cofp", _fip, 0, co_print_cofp, co_get_cofp, co_set_cofp, (float *)&cs.null, COOLANT_FLOOD_POLARITY },
+    { "co","com",  _f0,  0, co_print_com,  co_get_com,  co_set_com,  (float *)&cs.null, 0 },   // mist coolant enable
+    { "co","cof",  _f0,  0, co_print_cof,  co_get_cof,  co_set_cof,  (float *)&cs.null, 0 },   // flood coolant enable
+
+    // General system parameters
+    { "sys","jt",  _fipn, 2, cm_print_jt,  cm_get_jt,  cm_set_jt,  (float *)&cs.null, JUNCTION_INTEGRATION_TIME },
+    { "sys","ct",  _fipnc,4, cm_print_ct,  cm_get_ct,  cm_set_ct,  (float *)&cs.null, CHORDAL_TOLERANCE },
+    { "sys","zl",  _fipnc,3, cm_print_zl,  cm_get_zl,  cm_set_zl,  (float *)&cs.null, FEEDHOLD_Z_LIFT},
+    { "sys","sl",  _fipn, 0, cm_print_sl,  cm_get_sl,  cm_set_sl,  (float *)&cs.null, SOFT_LIMIT_ENABLE },
+    { "sys","lim", _fipn, 0, cm_print_lim, cm_get_lim, cm_set_lim, (float *)&cs.null, HARD_LIMIT_ENABLE },
+    { "sys","saf", _fipn, 0, cm_print_saf, cm_get_saf, cm_set_saf, (float *)&cs.null, SAFETY_INTERLOCK_ENABLE },
+    { "sys","m48", _fipn, 0, cm_print_m48, cm_get_m48, cm_get_m48, (float *)&cs.null, 0 },   // M48/M49 feedrate & spindle override enable
+    { "sys","froe",_fipn, 0, cm_print_froe,cm_get_froe,cm_get_froe,(float *)&cs.null, FEED_OVERRIDE_ENABLE},
+    { "sys","fro", _fipn, 3, cm_print_fro, cm_get_fro, cm_set_fro, (float *)&cs.null, FEED_OVERRIDE_FACTOR},
+    { "sys","troe",_fipn, 0, cm_print_troe,cm_get_troe,cm_get_troe,(float *)&cs.null, TRAVERSE_OVERRIDE_ENABLE},
+    { "sys","tro", _fipn, 3, cm_print_tro, cm_get_tro, cm_set_tro, (float *)&cs.null, TRAVERSE_OVERRIDE_FACTOR},
+    { "sys","mt",  _fipn, 2, st_print_mt,  st_get_mt,  st_set_mt,  (float *)&cs.null, MOTOR_POWER_TIMEOUT},
+    { "",   "me",  _f0,   0, st_print_me,  get_nul,    st_set_me,  (float *)&cs.null, 0 },    // SET to enable motors
+    { "",   "md",  _f0,   0, st_print_md,  get_nul,    st_set_md,  (float *)&cs.null, 0 },    // SET to disable motors
+
+    // Communications and reporting parameters
+#ifdef __TEXT_MODE
+    { "sys","tv", _fipn, 0, tx_print_tv, txt_get_tv, txt_set_tv, (float *)&cs.null, TEXT_VERBOSITY },
+#endif
+    { "sys","ej", _fipn, 0, js_print_ej,  js_get_ej, js_set_ej, (float *)&cs.null, COMM_MODE },
+    { "sys","jv", _fipn, 0, js_print_jv,  js_get_jv, js_set_jv, (float *)&cs.null, JSON_VERBOSITY },
+    { "sys","qv", _fipn, 0, qr_print_qv,  qr_get_qv, qr_set_qv, (float *)&cs.null, QUEUE_REPORT_VERBOSITY },
+    { "sys","sv", _fipn, 0, sr_print_sv,  sr_get_sv, sr_set_sv, (float *)&cs.null, STATUS_REPORT_VERBOSITY },
+    { "sys","si", _fipn, 0, sr_print_si,  sr_get_si, sr_set_si, (float *)&cs.null, STATUS_REPORT_INTERVAL_MS },
+
+    // Gcode defaults
+    // NOTE: The ordering within the gcode defaults is important for token resolution. gc must follow gco
+    { "sys","gpl", _fipn, 0, cm_print_gpl, cm_get_gpl, cm_set_gpl, (float *)&cs.null, GCODE_DEFAULT_PLANE },
+    { "sys","gun", _fipn, 0, cm_print_gun, cm_get_gun, cm_set_gun, (float *)&cs.null, GCODE_DEFAULT_UNITS },
+    { "sys","gco", _fipn, 0, cm_print_gco, cm_get_gco, cm_set_gco, (float *)&cs.null, GCODE_DEFAULT_COORD_SYSTEM },
+    { "sys","gpa", _fipn, 0, cm_print_gpa, cm_get_gpa, cm_set_gpa, (float *)&cs.null, GCODE_DEFAULT_PATH_CONTROL },
+    { "sys","gdi", _fipn, 0, cm_print_gdi, cm_get_gdi, cm_set_gdi, (float *)&cs.null, GCODE_DEFAULT_DISTANCE_MODE },
+    { "",   "gc",  _f0,   0, tx_print_nul, gc_get_gc,  gc_run_gc,  (float *)&cs.null, 0 },  // gcode block - must be last in this group
+
+    // Actions and Reports
+    { "", "sr",  _f0, 0, sr_print_sr,   sr_get,    sr_set,    (float *)&cs.null, 0 },   // request and set status reports
+    { "", "qr",  _f0, 0, qr_print_qr,   qr_get,    set_nul,   (float *)&cs.null, 0 },   // get queue value - planner buffers available
+    { "", "qi",  _f0, 0, qr_print_qi,   qi_get,    set_nul,   (float *)&cs.null, 0 },   // get queue value - buffers added to queue
+    { "", "qo",  _f0, 0, qr_print_qo,   qo_get,    set_nul,   (float *)&cs.null, 0 },   // get queue value - buffers removed from queue
+    { "", "er",  _f0, 0, tx_print_nul,  rpt_er,    set_nul,   (float *)&cs.null, 0 },   // get bogus exception report for testing
+    { "", "qf",  _f0, 0, tx_print_nul,  get_nul,   cm_run_qf, (float *)&cs.null, 0 },   // SET to invoke queue flush
+    { "", "rx",  _f0, 0, tx_print_int,  get_rx,    set_nul,   (float *)&cs.null, 0 },   // get RX buffer bytes or packets
+    { "", "msg", _f0, 0, tx_print_str,  get_nul,   set_noop,  (float *)&cs.null, 0 },   // no operation on messages
+    { "", "alarm",_f0,0, tx_print_nul,  cm_alrm,   cm_alrm,   (float *)&cs.null, 0 },   // trigger alarm
+    { "", "panic",_f0,0, tx_print_nul,  cm_pnic,   cm_pnic,   (float *)&cs.null, 0 },   // trigger panic
+    { "", "shutd",_f0,0, tx_print_nul,  cm_shutd,  cm_shutd,  (float *)&cs.null, 0 },   // trigger shutdown
+    { "", "clear",_f0,0, tx_print_nul,  cm_clr,    cm_clr,    (float *)&cs.null, 0 },   // GET "clear" to clear alarm state
+    { "", "clr",  _f0,0, tx_print_nul,  cm_clr,    cm_clr,    (float *)&cs.null, 0 },   // synonym for "clear"
+    { "", "tick", _f0,0, tx_print_int,  get_tick,  set_nul,   (float *)&cs.null, 0 },   // get system time tic
+    { "", "tram", _f0,0, cm_print_tram,cm_get_tram,cm_set_tram,(float *)&cs.null, 0 },  // SET to attempt setting rotation matrix from probes
+    { "", "defa",_f0, 0, tx_print_nul,  help_defa,set_defaults,(float *)&cs.null,0 },   // set/print defaults / help screen
+    { "", "flash",_f0,0, tx_print_nul,  help_flash,hw_flash,  (float *)&cs.null,0 },
+    //    { "", "switch",_f0,0, tx_print_nul, get_nul,   cm_switch, (float *)&cs.null,0 },
+    //    { "", "return",_f0,0, tx_print_nul, get_nul,   cm_return, (float *)&cs.null,0 },
+
+#ifdef __HELP_SCREENS
+    { "", "help",_f0, 0, tx_print_nul, help_config, set_nul, (float *)&cs.null,0 }, // prints config help screen
+    { "", "h",   _f0, 0, tx_print_nul, help_config, set_nul, (float *)&cs.null,0 }, // alias for "help"
+#endif
+
+#ifdef __USER_DATA
+    // User defined data groups
+    { "uda","uda0", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_a[0], USER_DATA_A0 },
+    { "uda","uda1", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_a[1], USER_DATA_A1 },
+    { "uda","uda2", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_a[2], USER_DATA_A2 },
+    { "uda","uda3", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_a[3], USER_DATA_A3 },
+
+    { "udb","udb0", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_b[0], USER_DATA_B0 },
+    { "udb","udb1", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_b[1], USER_DATA_B1 },
+    { "udb","udb2", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_b[2], USER_DATA_B2 },
+    { "udb","udb3", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_b[3], USER_DATA_B3 },
+
+    { "udc","udc0", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_c[0], USER_DATA_C0 },
+    { "udc","udc1", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_c[1], USER_DATA_C1 },
+    { "udc","udc2", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_c[2], USER_DATA_C2 },
+    { "udc","udc3", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_c[3], USER_DATA_C3 },
+
+    { "udd","udd0", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_d[0], USER_DATA_D0 },
+    { "udd","udd1", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_d[1], USER_DATA_D1 },
+    { "udd","udd2", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_d[2], USER_DATA_D2 },
+    { "udd","udd3", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_d[3], USER_DATA_D3 },
+#endif
+
     // Tool table offsets
     { "tof","tofx",_fipc, 3, cm_print_cofs, cm_get_tof, cm_set_tof,(float *)&cs.null, 0 },
     { "tof","tofy",_fipc, 3, cm_print_cofs, cm_get_tof, cm_set_tof,(float *)&cs.null, 0 },
@@ -829,116 +940,7 @@ const cfgItem_t cfgArray[] = {
     { "tt32","tt32b",_fipc, 3, cm_print_cofs, get_flt, set_flt,(float *)&tt.tt_offset[32][AXIS_B], TT32_B_OFFSET },
     { "tt32","tt32c",_fipc, 3, cm_print_cofs, get_flt, set_flt,(float *)&tt.tt_offset[32][AXIS_C], TT32_C_OFFSET },
 
-    // this is a 128bit UUID for identifying a previously committed job state
-    { "jid","jida",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[0], 0},
-    { "jid","jidb",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[1], 0},
-    { "jid","jidc",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[2], 0},
-    { "jid","jidd",_f0, 0, tx_print_nul, get_data, set_data, (float *)&cfg.job_id[3], 0},
 
-    // Spindle functions
-    { "sp","spmo", _fip, 0, sp_print_spmo, sp_get_spmo, sp_set_spmo, (float *)&cs.null, SPINDLE_MODE },
-    { "sp","spph", _fip, 0, sp_print_spph, sp_get_spph, sp_set_spph, (float *)&cs.null, SPINDLE_PAUSE_ON_HOLD },
-    { "sp","spde", _fip, 2, sp_print_spde, sp_get_spde, sp_set_spde, (float *)&cs.null, SPINDLE_SPINUP_DELAY },
-//    { "sp","spdn", _fip, 2, sp_print_spdn, sp_get_spdn, sp_set_spdn, (float *)&cs.null, SPINDLE_SPINDOWN_DELAY },
-    { "sp","spsn", _fip, 2, sp_print_spsn, sp_get_spsn, sp_set_spsn, (float *)&cs.null, SPINDLE_SPEED_MIN},
-    { "sp","spsm", _fip, 2, sp_print_spsm, sp_get_spsm, sp_set_spsm, (float *)&cs.null, SPINDLE_SPEED_MAX},
-    { "sp","spep", _fip, 0, sp_print_spep, sp_get_spep, sp_set_spep, (float *)&cs.null, SPINDLE_ENABLE_POLARITY },
-    { "sp","spdp", _fip, 0, sp_print_spdp, sp_get_spdp, sp_set_spdp, (float *)&cs.null, SPINDLE_DIR_POLARITY },
-    { "sp","spoe", _fip, 0, sp_print_spoe, sp_get_spoe, sp_set_spoe, (float *)&cs.null, SPINDLE_OVERRIDE_ENABLE},
-    { "sp","spo",  _fip, 3, sp_print_spo,  sp_get_spo,  sp_set_spo,  (float *)&cs.null, SPINDLE_OVERRIDE_FACTOR},
-    { "sp","spc",  _f0,  0, sp_print_spc,  sp_get_spc,  sp_set_spc,  (float *)&cs.null, 0 },   // spindle state
-    { "sp","sps",  _f0,  0, sp_print_sps,  sp_get_sps,  sp_set_sps,  (float *)&cs.null, 0 },   // spindle speed
-
-    // Coolant functions
-    { "co","coph", _fip, 0, co_print_coph, co_get_coph, co_set_coph, (float *)&cs.null, COOLANT_PAUSE_ON_HOLD },
-    { "co","comp", _fip, 0, co_print_comp, co_get_comp, co_set_comp, (float *)&cs.null, COOLANT_MIST_POLARITY },
-    { "co","cofp", _fip, 0, co_print_cofp, co_get_cofp, co_set_cofp, (float *)&cs.null, COOLANT_FLOOD_POLARITY },
-    { "co","com",  _f0,  0, co_print_com,  co_get_com,  co_set_com,  (float *)&cs.null, 0 },   // mist coolant enable
-    { "co","cof",  _f0,  0, co_print_cof,  co_get_com,  co_set_com,  (float *)&cs.null, 0 },   // flood coolant enable
-
-    // General system parameters
-    { "sys","jt",  _fipn, 2, cm_print_jt,  cm_get_jt,  cm_set_jt,  (float *)&cs.null, JUNCTION_INTEGRATION_TIME },
-    { "sys","ct",  _fipnc,4, cm_print_ct,  cm_get_ct,  cm_set_ct,  (float *)&cs.null, CHORDAL_TOLERANCE },
-    { "sys","zl",  _fipnc,3, cm_print_zl,  cm_get_zl,  cm_set_zl,  (float *)&cs.null, FEEDHOLD_Z_LIFT},
-    { "sys","sl",  _fipn, 0, cm_print_sl,  cm_get_sl,  cm_set_sl,  (float *)&cs.null, SOFT_LIMIT_ENABLE },
-    { "sys","lim", _fipn, 0, cm_print_lim, cm_get_lim, cm_set_lim, (float *)&cs.null, HARD_LIMIT_ENABLE },
-    { "sys","saf", _fipn, 0, cm_print_saf, cm_get_saf, cm_set_saf, (float *)&cs.null, SAFETY_INTERLOCK_ENABLE },
-    { "sys","m48", _fipn, 0, cm_print_m48, cm_get_m48, cm_get_m48, (float *)&cs.null, 0 },   // M48/M49 feedrate & spindle override enable
-    { "sys","froe",_fipn, 0, cm_print_froe,cm_get_froe,cm_get_froe,(float *)&cs.null, FEED_OVERRIDE_ENABLE},
-    { "sys","fro", _fipn, 3, cm_print_fro, cm_get_fro, cm_set_fro, (float *)&cs.null, FEED_OVERRIDE_FACTOR},
-    { "sys","troe",_fipn, 0, cm_print_troe,cm_get_troe,cm_get_troe,(float *)&cs.null, TRAVERSE_OVERRIDE_ENABLE},
-    { "sys","tro", _fipn, 3, cm_print_tro, cm_get_tro, cm_set_tro, (float *)&cs.null, TRAVERSE_OVERRIDE_FACTOR},
-    { "sys","mt",  _fipn, 2, st_print_mt,  st_get_mt,  st_set_mt,  (float *)&cs.null, MOTOR_POWER_TIMEOUT},
-    { "",   "me",  _f0,   0, st_print_me,  get_nul,    st_set_me,  (float *)&cs.null, 0 },    // SET to enable motors
-    { "",   "md",  _f0,   0, st_print_md,  get_nul,    st_set_md,  (float *)&cs.null, 0 },    // SET to disable motors
-
-    // Communications and reporting parameters
-#ifdef __TEXT_MODE
-    { "sys","tv", _fipn, 0, tx_print_tv, txt_get_tv, txt_set_tv, (float *)&cs.null, TEXT_VERBOSITY },
-#endif
-    { "sys","ej", _fipn, 0, js_print_ej,  js_get_ej, js_set_ej, (float *)&cs.null, COMM_MODE },
-    { "sys","jv", _fipn, 0, js_print_jv,  js_get_jv, js_set_jv, (float *)&cs.null, JSON_VERBOSITY },
-    { "sys","qv", _fipn, 0, qr_print_qv,  qr_get_qv, qr_set_qv, (float *)&cs.null, QUEUE_REPORT_VERBOSITY },
-    { "sys","sv", _fipn, 0, sr_print_sv,  sr_get_sv, sr_set_sv, (float *)&cs.null, STATUS_REPORT_VERBOSITY },
-    { "sys","si", _fipn, 0, sr_print_si,  sr_get_si, sr_set_si, (float *)&cs.null, STATUS_REPORT_INTERVAL_MS },
-
-    // Gcode defaults
-    // NOTE: The ordering within the gcode defaults is important for token resolution. gc must follow gco
-    { "sys","gpl", _fipn, 0, cm_print_gpl, cm_get_gpl, cm_set_gpl, (float *)&cs.null, GCODE_DEFAULT_PLANE },
-    { "sys","gun", _fipn, 0, cm_print_gun, cm_get_gun, cm_set_gun, (float *)&cs.null, GCODE_DEFAULT_UNITS },
-    { "sys","gco", _fipn, 0, cm_print_gco, cm_get_gco, cm_set_gco, (float *)&cs.null, GCODE_DEFAULT_COORD_SYSTEM },
-    { "sys","gpa", _fipn, 0, cm_print_gpa, cm_get_gpa, cm_set_gpa, (float *)&cs.null, GCODE_DEFAULT_PATH_CONTROL },
-    { "sys","gdi", _fipn, 0, cm_print_gdi, cm_get_gdi, cm_set_gdi, (float *)&cs.null, GCODE_DEFAULT_DISTANCE_MODE },
-    { "",   "gc",  _f0,   0, tx_print_nul, gc_get_gc,  gc_run_gc,  (float *)&cs.null, 0 },  // gcode block - must be last in this group
-
-    // Actions and Reports
-    { "", "sr",  _f0, 0, sr_print_sr,   sr_get,    sr_set,    (float *)&cs.null, 0 },   // request and set status reports
-    { "", "qr",  _f0, 0, qr_print_qr,   qr_get,    set_nul,   (float *)&cs.null, 0 },   // get queue value - planner buffers available
-    { "", "qi",  _f0, 0, qr_print_qi,   qi_get,    set_nul,   (float *)&cs.null, 0 },   // get queue value - buffers added to queue
-    { "", "qo",  _f0, 0, qr_print_qo,   qo_get,    set_nul,   (float *)&cs.null, 0 },   // get queue value - buffers removed from queue
-    { "", "er",  _f0, 0, tx_print_nul,  rpt_er,    set_nul,   (float *)&cs.null, 0 },   // get bogus exception report for testing
-    { "", "qf",  _f0, 0, tx_print_nul,  get_nul,   cm_run_qf, (float *)&cs.null, 0 },   // SET to invoke queue flush
-    { "", "rx",  _f0, 0, tx_print_int,  get_rx,    set_nul,   (float *)&cs.null, 0 },   // get RX buffer bytes or packets
-    { "", "msg", _f0, 0, tx_print_str,  get_nul,   set_noop,  (float *)&cs.null, 0 },   // no operation on messages
-    { "", "alarm",_f0,0, tx_print_nul,  cm_alrm,   cm_alrm,   (float *)&cs.null, 0 },   // trigger alarm
-    { "", "panic",_f0,0, tx_print_nul,  cm_pnic,   cm_pnic,   (float *)&cs.null, 0 },   // trigger panic
-    { "", "shutd",_f0,0, tx_print_nul,  cm_shutd,  cm_shutd,  (float *)&cs.null, 0 },   // trigger shutdown
-    { "", "clear",_f0,0, tx_print_nul,  cm_clr,    cm_clr,    (float *)&cs.null, 0 },   // GET "clear" to clear alarm state
-    { "", "clr",  _f0,0, tx_print_nul,  cm_clr,    cm_clr,    (float *)&cs.null, 0 },   // synonym for "clear"
-    { "", "tick", _f0,0, tx_print_int,  get_tick,  set_nul,   (float *)&cs.null, 0 },   // get system time tic
-    { "", "tram", _f0,0, cm_print_tram,cm_get_tram,cm_set_tram,(float *)&cs.null, 0 },  // SET to attempt setting rotation matrix from probes
-    { "", "defa",_f0, 0, tx_print_nul,  help_defa,set_defaults,(float *)&cs.null,0 },   // set/print defaults / help screen
-    { "", "flash",_f0,0, tx_print_nul,  help_flash,hw_flash,  (float *)&cs.null,0 },
-//    { "", "switch",_f0,0, tx_print_nul, get_nul,   cm_switch, (float *)&cs.null,0 },
-//    { "", "return",_f0,0, tx_print_nul, get_nul,   cm_return, (float *)&cs.null,0 },
-
-#ifdef __HELP_SCREENS
-    { "", "help",_f0, 0, tx_print_nul, help_config, set_nul, (float *)&cs.null,0 }, // prints config help screen
-    { "", "h",   _f0, 0, tx_print_nul, help_config, set_nul, (float *)&cs.null,0 }, // alias for "help"
-#endif
-
-#ifdef __USER_DATA
-    // User defined data groups
-    { "uda","uda0", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_a[0], USER_DATA_A0 },
-    { "uda","uda1", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_a[1], USER_DATA_A1 },
-    { "uda","uda2", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_a[2], USER_DATA_A2 },
-    { "uda","uda3", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_a[3], USER_DATA_A3 },
-
-    { "udb","udb0", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_b[0], USER_DATA_B0 },
-    { "udb","udb1", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_b[1], USER_DATA_B1 },
-    { "udb","udb2", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_b[2], USER_DATA_B2 },
-    { "udb","udb3", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_b[3], USER_DATA_B3 },
-
-    { "udc","udc0", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_c[0], USER_DATA_C0 },
-    { "udc","udc1", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_c[1], USER_DATA_C1 },
-    { "udc","udc2", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_c[2], USER_DATA_C2 },
-    { "udc","udc3", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_c[3], USER_DATA_C3 },
-
-    { "udd","udd0", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_d[0], USER_DATA_D0 },
-    { "udd","udd1", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_d[1], USER_DATA_D1 },
-    { "udd","udd2", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_d[2], USER_DATA_D2 },
-    { "udd","udd3", _fip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_d[3], USER_DATA_D3 },
-#endif
 
     // Diagnostic parameters
 #ifdef __DIAGNOSTIC_PARAMETERS

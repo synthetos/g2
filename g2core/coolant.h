@@ -29,10 +29,11 @@
 #define COOLANT_H_ONCE
 
 typedef enum {
-    COOLANT_OFF = 0,  // don't change the order. It gets masked.
-    COOLANT_ON,
-    COOLANT_PAUSE,
-    COOLANT_RESUME
+    COOLANT_OFF = 0,        // don't change the order. 0/1 get masked.
+    COOLANT_ON = 1,
+//  COOLANT_RESERVED = 2,   // not used. ALigns pause and resume with spindle enum
+    COOLANT_PAUSE = 3,
+    COOLANT_RESUME = 4
 } coControl;
 #define COOLANT_ACTION_MAX COOLANT_RESUME
 
@@ -42,10 +43,10 @@ typedef enum {
 
 typedef enum { 
     COOLANT_ACTIVE_LOW = 0, 
-    COOLANT_ACTIVE_HIGH 
+    COOLANT_ACTIVE_HIGH = 1
 } coPolarity;
 
-typedef enum {              // used as a bitmask
+typedef enum {              // don't change the order. used as a bitmask
     COOLANT_NONE = 0,       // none selected
     COOLANT_MIST = 1,       // mist coolant
     COOLANT_FLOOD = 2,      // flood coolant

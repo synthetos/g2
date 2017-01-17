@@ -58,8 +58,9 @@ typedef struct GCodeInputValue {    // Gcode inputs - meaning depends on context
     uint8_t tool;                   // Tool after T and M6 (tool_select and tool_change)
     uint8_t tool_select;            // T value - T sets this value
     uint8_t tool_change;            // M6 tool change flag - moves "tool_select" to "tool"
-    uint8_t mist_coolant;           // TRUE = mist on (M7), FALSE = off (M9)
-    uint8_t flood_coolant;          // TRUE = flood on (M8), FALSE = off (M9)
+    uint8_t coolant_mist;           // TRUE = mist on (M7)
+    uint8_t coolant_flood;          // TRUE = flood on (M8)
+    uint8_t coolant_off;            // TRUE = turn off all coolants (M9)
     uint8_t spindle_control;        // 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
 
     bool m48_enable;                // M48/M49 input (enables for feed and spindle)
@@ -97,8 +98,9 @@ typedef struct GCodeFlags {         // Gcode input flags
     bool tool;
     bool tool_select;
     bool tool_change;
-    bool mist_coolant;
-    bool flood_coolant;
+    bool coolant_mist;
+    bool coolant_flood;
+    bool coolant_off;
     bool spindle_control;
 
     bool m48_enable;
@@ -638,9 +640,9 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
                 case 4: SET_MODAL (MODAL_GROUP_M7, spindle_control, SPINDLE_CCW);
                 case 5: SET_MODAL (MODAL_GROUP_M7, spindle_control, SPINDLE_OFF);
                 case 6: SET_NON_MODAL (tool_change, true);
-                case 7: SET_MODAL (MODAL_GROUP_M8, mist_coolant, true);
-                case 8: SET_MODAL (MODAL_GROUP_M8, flood_coolant, true);
-                case 9: SET_MODAL (MODAL_GROUP_M8, flood_coolant, false);
+                case 7: SET_MODAL (MODAL_GROUP_M8, coolant_mist,  COOLANT_ON);
+                case 8: SET_MODAL (MODAL_GROUP_M8, coolant_flood, COOLANT_ON);
+                case 9: SET_MODAL (MODAL_GROUP_M8, coolant_off,   COOLANT_OFF);
                 case 48: SET_MODAL (MODAL_GROUP_M9, m48_enable, true);
                 case 49: SET_MODAL (MODAL_GROUP_M9, m48_enable, false);
                 case 50:
@@ -754,11 +756,14 @@ static stat_t _execute_gcode_block(char *active_comment)
     if (gf.spindle_control) {                               // spindle OFF, CW, CCW
         ritorno(spindle_control_sync((spControl)gv.spindle_control));
     }
-    if (gf.mist_coolant) {
-        ritorno(coolant_control_sync((coControl)gv.mist_coolant, COOLANT_MIST));   // M7, M9 
+    if (gf.coolant_mist) {
+        ritorno(coolant_control_sync((coControl)gv.coolant_mist, COOLANT_MIST));   // M7
     }
-    if (gf.flood_coolant) {
-        ritorno(coolant_control_sync((coControl)gv.flood_coolant, COOLANT_FLOOD));  // M8, M9 also disables mist coolant if OFF
+    if (gf.coolant_flood) {
+        ritorno(coolant_control_sync((coControl)gv.coolant_flood, COOLANT_FLOOD));  // M8
+    }
+    if (gf.coolant_off) {
+        ritorno(coolant_control_sync((coControl)gv.coolant_off, COOLANT_BOTH));  // M9
     }
     if (gv.next_action == NEXT_ACTION_DWELL) {              // G4 - dwell
         ritorno(cm_dwell(gv.P_word));                       // return if error, otherwise complete the block
