@@ -910,9 +910,8 @@ stat_t cm_set_tl_offset(const uint8_t H_word, const bool H_flag, const bool appl
             cm->tl_offset[axis] = tt.tt_offset[tool][axis];
         }
     }
-    float value[] = { (float)cm->gm.coord_system,0,0,0,0,0 };// pass coordinate system in value[0] element
-    bool flags[]  = { 1,0,0,0,0,0 };
-    mp_queue_command(_exec_offset, value, flags);			// second vector (flags) is not used, so fake it
+    float value[] = { (float)cm->gm.coord_system };     // pass coordinate system in value[0] element
+    mp_queue_command(_exec_offset, value, nullptr);     // second vector (flags) is not used, so fake it
     return (STAT_OK);
 }
 
@@ -921,19 +920,17 @@ stat_t cm_cancel_tl_offset()
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         cm->tl_offset[axis] = 0;
     }
-    float value[] = { (float)cm->gm.coord_system,0,0,0,0,0 };// pass coordinate system in value[0] element
-    bool flags[]  = { 1,0,0,0,0,0 };
-    mp_queue_command(_exec_offset, value, flags);			// second vector (flags) is not used, so fake it
+    float value[] = { (float)cm->gm.coord_system };
+    mp_queue_command(_exec_offset, value, nullptr);
     return (STAT_OK);
 }
 
-stat_t cm_set_coord_system(const uint8_t coord_system)      // set coordinate system sync'd with planner
+stat_t cm_set_coord_system(const uint8_t coord_system)  // set coordinate system sync'd with planner
 {
     cm->gm.coord_system = (cmCoordSystem)coord_system;
 
-    float value[] = { (float)coord_system,0,0,0,0,0 };      // pass coordinate system in value[0] element
-    bool flags[]  = { 1,0,0,0,0,0 };
-    mp_queue_command(_exec_offset, value, flags);           // second vector (flags) is not used, so fake it
+    float value[] = { (float)coord_system };
+    mp_queue_command(_exec_offset, value, nullptr);
     return (STAT_OK);
 }
 
@@ -1043,9 +1040,8 @@ stat_t cm_set_origin_offsets(const float offset[], const bool flag[])
         }
     }
     // now pass the offset to the callback - setting the coordinate system also applies the offsets
-    float value[] = { (float)cm->gm.coord_system,0,0,0,0,0 }; // pass coordinate system in value[0] element
-    bool flags[]  = { 1,0,0,0,0,0 };
-    mp_queue_command(_exec_offset, value, flags);
+    float value[] = { (float)cm->gm.coord_system }; // pass coordinate system in value[0] element
+    mp_queue_command(_exec_offset, value, nullptr);
     return (STAT_OK);
 }
 
@@ -1055,27 +1051,24 @@ stat_t cm_reset_origin_offsets()
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         cm->gmx.origin_offset[axis] = 0;
     }
-    float value[] = { (float)cm->gm.coord_system,0,0,0,0,0 };
-    bool flags[]  = { 1,0,0,0,0,0 };
-    mp_queue_command(_exec_offset, value, flags);
+    float value[] = { (float)cm->gm.coord_system };
+    mp_queue_command(_exec_offset, value, nullptr);
     return (STAT_OK);
 }
 
 stat_t cm_suspend_origin_offsets()
 {
     cm->gmx.origin_offset_enable = false;
-    float value[] = { (float)cm->gm.coord_system,0,0,0,0,0 };
-    bool flags[]  = { 1,0,0,0,0,0 };
-    mp_queue_command(_exec_offset, value, flags);
+    float value[] = { (float)cm->gm.coord_system };
+    mp_queue_command(_exec_offset, value, nullptr);
     return (STAT_OK);
 }
 
 stat_t cm_resume_origin_offsets()
 {
     cm->gmx.origin_offset_enable = true;
-    float value[] = { (float)cm->gm.coord_system,0,0,0,0,0 };
-    bool flags[]  = { 1,0,0,0,0,0 };
-    mp_queue_command(_exec_offset, value, flags);
+    float value[] = { (float)cm->gm.coord_system };
+    mp_queue_command(_exec_offset, value, nullptr);
     return (STAT_OK);
 }
 
@@ -1288,9 +1281,8 @@ stat_t cm_select_tool(const uint8_t tool_select)
     if (tool_select > TOOLS) {
         return (STAT_T_WORD_IS_INVALID);
     }
-    float value[] = { (float)tool_select, 0,0,0,0,0 };
-    bool flags[]  = { 1,0,0,0,0,0 };
-    mp_queue_command(_exec_select_tool, value, flags);
+    float value[] = { (float)tool_select };
+    mp_queue_command(_exec_select_tool, value, nullptr);
     return (STAT_OK);
 }
 
@@ -1301,9 +1293,8 @@ static void _exec_select_tool(float *value, bool *flag)
 
 stat_t cm_change_tool(const uint8_t tool_change)
 {
-    float value[] = { (float)cm->gm.tool_select,0,0,0,0,0 };
-    bool flags[]  = { 1,0,0,0,0,0 };
-    mp_queue_command(_exec_change_tool, value, flags);
+    float value[] = { (float)cm->gm.tool_select };
+    mp_queue_command(_exec_change_tool, value, nullptr);
     return (STAT_OK);
 }
 
@@ -1532,14 +1523,16 @@ stat_t cm_tro_control(const float P_word, const bool P_flag) // M50.1
 
 static void _exec_program_finalize(float *value, bool *flag)
 {
+    cmMachineState machine_state = (cmMachineState)value[0];
     cm_set_motion_state(MOTION_STOP);
 
     // Allow update in the alarm state, to accommodate queue flush (RAS)
     if ((cm->cycle_state == CYCLE_MACHINING || cm->cycle_state == CYCLE_OFF) &&
-//      (cm->machine_state != MACHINE_ALARM) &&          // omitted by OMC (RAS)
+//      (cm->machine_state != MACHINE_ALARM) &&         // omitted by OMC (RAS)
         (cm->machine_state != MACHINE_SHUTDOWN)) {
-        cm->machine_state = (cmMachineState)value[0];    // don't update macs/cycs if we're in the middle of a canned cycle,
-        cm->cycle_state = CYCLE_OFF;                     // or if we're in machine alarm/shutdown mode
+//        cm->machine_state = (cmMachineState)value[0];    // don't update macs/cycs if we're in the middle of a canned cycle,
+        cm->machine_state = machine_state;              // don't update macs/cycs if we're in the middle of a canned cycle,
+        cm->cycle_state = CYCLE_OFF;                    // or if we're in machine alarm/shutdown mode
     }
 
     // reset the rest of the states
@@ -1548,7 +1541,8 @@ static void _exec_program_finalize(float *value, bool *flag)
     mp_zero_segment_velocity();                             // for reporting purposes
 
     // perform the following resets if it's a program END
-    if (((uint8_t)value[0]) == MACHINE_PROGRAM_END) {
+//    if (((uint8_t)value[0]) == MACHINE_PROGRAM_END) {
+    if (machine_state == MACHINE_PROGRAM_END) {
         cm_suspend_origin_offsets();                        // G92.2 - as per NIST
 //      cm_reset_origin_offsets();                          // G92.1 - alternative to above
         cm_set_coord_system(cm->default_coord_system);      // reset to default coordinate system
@@ -1577,39 +1571,34 @@ void cm_cycle_start()
 void cm_cycle_end()
 {
     if(cm->cycle_state == CYCLE_MACHINING) {
-        float value[] = { (float)MACHINE_PROGRAM_STOP, 0,0,0,0,0 };
-        bool flags[]  = { 1,0,0,0,0,0 };
-        _exec_program_finalize(value, flags);
+        float value[] = { (float)MACHINE_PROGRAM_STOP };
+        _exec_program_finalize(value, nullptr);
     }
 }
 
 void cm_canned_cycle_end()
 {
     cm->cycle_state = CYCLE_OFF;
-    float value[] = { (float)MACHINE_PROGRAM_STOP, 0,0,0,0,0 };
-    bool flags[]  = { 1,0,0,0,0,0 };
-    _exec_program_finalize(value, flags);
+    float value[] = { (float)MACHINE_PROGRAM_STOP };
+    _exec_program_finalize(value, nullptr);
 }
 
 void cm_program_stop()
 {
-    float value[] = { (float)MACHINE_PROGRAM_STOP, 0,0,0,0,0 };
-    bool flags[]  = { 1,0,0,0,0,0 };
-    mp_queue_command(_exec_program_finalize, value, flags);
+    float value[] = { (float)MACHINE_PROGRAM_STOP };
+    mp_queue_command(_exec_program_finalize, value, nullptr);
 }
 
 void cm_optional_program_stop()
 {
-    float value[] = { (float)MACHINE_PROGRAM_STOP, 0,0,0,0,0 };
-    bool flags[]  = { 1,0,0,0,0,0 };
-    mp_queue_command(_exec_program_finalize, value, flags);
+    float value[] = { (float)MACHINE_PROGRAM_STOP };
+    mp_queue_command(_exec_program_finalize, value, nullptr);
 }
 
 void cm_program_end()
 {
-    float value[] = { (float)MACHINE_PROGRAM_END, 0,0,0,0,0 };
-    bool flags[]  = { 1,0,0,0,0,0 };
-    mp_queue_command(_exec_program_finalize, value, flags);
+    float value[] = { (float)MACHINE_PROGRAM_END };
+    mp_queue_command(_exec_program_finalize, value, nullptr);
 }
 
 /***********************************************************************************

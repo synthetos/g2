@@ -355,12 +355,7 @@ stat_t mp_json_command(char *json_string)
 {
     // Never supposed to fail, since we stopped parsing when we were full
     jc.write_buffer(json_string);
-
-    // We don't actually use these...
-    float value[] = { 0,0,0,0,0,0 };
-    bool flags[]  = { 0,0,0,0,0,0 };
-
-    mp_queue_command(_exec_json_command, value, flags);
+    mp_queue_command(_exec_json_command, nullptr, nullptr);
     return (STAT_OK);
 }
 

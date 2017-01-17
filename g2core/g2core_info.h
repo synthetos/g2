@@ -21,7 +21,7 @@
 #ifndef G2CORE_INFO_H_ONCE
 #define G2CORE_INFO_H_ONCE
 
-#define G2CORE_FIRMWARE_BUILD			100.19  // fix Issue #209 Random Pauses
+#define G2CORE_FIRMWARE_BUILD			100.19  // dev-195 Laserweb support. Based on feedhold lift branch p24
 #define G2CORE_FIRMWARE_VERSION         0.99
 
 #ifdef GIT_VERSION
