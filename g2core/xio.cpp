@@ -202,7 +202,7 @@ struct xio_t {
         return false;
     };
 
-    bool others_connected(xioDeviceWrapperBase* except) {
+    bool othersConnected(xioDeviceWrapperBase* except) {
         for (int8_t i = 0; i < _dev_count; ++i) {
             if((DeviceWrappers[i] != except) && (!DeviceWrappers[i]->isAlwaysDataAndCtrl()) && DeviceWrappers[i]->isConnected()) {
                 return true;
@@ -211,7 +211,7 @@ struct xio_t {
         return false;
     };
 
-    void remove_data_from_primary() {
+    void removeDataFromPrimary() {
         // Why is this first pass here? -RG
         for (int8_t i = 0; i < _dev_count; ++i) {
             if (DeviceWrappers[i]->isDataAndActive()) {
@@ -226,7 +226,7 @@ struct xio_t {
         }
     };
 
-    bool check_muted_secondary_channels() {
+    bool checkMutedSecondaryChannels() {
         bool muted_something = false;
         for (int8_t i = 0; i < _dev_count; ++i) {
             if (DeviceWrappers[i]->isMuteAsSecondary()) {
@@ -237,7 +237,7 @@ struct xio_t {
         return muted_something;
     }
 
-    bool deactivate_and_unmute_channels() {
+    bool deactivateAndUnmuteChannels() {
         bool unmuted_something = false;
         for(int8_t i = 0; i < _dev_count; ++i) {
             if (DeviceWrappers[i]->isMuted()) {
@@ -327,9 +327,7 @@ struct xio_t {
     void flushToCommand()
     {
         for (int8_t i = 0; i < _dev_count; ++i) {
-            if (DeviceWrappers[i]->flushToCommand()) {
-                return; // we only care to flush the one that last returned a control.
-            }
+            DeviceWrappers[i]->flushToCommand();
         }
     }
 
@@ -505,15 +503,15 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
         uint8_t read_section_idx; // index of the first skip section to skip
         uint8_t write_section_idx; // index of the next skip section to populate
 
-        bool is_full() {
+        bool isFull() {
             return ((write_section_idx+1)&(_section_count-1)) == read_section_idx;
         };
-        bool is_empty() {
+        bool isEmpty() {
             return (write_section_idx == read_section_idx);
         };
 
-        void add_skip(uint16_t start_offset, uint16_t end_offset) {
-            if (!is_empty()) {
+        void addSkip(uint16_t start_offset, uint16_t end_offset) {
+            if (!isEmpty()) {
                 uint8_t last_write_section_idx = write_section_idx;
                 if (write_section_idx == 0) {
                     last_write_section_idx = _section_count-1;
@@ -531,7 +529,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             write_section_idx = ((write_section_idx+1)&(_section_count-1));
         };
 
-        void pop_skip() {
+        void popSkip() {
             _sections[read_section_idx].start_offset = 0;
             _sections[read_section_idx].end_offset = 0;
 
@@ -539,13 +537,13 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
         };
 
         bool skip(volatile uint16_t &from) {
-            if (!is_empty()) {
+            if (!isEmpty()) {
                 SkipSection &next_skip = _sections[read_section_idx];
 
                 if (next_skip.start_offset == from) {
                     from = next_skip.end_offset;
 
-                    pop_skip();
+                    popSkip();
                     return true;
                 }
             }
@@ -559,21 +557,21 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 
     SkipSections _skip_sections;
 
-    uint16_t _get_next_scan_offset() {
+    uint16_t _getNextScanOffset() {
         return ((_scan_offset + 1) & (_size-1));
     }
 
-    bool _is_more_to_scan() {
+    bool _isMoreToScan() {
         return _canBeRead(_scan_offset);
     };
 
     /*
-     * _scan_buffer()
+     * _scanBuffer()
      *
      * Make a pass through the RX DMA buffer to locate any control lines, and count lines.
      * Single character controls, like !, ~, %, and ^x are also considered control "lines"
      *
-     * _scan_buffer() is called at the beginning of readline, and is effectively the first
+     * _scanBuffer() is called at the beginning of readline, and is effectively the first
      * "phase" of readline.
      *
      * This function is designed to be able to exit from almost any point, and
@@ -581,35 +579,35 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
      * end of the buffer then exit. When the function is called next it picks up
      * where it left off - i.e. avoiding rescanning the entire buffer multiple times.
      *
-     * _scan_buffer() returns true if it finds a control line.
+     * _scanBuffer() returns true if it finds a control line.
      * The control line starts at the character at _line_start_offset and includes 
      * the characters up to _scan_offset-1. If there are multiple line-ending chars 
      * ("\r\n" for example) _scan_offset will point to the *first* one.
      *
      * With ASCII art (where "." means "invalid data" or "don't care"):
      *
-     * Example 1 of _scan_buffer() == true:
+     * Example 1 of _scanBuffer() == true:
      *   _data = "G0X10\n{jvm:5}\n{xvm:1200}\nG0Y10\nG1Z......"
      *                   ^        ^
      *                   |        |
      *   _line_start_offset       |
      *                         _scan_offset
      *
-     * Example 2 of _scan_buffer() == true:
+     * Example 2 of _scanBuffer() == true:
      *   _data = "G0X10\n.........{xvm:1200}\nG0Y10\nG1Z......"
      *                            ^           ^
      *                            |           |
      *            _line_start_offset          |
      *                                  _scan_offset
      *
-     * Example 2 of _scan_buffer() == true:
+     * Example 2 of _scanBuffer() == true:
      *   _data = "G0X10\n!......"
      *                   ^^
      *                   ||
      *  _line_start_offset|
      *                    _scan_offset
      *
-     * For _scan_buffer() == false, IGNORE _line_start_offset and _scan_offset!!!
+     * For _scanBuffer() == false, IGNORE _line_start_offset and _scan_offset!!!
      * Only use _read_offset, and use _lines_found>0 to determine if _data contains a line to return.
      * Also note that _read_offset needs to be moved once the data is copied to _line_buffer!
      */
@@ -634,9 +632,9 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
      * true, then the first non \r or \n char will set it to false, and *then* start the next line.
      */
 
-    bool _scan_buffer() {
+    bool _scanBuffer() {
         _last_scan_offset = _scan_offset;
-        while (_is_more_to_scan()) {
+        while (_isMoreToScan()) {
             bool ends_line  = false;
             bool is_control = false;
 
@@ -727,7 +725,8 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                  (c == CHAR_RESET)  ||        // ^X - reset (aka cancel, terminate)
                  (c == CHAR_ALARM)  ||        // ^D - request job kill (end of transmission)
                  (c == '%' && cm_has_hold())  // flush (only in feedhold or part of control header)
-                )) {
+                ))
+            {
 
                 _line_start_offset = _scan_offset;
 
@@ -744,7 +743,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             }
 
             // bump the _scan_offset
-            _scan_offset = _get_next_scan_offset();
+            _scan_offset = _getNextScanOffset();
 
             if (ends_line) {
                 // _scan_offset is now one past the end of the line,
@@ -766,19 +765,19 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 
                 if (is_control) {       // we found a control
                     // Quick check for single-character with a \n after it
-                    while (_is_more_to_scan() &&
+                    while (_isMoreToScan() &&
                            ((_data[_scan_offset] == '\n') ||
                             (_data[_scan_offset] == '\r'))
                            )
                     {
-                        _scan_offset = _get_next_scan_offset();
+                        _scan_offset = _getNextScanOffset();
                     }
                     return true;
                 } else {                // we did find one more line, though.
                     _lines_found++;
                 }
             } // if ends_line
-        } //while (_is_more_to_scan())
+        } //while (_isMoreToScan())
         return false; // no control was found
     };
 
@@ -793,7 +792,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
     char *readline(bool control_only, uint16_t &line_size) {
         // This is tricky: if we don't have room for more skip_sections, then we
         // can't scan any more for controls. So we don't scan, amd hope some lines are read.
-        bool found_control = _skip_sections.is_full() ? false : _scan_buffer();
+        bool found_control = _skip_sections.isFull() ? false : _scanBuffer();
 
         _restartTransfer();
 
@@ -807,7 +806,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             // and update the _read_offset when we update _line_start_offset
             bool ctrl_is_at_beginning_of_data = (_line_start_offset == _read_offset);
             if (!ctrl_is_at_beginning_of_data) {
-                _skip_sections.add_skip(_line_start_offset, _scan_offset);
+                _skip_sections.addSkip(_line_start_offset, _scan_offset);
             }
 
             // When we get here, _line_start_offset points to either:
@@ -873,8 +872,8 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 //                    _lines_found = 0;
 //
 //                    // and clear out any skip sections we have
-//                    while (!_skip_sections.is_empty()) {
-//                        _skip_sections.pop_skip();
+//                    while (!_skip_sections.isEmpty()) {
+//                        _skip_sections.popSkip();
 //                    }
 //                }
 //            }
@@ -967,8 +966,8 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
         _lines_found = 0;
 
         // and clear out any skip sections we have
-        while (!_skip_sections.is_empty()) {
-            _skip_sections.pop_skip();
+        while (!_skip_sections.isEmpty()) {
+            _skip_sections.popSkip();
         }
     }; // flush
 
@@ -998,8 +997,8 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
         _lines_found = 0;
 
         // and clear out any skip sections we have
-        while (!_skip_sections.is_empty()) {
-            _skip_sections.pop_skip();
+        while (!_skip_sections.isEmpty()) {
+            _skip_sections.popSkip();
         }
 
         _last_returned_a_control = false;
@@ -1115,20 +1114,20 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
                     controller_set_connected(true);
 
                     // Case 2b (not ignoring others)
-                    if (isMuteAsSecondary() && xio.others_connected(this)) {
+                    if (isMuteAsSecondary() && xio.othersConnected(this)) {
                         controller_set_muted(true); // something was muted
                     }
 
                     return;
                 }
 
-                if(!xio.others_connected(this)) {
+                if(!xio.othersConnected(this)) {
                     // Case 1
                     setAsPrimaryActiveDualRole();
                     // report that there is now have a connection (only for the first one)
                     controller_set_connected(true);
                     // make sure secondary channels (that don't show up in isConnected) are muted
-                    if (xio.check_muted_secondary_channels()) {
+                    if (xio.checkMutedSecondaryChannels()) {
                         controller_set_muted(true); // something was muted
                     }
                 }
@@ -1140,8 +1139,8 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
                 }
                 else {
                     // Case 2a
-                    xio.remove_data_from_primary();
-                    if (xio.check_muted_secondary_channels()) {
+                    xio.removeDataFromPrimary();
+                    if (xio.checkMutedSecondaryChannels()) {
                         controller_set_muted(true); // something was muted
                     }
                     setAsActiveData();
@@ -1172,23 +1171,23 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
 
                 if (checkForNotActive(oldflags) || isAlwaysDataAndCtrl()) {
                     // Case 5a, 5b
-                } else if (checkForCtrlAndData(oldflags) || !xio.others_connected(this)) {
+                } else if (checkForCtrlAndData(oldflags) || !xio.othersConnected(this)) {
                     // Case 1
-                    if (xio.deactivate_and_unmute_channels()) {
+                    if (xio.deactivateAndUnmuteChannels()) {
                         controller_set_muted(false);  // something was unmuted
                     } else {
                         controller_set_connected(false);
                     }
                 } else if (checkForCtrlAndPrimary(oldflags)) {
                     // Case 2
-                    if (xio.deactivate_and_unmute_channels()) {
+                    if (xio.deactivateAndUnmuteChannels()) {
                         controller_set_muted(false);  // something was unmuted
                     }
                 } else if (checkForCtrl(oldflags)) {
                     // Case 3
                 } else if (checkForData(oldflags)) {
                     // Case 4
-                    xio.remove_data_from_primary();
+                    xio.removeDataFromPrimary();
                 }
             } // flags & DEV_IS_CONNECTED
         }
