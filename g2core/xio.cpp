@@ -199,7 +199,7 @@ struct xio_t {
         return false;
     };
 
-    bool others_connected(xioDeviceWrapperBase* except) {
+    bool othersConnected(xioDeviceWrapperBase* except) {
         for (int8_t i = 0; i < _dev_count; ++i) {
             if((DeviceWrappers[i] != except) && (!DeviceWrappers[i]->isAlwaysDataAndCtrl()) && DeviceWrappers[i]->isConnected()) {
                 return true;
@@ -208,7 +208,7 @@ struct xio_t {
         return false;
     };
 
-    void remove_data_from_primary() {
+    void removeDataFromPrimary() {
         // Why is this first pass here? -RG
         for (int8_t i = 0; i < _dev_count; ++i) {
             if (DeviceWrappers[i]->isDataAndActive()) {
@@ -223,7 +223,7 @@ struct xio_t {
         }
     };
 
-    bool check_muted_secondary_channels() {
+    bool checkMutedSecondaryChannels() {
         bool muted_something = false;
         for (int8_t i = 0; i < _dev_count; ++i) {
             if (DeviceWrappers[i]->isMuteAsSecondary()) {
@@ -234,7 +234,7 @@ struct xio_t {
         return muted_something;
     }
 
-    bool deactivate_and_unmute_channels() {
+    bool deactivateAndUnmuteChannels() {
         bool unmuted_something = false;
         for(int8_t i = 0; i < _dev_count; ++i) {
             if (DeviceWrappers[i]->isMuted()) {
@@ -325,10 +325,6 @@ struct xio_t {
     {
         for (int8_t i = 0; i < _dev_count; ++i) {
             DeviceWrappers[i]->flushToCommand();
-            //if (DeviceWrappers[i]->flushToCommand()) {
-            //    return; // we only care to flush the one that last returned a control.
-            //}
-
         }
     }
 
@@ -470,15 +466,15 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
         uint8_t read_section_idx; // index of the first skip section to skip
         uint8_t write_section_idx; // index of the next skip section to populate
 
-        bool is_full() {
+        bool isFull() {
             return ((write_section_idx+1)&(_section_count-1)) == read_section_idx;
         };
-        bool is_empty() {
+        bool isEmpty() {
             return (write_section_idx == read_section_idx);
         };
 
-        void add_skip(uint16_t start_offset, uint16_t end_offset) {
-            if (!is_empty()) {
+        void addSkip(uint16_t start_offset, uint16_t end_offset) {
+            if (!isEmpty()) {
                 uint8_t last_write_section_idx = write_section_idx;
                 if (write_section_idx == 0) {
                     last_write_section_idx = _section_count-1;
@@ -496,7 +492,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             write_section_idx = ((write_section_idx+1)&(_section_count-1));
         };
 
-        void pop_skip() {
+        void popSkip() {
             _sections[read_section_idx].start_offset = 0;
             _sections[read_section_idx].end_offset = 0;
 
@@ -504,13 +500,13 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
         };
 
         bool skip(volatile uint16_t &from) {
-            if (!is_empty()) {
+            if (!isEmpty()) {
                 SkipSection &next_skip = _sections[read_section_idx];
 
                 if (next_skip.start_offset == from) {
                     from = next_skip.end_offset;
 
-                    pop_skip();
+                    popSkip();
                     return true;
                 }
             }
@@ -524,21 +520,21 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 
     SkipSections _skip_sections;
 
-    uint16_t _get_next_scan_offset() {
+    uint16_t _getNextScanOffset() {
         return ((_scan_offset + 1) & (_size-1));
     }
 
-    bool _is_more_to_scan() {
+    bool _isMoreToScan() {
         return _canBeRead(_scan_offset);
     };
 
     /*
-     * _scan_buffer()
+     * _scanBuffer()
      *
      * Make a pass through the RX DMA buffer to locate any control lines, and count lines.
      * Single character controls, like !, ~, %, and ^x are also considered control "lines"
      *
-     * _scan_buffer() is called at the beginning of readline, and is effectively the first
+     * _scanBuffer() is called at the beginning of readline, and is effectively the first
      * "phase" of readline.
      *
      * This function is designed to be able to exit from almost any point, and
@@ -546,35 +542,35 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
      * end of the buffer then exit. When the function is called next it picks up
      * where it left off - i.e. avoiding rescanning the entire buffer multiple times.
      *
-     * _scan_buffer() returns true if it finds a control line.
+     * _scanBuffer() returns true if it finds a control line.
      * The control line starts at the character at _line_start_offset and includes 
      * the characters up to _scan_offset-1. If there are multiple line-ending chars 
      * ("\r\n" for example) _scan_offset will point to the *first* one.
      *
      * With ASCII art (where "." means "invalid data" or "don't care"):
      *
-     * Example 1 of _scan_buffer() == true:
+     * Example 1 of _scanBuffer() == true:
      *   _data = "G0X10\n{jvm:5}\n{xvm:1200}\nG0Y10\nG1Z......"
      *                   ^        ^
      *                   |        |
      *   _line_start_offset       |
      *                         _scan_offset
      *
-     * Example 2 of _scan_buffer() == true:
+     * Example 2 of _scanBuffer() == true:
      *   _data = "G0X10\n.........{xvm:1200}\nG0Y10\nG1Z......"
      *                            ^           ^
      *                            |           |
      *            _line_start_offset          |
      *                                  _scan_offset
      *
-     * Example 2 of _scan_buffer() == true:
+     * Example 2 of _scanBuffer() == true:
      *   _data = "G0X10\n!......"
      *                   ^^
      *                   ||
      *  _line_start_offset|
      *                    _scan_offset
      *
-     * For _scan_buffer() == false, IGNORE _line_start_offset and _scan_offset!!!
+     * For _scanBuffer() == false, IGNORE _line_start_offset and _scan_offset!!!
      * Only use _read_offset, and use _lines_found>0 to determine if _data contains a line to return.
      * Also note that _read_offset needs to be moved once the data is copied to _line_buffer!
      */
@@ -599,9 +595,9 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
      * true, then the first non \r or \n char will set it to false, and *then* start the next line.
      */
 
-    bool _scan_buffer() {
+    bool _scanBuffer() {
         _last_scan_offset = _scan_offset;
-        while (_is_more_to_scan()) {
+        while (_isMoreToScan()) {
             bool ends_line  = false;
             bool is_control = false;
 
@@ -628,7 +624,8 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                  (c == CHAR_RESET)  ||        // ^X - reset (aka cancel, terminate)
                  (c == CHAR_ALARM)  ||        // ^D - request job kill (end of transmission)
                  (c == '%' && cm_has_hold())  // flush (only in feedhold or part of control header)
-                )) {
+                ))
+            {
 
                 _line_start_offset = _scan_offset;
 
@@ -645,7 +642,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             }
 
             // bump the _scan_offset
-            _scan_offset = _get_next_scan_offset();
+            _scan_offset = _getNextScanOffset();
 
             if (ends_line) {
                 // _scan_offset is now one past the end of the line,
@@ -667,19 +664,19 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 
                 if (is_control) {       // we found a control
                     // Quick check for single-character with a \n after it
-                    while (_is_more_to_scan() &&
+                    while (_isMoreToScan() &&
                            ((_data[_scan_offset] == '\n') ||
                             (_data[_scan_offset] == '\r'))
                            )
                     {
-                        _scan_offset = _get_next_scan_offset();
+                        _scan_offset = _getNextScanOffset();
                     }
                     return true;
                 } else {                // we did find one more line, though.
                     _lines_found++;
                 }
             } // if ends_line
-        } //while (_is_more_to_scan())
+        } //while (_isMoreToScan())
         return false; // no control was found
     };
 
@@ -694,7 +691,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
     char *readline(bool control_only, uint16_t &line_size) {
         // This is tricky: if we don't have room for more skip_sections, then we
         // can't scan any more for controls. So we don't scan, amd hope some lines are read.
-        bool found_control = _skip_sections.is_full() ? false : _scan_buffer();
+        bool found_control = _skip_sections.isFull() ? false : _scanBuffer();
 
         _restartTransfer();
 
@@ -708,7 +705,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             // and update the _read_offset when we update _line_start_offset
             bool ctrl_is_at_beginning_of_data = (_line_start_offset == _read_offset);
             if (!ctrl_is_at_beginning_of_data) {
-                _skip_sections.add_skip(_line_start_offset, _scan_offset);
+                _skip_sections.addSkip(_line_start_offset, _scan_offset);
             }
 
             // When we get here, _line_start_offset points to either:
@@ -774,8 +771,8 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 //                    _lines_found = 0;
 //
 //                    // and clear out any skip sections we have
-//                    while (!_skip_sections.is_empty()) {
-//                        _skip_sections.pop_skip();
+//                    while (!_skip_sections.isEmpty()) {
+//                        _skip_sections.popSkip();
 //                    }
 //                }
 //            }
@@ -868,8 +865,8 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
         _lines_found = 0;
 
         // and clear out any skip sections we have
-        while (!_skip_sections.is_empty()) {
-            _skip_sections.pop_skip();
+        while (!_skip_sections.isEmpty()) {
+            _skip_sections.popSkip();
         }
     }; // flush
 
@@ -899,8 +896,8 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
         _lines_found = 0;
 
         // and clear out any skip sections we have
-        while (!_skip_sections.is_empty()) {
-            _skip_sections.pop_skip();
+        while (!_skip_sections.isEmpty()) {
+            _skip_sections.popSkip();
         }
 
         _last_returned_a_control = false;
@@ -909,6 +906,20 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
     }; // flush
 
 }; // LineRXBuffer
+
+/* xioDeviceWrapper<typename Device>
+ * Implements a xioDeviceWrapperBase around a Device. The Device must implement:
+ *   For RXBuffer:
+ *     const base_type* getRXTransferPosition()
+ *     void setRXTransferDoneCallback(std::function<void()> &&callback)
+ *     bool startRXTransfer(char *&buffer, uint16_t length)
+ *   For TXBuffer:
+ *     const base_type* getTXTransferPosition()
+ *     void setTXTransferDoneCallback(std::function<void()> &&callback)
+ *     bool startTXTransfer(char *&buffer, uint16_t length)
+ *   For xioDeviceWrapper:
+ *     void setConnectionCallback(std::function<void(bool)> &&callback)
+ */
 
 template<typename Device>
 struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for reading and writing
@@ -932,14 +943,6 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
 
         _rx_buffer.init();
         _tx_buffer.init();
-    };
-
-    virtual int16_t readchar() final {
-        if (!isConnected()) {
-            return -1;
-        }
-        return _rx_buffer.read();
-//        return _dev->readByte();                    // readByte calls the USB endpoint's read function
     };
 
     void flush() final {
@@ -979,112 +982,182 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
     };
 
     void connectedStateChanged(bool connected) {
-            if (connected) {
-                if (isNotConnected()) {
-                    // USB0 or UART has just connected
-                    // If one of the devices isAlwaysDataAndCtrl():
-                    //    We treat *it* as if it's the only device connected.
-                    //    We treat *the other devices* as if it's NOT connected.
-                    // Case 1: This is the first channel to connect -
-                    //   set it as CTRL+DATA+PRIMARY channel
-                    //     mark all isMutedAsSecondary() as MUTED, and call controller_set_muted(true) if needed
-                    // Case 2: This is the second (or later) channel to connect -
-                    // Case 2a: This device is !isMuteAsSecondary()
-                    //     set it as DATA channel, remove DATA flag from PRIMARY channel
-                    //     mark all isMutedAsSecondary() as MUTED, and call controller_set_muted(true) if needed
-                    //     ... inactive channels are counted as closed
-                    // Case 2b: This devices isMuteAsSecondary(), and needs to be "muted."
-                    //     set it as a MUTED channel, call controller_set_connected(true)
-                    //       then controller_set_muted(true)
+        if (connected) {
+            if (isNotConnected()) {
+                // USB0 or UART has just connected
+                // If one of the devices isAlwaysDataAndCtrl():
+                //    We treat *it* as if it's the only device connected.
+                //    We treat *the other devices* as if it's NOT connected.
+                // Case 1: This is the first channel to connect -
+                //   set it as CTRL+DATA+PRIMARY channel
+                //     mark all isMutedAsSecondary() as MUTED, and call controller_set_muted(true) if needed
+                // Case 2: This is the second (or later) channel to connect -
+                // Case 2a: This device is !isMuteAsSecondary()
+                //     set it as DATA channel, remove DATA flag from PRIMARY channel
+                //     mark all isMutedAsSecondary() as MUTED, and call controller_set_muted(true) if needed
+                //     ... inactive channels are counted as closed
+                // Case 2b: This devices isMuteAsSecondary(), and needs to be "muted."
+                //     set it as a MUTED channel, call controller_set_connected(true)
+                //       then controller_set_muted(true)
 
 
-                    setAsConnectedAndReady();
+                setAsConnectedAndReady();
 
-                    if (isAlwaysDataAndCtrl()) {
-                        // Case 1 (ignoring others)
-                        setActive();
-                        controller_set_connected(true);
+                if (isAlwaysDataAndCtrl()) {
+                    // Case 1 (ignoring others)
+                    setActive();
+                    controller_set_connected(true);
 
-                        // Case 2b (not ignoring others)
-                        if (isMuteAsSecondary() && xio.others_connected(this)) {
-                            controller_set_muted(true); // something was muted
-                        }
-
-                        return;
+                    // Case 2b (not ignoring others)
+                    if (isMuteAsSecondary() && xio.othersConnected(this)) {
+                        controller_set_muted(true); // something was muted
                     }
 
-                    if(!xio.others_connected(this)) {
-                        // Case 1
-                        setAsPrimaryActiveDualRole();
-                        // report that there is now have a connection (only for the first one)
-                        controller_set_connected(true);
-                        // make sure secondary channels (that don't show up in isConnected) are muted
-                        if (xio.check_muted_secondary_channels()) {
-                            controller_set_muted(true); // something was muted
-                        }
-                    }
-                    else if (isMuteAsSecondary()) {
-                        // Case 2b
-                        setAsMuted();
-                        controller_set_connected(true); // it DID just just get connected
-                        controller_set_muted(true);     // but it muted it too
-                    }
-                    else {
-                        // Case 2a
-                        xio.remove_data_from_primary();
-                        if (xio.check_muted_secondary_channels()) {
-                            controller_set_muted(true); // something was muted
-                        }
-                        setAsActiveData();
-                    }
-                } // flags & DEV_IS_DISCONNECTED
+                    return;
+                }
 
-            } else { // disconnected
-                if (isConnected()) {
-
-                    //USB0 has just disconnected
-                    //Case 1: This channel disconnected while it was a ctrl+data channel (and no other channels are open) -
-                    //  finalize this channel, unmute muted channels
-                    //Case 2: This channel disconnected while it was a primary ctrl channel (and other channels are open) -
-                    //  finalize this channel, unmute muted channels, deactivate other channels
-                    //Case 3: This channel disconnected while it was a non-primary ctrl channel (and other channels are open) -
-                    //  finalize this channel, leave other channels alone
-                    //Case 4: This channel disconnected while it was a data channel (and other channels are open, including a primary)
-                    //  finalize this channel, set primary channel as a CTRL+DATA channel if this was the last data channel
-                    //Case 5a: This channel disconnected while it was inactive
-                    //Case 5b: This channel disconnected when it's always present
-                    //  don't need to do anything!
-                    //... inactive channels are counted as closed
-
-                    devflags_t oldflags = flags;
-                    clearFlags();
-                    flush();
-                    flushRead();
-
-                    if (checkForNotActive(oldflags) || isAlwaysDataAndCtrl()) {
-                        // Case 5a, 5b
-                    } else if (checkForCtrlAndData(oldflags) || !xio.others_connected(this)) {
-                        // Case 1
-                        if (xio.deactivate_and_unmute_channels()) {
-                            controller_set_muted(false);  // something was unmuted
-                        } else {
-                            controller_set_connected(false);
-                        }
-                    } else if (checkForCtrlAndPrimary(oldflags)) {
-                        // Case 2
-                        if (xio.deactivate_and_unmute_channels()) {
-                            controller_set_muted(false);  // something was unmuted
-                        }
-                    } else if (checkForCtrl(oldflags)) {
-                        // Case 3
-                    } else if (checkForData(oldflags)) {
-                        // Case 4
-                        xio.remove_data_from_primary();
+                if(!xio.othersConnected(this)) {
+                    // Case 1
+                    setAsPrimaryActiveDualRole();
+                    // report that there is now have a connection (only for the first one)
+                    controller_set_connected(true);
+                    // make sure secondary channels (that don't show up in isConnected) are muted
+                    if (xio.checkMutedSecondaryChannels()) {
+                        controller_set_muted(true); // something was muted
                     }
-                } // flags & DEV_IS_CONNECTED
-            }
+                }
+                else if (isMuteAsSecondary()) {
+                    // Case 2b
+                    setAsMuted();
+                    controller_set_connected(true); // it DID just just get connected
+                    controller_set_muted(true);     // but it muted it too
+                }
+                else {
+                    // Case 2a
+                    xio.removeDataFromPrimary();
+                    if (xio.checkMutedSecondaryChannels()) {
+                        controller_set_muted(true); // something was muted
+                    }
+                    setAsActiveData();
+                }
+            } // flags & DEV_IS_DISCONNECTED
+
+        } else { // disconnected
+            if (isConnected()) {
+
+                //USB0 has just disconnected
+                //Case 1: This channel disconnected while it was a ctrl+data channel (and no other channels are open) -
+                //  finalize this channel, unmute muted channels
+                //Case 2: This channel disconnected while it was a primary ctrl channel (and other channels are open) -
+                //  finalize this channel, unmute muted channels, deactivate other channels
+                //Case 3: This channel disconnected while it was a non-primary ctrl channel (and other channels are open) -
+                //  finalize this channel, leave other channels alone
+                //Case 4: This channel disconnected while it was a data channel (and other channels are open, including a primary)
+                //  finalize this channel, set primary channel as a CTRL+DATA channel if this was the last data channel
+                //Case 5a: This channel disconnected while it was inactive
+                //Case 5b: This channel disconnected when it's always present
+                //  don't need to do anything!
+                //... inactive channels are counted as closed
+
+                devflags_t oldflags = flags;
+                clearFlags();
+                flush();
+                flushRead();
+
+                if (checkForNotActive(oldflags) || isAlwaysDataAndCtrl()) {
+                    // Case 5a, 5b
+                } else if (checkForCtrlAndData(oldflags) || !xio.othersConnected(this)) {
+                    // Case 1
+                    if (xio.deactivateAndUnmuteChannels()) {
+                        controller_set_muted(false);  // something was unmuted
+                    } else {
+                        controller_set_connected(false);
+                    }
+                } else if (checkForCtrlAndPrimary(oldflags)) {
+                    // Case 2
+                    if (xio.deactivateAndUnmuteChannels()) {
+                        controller_set_muted(false);  // something was unmuted
+                    }
+                } else if (checkForCtrl(oldflags)) {
+                    // Case 3
+                } else if (checkForData(oldflags)) {
+                    // Case 4
+                    xio.removeDataFromPrimary();
+                }
+            } // flags & DEV_IS_CONNECTED
+        }
     };
 };
+
+
+// Specialization for xio_flash_file -- we don't need most of the structure around a Device for xio_flash_file
+template<uint16_t _line_buffer_size = 255>
+struct xioFlashFileDeviceWrapper : xioDeviceWrapperBase {    // describes a device for reading and writing
+    xio_flash_file *_current_file = nullptr;
+
+    char _line_buffer[_line_buffer_size]; // hold exactly one line to return -- flash files are read-only, so we copy it
+
+    xioFlashFileDeviceWrapper() : xioDeviceWrapperBase(DEV_CAN_READ | DEV_IS_ALWAYS_BOTH)
+    {
+    };
+
+    bool sendFile(xio_flash_file &new_file) {
+        if (nullptr != _current_file) {
+            return false; // we're still sending a file
+        }
+
+        _current_file = &new_file;
+        _current_file->reset();
+        setActive();
+        return true;
+    }
+
+    void init() {
+    };
+
+    void flush() final {
+        // nothing to do
+    }
+
+    void flushRead() final {
+        // to flush the file, just forget about it
+        // next time it's used it'll get reset
+        _current_file = nullptr;
+    }
+
+    int16_t write(const char *buffer, int16_t len) final {
+        return -1;
+    }
+
+    char *readline(devflags_t limit_flags, uint16_t &line_size) final {
+        if (nullptr == _current_file) {
+            line_size = 0;
+            return nullptr;
+        }
+
+        const char *from = _current_file->readline(!(limit_flags & DEV_IS_DATA), line_size);
+        if ((nullptr == from) && (_current_file->isDone())) {
+            // all done sending this file, "close" it
+            _current_file = nullptr;
+            clearActive();
+            return nullptr;
+        }
+        char *dst_ptr = _line_buffer;
+
+        uint16_t count = std::min(line_size, uint16_t(_line_buffer_size - 2));
+
+        while (count--) {
+            *dst_ptr++ = *from++;
+        }
+
+        // null-terminate the string
+        *dst_ptr = 0;
+
+        return _line_buffer;
+    };
+};
+
+xioFlashFileDeviceWrapper<> flashFileWrapper {};
 
 // ALLOCATIONS
 // Declare a device wrapper class for SerialUSB and SerialUSB1
@@ -1115,6 +1188,7 @@ xioDeviceWrapper<decltype(&Serial)> serial0Wrapper {
 // Define the xio singleton (and initialize it to hold our two deviceWrappers)
 //xio_t xio = { &serialUSB0Wrapper, &serialUSB1Wrapper };
 xio_t xio = {
+    &flashFileWrapper,
 #if XIO_HAS_USB == 1
     &serialUSB0Wrapper,
 #if USB_SERIAL_PORTS_EXPOSED == 2
@@ -1134,7 +1208,7 @@ xio_t xio = {
  *  A lambda function closure is provided for trapping connection state changes from USB devices.
  *  The function is installed as a callback from the lower USB layers. It is called only on edges
  *  (connect/disconnect transitions). 'Connected' is true if the USB channel has just connected,
- *  false if it has just disconnected. It is only called on an edge � when it changes - so you
+ *  false if it has just disconnected. It is only called on an edge when it changes - so you
  *  shouldn't see two back-to-back connected=true calls with the same callback.
  *
  *  See here for some good info on lambda functions in C++
@@ -1197,6 +1271,14 @@ int16_t xio_writeline(const char *buffer, bool only_to_muted /*= false*/)
 bool xio_connected()
 {
     return xio.connected();
+}
+
+/*
+ * xio_send_file() - send the contents of a xio_flash_file - returns false if there's already one sending
+ */
+
+bool xio_send_file(xio_flash_file &file) {
+    return flashFileWrapper.sendFile(file);
 }
 
 /*
