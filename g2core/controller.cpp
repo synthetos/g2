@@ -171,6 +171,10 @@ static void _controller_HSM()
     DISPATCH(cm_jogging_cycle_callback());      // jog cycle operation
     DISPATCH(cm_deferred_write_callback());     // persist G10 changes when not in machining cycle
 
+#if MARLIN_COMPAT_ENABLED == true
+    DISPATCH(marlin_callback());                // handle marlin stuff - may return EAGAIN, must be after planner_callback!
+#endif
+
 //----- command readers and parsers --------------------------------------------------//
 
     DISPATCH(_sync_to_planner());               // ensure there is at least one free buffer in planning queue

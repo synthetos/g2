@@ -29,6 +29,8 @@
 #include "util.h"
 #include "xio.h"            // for char definitions
 #include "json_parser.h"
+#include "planner.h"
+#include "MotateTimers.h"            // for char definitions
 
 // Structures used
 enum STK500 {
@@ -50,6 +52,24 @@ enum STK500 {
 
 bool temperature_requested = false;
 bool position_requested = false;
+
+// State machine to handle marlin temperature controls
+enum class MarlinSetTempState {
+    Idle = 0,
+    SettingTemperature,
+    StartingUpdates,
+    StartingWait,
+    StoppingUpdates,
+    SettingTemperatureNoWait
+};
+MarlinSetTempState set_temp_state; // record the state for the temperature-control pseudo-cycle
+// These next parameters for the next temperature-control pseudo-cycle are only needed until the calls are queued.
+float next_temperature;            // as it says
+uint8_t next_temperature_tool;     // this is a g2core (1-based) tool
+
+// Information about if we are to be dumping periodic temperature updates
+bool temperature_updates_requested = false;
+Motate::Timeout temperature_update_timeout;
 
 // local helper functions and macros
 
@@ -263,27 +283,122 @@ void marlin_response(const stat_t status, char *buf)
     xio_writeline(buffer);
 }
 
-//stat_t gc_get_gc(nvObj_t *nv)
-//{
-//    ritorno(nv_copy_string(nv, cs.saved_buf));
-//    nv->valuetype = TYPE_STRING;
-//    return (STAT_OK);
-//}
-//
-//stat_t gc_run_gc(nvObj_t *nv)
-//{
-//    return(gcode_parser(*nv->stringp));
-//}
+/*
+ * _marlin_start_temperature_updates()/_marlin_end_temperature_updates() -
+ *    calls from commands in the buffer to manage temperature_updates_requested
+ */
+void _marlin_start_temperature_updates(float* vect, bool* flag) {
+    temperature_updates_requested = true;
+    temperature_update_timeout.set(1); // immediately
+}
 
-/***********************************************************************************
- * TEXT MODE SUPPORT
- * Functions to print variables from the cfgArray table
- ***********************************************************************************/
+void _marlin_end_temperature_updates(float* vect, bool* flag) {
+    temperature_updates_requested = false;
+}
 
-#ifdef __TEXT_MODE
+/*
+ * _queue_next_temperature_comands() - returns true if it finished
+ */
+bool _queue_next_temperature_commands()
+{
+    if (MarlinSetTempState::Idle != set_temp_state) {
+        if (mp_planner_is_full()) {
+            return false;
+        }
 
-// no text mode functions here. Move along
+        char buffer[128];
+        char *str = buffer;
 
-#endif // __TEXT_MODE
+        if ((MarlinSetTempState::SettingTemperature == set_temp_state) ||
+            (MarlinSetTempState::SettingTemperatureNoWait == set_temp_state))
+        {
+            str += sprintf(str, "{he%dst:%.2f}", next_temperature_tool, next_temperature);
+            cm_json_command(buffer);
+
+            if (MarlinSetTempState::SettingTemperatureNoWait == set_temp_state) {
+                set_temp_state = MarlinSetTempState::Idle;
+                return true;
+            }
+
+            set_temp_state = MarlinSetTempState::StartingUpdates;
+            if (mp_planner_is_full()) {
+                return false;
+            }
+        }
+
+        if (MarlinSetTempState::StartingUpdates == set_temp_state) {
+            mp_queue_command(_marlin_start_temperature_updates, nullptr, nullptr);
+
+            set_temp_state = MarlinSetTempState::StartingWait;
+            if (mp_planner_is_full()) {
+                return false;
+            }
+        }
+
+        if (MarlinSetTempState::StartingWait == set_temp_state) {
+            str = buffer;
+            str += sprintf(str, "{he%dat:t}", next_temperature_tool);
+            cm_json_wait(buffer);
+
+            set_temp_state = MarlinSetTempState::StoppingUpdates;
+            if (mp_planner_is_full()) {
+                return false;
+            }
+        }
+
+        if (MarlinSetTempState::StoppingUpdates == set_temp_state) {
+            mp_queue_command(_marlin_end_temperature_updates, nullptr, nullptr);
+
+            set_temp_state = MarlinSetTempState::Idle;
+        }
+    }
+
+    return true;
+}
+
+/*
+ * marlin_callback() - called by controller dispatcher - return STAT_EAGAIN if it failed
+ */
+stat_t marlin_callback()
+{
+    if (temperature_updates_requested && (temperature_update_timeout.isPast())) {
+        char buffer[128];
+        char *str = buffer;
+
+        _report_temperatures(str);
+
+        *str++ = '\n';
+        *str++ = 0;
+
+        temperature_update_timeout.set(1000); // every second
+        
+        xio_writeline(buffer);
+    } // temperature updates
+
+    if (!_queue_next_temperature_commands()) {
+        return STAT_EAGAIN;
+    }
+
+    return STAT_OK;
+}
+
+
+stat_t marlin_set_temperature(uint8_t tool, float temperature, bool wait) {
+    if (MarlinSetTempState::Idle != set_temp_state) {
+        return (STAT_BUFFER_FULL_FATAL); // this shouldn't happen
+    }
+    if ((tool < 0) || (tool > 3)) {
+        return STAT_INPUT_VALUE_RANGE_ERROR;
+    }
+
+    set_temp_state = wait ? MarlinSetTempState::SettingTemperature : MarlinSetTempState::SettingTemperatureNoWait;
+    next_temperature = temperature;
+
+    // Note the conversion from a "marlin" tool (zero-base) to a g2core tool (1-based)
+    next_temperature_tool = tool + 1;
+
+    _queue_next_temperature_commands(); // we can ignore the return
+    return (STAT_OK);
+}
 
 #endif // MARLIN_COMPAT_ENABLED == true

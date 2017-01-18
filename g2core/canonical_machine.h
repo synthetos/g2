@@ -176,7 +176,13 @@ typedef enum {                          // these are in order to optimized CASE 
     NEXT_ACTION_SUSPEND_ORIGIN_OFFSETS, // G92.2
     NEXT_ACTION_RESUME_ORIGIN_OFFSETS,  // G92.3
     NEXT_ACTION_JSON_COMMAND_SYNC,      // M100
-    NEXT_ACTION_JSON_WAIT               // M101
+    NEXT_ACTION_JSON_COMMAND_ASYNC,     // M100.1
+    NEXT_ACTION_JSON_WAIT,              // M101
+
+#if MARLIN_COMPAT_ENABLED == true
+    NEXT_ACTION_MARLIN_SET_EXTRUDER_TEMP,      // 104, 109
+    NEXT_ACTION_MARLIN_SET_BED_TEMP,           // 140, 190
+#endif
 } cmNextAction;
 
 typedef enum {                          // G Modal Group 1

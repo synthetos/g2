@@ -76,6 +76,8 @@ typedef struct GCodeInputValue {    // Gcode inputs - meaning depends on context
 #if MARLIN_COMPAT_ENABLED == true
     bool marlin_temp_requested;     // M105 temperature report request (Marlin-only)
     bool marlin_position_requested; // M114 position report request (Marlin-only)
+
+    bool marlin_wait_for_temp;      // M140 or M190 - wait for temperature (Marlin-only)
 #endif
 } GCodeValue_t;
 
@@ -700,6 +702,12 @@ stat_t _parse_gcode_block(char *buf, char *active_comment)
 #warning MARLIN_COMPAT_ENABLED
                 case 105: SET_NON_MODAL (marlin_temp_requested, true);
                 case 114: SET_NON_MODAL (marlin_position_requested, true);
+
+                case 140: gv.marlin_wait_for_temp = true; // NO break!
+                case 104: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_SET_EXTRUDER_TEMP);
+
+                case 190: gv.marlin_wait_for_temp = true; // NO break!
+                case 109: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_SET_BED_TEMP);
 #endif // MARLIN_COMPAT_ENABLED
 
                 default: status = STAT_MCODE_COMMAND_UNSUPPORTED;
@@ -782,6 +790,40 @@ stat_t _execute_gcode_block(char *active_comment)
     cm_set_model_linenum(gv.linenum);
     EXEC_FUNC(cm_set_feed_rate_mode, feed_rate_mode);       // G93, G94
     EXEC_FUNC(cm_set_feed_rate, F_word);                    // F
+
+#if MARLIN_COMPAT_ENABLED == true
+    // Handle Marlin specifics
+    // must be before we deal with S_word and P_word, since it MIGHT use those
+    if (gf.marlin_temp_requested) {                         // M105
+        js.json_mode = MARLIN_COMM_MODE; // we use M105 to know when to switch
+        ritorno(marlin_request_temperature_report());
+    }
+    if (gf.marlin_position_requested) {                     // M114
+        js.json_mode = MARLIN_COMM_MODE; // we use M105 to know when to switch
+        ritorno(marlin_request_position_report());
+    }
+    switch (gv.next_action) {
+        case NEXT_ACTION_MARLIN_SET_EXTRUDER_TEMP:  {       // M104 or M140
+            float temp = 0;
+            if (gf.S_word) { temp = gv.S_word; }
+            if (gf.P_word) { temp = gv.P_word; } // we treat them the same, for now
+            status = marlin_set_temperature(cm.gm.tool_select, temp, gv.marlin_wait_for_temp);
+            return status;
+            break;
+        }
+        case NEXT_ACTION_MARLIN_SET_BED_TEMP:       {       // M109 or M190
+            float temp = 0;
+            if (gf.S_word) { temp = gv.S_word; }
+            if (gf.P_word) { temp = gv.P_word; } // we treat them the same, for now
+
+            // Note: tool is zero-based, so to gt he3 (the bed) we pass tool as 2
+            status = marlin_set_temperature(2, temp, gv.marlin_wait_for_temp);
+            return status;
+            break;
+        }
+    }
+#endif // MARLIN_COMPAT_ENABLED
+
     EXEC_FUNC(cm_set_spindle_speed, S_word);                // S
     if (gf.sso_control) {                                   // spindle speed override
         ritorno(cm_sso_control(gv.P_word, gf.P_word));
@@ -882,20 +924,6 @@ stat_t _execute_gcode_block(char *active_comment)
             cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_OFF);     // un-set absolute override once the move is planned
         }
     }
-
-#if MARLIN_COMPAT_ENABLED == true
-    // Handle Marlin specifics
-    if (gf.marlin_temp_requested) {                                   // spindle speed override
-        js.json_mode = MARLIN_COMM_MODE; // we use M105 to know when to switch
-        ritorno(marlin_request_temperature_report());
-    }
-    if (gf.marlin_position_requested) {                                   // spindle speed override
-        js.json_mode = MARLIN_COMM_MODE; // we use M105 to know when to switch
-        ritorno(marlin_request_position_report());
-    }
-#endif // MARLIN_COMPAT_ENABLED
-
-
 
     // do the program stops and ends : M0, M1, M2, M30, M60
     if (gf.program_flow == true) {
