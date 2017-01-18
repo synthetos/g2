@@ -173,6 +173,10 @@ struct xioDeviceWrapperBase {                // C++ base class for device primit
     virtual int16_t write(const char *buffer, int16_t len) { return -1; };
 
     virtual char *readline(devflags_t limit_flags, uint16_t &size) { return nullptr; };
+
+#if MARLIN_COMPAT_ENABLED == true
+    virtual void exitFakeBootloaderMode() {};
+#endif
 };
 
 // Here we create the xio_t class, which has convenience methods to handle cross-device actions as a whole.
@@ -397,6 +401,14 @@ struct xio_t {
         return (NULL);
     };
 
+#if MARLIN_COMPAT_ENABLED == true
+    void exitFakeBootloaderMode() {
+        for (int8_t i = 0; i < _dev_count; ++i) {
+            DeviceWrappers[i]->exitFakeBootloaderMode();
+        }
+    };
+#endif
+
     uint16_t magic_end;
 };
 
@@ -446,6 +458,32 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
     volatile uint16_t _last_scan_offset;  // DEBUGGING
 
     bool _last_returned_a_control = false;
+
+#if MARLIN_COMPAT_ENABLED == true
+    enum class STK500V2_State {
+        Done,      // not in the faked stk500v2 bootloader
+        Timeout,   // timeout period, waiting for a start character
+        Start,     // waiting for 0x1B
+        Sequence,  // waiting for sequence byte
+        Length_0,  // waiting for MSB of length
+        Length_1,  // waiting for LSB of length
+        Header_End,// waiting for 0x0E
+        Data,      // waiting for more data
+        Checksum   // waiting for checksum byte
+    };
+    STK500V2_State _stk_parser_state;
+    uint16_t _stk_packet_data_length;
+    Motate::Timeout _stk_timeout;
+
+    void startFakeBootloaderMode() {
+        _stk_parser_state = STK500V2_State::Timeout;
+        _stk_timeout.set(2000); // two seconds
+    }
+
+    void exitFakeBootloaderMode() {
+        _stk_parser_state = STK500V2_State::Done;
+    }
+#endif
 
     LineRXBuffer(owner_type owner) : parent_type{owner} {};
 
@@ -610,6 +648,70 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                 return false;
             }
 
+#if MARLIN_COMPAT_ENABLED == true
+            // it's possible something will try to talk stk500v2 to us.
+            // See https://github.com/synthetos/g2/wiki/Marlin-Compatibility#stk500v2
+            if (_stk_parser_state >= STK500V2_State::Timeout)
+            {
+                if (_stk_parser_state == STK500V2_State::Timeout) {
+                    if (_stk_timeout.isPast()) {
+                        _stk_parser_state = STK500V2_State::Done;
+                        // start over, outside of stk500v2 mode
+                        continue;
+                    }
+                    // if we got something before the timeout, then we're in stk500v2 mode
+                    // we'll look at what we got and maybe exit anyway
+                    _stk_parser_state = STK500V2_State::Start;
+                }
+                if (_stk_parser_state == STK500V2_State::Start) {
+                    if (c == 0x1B) {
+                        _stk_parser_state = STK500V2_State::Sequence;
+
+                        // this is the start of this "line" and we can "read" (skip) everything up to here.
+                        _read_offset = _scan_offset;
+                        _line_start_offset = _scan_offset;
+                    }
+                    else if ((c == '{') || (c == '\n') || (c == '\r') || (c == 'G') || (c == 'M')) {
+                        // jump out of bootloader mode
+                        _stk_parser_state = STK500V2_State::Done;
+                        continue;
+                    }
+
+                } else if (_stk_parser_state == STK500V2_State::Sequence) {
+                    // we ignore the sequence
+                    _stk_parser_state = STK500V2_State::Length_0;
+                } else if (_stk_parser_state == STK500V2_State::Length_0) {
+                    _stk_packet_data_length = c << 8;
+                    _stk_parser_state = STK500V2_State::Length_1;
+                } else if (_stk_parser_state == STK500V2_State::Length_1) {
+                    _stk_packet_data_length |= c;
+                    _stk_parser_state = STK500V2_State::Header_End;
+                } else if (_stk_parser_state == STK500V2_State::Header_End) {
+                    if (c == 0x0E) {
+                        _stk_parser_state = STK500V2_State::Data;
+                    } else {
+                        // end-of-header marker was corrupt, start over
+                        _stk_packet_data_length = 0;
+                        _stk_parser_state = STK500V2_State::Start;
+                    }
+                } else if (_stk_parser_state == STK500V2_State::Data) {
+
+                    // we don't read the data here, just return it
+                    if (--_stk_packet_data_length == 0) {
+                        _stk_parser_state = STK500V2_State::Checksum;
+                    }
+                } else if (_stk_parser_state == STK500V2_State::Checksum) {
+                    // we do NOT check the checksum, since if it's corrupt, we
+                    // need to reply, and we can't reply here.
+
+                    // at this point, we at least have a complete packet
+                    // we will use the "control" return machanism to handle this
+                    // since controls don't have to be \r\n-terminated
+                    is_control = true;
+                }
+            }
+            else
+#endif
             // Look for line endings
             if (c == '\r' || c == '\n') {
                 if (!_at_start_of_line) {   // We only mark ends_line for the first end-line char, and if
@@ -1003,6 +1105,10 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
 
                 setAsConnectedAndReady();
 
+#if MARLIN_COMPAT_ENABLED == true
+                _rx_buffer.startFakeBootloaderMode();
+#endif
+
                 if (isAlwaysDataAndCtrl()) {
                     // Case 1 (ignoring others)
                     setActive();
@@ -1087,6 +1193,13 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
             } // flags & DEV_IS_CONNECTED
         }
     };
+
+#if MARLIN_COMPAT_ENABLED == true
+    void exitFakeBootloaderMode() override {
+        _rx_buffer.exitFakeBootloaderMode();
+    };
+#endif
+
 };
 
 
@@ -1288,6 +1401,16 @@ bool xio_send_file(xio_flash_file &file) {
 void xio_flush_to_command() {
     return xio.flushToCommand();
 }
+
+#if MARLIN_COMPAT_ENABLED == true
+/*
+ * xio_end_fake_bootloader() - end the fake bootloader mode
+ */
+
+void xio_exit_fake_bootloader() {
+    return xio.exitFakeBootloaderMode();
+}
+#endif
 
 /***********************************************************************************
  * newlib-nano support functions

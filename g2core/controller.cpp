@@ -48,6 +48,10 @@
 
 #include "MotatePower.h"
 
+#if MARLIN_COMPAT_ENABLED == true
+#include "marlin_compatibility.h"
+#endif
+
 /***********************************************************************************
  **** STRUCTURE ALLOCATIONS *********************************************************
  ***********************************************************************************/
@@ -221,7 +225,15 @@ static void _dispatch_kernel(const devflags_t flags)
         // It's possible to let some stuff through, but that's not happening yet.
         return;
     }
-    
+
+#if MARLIN_COMPAT_ENABLED == true
+    if (marlin_handle_fake_stk500(cs.bufp)) {
+        cs.comm_mode = MARLIN_COMM_MODE;
+        js.json_mode = MARLIN_COMM_MODE;
+        return;
+    }
+#endif
+
     while ((*cs.bufp == SPC) || (*cs.bufp == TAB)) {        // position past any leading whitespace
         cs.bufp++;
     }
@@ -263,6 +275,12 @@ static void _dispatch_kernel(const devflags_t flags)
         text_response(gcode_parser(cs.bufp), cs.saved_buf);
     }
 #endif
+#if MARLIN_COMPAT_ENABLED == true
+    else if (js.json_mode == MARLIN_COMM_MODE) {                   // handle marlin-specific protocol gcode
+        cs.comm_request_mode = MARLIN_COMM_MODE;                   // mode of this command
+        marlin_response(gcode_parser(cs.bufp), cs.saved_buf);
+    }
+#endif
     else {  // anything else is interpreted as Gcode
         cs.comm_request_mode = JSON_MODE;                   // mode of this command
 
@@ -272,6 +290,16 @@ static void _dispatch_kernel(const devflags_t flags)
         nv_copy_string(nv, cs.bufp);                        // copy the Gcode line
         nv->valuetype = TYPE_STRING;
         status = gcode_parser(cs.bufp);
+#if MARLIN_COMPAT_ENABLED == true
+        if (js.json_mode == MARLIN_COMM_MODE) {             // in case a marlin-specific M-code was found
+            cs.comm_request_mode = MARLIN_COMM_MODE;        // mode of this command
+            // We ae switching to marlin_comm_mode, kill status reports and queue reports
+            sr.status_report_verbosity = SR_OFF;
+            qr.queue_report_verbosity = QR_OFF;
+            marlin_response(gcode_parser(cs.bufp), cs.saved_buf);
+            return;
+        }
+#endif
         nv_print_list(status, TEXT_NO_PRINT, JSON_RESPONSE_FORMAT);
         sr_request_status_report(SR_REQUEST_TIMED);         // generate incremental status report to show any changes
     }

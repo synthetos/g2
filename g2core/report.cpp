@@ -111,7 +111,8 @@ void rpt_print_loading_configs_message(void)
 
 void rpt_print_system_ready_message(void)
 {
-    _startup_helper(STAT_OK, "SYSTEM READY");
+#warning DEAL WITH STARTUP MESSAGE
+    //_startup_helper(STAT_OK, "SYSTEM READY");
     if (cs.comm_mode == TEXT_MODE) { text_response(STAT_OK, (char *)"");}// prompt
 }
 

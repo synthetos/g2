@@ -29,5 +29,11 @@
  */
 
 stat_t marlin_verify_checksum(char *str);
+bool marlin_handle_fake_stk500(char *str);
+
+stat_t marlin_request_temperature_report(); // M105
+stat_t marlin_request_position_report();    // M114
+
+void marlin_response(const stat_t status, char *buf);
 
 #endif  // End of include guard: MARLIN_COMPAT_H_ONCE

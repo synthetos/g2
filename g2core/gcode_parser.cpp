@@ -30,6 +30,7 @@
 
 #if MARLIN_COMPAT_ENABLED == true
 #include "marlin_compatibility.h"
+#include "json_parser.h" // so we can switch js.comm_mode on a marlin M-code
 #endif
 
 // Structures used by Gcode parser
@@ -71,6 +72,11 @@ typedef struct GCodeInputValue {    // Gcode inputs - meaning depends on context
     bool mfo_control;               // M50 feedrate override control
     bool mto_control;               // M50.1 traverse override control
     bool sso_control;               // M51 spindle speed override control
+
+#if MARLIN_COMPAT_ENABLED == true
+    bool marlin_temp_requested;     // M105 temperature report request (Marlin-only)
+    bool marlin_position_requested; // M114 position report request (Marlin-only)
+#endif
 } GCodeValue_t;
 
 typedef struct GCodeFlags {         // Gcode input flags
@@ -110,6 +116,11 @@ typedef struct GCodeFlags {         // Gcode input flags
     bool mfo_control;
     bool mto_control;
     bool sso_control;
+
+#if MARLIN_COMPAT_ENABLED == true
+    bool marlin_temp_requested;
+    bool marlin_position_requested;
+#endif
 } GCodeFlag_t;
 
 typedef struct GCodeParser {
@@ -684,6 +695,13 @@ stat_t _parse_gcode_block(char *buf, char *active_comment)
                 case 51: SET_MODAL (MODAL_GROUP_M9, sso_control, true);
                 case 100: SET_NON_MODAL (next_action, NEXT_ACTION_JSON_COMMAND_SYNC);
                 case 101: SET_NON_MODAL (next_action, NEXT_ACTION_JSON_WAIT);
+
+#if MARLIN_COMPAT_ENABLED == true
+#warning MARLIN_COMPAT_ENABLED
+                case 105: SET_NON_MODAL (marlin_temp_requested, true);
+                case 114: SET_NON_MODAL (marlin_position_requested, true);
+#endif // MARLIN_COMPAT_ENABLED
+
                 default: status = STAT_MCODE_COMMAND_UNSUPPORTED;
             }
             break;
@@ -864,6 +882,20 @@ stat_t _execute_gcode_block(char *active_comment)
             cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_OFF);     // un-set absolute override once the move is planned
         }
     }
+
+#if MARLIN_COMPAT_ENABLED == true
+    // Handle Marlin specifics
+    if (gf.marlin_temp_requested) {                                   // spindle speed override
+        js.json_mode = MARLIN_COMM_MODE; // we use M105 to know when to switch
+        ritorno(marlin_request_temperature_report());
+    }
+    if (gf.marlin_position_requested) {                                   // spindle speed override
+        js.json_mode = MARLIN_COMM_MODE; // we use M105 to know when to switch
+        ritorno(marlin_request_position_report());
+    }
+#endif // MARLIN_COMPAT_ENABLED
+
+
 
     // do the program stops and ends : M0, M1, M2, M30, M60
     if (gf.program_flow == true) {
