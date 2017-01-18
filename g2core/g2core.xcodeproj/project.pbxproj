@@ -206,7 +206,7 @@
 /* Begin PBXLegacyTarget section */
 		D4037C091CDA42F300BC72AD /* G2 printrboardG2v3 PrintrbotPlus */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=PrintrbotPlus BOARD=printrboardG2v3 DEBUG=2";
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=PrintrbotPlus BOARD=printrboardG2v3 DEBUG=1";
 			buildConfigurationList = D4037C0A1CDA42F300BC72AD /* Build configuration list for PBXLegacyTarget "G2 printrboardG2v3 PrintrbotPlus" */;
 			buildPhases = (
 			);
