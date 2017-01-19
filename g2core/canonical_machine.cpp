@@ -130,7 +130,7 @@ static void _exec_select_tool(float *value, bool *flag);
 static void _exec_absolute_origin(float *value, bool *flag);
 static void _exec_program_finalize(float *value, bool *flag);
 
-static int8_t _axis(const index_t index);
+static int8_t _axis(const nvObj_t *nv);
 
 /***********************************************************************************
  **** CODE *************************************************************************
@@ -1637,15 +1637,10 @@ stat_t cm_json_wait(char *json_string)
  * cm_get_axis_char() - return ASCII char for axis given the axis number
  */
 
-static int8_t _coord(char *token) // extract coordinate system from 3rd character
+static int8_t _coord(nvObj_t *nv)   // extract coordinate system from 3rd character
 {
-    char *ptr;
-    char coord_list[] = {"456789"};
-
-    if ((ptr = strchr(coord_list, token[2])) == NULL) { // test the 3rd character against the string
-        return (-1);
-    }
-    return (ptr - coord_list);
+    char *ptr = ((*nv->group == 0) ? &nv->token[1] : &nv->group[1]); // skip past the 'g' to the number
+    return (max ((atoi(ptr)-54), -1));  // return G54-G59 as 0-5, error as -1
 }
 
 /* _axis()
@@ -1666,35 +1661,37 @@ static int8_t _coord(char *token) // extract coordinate system from 3rd characte
  *  such as 'coph' But it should not be called in these cases in any event.
  */
 
-static int8_t _axis(const index_t index)
+
+static int8_t _axis(const nvObj_t *nv)
 {
     // test if this is a SYS parameter (global), in which case there will be no axis    
-    if (strcmp("sys", cfgArray[index].group) == 0) {
+    if (strcmp("sys", cfgArray[nv->index].group) == 0) {
         return (AXIS_TYPE_SYSTEM);
     }
 
     // if the leading character of the token is a number it's a motor
-    char c = cfgArray[index].token[0];
-    if (isdigit(cfgArray[index].token[0])) {
-        return(st_cfg.mot[c-0x31].motor_map);
+    char c = cfgArray[nv->index].token[0];
+
+    if (isdigit(c)) {
+        return(st_cfg.mot[c-0x31].motor_map);   // return the axis associated with the motor
     }
 
     // otherwise it's an axis. Or undefined, which is usually a global.
     char *ptr;
     char axes[] = {"xyzabc"};
 
-    if ((ptr = strchr(axes, c)) == NULL) {                               // test for prefixed axis
-        c = *(cfgArray[index].token + strlen(cfgArray[index].token) -1); // test for postfixed axis
-        if ((ptr = strchr(axes, c)) == NULL) {
+    if ((ptr = strchr(axes, c)) == NULL) {      // not NULL indicates a prefixed axis
+        c = *(cfgArray[nv->index].token + strlen(cfgArray[nv->index].token) -1); // get the last character
+        if ((ptr = strchr(axes, c)) == NULL) {  // test for a postfixed axis
             return (AXIS_TYPE_UNDEFINED);
         }
     }
     return (ptr - axes);
 }
 
-cmAxisType cm_get_axis_type(const index_t index)
+cmAxisType cm_get_axis_type(const nvObj_t *nv)
 {
-    int8_t axis = _axis(index);
+    int8_t axis = _axis(nv);
     if (axis <= AXIS_TYPE_UNDEFINED) {
         return ((cmAxisType)axis);
     }
@@ -1749,7 +1746,7 @@ float cm_get_jogging_dest(void)
 stat_t cm_run_jog(nvObj_t *nv)
 {
     set_float(nv, cm->jogging_dest);
-    cm_jogging_cycle_start(_axis(nv->index));
+    cm_jogging_cycle_start(_axis(nv));
     return (STAT_OK);
 }
 
@@ -1975,24 +1972,23 @@ stat_t cm_get_vel(nvObj_t *nv)
 }
 
 stat_t cm_get_feed(nvObj_t *nv) { return (get_float(nv, cm_get_feed_rate(ACTIVE_MODEL))); }
-stat_t cm_get_pos(nvObj_t *nv)  { return (get_float(nv, cm_get_work_position(ACTIVE_MODEL, _axis(nv->index)))); }
-stat_t cm_get_mpo(nvObj_t *nv)  { return (get_float(nv, cm_get_absolute_position(ACTIVE_MODEL, _axis(nv->index)))); }
-stat_t cm_get_ofs(nvObj_t *nv)  { return (get_float(nv, cm_get_work_offset(ACTIVE_MODEL, _axis(nv->index)))); }
+stat_t cm_get_pos(nvObj_t *nv)  { return (get_float(nv, cm_get_work_position(ACTIVE_MODEL, _axis(nv)))); }
+stat_t cm_get_mpo(nvObj_t *nv)  { return (get_float(nv, cm_get_absolute_position(ACTIVE_MODEL, _axis(nv)))); }
+stat_t cm_get_ofs(nvObj_t *nv)  { return (get_float(nv, cm_get_work_offset(ACTIVE_MODEL, _axis(nv)))); }
 
-stat_t cm_get_home(nvObj_t *nv) { return(_get_msg_helper(nv, msg_home, cm_get_homing_state()));}
+stat_t cm_get_home(nvObj_t *nv) { return(_get_msg_helper(nv, msg_home, cm_get_homing_state())); }
 stat_t cm_set_home(nvObj_t *nv) { return (set_int(nv, ((uint8_t &)(cm->homing_state)), false, true)); }
-stat_t cm_get_hom(nvObj_t *nv)  { return (get_int(nv, cm->homed[_axis(nv->index)])); }
+stat_t cm_get_hom(nvObj_t *nv)  { return (get_int(nv, cm->homed[_axis(nv)])); }
 
-stat_t cm_get_prob(nvObj_t *nv) { return(_get_msg_helper(nv, msg_probe, cm_get_probe_state()));}
-stat_t cm_get_prb(nvObj_t *nv)  { return (get_float(nv, cm->probe_results[0][_axis(nv->index)])); }
+stat_t cm_get_prob(nvObj_t *nv) { return(_get_msg_helper(nv, msg_probe, cm_get_probe_state())); }
+stat_t cm_get_prb(nvObj_t *nv)  { return (get_float(nv, cm->probe_results[0][_axis(nv)])); }
 
-stat_t cm_get_coord(nvObj_t *nv) { return (get_float(nv, cm->offset[_coord(nv->token)][_axis(nv->index)]));}
-stat_t cm_set_coord(nvObj_t *nv) { return (set_float(nv, cm->offset[_coord(nv->token)][_axis(nv->index)]));}
+stat_t cm_get_coord(nvObj_t *nv) { return (get_float(nv, cm->offset[_coord(nv)][_axis(nv)])); }
+stat_t cm_set_coord(nvObj_t *nv) { return (set_float(nv, cm->offset[_coord(nv)][_axis(nv)])); }
 
-stat_t cm_get_g92(nvObj_t *nv)   { return (get_float(nv, cm->gmx.origin_offset[_axis(nv->index)]));}
-stat_t cm_get_g28(nvObj_t *nv)   { return (get_float(nv, cm->gmx.g28_position[_axis(nv->index)]));}
-stat_t cm_get_g30(nvObj_t *nv)   { return (get_float(nv, cm->gmx.g30_position[_axis(nv->index)]));}
-
+stat_t cm_get_g92(nvObj_t *nv)   { return (get_float(nv, cm->gmx.origin_offset[_axis(nv)])); }
+stat_t cm_get_g28(nvObj_t *nv)   { return (get_float(nv, cm->gmx.g28_position[_axis(nv)])); }
+stat_t cm_get_g30(nvObj_t *nv)   { return (get_float(nv, cm->gmx.g30_position[_axis(nv)])); }
 
 /*****************************************************
  **** TOOL TABLE AND OFFSET GET AND SET FUNCTIONS ****
@@ -2006,8 +2002,8 @@ static uint8_t _tool(nvObj_t *nv)
     return (atoi(&nv->token[2]));       // ttNNx is all in the token
 }
 
-stat_t cm_get_tof(nvObj_t *nv) { return (get_float(nv, cm->tl_offset[_axis(nv->index)])); }
-stat_t cm_set_tof(nvObj_t *nv) { return (set_float(nv, cm->tl_offset[_axis(nv->index)])); }
+stat_t cm_get_tof(nvObj_t *nv) { return (get_float(nv, cm->tl_offset[_axis(nv)])); }
+stat_t cm_set_tof(nvObj_t *nv) { return (set_float(nv, cm->tl_offset[_axis(nv)])); }
 
 stat_t cm_get_tt(nvObj_t *nv)
 {   
@@ -2015,7 +2011,7 @@ stat_t cm_get_tt(nvObj_t *nv)
     if (toolnum > TOOLS) {
         return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
-    return (get_float(nv, tt.tt_offset[toolnum][_axis(nv->index)]));
+    return (get_float(nv, tt.tt_offset[toolnum][_axis(nv)]));
 }
 
 stat_t cm_set_tt(nvObj_t *nv)
@@ -2024,7 +2020,7 @@ stat_t cm_set_tt(nvObj_t *nv)
     if (toolnum > TOOLS) {
         return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
-    return(set_float(nv, tt.tt_offset[toolnum][_axis(nv->index)]));
+    return(set_float(nv, tt.tt_offset[toolnum][_axis(nv)]));
 }
 
 /************************************
@@ -2044,14 +2040,14 @@ stat_t cm_set_tt(nvObj_t *nv)
 
 stat_t cm_get_am(nvObj_t *nv)
 {
-    int8_t axis = _axis(nv->index);
+    int8_t axis = _axis(nv);
     nv->value = (float)cm->a[axis].axis_mode;
     return(_get_msg_helper(nv, msg_am, nv->value));
 }
 
 stat_t cm_set_am(nvObj_t *nv)        // axis mode
 {
-    if (cm_get_axis_type(nv->index) == AXIS_TYPE_LINEAR) {
+    if (cm_get_axis_type(nv) == AXIS_TYPE_LINEAR) {
         if (nv->value > AXIS_MODE_LINEAR_MAX) { 
             nv->valuetype = TYPE_NULL;
             return (STAT_INPUT_EXCEEDS_MAX_VALUE);
@@ -2063,16 +2059,16 @@ stat_t cm_set_am(nvObj_t *nv)        // axis mode
         }
     }
     nv->valuetype = TYPE_INT;
-    cm->a[_axis(nv->index)].axis_mode = (cmAxisMode)nv->value;
+    cm->a[_axis(nv)].axis_mode = (cmAxisMode)nv->value;
     return(STAT_OK);    
 }
 
-stat_t cm_get_tn(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].travel_min)); }
-stat_t cm_set_tn(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv->index)].travel_min)); }
-stat_t cm_get_tm(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].travel_max)); }
-stat_t cm_set_tm(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv->index)].travel_max)); }
-stat_t cm_get_ra(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].radius)); }
-stat_t cm_set_ra(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].radius)); }
+stat_t cm_get_tn(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv)].travel_min)); }
+stat_t cm_set_tn(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv)].travel_min)); }
+stat_t cm_get_tm(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv)].travel_max)); }
+stat_t cm_set_tm(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv)].travel_max)); }
+stat_t cm_get_ra(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv)].radius)); }
+stat_t cm_set_ra(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv)].radius)); }
 
 /**** Axis Jerk Primitives
  * cm_get_axis_jerk() - returns jerk for an axis
@@ -2119,35 +2115,35 @@ void cm_set_axis_jerk(const uint8_t axis, const float jerk)
  *  This is corrected to mm/min^3 by the internals of the code.
  */
 
-stat_t cm_get_vm(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].velocity_max)); }
+stat_t cm_get_vm(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv)].velocity_max)); }
 stat_t cm_set_vm(nvObj_t *nv) 
 { 
-    uint8_t axis = _axis(nv->index);
+    uint8_t axis = _axis(nv);
     ritorno(set_float_range(nv, cm->a[axis].velocity_max, 0, MAX_LONG)); 
     cm->a[axis].recip_velocity_max = 1/nv->value;
     return(STAT_OK);
 }
 
-stat_t cm_get_fr(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].feedrate_max)); }
+stat_t cm_get_fr(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv)].feedrate_max)); }
 stat_t cm_set_fr(nvObj_t *nv) 
 {
-    uint8_t axis = _axis(nv->index);
+    uint8_t axis = _axis(nv);
     ritorno(set_float_range(nv, cm->a[axis].feedrate_max, 0, MAX_LONG));
     cm->a[axis].recip_feedrate_max = 1/nv->value;
     return(STAT_OK);
 }
 
-stat_t cm_get_jm(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].jerk_max)); }
+stat_t cm_get_jm(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv)].jerk_max)); }
 stat_t cm_set_jm(nvObj_t *nv) 
 {
-    uint8_t axis = _axis(nv->index);
+    uint8_t axis = _axis(nv);
     ritorno(set_float_range(nv, cm->a[axis].jerk_max, JERK_INPUT_MIN, JERK_INPUT_MAX));
     cm_set_axis_jerk(axis, nv->value);
     return(STAT_OK);
 }
 
-stat_t cm_get_jh(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].jerk_high)); }
-stat_t cm_set_jh(nvObj_t *nv) { return (set_float_range(nv, cm->a[_axis(nv->index)].jerk_high, JERK_INPUT_MIN, JERK_INPUT_MAX)); }
+stat_t cm_get_jh(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv)].jerk_high)); }
+stat_t cm_set_jh(nvObj_t *nv) { return (set_float_range(nv, cm->a[_axis(nv)].jerk_high, JERK_INPUT_MIN, JERK_INPUT_MAX)); }
 
 
 /**** Axis Homing Settings
@@ -2165,18 +2161,18 @@ stat_t cm_set_jh(nvObj_t *nv) { return (set_float_range(nv, cm->a[_axis(nv->inde
  * cm_set_zb() - set homing zero backoff
  */
 
-stat_t cm_get_hi(nvObj_t *nv) { return (get_int(nv, cm->a[_axis(nv->index)].homing_input)); }
-stat_t cm_set_hi(nvObj_t *nv) { return (set_int(nv, cm->a[_axis(nv->index)].homing_input, 0, D_IN_CHANNELS)); }
-stat_t cm_get_hd(nvObj_t *nv) { return (get_int(nv, cm->a[_axis(nv->index)].homing_dir)); }
-stat_t cm_set_hd(nvObj_t *nv) { return (set_int(nv, cm->a[_axis(nv->index)].homing_dir, 0, 1)); }
-stat_t cm_get_sv(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].search_velocity)); }
-stat_t cm_set_sv(nvObj_t *nv) { return (set_float_range(nv, cm->a[_axis(nv->index)].search_velocity, 0, MAX_LONG)); }
-stat_t cm_get_lv(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].latch_velocity)); }
-stat_t cm_set_lv(nvObj_t *nv) { return (set_float_range(nv, cm->a[_axis(nv->index)].latch_velocity, 0, MAX_LONG)); }
-stat_t cm_get_lb(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].latch_backoff)); }
-stat_t cm_set_lb(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv->index)].latch_backoff)); }
-stat_t cm_get_zb(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv->index)].zero_backoff)); }
-stat_t cm_set_zb(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv->index)].zero_backoff)); }
+stat_t cm_get_hi(nvObj_t *nv) { return (get_int(nv, cm->a[_axis(nv)].homing_input)); }
+stat_t cm_set_hi(nvObj_t *nv) { return (set_int(nv, cm->a[_axis(nv)].homing_input, 0, D_IN_CHANNELS)); }
+stat_t cm_get_hd(nvObj_t *nv) { return (get_int(nv, cm->a[_axis(nv)].homing_dir)); }
+stat_t cm_set_hd(nvObj_t *nv) { return (set_int(nv, cm->a[_axis(nv)].homing_dir, 0, 1)); }
+stat_t cm_get_sv(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv)].search_velocity)); }
+stat_t cm_set_sv(nvObj_t *nv) { return (set_float_range(nv, cm->a[_axis(nv)].search_velocity, 0, MAX_LONG)); }
+stat_t cm_get_lv(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv)].latch_velocity)); }
+stat_t cm_set_lv(nvObj_t *nv) { return (set_float_range(nv, cm->a[_axis(nv)].latch_velocity, 0, MAX_LONG)); }
+stat_t cm_get_lb(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv)].latch_backoff)); }
+stat_t cm_set_lb(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv)].latch_backoff)); }
+stat_t cm_get_zb(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv)].zero_backoff)); }
+stat_t cm_set_zb(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv)].zero_backoff)); }
 
 
 /*** Canonical Machine Global Settings ***/
@@ -2428,7 +2424,7 @@ static void _print_axis_ui8(nvObj_t *nv, const char *format)
 static void _print_axis_flt(nvObj_t *nv, const char *format)
 {
     char *units;
-    if (cm_get_axis_type(nv->index) == AXIS_TYPE_LINEAR) {
+    if (cm_get_axis_type(nv) == AXIS_TYPE_LINEAR) {
         units = (char *)GET_UNITS(MODEL);
     } else {
         units = (char *)GET_TEXT_ITEM(msg_units, DEGREE_INDEX);
@@ -2440,7 +2436,7 @@ static void _print_axis_flt(nvObj_t *nv, const char *format)
 static void _print_axis_coord_flt(nvObj_t *nv, const char *format)
 {
     char *units;
-    if (cm_get_axis_type(nv->index) == AXIS_TYPE_LINEAR) {
+    if (cm_get_axis_type(nv) == AXIS_TYPE_LINEAR) {
         units = (char *)GET_UNITS(MODEL);
     } else {
         units = (char *)GET_TEXT_ITEM(msg_units, DEGREE_INDEX);
@@ -2452,7 +2448,7 @@ static void _print_axis_coord_flt(nvObj_t *nv, const char *format)
 static void _print_pos(nvObj_t *nv, const char *format, uint8_t units)
 {
     char axes[] = {"XYZABC"};
-    uint8_t axis = _axis(nv->index);
+    uint8_t axis = _axis(nv);
     if (axis >= AXIS_A) { units = DEGREES;}
     sprintf(cs.out_buf, format, axes[axis], nv->value, GET_TEXT_ITEM(msg_units, units));
     xio_writeline(cs.out_buf);
@@ -2461,7 +2457,7 @@ static void _print_pos(nvObj_t *nv, const char *format, uint8_t units)
 static void _print_hom(nvObj_t *nv, const char *format)
 {
     char axes[] = {"XYZABC"};
-    uint8_t axis = _axis(nv->index);
+    uint8_t axis = _axis(nv);
     sprintf(cs.out_buf, format, axes[axis], nv->value);
     xio_writeline(cs.out_buf);
 }

@@ -750,20 +750,20 @@ static stat_t _execute_gcode_block(char *active_comment)
     EXEC_FUNC(cm_set_feed_rate, F_word);                    // F
     EXEC_FUNC(spindle_speed_sync, S_word);                  // S
 
-    EXEC_FUNC(cm_select_tool, tool_select);                 // tool_select is where it's written
-    EXEC_FUNC(cm_change_tool, tool_change);                 // M6
+    EXEC_FUNC(cm_select_tool, tool_select);                 // T - tool_select is where it's written
+    EXEC_FUNC(cm_change_tool, tool_change);                 // M6 - is where it's effected
 
-    if (gf.spindle_control) {                               // spindle OFF, CW, CCW
+    if (gf.spindle_control) {                               // M3, M4, M5 (spindle OFF, CW, CCW)
         ritorno(spindle_control_sync((spControl)gv.spindle_control));
     }
     if (gf.coolant_mist) {
-        ritorno(coolant_control_sync((coControl)gv.coolant_mist, COOLANT_MIST));   // M7
+        ritorno(coolant_control_sync((coControl)gv.coolant_mist, COOLANT_MIST));    // M7
     }
     if (gf.coolant_flood) {
         ritorno(coolant_control_sync((coControl)gv.coolant_flood, COOLANT_FLOOD));  // M8
     }
     if (gf.coolant_off) {
-        ritorno(coolant_control_sync((coControl)gv.coolant_off, COOLANT_BOTH));  // M9
+        ritorno(coolant_control_sync((coControl)gv.coolant_off, COOLANT_BOTH));     // M9
     }
     if (gv.next_action == NEXT_ACTION_DWELL) {              // G4 - dwell
         ritorno(cm_dwell(gv.P_word));                       // return if error, otherwise complete the block

@@ -901,7 +901,7 @@ stat_t st_set_su(nvObj_t *nv)
 
     // Do unit conversion here because it's a reciprocal value (rather than process_incoming_float())
     if (cm_get_units_mode(MODEL) == INCHES) {
-        if (cm_get_axis_type(nv->index) == AXIS_TYPE_LINEAR) {
+        if (cm_get_axis_type(nv) == AXIS_TYPE_LINEAR) {
             nv->value *= INCHES_PER_MM;
         }
     }    

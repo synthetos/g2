@@ -1296,7 +1296,7 @@ static void _convert(nvObj_t *nv, float conversion_factor)
     ///+++ transform these checks into NaN or INF strings with an error return?
 
     if (cm_get_units_mode(MODEL) == INCHES) {
-        cmAxisType axis_type = cm_get_axis_type(nv->index);     // linear, rotary, global or error
+        cmAxisType axis_type = cm_get_axis_type(nv);     // linear, rotary, global or error
         if ((axis_type == AXIS_TYPE_LINEAR) || (axis_type == AXIS_TYPE_SYSTEM)) {
             if (cfgArray[nv->index].flags & F_CONVERT) {        // standard units conversion
                     nv->value *= conversion_factor;

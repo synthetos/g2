@@ -484,7 +484,7 @@ stat_t cm_panic(const stat_t status, const char *msg);          // enter panic s
 /**** cfgArray interface functions ****/
 
 char cm_get_axis_char(const int8_t axis);
-cmAxisType cm_get_axis_type(const index_t index);
+cmAxisType cm_get_axis_type(const nvObj_t *nv);
 
 stat_t cm_get_mline(nvObj_t *nv);       // get model line number
 stat_t cm_get_line(nvObj_t *nv);        // get active (model or runtime) line number
