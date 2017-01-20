@@ -2,7 +2,8 @@
  * util.h - a random assortment of useful functions
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
+ * Copyright (c) 2016 - 2017 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -86,17 +87,11 @@ float max4(float x1, float x2, float x3, float x4);
 
 //*** string utilities ***
 
-//#ifdef __ARM
-//uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src );
-//#endif
-
 uint8_t isnumber(char c);
 char *escape_string(char *dst, char *src);
-char inttoa(char *str, int n);
-char floattoa(char *buffer, float in, int precision, int maxlen = 16);
-//char fntoa(char *str, float n, uint8_t precision);
-
 uint16_t compute_checksum(char const *string, const uint16_t length);
+char floattoa(char *buffer, float in, int precision, int maxlen = 16);
+char inttoa(char *str, int n);
 
 //*** other utilities ***
 

@@ -1631,36 +1631,33 @@ stat_t cm_json_wait(char *json_string)
  ***********************************************************************************/
 
 /***** AXIS HELPERS *****************************************************************
- * _coord()           - return coordinate system number or -1 if error
+ * _coord()           - return coordinate system number (53=0...59=6) or -1 if error
  * _axis()            - return axis # or -1 if not an axis (works for mapped motors as well)
  * cm_get_axis_type() - return linear axis (0), rotary axis (1) or error (-1)
- * cm_get_axis_char() - return ASCII char for axis given the axis number
+ * cm_get_axis_char() - return ASCII char for axis number provided
  */
 
 static int8_t _coord(nvObj_t *nv)   // extract coordinate system from 3rd character
 {
     char *ptr = ((*nv->group == 0) ? &nv->token[1] : &nv->group[1]); // skip past the 'g' to the number
-    return (max ((atoi(ptr)-54), -1));  // return G54-G59 as 0-5, error as -1
+    return (max ((atoi(ptr)-53), -1));  // return G54-G59 as 0-5, error as -1
 }
 
 /* _axis()
  *
- *  Cases that are handled by _get_axis():
- *    - sys/... value is a system parameter (global), there is no axis
- *    - xam     any axis parameter will return the axis number
- *    - 1ma     any motor parameter will return the mapped axis for that motor
- *    - 1su     an example of the above
- *    - mpox    readouts
- *    - g54x    offsets
- *    - tlx     tool length offset
- *    - tt1x    tool table
- *    - tt32x   tool table
- *    - _tex    diagnostic parameters
+ *  Cases handled:
+ *    - sys/...       value is a system parameter (global), there is no axis (AXIS_TYPE_SYSTEM)
+ *    - xam, yvm      any prefixed axis parameter
+ *    - 1ma, 2tr      any motor parameter will return mapped axis for that motor
+ *    - posx, mpox    readouts
+ *    - g54x, g92z    offsets
+ *    - tofx          tool offsets
+ *    - tt1x, tt32x   tool table
+ *    - _tex, _tra    diagnostic parameters
  *
  *  Note that this function will return an erroneous value if called by a non-axis tag, 
  *  such as 'coph' But it should not be called in these cases in any event.
  */
-
 
 static int8_t _axis(const nvObj_t *nv)
 {
@@ -1823,6 +1820,7 @@ static const char *const msg_stat[] = { msg_stat0, msg_stat1, msg_stat2, msg_sta
                                         msg_stat4, msg_stat5, msg_stat6, msg_stat7,
                                         msg_stat8, msg_stat9, msg_stat10, msg_stat11,
                                         msg_stat12, msg_stat13 };
+
 static const char msg_macs0[] = "Initializing";
 static const char msg_macs1[] = "Ready";
 static const char msg_macs2[] = "Alarm";
@@ -1835,6 +1833,7 @@ static const char msg_macs8[] = "PANIC";
 static const char *const msg_macs[] = { msg_macs0, msg_macs1, msg_macs2, msg_macs3,
                                         msg_macs4, msg_macs5, msg_macs6, msg_macs7,
                                         msg_macs8 };
+
 static const char msg_cycs0[] = "Off";
 static const char msg_cycs1[] = "Machining";
 static const char msg_cycs2[] = "Homing";
