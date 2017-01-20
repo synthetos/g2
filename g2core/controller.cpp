@@ -328,6 +328,18 @@ static stat_t _controller_state()
     return (STAT_OK);
 }
 
+
+/*
+ * _reset_comms_mode() - reset the communications mode (and other effected settings) after connection or disconnection
+ */
+void _reset_comms_mode() {
+    // reset the communications mode
+    cs.comm_mode = COMM_MODE;
+    js.json_mode = (COMM_MODE < AUTO_MODE) ? COMM_MODE : JSON_MODE;
+    sr.status_report_verbosity = STATUS_REPORT_VERBOSITY;
+    qr.queue_report_verbosity = QUEUE_REPORT_VERBOSITY;
+}
+
 /*
  * controller_set_connected(bool) - hook for xio to tell the controller that we
  * have/don't have a connection.
@@ -335,6 +347,8 @@ static stat_t _controller_state()
 
 void controller_set_connected(bool is_connected) {
     if (is_connected) {
+        _reset_comms_mode();
+
         cs.controller_state = CONTROLLER_CONNECTED; // we JUST connected
     } else {  // we just disconnected from the last device, we'll expect a banner again
         cs.controller_state = CONTROLLER_NOT_CONNECTED;
@@ -353,6 +367,8 @@ void controller_set_muted(bool is_muted) {
         const bool only_to_muted = true;
         xio_writeline("{\"muted\":true}\n", only_to_muted);
     } else {
+        _reset_comms_mode();
+
         // one channel just got unmuted, announce it (except to the muted)
         xio_writeline("{\"muted\":false}\n");
     }

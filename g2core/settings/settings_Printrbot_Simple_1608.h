@@ -87,6 +87,23 @@
 #define GCODE_DEFAULT_PATH_CONTROL  PATH_CONTINUOUS
 #define GCODE_DEFAULT_DISTANCE_MODE ABSOLUTE_DISTANCE_MODE
 
+#define MARLIN_G29_SCRIPT \
+    "(MSG Tramming started)\n" \
+    "M100 ({\"_leds\":3})\n" \
+    "G1 X0 Y145 Z6 F20000\n" \
+    "G38.2 Z-10 F200\n" \
+    "G1 Z5 F20000\n" \
+    "M100 ({\"_leds\":5})\n" \
+    "G1 X210 Y65 F20000\n" \
+    "G38.2 Z-10 F200\n" \
+    "G1 Z5 F20000\n" \
+    "M100 ({\"_leds\":6})\n" \
+    "G1 X0 Y10 F20000\n" \
+    "G38.2 Z-10 F200\n" \
+    "G1 Z5 F20000\n" \
+    "M100 ({\"_leds\":3})\n" \
+    "M100 ({\"tram\":1})" \
+    "(MSG Tramming completed)\n"
 
 // *** motor settings ************************************************************************************
 

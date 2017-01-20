@@ -594,7 +594,10 @@ static float _calc_ABC(const uint8_t axis, const float target[])
     if ((cm.a[axis].axis_mode == AXIS_STANDARD) || (cm.a[axis].axis_mode == AXIS_INHIBITED)) {
         return(target[axis]);    // no mm conversion - it's in degrees
     }
-    return(_to_millimeters(target[axis]) * 360 / (2 * M_PI * cm.a[axis].radius));
+
+    // radius mode
+
+    return (_to_millimeters(target[axis]) * 360.0 / (2.0 * M_PI * cm.a[axis].radius));
 }
 
 void cm_set_model_target(const float target[], const bool flags[])
@@ -624,9 +627,27 @@ void cm_set_model_target(const float target[], const bool flags[])
         } else {
             tmp = _calc_ABC(axis, target);
         }
+#if MARLIN_COMPAT_ENABLED == true
+        // If we are in absolute mode (generally), but the extruder is relative,
+        // then we adjust the extruder to a relative position
+        if (cm.gmx.marlin_flavor && (cm.a[axis].axis_mode == AXIS_RADIUS)) {
+            if (cm.gmx.extruder_mode == EXTRUDER_MOVES_ABSOLUTE) {
+                cm.gm.target[axis] = tmp + cm_get_active_coord_offset(axis);
+            }
+            else if (cm.gmx.extruder_mode == EXTRUDER_MOVES_RELATIVE) {
+                cm.gm.target[axis] += tmp;
+            }
+            // TODO
+//            else {
+//                cm.gm.target[axis] += tmp * cm.gmx.volume_to_filament_length[axis-3];
+//            }
+        }
+        else
+#endif // MARLIN_COMPAT_ENABLED
         if (cm.gm.distance_mode == ABSOLUTE_DISTANCE_MODE) {
             cm.gm.target[axis] = tmp + cm_get_active_coord_offset(axis); // sacidu93's fix to Issue #22
-        } else {
+        }
+        else {
             cm.gm.target[axis] += tmp;
         }
     }
@@ -2022,6 +2043,14 @@ void cm_program_end()
 stat_t cm_json_command(char *json_string)
 {
     return mp_json_command(json_string);
+}
+
+/*
+ * cm_json_command_immediate() - M100.1
+ */
+stat_t cm_json_command_immediate(char *json_string)
+{
+    return mp_json_command_immediate(json_string);
 }
 
 /*

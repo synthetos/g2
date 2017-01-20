@@ -640,15 +640,17 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 
             char c = _data[_scan_offset];
 
-            if (c == 0) {
+
+#if MARLIN_COMPAT_ENABLED == true
+            // it's possible something will try to talk stk500v2 to us.
+            // See https://github.com/synthetos/g2/wiki/Marlin-Compatibility#stk500v2
+
+            if ((_stk_parser_state == STK500V2_State::Done) && (c == 0)) {
                 _debug_trap("scan ran into NULL");
                 flush(); // consider the connection and all data trashed
                 return false;
             }
 
-#if MARLIN_COMPAT_ENABLED == true
-            // it's possible something will try to talk stk500v2 to us.
-            // See https://github.com/synthetos/g2/wiki/Marlin-Compatibility#stk500v2
             if (_stk_parser_state >= STK500V2_State::Timeout)
             {
                 if (_stk_parser_state == STK500V2_State::Timeout) {
@@ -672,6 +674,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                     else if ((c == '{') || (c == '\n') || (c == '\r') || (c == 'G') || (c == 'M')) {
                         // jump out of bootloader mode
                         _stk_parser_state = STK500V2_State::Done;
+                        _read_offset = _scan_offset;
                         continue;
                     }
 
@@ -690,6 +693,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                     } else {
                         // end-of-header marker was corrupt, start over
                         _stk_packet_data_length = 0;
+                        _read_offset = _scan_offset;
                         _stk_parser_state = STK500V2_State::Start;
                     }
                 } else if (_stk_parser_state == STK500V2_State::Data) {
@@ -706,9 +710,21 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                     // we will use the "control" return machanism to handle this
                     // since controls don't have to be \r\n-terminated
                     is_control = true;
+                    ends_line = true;
+
+                    // this line is complete, reset the state engine
+                    _stk_parser_state = STK500V2_State::Start;
                 }
             }
             else
+#else
+
+            if (c == 0) {
+                _debug_trap("scan ran into NULL");
+                flush(); // consider the connection and all data trashed
+                return false;
+            }
+
 #endif
             // Look for line endings
             if (c == '\r' || c == '\n') {
@@ -1235,6 +1251,12 @@ struct xioFlashFileDeviceWrapper : xioDeviceWrapperBase {    // describes a devi
         // to flush the file, just forget about it
         // next time it's used it'll get reset
         _current_file = nullptr;
+    }
+
+    bool flushToCommand() final {
+        // the end of the file is the next "command"
+        _current_file = nullptr;
+        return false;
     }
 
     int16_t write(const char *buffer, int16_t len) final {

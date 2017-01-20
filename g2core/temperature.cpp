@@ -365,7 +365,10 @@ struct PID {
                 if (_rise_time_timeout.isPast()) {
                     if (input < _rise_time_checkpoint) {
                         // FAILURE!!
-                        cm_alarm(STAT_TEMPERATURE_CONTROL_ERROR, "Heater temperature failed to rise fast enough.");
+                        char buffer[128];
+                        char *str = buffer;
+                        str += sprintf(str, "Heater temperature failed to rise fast enough. At: %f Set: %f", input, _set_point);
+                        cm_alarm(STAT_TEMPERATURE_CONTROL_ERROR, buffer);
                         _set_point = 0;
                         _rise_time_timeout.clear();
                         return -1;

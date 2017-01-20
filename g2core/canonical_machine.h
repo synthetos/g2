@@ -180,8 +180,16 @@ typedef enum {                          // these are in order to optimized CASE 
     NEXT_ACTION_JSON_WAIT,              // M101
 
 #if MARLIN_COMPAT_ENABLED == true
-    NEXT_ACTION_MARLIN_SET_EXTRUDER_TEMP,      // 104, 109
-    NEXT_ACTION_MARLIN_SET_BED_TEMP,           // 140, 190
+    NEXT_ACTION_MARLIN_PRINT_TEMPERATURES,     // M105
+    NEXT_ACTION_MARLIN_PRINT_POSITION,         // M114
+    NEXT_ACTION_MARLIN_SET_EXTRUDER_TEMP,      // M104, M109
+    NEXT_ACTION_MARLIN_SET_BED_TEMP,           // M140, M190
+    NEXT_ACTION_MARLIN_CANCEL_WAIT_TEMP,       // M108
+    NEXT_ACTION_MARLIN_TRAM_BED,               // G29
+    NEXT_ACTION_MARLIN_SET_FAN_SPEED,          // M106
+    NEXT_ACTION_MARLIN_STOP_FAN,               // M107
+    NEXT_ACTION_MARLIN_DISABLE_MOTORS,         // M84
+    NEXT_ACTION_MARLIN_DISPLAY_ON_SCREEN,      // M117
 #endif
 } cmNextAction;
 
@@ -384,6 +392,14 @@ typedef struct GCodeState {             // Gcode model state - used by model, pl
     };
 } GCodeState_t;
 
+#if MARLIN_COMPAT_ENABLED == true
+enum cmExtruderMode {
+    EXTRUDER_MOVES_ABSOLUTE = 0,    // M82
+    EXTRUDER_MOVES_RELATIVE,        // M83
+    EXTRUDER_MOVES_VOLUMETRIC       // Ultimaker2Marlin
+};
+#endif // MARLIN_COMPAT_ENABLED
+
 typedef struct GCodeStateExtended {     // Gcode dynamic state extensions - used by model and arcs
     uint16_t magic_start;               // magic number to test memory integrity
     uint8_t next_action;                // handles G modal group 1 moves & non-modals
@@ -409,7 +425,8 @@ typedef struct GCodeStateExtended {     // Gcode dynamic state extensions - used
 
 #if MARLIN_COMPAT_ENABLED == true
     bool marlin_flavor;
-#endif
+    cmExtruderMode extruder_mode;      // Mode of the extruder - changes how "E" is interpreted
+#endif // MARLIN_COMPAT_ENABLED
 
     uint16_t magic_end;
 
@@ -679,6 +696,7 @@ void cm_optional_program_stop(void);                            // M1
 void cm_program_end(void);                                      // M2
 
 stat_t cm_json_command(char *json_string);                      // M100
+stat_t cm_json_command_immediate(char *json_string);            // M100.1
 stat_t cm_json_wait(char *json_string);                         // M102
 
 /*--- Cycles ---*/

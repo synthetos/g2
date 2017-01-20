@@ -537,6 +537,7 @@ stat_t mp_runtime_command(mpBuf_t *bf);
 
 stat_t mp_json_command(char *json_string);
 stat_t mp_json_wait(char *json_string);
+stat_t mp_json_command_immediate(char *json_string);
 
 stat_t mp_dwell(const float seconds);
 void mp_end_dwell(void);

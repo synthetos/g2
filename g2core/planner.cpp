@@ -311,7 +311,7 @@ stat_t mp_runtime_command(mpBuf_t *bf)
 
 /*************************************************************************
  * mp_json_command()    - queue a json command
- * _exec_json_command() - execute json string
+ * _exec_json_command() - execute json string (from exec system)
  */
 
 stat_t mp_json_command(char *json_string)
@@ -334,6 +334,14 @@ static void _exec_json_command(float *value, bool *flag)
     jc.free_buffer();
 }
 
+/*************************************************************************
+ * mp_json_command_immediate()    - execute a json command with response suppressed
+ */
+
+stat_t mp_json_command_immediate(char *json_string)
+{
+    return json_parser(json_string);
+}
 
 /*************************************************************************
  * mp_json_wait()    - queue a json wait command

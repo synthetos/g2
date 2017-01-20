@@ -206,7 +206,7 @@ char *get_status_message(stat_t status);
 
 #define STAT_INPUT_FROM_MUTED_CHANNEL_ERROR 117 // input from a muted channel was ignored
 #define STAT_CHECKSUM_MATCH_FAILED 118          // the provided checksum didn't match
-#define STAT_LINE_NUMBER_OUT_OF_SEQUENCE 119
+#define STAT_LINE_NUMBER_OUT_OF_SEQUENCE 119    // the provided line number was out of sequence
 
 #define STAT_ERROR_120 120
 #define STAT_ERROR_121 121
@@ -315,7 +315,7 @@ char *get_status_message(stat_t status);
 
 #define STAT_TEMPERATURE_CONTROL_ERROR 209      // temperature controls err'd out
 
-#define STAT_ERROR_210 210
+#define STAT_G29_NOT_CONFIGURED 210
 #define STAT_ERROR_211 211
 #define STAT_ERROR_212 212
 #define STAT_ERROR_213 213
@@ -501,9 +501,9 @@ static const char stat_113[] = "JSON string too long";
 static const char stat_114[] = "JSON txt fields cannot be nested";
 static const char stat_115[] = "JSON maximum nesting depth exceeded";
 static const char stat_116[] = "JSON value does not agree with variable type";
-static const char stat_117[] = "117";
-static const char stat_118[] = "118";
-static const char stat_119[] = "119";
+static const char stat_117[] = "Input from a muted channel was ignored";
+static const char stat_118[] = "The provided checksum didn't match";
+static const char stat_119[] = "The provided line number was out of sequence";
 
 static const char stat_120[] = "120";
 static const char stat_121[] = "121";
@@ -606,7 +606,7 @@ static const char stat_207[] = "Kill job";
 static const char stat_208[] = "No GPIO for this value";
 static const char stat_209[] = "209";
 
-static const char stat_210[] = "210";
+static const char stat_210[] = "Marlin G29 command was not configured at compile-time";
 static const char stat_211[] = "211";
 static const char stat_212[] = "212";
 static const char stat_213[] = "213";

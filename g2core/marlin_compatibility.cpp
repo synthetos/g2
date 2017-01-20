@@ -65,7 +65,7 @@ enum class MarlinSetTempState {
 MarlinSetTempState set_temp_state; // record the state for the temperature-control pseudo-cycle
 // These next parameters for the next temperature-control pseudo-cycle are only needed until the calls are queued.
 float next_temperature;            // as it says
-uint8_t next_temperature_tool;     // this is a g2core (1-based) tool
+uint8_t next_temperature_tool;     // 0-based, with 2 being the heat-bed
 
 // Information about if we are to be dumping periodic temperature updates
 bool temperature_updates_requested = false;
@@ -74,10 +74,101 @@ Motate::Timeout temperature_update_timeout;
 // local helper functions and macros
 
 /*
- * marlin_verify_checksum() - check to see if we have a line number (cheaply) and a valid checksum
+ * _report_temperatures() - convenience function to get a value via the JSON NV system
  */
+nvObj_t *_get_spcific_nv(const char *key) {
+    nvObj_t *nv = nv_reset_nv_list();           // returns first object in the body
+
+    strncpy(nv->token, key, TOKEN_LEN);
+
+    // validate and post-process the token
+    if ((nv->index = nv_get_index((const char *)"", nv->token)) == NO_MATCH) { // get index or fail it
+        // since we JUST provided the keys, this should never happen
+        return nullptr;
+    }
+    strcpy(nv->group, cfgArray[nv->index].group); // capture the group string if there is one
+
+    nv_get(nv);
+
+    return nv;
+}
+
+/*
+ * _report_temperatures() - convenience function called from marlin_response() and marlin_callback()
+ */
+void _report_temperatures(char *(&str)) {
+    // Tool 0 is extruder 1
+    uint8_t tool = cm.gm.tool_select;
+
+    nvObj_t *nv = nullptr;
+
+    if (tool == 0) {
+        nv = _get_spcific_nv("he1t");
+    } else if (tool == 1) {
+        nv = _get_spcific_nv("he2t");
+    } else {
+        return; // we have no way of reporting errors here, ATM
+    }
+    if (!nv) { return; }
+    str += sprintf(str, " T:%.2f", (float)nv->value);
+
+    if (tool == 0) {
+        nv = _get_spcific_nv("he1st");
+    } else if (tool == 1) {
+        nv = _get_spcific_nv("he2st");
+    } else {
+        return; // we have no way of reporting errors here, ATM
+    }
+    if (!nv) { return; }
+    str += sprintf(str, " /%.2f", (float)nv->value);
+
+    nv = _get_spcific_nv("he3t");
+    if (!nv) { return; }
+    str += sprintf(str, " B:%.2f", (float)nv->value);
+
+    nv = _get_spcific_nv("he3st");
+    if (!nv) { return; }
+    str += sprintf(str, " /%.2f", (float)nv->value);
+
+    if (tool == 0) {
+        nv = _get_spcific_nv("he1op");
+    } else if (tool == 1) {
+        nv = _get_spcific_nv("he2op");
+    }    if (!nv) { return; }
+    str += sprintf(str, " @:%.0f", (float)nv->value * 255.0);
+
+    nv = _get_spcific_nv("he3op");
+    if (!nv) { return; }
+    str += sprintf(str, " B@:%.0f", (float)nv->value * 255.0);
+}
+
+/*
+ * _report_position() - convenience function called from marlin_response()
+ */
+void _report_position(char *(&str)) {
+    str += sprintf(str, " X:%.2f", cm_get_work_position(ACTIVE_MODEL, 0));
+    str += sprintf(str, " Y:%.2f", cm_get_work_position(ACTIVE_MODEL, 1));
+    str += sprintf(str, " Z:%.2f", cm_get_work_position(ACTIVE_MODEL, 2));
+
+    uint8_t tool = cm.gm.tool_select;
+    if (tool == 0) {
+        str += sprintf(str, " E:%.2f", cm_get_work_position(ACTIVE_MODEL, 3));
+    } else if (tool == 1) {
+        str += sprintf(str, " E:%.2f", cm_get_work_position(ACTIVE_MODEL, 4));
+    }
+}
+
+/***********************************************************************************
+ * CONFIGURATION AND INTERFACE FUNCTIONS
+ * Functions to get and set variables from the cfgArray table
+ ***********************************************************************************/
 
 
+
+/*
+ * marlin_verify_checksum() - check to see if we have a line number (cheaply) and a valid checksum
+ *   called from gcode_parser
+ */
 stat_t marlin_verify_checksum(char *str)
 {
     if (*str != 'N') { return STAT_OK; } // we only check if we have a line number
@@ -91,12 +182,18 @@ stat_t marlin_verify_checksum(char *str)
 
     // c might be 0 here, in which case we didn't get a checksum and we return STAT_OK
 
-    if ((c == '*') && strtol(str, NULL, 10) != checksum) {
-        return STAT_CHECKSUM_MATCH_FAILED;
+    if (c == '*') {
+        *(str-1) = 0; // null terminate, the parser won't like this * here!
+        if (strtol(str, NULL, 10) != checksum) {
+            return STAT_CHECKSUM_MATCH_FAILED;
+        }
     }
     return STAT_OK;
 }
 
+/*
+ * _marlin_fake_stk500_response() - convenience function for formang responses from marlin_handle_fake_stk500()
+ */
 void _marlin_fake_stk500_response(char *resp, uint16_t length)
 {
     char *str = resp;
@@ -151,15 +248,13 @@ bool marlin_handle_fake_stk500(char *str)
 }
 
 
-/***********************************************************************************
- * CONFIGURATION AND INTERFACE FUNCTIONS
- * Functions to get and set variables from the cfgArray table
- ***********************************************************************************/
-
+/*
+ * marlin_request_temperature_report() - called from the gcode parser for M105
+ */
 stat_t marlin_request_temperature_report() // M105
 {
     uint8_t tool = cm.gm.tool_select;
-    if (tool > 1) {
+    if ((tool < 0) || (tool > 1)) {
         return STAT_INPUT_VALUE_RANGE_ERROR;
     }
 
@@ -167,82 +262,19 @@ stat_t marlin_request_temperature_report() // M105
     return STAT_OK;
 }
 
+
+/*
+ * marlin_request_temperature_report() - called from the gcode parser for M114
+ */
 stat_t marlin_request_position_report() // M114
 {
     position_requested = true;
     return STAT_OK;
 }
 
-nvObj_t *_get_spcific_nv(const char *key) {
-    nvObj_t *nv = nv_reset_nv_list();           // returns first object in the body
-
-    strncpy(nv->token, key, TOKEN_LEN);
-
-    // validate and post-process the token
-    if ((nv->index = nv_get_index((const char *)"", nv->token)) == NO_MATCH) { // get index or fail it
-        // since we JUST provided the keys, this should never happen
-        return nullptr;
-    }
-    strcpy(nv->group, cfgArray[nv->index].group); // capture the group string if there is one
-
-    nv_get(nv);
-
-    return nv;
-}
-
-void _report_temperatures(char *(&str)) {
-    // Tool 0 is extruder 1
-    uint8_t tool = cm.gm.tool_select;
-
-    nvObj_t *nv = nullptr;
-
-    if (tool == 0) {
-        nv = _get_spcific_nv("he1t");
-    } else if (tool == 1) {
-        nv = _get_spcific_nv("he2t");
-    } else {
-        return; // we have no way of reporting errors here, ATM
-    }
-    if (!nv) { return; }
-    str += sprintf(str, " T:%.2f", (float)nv->value);
-
-    if (tool == 0) {
-        nv = _get_spcific_nv("he1st");
-    } else if (tool == 1) {
-        nv = _get_spcific_nv("he2st");
-    } else {
-        return; // we have no way of reporting errors here, ATM
-    }
-    if (!nv) { return; }
-    str += sprintf(str, " /%.2f", (float)nv->value);
-
-    nv = _get_spcific_nv("he3t");
-    if (!nv) { return; }
-    str += sprintf(str, " B:%.2f", (float)nv->value);
-
-    nv = _get_spcific_nv("he3st");
-    if (!nv) { return; }
-    str += sprintf(str, " /%.2f", (float)nv->value);
-}
-
-void _report_position(char *(&str)) {
-    //
-    // Tool 0 is extruder 1
-    uint8_t tool = cm.gm.tool_select;
-
-    str += sprintf(str, " X:%.2f", cm_get_work_position(ACTIVE_MODEL, 0));
-    str += sprintf(str, " Y:%.2f", cm_get_work_position(ACTIVE_MODEL, 1));
-    str += sprintf(str, " Z:%.2f", cm_get_work_position(ACTIVE_MODEL, 2));
-
-    if (tool == 0) {
-        str += sprintf(str, " E:%.2f", cm_get_work_position(ACTIVE_MODEL, 3));
-    } else if (tool == 1) {
-        str += sprintf(str, " E:%.2f", cm_get_work_position(ACTIVE_MODEL, 4));
-    }
-}
 
 /*
- * marlin_response() - marlin mirror if text_response()
+ * marlin_response() - marlin mirror of text_response(), called from _dispatch_kernel() in controller.cpp
  */
 void marlin_response(const stat_t status, char *buf)
 {
@@ -283,6 +315,7 @@ void marlin_response(const stat_t status, char *buf)
     xio_writeline(buffer);
 }
 
+
 /*
  * _marlin_start_temperature_updates()/_marlin_end_temperature_updates() -
  *    calls from commands in the buffer to manage temperature_updates_requested
@@ -291,10 +324,10 @@ void _marlin_start_temperature_updates(float* vect, bool* flag) {
     temperature_updates_requested = true;
     temperature_update_timeout.set(1); // immediately
 }
-
 void _marlin_end_temperature_updates(float* vect, bool* flag) {
     temperature_updates_requested = false;
 }
+
 
 /*
  * _queue_next_temperature_comands() - returns true if it finished
@@ -312,7 +345,7 @@ bool _queue_next_temperature_commands()
         if ((MarlinSetTempState::SettingTemperature == set_temp_state) ||
             (MarlinSetTempState::SettingTemperatureNoWait == set_temp_state))
         {
-            str += sprintf(str, "{he%dst:%.2f}", next_temperature_tool, next_temperature);
+            str += sprintf(str, "{he%dst:%.2f}", next_temperature_tool+1, next_temperature);
             cm_json_command(buffer);
 
             if (MarlinSetTempState::SettingTemperatureNoWait == set_temp_state) {
@@ -337,7 +370,7 @@ bool _queue_next_temperature_commands()
 
         if (MarlinSetTempState::StartingWait == set_temp_state) {
             str = buffer;
-            str += sprintf(str, "{he%dat:t}", next_temperature_tool);
+            str += sprintf(str, "{he%dat:t}", next_temperature_tool+1);
             cm_json_wait(buffer);
 
             set_temp_state = MarlinSetTempState::StoppingUpdates;
@@ -356,12 +389,13 @@ bool _queue_next_temperature_commands()
     return true;
 }
 
+
 /*
  * marlin_callback() - called by controller dispatcher - return STAT_EAGAIN if it failed
  */
 stat_t marlin_callback()
 {
-    if (temperature_updates_requested && (temperature_update_timeout.isPast())) {
+    if ((js.json_mode == MARLIN_COMM_MODE) && temperature_updates_requested && (temperature_update_timeout.isPast())) {
         char buffer[128];
         char *str = buffer;
 
@@ -383,22 +417,95 @@ stat_t marlin_callback()
 }
 
 
+/*
+ * marlin_set_temperature() - called from the gcode parser for M104,M140,M109,M190
+ */
 stat_t marlin_set_temperature(uint8_t tool, float temperature, bool wait) {
     if (MarlinSetTempState::Idle != set_temp_state) {
-        return (STAT_BUFFER_FULL_FATAL); // this shouldn't happen
+        return (STAT_BUFFER_FULL_FATAL); // we shouldn't be here
     }
-    if ((tool < 0) || (tool > 3)) {
+    if ((tool < 0) || (tool > 2)) {
         return STAT_INPUT_VALUE_RANGE_ERROR;
     }
 
     set_temp_state = wait ? MarlinSetTempState::SettingTemperature : MarlinSetTempState::SettingTemperatureNoWait;
     next_temperature = temperature;
 
-    // Note the conversion from a "marlin" tool (zero-base) to a g2core tool (1-based)
-    next_temperature_tool = tool + 1;
+    next_temperature_tool = tool;
 
     _queue_next_temperature_commands(); // we can ignore the return
     return (STAT_OK);
 }
 
+
+#ifdef MARLIN_G29_SCRIPT
+auto marlin_g29_file = make_xio_flash_file(MARLIN_G29_SCRIPT);
+#endif
+
+/*
+ * marlin_start_tramming_bed() - called from the gcode parser for G29
+ */
+stat_t marlin_start_tramming_bed() {
+#ifndef MARLIN_G29_SCRIPT
+    return (STAT_G29_NOT_CONFIGURED);
+#else
+    xio_send_file(marlin_g29_file);
+    return (STAT_OK);
+#endif
+}
+
+
+
+/*
+ * cm_marlin_set_extruder_mode() - M82, M83 (affects MODEL only)
+ *
+ *  EXTRUDER_MOVES_ABSOLUTE = 0,    // M82
+ *  EXTRUDER_MOVES_RELATIVE,        // M83
+ *  EXTRUDER_MOVES_VOLUMETRIC       // Ultimaker2Marlin
+ */
+
+stat_t cm_marlin_set_extruder_mode(const uint8_t mode)
+{
+    cm.gmx.extruder_mode = (cmExtruderMode)mode;
+    return (STAT_OK);
+}
+
+
+/*
+ * marlin_set_fan_speed() - M106, M107
+ *
+ */
+
+stat_t marlin_set_fan_speed(const uint8_t fan, float speed)
+{
+    char buffer[128];
+    char *str = buffer;
+    if ((fan != 0) || (speed < 0.0) || (speed > 255.0)) {
+        return STAT_INPUT_VALUE_RANGE_ERROR;
+    }
+
+    // TODO: support other fans, or remapping output
+    str += sprintf(str, "{out4:%.2f}", (speed < 1.0) ? speed : (speed / 255.0));
+    cm_json_command(buffer);
+
+    return (STAT_OK);
+}
+
+
+/*
+ * marlin_disable_motors() - M84
+ *
+ */
+
+stat_t marlin_disable_motors()
+{
+    char buffer[128];
+    char *str = buffer;
+
+    // TODO: support other parameters
+    strncpy(str, "{md:0}", 6);
+    cm_json_command(buffer);
+
+    return (STAT_OK);
+}
 #endif // MARLIN_COMPAT_ENABLED == true
