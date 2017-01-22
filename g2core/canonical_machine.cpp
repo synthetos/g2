@@ -99,6 +99,7 @@
 #include "planner.h"
 #include "stepper.h"
 #include "encoder.h"
+//#include "toolhead.h"
 #include "spindle.h"
 #include "coolant.h"
 #include "pwm.h"
@@ -294,22 +295,22 @@ cmProbeState    cm_get_probe_state()   { return cm->probe_state[0];}
  *      cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "mots2"));//"mots is stop but machine is in cycle"
  *      return (COMBINED_PANIC);
  */
-cmCombinedState cm_get_combined_state()
+cmCombinedState cm_get_combined_state(cmMachine_t *_cm)
 {
-    if (cm->machine_state <= MACHINE_PROGRAM_END) {  // replaces first 5 cm->machine_state cases
-        return ((cmCombinedState)cm->machine_state); //...where MACHINE_xxx == COMBINED_xxx
+    if (_cm->machine_state <= MACHINE_PROGRAM_END) {  // replaces first 5 cm->machine_state cases
+        return ((cmCombinedState)_cm->machine_state); //...where MACHINE_xxx == COMBINED_xxx
     }
-    switch(cm->machine_state) {
+    switch(_cm->machine_state) {
         case MACHINE_INTERLOCK:     { return (COMBINED_INTERLOCK); }
         case MACHINE_SHUTDOWN:      { return (COMBINED_SHUTDOWN); }
         case MACHINE_PANIC:         { return (COMBINED_PANIC); }
         case MACHINE_CYCLE: {
-            switch(cm->cycle_state) {
+            switch(_cm->cycle_state) {
                 case CYCLE_HOMING:  { return (COMBINED_HOMING); }
                 case CYCLE_PROBE:   { return (COMBINED_PROBE); }
                 case CYCLE_JOG:     { return (COMBINED_JOG); }
                 case CYCLE_MACHINING: case CYCLE_OFF: {
-                    switch(cm->motion_state) {
+                    switch(_cm->motion_state) {
                         case MOTION_STOP:     { return (COMBINED_RUN); }    // See NOTE_1, above
                         case MOTION_PLANNING: { return (COMBINED_RUN); }
                         case MOTION_RUN:      { return (COMBINED_RUN); }
@@ -749,7 +750,7 @@ stat_t cm_test_soft_limits(const float target[])
     if (cm->soft_limit_enable == true) {
         for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
             if (cm->homed[axis] != true) { continue; }                               // skip axis if not homed
-            if (fp_EQ(cm->a[axis].travel_min, cm->a[axis].travel_max)) { continue; }  // skip axis if identical
+            if (fp_EQ(cm->a[axis].travel_min, cm->a[axis].travel_max)) { continue; } // skip axis if identical
             if (fabs(cm->a[axis].travel_min) > DISABLE_SOFT_LIMIT) { continue; }     // skip min test if disabled
             if (fabs(cm->a[axis].travel_max) > DISABLE_SOFT_LIMIT) { continue; }     // skip max test if disabled
 
@@ -1221,7 +1222,7 @@ stat_t cm_set_path_control(GCodeState_t *gcode_state, const uint8_t mode)
  */
 stat_t cm_dwell(const float seconds)
 {
-    cm->gm.parameter = seconds;
+    cm->gm.P_word = seconds;
     mp_dwell(seconds);
     return (STAT_OK);
 }
@@ -1244,10 +1245,10 @@ stat_t cm_straight_feed(const float target[], const bool flags[])
     }
 
     cm_set_model_target(target, flags);
-    ritorno (cm_test_soft_limits(cm->gm.target));    // test soft limits; exit if thrown
-    cm_set_work_offsets(&cm->gm);                    // capture the fully resolved offsets to the state
+    ritorno (cm_test_soft_limits(cm->gm.target));   // test soft limits; exit if thrown
+    cm_set_work_offsets(&cm->gm);                   // capture the fully resolved offsets to the state
     cm_cycle_start();                               // required for homing & other cycles
-    stat_t status = mp_aline(&cm->gm);               // send the move to the planner
+    stat_t status = mp_aline(&cm->gm);              // send the move to the planner
 
     cm_finalize_move(); // <-- ONLY safe because we don't care about status...
 
@@ -1547,7 +1548,8 @@ static void _exec_program_finalize(float *value, bool *flag)
         cm_select_plane(cm->default_select_plane);          // reset to default arc plane
         cm_set_distance_mode(cm->default_distance_mode);
         cm_set_arc_distance_mode(INCREMENTAL_DISTANCE_MODE);// always the default
-        spindle_control_immediate(SPINDLE_OFF);             // M5
+//        toolhead.control_immediate(TOOLHEAD_OFF);           // M5
+        spindle_control_immediate(SPINDLE_OFF);           // M5
         coolant_control_immediate(COOLANT_OFF, COOLANT_BOTH);// M9
         cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);       // G94
         cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);// NIST specifies G1 (MOTION_MODE_STRAIGHT_FEED), but we cancel motion mode. Safer.
@@ -1936,7 +1938,8 @@ stat_t _get_msg_helper(nvObj_t *nv, const char *const msg_array[], uint8_t value
     return(nv_copy_string(nv, (const char *)GET_TEXT_ITEM(msg_array, value)));
 }
 
-stat_t cm_get_stat(nvObj_t *nv) { return(_get_msg_helper(nv, msg_stat, cm_get_combined_state()));}
+stat_t cm_get_stat(nvObj_t *nv) { return(_get_msg_helper(nv, msg_stat, cm_get_combined_state(&cm1)));}
+stat_t cm_get_stat2(nvObj_t *nv) { return(_get_msg_helper(nv, msg_stat, cm_get_combined_state(&cm2)));}
 stat_t cm_get_macs(nvObj_t *nv) { return(_get_msg_helper(nv, msg_macs, cm_get_machine_state()));}
 stat_t cm_get_cycs(nvObj_t *nv) { return(_get_msg_helper(nv, msg_cycs, cm_get_cycle_state()));}
 stat_t cm_get_mots(nvObj_t *nv) { return(_get_msg_helper(nv, msg_mots, cm_get_motion_state()));}

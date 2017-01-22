@@ -303,7 +303,7 @@ extern cmToolTable_t tt;
 /*--- Internal functions and helpers ---*/
 
 // Model state getters and setters
-cmCombinedState cm_get_combined_state(void);
+cmCombinedState cm_get_combined_state(cmMachine_t *_cm);
 cmMachineState cm_get_machine_state(void);
 cmCycleState cm_get_cycle_state(void);
 cmMotionState cm_get_motion_state(void);
@@ -489,6 +489,7 @@ cmAxisType cm_get_axis_type(const nvObj_t *nv);
 stat_t cm_get_mline(nvObj_t *nv);       // get model line number
 stat_t cm_get_line(nvObj_t *nv);        // get active (model or runtime) line number
 stat_t cm_get_stat(nvObj_t *nv);        // get combined machine state as value and string
+stat_t cm_get_stat2(nvObj_t *nv);       // get combined machine state as value and string
 stat_t cm_get_macs(nvObj_t *nv);        // get raw machine state as value and string
 stat_t cm_get_cycs(nvObj_t *nv);        // get raw cycle state
 stat_t cm_get_mots(nvObj_t *nv);        // get raw motion state

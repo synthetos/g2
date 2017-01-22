@@ -218,7 +218,7 @@ typedef struct GCodeState {             // Gcode model state - used by model, pl
     float work_offset[AXES];            // offset from the work coordinate system (for reporting only)
 
     float feed_rate;                    // F - normalized to millimeters/minute or in inverse time mode
-    float parameter;                    // P - parameter used for dwell time in seconds, G10 coord select...
+    float P_word;                       // P - parameter used for dwell time in seconds, G10 coord select...
 
     cmFeedRateMode feed_rate_mode;      // See cmFeedRateMode for settings
     cmCanonicalPlane select_plane;      // G17,G18,G19 - values to set plane to
@@ -241,7 +241,7 @@ typedef struct GCodeState {             // Gcode model state - used by model, pl
         }
 
         feed_rate = 0.0;
-        parameter = 0.0;
+        P_word = 0.0;
 
         feed_rate_mode = INVERSE_TIME_MODE;
         select_plane = CANON_PLANE_XY;
