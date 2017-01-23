@@ -734,11 +734,11 @@ stat_t _parse_gcode_block(char *buf, char *active_comment)
                 case 105: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_PRINT_TEMPERATURES);
                 case 114: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_PRINT_POSITION);
 
-                case 140: gf.marlin_wait_for_temp = true; // NO break!
+                case 109: gf.marlin_wait_for_temp = true; // NO break!
                 case 104: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_SET_EXTRUDER_TEMP);
 
                 case 190: gf.marlin_wait_for_temp = true; // NO break!
-                case 109: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_SET_BED_TEMP);
+                case 140: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_SET_BED_TEMP);
 
                 case 108: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_CANCEL_WAIT_TEMP);
 
@@ -875,8 +875,8 @@ stat_t _execute_gcode_block(char *active_comment)
             ritorno(marlin_request_position_report());
             break;
         }
-        case NEXT_ACTION_MARLIN_SET_EXTRUDER_TEMP:          // M104 or M140
-        case NEXT_ACTION_MARLIN_SET_BED_TEMP:       {       // M109 or M190
+        case NEXT_ACTION_MARLIN_SET_EXTRUDER_TEMP:          // M104 or M109
+        case NEXT_ACTION_MARLIN_SET_BED_TEMP:       {       // M140 or M190
             cm.gmx.marlin_flavor = true;         // these gcodes are ONLY in marlin flavor
             float temp = 0;
             if (gf.S_word) { temp = gv.S_word; }
