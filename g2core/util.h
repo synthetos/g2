@@ -187,7 +187,7 @@ constexpr float c_atof_int_(char *&p_, int_type v_) {
 }
 
 // Start portion
-constexpr float c_atof(char *&p_) { return (*p_ == '-') ? (c_atof_int_(++p_, 0) * -1.0) : (c_atof_int_(p_, 0)); }
+constexpr float c_atof(char *&p_) { return (*p_ == '-') ? (c_atof_int_(++p_, 0) * -1.0) : ( (*p_ == '+') ? c_atof_int_(++p_, 0) : (c_atof_int_(p_, 0))); }
 
 
 // It's assumed that the string buffer contains at lest count_ non-\0 chars
