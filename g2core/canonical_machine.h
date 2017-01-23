@@ -394,7 +394,7 @@ typedef struct GCodeState {             // Gcode model state - used by model, pl
 
 #if MARLIN_COMPAT_ENABLED == true
 enum cmExtruderMode {
-    EXTRUDER_MOVES_ABSOLUTE = 0,    // M82
+    EXTRUDER_MOVES_NORMAL = 0,    // M82
     EXTRUDER_MOVES_RELATIVE,        // M83
     EXTRUDER_MOVES_VOLUMETRIC       // Ultimaker2Marlin
 };
