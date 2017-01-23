@@ -231,21 +231,6 @@ void mp_halt_runtime()
 }
 
 /*
- * mp_flush_planner() - flush all moves in the planner and all arcs
- *
- *    Does not affect the move currently running in mr->
- *    Does not affect mm or gm model positions
- *    This function is designed to be called during a hold to reset the planner
- *    This function should not generally be called; call cm_queue_flush() instead
- */
-void mp_flush_planner(mpPlanner_t *_mp)
-{
-    cm_abort_arc(cm);
-    planner_reset(_mp);
-    mr->block_state = BLOCK_INACTIVE;   // invalidate mr buffer to prevent subsequent motion
-}
-
-/*
  * mp_set_planner_position() - set planner position for a single axis
  * mp_set_runtime_position() - set runtime position for a single axis
  * mp_set_steps_to_runtime_position() - set encoder counts to the runtime position

@@ -533,18 +533,18 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
     if (cm->motion_state == MOTION_HOLD) {
         // Case (7) - all motion has ceased
-        if (cm->hold_state >= FEEDHOLD_FINALIZING) {    // FEEDHOLD_FINALIZING or FEEDHOLD_HOLD
+        if (cm->hold_state >= FEEDHOLD_FINAL_ONCE) {    // FEEDHOLD_FINAL_ONCE or later
             return (STAT_NOOP);                         // VERY IMPORTANT to exit as a NOOP. No more movement
         }
 
         // Case (6) - wait for the steppers to stop
-        if (cm->hold_state == FEEDHOLD_PENDING) {
+        if (cm->hold_state == FEEDHOLD_STOPPING) {
             if (mp_runtime_is_idle()) {                                 // wait for the steppers to actually clear out
                 if ((cm->cycle_state == CYCLE_HOMING) || (cm->cycle_state == CYCLE_PROBE)) {
                     // when homing or probing we don't want to stay in HOLD or execute finalizations
                     cm->hold_state = FEEDHOLD_OFF;
                 } else {
-                    cm->hold_state = FEEDHOLD_FINALIZING;
+                    cm->hold_state = FEEDHOLD_FINAL_ONCE;
                 }
                 mp_zero_segment_velocity();                             // for reporting purposes
                 sr_request_status_report(SR_REQUEST_IMMEDIATE);
@@ -560,7 +560,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             bf->block_state = BLOCK_INITIAL_ACTION;                     // tell _exec to re-use the bf buffer
             bf->length = get_axis_vector_length(mr->target, mr->position);// reset length
             //bf->entry_vmax = 0;                                       // set bp+0 as hold point
-            cm->hold_state = FEEDHOLD_PENDING;
+            cm->hold_state = FEEDHOLD_STOPPING;
 
             // No point bothering with the rest of this move if homing or probing
             if ((cm->cycle_state == CYCLE_HOMING) || (cm->cycle_state == CYCLE_PROBE)) {

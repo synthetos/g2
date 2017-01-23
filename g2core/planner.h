@@ -541,7 +541,7 @@ void planner_reset(mpPlanner_t *_mp);
 stat_t planner_test_assertions(const mpPlanner_t *_mp);
 
 void mp_halt_runtime(void);
-void mp_flush_planner(mpPlanner_t *_mp);
+
 void mp_set_planner_position(uint8_t axis, const float position);
 void mp_set_runtime_position(uint8_t axis, const float position);
 void mp_set_steps_to_runtime_position(void);
@@ -590,7 +590,7 @@ bool mp_free_run_buffer(void);
 //**** plan_line.c functions
 void mp_zero_segment_velocity(void);                    // getters and setters...
 float mp_get_runtime_velocity(void);
-float mp_get_runtime_absolute_position(uint8_t axis);
+float mp_get_runtime_absolute_position(mpPlannerRuntime_t *_mr, uint8_t axis);
 float mp_get_runtime_work_position(uint8_t axis);
 void mp_set_runtime_work_offset(float offset[]);
 bool mp_get_runtime_busy(void);

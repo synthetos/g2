@@ -76,7 +76,7 @@ static void _set_bf_diagnostics(mpBuf_t* bf) {
 
 void  mp_zero_segment_velocity() { mr->segment_velocity = 0; }
 float mp_get_runtime_velocity(void) { return (mr->segment_velocity); }
-float mp_get_runtime_absolute_position(uint8_t axis) { return (mr->position[axis]); }
+float mp_get_runtime_absolute_position(mpPlannerRuntime_t *_mr, uint8_t axis) { return (_mr->position[axis]); }
 void mp_set_runtime_work_offset(float offset[]) { copy_vector(mr->gm.work_offset, offset); }
 
 // We have to handle rotation - "rotate" by the transverse of the matrix to got "normal" coordinates
