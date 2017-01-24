@@ -113,7 +113,7 @@
 
 /***********************************************************************************
  * cm_has_hold()   - return true if a hold condition exists (or a pending hold request)
- * cm_start_hold() - start a feedhhold external to feedhold request
+ * cm_start_hold() - start a feedhhold external to feedhold request & sequencing
  *
  *  It's OK to call start_hold directly in order to get a hold quickly (see gpio.cpp)
  */
@@ -124,9 +124,11 @@ bool cm_has_hold()
 
 void cm_start_hold()
 {
-    if ((cm1.hold_state != FEEDHOLD_REQUESTED) && (mp_has_runnable_buffer(mp))) { // meaning there's something running
+//    if ((cm1.hold_state != FEEDHOLD_REQUESTED) && (mp_has_runnable_buffer(mp))) { // meaning there's something running
+    // Can only request a feedhold if the machine is in motion and there not one is not already in progress 
+    if ((cm1.hold_state == FEEDHOLD_OFF) && (mp_has_runnable_buffer(mp))) {
         cm_set_motion_state(MOTION_HOLD);
-        cm->hold_state = FEEDHOLD_SYNC;                      // invokes hold from aline execution
+        cm1.hold_state = FEEDHOLD_SYNC;   // invokes hold from aline execution
     }
 }
 
@@ -205,7 +207,7 @@ stat_t cm_feedhold_sequencing_callback()
     // exit_hold runs for both ~ and % feedhold ends
     if (cm1.end_hold_requested) {
         
-        // Flushes must complete before end_hold runs. Trap possible race condition if flush request was
+        // Flush must complete before exit_hold runs. Trap possible race condition if flush request was
         if (cm1.queue_flush_state == FLUSH_REQUESTED) { // ...received when this callback was running
             return (STAT_OK);
         } 
@@ -284,7 +286,7 @@ stat_t cm_enter_hold_planner()
 }
 
 /***********************************************************************************
- *  cm_exit_hold_planner()  - initiate return from secondary context
+ *  cm_exit_hold_planner()  - initiate return from feedhold planner
  *  cm_exit_hold_finalize() - main loop callback to finsh return once moves are done 
  *  _planner_done_callback() - callback to sync to end of planner operations 
  *
