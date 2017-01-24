@@ -134,7 +134,6 @@ void cm_start_hold()
  * cm_request_feedhold()
  * cm_request_end_hold()
  * cm_request_queue_flush()
- * cm_feedhold_sequencing_callback() - sequence feedhold, queue_flush, and end_hold requests
  */
 
 void cm_request_feedhold(void) 
@@ -166,6 +165,10 @@ void cm_request_queue_flush()
     }
 }
 
+/***********************************************************************************
+ * cm_feedhold_sequencing_callback() - sequence feedhold, queue_flush, and end_hold requests
+ */
+
 stat_t cm_feedhold_sequencing_callback()
 {
     // invoking a feedhold is a 2 step process, invoke it, then do the hold moves
@@ -186,12 +189,13 @@ stat_t cm_feedhold_sequencing_callback()
             cm_queue_flush();
     }                                               // queue flush always ends hold, so it drops through
     
-    // end hold always copies end position of the hold back to the primary planner
+    // exit_hold runs for both ~ and % feedhold ends
     if (cm1.end_hold_requested) {
-        if (cm1.queue_flush_state == FLUSH_OFF) {   // either no flush or wait until it's done flushing
-            cm1.end_hold_requested = false;
-            cm_exit_hold_planner();
-        }
+        if (cm1.queue_flush_state == FLUSH_REQUESTED) { // possible race condition if flush request
+            return (STAT_OK);                           //...was received when this callback was running
+        }        
+        cm1.end_hold_requested = false;
+        cm_exit_hold_planner();
     }
     return (STAT_OK);
 }
@@ -224,18 +228,17 @@ stat_t cm_enter_hold_planner()
     planner_reset((mpPlanner_t *)cm2.mp);   // mp is a void pointer
 
     // set parameters in cm, gm and gmx so you can actually use it
-    cmMachine_t *_cm = &cm2;
-    _cm->hold_state = FEEDHOLD_OFF;
-    _cm->gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;
-    _cm->gm.absolute_override = ABSOLUTE_OVERRIDE_OFF;
-    _cm->gm.feed_rate = 0;
+    cm2.hold_state = FEEDHOLD_OFF;
+    cm2.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;
+    cm2.gm.absolute_override = ABSOLUTE_OVERRIDE_OFF;
+    cm2.gm.feed_rate = 0;
 
     // clear the target and set the positions to the current hold position
-    memset(&(_cm->gm.target), 0, sizeof(_cm->gm.target));
-    copy_vector(_cm->gm.target_comp, cm->gm.target_comp); // preserve original Kahan compensation
-    copy_vector(_cm->gmx.position, mr->position);
-    copy_vector(mp2.position, mr->position);
-    copy_vector(mr2.position, mr->position);
+    memset(&(cm2.gm.target), 0, sizeof(cm2.gm.target));
+    copy_vector(cm2.gm.target_comp, cm1.gm.target_comp); // preserve original Kahan compensation
+    copy_vector(cm2.gmx.position, mr1.position);
+    copy_vector(mp2.position, mr1.position);
+    copy_vector(mr2.position, mr1.position);
 
     // reassign the globals to the secondary CM
     cm = &cm2;
@@ -247,8 +250,8 @@ stat_t cm_enter_hold_planner()
     cm_set_g30_position();
     cm_set_motion_state(MOTION_STOP);
 
-    // optional Z lift
-    if (fp_NOT_ZERO(cm->feedhold_z_lift)) {
+    // execute feedhold actions
+    if (fp_NOT_ZERO(cm->feedhold_z_lift)) {             // optional Z lift
         float stored_distance_mode = cm_get_distance_mode(MODEL);
         cm_set_distance_mode(INCREMENTAL_DISTANCE_MODE);
         bool flags[] = { 0,0,1,0,0,0 };
@@ -256,7 +259,6 @@ stat_t cm_enter_hold_planner()
         cm_straight_traverse(target, flags);
         cm_set_distance_mode(stored_distance_mode);
     }
-
     spindle_control_sync(SPINDLE_PAUSE);                // optional spindle pause
     coolant_control_sync(COOLANT_PAUSE, COOLANT_BOTH);  // optional coolant pause
     mp_queue_command(_enter_hold_finalize, nullptr, nullptr);
@@ -289,8 +291,7 @@ static void _exit_hold_finalize(float* vect, bool* flag)
 
 stat_t cm_exit_hold_planner()     // LATER: if value == true return with offset corrections
 {
-    // *** While still in secondary machine:
-
+    // perform end-hold actions --- while still in secondary machine
     spindle_control_sync(SPINDLE_RESUME);               // resume spindle if paused
     coolant_control_sync(COOLANT_RESUME, COOLANT_BOTH); // resume coolant if paused
     
@@ -303,7 +304,7 @@ stat_t cm_exit_hold_planner()     // LATER: if value == true return with offset 
     cm_select = CM_SECONDARY_RETURN;
     return (STAT_OK);
     
-    // return_to_primary completes in cm_return_callback() after the wait 
+//  cm_exit_hold_planner() completes in cm_exit_hold_finalize() after the above moves are done 
 }
 
 stat_t cm_exit_hold_finalize()
@@ -315,25 +316,21 @@ stat_t cm_exit_hold_finalize()
         return (STAT_EAGAIN);
     }
     
-    // collect final runtime position from secondary planner
-    uint8_t axis;
-    float runtime_position[AXES];
-    for (axis = AXIS_X; axis < AXES; axis++) {
-        runtime_position[axis] = mp_get_runtime_absolute_position(&mr2, axis);
-    }
-//    copy_vector(runtime_position, mr2.position);
-
     // return to primary machine
     cm = &cm1;
     mp = (mpPlanner_t *)cm->mp;             // cm->mp is a void pointer
     mr = mp->mr;
     cm_select = CM_PRIMARY;
 
-    // copy final runtime position to primary planner
-    for (axis = AXIS_X; axis < AXES; axis++) {
-        cm_set_position(axis, runtime_position[axis]);
+    // if queue flush occurred adjust primary planner positions to runtime positions
+    if (cm1.queue_flush_state == FLUSH_WAS_RUN) {
+        for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+            cm_set_position(axis, mp_get_runtime_absolute_position(&mr2, axis));
+        }
+        cm1.queue_flush_state = FLUSH_OFF;
     }
 
+    // resume motion from primary planner or end cycle if now moves
     cm->hold_state = FEEDHOLD_OFF;
     if (mp_has_runnable_buffer(mp)) {       //+++++ Should MP be passed or global?
         cm_set_motion_state(MOTION_RUN);
@@ -351,8 +348,8 @@ stat_t cm_exit_hold_finalize()
  * Queue Flush operations
  *
  * This one's complicated. See here first:
- * https://github.com/synthetos/g2/wiki/Alarm-Processing
  * https://github.com/synthetos/g2/wiki/Job-Exception-Handling
+ * https://github.com/synthetos/g2/wiki/Alarm-Processing
  *
  * We want to use queue flush for a few different use cases, as per the above wiki pages.
  * The % behavior implements Exception Handling cases 1 and 2 - Stop a Single Move and
@@ -389,14 +386,14 @@ stat_t cm_exit_hold_finalize()
  *
  *  This function assumes that the feedhold sequencing callback has resolved all 
  *  state and timing issues and it's OK to call this now. Do not call this function
- *  directly. ALways use the feedhold sequencing callback.
+ *  directly. Always use the feedhold sequencing callback.
  */
 
 void cm_queue_flush()
 {
     cm_abort_arc(&cm1);                     // kill arcs so they don't just create more alines
-    planner_reset((mpPlanner_t *)cm1.mp);   // also resets the mr under the planner
-    cm1.queue_flush_state = FLUSH_OFF;
+    planner_reset((mpPlanner_t *)cm1.mp);   // reset primary planner. also resets the mr under the planner
+    cm1.queue_flush_state = FLUSH_WAS_RUN;
     cm1.end_hold_requested = true;          // queue flush always ends the hold
     qr_request_queue_report(0);             // request a queue report, since we've changed the number of buffers available
 }

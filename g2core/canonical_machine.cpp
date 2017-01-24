@@ -740,8 +740,8 @@ void cm_set_model_target(const float target[], const bool flags[])
 
 static stat_t _finalize_soft_limits(const stat_t status)
 {
-    cm->gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;     // cancel motion
-    copy_vector(cm->gm.target, cm->gmx.position);             // reset model target
+    cm->gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;    // cancel motion
+    copy_vector(cm->gm.target, cm->gmx.position);           // reset model target
     return (cm_alarm(status, "soft_limits"));               // throw an alarm
 }
 

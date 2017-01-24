@@ -144,7 +144,8 @@ typedef enum {                  // feed override state machine
 
 typedef enum {                  // queue flush state machine
     FLUSH_OFF = 0,              // no queue flush in effect
-    FLUSH_REQUESTED             // flush has been requested but not started yet
+    FLUSH_REQUESTED,            // flush has been requested but not started yet
+    FLUSH_WAS_RUN               // transient state to note that a queue flush has been run 
 } cmQueueFlushState;
 
 typedef enum {
