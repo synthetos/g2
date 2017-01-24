@@ -167,6 +167,19 @@ void cm_request_queue_flush()
 
 /***********************************************************************************
  * cm_feedhold_sequencing_callback() - sequence feedhold, queue_flush, and end_hold requests
+ *
+ * Expected behaviors:           (no-hold means machine is not in hold, etc)
+ *
+ *  (no-cycle) !    No action. Feedhold is not run (nothing to hold!)
+ *  (no-hold)  ~    No action. Cannot exit a feedhold that does not exist
+ *  (no-hold)  %    No action. Queue flush is not honored except during a feedhold
+ *  (in-cycle) !    Start a feedhold
+ *  (in-hold)  ~    Wait for feedhold actions to complete, exit feedhold, resume motion 
+ *  (in-hold)  %    Wait for feedhold actions to complete, exit feedhold, do not resume motion
+ *  (in-cycle) !~   Start a feedhold, do enter and exit actions, exit feedhold, resume motion
+ *  (in-cycle) !%   Start a feedhold, do enter and exit actions, exit feedhold, do not resume motion
+ *  (in-cycle) !%~  Same as above
+ *  (in-cycle) !~%  Same as above (this one's an anomaly, but the intent would be to Q flush)
  */
 
 stat_t cm_feedhold_sequencing_callback()
