@@ -34,21 +34,21 @@
 
 //+++++ DIAGNOSTICS
 
-#if IN_DEBUGGER < 1
+//#if IN_DEBUGGER < 1
 #define LOG_RETURN(msg)  // LOG_RETURN with no action (production)
-#else
-#include "xio.h"
-static char logbuf[128];
-static void _logger(const char *msg, const mpBuf_t *bf)         // LOG_RETURN with full state dump
-{
-    sprintf(logbuf, "[%2d] %s (%d) mt:%5.2f, L:%1.3f [%1.3f, %1.3f, %1.3f] V:[%1.2f, %1.2f, %1.2f]\n",
-                    bf->buffer_number, msg, bf->hint, (bf->block_time * 60000),
-                    bf->length, bf->head_length, bf->body_length, bf->tail_length,
-                    bf->pv->exit_velocity, bf->cruise_velocity, bf->exit_velocity);
-    xio_writeline(logbuf);
-}
-#define LOG_RETURN(msg) { _logger(msg, bf); }
-#endif
+//#else
+//#include "xio.h"
+//static char logbuf[128];
+//static void _logger(const char *msg, const mpBuf_t *bf)         // LOG_RETURN with full state dump
+//{
+//    sprintf(logbuf, "[%2d] %s (%d) mt:%5.2f, L:%1.3f [%1.3f, %1.3f, %1.3f] V:[%1.2f, %1.2f, %1.2f]\n",
+//                    bf->buffer_number, msg, bf->hint, (bf->block_time * 60000),
+//                    bf->length, bf->head_length, bf->body_length, bf->tail_length,
+//                    bf->pv->exit_velocity, bf->cruise_velocity, bf->exit_velocity);
+//    xio_writeline(logbuf);
+//}
+//#define LOG_RETURN(msg) { _logger(msg, bf); }
+//#endif
 
 #if IN_DEBUGGER < 1
 #define TRAP_ZERO(t,m)

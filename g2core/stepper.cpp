@@ -79,7 +79,7 @@ extern OutputPin<kDebug3_PinNumber> debug_pin3;
 //extern OutputPin<kDebug4_PinNumber> debug_pin4;
 
 dda_timer_type dda_timer     {kTimerUpToMatch, FREQUENCY_DDA};      // stepper pulse generation
-load_timer_type load_timer;         // triggers load of next stepper segment
+//load_timer_type load_timer;         // triggers load of next stepper segment
 exec_timer_type exec_timer;         // triggers calculation of next+1 stepper segment
 fwd_plan_timer_type fwd_plan_timer; // triggers planning of next block
 
@@ -129,7 +129,7 @@ void stepper_init()
     dda_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
 
     // setup software interrupt load timer
-    load_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityHigh);
+//    load_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityHigh);
 
     // setup software interrupt exec timer & initial condition
     exec_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityMedium);
@@ -409,18 +409,9 @@ void st_request_load_move()
         return;
     }
     if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_LOADER) {       // bother interrupting
-        load_timer.setInterruptPending();
+       _load_move();
     }
 }
-
-namespace Motate {    // Define timer inside Motate namespace
-    template<>
-    void load_timer_type::interrupt()
-    {
-        load_timer.getInterruptCause();                             // read SR to clear interrupt condition
-        _load_move();
-    }
-} // namespace Motate
 
 /****************************************************************************************
  * _load_move() - Dequeue move and load into stepper runtime structure
