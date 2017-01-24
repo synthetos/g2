@@ -173,29 +173,33 @@ stat_t cm_feedhold_sequencing_callback()
 {
     // invoking a feedhold is a 2 step process, invoke it, then do the hold moves
     if (cm1.hold_state == FEEDHOLD_REQUESTED) {
-        if (mp_has_runnable_buffer(mp)) {           // bypass cm_start_hold() to start from here
+        if (mp_has_runnable_buffer(mp)) {               // bypass cm_start_hold() to start from here
             cm_set_motion_state(MOTION_HOLD);
-            cm->hold_state = FEEDHOLD_SYNC;         // invokes hold from aline execution
+            cm->hold_state = FEEDHOLD_SYNC;             // invokes hold from aline execution
         }
     }
     if (cm1.hold_state == FEEDHOLD_FINAL_ONCE) {
-        cm_enter_hold_planner();                    // perform Z lift, spindle & coolant operations
+        cm_enter_hold_planner();                        // perform Z lift, spindle & coolant operations
     }
 
     // queue flush won't run until the hold is complete and all (subsequent) motion has stopped
     if ((cm1.queue_flush_state == FLUSH_REQUESTED) && 
-        (cm1.hold_state == FEEDHOLD_HOLD) &&        // only flush once hold is actually holding
-        (mp_runtime_is_idle())) {                   // don't flush planner during movement
+        (cm1.hold_state == FEEDHOLD_HOLD) &&            // only flush once hold is actually holding
+        (mp_runtime_is_idle())) {                       // don't flush planner during movement
             cm_queue_flush();
-    }                                               // queue flush always ends hold, so it drops through
+    }                                                   // queue flush always ends hold, so it drops through
     
     // exit_hold runs for both ~ and % feedhold ends
     if (cm1.end_hold_requested) {
-        if (cm1.queue_flush_state == FLUSH_REQUESTED) { // possible race condition if flush request
-            return (STAT_OK);                           //...was received when this callback was running
-        }        
-        cm1.end_hold_requested = false;
-        cm_exit_hold_planner();
+        
+        // Flushes must complete before end_hold runs. Trap possible race condition if flush request was
+        if (cm1.queue_flush_state == FLUSH_REQUESTED) { // ...received when this callback was running
+            return (STAT_OK);
+        } 
+        if (cm1.hold_state == FEEDHOLD_HOLD) {          // don't run end_hold until fully into a hold
+            cm1.end_hold_requested = false;
+            cm_exit_hold_planner();
+        }       
     }
     return (STAT_OK);
 }
