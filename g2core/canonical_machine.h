@@ -387,8 +387,8 @@ typedef struct GCodeState {             // Gcode model state - used by model, pl
         arc_distance_mode = ABSOLUTE_DISTANCE_MODE;
         absolute_override = ABSOLUTE_OVERRIDE_OFF;
         coord_system = ABSOLUTE_COORDS;
-        tool = 0;
-        tool_select = 0;
+        tool = 1;
+        tool_select = 1;
     };
 } GCodeState_t;
 

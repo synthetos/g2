@@ -714,7 +714,7 @@ void canonical_machine_init()
 // If you can assume all memory has been zeroed by a hard reset you don't need this code:
 //    memset(&cm, 0, sizeof(cm));                 // do not reset canonicalMachineSingleton once it's been initialized
     memset(&cm, 0, sizeof(cmSingleton_t));      // do not reset canonicalMachineSingleton once it's been initialized
-    memset(&cm.gm, 0, sizeof(GCodeState_t));    // clear all values, pointers and status
+    cm.gm.reset();                              // clear all values, pointers and status -- not ALL to zero, however
 
     canonical_machine_init_assertions();        // establish assertions
     ACTIVE_MODEL = MODEL;                       // setup initial Gcode model pointer

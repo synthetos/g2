@@ -840,7 +840,10 @@ stat_t _execute_gcode_block(char *active_comment)
 #if MARLIN_COMPAT_ENABLED == true
     // adjust T real quick
     if (cm.gmx.marlin_flavor && gf.tool_select) {
-        cm_select_tool(gv.tool_select); // We need to go ahead and apply to tool select
+        gv.tool_select += 1;
+        cm.gm.tool_select = gv.tool_select; // We need to go ahead and apply to tool select, and in Marlin 0 is valid, so add 1
+        cm.gm.tool = cm.gm.tool_select;     // Also, in Marlin, tool changes are effective immediately :facepalm:
+        gf.tool_select = false;             // prevent a tool_select command from being buffered (planning to zero)
     }
     // Handle Marlin specifics
 
@@ -850,12 +853,12 @@ stat_t _execute_gcode_block(char *active_comment)
         cm.gmx.marlin_flavor = true;         // E should ONLY be seen in marlin flavor
 
         // Ennn T0 -> Annn
-        if (cm.gm.tool_select == 0) {
+        if (cm.gm.tool_select == 1) {
             gf.target[AXIS_A] = true;
             gv.target[AXIS_A] = gv.E_word;
         }
         // Ennn T1 -> Bnnn
-        else if (cm.gm.tool_select == 1) {
+        else if (cm.gm.tool_select == 2) {
             gf.target[AXIS_B] = true;
             gv.target[AXIS_B] = gv.E_word;
         }

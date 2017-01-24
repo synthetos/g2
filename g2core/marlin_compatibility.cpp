@@ -28,6 +28,7 @@
 #include "canonical_machine.h"
 #include "util.h"
 #include "xio.h"            // for char definitions
+#include "temperature.h"            // for temperature controls
 #include "json_parser.h"
 #include "planner.h"
 #include "MotateTimers.h"            // for char definitions
@@ -98,63 +99,40 @@ nvObj_t *_get_spcific_nv(const char *key) {
  */
 void _report_temperatures(char *(&str)) {
     // Tool 0 is extruder 1
-    uint8_t tool = cm.gm.tool_select;
+    uint8_t tool = cm.gm.tool;
 
-    nvObj_t *nv = nullptr;
+    str_concat(str, " T:");
+    str += floattoa(str, cm_get_temperature(tool), 2);
+    str_concat(str, " /");
+    str += floattoa(str, cm_get_set_temperature(tool), 2);
 
-    if (tool == 0) {
-        nv = _get_spcific_nv("he1t");
-    } else if (tool == 1) {
-        nv = _get_spcific_nv("he2t");
-    } else {
-        return; // we have no way of reporting errors here, ATM
-    }
-    if (!nv) { return; }
-    str += sprintf(str, " T:%.2f", (float)nv->value);
+    str_concat(str, " B:");
+    str += floattoa(str, cm_get_temperature(3), 2);
+    str_concat(str, " /");
+    str += floattoa(str, cm_get_set_temperature(3), 2);
 
-    if (tool == 0) {
-        nv = _get_spcific_nv("he1st");
-    } else if (tool == 1) {
-        nv = _get_spcific_nv("he2st");
-    } else {
-        return; // we have no way of reporting errors here, ATM
-    }
-    if (!nv) { return; }
-    str += sprintf(str, " /%.2f", (float)nv->value);
+    str_concat(str, " @:");
+    str += floattoa(str, cm_get_heater_output(tool), 0);
 
-    nv = _get_spcific_nv("he3t");
-    if (!nv) { return; }
-    str += sprintf(str, " B:%.2f", (float)nv->value);
-
-    nv = _get_spcific_nv("he3st");
-    if (!nv) { return; }
-    str += sprintf(str, " /%.2f", (float)nv->value);
-
-    if (tool == 0) {
-        nv = _get_spcific_nv("he1op");
-    } else if (tool == 1) {
-        nv = _get_spcific_nv("he2op");
-    }    if (!nv) { return; }
-    str += sprintf(str, " @:%.0f", (float)nv->value * 255.0);
-
-    nv = _get_spcific_nv("he3op");
-    if (!nv) { return; }
-    str += sprintf(str, " B@:%.0f", (float)nv->value * 255.0);
+    str_concat(str, " B@:");
+    str += floattoa(str, cm_get_heater_output(3), 0);
 }
 
 /*
  * _report_position() - convenience function called from marlin_response()
  */
 void _report_position(char *(&str)) {
-    str += sprintf(str, " X:%.2f", cm_get_work_position(ACTIVE_MODEL, 0));
-    str += sprintf(str, " Y:%.2f", cm_get_work_position(ACTIVE_MODEL, 1));
-    str += sprintf(str, " Z:%.2f", cm_get_work_position(ACTIVE_MODEL, 2));
+    str_concat(str, " X:");
+    str += floattoa(str, cm_get_work_position(ACTIVE_MODEL, 0), 2);
+    str_concat(str, " Y:");
+    str += floattoa(str, cm_get_work_position(ACTIVE_MODEL, 1), 2);
+    str_concat(str, " Z:");
+    str += floattoa(str, cm_get_work_position(ACTIVE_MODEL, 2), 2);
 
-    uint8_t tool = cm.gm.tool_select;
-    if (tool == 0) {
-        str += sprintf(str, " E:%.2f", cm_get_work_position(ACTIVE_MODEL, 3));
-    } else if (tool == 1) {
-        str += sprintf(str, " E:%.2f", cm_get_work_position(ACTIVE_MODEL, 4));
+    uint8_t tool = cm.gm.tool;
+    if ((tool > 0) && (tool < 3)) {
+        str_concat(str, " E:");
+        str += floattoa(str, cm_get_work_position(ACTIVE_MODEL, 2), tool + 2); // A or B, depending on tool
     }
 }
 
@@ -253,8 +231,8 @@ bool marlin_handle_fake_stk500(char *str)
  */
 stat_t marlin_request_temperature_report() // M105
 {
-    uint8_t tool = cm.gm.tool_select;
-    if ((tool < 0) || (tool > 1)) {
+    uint8_t tool = cm.gm.tool;
+    if ((tool < 1) || (tool > 2)) {
         return STAT_INPUT_VALUE_RANGE_ERROR;
     }
 
@@ -282,8 +260,7 @@ void marlin_response(const stat_t status, char *buf)
     char *str = buffer;
 
     if ((status == STAT_OK) || (status == STAT_EAGAIN) || (status == STAT_NOOP)) {
-        strncpy(str, "ok", 2);
-        str += 2;
+        str_concat(str, "ok");
 
         if (temperature_requested) {
             _report_temperatures(str);
@@ -302,7 +279,7 @@ void marlin_response(const stat_t status, char *buf)
 
     } else {
 //        str += sprintf(p, "echo:M%d %s", (int)status, get_status_message(status), buf);
-        str += sprintf(str, "Error:[%d] %s", (int)status, get_status_message(status));
+        str += sprintf(str, "Error:%d %s", (int)status, get_status_message(status));
     }
 
     *str++ = '\n';
@@ -345,7 +322,11 @@ bool _queue_next_temperature_commands()
         if ((MarlinSetTempState::SettingTemperature == set_temp_state) ||
             (MarlinSetTempState::SettingTemperatureNoWait == set_temp_state))
         {
-            str += sprintf(str, "{he%dst:%.2f}", next_temperature_tool+1, next_temperature);
+            str_concat(str, "{he");
+            str += inttoa(str, next_temperature_tool);
+            str_concat(str, "st:");
+            str += floattoa(str, next_temperature, 2);
+            str_concat(str, "}");
             cm_json_command(buffer);
 
             if (MarlinSetTempState::SettingTemperatureNoWait == set_temp_state) {
@@ -370,7 +351,9 @@ bool _queue_next_temperature_commands()
 
         if (MarlinSetTempState::StartingWait == set_temp_state) {
             str = buffer;
-            str += sprintf(str, "{he%dat:t}", next_temperature_tool+1);
+            str_concat(str, "{he");
+            str += inttoa(str, next_temperature_tool);
+            str_concat(str, "at:t}");
             cm_json_wait(buffer);
 
             set_temp_state = MarlinSetTempState::StoppingUpdates;
@@ -424,7 +407,7 @@ stat_t marlin_set_temperature(uint8_t tool, float temperature, bool wait) {
     if (MarlinSetTempState::Idle != set_temp_state) {
         return (STAT_BUFFER_FULL_FATAL); // we shouldn't be here
     }
-    if ((tool < 0) || (tool > 2)) {
+    if ((tool < 1) || (tool > 2)) {
         return STAT_INPUT_VALUE_RANGE_ERROR;
     }
 
@@ -485,7 +468,10 @@ stat_t marlin_set_fan_speed(const uint8_t fan, float speed)
     }
 
     // TODO: support other fans, or remapping output
-    str += sprintf(str, "{out4:%.2f}", (speed < 1.0) ? speed : (speed / 255.0));
+    str_concat(str, "{out4:");
+    str += floattoa(str, (speed < 1.0) ? speed : (speed / 255.0), 4);
+    str_concat(str, "}");
+
     cm_json_command(buffer);
 
     return (STAT_OK);
@@ -503,7 +489,7 @@ stat_t marlin_disable_motors()
     char *str = buffer;
 
     // TODO: support other parameters
-    strncpy(str, "{md:0}", 6);
+    str_concat(str, "{md:0}");
     cm_json_command(buffer);
 
     return (STAT_OK);

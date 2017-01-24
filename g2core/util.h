@@ -189,10 +189,15 @@ constexpr float c_atof_int_(char *&p_, int_type v_) {
 // Start portion
 constexpr float c_atof(char *&p_) { return (*p_ == '-') ? (c_atof_int_(++p_, 0) * -1.0) : ( (*p_ == '+') ? c_atof_int_(++p_, 0) : (c_atof_int_(p_, 0))); }
 
-
 // It's assumed that the string buffer contains at lest count_ non-\0 chars
 //constexpr int c_strreverse(char * const t, const int count_, char hold = 0) {
 //    return count_>1 ? (hold=*t, *t=*(t+(count_-1)), *(t+(count_-1))=hold), c_strreverse(t+1, count_-2), count_ : count_;
 //}
+
+template <int32_t length>
+void str_concat(char *&dest, const char (&data)[length]) {
+    // length includes the \0
+    strncpy(dest, data, length); dest += length-1;
+};
 
 #endif    // End of include guard: UTIL_H_ONCE
