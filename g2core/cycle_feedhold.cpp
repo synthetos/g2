@@ -347,7 +347,6 @@ stat_t cm_exit_hold_finalize()
         for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
             cm_set_position(axis, mp_get_runtime_absolute_position(&mr2, axis));
         }
-        // TODO: reset motion mode to G80 or G0. Others?
         cm1.queue_flush_state = FLUSH_OFF;
     }
 
