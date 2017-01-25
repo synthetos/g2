@@ -341,11 +341,13 @@ stat_t cm_exit_hold_finalize()
     mr = mp->mr;
     cm_select = CM_PRIMARY;
 
-    // if queue flush occurred adjust primary planner positions to runtime positions
+    // execute this block if a queue flush was performed
+    // adjust primary planner positions to runtime positions
     if (cm1.queue_flush_state == FLUSH_WAS_RUN) {
         for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
             cm_set_position(axis, mp_get_runtime_absolute_position(&mr2, axis));
         }
+        // TODO: reset motion mode to G80 or G0. Others?
         cm1.queue_flush_state = FLUSH_OFF;
     }
 

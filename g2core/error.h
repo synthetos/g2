@@ -249,9 +249,9 @@ char *get_status_message(stat_t status);
 #define STAT_SPINDLE_SPEED_MAX_EXCEEDED 150
 #define STAT_SPINDLE_MUST_BE_OFF 151
 #define STAT_SPINDLE_MUST_BE_TURNING 152            // some canned cycles require spindle to be turning when called
-#define STAT_ARC_ERROR_RESERVED 153                 // RESERVED
+#define STAT_ARC_SPECIFICATION_ERROR 153            // generic arc specification error
 #define STAT_ARC_HAS_IMPOSSIBLE_CENTER_POINT 154    // trap (.05 inch/.5 mm) OR ((.0005 inch/.005mm) AND .1% of radius condition
-#define STAT_ARC_SPECIFICATION_ERROR 155            // generic arc specification error
+#define STAT_ARC_HAS_ROTARY_AXIS 155                // arc specification includes a rotary axis
 #define STAT_ARC_AXIS_MISSING_FOR_SELECTED_PLANE 156  // arc is missing axis (axes) required by selected plane
 #define STAT_ARC_OFFSETS_MISSING_FOR_SELECTED_PLANE 157 // one or both offsets are not specified
 #define STAT_ARC_RADIUS_OUT_OF_TOLERANCE 158        // WARNING - radius arc is too large - accuracy in question
@@ -543,9 +543,9 @@ static const char stat_149[] = "Spindle speed below minimum";
 static const char stat_150[] = "Spindle speed exceeded maximum";
 static const char stat_151[] = "Spindle must be off for this command";
 static const char stat_152[] = "Spindle must be turning for this command";
-static const char stat_153[] = "153";
+static const char stat_153[] = "Arc specification error";
 static const char stat_154[] = "Arc specification error - impossible center point";
-static const char stat_155[] = "Arc specification error";
+static const char stat_155[] = "Arc specification error - arc has rotary axis(es)";
 static const char stat_156[] = "Arc specification error - missing axis(es)";
 static const char stat_157[] = "Arc specification error - missing offset(s)";
 //--------------------------------------1--------10--------20--------30--------40--------50--------60-64

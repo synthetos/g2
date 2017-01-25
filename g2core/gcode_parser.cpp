@@ -724,7 +724,7 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
  *    20. perform motion (G0 to G3, G80-G89) as modified (possibly) by G53
  *    21. stop and end (M0, M1, M2, M30, M60)
  *
- *  Values in gn are in original units and should not be unit converted prior
+ *  Values in gv are in original units and should not be unit converted prior
  *  to calling the canonical functions (which do the unit conversions)
  */
 

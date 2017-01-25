@@ -105,7 +105,7 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
                    const cmMotionMode motion_mode)                  // defined motion mode
 {
     // Start setting up the arc and trapping arc specification errors
-
+    
     // Trap some precursor cases. Since motion mode (MODAL_GROUP_G1) persists from the
     // previous move it's possible for non-modal commands such as F or P to arrive here
     // when no motion has actually been specified. It's also possible to run an arc as
@@ -127,6 +127,15 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
     // Some things you might think are errors but are not:
     //  - offset specified for linear axis (i.e. not one of the plane axes). Ignored
     //  - rotary axes are present. Ignored
+    //  - no parameters are specified. This can happen when G2 or G3 motion mode persists but
+    //    a non-arc, non-motion command is entered afterwards, such as M3 or T. Trapped here:
+
+    // Trap if no parameters were specified while in CW or CCW arc motion mode. This is OK
+    if (!(target_f[AXIS_X] | target_f[AXIS_Y] | target_f[AXIS_Z] | 
+          offset_f[AXIS_X] | offset_f[AXIS_Y] | offset_f[AXIS_Z] |
+          radius_f | P_word_f)) {
+        return(STAT_OK);
+    }
 
     // trap missing feed rate
     if (fp_ZERO(cm->gm.feed_rate)) {
