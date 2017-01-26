@@ -600,14 +600,7 @@ stat_t _parse_gcode_block(char *buf, char *active_comment)
                 case 21: SET_MODAL (MODAL_GROUP_G6, units_mode, MILLIMETERS);
                 case 28: {
                     switch (_point(value)) {
-                        case 0: {
-#if MARLIN_COMPAT_ENABLED == true
-                            if (cm.gmx.marlin_flavor) {
-                                SET_NON_MODAL (next_action, NEXT_ACTION_SEARCH_HOME);
-                            }
-#endif
-                            SET_MODAL (MODAL_GROUP_G0, next_action, NEXT_ACTION_GOTO_G28_POSITION);
-                        }
+                        case 0: SET_MODAL (MODAL_GROUP_G0, next_action, NEXT_ACTION_GOTO_G28_POSITION);
                         case 1: SET_MODAL (MODAL_GROUP_G0, next_action, NEXT_ACTION_SET_G28_POSITION);
                         case 2: SET_NON_MODAL (next_action, NEXT_ACTION_SEARCH_HOME);
                         case 3: SET_NON_MODAL (next_action, NEXT_ACTION_SET_ABSOLUTE_ORIGIN);
@@ -870,6 +863,13 @@ stat_t _execute_gcode_block(char *active_comment)
         else {
             return STAT_INPUT_VALUE_RANGE_ERROR;
         }
+    }
+
+    if ((cm.gmx.marlin_flavor || (MARLIN_COMM_MODE == js.json_mode)) &&
+        (NEXT_ACTION_GOTO_G28_POSITION == gv.next_action)
+       )
+    {
+        gv.next_action = NEXT_ACTION_SEARCH_HOME;
     }
 
     switch (gv.next_action) {
