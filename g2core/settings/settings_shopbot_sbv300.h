@@ -417,3 +417,6 @@ constexpr float H3_DEFAULT_D = 100.0;
 #define USER_DATA_D1 0
 #define USER_DATA_D2 0
 #define USER_DATA_D3 0
+
+#define FEEDHOLD_Z_LIFT 0.5
+
