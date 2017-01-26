@@ -189,6 +189,8 @@ typedef enum {                          // these are in order to optimized CASE 
     NEXT_ACTION_MARLIN_SET_FAN_SPEED,          // M106
     NEXT_ACTION_MARLIN_STOP_FAN,               // M107
     NEXT_ACTION_MARLIN_DISABLE_MOTORS,         // M84
+    NEXT_ACTION_MARLIN_RESET_LINE_NUMBERS,     // M110
+    NEXT_ACTION_MARLIN_REPORT_VERSION,         // M115
     NEXT_ACTION_MARLIN_DISPLAY_ON_SCREEN,      // M117
 #endif
 } cmNextAction;

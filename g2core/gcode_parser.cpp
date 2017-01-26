@@ -206,7 +206,7 @@ stat_t gcode_parser(char *block)
 stat_t _verify_checksum(char *str)
 {
 #if MARLIN_COMPAT_ENABLED == true
-    if (true == cm.gmx.marlin_flavor) {
+    if (MARLIN_COMM_MODE == js.json_mode) {
         return marlin_verify_checksum(str);
     }
 #endif
@@ -751,6 +751,11 @@ stat_t _parse_gcode_block(char *buf, char *active_comment)
                 case 117: return STAT_OK;  //SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_DISPLAY_ON_SCREEN);
 
                 case 84: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_DISABLE_MOTORS);
+
+                case 110: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_RESET_LINE_NUMBERS);
+                case 111: return STAT_OK; // ignore M111, and don't process contents of the line further
+
+                case 115: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_REPORT_VERSION);
 #endif // MARLIN_COMPAT_ENABLED
 
                 default: status = STAT_MCODE_COMMAND_UNSUPPORTED;
@@ -936,6 +941,16 @@ stat_t _execute_gcode_block(char *active_comment)
             // ignore for now
             return status;
         }
+        case NEXT_ACTION_MARLIN_REPORT_VERSION:    {      // M115
+            js.json_mode = MARLIN_COMM_MODE;
+            ritorno(marlin_report_version());
+            break;
+        }
+        case NEXT_ACTION_MARLIN_RESET_LINE_NUMBERS:{      // M110
+            js.json_mode = MARLIN_COMM_MODE;
+            // TODO: care about line numbers
+            break;
+        }
         case NEXT_ACTION_DEFAULT: {
             if (cm.gmx.marlin_flavor) {
                 // adjust G0 to almost always be the same as G1
@@ -953,7 +968,7 @@ stat_t _execute_gcode_block(char *active_comment)
             }
             break;
         }
-    }
+    } // switch (gv.next_action)
 #endif // MARLIN_COMPAT_ENABLED
 
     EXEC_FUNC(cm_set_spindle_speed, S_word);                // S

@@ -27,11 +27,12 @@
 #include "gcode_parser.h"
 #include "canonical_machine.h"
 #include "util.h"
-#include "xio.h"            // for char definitions
-#include "temperature.h"            // for temperature controls
+#include "xio.h"             // for char definitions
+#include "temperature.h"     // for temperature controls
 #include "json_parser.h"
 #include "planner.h"
-#include "MotateTimers.h"            // for char definitions
+#include "MotateTimers.h"    // for char definitions
+#include "MotateUniqueID.h"  // for Motate::UUID
 
 // Structures used
 enum STK500 {
@@ -388,7 +389,7 @@ stat_t marlin_callback()
         *str++ = 0;
 
         temperature_update_timeout.set(1000); // every second
-        
+
         xio_writeline(buffer);
     } // temperature updates
 
@@ -494,4 +495,65 @@ stat_t marlin_disable_motors()
 
     return (STAT_OK);
 }
+
+
+/*
+ * marlin_report_version() - M115
+ *
+ */
+
+stat_t marlin_report_version()
+{
+    char buffer[128];
+    char *str = buffer;
+
+    str_concat(str, "ok FIRMWARE_NAME:Marlin g2core-");
+    str_concat(str, G2CORE_FIRMWARE_BUILD_STRING);
+    *str = 0;
+    xio_writeline(buffer);
+    str = buffer;
+    *str = 0;
+
+    str_concat(str, " SOURCE_CODE_URL:https://github.com/synthetos/g2");
+    *str = 0;
+    xio_writeline(buffer);
+    str = buffer; *str = 0;
+
+    str_concat(str, " PROTOCOL_VERSION:1.0");
+    *str = 0;
+    xio_writeline(buffer);
+    str = buffer; *str = 0;
+
+    str_concat(str, " MACHINE_TYPE:");
+#ifdef SETTINGS_FILE
+#define settings_file_string1(s) #s
+#define settings_file_string2(s) settings_file_string1(s)
+    str_concat(str, settings_file_string2(SETTINGS_FILE));
+#undef settings_file_string1
+#undef settings_file_string2
+#else
+    str_concat(str, "<default-settings>");
+#endif
+    *str = 0;
+    xio_writeline(buffer);
+    str = buffer; *str = 0;
+
+    // TODO: make this configurable, based on the tool table
+    str_concat(str, " EXTRUDER_COUNT:1");
+    *str = 0;
+    xio_writeline(buffer);
+    str = buffer; *str = 0;
+
+    str_concat(str, " UUID:");
+    const char *uuid = Motate::UUID;
+    strncpy(str, uuid, Motate::strlen(uuid));
+    str += Motate::strlen(uuid);
+    str_concat(str, "\n");
+    *str = 0;
+    xio_writeline(buffer);
+    str = buffer; *str = 0;
+
+    return (STAT_OK);
+}
+
 #endif // MARLIN_COMPAT_ENABLED == true

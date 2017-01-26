@@ -48,4 +48,6 @@ stat_t cm_marlin_set_extruder_mode(const uint8_t mode); // M82, M82
 stat_t marlin_set_fan_speed(const uint8_t fan, float speed); // M106, M107
 
 stat_t marlin_disable_motors(); // M84
+
+stat_t marlin_report_version(); // M115
 #endif  // End of include guard: MARLIN_COMPAT_H_ONCE
