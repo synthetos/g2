@@ -131,7 +131,7 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
     //    a non-arc, non-motion command is entered afterwards, such as M3 or T. Trapped here:
 
     // Trap if no parameters were specified while in CW or CCW arc motion mode. This is OK
-    if (!(target_f[AXIS_X] | target_f[AXIS_Y] | target_f[AXIS_Z] | 
+    if (!(target_f[AXIS_X] | target_f[AXIS_Y] | target_f[AXIS_Z] |
           offset_f[AXIS_X] | offset_f[AXIS_Y] | offset_f[AXIS_Z] |
           radius_f | P_word_f)) {
         return(STAT_OK);
