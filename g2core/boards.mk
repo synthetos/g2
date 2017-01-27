@@ -67,7 +67,8 @@ ifeq ("$(CONFIG)","TestV9")
     ifeq ("$(BOARD)","NONE")
         BOARD=g2v9k
     endif
-    SETTINGS_FILE="settings_test.h"
+#    SETTINGS_FILE="settings_test.h"
+    SETTINGS_FILE="settings_shopbot_test.h"   
 endif
 
 ifeq ("$(CONFIG)","TestQuintic")

@@ -1,8 +1,8 @@
 /*
- * settings_shapeoko375.h - Shopbot Test
+ * settings_shopbot_sbv300.h - Shopbot sbv300 board
  * This file is part of the g2core project
  *
- * Copyright (c) 2015 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2015 - 2017 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -154,7 +154,7 @@ constexpr float H3_DEFAULT_D = 100.0;
 #define X_FEEDRATE_MAX X_VELOCITY_MAX            // xfr     G1 max feed rate in mm/min
 #define X_TRAVEL_MIN 0                           // xtn    minimum travel for soft limits
 #define X_TRAVEL_MAX (25 * 25.4)                 // xtm    travel between switches or crashes
-#define X_JERK_MAX (2 * 25.4)                    // xjm    jerk is multipled by 1,000,000 internally
+#define X_JERK_MAX (2 * 25.4)                    // xjm    jerk is multiplied by 1,000,000 internally
 #define X_JERK_HIGH_SPEED 10000                  // xjh
 //#define X_HOMING_INPUT 1                         // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIRECTION 0                     // xhd  0=search moves negative, 1= search moves positive

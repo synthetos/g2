@@ -1,8 +1,8 @@
 /*
- * settings_shapeoko375.h - Shopbot Test
+ * settings_shopbot_test.h - Shopbot Test
  * This file is part of the g2core project
  *
- * Copyright (c) 2015 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2015 - 2017 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -51,13 +51,15 @@
 #define SPINDLE_PAUSE_ON_HOLD true
 #define SPINDLE_DWELL_TIME 1.0
 
+#define FEEDHOLD_Z_LIFT (0.5 * 25.4)
+
 #define COOLANT_MIST_POLARITY 1     // 0=active low, 1=active high
 #define COOLANT_FLOOD_POLARITY 1    // 0=active low, 1=active high
 #define COOLANT_PAUSE_ON_HOLD true
 
 // Communications and reporting settings
 
-#define USB_SERIAL_PORTS_EXPOSED   2        // Valid options are 1 or 2, only!
+#define USB_SERIAL_PORTS_EXPOSED   1        // Valid options are 1 or 2, only!
 
 #define COMM_MODE JSON_MODE                      // one of: TEXT_MODE, JSON_MODE
 #define XIO_ENABLE_FLOW_CONTROL FLOW_CONTROL_RTS // FLOW_CONTROL_OFF, FLOW_CONTROL_RTS
@@ -69,14 +71,7 @@
 #define STATUS_REPORT_VERBOSITY SR_FILTERED  // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 #define STATUS_REPORT_MIN_MS 200             // milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS 250        // milliseconds - set $SV=0 to disable
-//#define STATUS_REPORT_DEFAULTS "posx","posy","posz","posa","posb","vel","stat","hold","line","coor"
-//#define STATUS_REPORT_DEFAULTS
-//"posx","posy","posz","posa","posb","vel","stat","macs","cycs","mots","hold","line","coor"
-#define STATUS_REPORT_DEFAULTS                                                                                         \
-    "posx", "posy", "posz", "posa", "vel", "feed", "stat", "macs", "cycs", "mots", "hold", "in1", "in2", "in3", "in4", \
-        "in5", "in6", "in7", "in8", "in9"
-//                               "home","homx","homy","homz"
-//                               "line","vel","feed","stat","macs","cycs","mots","hold","unit",
+#define STATUS_REPORT_DEFAULTS "posx", "posy", "posz", "posa", "posb", "vel", "stat", "hold", "line", "coor"
 
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS INCHES          // MILLIMETERS or INCHES
@@ -106,7 +101,7 @@ constexpr float H3_DEFAULT_D = 100.0;
 #define M1_MOTOR_MAP AXIS_X               // 1ma
 #define M1_STEP_ANGLE 1.8                 // 1sa
 #define M1_TRAVEL_PER_REV (0.5 * 25.4)    // 1tr
-#define M1_MICROSTEPS 16                  // 1mi        1,2,4,8
+#define M1_MICROSTEPS 8                   // 1mi        1,2,4,8
 #define M1_POLARITY 0                     // 1po        0=normal, 1=reversed
 #define M1_POWER_MODE MOTOR_POWER_MODE    // 1pm        TRUE=low power idle enabled
 #define M1_POWER_LEVEL MOTOR_POWER_LEVEL  // 1pl        Irrelevant to Shopbot sbv300
@@ -114,7 +109,7 @@ constexpr float H3_DEFAULT_D = 100.0;
 #define M2_MOTOR_MAP AXIS_Y
 #define M2_STEP_ANGLE 1.8
 #define M2_TRAVEL_PER_REV (0.5 * 25.4)
-#define M2_MICROSTEPS 16
+#define M2_MICROSTEPS 8
 #define M2_POLARITY 0
 #define M2_POWER_MODE MOTOR_POWER_MODE
 #define M2_POWER_LEVEL MOTOR_POWER_LEVEL
@@ -122,7 +117,7 @@ constexpr float H3_DEFAULT_D = 100.0;
 #define M3_MOTOR_MAP AXIS_Z
 #define M3_STEP_ANGLE 1.8
 #define M3_TRAVEL_PER_REV (0.5 * 25.4)
-#define M3_MICROSTEPS 16
+#define M3_MICROSTEPS 8
 #define M3_POLARITY 0
 #define M3_POWER_MODE MOTOR_POWER_MODE
 #define M3_POWER_LEVEL MOTOR_POWER_LEVEL
@@ -130,7 +125,7 @@ constexpr float H3_DEFAULT_D = 100.0;
 #define M4_MOTOR_MAP AXIS_A
 #define M4_STEP_ANGLE 1.8
 #define M4_TRAVEL_PER_REV (0.5 * 25.4)
-#define M4_MICROSTEPS 16
+#define M4_MICROSTEPS 8
 #define M4_POLARITY 0
 #define M4_POWER_MODE MOTOR_POWER_MODE
 #define M4_POWER_LEVEL MOTOR_POWER_LEVEL
@@ -139,7 +134,7 @@ constexpr float H3_DEFAULT_D = 100.0;
 #define M5_MOTOR_MAP AXIS_B
 #define M5_STEP_ANGLE 1.8
 #define M5_TRAVEL_PER_REV (0.5 * 25.4)
-#define M5_MICROSTEPS 16
+#define M5_MICROSTEPS 8
 #define M5_POLARITY 0
 #define M5_POWER_MODE MOTOR_POWER_MODE
 #define M5_POWER_LEVEL MOTOR_POWER_LEVEL
@@ -147,7 +142,7 @@ constexpr float H3_DEFAULT_D = 100.0;
 #define M6_MOTOR_MAP AXIS_C
 #define M6_STEP_ANGLE 1.8
 #define M6_TRAVEL_PER_REV (0.5 * 25.4)
-#define M6_MICROSTEPS 16
+#define M6_MICROSTEPS 8
 #define M6_POLARITY 0
 #define M6_POWER_MODE MOTOR_POWER_MODE
 #define M6_POWER_LEVEL MOTOR_POWER_LEVEL
@@ -160,7 +155,7 @@ constexpr float H3_DEFAULT_D = 100.0;
 #define X_FEEDRATE_MAX X_VELOCITY_MAX            // xfr     G1 max feed rate in mm/min
 #define X_TRAVEL_MIN 0                           // xtn    minimum travel for soft limits
 #define X_TRAVEL_MAX (25 * 25.4)                 // xtm    travel between switches or crashes
-#define X_JERK_MAX (2 * 25.4)                    // xjm    jerk is multipled by 1,000,000 internally
+#define X_JERK_MAX (2 * 25.4)                    // xjm    jerk is multiplied by 1,000,000 internally
 #define X_JERK_HIGH_SPEED 10000                  // xjh
 #define X_HOMING_INPUT 1                         // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIRECTION 0                     // xhd  0=search moves negative, 1= search moves positive
@@ -272,7 +267,7 @@ constexpr float H3_DEFAULT_D = 100.0;
 #define DI1_FUNCTION INPUT_FUNCTION_LIMIT  // configured as limit switch. Also used for X homing
 
 // Xmax
-#define DI2_MODE INPUT_MODE_DISABLED  // testing disable
+#define DI2_MODE INPUT_INACTIVE     // testing disable
 //#define DI2_MODE                    NORMALLY_CLOSED       // configured as limit switch
 #define DI2_ACTION INPUT_ACTION_FAST_STOP
 #define DI2_FUNCTION INPUT_FUNCTION_LIMIT
@@ -288,7 +283,7 @@ constexpr float H3_DEFAULT_D = 100.0;
 #define DI4_FUNCTION INPUT_FUNCTION_LIMIT
 
 // Zmin
-#define DI5_MODE INPUT_ACTIVE_LOW  // used for Z probe. Active closes circuit (active LO)
+#define DI5_MODE IO_ACTIVE_LOW  // used for Z probe. Active closes circuit (active LO)
 #define DI5_ACTION INPUT_ACTION_NONE
 #define DI5_FUNCTION INPUT_FUNCTION_NONE
 
@@ -302,12 +297,12 @@ constexpr float H3_DEFAULT_D = 100.0;
 //#define DI6_FUNCTION                INPUT_FUNCTION_LIMIT
 
 // Amin
-#define DI7_MODE INPUT_ACTIVE_HIGH    // interlock happens when NO switch goes HI (opens)
-#define DI7_ACTION INPUT_ACTION_STOP  // wired as interlock switch
+#define DI7_MODE IO_ACTIVE_HIGH         // interlock happens when NO switch goes HI (opens)
+#define DI7_ACTION INPUT_ACTION_STOP    // wired as interlock switch
 #define DI7_FUNCTION INPUT_FUNCTION_INTERLOCK
 
 // Amax
-#define DI8_MODE INPUT_ACTIVE_LOW  // configured as panic switch, NO
+#define DI8_MODE IO_ACTIVE_LOW          // configured as panic switch, NO
 #define DI8_ACTION INPUT_ACTION_PANIC
 #define DI8_FUNCTION INPUT_FUNCTION_NONE
 
@@ -328,70 +323,3 @@ constexpr float H3_DEFAULT_D = 100.0;
 #define P1_CCW_PHASE_LO 0.1
 #define P1_CCW_PHASE_HI 0.1
 #define P1_PWM_PHASE_OFF 0.1
-
-// *** DEFAULT COORDINATE SYSTEM OFFSETS ***
-// Our convention is:
-//    - leave G54 in machine coordinates to act as a persistent absolute coordinate system
-//    - set G55 to be a zero in the middle of the table
-//    - no action for the others
-
-#define G54_X_OFFSET 0  // G54 is traditionally set to all zeros
-#define G54_Y_OFFSET 0
-#define G54_Z_OFFSET 0
-#define G54_A_OFFSET 0
-#define G54_B_OFFSET 0
-#define G54_C_OFFSET 0
-
-#define G55_X_OFFSET 0
-#define G55_Y_OFFSET 0
-#define G55_Z_OFFSET 0
-#define G55_A_OFFSET 0
-#define G55_B_OFFSET 0
-#define G55_C_OFFSET 0
-
-#define G56_X_OFFSET 0
-#define G56_Y_OFFSET 0
-#define G56_Z_OFFSET 0
-#define G56_A_OFFSET 0
-#define G56_B_OFFSET 0
-#define G56_C_OFFSET 0
-
-#define G57_X_OFFSET 0
-#define G57_Y_OFFSET 0
-#define G57_Z_OFFSET 0
-#define G57_A_OFFSET 0
-#define G57_B_OFFSET 0
-#define G57_C_OFFSET 0
-
-#define G58_X_OFFSET 0
-#define G58_Y_OFFSET 0
-#define G58_Z_OFFSET 0
-#define G58_A_OFFSET 0
-#define G58_B_OFFSET 0
-#define G58_C_OFFSET 0
-
-#define G59_X_OFFSET 0
-#define G59_Y_OFFSET 0
-#define G59_Z_OFFSET 0
-#define G59_A_OFFSET 0
-#define G59_B_OFFSET 0
-#define G59_C_OFFSET 0
-
-/*** User-Defined Data Defaults ***/
-
-#define USER_DATA_A0 0
-#define USER_DATA_A1 0
-#define USER_DATA_A2 0
-#define USER_DATA_A3 0
-#define USER_DATA_B0 0
-#define USER_DATA_B1 0
-#define USER_DATA_B2 0
-#define USER_DATA_B3 0
-#define USER_DATA_C0 0
-#define USER_DATA_C1 0
-#define USER_DATA_C2 0
-#define USER_DATA_C3 0
-#define USER_DATA_D0 0
-#define USER_DATA_D1 0
-#define USER_DATA_D2 0
-#define USER_DATA_D3 0

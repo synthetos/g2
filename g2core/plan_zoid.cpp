@@ -2,8 +2,8 @@
  * plan_zoid.cpp - acceleration managed line planning and motion execution - trapezoid planner
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2012 - 2016 Rob Giseburt
+ * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
+ * Copyright (c) 2012 - 2017 Rob Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -419,51 +419,52 @@ float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t* bf)
     return fabs(v_1);
 }
 
-
 /*
  * mp_get_decel_velocity() - mp_get_target_velocity but ONLY for deceleration
  *
- * Get "the velocity" that we would end up at if we *decelerated* from v_0,
- * over the provided L (length) and J (jerk, provided in the bf structure).
+ *  Get "the velocity" that we would end up at if we *decelerated* from v_0,
+ *  over the provided L (length) and J (jerk, provided in the bf structure).
  *
- * We have to use a root finding solution, since there is actually three possible
- * solutions. We can eliminate one quickly, since it's the acceleration case.
+ *  We have to use a root finding solution, since there is actually three possible
+ *  solutions. We can eliminate one quickly, since it's the acceleration case.
  *
- * The other two cases are occasionally the same value, but this is rare.
- * Otherwise there is a "high" value and a "low" value. The low value can be
- * negative and then eliminated.
+ *  The other two cases are occasionally the same value, but this is rare.
+ *  Otherwise there is a "high" value and a "low" value. The low value can be
+ *  negative and then eliminated.
+ *
+ *  This function may generate minor errors in target velocity, and should only
+ *  be used to compute feedholds or other cases where exact velocity is not mandatory. 
  */
 
 float mp_get_decel_velocity(const float v_0, const float L, const mpBuf_t* bf) 
 {
     const float q_recip_2_sqrt_j = bf->q_recip_2_sqrt_j;
+    float v_1 = 0;              // start the guess at zero
 
-    float v_1        = 0;     // start the guess at zero
-    bool  first_pass = true;  // We may invert our guess based on the first pass results.
+    int i = 0;                  // limit the iterations
+    while (i++ < 20) {          // If it fails after 20 iterations something's wrong
 
-    int i = 0;          // limit the iterations
-    while (i++ < 10) {  // If it fails after 10, something's wrong
+        // l_t is the difference in length between the L provided and the current guessed deceleration length
         const float sqrt_delta_v_0 = sqrt(v_0 - v_1);
-        const float l_t            = q_recip_2_sqrt_j * (sqrt_delta_v_0 * (v_1 + v_0)) - L;
+        const float l_t = q_recip_2_sqrt_j * (sqrt_delta_v_0 * (v_1 + v_0)) - L;
 
-        if (fabs(l_t) < 0.00001) {
+        // The return condition allows a minor error in length (in mm). 
+        // Note: This comparison does NOT affect actual lengths or steps, which would be bad.
+        //       The actual lengths traveled must be controlled by the caller.
+        if (fabs(l_t) < 0.001) {    
             break;
         }
-        // For the first pass, we tested velocity 0.
-        // If velocity 0 yields a l_t > zero, then we need to start searching
-        // at v_1 instead. (We can't start AT v_1, so we start at v_1 - 0.1.)
-        if (first_pass && (l_t > 0)) {
-            v_1 = v_0 - 0.001;
-
+        // For the first pass we tested velocity 0. If velocity 0 yields a l_t > 0, 
+        // then we need to start searching at v_1 instead. 
+        // (We can't start AT v_1, so we start at v_1 - 0.1)
+        if (i==1 && (l_t > 0)) {
+            v_1 = v_0 - 0.1;
             continue;
         }
-
-        const float v_1x3     = 3 * v_1;
+        const float v_1x3 = 3 * v_1;
         const float recip_l_t = (2 * sqrt_delta_v_0) / ((v_0 - v_1x3) * q_recip_2_sqrt_j);
-
         v_1 = v_1 - (l_t * recip_l_t);
     }
-
     return v_1;
 }
 
