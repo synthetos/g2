@@ -24,7 +24,6 @@
 # To choose a CONFIG but apply it to a different BOARD:
 #   make CONFIG=PrintrbotPlus BOARD=g2ref-a
 
-
 ##########
 # V9-based configs:
 
@@ -39,7 +38,8 @@ ifeq ("$(CONFIG)","Othermill")
     ifeq ("$(BOARD)","NONE")
         BOARD=g2v9k
     endif
-    SETTINGS_FILE="settings_othermill.h"
+#    SETTINGS_FILE="settings_othermill.h"
+    SETTINGS_FILE="settings_othermill_test.h"
 endif
 
 ifeq ("$(CONFIG)","ProbotixV90")
@@ -95,6 +95,12 @@ ifeq ("$(CONFIG)","sbv300")
     SETTINGS_FILE="settings_shopbot_sbv300.h"
 endif
 
+ifeq ("$(CONFIG)","ShopbotTestV9")
+    ifeq ("$(BOARD)","NONE")
+        BOARD=g2v9k
+    endif
+    SETTINGS_FILE="settings_shopbot_test.h"
+endif
 
 ##########
 # PrintrBot configs:
