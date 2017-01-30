@@ -73,7 +73,7 @@
         <InterfaceName>SWD</InterfaceName>
       </ToolOptions>
       <ToolType>com.atmel.avrdbg.tool.atmelice</ToolType>
-      <ToolNumber>J41800036434</ToolNumber>
+      <ToolNumber>J41800030015</ToolNumber>
       <ToolName>Atmel-ICE</ToolName>
     </com_atmel_avrdbg_tool_atmelice>
     <UseGdb>True</UseGdb>
@@ -100,7 +100,7 @@
       <HWProgramCounterSampling>True</HWProgramCounterSampling>
     </PercepioTrace>
     <preserveEEPROM>true</preserveEEPROM>
-    <avrtoolserialnumber>J41800036434</avrtoolserialnumber>
+    <avrtoolserialnumber>J41800030015</avrtoolserialnumber>
     <avrdeviceexpectedsignature>0x284E0A60</avrdeviceexpectedsignature>
     <avrtoolinterfaceclock>10000000</avrtoolinterfaceclock>
     <custom>
@@ -252,8 +252,8 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'sbv300' ">
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>BOARD=sbv300 COLOR=0 VERBOSE=1</BuildTarget>
-    <CleanTarget>clean BOARD=sbv300</CleanTarget>
+    <BuildTarget>CONFIG=sbv300 COLOR=0 VERBOSE=1</BuildTarget>
+    <CleanTarget>clean CONFIG=sbv300</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\sbv300\</OutputPath>
     <ToolchainSettings>
@@ -376,8 +376,8 @@
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>BOARD=g2v9k CONFIG=ShapeokoDualY COLOR=0 VERBOSE=1</BuildTarget>
-    <CleanTarget>clean BOARD=g2v9k CONFIG=ShapeokoDualY</CleanTarget>
+    <BuildTarget>CONFIG=ShopbotTestV9 COLOR=0 VERBOSE=1</BuildTarget>
+    <CleanTarget>clean CONFIG=ShopbotTestV9</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\G2v9k\</OutputPath>
   </PropertyGroup>

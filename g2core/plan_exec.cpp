@@ -602,9 +602,13 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                     mr->r->exit_velocity = 0;
 
                 } else if (available_length < mr->r->tail_length) {      // (1b) the deceleration has to span multiple moves
-                    cm->hold_state = FEEDHOLD_DECEL_CONTINUE;
-                    mr->r->tail_length = available_length;
                     mr->r->exit_velocity = mp_get_decel_velocity(mr->r->cruise_velocity, mr->r->tail_length, bf);
+                    if (fp_ZERO(mr->r->exit_velocity)) {                // this takes care of an odd case where the move
+                        cm->hold_state = FEEDHOLD_DECEL_TO_ZERO;        // was previously mis-classified as a CONTINUE move
+                    } else {
+                        cm->hold_state = FEEDHOLD_DECEL_CONTINUE;
+                    }
+                    mr->r->tail_length = available_length;
 
                 } else {                                                // (1a)the deceleration will fit into the current move
                     cm->hold_state = FEEDHOLD_DECEL_TO_ZERO;
