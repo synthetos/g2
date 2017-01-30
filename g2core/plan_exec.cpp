@@ -578,12 +578,14 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             // Case (3a) - already decelerating, continue the deceleration.
             if (mr->section == SECTION_TAIL) {   // if already in a tail don't decelerate. You already are
                 if (fp_ZERO(mr->r->exit_velocity)) {
+//                if (mr->r->exit_velocity < 1)) {
                     cm->hold_state = FEEDHOLD_DECEL_TO_ZERO;
                 } else {
                     cm->hold_state = FEEDHOLD_DECEL_CONTINUE;
                 }
 
-            // Case (3b) - currently accelerating - is simply skipped and waited for
+            // Case (3b) - Currently accelerating - is simply skipped and waited for. 
+            //             This is true because to do otherwise the jerk would not have returned to zero.
             // Small exception, if we *just started* the head, then we're not actually accelerating yet.
             } else if ((mr->section != SECTION_HEAD) || (mr->section_state == SECTION_NEW)) {
                 mr->entry_velocity = mr->segment_velocity;
