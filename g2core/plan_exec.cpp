@@ -532,12 +532,12 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     //  (9) - We are removing the hold state and there is no queued motion (also handled outside this routine)
 
     if (cm->motion_state == MOTION_HOLD) {
-        // Case (7) - all motion has ceased
+        // Case (7) - All motion has ceased
         if (cm->hold_state >= FEEDHOLD_FINAL_ONCE) {    // FEEDHOLD_FINAL_ONCE or later
             return (STAT_NOOP);                         // VERY IMPORTANT to exit as a NOOP. No more movement
         }
 
-        // Case (6) - wait for the steppers to stop
+        // Case (6) - Wait for the steppers to stop
         if (cm->hold_state == FEEDHOLD_STOPPING) {
             if (mp_runtime_is_idle()) {                                 // wait for the steppers to actually clear out
                 if ((cm->cycle_state == CYCLE_HOMING) || (cm->cycle_state == CYCLE_PROBE)) {
@@ -553,7 +553,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             return (STAT_OK);                                           // hold here. No more movement
         }
 
-        // Case (5) - decelerated to zero
+        // Case (5) - Decelerated to zero
         // Update the run buffer then force a replan of the whole planner queue
         if (cm->hold_state == FEEDHOLD_DECEL_END) {
             mr->block_state = BLOCK_INACTIVE;                           // invalidate mr buffer to reset the new move
@@ -575,10 +575,9 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         if ((cm->hold_state == FEEDHOLD_SYNC) ||
            ((cm->hold_state == FEEDHOLD_DECEL_CONTINUE) && (mr->block_state == BLOCK_INITIAL_ACTION))) {
 
-            // Case (3a) - already decelerating, continue the deceleration.
+            // Case (3a) - Already decelerating, continue the deceleration.
             if (mr->section == SECTION_TAIL) {   // if already in a tail don't decelerate. You already are
-                if (fp_ZERO(mr->r->exit_velocity)) {
-//                if (mr->r->exit_velocity < 1)) {
+                if (mr->r->exit_velocity < EPSILON2) {      // allow near-zero velocities to be treated as zero
                     cm->hold_state = FEEDHOLD_DECEL_TO_ZERO;
                 } else {
                     cm->hold_state = FEEDHOLD_DECEL_CONTINUE;
@@ -596,21 +595,27 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                 float available_length = get_axis_vector_length(mr->target, mr->position);
                 mr->r->tail_length = mp_get_target_length(0, mr->r->cruise_velocity, bf);  // braking length
 
-                if (fp_ZERO(available_length - mr->r->tail_length)) {    // (1c) the deceleration time is almost exactly the remaining of the current move
+                // (1c) The deceleration distance is almost exactly the remaining of the current move.
+                // This happens mostly when the tail in the move was already planned to zero. 
+                // EPSILON2 deals with floating point rounding errors that might mis-classify this move.
+                if (fabs(available_length - mr->r->tail_length) < EPSILON2) {
                     cm->hold_state = FEEDHOLD_DECEL_TO_ZERO;
                     mr->r->tail_length = available_length;
                     mr->r->exit_velocity = 0;
 
-                } else if (available_length < mr->r->tail_length) {      // (1b) the deceleration has to span multiple moves
+                // (1b) The deceleration clearly has to span multiple moves
+                } else if (available_length < mr->r->tail_length) {
+                    mr->r->tail_length = available_length;
                     mr->r->exit_velocity = mp_get_decel_velocity(mr->r->cruise_velocity, mr->r->tail_length, bf);
+
                     if (fp_ZERO(mr->r->exit_velocity)) {                // this takes care of an odd case where the move
                         cm->hold_state = FEEDHOLD_DECEL_TO_ZERO;        // was previously mis-classified as a CONTINUE move
                     } else {
                         cm->hold_state = FEEDHOLD_DECEL_CONTINUE;
                     }
-                    mr->r->tail_length = available_length;
 
-                } else {                                                // (1a)the deceleration will fit into the current move
+                // (1a) The deceleration will fit easily into the current move
+                } else {                                                
                     cm->hold_state = FEEDHOLD_DECEL_TO_ZERO;
                     mr->r->exit_velocity = 0;
                 }
