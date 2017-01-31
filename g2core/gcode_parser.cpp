@@ -692,8 +692,8 @@ static stat_t _execute_gcode_block(char *active_comment)
 
         case NEXT_ACTION_STRAIGHT_PROBE_ERR:     { status = cm_straight_probe(cm.gn.target, cm.gf.target, true, true); break;}  // G38.2
         case NEXT_ACTION_STRAIGHT_PROBE:         { status = cm_straight_probe(cm.gn.target, cm.gf.target, false, true); break;} // G38.3
-        case NEXT_ACTION_STRAIGHT_PROBE_AWAY_ERR:{ status = cm_straight_probe(cm.gn.target, cm.gf.target, true, false); break;}   // G38.4
-        case NEXT_ACTION_STRAIGHT_PROBE_AWAY:    { status = cm_straight_probe(cm.gn.target, cm.gf.target, false, false); break;}  // G38.5
+        case NEXT_ACTION_STRAIGHT_PROBE_AWAY_ERR:{ status = cm_straight_probe(cm.gn.target, cm.gf.target, true, false); break;} // G38.4
+        case NEXT_ACTION_STRAIGHT_PROBE_AWAY:    { status = cm_straight_probe(cm.gn.target, cm.gf.target, false, false); break;}// G38.5
 
         case NEXT_ACTION_SET_G10_DATA:           { status = cm_set_g10_data(cm.gn.parameter, cm.gn.L_word, cm.gn.target, cm.gf.target); break;}
         case NEXT_ACTION_SET_ORIGIN_OFFSETS:     { status = cm_set_origin_offsets(cm.gn.target, cm.gf.target); break;}// G92

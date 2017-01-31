@@ -44,9 +44,9 @@
 #define MINIMUM_PROBE_TRAVEL 0.254
 
 struct pbProbingSingleton {         // persistent probing runtime variables
-    bool waiting_for_motion_end;    // flag to use to now when the motion has ended
-    bool failure_is_fatal;          // flag for G38.2 and G38.4, where failure is NOT an option
-    bool moving_toward_contact;     // flag for G38.4 and G38.5, where we move off of the contact
+    bool wait_for_motion_end;       // flag to use to now when the motion has ended
+    bool alarm_if_fail;             // flag for G38.2 and G38.4, where failure is NOT an option
+    bool move_toward_contact;       // flag for G38.4 and G38.5, where we move off of the contact
 
     stat_t (*func)();  // binding for callback function state machine
 
@@ -56,6 +56,7 @@ struct pbProbingSingleton {         // persistent probing runtime variables
     // state saved from gcode model
     uint8_t saved_distance_mode;    // G90,G91 global setting
     uint8_t saved_coord_system;     // G54 - G59 setting
+    bool saved_soft_limit_enable;   // turn off soft limits during probing
     float   saved_jerk[AXES];       // saved and restored for each axis
 
     // probe destination
@@ -66,22 +67,26 @@ static struct pbProbingSingleton pb;
 
 /**** NOTE: global prototypes and other .h info is located in canonical_machine.h ****/
 
-static stat_t _probing_init();
 static stat_t _probing_start();
 static stat_t _probing_backoff();
 static stat_t _probing_finish();
 static stat_t _probing_finalize_exit();
 static stat_t _probing_error_exit(int8_t axis);
 static stat_t _probe_axis_move(const float target[], bool exact_position);
-static void _probe_axis_move_callback(float* vect, bool* flag);
 
 /**** HELPERS ***************************************************************************
  * _set_pb_func() - a convenience for setting the next dispatch vector and exiting
+ * _probe_axis_move_callback() - wait for end of move (syn to planner)
  */
 
 static stat_t _set_pb_func(uint8_t (*func)()) {
     pb.func = func;
     return (STAT_EAGAIN);
+}
+
+static void _probe_axis_move_callback(float* vect, bool* flag)
+{
+    pb.wait_for_motion_end = false;
 }
 
 /***********************************************************************************
@@ -137,21 +142,17 @@ static stat_t _set_pb_func(uint8_t (*func)()) {
  *
  */
 
-uint8_t cm_straight_probe(float target[], bool flags[], bool failure_is_fatal, bool moving_toward_contact) {
+uint8_t cm_straight_probe(float target[], bool flags[], bool alarm_if_fail, bool move_toward_contact) {
 
     // trap zero feed rate condition
     if (fp_ZERO(cm.gm.feed_rate)) {
         return (STAT_GCODE_FEEDRATE_NOT_SPECIFIED);
     }
 
-    // error if no X/Y/Z axes specified
-    if (!flags[AXIS_X] && !flags[AXIS_Y] && !flags[AXIS_Z]) {
+    // error if no axes specified
+    if (!(flags[AXIS_X] | flags[AXIS_Y] | flags[AXIS_Z] |
+          flags[AXIS_A] | flags[AXIS_B] | flags[AXIS_C])) {
         return (STAT_GCODE_AXIS_IS_MISSING);
-    }
-
-    // error if the probe target requires a move along the A/B/C axes
-    if (flags[AXIS_A] | flags[AXIS_B] | flags[AXIS_C]) {
-        return (STAT_GCODE_AXIS_IS_INVALID);
     }
 
     // initialize the probe input
@@ -160,11 +161,13 @@ uint8_t cm_straight_probe(float target[], bool flags[], bool failure_is_fatal, b
     }
 
     // setup
-    pb.failure_is_fatal = failure_is_fatal;
-    pb.moving_toward_contact = moving_toward_contact;
-    pb.func = _probing_init;            // bind probing initialization function
-    copy_vector(pb.target, target);     // set probe move endpoint
-    copy_vector(pb.flags, flags);       // set axes involved on the move
+    pb.alarm_if_fail = alarm_if_fail;
+    pb.move_toward_contact = move_toward_contact;
+    pb.func = _probing_start;               // bind probing start function
+
+    cm_set_model_target(target, flags);     // set probe move endpoint taking all offsets into account
+    copy_vector(pb.target, cm.gm.target);
+    copy_vector(pb.flags, flags);           // set axes involved on the move
 
     // if the previous probe succeeded, roll probes to the next position
     if (cm.probe_state[0] == PROBE_SUCCEEDED) {
@@ -181,7 +184,7 @@ uint8_t cm_straight_probe(float target[], bool flags[], bool failure_is_fatal, b
 
     // queue a function to let us know when we can start probing
     cm.probe_state[0] = PROBE_WAITING;  // wait until planner queue empties before completing initialization
-    pb.waiting_for_motion_end = true;
+    pb.wait_for_motion_end = true;
     mp_queue_command(_probe_axis_move_callback, nullptr, nullptr);  // note: these args are ignored
     return (STAT_OK);
 }
@@ -205,24 +208,25 @@ uint8_t cm_probing_cycle_callback(void) {
     if ((cm.cycle_state != CYCLE_PROBE) && (cm.probe_state[0] != PROBE_WAITING)) {  // exit if not in a probing cycle
         return (STAT_NOOP);
     }
-    if (pb.waiting_for_motion_end) {  // sync to planner move ends (using callback)
+    if (pb.wait_for_motion_end) {  // sync to planner move ends (using callback)
         return (STAT_EAGAIN);
     }
     return (pb.func());  // execute the current probing move
 }
 
 /*
- * _probing_init() - G38.2 probing cycle using probe contact (digital input)
- *
- *  These initializations are required before starting the probing cycle.
- *  They must be done after the planner has exhausted all current CYCLE moves as
- *  they affect the runtime (specifically the digital input modes). Side effects would
- *  include limit switches initiating probe actions instead of just killing movement
+ * _probing_start() - start the probe or skip it if contact is already active
  */
 
-static uint8_t _probing_init() {
+static uint8_t _probing_start() {
+
     float start_position[AXES];
 
+    // Initializations. These initializations are required before starting the probing cycle
+    // but must be done after the planner has exhausted all current CYCLE moves as
+    // they affect the runtime (specifically the digital input modes). Side effects would
+    // include limit switches initiating probe actions instead of just killing movement
+    
     // so optimistic... ;)
     // NOTE: it is *not* an error condition for the probe not to trigger.
     // it is an error for the limit or homing switches to fire, or for some other configuration error.
@@ -233,12 +237,13 @@ static uint8_t _probing_init() {
     // save relevant non-axis parameters from Gcode model
     pb.saved_coord_system = cm_get_coord_system(ACTIVE_MODEL);
     pb.saved_distance_mode = cm_get_distance_mode(ACTIVE_MODEL);
-
+    pb.saved_soft_limit_enable = cm.soft_limit_enable;
+    
     // set working values
     cm_set_distance_mode(ABSOLUTE_DISTANCE_MODE);
     cm_set_coord_system(ABSOLUTE_COORDS);  // probing is done in machine coordinates
 
-    // initialize the axes - save the jerk settings & change to the jerk_homing settings
+    // initialize the axes - save the jerk settings & change to the high-speed jerk settings
     for (uint8_t axis = 0; axis < AXES; axis++) {
         pb.saved_jerk[axis] = cm_get_axis_jerk(axis);  // save the max jerk value
         cm_set_axis_jerk(axis, cm.a[axis].jerk_high);  // use the high-speed jerk for probe
@@ -250,45 +255,17 @@ static uint8_t _probing_init() {
         _probing_error_exit(-2);
     }
 
-/*
-    // error if the probe target requires a move along the A/B/C axes
-    for (uint8_t axis = AXIS_A; axis < AXES; axis++) {
-        //        if (fp_NE(start_position[axis], pb.target[axis])) { // old style
-        if (fp_TRUE(pb.flags[axis])) {
-            //        if (pb.flags[axis]) {           // will reduce to this once flags are booleans
-            _probing_error_exit(axis);
-        }
-    }
-*/
-    // initialize the probe input
-    // TODO -- for now we hard code it to z homing input
-//    if (fp_ZERO(cm.a[AXIS_Z].homing_input)) {
-//        return (_probing_error_exit(-2));
-//    }
-//    pb.probe_input = cm.a[AXIS_Z].homing_input;
-
-//    if ((pb.probe_input = gpio_get_probing_input()) == -1) {
-//        return (_probing_error_exit(-2));
-//    }
     gpio_set_probing_mode(pb.probe_input, true);
 
     // turn off spindle and start the move
-    cm_spindle_optional_pause(true);        // pause the spindle if it's on
-    return (_set_pb_func(_probing_start));  // start the probe move
-}
+//    cm_spindle_optional_pause(true);        // pause the spindle if it's on
 
-/*
- * _probing_start() - start the probe or skip it if contact is already active
- */
-
-static stat_t _probing_start() {
     // initial probe state, don't probe if we're already contacted!
-    int8_t probe = gpio_read_input(pb.probe_input);
-
-    // INPUT_INACTIVE is the right start condition for G38.2 and G38.3
-    // INPUT_ACTIVE is the right start condition for G38.4 and G38.5
+    // INPUT_INACTIVE (false) is the correct start condition for G38.2 and G38.3
+    // INPUT_ACTIVE (true) is the right start condition for G38.4 and G38.5
     // Note that we're testing for SUCCESS here
-    if (probe == (pb.moving_toward_contact ? INPUT_INACTIVE : INPUT_ACTIVE)) {
+    int8_t probe_input = gpio_read_input(pb.probe_input);   // returns `true` if contacted
+    if (probe_input == (pb.move_toward_contact ? INPUT_INACTIVE : INPUT_ACTIVE)) {
         _probe_axis_move(pb.target, false);
         return (_set_pb_func(_probing_backoff));
     }
@@ -304,13 +281,13 @@ static stat_t _probing_start() {
  */
 
 static stat_t _probing_backoff() {
+    
     // Test if we've contacted
-    int8_t probe = gpio_read_input(pb.probe_input);
-
-    // INPUT_ACTIVE is the right end condition for G38.2 and G38.3
-    // INPUT_INACTIVE is the right end condition for G38.4 and G38.5
+    // INPUT_INACTIVE (false) is the correct start condition for G38.2 and G38.3
+    // INPUT_ACTIVE (true) is the right start condition for G38.4 and G38.5
     // Note that we're testing for SUCCESS here
-    if (probe == (pb.moving_toward_contact ? INPUT_ACTIVE : INPUT_INACTIVE)) {
+    int8_t probe = gpio_read_input(pb.probe_input);
+    if (probe == (pb.move_toward_contact ? INPUT_ACTIVE : INPUT_INACTIVE)) {
         cm.probe_state[0] = PROBE_SUCCEEDED;
 
         // capture contact position in step space and convert from steps to mm.
@@ -324,6 +301,10 @@ static stat_t _probing_backoff() {
     }
     return (_set_pb_func(_probing_finish));
 }
+
+/*
+ * _probe_axis_move() - function to execute probing moves
+ */
 
 static stat_t _probe_axis_move(const float target[], bool exact_position) {
     auto stored_units_mode    = cm.gm.units_mode;
@@ -339,7 +320,7 @@ static stat_t _probe_axis_move(const float target[], bool exact_position) {
     }
 
     // set this BEFORE the motion starts
-    pb.waiting_for_motion_end = true;
+    pb.wait_for_motion_end = true;
 
     cm_straight_feed(target, pb.flags);
 
@@ -347,16 +328,8 @@ static stat_t _probe_axis_move(const float target[], bool exact_position) {
         cm.gm.units_mode    = stored_units_mode;
         cm.gm.distance_mode = stored_distance_mode;
     }
-
-    // the last two arguments are ignored anyway
-    mp_queue_command(_probe_axis_move_callback, nullptr, nullptr);
-
+    mp_queue_command(_probe_axis_move_callback, nullptr, nullptr);      // the last two arguments are ignored anyway
     return (STAT_EAGAIN);
-}
-
-static void _probe_axis_move_callback(float* vect, bool* flag) 
-{ 
-    pb.waiting_for_motion_end = false; 
 }
 
 /*
@@ -405,15 +378,18 @@ static void _probe_restore_settings() {
     // set input back to normal operation
     gpio_set_probing_mode(pb.probe_input, false);
 
-    // restore axis jerk
-    for (uint8_t axis = 0; axis < AXES; axis++) { cm.a[axis].jerk_max = pb.saved_jerk[axis]; }
+    // restore axis jerks
+    for (uint8_t axis = 0; axis < AXES; axis++) { 
+        cm.a[axis].jerk_max = pb.saved_jerk[axis]; 
+    }
 
     // restore coordinate system and distance mode
     cm_set_coord_system(pb.saved_coord_system);
     cm_set_distance_mode(pb.saved_distance_mode);
+    cm.soft_limit_enable = pb.saved_soft_limit_enable;
 
     // restart spindle if it was paused
-    cm_spindle_resume(spindle.dwell_seconds);
+//    cm_spindle_resume(spindle.dwell_seconds);
 
     // cancel the feed modes used during probing
     cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);
@@ -426,7 +402,7 @@ static stat_t _probing_finalize_exit() {
         return (STAT_OK);
     }
 
-    if (pb.failure_is_fatal) {
+    if (pb.alarm_if_fail) {
         cm_alarm(STAT_PROBE_CYCLE_FAILED, "Probing error - probe failed to change.");
     }
     return (STAT_PROBE_CYCLE_FAILED);
@@ -444,21 +420,21 @@ static stat_t _probing_error_exit(int8_t axis) {
     nv_reset_nv_list();
     if (axis == -3) {
         const char* msg = "Probing error - probe input is already active";
-        if (pb.failure_is_fatal) {
+        if (pb.alarm_if_fail) {
             cm_alarm(STAT_PROBE_CYCLE_FAILED, msg);
         } else {
             nv_add_conditional_message(msg);
         }
     } else if (axis == -4) {
         const char* msg = "Probing error - probe input is already inactive";
-        if (pb.failure_is_fatal) {
+        if (pb.alarm_if_fail) {
             cm_alarm(STAT_PROBE_CYCLE_FAILED, msg);
         } else {
             nv_add_conditional_message(msg);
         }
     } else if (axis == -2) {
         const char* msg = "Probing error - invalid probe destination";
-        if (pb.failure_is_fatal) {
+        if (pb.alarm_if_fail) {
             cm_alarm(STAT_PROBE_CYCLE_FAILED, msg);
         } else {
             nv_add_conditional_message(msg);
@@ -466,14 +442,14 @@ static stat_t _probing_error_exit(int8_t axis) {
     } else {
         char msg[NV_MESSAGE_LEN];
         sprintf(msg, "Probing error - %c axis cannot move during probing", cm_get_axis_char(axis));
-        if (pb.failure_is_fatal) {
+        if (pb.alarm_if_fail) {
             cm_alarm(STAT_PROBE_CYCLE_FAILED, msg);
         } else {
             nv_add_conditional_message(msg);
         }
     }
 
-    if (!pb.failure_is_fatal) {
+    if (!pb.alarm_if_fail) {
         nv_print_list(STAT_PROBE_CYCLE_FAILED, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT);
     }
 
