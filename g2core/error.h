@@ -654,7 +654,7 @@ static const char stat_250[] = "Probe cycle failed";
 static const char stat_251[] = "Probe travel is too small";
 static const char stat_252[] = "No probe switch configured";
 static const char stat_253[] = "Multiple probe switches configured";
-static const char stat_254[] = "Probe switch configured on ABC axis";
+static const char stat_254[] = "Probe has invalid starting state";
 static const char stat_255[] = "255";
 
 static const char *const stat_msg[] = {

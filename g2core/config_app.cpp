@@ -1360,7 +1360,7 @@ static stat_t _do_group_list(nvObj_t *nv, char list[][TOKEN_LEN+1]) // helper to
         }
         _do_group(nv, list[i]);
     }
-    return (STAT_COMPLETE);
+    return (STAT_COMPLETE);         // STAT_COMPLETE suppresses the normal response line
 }
 
 static stat_t _do_motors(nvObj_t *nv)  // print parameters for all motor groups
@@ -1370,7 +1370,7 @@ static stat_t _do_motors(nvObj_t *nv)  // print parameters for all motor groups
         sprintf(group, "%d", i);
         _do_group(nv, group);
     }
-    return (STAT_COMPLETE);
+    return (STAT_COMPLETE);         // STAT_COMPLETE suppresses the normal response line
 }
 
 static stat_t _do_axes(nvObj_t *nv)  // print parameters for all axis groups
@@ -1392,7 +1392,7 @@ static stat_t _do_inputs(nvObj_t *nv)  // print parameters for all input groups
         sprintf(group, "di%d", i);
         _do_group(nv, group);
     }
-    return (STAT_COMPLETE);
+    return (STAT_COMPLETE);         // STAT_COMPLETE suppresses the normal response line
 }
 
 static stat_t _do_outputs(nvObj_t *nv)  // print parameters for all output groups
@@ -1402,7 +1402,7 @@ static stat_t _do_outputs(nvObj_t *nv)  // print parameters for all output group
         sprintf(group, "do%d", i);
         _do_group(nv, group);
     }
-    return (STAT_COMPLETE);
+    return (STAT_COMPLETE);         // STAT_COMPLETE suppresses the normal response line
 }
 
 static stat_t _do_heaters(nvObj_t *nv)  // print parameters for all heater groups
@@ -1412,7 +1412,7 @@ static stat_t _do_heaters(nvObj_t *nv)  // print parameters for all heater group
         sprintf(group, "he%d", i);
         _do_group(nv, group);
     }
-    return (STAT_COMPLETE);
+    return (STAT_COMPLETE);         // STAT_COMPLETE suppresses the normal response line
 }
 
 static stat_t _do_all(nvObj_t *nv)  // print all parameters
