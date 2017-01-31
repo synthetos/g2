@@ -67,7 +67,7 @@
 
 #define STATUS_REPORT_DEFAULTS      "line","stat","posx","posy","posz",\
                                     "vel", "unit","feed","coor","momo",\
-                                    "plan","path","dist",\
+                                    "plan","path","dist","prbe","prbz",\
                                     "mpox","mpoy","mpoz",\
                                     "admo","frmo","cycs","hold"
 //                                     "_ts1","_cs1","_es1","_xs1","_fe1"

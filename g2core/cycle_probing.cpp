@@ -43,21 +43,21 @@
 
 #define MINIMUM_PROBE_TRAVEL 0.254
 
-struct pbProbingSingleton {         // persistent probing runtime variables
-    bool wait_for_motion_end;       // flag to use to now when the motion has ended
-    bool alarm_if_fail;             // flag for G38.2 and G38.4, where failure is NOT an option
-    bool move_toward_contact;       // flag for G38.4 and G38.5, where we move off of the contact
+struct pbProbingSingleton {             // persistent probing runtime variables
+    bool wait_for_motion_end;           // flag to use to now when the motion has ended
+    bool alarm_if_fail;                 // flag for G38.2 and G38.4, where failure is NOT an option
+    bool move_toward_contact;           // flag for G38.4 and G38.5, where we move off of the contact
 
-    stat_t (*func)();               // binding for callback function state machine
+    stat_t (*func)();                   // binding for callback function state machine
 
     // controls for probing cycle
-    int8_t probe_input;             // which input should we check?
+    int8_t probe_input;                 // which input should we check?
 
     // state saved from gcode model
-    cmDistanceMode saved_distance_mode;     // G90,G91 global setting
-    cmCoordSystem saved_coord_system;       // G54 - G59 setting
-    bool saved_soft_limit_enable;           // turn off soft limits during probing
-    float saved_jerk[AXES];                  // saved and restored for each axis
+    cmDistanceMode saved_distance_mode; // G90,G91 global setting
+    cmCoordSystem saved_coord_system;   // G54 - G59 setting
+    bool saved_soft_limit_enable;       // turn off soft limits during probing
+    float saved_jerk[AXES];             // saved and restored for each axis
 
     // probe destination
     float target[AXES];
@@ -70,20 +70,10 @@ static struct pbProbingSingleton pb;
 static stat_t _probing_start();
 static stat_t _probing_backoff();
 static stat_t _probing_exit();
-//static stat_t _probing_finalize_exit();
 static stat_t _probing_error_exit(stat_t status);
 static stat_t _probe_axis_move(const float target[], bool exact_position);
 
-/**** HELPERS ***************************************************************************
- * _set_probe_function()  - a convenience for setting the next dispatch vector and exiting
- * _motion_end_callback() - wait for end of move (sync to planner)
- */
-
-static stat_t _set_probe_function(uint8_t (*func)()) 
-{
-    pb.func = func;
-    return (STAT_EAGAIN);
-}
+// helper
 
 static void _motion_end_callback(float* vect, bool* flag)
 {
@@ -271,11 +261,13 @@ static uint8_t _probing_start()
     
     if (probe_input == (pb.move_toward_contact ? INPUT_INACTIVE : INPUT_ACTIVE)) {
         _probe_axis_move(pb.target, false);
-        return (_set_probe_function(_probing_backoff));
+        pb.func = _probing_backoff;
+        return (STAT_EAGAIN);
     }
 
     cm.probe_state[0] = PROBE_FAILED;               // we failed
-    return (_set_probe_function(_probing_exit));    // exit after this move
+    pb.func = _probing_exit;
+    return (STAT_EAGAIN);
 }
 
 /*
@@ -303,7 +295,8 @@ static stat_t _probing_backoff()
     } else {
         cm.probe_state[0] = PROBE_FAILED;
     }
-    return (_set_probe_function(_probing_exit));    // exit after the backoff
+    pb.func = _probing_exit;
+    return (STAT_EAGAIN);
 }
 
 /*
@@ -343,8 +336,8 @@ static stat_t _probe_axis_move(const float target[], bool exact_position)
  * _probing_error_exit()
  */
 
-static void _probe_restore_settings() {
-    
+static void _probe_restore_settings() 
+{    
     gpio_set_probing_mode(pb.probe_input, false);       // set input back to normal operation
 
     for (uint8_t axis = 0; axis < AXES; axis++) {       // restore axis jerks
@@ -355,23 +348,27 @@ static void _probe_restore_settings() {
     cm.soft_limit_enable = pb.saved_soft_limit_enable;  // ...and soft limit setting
 
     cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE); // cancel feed modes used during probing
+    sr_request_status_report(SR_REQUEST_IMMEDIATE);     // request SR for success or failure
     cm_canned_cycle_end();
 }
 
-static stat_t _probing_exit() 
+static stat_t _probing_exit()
 {
     _probe_restore_settings();          // cleanup first
 
+    // set absolute position in probe results vector
     for (uint8_t axis = 0; axis < AXES; axis++) {
         cm.probe_results[0][axis] = cm_get_absolute_position(ACTIVE_MODEL, axis);
     }
     if (cm.probe_state[0] == PROBE_SUCCEEDED) {
         return (STAT_OK);
     }
+
+    // handle failure cases
     if (pb.alarm_if_fail) {
-        cm_alarm(STAT_PROBE_CYCLE_FAILED, "Probing error - probe failed to change.");
+        cm_alarm(STAT_PROBE_CYCLE_FAILED, "probing error");
     }
-    return (STAT_PROBE_CYCLE_FAILED);
+    return (STAT_OK);
 }
 
 static stat_t _probing_error_exit(stat_t status) 
@@ -382,45 +379,5 @@ static stat_t _probing_error_exit(stat_t status)
         char message[16] = { "probe error" };
         cm_alarm(status, message);
     }
-    nv_add_conditional_message(get_status_message(status));
-    nv_print_list(status, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT);
     return (status);
 }
-
-/*
- * _probing_finish() - report probe results and clean up
- */
-/*
-static stat_t _probing_finish() {
-
-    for (uint8_t axis = 0; axis < AXES; axis++) {
-        cm.probe_results[0][axis] = cm_get_absolute_position(ACTIVE_MODEL, axis);
-    }
-
-    // If probe was successful the 'e' word == 1, otherwise e == 0 to signal an error
-    char  buf[32];
-    char* bufp = buf;
-    bufp += sprintf(bufp, "{\"prb\":{\"e\":%i, \"", (int)cm.probe_state[0]);
-    if (pb.flags[AXIS_X]) {
-        sprintf(bufp, "x\":%0.3f}}\n", cm.probe_results[0][AXIS_X]);
-    }
-    if (pb.flags[AXIS_Y]) {
-        sprintf(bufp, "y\":%0.3f}}\n", cm.probe_results[0][AXIS_Y]);
-    }
-    if (pb.flags[AXIS_Z]) {
-        sprintf(bufp, "z\":%0.3f}}\n", cm.probe_results[0][AXIS_Z]);
-    }
-    if (pb.flags[AXIS_A]) {
-        sprintf(bufp, "a\":%0.3f}}\n", cm.probe_results[0][AXIS_A]);
-    }
-    if (pb.flags[AXIS_B]) {
-        sprintf(bufp, "b\":%0.3f}}\n", cm.probe_results[0][AXIS_B]);
-    }
-    if (pb.flags[AXIS_C]) {
-        sprintf(bufp, "c\":%0.3f}}\n", cm.probe_results[0][AXIS_C]);
-    }
-    xio_writeline(buf);
-
-    return (_set_probe_function(_probing_finalize_exit));
-}
-*/
