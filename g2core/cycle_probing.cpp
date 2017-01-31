@@ -42,6 +42,8 @@
 /**** Probe singleton structure ****/
 
 #define MINIMUM_PROBE_TRAVEL 0.254
+#define INVALID_PROBE_DESTINATION -1
+#define INVALID_PROBE_START_STATE -2
 
 struct pbProbingSingleton {         // persistent probing runtime variables
     bool wait_for_motion_end;       // flag to use to now when the motion has ended
@@ -51,13 +53,13 @@ struct pbProbingSingleton {         // persistent probing runtime variables
     stat_t (*func)();  // binding for callback function state machine
 
     // controls for probing cycle
-    uint8_t probe_input;            // which input should we check?
+    int8_t probe_input;             // which input should we check?
 
     // state saved from gcode model
-    uint8_t saved_distance_mode;    // G90,G91 global setting
-    uint8_t saved_coord_system;     // G54 - G59 setting
-    bool saved_soft_limit_enable;   // turn off soft limits during probing
-    float   saved_jerk[AXES];       // saved and restored for each axis
+    cmDistanceMode saved_distance_mode;     // G90,G91 global setting
+    cmCoordSystem saved_coord_system;       // G54 - G59 setting
+    bool saved_soft_limit_enable;           // turn off soft limits during probing
+    float saved_jerk[AXES];                  // saved and restored for each axis
 
     // probe destination
     float target[AXES];
@@ -71,20 +73,20 @@ static stat_t _probing_start();
 static stat_t _probing_backoff();
 static stat_t _probing_finish();
 static stat_t _probing_finalize_exit();
-static stat_t _probing_error_exit(int8_t axis);
+static stat_t _probing_error_exit(stat_t status);
 static stat_t _probe_axis_move(const float target[], bool exact_position);
 
 /**** HELPERS ***************************************************************************
- * _set_pb_func() - a convenience for setting the next dispatch vector and exiting
- * _probe_axis_move_callback() - wait for end of move (syn to planner)
+ * _set_probe_function()  - a convenience for setting the next dispatch vector and exiting
+ * _motion_end_callback() - wait for end of move (sync to planner)
  */
 
-static stat_t _set_pb_func(uint8_t (*func)()) {
+static stat_t _set_probe_function(uint8_t (*func)()) {
     pb.func = func;
     return (STAT_EAGAIN);
 }
 
-static void _probe_axis_move_callback(float* vect, bool* flag)
+static void _motion_end_callback(float* vect, bool* flag)
 {
     pb.wait_for_motion_end = false;
 }
@@ -140,11 +142,13 @@ static void _probe_axis_move_callback(float* vect, bool* flag)
  *  PROBE_SUCCEEDED, then we roll 0 to 1, and 1 to 2, up to PROBES_STORED-1.
  *  The oldest probe is "lost."
  *
+ *  Note: Spindle and coolant are not affected during probing. Some probes require 
+ *  the spindle to be turned on.
  */
 
 uint8_t cm_straight_probe(float target[], bool flags[], bool alarm_if_fail, bool move_toward_contact) {
 
-    // trap zero feed rate condition
+    // error if zero feed rate
     if (fp_ZERO(cm.gm.feed_rate)) {
         return (STAT_GCODE_FEEDRATE_NOT_SPECIFIED);
     }
@@ -155,9 +159,9 @@ uint8_t cm_straight_probe(float target[], bool flags[], bool alarm_if_fail, bool
         return (STAT_GCODE_AXIS_IS_MISSING);
     }
 
-    // initialize the probe input
+    // initialize the probe input; error if no probe input specified
     if ((pb.probe_input = gpio_get_probing_input()) == -1) {
-        return (STAT_PROBE_INPUT_NOT_CONFIGURED);
+        return (STAT_NO_PROBE_INPUT_CONFIGURED);
     }
 
     // setup
@@ -179,29 +183,27 @@ uint8_t cm_straight_probe(float target[], bool flags[], bool alarm_if_fail, bool
         }
     }
     // clear the old probe position
-    // NOTE: relying on cm.probe_results will not detect a probe to 0,0,0.
-    clear_vector(cm.probe_results[0]);
+    clear_vector(cm.probe_results[0]);  // NOTE: relying on cm.probe_results will not detect a probe to 0,0,0.
 
     // queue a function to let us know when we can start probing
     cm.probe_state[0] = PROBE_WAITING;  // wait until planner queue empties before completing initialization
     pb.wait_for_motion_end = true;
-    mp_queue_command(_probe_axis_move_callback, nullptr, nullptr);  // note: these args are ignored
+    mp_queue_command(_motion_end_callback, nullptr, nullptr);  // note: these args are ignored
     return (STAT_OK);
 }
 
 /*
  *  cm_probing_cycle_callback() - handle probing progress
  *
- *  This is called regularly from the controller. If we report NOOP, the
- *  controller will continue with other tasks. Otherwise the controller will
- *  not execute any later tasks, including read any more "data".
+ *  This is called regularly from the controller. If we report NOOP, the controller 
+ *  will continue with other tasks. Otherwise the controller will not execute any 
+ *  later tasks, including read any more "data".
  *
- *  Note: When coding a cycle (like this one) you must wait until
- *  the last move has actually been queued (or has finished) before declaring
- *  the cycle to be done. Otherwise there is a nasty race condition in
- *  _controller_HSM() that may accept the next command before the position of
- *  the final move has been recorded in the Gcode model. That's what the call
- *  to cm_get_runtime_busy() is about.
+ *  Note: When coding a cycle (like this one) you must wait until the last move has
+ *  actually been queued (or has finished) before declaring the cycle to be done. 
+ *  Otherwise there is a nasty race condition in _controller_HSM() that may accept 
+ *  the next command before the position of the final move has been recorded in the 
+ *  Gcode model. That's what the wait_for_motion_end callback is about.
  */
 
 uint8_t cm_probing_cycle_callback(void) {
@@ -235,8 +237,8 @@ static uint8_t _probing_start() {
     cm.cycle_state = CYCLE_PROBE;
 
     // save relevant non-axis parameters from Gcode model
-    pb.saved_coord_system = cm_get_coord_system(ACTIVE_MODEL);
-    pb.saved_distance_mode = cm_get_distance_mode(ACTIVE_MODEL);
+    pb.saved_coord_system = (cmCoordSystem)cm_get_coord_system(ACTIVE_MODEL);
+    pb.saved_distance_mode = (cmDistanceMode)cm_get_distance_mode(ACTIVE_MODEL);
     pb.saved_soft_limit_enable = cm.soft_limit_enable;
     
     // set working values
@@ -252,26 +254,28 @@ static uint8_t _probing_start() {
 
     // error if the probe target is too close to the current position
     if (get_axis_vector_length(start_position, pb.target) < MINIMUM_PROBE_TRAVEL) {
-        _probing_error_exit(-2);
+        return(_probing_error_exit(STAT_PROBE_TRAVEL_TOO_SMALL));
     }
 
     gpio_set_probing_mode(pb.probe_input, true);
-
-    // turn off spindle and start the move
-//    cm_spindle_optional_pause(true);        // pause the spindle if it's on
 
     // initial probe state, don't probe if we're already contacted!
     // INPUT_INACTIVE (false) is the correct start condition for G38.2 and G38.3
     // INPUT_ACTIVE (true) is the right start condition for G38.4 and G38.5
     // Note that we're testing for SUCCESS here
     int8_t probe_input = gpio_read_input(pb.probe_input);   // returns `true` if contacted
+    
+//    if (pb.move_toward_contact ^ probe_input) {
+//        return(_probing_error_exit(STAT_PROBE_HAS_INVALID_START_STATE));
+//    }
+    
     if (probe_input == (pb.move_toward_contact ? INPUT_INACTIVE : INPUT_ACTIVE)) {
         _probe_axis_move(pb.target, false);
-        return (_set_pb_func(_probing_backoff));
+        return (_set_probe_function(_probing_backoff));
     }
 
     cm.probe_state[0] = PROBE_FAILED;  // we failed
-    return (_set_pb_func(_probing_finish));
+    return (_set_probe_function(_probing_finish));
 }
 
 /*
@@ -299,7 +303,7 @@ static stat_t _probing_backoff() {
     } else {
         cm.probe_state[0] = PROBE_FAILED;
     }
-    return (_set_pb_func(_probing_finish));
+    return (_set_probe_function(_probing_finish));
 }
 
 /*
@@ -328,7 +332,7 @@ static stat_t _probe_axis_move(const float target[], bool exact_position) {
         cm.gm.units_mode    = stored_units_mode;
         cm.gm.distance_mode = stored_distance_mode;
     }
-    mp_queue_command(_probe_axis_move_callback, nullptr, nullptr);      // the last two arguments are ignored anyway
+    mp_queue_command(_motion_end_callback, nullptr, nullptr);      // the last two arguments are ignored anyway
     return (STAT_EAGAIN);
 }
 
@@ -365,93 +369,55 @@ static stat_t _probing_finish() {
     }
     xio_writeline(buf);
 
-    return (_set_pb_func(_probing_finalize_exit));
+    return (_set_probe_function(_probing_finalize_exit));
 }
 
 /*
  * _probe_restore_settings()
  * _probing_finalize_exit()
  * _probing_error_exit()
+ *
+ *  _probing_finalize_exit() and _probing_error_exit() generate their own warning/error messages. 
+ *  Since the exits return via the probing callback- and not the main controller - they require
+ *  their own display processing.
  */
 
 static void _probe_restore_settings() {
-    // set input back to normal operation
-    gpio_set_probing_mode(pb.probe_input, false);
-
-    // restore axis jerks
-    for (uint8_t axis = 0; axis < AXES; axis++) { 
+    
+    gpio_set_probing_mode(pb.probe_input, false);       // set input back to normal operation
+    for (uint8_t axis = 0; axis < AXES; axis++) {       // restore axis jerks
         cm.a[axis].jerk_max = pb.saved_jerk[axis]; 
     }
+    cm_set_coord_system(pb.saved_coord_system);         // restore coordinate system...
+    cm_set_distance_mode(pb.saved_distance_mode);       // ...distance mode...
+    cm.soft_limit_enable = pb.saved_soft_limit_enable;  // ...and soft limit setting
 
-    // restore coordinate system and distance mode
-    cm_set_coord_system(pb.saved_coord_system);
-    cm_set_distance_mode(pb.saved_distance_mode);
-    cm.soft_limit_enable = pb.saved_soft_limit_enable;
-
-    // restart spindle if it was paused
-//    cm_spindle_resume(spindle.dwell_seconds);
-
-    // cancel the feed modes used during probing
-    cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);
+    cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE); // cancel feed modes used during probing
     cm_canned_cycle_end();
 }
 
 static stat_t _probing_finalize_exit() {
-    _probe_restore_settings();
+
+    _probe_restore_settings();          // cleanup first
+
     if (cm.probe_state[0] == PROBE_SUCCEEDED) {
         return (STAT_OK);
     }
-
     if (pb.alarm_if_fail) {
         cm_alarm(STAT_PROBE_CYCLE_FAILED, "Probing error - probe failed to change.");
     }
     return (STAT_PROBE_CYCLE_FAILED);
 }
 
-static stat_t _probing_error_exit(int8_t axis) {
-    // cleanup first
-    _probe_restore_settings();
+static stat_t _probing_error_exit(stat_t status) {
 
-    // Generate the warning/error message.
+    _probe_restore_settings();          // cleanup first
 
-    // Since the error exit returns via the probing callback - and not the main
-    // controller - it requires its own display processing.
-
-    nv_reset_nv_list();
-    if (axis == -3) {
-        const char* msg = "Probing error - probe input is already active";
-        if (pb.alarm_if_fail) {
-            cm_alarm(STAT_PROBE_CYCLE_FAILED, msg);
-        } else {
-            nv_add_conditional_message(msg);
-        }
-    } else if (axis == -4) {
-        const char* msg = "Probing error - probe input is already inactive";
-        if (pb.alarm_if_fail) {
-            cm_alarm(STAT_PROBE_CYCLE_FAILED, msg);
-        } else {
-            nv_add_conditional_message(msg);
-        }
-    } else if (axis == -2) {
-        const char* msg = "Probing error - invalid probe destination";
-        if (pb.alarm_if_fail) {
-            cm_alarm(STAT_PROBE_CYCLE_FAILED, msg);
-        } else {
-            nv_add_conditional_message(msg);
-        }
-    } else {
-        char msg[NV_MESSAGE_LEN];
-        sprintf(msg, "Probing error - %c axis cannot move during probing", cm_get_axis_char(axis));
-        if (pb.alarm_if_fail) {
-            cm_alarm(STAT_PROBE_CYCLE_FAILED, msg);
-        } else {
-            nv_add_conditional_message(msg);
-        }
+    if (pb.alarm_if_fail) {             // generate an alarm
+        char message[16] = { "probe error" };
+        cm_alarm(status, message);
     }
-
-    if (!pb.alarm_if_fail) {
-        nv_print_list(STAT_PROBE_CYCLE_FAILED, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT);
-    }
-
-    return (STAT_PROBE_CYCLE_FAILED);
+    nv_add_conditional_message(get_status_message(status));
+    nv_print_list(status, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT);
+    return (status);
 }
