@@ -280,6 +280,8 @@ char *get_status_message(stat_t status);
 #define STAT_T_WORD_IS_MISSING 180
 #define STAT_T_WORD_IS_INVALID 181
 
+#define STAT_PROBE_INPUT_NOT_CONFIGURED 182
+
 /* reserved for Gcode or other program errors */
 
 #define STAT_ERROR_183 183
@@ -574,7 +576,7 @@ static const char stat_179[] = "S word invalid";
 
 static const char stat_180[] = "T word missing";
 static const char stat_181[] = "T word invalid";
-static const char stat_182[] = "182";
+static const char stat_182[] = "Probe Input Not Configured";
 static const char stat_183[] = "183";
 static const char stat_184[] = "184";
 static const char stat_185[] = "185";
