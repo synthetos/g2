@@ -633,6 +633,8 @@ void cm_set_model_target(const float target[], const bool flags[])
 }
 
 /*
+ * cm_get_soft_limits()
+ * cm_set_soft_limits()
  * cm_test_soft_limits() - return error code if soft limit is exceeded
  *
  *  The target[] arg must be in absolute machine coordinates. Best done after cm_set_model_target().
@@ -642,6 +644,9 @@ void cm_set_model_target(const float target[], const bool flags[])
  *  a min or a max if the value is more than +/- 1000000 (plus or minus 1 million ).
  *  This allows a single end to be tested w/the other disabled, should that requirement ever arise.
  */
+
+bool cm_get_soft_limits() { return (cm.soft_limit_enable); }
+void cm_set_soft_limits(bool enable) { cm.soft_limit_enable = enable; }
 
 static stat_t _finalize_soft_limits(const stat_t status)
 {

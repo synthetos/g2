@@ -59,7 +59,7 @@ struct pbProbingSingleton {             // persistent probing runtime variables
     // saved gcode model state
     cmUnitsMode saved_units_mode;       // G20,G21 setting
     cmDistanceMode saved_distance_mode; // G90,G91 global setting
-    bool saved_soft_limit_enable;       // turn off soft limits during probing
+    bool saved_soft_limits;             // turn off soft limits during probing
     float saved_jerk[AXES];             // saved and restored for each axis
 };
 static struct pbProbingSingleton pb;
@@ -215,7 +215,8 @@ static uint8_t _probing_start()
     // save relevant non-axis parameters from Gcode model
     pb.saved_distance_mode = (cmDistanceMode)cm_get_distance_mode(ACTIVE_MODEL);
     pb.saved_units_mode = (cmUnitsMode)cm_get_units_mode(ACTIVE_MODEL);
-    pb.saved_soft_limit_enable = cm.soft_limit_enable;
+    pb.saved_soft_limits = cm_get_soft_limits();
+    cm_set_soft_limits(false);
     
     // set working values
     cm_set_distance_mode(ABSOLUTE_DISTANCE_MODE);
@@ -302,7 +303,7 @@ static void _probe_restore_settings()
     cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_OFF); // release abs override and restore work offsets
     cm_set_distance_mode(pb.saved_distance_mode);
     cm_set_units_mode(pb.saved_units_mode);
-    cm.soft_limit_enable = pb.saved_soft_limit_enable;
+    cm_set_soft_limits(pb.saved_soft_limits);
 
     cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);// cancel feed modes used during probing
     sr_request_status_report(SR_REQUEST_IMMEDIATE);         // request SR for success or failure
