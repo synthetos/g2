@@ -139,17 +139,26 @@ uint8_t cm_straight_probe(float target[], bool flags[], bool alarm_if_fail, bool
 {
     // error if zero feed rate
     if (fp_ZERO(cm.gm.feed_rate)) {
+        if (alarm_if_fail) { 
+            cm_alarm(STAT_GCODE_FEEDRATE_NOT_SPECIFIED, "Feedrate is zero");
+        }
         return (STAT_GCODE_FEEDRATE_NOT_SPECIFIED);
     }
 
     // error if no axes specified
     if (!(flags[AXIS_X] | flags[AXIS_Y] | flags[AXIS_Z] |
           flags[AXIS_A] | flags[AXIS_B] | flags[AXIS_C])) {
+        if (alarm_if_fail) {
+            cm_alarm(STAT_GCODE_AXIS_IS_MISSING, "Axis is missing");
+        }
         return (STAT_GCODE_AXIS_IS_MISSING);
     }
 
     // initialize the probe input; error if no probe input specified
     if ((pb.probe_input = gpio_get_probing_input()) == -1) {
+        if (alarm_if_fail) {
+            cm_alarm(STAT_NO_PROBE_INPUT_CONFIGURED, "No probe input");
+        }
         return (STAT_NO_PROBE_INPUT_CONFIGURED);
     }
 
@@ -256,7 +265,7 @@ static uint8_t _probing_start()
     int8_t probe_input = gpio_read_input(pb.probe_input);   // returns `true` if contacted
     
     if (pb.move_toward_contact == probe_input) {            // exclusive nor for booleans
-        return(_probing_error_exit(STAT_PROBE_HAS_INVALID_START_STATE));
+        return(_probing_error_exit(STAT_PROBE_IS_ALREADY_TRIPPED));
     }
     
     if (probe_input == (pb.move_toward_contact ? INPUT_INACTIVE : INPUT_ACTIVE)) {
@@ -264,8 +273,7 @@ static uint8_t _probing_start()
         pb.func = _probing_backoff;
         return (STAT_EAGAIN);
     }
-
-    cm.probe_state[0] = PROBE_FAILED;               // we failed
+    cm.probe_state[0] = PROBE_FAILED;
     pb.func = _probing_exit;
     return (STAT_EAGAIN);
 }
@@ -301,6 +309,8 @@ static stat_t _probing_backoff()
 
 /*
  * _probe_axis_move() - function to execute probing moves
+ *
+ *  target[] must be provided in canonical coordinates (absolute, mm)
  */
 
 static stat_t _probe_axis_move(const float target[], bool exact_position) 
@@ -312,8 +322,8 @@ static stat_t _probe_axis_move(const float target[], bool exact_position)
         cm.gm.units_mode    = MILLIMETERS;
         cm.gm.distance_mode = ABSOLUTE_DISTANCE_MODE;
     }
-
-    for (uint8_t axis = AXIS_X; axis < AXES; axis++) {  // set all positions
+    // This must be performed while there is no movement
+    for (uint8_t axis = AXIS_X; axis < AXES; axis++) {          // set all positions
         cm_set_position(axis, mp_get_runtime_absolute_position(axis));
     }
 

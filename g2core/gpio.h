@@ -68,10 +68,10 @@ typedef enum {                          // actions are initiated from within the
 
 typedef enum {                          // functions are requested from the ISR, run from the main loop
     INPUT_FUNCTION_NONE = 0,
-    INPUT_FUNCTION_LIMIT,               // limit switch processing
-    INPUT_FUNCTION_INTERLOCK,           // interlock processing
-    INPUT_FUNCTION_SHUTDOWN,            // shutdown in support of external emergency stop
-    INPUT_FUNCTION_PROBE,               // assign input as probe input
+    INPUT_FUNCTION_LIMIT = 1,           // limit switch processing
+    INPUT_FUNCTION_INTERLOCK = 2,       // interlock processing
+    INPUT_FUNCTION_SHUTDOWN = 3,        // shutdown in support of external emergency stop
+    INPUT_FUNCTION_PROBE = 4,           // assign input as probe input
     INPUT_FUNCTION_MAX                  // unused. Just for range checking
 } inputFunc;
 
