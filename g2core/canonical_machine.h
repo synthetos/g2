@@ -139,7 +139,7 @@ typedef enum {                  // applies to cm.homing_state
 typedef enum {                  // applies to cm.probe_state
     PROBE_FAILED = 0,           // probe reached endpoint without triggering
     PROBE_SUCCEEDED = 1,        // probe was triggered, cm.probe_results has position
-    PROBE_WAITING               // probe is waiting to be started
+    PROBE_WAITING = 2           // probe is waiting to be started or is running
 } cmProbeState;
 
 typedef enum {
