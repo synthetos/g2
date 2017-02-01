@@ -766,9 +766,8 @@ stat_t cm_homing_cycle_start_no_set(void);                      // G28.4
 stat_t cm_homing_cycle_callback(void);                          // G28.2/.4 main loop callback
 
 // Probe cycles
-stat_t cm_straight_probe(float target[], bool flags[],
-                         bool alarm_if_fail,
-                         bool move_toward_contact);             // G38.x
+stat_t cm_straight_probe(float target[], bool flags[],          // G38.x
+                         bool trip_sense, bool alarm_flag);
 stat_t cm_probing_cycle_callback(void);                         // G38.x main loop callback
 
 // Jogging cycle

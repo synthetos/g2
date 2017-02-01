@@ -41,7 +41,7 @@
 
 /**** Probe singleton structure ****/
 
-#define MINIMUM_PROBE_TRAVEL 0.254
+#define MINIMUM_PROBE_TRAVEL 0.254      // mm of travel below which the probe will err out
 
 struct pbProbingSingleton {             // persistent probing runtime variables
 
@@ -50,10 +50,10 @@ struct pbProbingSingleton {             // persistent probing runtime variables
     bool  flags[AXES];
 
     // controls for probing cycle
-    int8_t probe_input;                 // which input should we check?
-    bool wait_for_motion_end;           // flag to use to now when the motion has ended
-    bool alarm_if_fail;                 // flag for G38.2 and G38.4, where failure is NOT an option
-    bool move_toward_contact;           // flag for G38.4 and G38.5, where we move off of the contact
+    int8_t probe_input;                 // digital input to read
+    bool trip_sense;                    // true if contact CLOSURE trips probe  (true for G38.2 and G38.3)
+    bool alarm_flag;                    // true if failure triggers alarm       (true for G38.2 and G38.4)
+    bool wait_for_motion_end;           // flag to know when the motion has ended
     stat_t (*func)();                   // binding for callback function state machine
 
     // saved gcode model state
@@ -133,11 +133,11 @@ static void _motion_end_callback(float* vect, bool* flag)
  *  the spindle to be turned on.
  */
 
-uint8_t cm_straight_probe(float target[], bool flags[], bool alarm_if_fail, bool move_toward_contact) 
+uint8_t cm_straight_probe(float target[], bool flags[], bool trip_sense, bool alarm_flag) 
 {
     // error if zero feed rate
     if (fp_ZERO(cm.gm.feed_rate)) {
-        if (alarm_if_fail) { 
+        if (alarm_flag) { 
             cm_alarm(STAT_GCODE_FEEDRATE_NOT_SPECIFIED, "Feedrate is zero");
         }
         return (STAT_GCODE_FEEDRATE_NOT_SPECIFIED);
@@ -146,7 +146,7 @@ uint8_t cm_straight_probe(float target[], bool flags[], bool alarm_if_fail, bool
     // error if no axes specified
     if (!(flags[AXIS_X] | flags[AXIS_Y] | flags[AXIS_Z] |
           flags[AXIS_A] | flags[AXIS_B] | flags[AXIS_C])) {
-        if (alarm_if_fail) {
+        if (alarm_flag) {
             cm_alarm(STAT_GCODE_AXIS_IS_MISSING, "Axis is missing");
         }
         return (STAT_GCODE_AXIS_IS_MISSING);
@@ -154,15 +154,15 @@ uint8_t cm_straight_probe(float target[], bool flags[], bool alarm_if_fail, bool
 
     // initialize the probe input; error if no probe input specified
     if ((pb.probe_input = gpio_get_probing_input()) == -1) {
-        if (alarm_if_fail) {
+        if (alarm_flag) {
             cm_alarm(STAT_NO_PROBE_INPUT_CONFIGURED, "No probe input");
         }
         return (STAT_NO_PROBE_INPUT_CONFIGURED);
     }
 
     // setup
-    pb.alarm_if_fail = alarm_if_fail;
-    pb.move_toward_contact = move_toward_contact;
+    pb.alarm_flag = alarm_flag;
+    pb.trip_sense = trip_sense;
     pb.func = _probing_start;               // bind probing start function
 
     cm_set_model_target(target, flags);     // convert target to canonical form taking all offsets into account
@@ -257,7 +257,9 @@ static uint8_t _probing_start()
     // Input == false is the correct start condition for G38.2 and G38.3
     // Input == true is the right start condition for G38.4 and G38.5
     // If the initial input is the same as the target state it's an error
-    if (pb.move_toward_contact == gpio_read_input(pb.probe_input)) {  // == is exclusive nor for booleans
+//    pb.input_state = gpio_read_input(pb.probe_input);
+//    if (pb.trip_sense == pb.input_state) {                      // == is exclusive nor for booleans
+    if (pb.trip_sense == gpio_read_input(pb.probe_input)) {     // == is exclusive nor for booleans
         return(_probing_exception_exit(STAT_PROBE_IS_ALREADY_TRIPPED));
     }
 
@@ -275,17 +277,12 @@ static uint8_t _probing_start()
 
 static stat_t _probing_backoff() 
 {
-    // Test if we've contacted
-    // INPUT_INACTIVE (false) is the correct start condition for G38.2 and G38.3
-    // INPUT_ACTIVE (true) is the right start condition for G38.4 and G38.5
-    // Note that we're testing for SUCCESS here
-    bool probe = gpio_read_input(pb.probe_input);
-    if (probe == (pb.move_toward_contact ? INPUT_ACTIVE : INPUT_INACTIVE)) {
-//    if (pb.move_toward_contact ^ gpio_read_input(pb.probe_input)) {  // exclusive or for booleans
-        cm.probe_state[0] = PROBE_SUCCEEDED;
+    // Test if we've contacted. If so, do the backoff.  Convert the contact position 
+    // captured from the encoder in step space to steps to mm. The encoder snapshot 
+    // was taken by input interrupt at the time of closure.
 
-        // capture contact position in step space and convert from steps to mm.
-        // snapshot was taken by input interrupt at the time of closure
+    if (pb.trip_sense == gpio_read_input(pb.probe_input)) {  // exclusive or for booleans
+        cm.probe_state[0] = PROBE_SUCCEEDED;
         float contact_position[AXES];
         kn_forward_kinematics(en_get_encoder_snapshot_vector(), contact_position);
         _probe_axis_move(contact_position, pb.flags);   // NB: feed rate is the same as the probe move
@@ -349,7 +346,7 @@ static stat_t _probing_finish()
     }
 
     // handle failure cases
-    if (pb.alarm_if_fail) {
+    if (pb.alarm_flag) {
         cm_alarm(STAT_PROBE_CYCLE_FAILED, "probing error");
     }
     return (STAT_OK);
@@ -359,7 +356,7 @@ static stat_t _probing_exception_exit(stat_t status)
 {
     _probe_restore_settings();          // cleanup first
 
-    if (pb.alarm_if_fail) {             // generate an alarm
+    if (pb.alarm_flag) {             // generate an alarm
         cm_alarm(status, "probe error");
     }
     return (status);
