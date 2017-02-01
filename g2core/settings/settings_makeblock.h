@@ -113,6 +113,14 @@
 #define M3_POWER_MODE           MOTOR_POWER_MODE
 #define M3_POWER_LEVEL          0.4
 
+#define M4_MOTOR_MAP            AXIS_A
+#define M4_STEP_ANGLE           1.8
+#define M4_TRAVEL_PER_REV       1.25
+#define M4_MICROSTEPS           8
+#define M4_POLARITY             0
+#define M4_POWER_MODE           MOTOR_POWER_MODE
+#define M4_POWER_LEVEL          0.4
+
 // *** axis settings **********************************************************************************
 
 #define JERK_MAX 5000
@@ -159,6 +167,20 @@
 #define Z_LATCH_BACKOFF         4
 #define Z_ZERO_BACKOFF          2
 
+#define A_AXIS_MODE             AXIS_STANDARD
+#define A_RADIUS                1
+#define A_VELOCITY_MAX          360000
+#define A_FEEDRATE_MAX          A_VELOCITY_MAX
+#define A_TRAVEL_MIN            -1
+#define A_TRAVEL_MAX            -1
+#define A_JERK_MAX              100000
+#define A_JERK_HIGH_SPEED       A_JERK_MAX
+#define A_HOMING_INPUT          0
+#define A_HOMING_DIRECTION      0
+#define A_SEARCH_VELOCITY       600
+#define A_LATCH_VELOCITY        100
+#define A_LATCH_BACKOFF         10
+#define A_ZERO_BACKOFF          2
 
 //*** Input / output settings ***
 /*
