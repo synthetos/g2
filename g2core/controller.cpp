@@ -231,9 +231,13 @@ static void _dispatch_kernel(const devflags_t flags)
     }
 
 #if MARLIN_COMPAT_ENABLED == true
+    // marlin_handle_fake_stk500 returns true if it responded to a stk500v2 message
     if (marlin_handle_fake_stk500(cs.bufp)) {
         cs.comm_mode = MARLIN_COMM_MODE;
         js.json_mode = MARLIN_COMM_MODE;
+
+        sr.status_report_verbosity = SR_OFF;
+        qr.queue_report_verbosity = QR_OFF;
         return;
     }
 #endif
@@ -320,7 +324,13 @@ static stat_t _controller_state()
     if (cs.controller_state == CONTROLLER_CONNECTED) {        // first time through after reset
         cs.controller_state = CONTROLLER_STARTUP;
         // This is here just to put a small delay in before the startup message.
+#if MARLIN_COMPAT_ENABLED == true
+        // For Marlin compatibility, we need this to be long enough for the UI to say something and reveal
+        // if it's a Marlin-compatible UI.
+        _connection_timeout.set(2000);
+#else
         _connection_timeout.set(10);
+#endif
     } else if ((cs.controller_state == CONTROLLER_STARTUP) && (_connection_timeout.isPast())) {        // first time through after reset
         cs.controller_state = CONTROLLER_READY;
         rpt_print_system_ready_message();
@@ -351,6 +361,10 @@ void controller_set_connected(bool is_connected) {
 
         cs.controller_state = CONTROLLER_CONNECTED; // we JUST connected
     } else {  // we just disconnected from the last device, we'll expect a banner again
+        // turn off reports while no-one's listening
+        sr.status_report_verbosity = SR_OFF;
+        qr.queue_report_verbosity = QR_OFF;
+
         cs.controller_state = CONTROLLER_NOT_CONNECTED;
     }
 }
