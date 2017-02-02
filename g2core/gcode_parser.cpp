@@ -836,6 +836,8 @@ stat_t _execute_gcode_block(char *active_comment)
     EXEC_FUNC(cm_set_feed_rate, F_word);                    // F
 
 #if MARLIN_COMPAT_ENABLED == true
+    // Handle Marlin specifics
+
     // adjust T real quick
     if (cm.gmx.marlin_flavor && gf.tool_select) {
         gv.tool_select += 1;
@@ -843,7 +845,10 @@ stat_t _execute_gcode_block(char *active_comment)
         cm.gm.tool = cm.gm.tool_select;     // Also, in Marlin, tool changes are effective immediately :facepalm:
         gf.tool_select = false;             // prevent a tool_select command from being buffered (planning to zero)
     }
-    // Handle Marlin specifics
+    else if (cm.gm.tool_select == 0) {
+        cm.gm.tool_select = 1;              // We need to ensure we have a valid tool selected, often Malin gcode won't have a T word at all
+        cm.gm.tool = cm.gm.tool_select;     // Also, in Marlin, tool changes are effective immediately :facepalm:
+    }
 
     // Deal with E
     EXEC_FUNC(cm_marlin_set_extruder_mode, marlin_relative_extruder_mode);  // M82, M83
@@ -861,6 +866,9 @@ stat_t _execute_gcode_block(char *active_comment)
             gv.target[AXIS_B] = gv.E_word;
         }
         else {
+#if IN_DEBUGGER == 1
+            __asm__("BKPT");    // mp_exec_move() buffer is not prepped
+#endif
             return STAT_INPUT_VALUE_RANGE_ERROR;
         }
     }

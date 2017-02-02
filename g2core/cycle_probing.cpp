@@ -353,29 +353,30 @@ static stat_t _probing_finish() {
         cm.probe_results[0][axis] = cm_get_absolute_position(ACTIVE_MODEL, axis);
     }
 
-    // If probe was successful the 'e' word == 1, otherwise e == 0 to signal an error
-    char  buf[32];
-    char* bufp = buf;
-    bufp += sprintf(bufp, "{\"prb\":{\"e\":%i, \"", (int)cm.probe_state[0]);
-    if (pb.flags[AXIS_X]) {
-        sprintf(bufp, "x\":%0.3f}}\n", cm.probe_results[0][AXIS_X]);
-    }
-    if (pb.flags[AXIS_Y]) {
-        sprintf(bufp, "y\":%0.3f}}\n", cm.probe_results[0][AXIS_Y]);
-    }
-    if (pb.flags[AXIS_Z]) {
-        sprintf(bufp, "z\":%0.3f}}\n", cm.probe_results[0][AXIS_Z]);
-    }
-    if (pb.flags[AXIS_A]) {
-        sprintf(bufp, "a\":%0.3f}}\n", cm.probe_results[0][AXIS_A]);
-    }
-    if (pb.flags[AXIS_B]) {
-        sprintf(bufp, "b\":%0.3f}}\n", cm.probe_results[0][AXIS_B]);
-    }
-    if (pb.flags[AXIS_C]) {
-        sprintf(bufp, "c\":%0.3f}}\n", cm.probe_results[0][AXIS_C]);
-    }
-    xio_writeline(buf);
+//    // If probe was successful the 'e' word == 1, otherwise e == 0 to signal an error
+//    char  buf[32];
+//    char* bufp = buf;
+//    bufp += sprintf(bufp, "{\"prb\":{\"e\":%i, \"", (int)cm.probe_state[0]);
+//    if (pb.flags[AXIS_X]) {
+//        sprintf(bufp, "x\":%0.3f}}\n", cm.probe_results[0][AXIS_X]);
+//    }
+//    if (pb.flags[AXIS_Y]) {
+//        sprintf(bufp, "y\":%0.3f}}\n", cm.probe_results[0][AXIS_Y]);
+//    }
+//    if (pb.flags[AXIS_Z]) {
+//        sprintf(bufp, "z\":%0.3f}}\n", cm.probe_results[0][AXIS_Z]);
+//    }
+//    if (pb.flags[AXIS_A]) {
+//        sprintf(bufp, "a\":%0.3f}}\n", cm.probe_results[0][AXIS_A]);
+//    }
+//    if (pb.flags[AXIS_B]) {
+//        sprintf(bufp, "b\":%0.3f}}\n", cm.probe_results[0][AXIS_B]);
+//    }
+//    if (pb.flags[AXIS_C]) {
+//        sprintf(bufp, "c\":%0.3f}}\n", cm.probe_results[0][AXIS_C]);
+//    }
+//    xio_writeline(buf);
+    sr_request_status_report(SR_REQUEST_TIMED);
 
     return (_set_pb_func(_probing_finalize_exit));
 }
