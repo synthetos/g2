@@ -53,7 +53,7 @@ stat_t cm_get_pid_d(nvObj_t* nv);
 float cm_get_set_temperature(const uint8_t heater);
 stat_t cm_get_set_temperature(nvObj_t* nv);
 
-void cm_set_set_temperature(const uint8_t heater, const float valoue);
+void cm_set_set_temperature(const uint8_t heater, const float value);
 stat_t cm_set_set_temperature(nvObj_t* nv);
 
 float cm_get_fan_power(const uint8_t heater);
