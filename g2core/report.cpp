@@ -368,6 +368,7 @@ static uint8_t _populate_filtered_status_report()
     bool has_data = false;
     char tmp[TOKEN_LEN+1];
     nvObj_t *nv = nv_reset_nv_list();           // sets nv to the start of the body
+    float precision[8] = { 1, 0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001, 0.0000001 };
 
     nv->valuetype = TYPE_PARENT;                // setup the parent object (no need to length check the copy)
     strcpy(nv->token, sr_str);
@@ -381,7 +382,7 @@ static uint8_t _populate_filtered_status_report()
         nv_get_nvObj(nv);
 
         // report values that have changed by more than 0.0001, but always stops and ends
-        if ((fabs(nv->value - sr.status_report_value[i]) > EPSILON3) ||
+        if ((fabs(nv->value - sr.status_report_value[i]) > precision[cfgArray[nv->index].precision]) ||
             ((nv->index == sr.stat_index) && fp_EQ(nv->value, COMBINED_PROGRAM_STOP)) ||
             ((nv->index == sr.stat_index) && fp_EQ(nv->value, COMBINED_PROGRAM_END))) {
 
