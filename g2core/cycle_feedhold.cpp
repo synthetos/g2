@@ -273,8 +273,8 @@ stat_t cm_enter_hold_planner()
     if (fp_NOT_ZERO(cm->feedhold_z_lift)) {             // optional Z lift
         float stored_distance_mode = cm_get_distance_mode(MODEL);
         cm_set_distance_mode(INCREMENTAL_DISTANCE_MODE);
-        bool flags[] = { 0,0,1,0,0,0 };
-        float target[] = { 0,0, cm->feedhold_z_lift, 0,0,0 };
+        bool flags[] = { 0,0,1,0,0,0 };            
+        float target[] = { 0,0, _to_inches(cm->feedhold_z_lift), 0,0,0 };   // convert to inches if in inches mode
         cm_straight_traverse(target, flags);
         cm_set_distance_mode(stored_distance_mode);
     }

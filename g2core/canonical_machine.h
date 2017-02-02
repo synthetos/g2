@@ -42,7 +42,8 @@
 #define RUNTIME (GCodeState_t *)&mr->gm     // absolute pointer from runtime mm struct
 #define ACTIVE_MODEL cm->am                 // active model pointer is maintained by cm_set_motion_state()
 
-#define _to_millimeters(a) ((cm->gm.units_mode == INCHES) ? (a * MM_PER_INCH) : a)
+#define _to_millimeters(a)  ((cm->gm.units_mode == INCHES) ? (a * MM_PER_INCH) : a)
+#define _to_inches(a)       ((cm->gm.units_mode == INCHES) ? (a * 1/MM_PER_INCH) : a)
 
 #define DISABLE_SOFT_LIMIT (999999)
 #define JERK_INPUT_MIN (0.01)               // minimum allowable jerk setting in millions mm/min^3
