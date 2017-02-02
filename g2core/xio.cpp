@@ -1117,12 +1117,10 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
                 //     set it as a MUTED channel, call controller_set_connected(true)
                 //       then controller_set_muted(true)
 
+                flush(); // toss anything that has been written so far.
 
                 setAsConnectedAndReady();
 
-#if MARLIN_COMPAT_ENABLED == true
-                _rx_buffer.startFakeBootloaderMode();
-#endif
 
                 if (isAlwaysDataAndCtrl()) {
                     // Case 1 (ignoring others)
@@ -1137,7 +1135,7 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
                     return;
                 }
 
-                if(!xio.othersConnected(this)) {
+                if (!xio.othersConnected(this)) {
                     // Case 1
                     setAsPrimaryActiveDualRole();
                     // report that there is now have a connection (only for the first one)
@@ -1146,6 +1144,10 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
                     if (xio.checkMutedSecondaryChannels()) {
                         controller_set_muted(true); // something was muted
                     }
+#if MARLIN_COMPAT_ENABLED == true
+                    // start the "fake bootloader"
+                    _rx_buffer.startFakeBootloaderMode();
+#endif
                 }
                 else if (isMuteAsSecondary()) {
                     // Case 2b
@@ -1251,11 +1253,13 @@ struct xioFlashFileDeviceWrapper : xioDeviceWrapperBase {    // describes a devi
         // to flush the file, just forget about it
         // next time it's used it'll get reset
         _current_file = nullptr;
+        cs.responses_suppressed = false;
     }
 
     bool flushToCommand() final {
         // the end of the file is the next "command"
         _current_file = nullptr;
+        cs.responses_suppressed = false;
         return false;
     }
 
@@ -1273,6 +1277,7 @@ struct xioFlashFileDeviceWrapper : xioDeviceWrapperBase {    // describes a devi
         if ((nullptr == from) && (_current_file->isDone())) {
             // all done sending this file, "close" it
             _current_file = nullptr;
+            cs.responses_suppressed = false;
             clearActive();
             return nullptr;
         }
@@ -1287,6 +1292,7 @@ struct xioFlashFileDeviceWrapper : xioDeviceWrapperBase {    // describes a devi
         // null-terminate the string
         *dst_ptr = 0;
 
+        cs.responses_suppressed = true;
         return _line_buffer;
     };
 };

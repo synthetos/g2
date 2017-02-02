@@ -260,6 +260,10 @@ void marlin_response(const stat_t status, char *buf)
     char buffer[128];
     char *str = buffer;
 
+    if (cs.responses_suppressed) {
+        return;
+    }
+
     if ((status == STAT_OK) || (status == STAT_EAGAIN) || (status == STAT_NOOP)) {
         str_concat(str, "ok");
 

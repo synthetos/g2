@@ -112,7 +112,9 @@ void rpt_print_loading_configs_message(void)
 void rpt_print_system_ready_message(void)
 {
 #if MARLIN_COMPAT_ENABLED == true
-    #warning DEAL WITH STARTUP MESSAGE
+    if (MARLIN_COMM_MODE != cs.comm_mode) {
+        _startup_helper(STAT_OK, "SYSTEM READY");
+    }
 #else
     _startup_helper(STAT_OK, "SYSTEM READY");
 #endif

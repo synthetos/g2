@@ -525,7 +525,7 @@ void json_print_list(stat_t status, uint8_t flags)
 
 void json_print_response(uint8_t status, const bool only_to_muted /*= false*/)
 {
-    if (js.json_verbosity == JV_SILENT) {                   // silent means no responses
+    if ((js.json_verbosity == JV_SILENT) || (cs.responses_suppressed)) {                   // silent means no responses
         return;
     }
     if (js.json_verbosity == JV_EXCEPTIONS)    {            // cutout for JV_EXCEPTIONS mode
