@@ -71,6 +71,7 @@ static stat_t _probing_backoff();
 static stat_t _probing_finish();
 static stat_t _probing_exception_exit(stat_t status);
 static stat_t _probe_move(const float target[], const bool flags[]);
+static void _send_probe_report(void);
 
 // helper
 static void _motion_end_callback(float* vect, bool* flag)
@@ -306,8 +307,8 @@ static void _probe_restore_settings()
     cm_set_soft_limits(pb.saved_soft_limits);
 
     cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);// cancel feed modes used during probing
-    sr_request_status_report(SR_REQUEST_IMMEDIATE);         // request SR for success or failure
     cm_canned_cycle_end();
+    sr_request_status_report(SR_REQUEST_IMMEDIATE);         // do this last
 }
 
 static stat_t _probing_exception_exit(stat_t status)
@@ -331,5 +332,57 @@ static stat_t _probing_finish()
             cm_alarm(STAT_PROBE_CYCLE_FAILED, "probing failed");
         }
     }
+    _send_probe_report();
+    return (STAT_OK);
+}
+
+/*
+ * _probe_report() - report probe results - must update results vector first
+ */
+
+static void _send_probe_report() {
+
+    if (cm.probe_report_enable) {
+        // If probe was successful the 'e' word == 1, otherwise e == 0 to signal an error
+        char  buf[32];
+        char* bufp = buf;
+        bufp += sprintf(bufp, "{\"prb\":{\"e\":%i, \"", (int)cm.probe_state[0]);
+        if (pb.flags[AXIS_X]) {
+            sprintf(bufp, "x\":%0.3f}}\n", cm.probe_results[0][AXIS_X]);
+        }
+        if (pb.flags[AXIS_Y]) {
+            sprintf(bufp, "y\":%0.3f}}\n", cm.probe_results[0][AXIS_Y]);
+        }
+        if (pb.flags[AXIS_Z]) {
+            sprintf(bufp, "z\":%0.3f}}\n", cm.probe_results[0][AXIS_Z]);
+        }
+        if (pb.flags[AXIS_A]) {
+            sprintf(bufp, "a\":%0.3f}}\n", cm.probe_results[0][AXIS_A]);
+        }
+        if (pb.flags[AXIS_B]) {
+            sprintf(bufp, "b\":%0.3f}}\n", cm.probe_results[0][AXIS_B]);
+        }
+        if (pb.flags[AXIS_C]) {
+            sprintf(bufp, "c\":%0.3f}}\n", cm.probe_results[0][AXIS_C]);
+        }
+        xio_writeline(buf);
+    }
+}
+
+/*
+ * cm_get_prbr() - get probe report enable setting
+ * cm_set_prbr() - set probe report enable setting
+ */
+
+stat_t cm_get_prbr(nvObj_t *nv)
+{
+    nv->value = (float)cm.probe_report_enable;
+    nv->valuetype = TYPE_INT;
+    return (STAT_OK);
+}
+
+stat_t cm_set_prbr(nvObj_t *nv)
+{
+    cm.probe_report_enable = fp_NOT_ZERO(nv->value);
     return (STAT_OK);
 }

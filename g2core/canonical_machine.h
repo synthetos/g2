@@ -568,6 +568,7 @@ typedef struct cmSingleton {                // struct to manage cm globals and c
     cmHomingState homing_state;             // home: homing cycle sub-state machine
     uint8_t homed[AXES];                    // individual axis homing flags
 
+    bool probe_report_enable;                 // 0=disabled, 1=enabled
     cmProbeState probe_state[PROBES_STORED];  // probing state machine (simple)
     float probe_results[PROBES_STORED][AXES]; // probing results
 
@@ -772,6 +773,8 @@ stat_t cm_homing_cycle_callback(void);                          // G28.2/.4 main
 stat_t cm_straight_probe(float target[], bool flags[],          // G38.x
                          bool trip_sense, bool alarm_flag);
 stat_t cm_probing_cycle_callback(void);                         // G38.x main loop callback
+stat_t cm_get_prbr(nvObj_t *nv);                                // enable/disable probe report
+stat_t cm_set_prbr(nvObj_t *nv);
 
 // Jogging cycle
 stat_t cm_jogging_cycle_callback(void);                         // jogging cycle main loop

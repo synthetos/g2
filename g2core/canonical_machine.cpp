@@ -93,6 +93,7 @@
 #include "controller.h"
 #include "json_parser.h"
 #include "text_parser.h"
+#include "settings.h"
 
 #include "plan_arc.h"
 #include "planner.h"
@@ -724,19 +725,20 @@ void canonical_machine_reset()
     cm_select_plane(cm.default_select_plane);
     cm_set_path_control(MODEL, cm.default_path_control);
     cm_set_distance_mode(cm.default_distance_mode);
-    cm_set_arc_distance_mode(INCREMENTAL_DISTANCE_MODE); // always the default
-    cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);   // always the default
-    cm_reset_overrides();                           // set overrides to initial conditions
+    cm_set_arc_distance_mode(INCREMENTAL_DISTANCE_MODE);// always the default
+    cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);       // always the default
+    cm_reset_overrides();                               // set overrides to initial conditions
 
     // NOTE: Should unhome axes here
 
-    // reset request flags
+    // reset requests and flags 
     cm.queue_flush_state = FLUSH_OFF;
     cm.end_hold_requested = false;
     cm.limit_requested = 0;                     // resets switch closures that occurred during initialization
     cm.safety_interlock_disengaged = 0;         // ditto
     cm.safety_interlock_reengaged = 0;          // ditto
     cm.shutdown_requested = 0;                  // ditto
+    cm.probe_report_enable = PROBE_REPORT_ENABLE;
 
     // set initial state and signal that the machine is ready for action
     cm.cycle_state = CYCLE_OFF;

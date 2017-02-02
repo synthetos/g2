@@ -50,6 +50,8 @@
 #define COOLANT_FLOOD_POLARITY      1                       // 0=active low, 1=active high
 #define COOLANT_PAUSE_ON_HOLD       true
 
+#define PROBE_REPORT_ENABLE         true
+
 // Communications and reporting settings
 
 #define COMM_MODE                   JSON_MODE               // one of: TEXT_MODE, JSON_MODE
