@@ -193,8 +193,8 @@ stat_t cm_feedhold_sequencing_callback()
             cm->hold_state = FEEDHOLD_SYNC;             // invokes hold from aline execution
         }
     }
-    if (cm1.hold_state == FEEDHOLD_FINAL_ONCE) {
-        cm_enter_hold_planner();                        // perform Z lift, spindle & coolant operations
+    if (cm1.hold_state == FEEDHOLD_ACTIONS_START) {     // perform Z lift, spindle & coolant actions
+        cm_enter_hold_planner();
     }
 
     // queue flush won't run until the hold is complete and all (subsequent) motion has stopped
@@ -238,7 +238,7 @@ static void _enter_hold_finalize(float* vect, bool* flag)
 
 stat_t cm_enter_hold_planner()
 {    
-    cm->hold_state = FEEDHOLD_FINAL_WAIT;   // last state before transitioning to HOLD
+    cm->hold_state = FEEDHOLD_ACTIONS_WAIT;   // last state before transitioning to HOLD
     
     // copy the primary canonical machine to the secondary, 
     // fix the planner pointer, and reset the secondary planner

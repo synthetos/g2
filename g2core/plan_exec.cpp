@@ -533,40 +533,40 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
     if (cm->motion_state == MOTION_HOLD) {
         // Case (7) - All motion has ceased
-        if (cm->hold_state >= FEEDHOLD_FINAL_ONCE) {    // FEEDHOLD_FINAL_ONCE or later
-            return (STAT_NOOP);                         // VERY IMPORTANT to exit as a NOOP. No more movement
+        if (cm->hold_state >= FEEDHOLD_ACTIONS_START) {     // FEEDHOLD_ACTIONS or later
+            return (STAT_NOOP);                             // VERY IMPORTANT to exit as a NOOP. No more movement
         }
 
         // Case (6) - Wait for the steppers to stop
         if (cm->hold_state == FEEDHOLD_STOPPING) {
-            if (mp_runtime_is_idle()) {                                 // wait for the steppers to actually clear out
+            if (mp_runtime_is_idle()) {                         // wait for the steppers to actually clear out
                 if ((cm->cycle_state == CYCLE_HOMING) || (cm->cycle_state == CYCLE_PROBE)) {
                     // when homing or probing we don't want to stay in HOLD or execute finalizations
                     cm->hold_state = FEEDHOLD_OFF;
                 } else {
-                    cm->hold_state = FEEDHOLD_FINAL_ONCE;
+                    cm->hold_state = FEEDHOLD_ACTIONS_START;    // perform Z-lift, spindle, coolant actions
                 }
-                mp_zero_segment_velocity();                             // for reporting purposes
+                mp_zero_segment_velocity();                     // for reporting purposes
                 sr_request_status_report(SR_REQUEST_IMMEDIATE);
-                cs.controller_state = CONTROLLER_READY;                 // remove controller readline() PAUSE
+                cs.controller_state = CONTROLLER_READY;         // remove controller readline() PAUSE
             }
-            return (STAT_OK);                                           // hold here. No more movement
+            return (STAT_OK);                                   // hold here. No more movement
         }
 
         // Case (5) - Decelerated to zero
         // Update the run buffer then force a replan of the whole planner queue
         if (cm->hold_state == FEEDHOLD_DECEL_END) {
-            mr->block_state = BLOCK_INACTIVE;                           // invalidate mr buffer to reset the new move
-            bf->block_state = BLOCK_INITIAL_ACTION;                     // tell _exec to re-use the bf buffer
+            mr->block_state = BLOCK_INACTIVE;                   // invalidate mr buffer to reset the new move
+            bf->block_state = BLOCK_INITIAL_ACTION;             // tell _exec to re-use the bf buffer
             bf->length = get_axis_vector_length(mr->target, mr->position);// reset length
-            //bf->entry_vmax = 0;                                       // set bp+0 as hold point
+            //bf->entry_vmax = 0;                               // set bp+0 as hold point
             cm->hold_state = FEEDHOLD_STOPPING;
 
             // No point bothering with the rest of this move if homing or probing
             if ((cm->cycle_state == CYCLE_HOMING) || (cm->cycle_state == CYCLE_PROBE)) {
                 mp_free_run_buffer();
             }
-            mp_replan_queue(mp_get_r());                                // make it replan all the blocks
+            mp_replan_queue(mp_get_r());                        // make it replan all the blocks
             return (STAT_OK);
         }
 
@@ -577,7 +577,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
             // Case (3a) - Already decelerating, continue the deceleration.
             if (mr->section == SECTION_TAIL) {   // if already in a tail don't decelerate. You already are
-                if (mr->r->exit_velocity < EPSILON2) {      // allow near-zero velocities to be treated as zero
+                if (mr->r->exit_velocity < EPSILON2) {          // allow near-zero velocities to be treated as zero
                     cm->hold_state = FEEDHOLD_DECEL_TO_ZERO;
                 } else {
                     cm->hold_state = FEEDHOLD_DECEL_CONTINUE;
@@ -608,8 +608,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                     mr->r->tail_length = available_length;
                     mr->r->exit_velocity = mp_get_decel_velocity(mr->r->cruise_velocity, mr->r->tail_length, bf);
 
-                    if (fp_ZERO(mr->r->exit_velocity)) {                // this takes care of an odd case where the move
-                        cm->hold_state = FEEDHOLD_DECEL_TO_ZERO;        // was previously mis-classified as a CONTINUE move
+                    if (fp_ZERO(mr->r->exit_velocity)) {        // this takes care of an odd case where the move
+                        cm->hold_state = FEEDHOLD_DECEL_TO_ZERO;// was previously mis-classified as a CONTINUE move
                     } else {
                         cm->hold_state = FEEDHOLD_DECEL_CONTINUE;
                     }
