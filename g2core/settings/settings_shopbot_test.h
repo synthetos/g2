@@ -39,13 +39,12 @@
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
-//#define JUNCTION_INTEGRATION_TIME   (5000 * 25.4)   // cornering - usually between 0.5 and 2.0 (higher is faster)
-#define JUNCTION_INTEGRATION_TIME   0.75    // cornering - between 0.10 and 2.00 (higher is faster)
-#define CHORDAL_TOLERANCE           0.001           // chordal accuracy for arc drawing (in mm)
+#define JUNCTION_INTEGRATION_TIME   0.8     // cornering - between 0.10 and 2.00 (higher is faster)
+#define CHORDAL_TOLERANCE           0.0001  // chordal accuracy for arc drawing (in mm)
 
 #define SOFT_LIMIT_ENABLE           0       // 0=off, 1=on
-#define HARD_LIMIT_ENABLE           1       // 0=off, 1=on
-#define SAFETY_INTERLOCK_ENABLE     1       // 0=off, 1=on
+#define HARD_LIMIT_ENABLE           0       // 0=off, 1=on
+#define SAFETY_INTERLOCK_ENABLE     0       // 0=off, 1=on
 
 #define SPINDLE_ENABLE_POLARITY     1       // 0=active low, 1=active high
 #define SPINDLE_DIR_POLARITY        0       // 0=clockwise is low, 1=clockwise is high
@@ -72,16 +71,14 @@
 #define JSON_VERBOSITY              JV_VERBOSE          // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
 #define QUEUE_REPORT_VERBOSITY      QR_OFF              // one of: QR_OFF, QR_SINGLE, QR_TRIPLE
 
-#define STATUS_REPORT_VERBOSITY SR_FILTERED  // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
-#define STATUS_REPORT_MIN_MS 200             // milliseconds - enforces a viable minimum
-#define STATUS_REPORT_INTERVAL_MS 250        // milliseconds - set $SV=0 to disable
+#define STATUS_REPORT_VERBOSITY     SR_FILTERED         // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
+#define STATUS_REPORT_MIN_MS        200                 // milliseconds - enforces a viable minimum
+#define STATUS_REPORT_INTERVAL_MS   250                 // milliseconds
 
-//#define STATUS_REPORT_DEFAULTS "posx", "posy", "posz", "posa", "posb", "vel", "hold", "line", "coor", "stat"
-#define STATUS_REPORT_DEFAULTS "posx", "posy", "posz", "posa", \
-                               "vel", "feed", "stat", "macs", "cycs", "mots", "hold", \
-                               "in1", "in2", "in3", "in4", "in5", "in6", "in7", "in8", "in9"
+#define STATUS_REPORT_DEFAULTS "posx", "posy", "posz", "posa", "posb", \
+                               "vel",  "stat", "hold", "line", "coor", "unit", \
+                               "in1", "in2", "in3", "in4", "in5", "in6", "in7", "in8"
 //                               "home","homx","homy","homz"
-//                               "line","vel","feed","stat","macs","cycs","mots","hold","unit",
 
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS         INCHES              // MILLIMETERS or INCHES
@@ -122,7 +119,7 @@
 
 #define M4_MOTOR_MAP                AXIS_A
 #define M4_STEP_ANGLE               1.8
-#define M4_TRAVEL_PER_REV           (0.5 * 25.4)
+#define M4_TRAVEL_PER_REV           48      // was (0.5 * 25.4)  Set to agree with sbv300 su = 33.333333
 #define M4_MICROSTEPS               8
 #define M4_POLARITY                 0
 #define M4_POWER_MODE               MOTOR_POWER_MODE
@@ -131,7 +128,7 @@
 #if (MOTORS >= 5)
 #define M5_MOTOR_MAP                AXIS_B
 #define M5_STEP_ANGLE               1.8
-#define M5_TRAVEL_PER_REV           (0.5 * 25.4)
+#define M5_TRAVEL_PER_REV           48  // (0.5 * 25.4)
 #define M5_MICROSTEPS               8
 #define M5_POLARITY                 0
 #define M5_POWER_MODE               MOTOR_POWER_MODE
@@ -139,7 +136,7 @@
 
 #define M6_MOTOR_MAP                AXIS_C
 #define M6_STEP_ANGLE               1.8
-#define M6_TRAVEL_PER_REV           (0.5 * 25.4)
+#define M6_TRAVEL_PER_REV           48  // (0.5 * 25.4)
 #define M6_MICROSTEPS               8
 #define M6_POLARITY                 0
 #define M6_POWER_MODE               MOTOR_POWER_MODE
@@ -151,13 +148,16 @@
 // Axis values are set to make the Othermachine behave like a smaller Handibot
 // Units are not to scale: i.e. G0 X1 travels approx 0.34" instead of 1"
 
+#define LINEAR_JERK_MAX             50              // value set by sbv300 initialization sequence
+//#define LINEAR_JERK_MAX             25.4            // test value
+#define ROTARY_JERK_MAX             6000            // sbv300 initialization value
+
 #define X_AXIS_MODE                 AXIS_STANDARD   // xam  see canonical_machine.h cmAxisMode for valid values
 #define X_VELOCITY_MAX              (100 * 25.4)    // xvm  G0 max velocity in mm/min (was 360)
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX  // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0               // xtn  minimum travel for soft limits
 #define X_TRAVEL_MAX                (14 * 25.4)     // xtm  travel between switches or crashes (was 25)
-//#define X_JERK_MAX                  (2 * 25.4)      // xjm  jerk is multiplied by 1,000,000 internally
-#define X_JERK_MAX                  (1 * 25.4)      // xjm  jerk is multiplied by 1,000,000 internally
+#define X_JERK_MAX                  LINEAR_JERK_MAX // xjm
 #define X_JERK_HIGH_SPEED           10000           // xjh
 #define X_HOMING_INPUT              1               // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIRECTION          0               // xhd  0=search moves negative, 1= search moves positive
@@ -171,8 +171,7 @@
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                (11.5 * 25.4)   // was 19
-//#define Y_JERK_MAX                  (2 * 25.4)
-#define Y_JERK_MAX                  (1 * 25.4)
+#define Y_JERK_MAX                  LINEAR_JERK_MAX
 #define Y_JERK_HIGH_SPEED           10000
 #define Y_HOMING_INPUT              3
 #define Y_HOMING_DIRECTION          0
@@ -186,7 +185,7 @@
 #define Z_FEEDRATE_MAX              Z_VELOCITY_MAX
 #define Z_TRAVEL_MAX                (6 * 25.4)      // was 6.5
 #define Z_TRAVEL_MIN                0
-#define Z_JERK_MAX                  (2 * 25.4)
+#define Z_JERK_MAX                  LINEAR_JERK_MAX
 #define Z_JERK_HIGH_SPEED           1000
 #define Z_HOMING_INPUT              6
 #define Z_HOMING_DIRECTION          1
@@ -196,11 +195,11 @@
 #define Z_ZERO_BACKOFF              (0.250 * 25.4)  // was 0.375
 
 #define A_AXIS_MODE                 AXIS_STANDARD
-#define A_VELOCITY_MAX              (360 * 25.4)
+#define A_VELOCITY_MAX              (360 * 25.4)    // is 15000 in sbv300
 #define A_FEEDRATE_MAX              48000
 #define A_TRAVEL_MIN                -1  // degrees
 #define A_TRAVEL_MAX                -1  // same value means infinite, no limit
-#define A_JERK_MAX                  (2 * 25.4)
+#define A_JERK_MAX                  ROTARY_JERK_MAX
 #define A_JERK_HIGH_SPEED           A_JERK_MAX
 #define A_RADIUS                    1.0
 #define A_HOMING_INPUT              0
@@ -215,7 +214,7 @@
 #define B_FEEDRATE_MAX              B_VELOCITY_MAX
 #define B_TRAVEL_MAX                -1
 #define B_TRAVEL_MIN                -1
-#define B_JERK_MAX                  (2 * 25.4)
+#define B_JERK_MAX                  ROTARY_JERK_MAX
 #define B_JERK_HIGH_SPEED           B_JERK_MAX
 #define B_RADIUS                    1
 #define B_HOMING_INPUT              0
@@ -230,7 +229,7 @@
 #define C_FEEDRATE_MAX              C_VELOCITY_MAX
 #define C_TRAVEL_MAX                -1
 #define C_TRAVEL_MIN                -1
-#define C_JERK_MAX                  (2 * 25.4)
+#define C_JERK_MAX                  ROTARY_JERK_MAX
 #define C_JERK_HIGH_SPEED           C_JERK_MAX
 #define C_RADIUS                    1
 #define C_HOMING_INPUT              0

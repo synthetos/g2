@@ -368,6 +368,9 @@ static uint8_t _populate_filtered_status_report()
     bool has_data = false;
     char tmp[TOKEN_LEN+1];
     nvObj_t *nv = nv_reset_nv_list();           // sets nv to the start of the body
+    
+    // Set thresholds to detect value changes based on precision for the value. 
+    // Allow for floating point roundoffs, i.e. precision = 2 is 0.01 becomes --> 0.009
     float precision[8] = { 0.9, 0.09, 0.009, 0.0009, 0.00009, 0.000009, 0.0000009, 0.00000009 };
 
     nv->valuetype = TYPE_PARENT;                // setup the parent object (no need to length check the copy)

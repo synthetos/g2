@@ -38,9 +38,8 @@
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
-//#define JUNCTION_INTEGRATION_TIME (5000 * 25.4)  // centripetal acceleration around corners
-#define JUNCTION_INTEGRATION_TIME   0.75    // cornering - between 0.10 and 2.00 (higher is faster)
-#define CHORDAL_TOLERANCE           0.001   // chordal accuracy for arc drawing (in mm)
+#define JUNCTION_INTEGRATION_TIME   0.8     // cornering - between 0.10 and 2.00 (higher is faster)
+#define CHORDAL_TOLERANCE           0.0001  // chordal accuracy for arc drawing (in mm)
 
 #define SOFT_LIMIT_ENABLE           0       // 0=off, 1=on
 #define HARD_LIMIT_ENABLE           1       // 0=off, 1=on
@@ -74,7 +73,10 @@
 #define STATUS_REPORT_VERBOSITY     SR_FILTERED         // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 #define STATUS_REPORT_MIN_MS        200                 // milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS   250                 // milliseconds - set $SV=0 to disable
-#define STATUS_REPORT_DEFAULTS "posx", "posy", "posz", "posa", "posb", "vel", "hold", "line", "coor", "stat"
+
+#define STATUS_REPORT_DEFAULTS "posx", "posy", "posz", "posa", "posb", \
+                               "vel",  "stat", "hold", "line", "coor", "unit", \
+                               "in1", "in2", "in3", "in4", "in5", "in6", "in7", "in8"
 
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS         INCHES              // MILLIMETERS or INCHES
