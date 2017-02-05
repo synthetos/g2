@@ -181,7 +181,7 @@ void cm_request_feedhold(void)
 void cm_request_end_hold(void)
 {
     if (cm1.hold_state != FEEDHOLD_OFF) {
-        cm1.end_hold_requested = true;
+        cm1.hold_exit_requested = true;
     }
 }
 
@@ -239,19 +239,19 @@ stat_t cm_feedhold_sequencing_callback()
     if ((cm1.flush_state == FLUSH_REQUESTED) && (cm1.hold_state == FEEDHOLD_HOLD) &&
         (mp_runtime_is_idle())) {                   // don't flush planner during movement
             cm_queue_flush(&cm1);
-            cm1.end_hold_requested = true;          // p1 queue flush always ends the hold
+            cm1.hold_exit_requested = true;          // p1 queue flush always ends the hold
             qr_request_queue_report(0);             // request a queue report, since we've changed the number of buffers available
     }
 
     // exit_hold runs for both ~ and % feedhold ends
-    if (cm1.end_hold_requested) {
+    if (cm1.hold_exit_requested) {
         
         // Flush must complete before exit_hold runs. Trap possible race condition if flush request was
         if (cm1.flush_state == FLUSH_REQUESTED) {   // ...received when this callback was running
             return (STAT_OK);
         } 
         if (cm1.hold_state == FEEDHOLD_HOLD) {      // don't run end_hold until fully into a hold
-            cm1.end_hold_requested = false;
+            cm1.hold_exit_requested = false;
             _run_p1_hold_exit_actions();            // runs once only
         }       
     }
@@ -291,6 +291,7 @@ static stat_t _run_p1_hold_entry_actions()
 
     // clear the target and set the positions to the current hold position
     memset(&(cm2.gm.target), 0, sizeof(cm2.gm.target));
+    memset(&(cm2.return_flags), 0, sizeof(cm2.return_flags));
     copy_vector(cm2.gm.target_comp, cm1.gm.target_comp); // preserve original Kahan compensation
     copy_vector(cm2.gmx.position, mr1.position);
     copy_vector(mp2.position, mr1.position);
@@ -325,6 +326,7 @@ static stat_t _run_p1_hold_entry_actions()
 // actually run in the secondary planner. Feedholds from planner 2 do not run
 // actions, so this function is never called for planner 2 feedholds.
 // It's called from an interrupt, so it only sets a flag.
+
 static void _sync_to_p1_hold_entry_actions_done(float* vect, bool* flag)
 {
     cm1.hold_state = FEEDHOLD_HOLD;
@@ -349,10 +351,9 @@ static stat_t _run_p1_hold_exit_actions()     // LATER: if value == true return 
     spindle_control_sync(SPINDLE_RESUME);               // resume spindle if paused
     coolant_control_sync(COOLANT_RESUME, COOLANT_BOTH); // resume coolant if paused
     
-    // perform the G30 move and queue a wait
-    float target[] = { 0,0,0,0,0,0 };       // LATER: Make this move return through XY, then Z
-    bool flags[]   = { 0,0,0,0,0,0 };
-    cm_goto_g30_position(target, flags);    // initiate a return move
+    // do return move though an intermediate point; queue a wait
+    cm2.return_flags[AXIS_Z] = false;
+    cm_goto_g30_position(cm2.gmx.g30_position, cm2.return_flags);         
     mp_queue_command(_sync_to_p1_hold_exit_actions_done, nullptr, nullptr);
     return (STAT_OK);
 }

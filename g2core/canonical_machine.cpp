@@ -191,7 +191,7 @@ void canonical_machine_reset(cmMachine_t *_cm)
 
     // reset request flags
     _cm->flush_state = FLUSH_OFF;
-    _cm->end_hold_requested = false;
+    _cm->hold_exit_requested = false;
     _cm->limit_requested = 0;                       // resets switch closures that occurred during initialization
     _cm->safety_interlock_disengaged = 0;           // ditto
     _cm->safety_interlock_reengaged = 0;            // ditto
@@ -708,6 +708,7 @@ void cm_set_model_target(const float target[], const bool flags[])
             } else {
                 cm->gm.target[axis] += _to_millimeters(target[axis]);
             }
+            cm->return_flags[axis] = true;  // used to make a synthetic G28/G30 intermediate move
         }
     }
     // FYI: The ABC loop below relies on the XYZ loop having been run first
@@ -722,6 +723,7 @@ void cm_set_model_target(const float target[], const bool flags[])
         } else {
             cm->gm.target[axis] += tmp;
         }
+        cm->return_flags[axis] = true;
     }
 }
 
@@ -1137,7 +1139,7 @@ stat_t _goto_stored_position(const float stored_position[],     // always in mm
             target[i] *= INCHES_PER_MM;
         }
     }
-    
+
     // Run the stored position move
     while (mp_planner_is_full(mp));                         // Make sure you have available buffers
 
@@ -1154,7 +1156,7 @@ stat_t _goto_stored_position(const float stored_position[],     // always in mm
 
 stat_t cm_set_g28_position(void)
 {
-    copy_vector(cm->gmx.g28_position, cm->gmx.position); // in MM and machine coordinates
+    copy_vector(cm->gmx.g28_position, cm->gmx.position);    // in MM and machine coordinates
     return (STAT_OK);
 }
 
@@ -1165,7 +1167,7 @@ stat_t cm_goto_g28_position(const float target[], const bool flags[])
 
 stat_t cm_set_g30_position(void)
 {
-    copy_vector(cm->gmx.g30_position, cm->gmx.position); // in MM and machine coordinates
+    copy_vector(cm->gmx.g30_position, cm->gmx.position);    // in MM and machine coordinates
     return (STAT_OK);
 }
 

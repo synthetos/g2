@@ -241,7 +241,7 @@ typedef struct cmMachine {                  // struct to manage canonical machin
 
   /**** Runtime variables (PRIVATE) ****/
 
-    // Global state variables and requestors
+    // Global state variables and flags
 
     cmMachineState machine_state;           // macs: machine/cycle/motion is the actual machine state
     cmCycleState cycle_state;               // cycs
@@ -255,19 +255,21 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     cmSafetyState safety_interlock_state;   // safety interlock state
     uint32_t esc_boot_timer;                // timer for Electronic Speed Control (Spindle electronics) to boot
 
-    bool end_hold_requested;                // request restart after feedhold
-    bool deferred_write_flag;               // G10 data has changed (e.g. offsets) - flag to persist them
     uint8_t limit_requested;                // set non-zero to request limit switch processing (value is input number)
     uint8_t shutdown_requested;             // set non-zero to request shutdown in support of external estop (value is input number)
+    bool deferred_write_flag;               // G10 data has changed (e.g. offsets) - flag to persist them
+    bool hold_exit_requested;               // request exit from feedhold
+    bool return_flags[AXES];                // flags for recording which axes moved - used in feedhold exit move
 
     cmHomingState homing_state;             // home: homing cycle sub-state machine
     uint8_t homed[AXES];                    // individual axis homing flags
 
-    cmProbeState probe_state[PROBES_STORED];    // probing state machine (simple)
-    float probe_results[PROBES_STORED][AXES];   // probing results
+    cmProbeState probe_state[PROBES_STORED];  // probing state machine (simple)
+    float probe_results[PROBES_STORED][AXES]; // probing results
 
     float rotation_matrix[3][3];            // three-by-three rotation matrix. We ignore rotary axes.
     float rotation_z_offset;                // separately handle a z-offset to maintain consistent distance to bed
+
     float jogging_dest;                     // jogging destination as a relative move from current position
 
   /**** Model state structures ****/
