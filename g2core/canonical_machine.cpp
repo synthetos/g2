@@ -114,7 +114,6 @@
  **** CM GLOBALS & STRUCTURE ALLOCATIONS *******************************************
  ***********************************************************************************/
 
-cmMachineSelect cm_select;  // CM_PRIMARY, CM_SECONDARY, CM_SECONDARY_RETURN
 cmMachine_t *cm;            // pointer to active canonical machine
 cmMachine_t cm1;            // canonical machine primary machine
 cmMachine_t cm2;            // canonical machine secondary machine
@@ -156,7 +155,6 @@ void canonical_machine_inits()
     cm = &cm1;                          // set global canonical machine pointer to primary machine
     mp = &mp1;                          // set global pointer to the primary planner
     mr = &mr1;                          // and primary runtime
-    cm_select = CM_PRIMARY;
 }    
 
 void canonical_machine_init(cmMachine_t *_cm, void *_mp)

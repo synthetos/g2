@@ -108,6 +108,7 @@ typedef enum {
 } cmMotionState;
 
 typedef enum {                  // feedhold state machine
+//    FEEDHOLD_FLUSH = -2,        // set when p2 feedhold is ready to flush p2 queue
     FEEDHOLD_EXIT = -1,         // set when feedhold is due to exit
     FEEDHOLD_OFF = 0,           // no feedhold in effect
     FEEDHOLD_REQUESTED,         // feedhold has been requested but not started yet
@@ -149,12 +150,6 @@ typedef enum {                  // queue flush state machine
     FLUSH_REQUESTED,            // flush has been requested but not started yet
     FLUSH_WAS_RUN               // transient state to note that a queue flush has been run 
 } cmQueueFlushState;
-
-typedef enum {
-    CM_NOT_INIT = 0,            // planners need initialization
-    CM_PRIMARY,                 // in primary machine/planner
-    CM_SECONDARY,               // in secondary machine/planner
-} cmMachineSelect;
 
 /*****************************************************************************
  * CANONICAL MACHINE STRUCTURES
@@ -291,7 +286,6 @@ typedef struct cmToolTable {                // struct to keep a global tool tabl
 
 /**** Externs - See canonical_machine.cpp for allocation ****/
 
-extern cmMachineSelect cm_select;           // CM_PRIMARY, CM_SECONDARY, CM_SECONDARY_RETURN
 extern cmMachine_t *cm;                     // pointer to active canonical machine
 extern cmMachine_t cm1;                     // canonical machine primary machine
 extern cmMachine_t cm2;                     // canonical machine secondary machine
@@ -441,9 +435,9 @@ void cm_request_end_hold(void);
 void cm_request_queue_flush(void);
 stat_t cm_feedhold_sequencing_callback(void);                   // process feedhold, cycle start and queue flush requests
 
-bool cm_has_hold(void);
-void cm_start_hold(void);
-void cm_queue_flush(void);                                      // flush serial and planner queues with coordinate resets
+bool cm_has_hold(void);                                         // has hold in primary planner
+void cm_start_hold(void);                                       // starts hold in primary planner
+void cm_queue_flush(cmMachine_t *_cm);                          // queue flush in either planner
 
 // Homing cycles (cycle_homing.cpp)
 stat_t cm_homing_cycle_start(const float axes[], const bool flags[]);        // G28.2

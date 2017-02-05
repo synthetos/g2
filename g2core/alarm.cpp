@@ -206,14 +206,14 @@ stat_t cm_shutdown(const stat_t status, const char *msg)
     spindle_reset();                            // stop spindle immediately and set speed to 0 RPM
     coolant_reset();                            // stop coolant immediately
     temperature_reset();                        // turn off heaters and fans
-    cm_queue_flush();                           // flush all queues and reset positions
+    cm_queue_flush(&cm1);                       // flush all queues and reset positions
 
     for (uint8_t i = 0; i < HOMING_AXES; i++) { // unhome axes and the machine
         cm->homed[i] = false;
     }
     cm->homing_state = HOMING_NOT_HOMED;
 
-    cm->machine_state = MACHINE_SHUTDOWN;        // do this after all other activity
+    cm->machine_state = MACHINE_SHUTDOWN;       // do this after all other activity
     rpt_exception(status, msg);                 // send exception report
     return (status);
 }
@@ -239,9 +239,9 @@ stat_t cm_panic(const stat_t status, const char *msg)
     spindle_reset();                            // stop spindle immediately and set speed to 0 RPM
     coolant_reset();                            // stop coolant immediately
     temperature_reset();                        // turn off heaters and fans
-    cm_queue_flush();                           // flush all queues and reset positions
+    cm_queue_flush(&cm1);                       // flush all queues and reset positions
 
-    cm->machine_state = MACHINE_PANIC;           // don't reset anything. Panics are not recoverable
+    cm->machine_state = MACHINE_PANIC;          // don't reset anything. Panics are not recoverable
     rpt_exception(status, msg);                 // send panic report
     return (status);
 }

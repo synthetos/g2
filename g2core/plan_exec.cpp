@@ -527,24 +527,28 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     //  (4) - We have decelerated a block to some velocity > zero (needs continuation in next block)
     //  (5) - We have decelerated a block to zero velocity
     //  (6) - We have finished all the runtime work now we have to wait for the steppers to stop
-    //  (7) - The steppers have stopped. No motion should occur. ALlows hold finalization to commence
+    //   (6a) - It's a homing or probing feedhold - ditch the remaining buffer & go directly to OFF  
+    //   (6b) - It's a p2 feedhold - ditch the remaining buffer & signal we want a p2 queue flush
+    //   (6c) - It's a normal feedhold - signal we want the entry action
+    //  (7) - The steppers have stopped. No motion should occur. Allows hold actions to complete
     //  (8) - We are removing the hold state and there is queued motion (handled outside this routine)
     //  (9) - We are removing the hold state and there is no queued motion (also handled outside this routine)
 
     if (cm->motion_state == MOTION_HOLD) {
         // Case (7) - All motion has ceased
-        // FEEDHOLD_ACTIONS_START, FEEDHOLD_ACTIONS_WAIT or FEEDHOLD HOLD
-        if (cm->hold_state >= FEEDHOLD_ACTIONS_START) {
-            return (STAT_NOOP);                             // VERY IMPORTANT to exit as a NOOP. No more movement
+        if (cm->hold_state >= FEEDHOLD_ACTIONS_START) { // FEEDHOLD_ACTIONS_START, FEEDHOLD_ACTIONS_WAIT or FEEDHOLD HOLD
+            return (STAT_NOOP);                         // VERY IMPORTANT to exit as a NOOP. No more movement
         }
 
         // Case (6) - Wait for the steppers to stop
         if (cm->hold_state == FEEDHOLD_STOPPING) {
-            if (mp_runtime_is_idle()) {                         // wait for the steppers to actually clear out
+            if (mp_runtime_is_idle()) {                         // wait for steppers to actually finish
+                // when homing or probing don't stay in HOLD or execute entry actions
                 if ((cm->cycle_state == CYCLE_HOMING) || (cm->cycle_state == CYCLE_PROBE)) {
-                    // when homing or probing we don't want to stay in HOLD or execute finalizations
                     cm->hold_state = FEEDHOLD_OFF;
-                } else {
+                } else if (cm == &cm2) {                        // if in p2 hold set up a flush
+                    cm->queue_flush_state = FLUSH_REQUESTED;
+                }  else {
                     cm->hold_state = FEEDHOLD_ACTIONS_START;    // perform Z-lift, spindle, coolant actions
                 }
                 mp_zero_segment_velocity();                     // for reporting purposes
