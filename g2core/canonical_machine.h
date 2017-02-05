@@ -108,6 +108,7 @@ typedef enum {
 } cmMotionState;
 
 typedef enum {                  // feedhold state machine
+    FEEDHOLD_EXIT = -1,         // set when feedhold is due to exit
     FEEDHOLD_OFF = 0,           // no feedhold in effect
     FEEDHOLD_REQUESTED,         // feedhold has been requested but not started yet
     FEEDHOLD_SYNC,              // start hold - sync to latest aline segment
@@ -117,7 +118,7 @@ typedef enum {                  // feedhold state machine
     FEEDHOLD_STOPPING,          // waiting to complete deceleration once planner motion stops
     FEEDHOLD_ACTIONS_START,     // enter secondary planner and perform feedhold actions (once)
     FEEDHOLD_ACTIONS_WAIT,      // wait for feedhold actions to complete
-    FEEDHOLD_HOLD               // holding
+    FEEDHOLD_HOLD               // holding (steady state) Must be last state
 } cmFeedholdState;
 
 typedef enum {                  // applies to cm->homing_state
@@ -153,7 +154,6 @@ typedef enum {
     CM_NOT_INIT = 0,            // planners need initialization
     CM_PRIMARY,                 // in primary machine/planner
     CM_SECONDARY,               // in secondary machine/planner
-    CM_SECONDARY_RETURN         // in return move from secondary planner
 } cmMachineSelect;
 
 /*****************************************************************************
@@ -260,7 +260,7 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     cmSafetyState safety_interlock_state;   // safety interlock state
     uint32_t esc_boot_timer;                // timer for Electronic Speed Control (Spindle electronics) to boot
 
-    bool waiting_for_exit_hold;             // used by cm_exit_hold_planner() to tell when secondary planner is done
+//    bool waiting_for_exit_hold;             // used by cm_exit_hold_planner() to tell when secondary planner is done
     bool end_hold_requested;                // request restart after feedhold
     bool deferred_write_flag;               // G10 data has changed (e.g. offsets) - flag to persist them
     uint8_t limit_requested;                // set non-zero to request limit switch processing (value is input number)
@@ -445,10 +445,6 @@ stat_t cm_feedhold_sequencing_callback(void);                   // process feedh
 bool cm_has_hold(void);
 void cm_start_hold(void);
 void cm_queue_flush(void);                                      // flush serial and planner queues with coordinate resets
-
-stat_t cm_enter_hold_planner(void);                             // move to secondary planner for in-hold actions
-stat_t cm_exit_hold_planner(void);                              // return to primary planner
-stat_t cm_exit_hold_finalize(void);                             // main loop callback for synchronization
 
 // Homing cycles (cycle_homing.cpp)
 stat_t cm_homing_cycle_start(const float axes[], const bool flags[]);        // G28.2

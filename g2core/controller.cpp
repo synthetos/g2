@@ -162,7 +162,6 @@ static void _controller_HSM()
     DISPATCH(cm_feedhold_sequencing_callback());// feedhold state machine runner
     DISPATCH(mp_planner_callback());            // motion planner
     DISPATCH(cm_arc_callback(cm));              // arc generation runs as a cycle above lines
-    DISPATCH(cm_exit_hold_finalize());          // finalization for return from secondary planner
     DISPATCH(cm_homing_cycle_callback());       // homing cycle operation (G28.2)
     DISPATCH(cm_probing_cycle_callback());      // probing cycle operation (G38.2)
     DISPATCH(cm_jogging_cycle_callback());      // jog cycle operation

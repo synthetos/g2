@@ -533,7 +533,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
     if (cm->motion_state == MOTION_HOLD) {
         // Case (7) - All motion has ceased
-        if (cm->hold_state >= FEEDHOLD_ACTIONS_START) {     // FEEDHOLD_ACTIONS or later
+        // FEEDHOLD_ACTIONS_START, FEEDHOLD_ACTIONS_WAIT or FEEDHOLD HOLD
+        if (cm->hold_state >= FEEDHOLD_ACTIONS_START) {
             return (STAT_NOOP);                             // VERY IMPORTANT to exit as a NOOP. No more movement
         }
 
@@ -554,12 +555,11 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         }
 
         // Case (5) - Decelerated to zero
-        // Update the run buffer then force a replan of the whole planner queue
+        // Update the run buffer then force a replan of the whole planner queue. Replans from 0 velocity
         if (cm->hold_state == FEEDHOLD_DECEL_END) {
             mr->block_state = BLOCK_INACTIVE;                   // invalidate mr buffer to reset the new move
             bf->block_state = BLOCK_INITIAL_ACTION;             // tell _exec to re-use the bf buffer
             bf->length = get_axis_vector_length(mr->target, mr->position);// reset length
-            //bf->entry_vmax = 0;                               // set bp+0 as hold point
             cm->hold_state = FEEDHOLD_STOPPING;
 
             // No point bothering with the rest of this move if homing or probing
