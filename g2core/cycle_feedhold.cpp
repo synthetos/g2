@@ -230,29 +230,19 @@ stat_t cm_feedhold_sequencing_callback()
 }
 
 /***********************************************************************************
- *  cm_enter_hold_planner() - switch to secondary machine context for feedhold
- *
- *  Moving between planners is only safe when the machine is completely stopped 
- *  either during a feedhold or when idle.
+ * _run_p1_hold_entry_actions()         - run actions in p2 that complete the p1 hold
+ * _sync_to_p1_hold_entry_actions_done() - final state change occurs here
  *
  *  This function assumes that the feedhold sequencing callback has resolved all 
  *  state and timing issues and it's OK to call this now. Do not call this function
  *  directly. Always use the feedhold sequencing callback.
+ *
+ *  Moving between planners is only safe when the machine is completely stopped.
  */
-
-// Callback to run when the ACTIONS from feedhold in planner 1 are finished.
-// This function hits cm1 directly (no pointers) as ACTIONS for a feedhold 
-// in planner 1 actually run in the secondary planner. Feedholds from planner 2
-// do not run actions, so this function is never called for planner 2 feedholds. 
-// It's called from an interrupt, so it only sets a flag.
-static void _sync_to_p1_hold_entry_actions_done(float* vect, bool* flag)
-{
-    cm1.hold_state = FEEDHOLD_HOLD;
-}
 
 static stat_t _run_p1_hold_entry_actions()
 {    
-    cm->hold_state = FEEDHOLD_ACTIONS_WAIT;   // last state before transitioning to HOLD
+    cm->hold_state = FEEDHOLD_ACTIONS_WAIT;   // penultimate state before transitioning to HOLD
     
     // copy the primary canonical machine to the secondary, 
     // fix the planner pointer, and reset the secondary planner
@@ -295,8 +285,17 @@ static stat_t _run_p1_hold_entry_actions()
     spindle_control_sync(SPINDLE_PAUSE);                // optional spindle pause
     coolant_control_sync(COOLANT_PAUSE, COOLANT_BOTH);  // optional coolant pause
     mp_queue_command(_sync_to_p1_hold_entry_actions_done, nullptr, nullptr);
-
     return (STAT_OK);
+}
+
+// Callback to run when the ACTIONS from feedhold in planner 1 are finished.
+// This function hits cm1 directly as ACTIONS for a feedhold in planner 1
+// actually run in the secondary planner. Feedholds from planner 2 do not run
+// actions, so this function is never called for planner 2 feedholds.
+// It's called from an interrupt, so it only sets a flag.
+static void _sync_to_p1_hold_entry_actions_done(float* vect, bool* flag)
+{
+    cm1.hold_state = FEEDHOLD_HOLD;
 }
 
 /***********************************************************************************
@@ -304,16 +303,12 @@ static stat_t _run_p1_hold_entry_actions()
  *  _sync_to_p1_hold_exit_actions_done() - callback to sync to end of planner operations
  *  _finalize_p1_hold_exit()             - callback to finsh return once moves are done 
  *
- *  Moving between planners is only safe when the machine is completely stopped 
- *  either during a feedhold or when idle.
- *
- *  The reason the finalization moves are not just done in _exit_hold_finalize
- *  is that they need to run as main loop functions, not called from the 
- *  planner_exec interrupt level.
- *
- *  This function assumes that the feedhold sequencing callback has resolved all 
+ *  These functions assume that the feedhold sequencing callback has resolved all
  *  state and timing issues and it's OK to call this now. Do not call this function
  *  directly. Always use the feedhold sequencing callback.
+ *
+ *  The finalization moves are performed in _sync_to_p1_hold_exit_actions_done() because 
+ *  the sync runs from an interrupt. Finalization needs to run from the main loop.
  */
 
 static stat_t _run_p1_hold_exit_actions()     // LATER: if value == true return with offset corrections
@@ -326,28 +321,25 @@ static stat_t _run_p1_hold_exit_actions()     // LATER: if value == true return 
     float target[] = { 0,0,0,0,0,0 };       // LATER: Make this move return through XY, then Z
     bool flags[]   = { 0,0,0,0,0,0 };
     cm_goto_g30_position(target, flags);    // initiate a return move
- //   cm2.waiting_for_exit_hold = true;       // indicates running the final G30 move in the secondary
     mp_queue_command(_sync_to_p1_hold_exit_actions_done, nullptr, nullptr);
     return (STAT_OK);
 }
 
-// Callback to run at when the G30 return move is finished. This function is
-// only ever called by the secondary planner, and only when exiting a feedhold
-// from planner 1. It's called from an interrupt, so it only sets a flag.
+// Callback to run when the G30 return move is finished. This function is only ever
+// called by the secondary planner, and only when exiting a feedhold from planner 1. 
+// It's called from an interrupt, so it only sets a flag.
+
 static void _sync_to_p1_hold_exit_actions_done(float* vect, bool* flag)
 {
-//    cm2.waiting_for_exit_hold = false;
-    cm1.hold_state = FEEDHOLD_EXIT;         // last state before transitioning out of HOLD
+    cm1.hold_state = FEEDHOLD_EXIT;         // penultimate state before transitioning to FEEDHOLD_OFF
 }
 
 static stat_t _finalize_p1_hold_exit()
 {
-    if (cm1.hold_state != FEEDHOLD_EXIT) {  // skip out if not ready to finalize the exit
-        return (STAT_NOOP);
+    // skip out if not ready to finalize the exit
+    if (cm1.hold_state != FEEDHOLD_EXIT) {
+        return (STAT_NOOP);                 // ??? return (STAT_EAGAIN);
     }
-//    if (cm2.waiting_for_exit_hold) {     // sync to planner move ends (via _return_move_callback)
-//        return (STAT_EAGAIN);
-//    }
     
     // return to primary planner (p1)
     cm = &cm1;

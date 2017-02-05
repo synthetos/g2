@@ -260,7 +260,6 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     cmSafetyState safety_interlock_state;   // safety interlock state
     uint32_t esc_boot_timer;                // timer for Electronic Speed Control (Spindle electronics) to boot
 
-//    bool waiting_for_exit_hold;             // used by cm_exit_hold_planner() to tell when secondary planner is done
     bool end_hold_requested;                // request restart after feedhold
     bool deferred_write_flag;               // G10 data has changed (e.g. offsets) - flag to persist them
     uint8_t limit_requested;                // set non-zero to request limit switch processing (value is input number)
