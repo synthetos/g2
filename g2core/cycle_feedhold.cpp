@@ -43,6 +43,7 @@ static void   _sync_to_p1_hold_entry_actions_done(float* vect, bool* flag);
 static stat_t _run_p1_hold_exit_actions(void);
 static void   _sync_to_p1_hold_exit_actions_done(float* vect, bool* flag);
 static stat_t _finalize_p1_hold_exit(void);
+static stat_t _finalize_p2_hold_exit(void);
 
 /***********************************************************************************
  **** Feedholds ********************************************************************
@@ -231,15 +232,7 @@ stat_t cm_feedhold_sequencing_callback()
         }
     }
     if (cm2.hold_state == FEEDHOLD_P2_EXIT) {
-        cm2.hold_state = FEEDHOLD_OFF;
-//        copy_vector (mr1.position, mr2.position);
-        cm_reset_position_to_absolute_position(&cm2); // get the absolute position before destroying it
-//        cm_reset_position_to_absolute_position(&cm1);
-        cm_queue_flush(&cm2);
-        cm_set_motion_state(MOTION_STOP);
-        cm_cycle_end();
-        sr_request_status_report(SR_REQUEST_IMMEDIATE);
-        return (STAT_OK);
+        return(_finalize_p2_hold_exit());
     }
 
     // queue flush won't run until the hold is complete and all (subsequent) motion has stopped
@@ -402,6 +395,25 @@ static stat_t _finalize_p1_hold_exit()
         cm_set_motion_state(MOTION_STOP);
         cm_cycle_end();
     }
+    sr_request_status_report(SR_REQUEST_IMMEDIATE);
+    return (STAT_OK);
+}
+
+/***********************************************************************************
+ * _finalize_p2_hold_exit()
+ */
+
+static stat_t _finalize_p2_hold_exit()
+{
+    float position[AXES];
+    copy_vector(position, mr2.position);            // save the final position
+    cm_queue_flush(&cm2);
+    copy_vector(mr2.position, position);            // restore the final position
+    cm_reset_position_to_absolute_position(&cm2);   // propagate position 
+
+    cm2.hold_state = FEEDHOLD_OFF;
+    cm_set_motion_state(MOTION_STOP);
+    cm_cycle_end();
     sr_request_status_report(SR_REQUEST_IMMEDIATE);
     return (STAT_OK);
 }

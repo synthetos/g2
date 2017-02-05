@@ -547,7 +547,6 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                 if ((cm->cycle_state == CYCLE_HOMING) || (cm->cycle_state == CYCLE_PROBE)) {
                     cm->hold_state = FEEDHOLD_OFF;
                 } else if (cm == &cm2) {                        // if in p2 hold set up a flush
-//                    cm_reset_position_to_absolute_position(&cm2);
                     cm->hold_state = FEEDHOLD_P2_EXIT;
                 }  else {
                     cm->hold_state = FEEDHOLD_ACTIONS_START;    // perform Z-lift, spindle, coolant actions
