@@ -948,21 +948,22 @@ static void _exec_offset(float *value, bool *flag)
 
 /*
  * cm_set_position_by_axis() - set the position of a single axis in the model, planner and runtime
+ * cm_reset_position_to_absolute_position() - set all positions to current absolute position in mr
  *
- *    This command sets an axis/axes to a position provided as an argument.
- *    This is useful for setting origins for homing, probing, and other operations.
+ *  This command sets an axis/axes to a position provided as an argument.
+ *  This is useful for setting origins for homing, probing, and other operations.
  *
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *  !!!!! DO NOT CALL THIS FUNCTION WHILE IN A MACHINING CYCLE !!!!!
- *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ *  !!!!! DO NOT CALL THESE FUNCTIONS WHILE IN A MACHINING CYCLE !!!!!
+ *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  *
- *    More specifically, do not call this function if there are any moves in the planner or
- *    if the runtime is moving. The system must be quiescent or you will introduce positional
- *    errors. This is true because the planned / running moves have a different reference frame
- *    than the one you are now going to set. These functions should only be called during
- *    initialization sequences and during cycles (such as homing cycles) when you know there
- *    are no more moves in the planner and that all motion has stopped.
- *    Use cm_get_runtime_busy() to be sure the system is quiescent.
+ *  More specifically, do not call these functions if there are any moves in the planner or
+ *  if the runtime is moving. The system must be quiescent or you will introduce positional
+ *  errors. This is true because the planned / running moves have a different reference frame
+ *  than the one you are now going to set. These functions should only be called during
+ *  initialization sequences and during cycles (such as homing cycles) when you know there
+ *  are no more moves in the planner and that all motion has stopped.
+ *  You can use cm_get_runtime_busy() to be sure the system is quiescent.
  */
 
 void cm_set_position_by_axis(const uint8_t axis, const float position)
@@ -974,10 +975,6 @@ void cm_set_position_by_axis(const uint8_t axis, const float position)
     mp_set_runtime_position(axis, position);
     mp_set_steps_to_runtime_position();
 }
-
-/*
- * cm_reset_position_to_absolute_position() - set all positions to current absolute position in mr
- */
 
 void cm_reset_position_to_absolute_position(cmMachine_t *_cm)
 {

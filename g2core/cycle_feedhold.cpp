@@ -223,20 +223,26 @@ stat_t cm_feedhold_sequencing_callback()
         _run_p1_hold_entry_actions();
     }
 
+    // p2 feedhold states - feedhold in feedhold
     if (cm2.hold_state == FEEDHOLD_REQUESTED) {
         if (mp_has_runnable_buffer(&mp2)) {
             cm_set_motion_state(MOTION_HOLD);
             cm2.hold_state = FEEDHOLD_SYNC;
         }
     }
-
-    // queue flush won't run until the hold is complete and all (subsequent) motion has stopped
-//    if ((cm2.flush_state == FLUSH_REQUESTED) && (mp_runtime_is_idle())) {
-    if (cm2.flush_state == FLUSH_REQUESTED) {
+    if (cm2.hold_state == FEEDHOLD_P2_EXIT) {
+        cm2.hold_state = FEEDHOLD_OFF;
+//        copy_vector (mr1.position, mr2.position);
+        cm_reset_position_to_absolute_position(&cm2); // get the absolute position before destroying it
+//        cm_reset_position_to_absolute_position(&cm1);
         cm_queue_flush(&cm2);
+        cm_set_motion_state(MOTION_STOP);
+        cm_cycle_end();
+        sr_request_status_report(SR_REQUEST_IMMEDIATE);
         return (STAT_OK);
     }
 
+    // queue flush won't run until the hold is complete and all (subsequent) motion has stopped
     if ((cm1.flush_state == FLUSH_REQUESTED) && (cm1.hold_state == FEEDHOLD_HOLD) &&
         (mp_runtime_is_idle())) {                   // don't flush planner during movement
             cm_queue_flush(&cm1);
@@ -256,7 +262,7 @@ stat_t cm_feedhold_sequencing_callback()
             _run_p1_hold_exit_actions();            // runs once only
         }       
     }
-    if (cm1.hold_state == FEEDHOLD_EXIT) {
+    if (cm1.hold_state == FEEDHOLD_P1_EXIT) {
         return(_finalize_p1_hold_exit());           // run multiple times until actions are complete
     }
     return (STAT_OK);
@@ -364,13 +370,13 @@ static stat_t _run_p1_hold_exit_actions()     // LATER: if value == true return 
 
 static void _sync_to_p1_hold_exit_actions_done(float* vect, bool* flag)
 {
-    cm1.hold_state = FEEDHOLD_EXIT;         // penultimate state before transitioning to FEEDHOLD_OFF
+    cm1.hold_state = FEEDHOLD_P1_EXIT;      // penultimate state before transitioning to FEEDHOLD_OFF
 }
 
 static stat_t _finalize_p1_hold_exit()
 {
     // skip out if not ready to finalize the exit
-    if (cm1.hold_state != FEEDHOLD_EXIT) {
+    if (cm1.hold_state != FEEDHOLD_P1_EXIT) {
         return (STAT_NOOP);                 // ??? return (STAT_EAGAIN);
     }
     
@@ -380,12 +386,9 @@ static stat_t _finalize_p1_hold_exit()
     mr = mp->mr;
 
     // execute this block if a queue flush was performed
-    // adjust primary planner positions to runtime positions
+    // adjust p1 planner positions to runtime positions
     if (cm1.flush_state == FLUSH_WAS_RUN) {
         cm_reset_position_to_absolute_position(cm);
-//        for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-//            cm_set_position(axis, mp_get_runtime_absolute_position(&mr2, axis));
-//        }
         cm1.flush_state = FLUSH_OFF;
     }
 

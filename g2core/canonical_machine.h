@@ -108,8 +108,7 @@ typedef enum {
 } cmMotionState;
 
 typedef enum {                  // feedhold state machine
-//    FEEDHOLD_FLUSH = -2,        // set when p2 feedhold is ready to flush p2 queue
-    FEEDHOLD_EXIT = -1,         // set when feedhold is due to exit
+    FEEDHOLD_P1_EXIT = -1,      // set when p1 feedhold is due to exit
     FEEDHOLD_OFF = 0,           // no feedhold in effect
     FEEDHOLD_REQUESTED,         // feedhold has been requested but not started yet
     FEEDHOLD_SYNC,              // start hold - sync to latest aline segment
@@ -119,7 +118,8 @@ typedef enum {                  // feedhold state machine
     FEEDHOLD_STOPPING,          // waiting to complete deceleration once planner motion stops
     FEEDHOLD_ACTIONS_START,     // enter secondary planner and perform feedhold actions (once)
     FEEDHOLD_ACTIONS_WAIT,      // wait for feedhold actions to complete
-    FEEDHOLD_HOLD               // holding (steady state) Must be last state
+    FEEDHOLD_HOLD,              // holding (steady state) Must be last state
+    FEEDHOLD_P2_EXIT            // set when p2 feedhold is finishing
 } cmFeedholdState;
 
 typedef enum {                  // applies to cm->homing_state
@@ -367,8 +367,6 @@ stat_t cm_set_g10_data(const uint8_t P_word, const bool P_flag,             // G
 
 void cm_set_position_by_axis(const uint8_t axis, const float position);     // set position to abs pos - single axis
 void cm_reset_position_to_absolute_position(cmMachine_t *_cm);              // set position to abs pos - all axes
-//void cm_set_position(const uint8_t axis, const float position);             // set absolute position - single axis
-//void cm_set_positions(cmMachine_t *_cm);                                    // set absolute position - all axes
 stat_t cm_set_absolute_origin(const float origin[], bool flag[]);           // G28.3
 void cm_set_axis_origin(uint8_t axis, const float position);                // G28.3 planner callback
 
