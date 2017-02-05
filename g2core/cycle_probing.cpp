@@ -313,7 +313,7 @@ static stat_t _probe_axis_move(const float target[], bool exact_position) {
     }
 
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {  // set all positions
-        cm_set_position(axis, mp_get_runtime_absolute_position(mr, axis));
+        cm_set_position_by_axis(axis, mp_get_runtime_absolute_position(mr, axis));
     }
 
     // set this BEFORE the motion starts

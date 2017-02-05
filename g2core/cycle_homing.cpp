@@ -321,7 +321,7 @@ static stat_t _homing_axis_setpoint_backoff(int8_t axis)  // backoff to zero or 
 static stat_t _homing_axis_set_position(int8_t axis)  // set axis zero / max and finish up
 {
     if (hm.set_coordinates) {
-        cm_set_position(axis, hm.setpoint);
+        cm_set_position_by_axis(axis, hm.setpoint);
         cm->homed[axis] = true;
 
     } else {  // handle G28.4 cycle - set position to the point of switch closure

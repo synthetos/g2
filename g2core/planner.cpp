@@ -255,7 +255,7 @@ void mp_halt_runtime()
  *  still close to the starting point.
  */
 
-void mp_set_planner_position(uint8_t axis, const float position) { mp->position[axis] = position; } //+++++
+void mp_set_planner_position(uint8_t axis, const float position) { mp->position[axis] = position; }
 void mp_set_runtime_position(uint8_t axis, const float position) { mr->position[axis] = position; }
 
 void mp_set_steps_to_runtime_position()

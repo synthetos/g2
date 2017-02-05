@@ -190,7 +190,7 @@ void canonical_machine_reset(cmMachine_t *_cm)
     _cm->homing_state = HOMING_NOT_HOMED;
 
     // reset request flags
-    _cm->queue_flush_state = FLUSH_OFF;
+    _cm->flush_state = FLUSH_OFF;
     _cm->end_hold_requested = false;
     _cm->limit_requested = 0;                       // resets switch closures that occurred during initialization
     _cm->safety_interlock_disengaged = 0;           // ditto
@@ -947,7 +947,7 @@ static void _exec_offset(float *value, bool *flag)
 }
 
 /*
- * cm_set_position() - set the position of a single axis in the model, planner and runtime
+ * cm_set_position_by_axis() - set the position of a single axis in the model, planner and runtime
  *
  *    This command sets an axis/axes to a position provided as an argument.
  *    This is useful for setting origins for homing, probing, and other operations.
@@ -965,7 +965,7 @@ static void _exec_offset(float *value, bool *flag)
  *    Use cm_get_runtime_busy() to be sure the system is quiescent.
  */
 
-void cm_set_position(const uint8_t axis, const float position)
+void cm_set_position_by_axis(const uint8_t axis, const float position)
 {
     // TODO: Interlock involving runtime_busy test
     cm->gmx.position[axis] = position;
@@ -973,6 +973,18 @@ void cm_set_position(const uint8_t axis, const float position)
     mp_set_planner_position(axis, position);
     mp_set_runtime_position(axis, position);
     mp_set_steps_to_runtime_position();
+}
+
+/*
+ * cm_reset_position_to_absolute_position() - set all positions to current absolute position in mr
+ */
+
+void cm_reset_position_to_absolute_position(cmMachine_t *_cm)
+{
+    mpPlanner_t *_mp = (mpPlanner_t *)_cm->mp;
+    for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+        cm_set_position_by_axis(axis, mp_get_runtime_absolute_position(_mp->mr, axis));
+    }
 }
 
 /*** G28.3 functions and support ***

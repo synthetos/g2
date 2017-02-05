@@ -149,7 +149,7 @@ typedef enum {                  // queue flush state machine
     FLUSH_OFF = 0,              // no queue flush in effect
     FLUSH_REQUESTED,            // flush has been requested but not started yet
     FLUSH_WAS_RUN               // transient state to note that a queue flush has been run 
-} cmQueueFlushState;
+} cmFlushState;
 
 /*****************************************************************************
  * CANONICAL MACHINE STRUCTURES
@@ -248,7 +248,7 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     cmMotionState motion_state;             // momo
     cmFeedholdState hold_state;             // hold: feedhold state machine
     cmOverrideState mfo_state;              // feed override state machine
-    cmQueueFlushState queue_flush_state;    // master queue flush state machine
+    cmFlushState flush_state;               // queue flush state machine
 
     uint8_t safety_interlock_disengaged;    // set non-zero to start interlock processing (value is input number)
     uint8_t safety_interlock_reengaged;     // set non-zero to end interlock processing (value is input number)
@@ -365,7 +365,10 @@ stat_t cm_set_g10_data(const uint8_t P_word, const bool P_flag,             // G
                        const uint8_t L_word, const bool L_flag,
                        const float offset[], const bool flag[]);
 
-void cm_set_position(const uint8_t axis, const float position);             // set absolute position - single axis
+void cm_set_position_by_axis(const uint8_t axis, const float position);     // set position to abs pos - single axis
+void cm_reset_position_to_absolute_position(cmMachine_t *_cm);              // set position to abs pos - all axes
+//void cm_set_position(const uint8_t axis, const float position);             // set absolute position - single axis
+//void cm_set_positions(cmMachine_t *_cm);                                    // set absolute position - all axes
 stat_t cm_set_absolute_origin(const float origin[], bool flag[]);           // G28.3
 void cm_set_axis_origin(uint8_t axis, const float position);                // G28.3 planner callback
 

@@ -187,9 +187,9 @@ void cm_request_end_hold(void)
 void cm_request_queue_flush()
 {
     // NOTE: this function used to flush input buffers, but this is handled in xio *prior* to queue flush now
-    if ((cm1.hold_state != FEEDHOLD_OFF) &&          // don't honor request unless you are in a feedhold
-        (cm1.queue_flush_state == FLUSH_OFF)) {      // ...and only once
-        cm1.queue_flush_state = FLUSH_REQUESTED;     // request planner flush once motion has stopped
+    if ((cm1.hold_state != FEEDHOLD_OFF) &&         // don't honor request unless you are in a feedhold
+        (cm1.flush_state == FLUSH_OFF)) {           // ...and only once
+        cm1.flush_state = FLUSH_REQUESTED;          // request planner flush once motion has stopped
     }
 }
 
@@ -214,12 +214,12 @@ stat_t cm_feedhold_sequencing_callback()
 {
     // invoking a p1 feedhold is a 2 step process - get to the stop, then execute the hold actions
     if (cm1.hold_state == FEEDHOLD_REQUESTED) {
-        if (mp_has_runnable_buffer(&mp1)) {             // bypass cm_start_hold() to start from here
+        if (mp_has_runnable_buffer(&mp1)) {         // bypass cm_start_hold() to start from here
             cm_set_motion_state(MOTION_HOLD);
-            cm1.hold_state = FEEDHOLD_SYNC;             // invokes hold from aline execution
+            cm1.hold_state = FEEDHOLD_SYNC;         // invokes hold from aline execution
         }
     }
-    if (cm1.hold_state == FEEDHOLD_ACTIONS_START) {     // perform Z lift, spindle & coolant actions
+    if (cm1.hold_state == FEEDHOLD_ACTIONS_START) { // perform Z lift, spindle & coolant actions
         _run_p1_hold_entry_actions();
     }
 
@@ -231,37 +231,37 @@ stat_t cm_feedhold_sequencing_callback()
     }
 
     // queue flush won't run until the hold is complete and all (subsequent) motion has stopped
-/*
-    if ((cm2.queue_flush_state == FLUSH_REQUESTED) && (mp_runtime_is_idle())) {
+//    if ((cm2.flush_state == FLUSH_REQUESTED) && (mp_runtime_is_idle())) {
+    if (cm2.flush_state == FLUSH_REQUESTED) {
         cm_queue_flush(&cm2);
         return (STAT_OK);
     }
-*/
-    if ((cm1.queue_flush_state == FLUSH_REQUESTED) && 
-        (cm1.hold_state == FEEDHOLD_HOLD) &&            // only flush once hold is actually holding
-        (mp_runtime_is_idle())) {                       // don't flush planner during movement
+
+    if ((cm1.flush_state == FLUSH_REQUESTED) && (cm1.hold_state == FEEDHOLD_HOLD) &&
+        (mp_runtime_is_idle())) {                   // don't flush planner during movement
             cm_queue_flush(&cm1);
-            cm1.end_hold_requested = true;              // p1 queue flush always ends the hold
+            cm1.end_hold_requested = true;          // p1 queue flush always ends the hold
+            qr_request_queue_report(0);             // request a queue report, since we've changed the number of buffers available
     }
 
     // exit_hold runs for both ~ and % feedhold ends
     if (cm1.end_hold_requested) {
         
         // Flush must complete before exit_hold runs. Trap possible race condition if flush request was
-        if (cm1.queue_flush_state == FLUSH_REQUESTED) { // ...received when this callback was running
+        if (cm1.flush_state == FLUSH_REQUESTED) {   // ...received when this callback was running
             return (STAT_OK);
         } 
-        if (cm1.hold_state == FEEDHOLD_HOLD) {          // don't run end_hold until fully into a hold
+        if (cm1.hold_state == FEEDHOLD_HOLD) {      // don't run end_hold until fully into a hold
             cm1.end_hold_requested = false;
-            _run_p1_hold_exit_actions();                // runs once only
+            _run_p1_hold_exit_actions();            // runs once only
         }       
     }
     if (cm1.hold_state == FEEDHOLD_EXIT) {
-        return(_finalize_p1_hold_exit());               // run multiple times until actions are complete
+        return(_finalize_p1_hold_exit());           // run multiple times until actions are complete
     }
     return (STAT_OK);
 }
-
+    
 /***********************************************************************************
  * _run_p1_hold_entry_actions()         - run actions in p2 that complete the p1 hold
  * _sync_to_p1_hold_entry_actions_done() - final state change occurs here
@@ -287,6 +287,7 @@ static stat_t _run_p1_hold_entry_actions()
     cm2.hold_state = FEEDHOLD_OFF;
     cm2.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;
     cm2.gm.absolute_override = ABSOLUTE_OVERRIDE_OFF;
+    cm2.flush_state = FLUSH_OFF;
     cm2.gm.feed_rate = 0;
 
     // clear the target and set the positions to the current hold position
@@ -380,11 +381,12 @@ static stat_t _finalize_p1_hold_exit()
 
     // execute this block if a queue flush was performed
     // adjust primary planner positions to runtime positions
-    if (cm1.queue_flush_state == FLUSH_WAS_RUN) {
-        for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-            cm_set_position(axis, mp_get_runtime_absolute_position(&mr2, axis));
-        }
-        cm1.queue_flush_state = FLUSH_OFF;
+    if (cm1.flush_state == FLUSH_WAS_RUN) {
+        cm_reset_position_to_absolute_position(cm);
+//        for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+//            cm_set_position(axis, mp_get_runtime_absolute_position(&mr2, axis));
+//        }
+        cm1.flush_state = FLUSH_OFF;
     }
 
     // resume motion from primary planner or end cycle if no moves in planner
@@ -450,14 +452,5 @@ void cm_queue_flush(cmMachine_t *_cm)
 {
     cm_abort_arc(_cm);                      // kill arcs so they don't just create more alines
     planner_reset((mpPlanner_t *)_cm->mp);  // reset primary planner. also resets the mr under the planner
-    _cm->queue_flush_state = FLUSH_WAS_RUN;
-    qr_request_queue_report(0);             // request a queue report, since we've changed the number of buffers available
-
-/*
-    cm_abort_arc(&cm1);                     // kill arcs so they don't just create more alines
-    planner_reset((mpPlanner_t *)cm1.mp);   // reset primary planner. also resets the mr under the planner
-    cm1.queue_flush_state = FLUSH_WAS_RUN;
-    cm1.end_hold_requested = true;          // queue flush always ends the hold
-    qr_request_queue_report(0);             // request a queue report, since we've changed the number of buffers available
-*/
+    _cm->flush_state = FLUSH_WAS_RUN;
 }
