@@ -59,9 +59,10 @@ stat_t rpt_exception(stat_t status, const char *msg)
 
         // you cannot send an exception report if the USB has not been set up. Causes a processor exception.
         if (cs.controller_state >= CONTROLLER_READY) {
-           sprintf(global_string_buf, "{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s - %s\"}}\n",
+            char buffer[128];
+            sprintf(buffer, "{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s - %s\"}}\n",
                                         G2CORE_FIRMWARE_BUILD, status, get_status_message(status), msg);
-           xio_writeline(global_string_buf);
+            xio_writeline(buffer);
         }
     }
     return (status);            // makes it possible to inline, e.g: return(rpt_exception(status));
