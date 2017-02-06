@@ -249,7 +249,7 @@ stat_t _verify_checksum(char *str)
  *   - block_delete_flag is set true if block delete encountered, false otherwise
  */
 
-char _normalize_scratch[RX_BUFFER_MIN_SIZE];
+char _normalize_scratch[RX_BUFFER_SIZE];
 
 void _normalize_gcode_block(char *str, char **active_comment, uint8_t *block_delete_flag)
 {

@@ -72,7 +72,7 @@ mpMotionRuntimeSingleton_t mr;      // context for block runtime
 #define JSON_COMMAND_BUFFER_SIZE 3
 
 struct json_command_buffer_t {
-    char buf[RX_BUFFER_MIN_SIZE];
+    char buf[RX_BUFFER_SIZE];
     json_command_buffer_t *pv;
     json_command_buffer_t *nx;
 };

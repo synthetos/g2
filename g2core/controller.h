@@ -28,9 +28,10 @@
 #ifndef CONTROLLER_H_ONCE
 #define CONTROLLER_H_ONCE
 
+#include "xio.h"
+
 // see also: g2core.h MESSAGE_LEN and config.h NV_ lengths
-#define SAVED_BUFFER_LEN 80             // saved buffer size (for reporting only)
-#define MAXED_BUFFER_LEN 255            // same as streaming RX buffer size as a worst case
+#define SAVED_BUFFER_LEN RX_BUFFER_SIZE // saved buffer size (for reporting only)
 #define OUTPUT_BUFFER_LEN 512           // text buffer size
 
 #define LED_NORMAL_BLINK_RATE 3000      // blink rate for normal operation (in ms)
