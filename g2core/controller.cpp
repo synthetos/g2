@@ -233,7 +233,6 @@ static void _dispatch_kernel(const devflags_t flags)
 #if MARLIN_COMPAT_ENABLED == true
     // marlin_handle_fake_stk500 returns true if it responded to a stk500v2 message
     if (marlin_handle_fake_stk500(cs.bufp)) {
-        cs.comm_mode = MARLIN_COMM_MODE;
         js.json_mode = MARLIN_COMM_MODE;
 
         sr.status_report_verbosity = SR_OFF;
@@ -350,7 +349,7 @@ static stat_t _controller_state()
         _connection_timeout.set(10);
 #endif
     } else if ((cs.controller_state == CONTROLLER_STARTUP) && (_connection_timeout.isPast())) {        // first time through after reset
-        if (cs.comm_mode != MARLIN_COMM_MODE) { // MARLIN_COMM_MODE is always defined, just not always used
+        if (js.json_mode != MARLIN_COMM_MODE) { // MARLIN_COMM_MODE is always defined, just not always used
             _reset_comms_mode();
         }
         cs.controller_state = CONTROLLER_READY;
@@ -372,6 +371,7 @@ void controller_set_connected(bool is_connected) {
     if (is_connected) {
         cs.controller_state = CONTROLLER_CONNECTED; // we JUST connected
     } else {  // we just disconnected from the last device, we'll expect a banner again
+        _reset_comms_mode();
         cs.controller_state = CONTROLLER_NOT_CONNECTED;
     }
 }
