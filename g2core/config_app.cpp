@@ -669,15 +669,15 @@ const cfgItem_t cfgArray[] = {
     { "", "er",  _f0, 0, tx_print_nul,  rpt_er,    set_nul,   (float *)&cs.null, 0 },   // get bogus exception report for testing
     { "", "qf",  _f0, 0, tx_print_nul,  get_nul,   cm_run_qf, (float *)&cs.null, 0 },   // SET to invoke queue flush
     { "", "rx",  _f0, 0, tx_print_int,  get_rx,    set_nul,   (float *)&cs.null, 0 },   // get RX buffer bytes or packets
-    { "", "dw",  _f0, 0, tx_print_int,  st_get_dw, set_nul,   (float *)&cs.null, 0 },   // get dwell time remaining
+    { "", "dw",  _f0, 0, tx_print_int,  st_get_dw, set_noop,  (float *)&cs.null, 0 },   // get dwell time remaining
     { "", "msg", _f0, 0, tx_print_str,  get_nul,   set_noop,  (float *)&cs.null, 0 },   // no operation on messages
     { "", "alarm",_f0,0, tx_print_nul,  cm_alrm,   cm_alrm,   (float *)&cs.null, 0 },   // trigger alarm
     { "", "panic",_f0,0, tx_print_nul,  cm_pnic,   cm_pnic,   (float *)&cs.null, 0 },   // trigger panic
     { "", "shutd",_f0,0, tx_print_nul,  cm_shutd,  cm_shutd,  (float *)&cs.null, 0 },   // trigger shutdown
     { "", "clear",_f0,0, tx_print_nul,  cm_clr,    cm_clr,    (float *)&cs.null, 0 },   // GET "clear" to clear alarm state
-    { "", "clr",  _f0,0, tx_print_nul,  cm_clr,    cm_clr,    (float *)&cs.null, 0 },   // synonym for "clear"
-    { "", "tick", _f0,0, tx_print_int,  get_tick,  set_nul,   (float *)&cs.null, 0 },   // get system time tic
-    { "", "tram", _f0,0, cm_print_tram,cm_get_tram,cm_set_tram,(float *)&cs.null, 0 },  // SET to attempt setting rotation matrix from probes
+    { "", "clr", _f0, 0, tx_print_nul,  cm_clr,    cm_clr,    (float *)&cs.null, 0 },   // synonym for "clear"
+    { "", "tick",_f0, 0, tx_print_int,  get_tick,  set_nul,   (float *)&cs.null, 0 },   // get system time tic
+    { "", "tram",_f0, 0, cm_print_tram,cm_get_tram,cm_set_tram,(float *)&cs.null, 0 },  // SET to attempt setting rotation matrix from probes
     { "", "defa",_f0, 0, tx_print_nul,  help_defa,set_defaults,(float *)&cs.null,0 },   // set/print defaults / help screen
     { "", "flash",_f0,0, tx_print_nul,  help_flash,hw_flash,  (float *)&cs.null,0 },
 

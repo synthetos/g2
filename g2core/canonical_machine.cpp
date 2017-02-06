@@ -367,7 +367,7 @@ void cm_set_tool_number(GCodeState_t *gcode_state, const uint8_t tool)
 void cm_set_absolute_override(GCodeState_t *gcode_state, const uint8_t absolute_override)
 {
     gcode_state->absolute_override = (cmAbsoluteOverride)absolute_override;
-    cm_set_work_offsets(MODEL);         // must reset offsets if you change absolute override
+//    cm_set_work_offsets(MODEL);         // must reset offsets if you change absolute override
 }
 
 void cm_set_model_linenum(const uint32_t linenum)
@@ -2082,7 +2082,7 @@ stat_t cm_set_tn(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv)].travel_mi
 stat_t cm_get_tm(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv)].travel_max)); }
 stat_t cm_set_tm(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv)].travel_max)); }
 stat_t cm_get_ra(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv)].radius)); }
-stat_t cm_set_ra(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv)].radius)); }
+stat_t cm_set_ra(nvObj_t *nv) { return (set_float_range(nv, cm->a[_axis(nv)].radius, RADIUS_MIN, 1000000)); }
 
 /**** Axis Jerk Primitives
  * cm_get_axis_jerk() - returns jerk for an axis

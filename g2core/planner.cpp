@@ -200,9 +200,11 @@ void planner_init(mpPlanner_t *_mp, mpPlannerRuntime_t *_mr, mpBuf_t *queue, uin
     _mr->p = &_mr->bf[1];
 }
 
-void planner_reset(mpPlanner_t *_mp)
+void planner_reset(mpPlanner_t *_mp)    // reset planner queue, cease MR activity, but leave positions alone
 {
-    planner_init(_mp, _mp->mr, _mp->q.bf, _mp->q.queue_size);  // reset parent planner and linked Q and MR
+//    planner_init(_mp, _mp->mr, _mp->q.bf, _mp->q.queue_size);  // reset parent planner and linked Q and MR
+//    _mp->mr.block_state == BLOCK_INACTIVE;
+    _init_planner_queue(_mp, _mp->q.bf, _mp->q.queue_size);
 }
 
 stat_t planner_test_assertions(const mpPlanner_t *_mp)

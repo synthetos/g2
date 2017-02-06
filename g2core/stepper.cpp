@@ -603,9 +603,7 @@ static void _load_move()
     // handle dwells and commands
     } else if (st_pre.block_type == BLOCK_TYPE_DWELL) {
         st_run.dwell_ticks_downcount = st_pre.dwell_ticks;
-
-        // We now use SysTick events to handle dwells
-        SysTickTimer.registerEvent(&dwell_systick_event);
+        SysTickTimer.registerEvent(&dwell_systick_event); // We now use SysTick events to handle dwells
 
     // handle synchronous commands
     } else if (st_pre.block_type == BLOCK_TYPE_COMMAND) {

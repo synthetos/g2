@@ -348,8 +348,8 @@ static void _sync_to_p1_hold_entry_actions_done(float* vect, bool* flag)
 static stat_t _run_p1_hold_exit_actions()     // LATER: if value == true return with offset corrections
 {
     // perform end-hold actions --- while still in secondary machine
-    spindle_control_sync(SPINDLE_RESUME);               // resume spindle if paused
     coolant_control_sync(COOLANT_RESUME, COOLANT_BOTH); // resume coolant if paused
+    spindle_control_sync(SPINDLE_RESUME);               // resume spindle if paused
     
     // do return move though an intermediate point; queue a wait
     cm2.return_flags[AXIS_Z] = false;
