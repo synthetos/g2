@@ -31,6 +31,7 @@
 #include "temperature.h"     // for temperature controls
 #include "json_parser.h"
 #include "planner.h"
+#include "stepper.h" // for MOTOR_TIMEOUT_SECONDS_MIN/MOTOR_TIMEOUT_SECONDS_MAX
 #include "MotateTimers.h"    // for char definitions
 #include "MotateUniqueID.h"  // for Motate::UUID
 
@@ -484,7 +485,7 @@ stat_t marlin_set_fan_speed(const uint8_t fan, float speed)
 
 
 /*
- * marlin_disable_motors() - M84
+ * marlin_disable_motors() - M84 (without S)
  *
  */
 
@@ -495,6 +496,33 @@ stat_t marlin_disable_motors()
 
     // TODO: support other parameters
     str_concat(str, "{md:0}");
+    cm_json_command(buffer);
+
+    return (STAT_OK);
+}
+
+/*
+ * marlin_set_motor_timeout() - M84 (with S), M85 Sxxx
+ *
+ */
+
+stat_t marlin_set_motor_timeout(float s) // M18 Sxxx, M84 Sxxx, M85 Sxxx
+{
+    if (s < MOTOR_TIMEOUT_SECONDS_MIN) {
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    if (s > MOTOR_TIMEOUT_SECONDS_MAX) {
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+    }
+
+    char buffer[128];
+    char *str = buffer;
+
+    // TODO: support other fans, or remapping output
+    str_concat(str, "{mt:");
+    str += floattoa(str, s, 1);
+    str_concat(str, "}");
+
     cm_json_command(buffer);
 
     return (STAT_OK);

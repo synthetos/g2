@@ -192,6 +192,7 @@ typedef enum {                          // these are in order to optimized CASE 
     NEXT_ACTION_MARLIN_RESET_LINE_NUMBERS,     // M110
     NEXT_ACTION_MARLIN_REPORT_VERSION,         // M115
     NEXT_ACTION_MARLIN_DISPLAY_ON_SCREEN,      // M117
+    NEXT_ACTION_MARLIN_SET_MT,                 // M84 (with S), M85
 #endif
 } cmNextAction;
 

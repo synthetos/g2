@@ -743,7 +743,9 @@ stat_t _parse_gcode_block(char *buf, char *active_comment)
 
                 case 117: return STAT_OK;  //SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_DISPLAY_ON_SCREEN);
 
+                case 18: // compatibility alias for M84
                 case 84: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_DISABLE_MOTORS);
+                case 85: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_SET_MT);
 
                 case 110: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_RESET_LINE_NUMBERS);
                 case 111: return STAT_OK; // ignore M111, and don't process contents of the line further
@@ -941,11 +943,26 @@ stat_t _execute_gcode_block(char *active_comment)
             }
             break;
         }
-        case NEXT_ACTION_MARLIN_DISABLE_MOTORS:    {      // M84
-            ritorno(marlin_disable_motors());
+        case NEXT_ACTION_MARLIN_DISABLE_MOTORS:    {      // M84 and M18
+            if (gf.S_word) {
+                ritorno(marlin_set_motor_timeout(gv.S_word));
+                gf.S_word = false;
+            } else {
+                ritorno(marlin_disable_motors());
+            }
+
             break;
         }
-        case NEXT_ACTION_MARLIN_DISPLAY_ON_SCREEN: {      // M184
+        case NEXT_ACTION_MARLIN_SET_MT:            {      // M85
+            if (gf.S_word) {
+                ritorno(marlin_set_motor_timeout(gv.S_word));
+                gf.S_word = false;
+            } else {
+                // this means nothing, but it's not an error
+                return status;
+            }
+        }
+        case NEXT_ACTION_MARLIN_DISPLAY_ON_SCREEN: {      // M117
             // ignore for now
             return status;
         }
