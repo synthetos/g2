@@ -840,6 +840,11 @@ stat_t _execute_gcode_block(char *active_comment)
 #if MARLIN_COMPAT_ENABLED == true
     // Handle Marlin specifics
 
+    // E should ONLY be seen in marlin flavor
+    if (gf.E_word) {
+        cm.gmx.marlin_flavor = true;
+    }
+
     // adjust T real quick
     if (cm.gmx.marlin_flavor && gf.tool_select) {
         gv.tool_select += 1;
@@ -855,8 +860,6 @@ stat_t _execute_gcode_block(char *active_comment)
     // Deal with E
     EXEC_FUNC(cm_marlin_set_extruder_mode, marlin_relative_extruder_mode);  // M82, M83
     if (gf.E_word) {
-        cm.gmx.marlin_flavor = true;         // E should ONLY be seen in marlin flavor
-
         // Ennn T0 -> Annn
         if (cm.gm.tool_select == 1) {
             gf.target[AXIS_A] = true;
