@@ -314,29 +314,6 @@ static void _dispatch_kernel(const devflags_t flags)
 }
 
 /**** Local Functions ********************************************************/
-/* CONTROLLER STATE MANAGEMENT
- * _controller_state() - manage controller connection, startup, and other state changes
- */
-
-Motate::Timeout _connection_timeout;
-static stat_t _controller_state()
-{
-    if (cs.controller_state == CONTROLLER_CONNECTED) {        // first time through after reset
-        cs.controller_state = CONTROLLER_STARTUP;
-        // This is here just to put a small delay in before the startup message.
-#if MARLIN_COMPAT_ENABLED == true
-        // For Marlin compatibility, we need this to be long enough for the UI to say something and reveal
-        // if it's a Marlin-compatible UI.
-        _connection_timeout.set(2000);
-#else
-        _connection_timeout.set(10);
-#endif
-    } else if ((cs.controller_state == CONTROLLER_STARTUP) && (_connection_timeout.isPast())) {        // first time through after reset
-        cs.controller_state = CONTROLLER_READY;
-        rpt_print_system_ready_message();
-    }
-    return (STAT_OK);
-}
 
 
 /*
@@ -350,21 +327,51 @@ void _reset_comms_mode() {
     qr.queue_report_verbosity = QUEUE_REPORT_VERBOSITY;
 }
 
+/* CONTROLLER STATE MANAGEMENT
+ * _controller_state() - manage controller connection, startup, and other state changes
+ */
+
+Motate::Timeout _connection_timeout;
+static stat_t _controller_state()
+{
+    if (cs.controller_state == CONTROLLER_CONNECTED) {        // first time through after reset
+        cs.controller_state = CONTROLLER_STARTUP;
+        // This is here just to put a small delay in before the startup message.
+#if MARLIN_COMPAT_ENABLED == true
+        // For Marlin compatibility, we need this to be long enough for the UI to say something and reveal
+        // if it's a Marlin-compatible UI.
+        if (xio_connected()) {
+            // xio_connected will only return true for USB and other non-permanent connections
+            _connection_timeout.set(2000);
+        } else {
+            _connection_timeout.set(1);
+        }
+#else
+        _connection_timeout.set(10);
+#endif
+    } else if ((cs.controller_state == CONTROLLER_STARTUP) && (_connection_timeout.isPast())) {        // first time through after reset
+        if (cs.comm_mode != MARLIN_COMM_MODE) { // MARLIN_COMM_MODE is always defined, just not always used
+            _reset_comms_mode();
+        }
+        cs.controller_state = CONTROLLER_READY;
+        rpt_print_system_ready_message();
+    }
+    return (STAT_OK);
+}
+
 /*
  * controller_set_connected(bool) - hook for xio to tell the controller that we
  * have/don't have a connection.
  */
 
 void controller_set_connected(bool is_connected) {
-    if (is_connected) {
-        _reset_comms_mode();
+    // turn off reports while no-one's listening or we determine what dialect they speak
+    sr.status_report_verbosity = SR_OFF;
+    qr.queue_report_verbosity = QR_OFF;
 
+    if (is_connected) {
         cs.controller_state = CONTROLLER_CONNECTED; // we JUST connected
     } else {  // we just disconnected from the last device, we'll expect a banner again
-        // turn off reports while no-one's listening
-        sr.status_report_verbosity = SR_OFF;
-        qr.queue_report_verbosity = QR_OFF;
-
         cs.controller_state = CONTROLLER_NOT_CONNECTED;
     }
 }
@@ -381,9 +388,10 @@ void controller_set_muted(bool is_muted) {
         const bool only_to_muted = true;
         xio_writeline("{\"muted\":true}\n", only_to_muted);
     } else {
+        // we're assuming anything that can be muted speaks g2core-dialect JSON
         _reset_comms_mode();
 
-        // one channel just got unmuted, announce it (except to the muted)
+        // something was just unmuted (usually because USB disconnected), tell it
         xio_writeline("{\"muted\":false}\n");
     }
 }
