@@ -601,6 +601,7 @@ stat_t st_get_mt(nvObj_t *nv);
 stat_t st_set_mt(nvObj_t *nv);
 stat_t st_set_md(nvObj_t *nv);
 stat_t st_set_me(nvObj_t *nv);
+stat_t st_get_dw(nvObj_t *nv);
 
 #ifdef __TEXT_MODE
 

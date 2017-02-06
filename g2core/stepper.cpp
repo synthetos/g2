@@ -607,7 +607,7 @@ static void _load_move()
         // We now use SysTick events to handle dwells
         SysTickTimer.registerEvent(&dwell_systick_event);
 
-        // handle synchronous commands
+    // handle synchronous commands
     } else if (st_pre.block_type == BLOCK_TYPE_COMMAND) {
         mp_runtime_command(st_pre.bf);
         
@@ -973,6 +973,7 @@ stat_t st_get_pwr(nvObj_t *nv)
  * st_set_md() - disable motor power
  * st_set_me() - enable motor power
  * st_set_md() - disable motor power
+ * st_get_dw() - get remaining dwell time
  *
  * Calling me or md with NULL will enable or disable all motors
  * Setting a value of 0 will enable or disable all motors
@@ -1014,6 +1015,13 @@ stat_t st_set_md(nvObj_t *nv)
     } else {                            // otherwise it's just one motor
          Motors[(uint8_t)nv->value -1]->disable();
     }
+    return (STAT_OK);
+}
+
+stat_t st_get_dw(nvObj_t *nv) 
+{
+    nv->value = st_run.dwell_ticks_downcount;
+    nv->valuetype = TYPE_INT;
     return (STAT_OK);
 }
 

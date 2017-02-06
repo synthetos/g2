@@ -399,11 +399,8 @@ stat_t sp_set_spdp(nvObj_t *nv) {
 
 stat_t sp_get_spph(nvObj_t *nv) { return(get_int(nv, spindle.pause_enable)); }
 stat_t sp_set_spph(nvObj_t *nv) { return(set_int(nv, (uint8_t &)spindle.pause_enable, 0, 1)); }
-
 stat_t sp_get_spde(nvObj_t *nv) { return(get_float(nv, spindle.spinup_delay)); }
 stat_t sp_set_spde(nvObj_t *nv) { return(set_float_range(nv, spindle.spinup_delay, 0, SPINDLE_DWELL_MAX)); }
-//stat_t sp_get_spdn(nvObj_t *nv) { return(get_float(nv, spindle.spindown_delay)); }
-//stat_t sp_set_spdn(nvObj_t *nv) { return(set_float_range(nv, spindle.spindown_delay, 0, SPINDLE_DWELL_MAX)); }
 
 stat_t sp_get_spsn(nvObj_t *nv) { return(get_float(nv, spindle.speed_min)); }
 stat_t sp_set_spsn(nvObj_t *nv) { return(set_float_range(nv, spindle.speed_min, SPINDLE_SPEED_MIN, SPINDLE_SPEED_MAX)); }
@@ -435,7 +432,6 @@ const char fmt_spep[] = "[spep] spindle enable polarity%5d [0=active_low,1=activ
 const char fmt_spdp[] = "[spdp] spindle direction polarity%2d [0=CW_low,1=CW_high]\n";
 const char fmt_spph[] = "[spph] spindle pause on hold%7d [0=no,1=pause_on_hold]\n";
 const char fmt_spde[] = "[spde] spindle spinup delay%10.1f seconds\n";
-//const char fmt_spdn[] = "[spdn] spindle spindown delay%8.1f seconds\n";
 const char fmt_spsn[] = "[spsn] spindle speed min%14.2f rpm\n";
 const char fmt_spsm[] = "[spsm] spindle speed max%14.2f rpm\n";
 const char fmt_spoe[] = "[spoe] spindle speed override ena%2d [0=disable,1=enable]\n";
@@ -448,7 +444,6 @@ void sp_print_spep(nvObj_t *nv) { text_print(nv, fmt_spep);}    // TYPE_INT
 void sp_print_spdp(nvObj_t *nv) { text_print(nv, fmt_spdp);}    // TYPE_INT
 void sp_print_spph(nvObj_t *nv) { text_print(nv, fmt_spph);}    // TYPE_INT
 void sp_print_spde(nvObj_t *nv) { text_print(nv, fmt_spde);}    // TYPE_FLOAT
-//void sp_print_spdn(nvObj_t *nv) { text_print(nv, fmt_spdn);}    // TYPE_FLOAT
 void sp_print_spsn(nvObj_t *nv) { text_print(nv, fmt_spsn);}    // TYPE_FLOAT
 void sp_print_spsm(nvObj_t *nv) { text_print(nv, fmt_spsm);}    // TYPE_FLOAT
 void sp_print_spoe(nvObj_t *nv) { text_print(nv, fmt_spoe);}    // TYPE INT
