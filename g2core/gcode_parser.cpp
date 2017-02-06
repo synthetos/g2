@@ -751,6 +751,16 @@ stat_t _parse_gcode_block(char *buf, char *active_comment)
                 case 111: return STAT_OK; // ignore M111, and don't process contents of the line further
 
                 case 115: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_REPORT_VERSION);
+
+                case 20: // List SD card
+                    return marlin_list_sd_response();
+                case 21: // Initialize SD card
+                case 22: // Release SD card
+                    return STAT_OK;
+
+                case 23: // Select SD file
+                    return marlin_select_sd_response(pstr);
+
 #endif // MARLIN_COMPAT_ENABLED
 
                 default: status = STAT_MCODE_COMMAND_UNSUPPORTED;

@@ -51,4 +51,7 @@ stat_t marlin_disable_motors(); // M84
 stat_t marlin_set_motor_timeout(float s); // M18 Sxxx, M84 Sxxx, M85 Sxxx
 
 stat_t marlin_report_version(); // M115
+
+stat_t marlin_list_sd_response(); // M20
+stat_t marlin_select_sd_response(const char *file); // M23
 #endif  // End of include guard: MARLIN_COMPAT_H_ONCE

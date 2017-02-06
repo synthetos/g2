@@ -588,4 +588,39 @@ stat_t marlin_report_version()
     return (STAT_OK);
 }
 
+/*
+ * marlin_list_sd_response() - M20
+ *
+ */
+stat_t marlin_list_sd_response()
+{
+    char buffer[128];
+    char *str = buffer;
+
+    str_concat(str, "Begin file list\nEnd file list\n");
+    *str = 0;
+    xio_writeline(buffer);
+
+    return (STAT_OK);
+}
+
+/*
+ * marlin_select_sd_response() - M23
+ *
+ */
+stat_t marlin_select_sd_response(const char *file)
+{
+    char buffer[128];
+    char *str = buffer;
+
+    str_concat(str, "open failed, File: ");
+    strncpy(str, file, Motate::strlen(file));
+    str += Motate::strlen(file);
+    str_concat(str, "\n");
+    *str = 0;
+    xio_writeline(buffer);
+
+    return (STAT_OK);
+}
+
 #endif // MARLIN_COMPAT_ENABLED == true
