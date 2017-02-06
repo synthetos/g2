@@ -372,7 +372,7 @@ void cm_set_absolute_override(GCodeState_t *gcode_state, const uint8_t absolute_
 
 void cm_set_model_linenum(const uint32_t linenum)
 {
-    cm->gm.linenum = linenum;            // you must first set the model line number,
+    cm->gm.linenum = linenum;           // you must first set the model line number,
     nv_add_object((const char *)"n");   // then add the line number to the nv list
 }
 
