@@ -79,7 +79,6 @@ extern OutputPin<kDebug3_PinNumber> debug_pin3;
 //extern OutputPin<kDebug4_PinNumber> debug_pin4;
 
 dda_timer_type dda_timer     {kTimerUpToMatch, FREQUENCY_DDA};      // stepper pulse generation
-//load_timer_type load_timer;         // triggers load of next stepper segment
 exec_timer_type exec_timer;         // triggers calculation of next+1 stepper segment
 fwd_plan_timer_type fwd_plan_timer; // triggers planning of next block
 
@@ -127,9 +126,6 @@ void stepper_init()
     // optimal for 200 KHz DDA clock before the time in the OFF cycle is too short.
     // If you need more pulse width you need to drop the DDA clock rate
     dda_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
-
-    // setup software interrupt load timer
-//    load_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityHigh);
 
     // setup software interrupt exec timer & initial condition
     exec_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityMedium);
