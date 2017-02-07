@@ -333,7 +333,7 @@ void cm_set_absolute_override(GCodeState_t *gcode_state, const uint8_t absolute_
 void cm_set_model_linenum(const uint32_t linenum);
 
 // Coordinate systems and offsets
-float cm_get_active_coord_offset(const uint8_t axis, const cmAbsoluteOverride absolute_override);
+float cm_get_active_coord_offset(const uint8_t axis, const bool use_absolute_override);
 float cm_get_work_offset(const GCodeState_t *gcode_state, const uint8_t axis);
 void cm_set_work_offsets(GCodeState_t *gcode_state);
 float cm_get_absolute_position(const GCodeState_t *gcode_state, const uint8_t axis);

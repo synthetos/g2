@@ -414,10 +414,12 @@ void cm_set_model_linenum(const uint32_t linenum)
  *  If you don;t want that, just set absolute_override false in the function call.
  */
 
-float cm_get_active_coord_offset(const uint8_t axis, const cmAbsoluteOverride absolute_override)
+float cm_get_active_coord_offset(const uint8_t axis, const bool use_absolute_override)
 {
-    if (cm->gm.absolute_override == absolute_override) {    // no offset if in absolute override mode
-        return (0.0);
+    if (use_absolute_override) {
+        if (cm->gm.absolute_override == use_absolute_override) { // no offset if in absolute override mode
+            return (0.0);
+        }
     }
     float offset = cm->offset[cm->gm.coord_system][axis] + cm->tl_offset[axis];
     if (cm->gmx.origin_offset_enable == true) {
@@ -439,7 +441,7 @@ float cm_get_work_offset(const GCodeState_t *gcode_state, const uint8_t axis)
 void cm_set_work_offsets(GCodeState_t *gcode_state)
 {
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-        gcode_state->work_offset[axis] = cm_get_active_coord_offset(axis, (cmAbsoluteOverride)false);
+        gcode_state->work_offset[axis] = cm_get_active_coord_offset(axis, false);
     }
 }
 
@@ -468,7 +470,7 @@ float cm_get_work_position(const GCodeState_t *gcode_state, const uint8_t axis)
     float position;
 
     if (gcode_state == MODEL) {
-        position = cm->gmx.position[axis] - cm_get_active_coord_offset(axis, (cmAbsoluteOverride)false);
+        position = cm->gmx.position[axis] - cm_get_active_coord_offset(axis, false);
     } else {
         position = mp_get_runtime_work_position(axis);
     }
@@ -706,7 +708,7 @@ void cm_set_model_target(const float target[], const bool flags[])
             continue;        // skip axis if not flagged for update or its disabled
         } else if ((cm->a[axis].axis_mode == AXIS_STANDARD) || (cm->a[axis].axis_mode == AXIS_INHIBITED)) {
             if (cm->gm.distance_mode == ABSOLUTE_DISTANCE_MODE) {
-                cm->gm.target[axis] = cm_get_active_coord_offset(axis, cm->gm.absolute_override) + _to_millimeters(target[axis]);
+                cm->gm.target[axis] = cm_get_active_coord_offset(axis, true) + _to_millimeters(target[axis]);
             } else {
                 cm->gm.target[axis] += _to_millimeters(target[axis]);
             }
@@ -721,7 +723,7 @@ void cm_set_model_target(const float target[], const bool flags[])
             tmp = _calc_ABC(axis, target);
         }
         if (cm->gm.distance_mode == ABSOLUTE_DISTANCE_MODE) {
-            cm->gm.target[axis] = tmp + cm_get_active_coord_offset(axis, cm->gm.absolute_override); // sacidu93's fix to Issue #22
+            cm->gm.target[axis] = tmp + cm_get_active_coord_offset(axis, true); // sacidu93's fix to Issue #22
         } else {
             cm->gm.target[axis] += tmp;
         }
