@@ -667,7 +667,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                         _read_offset = _scan_offset;
                         _line_start_offset = _scan_offset;
                     }
-                    else if ((c == '{') || (c == '\n') || (c == '\r') || (c == 'G') || (c == 'M')) {
+                    else if ((c == '{') || (c == 'N') || (c == '\n') || (c == '\r') || (c == 'G') || (c == 'M')) {
                         // jump out of bootloader mode
                         _stk_parser_state = STK500V2_State::Done;
                         _read_offset = _scan_offset;
