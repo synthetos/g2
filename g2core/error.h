@@ -204,8 +204,8 @@ char *get_status_message(stat_t status);
 #define STAT_INPUT_FROM_MUTED_CHANNEL_ERROR 117 // input from a muted channel was ignored
 #define STAT_CHECKSUM_MATCH_FAILED 118          // the provided checksum didn't match
 #define STAT_LINE_NUMBER_OUT_OF_SEQUENCE 119    // the provided line number was out of sequence
+#define STAT_MISSING_LINE_NUMBER_WITH_CHECKSUM 120 // if a checksum is provided, a line number should be present as well
 
-#define STAT_ERROR_120 120
 #define STAT_ERROR_121 121
 #define STAT_ERROR_122 122
 #define STAT_ERROR_123 123

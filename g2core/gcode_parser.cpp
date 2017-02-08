@@ -37,7 +37,7 @@
 
 typedef struct GCodeInputValue {    // Gcode inputs - meaning depends on context
 
-    uint8_t next_action;            // handles G modal group 1 moves & non-modals
+    cmNextAction next_action;       // handles G modal group 1 moves & non-modals
     cmMotionMode motion_mode;       // Group1: G0, G1, G2, G3, G38.2, G80, G81, G82, G83, G84, G85, G86, G87, G88, G89
     uint8_t program_flow;           // used only by the gcode_parser
     uint32_t linenum;               // N word
@@ -206,9 +206,9 @@ stat_t gcode_parser(char *block)
 stat_t _verify_checksum(char *str)
 {
 #if MARLIN_COMPAT_ENABLED == true
-    if (MARLIN_COMM_MODE == js.json_mode) {
+//    if (MARLIN_COMM_MODE == js.json_mode) {
         return marlin_verify_checksum(str);
-    }
+//    }
 #endif
 
     // for now, always assume it's ok
@@ -741,25 +741,26 @@ stat_t _parse_gcode_block(char *buf, char *active_comment)
                 case 106: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_SET_FAN_SPEED);
                 case 107: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_STOP_FAN);
 
-                case 117: return STAT_OK;  //SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_DISPLAY_ON_SCREEN);
+                case 117: status = STAT_COMPLETE; break;  //SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_DISPLAY_ON_SCREEN);
 
                 case 18: // compatibility alias for M84
                 case 84: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_DISABLE_MOTORS);
                 case 85: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_SET_MT);
 
                 case 110: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_RESET_LINE_NUMBERS);
-                case 111: return STAT_OK; // ignore M111, and don't process contents of the line further
+                case 111: status = STAT_COMPLETE; break; // ignore M111, and don't process contents of the line further
 
                 case 115: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_REPORT_VERSION);
 
                 case 20: // List SD card
-                    return marlin_list_sd_response();
+                    marlin_list_sd_response(); status = STAT_COMPLETE; break;
+                
                 case 21: // Initialize SD card
                 case 22: // Release SD card
-                    return STAT_OK;
+                    status = STAT_COMPLETE; break;
 
                 case 23: // Select SD file
-                    return marlin_select_sd_response(pstr);
+                    marlin_select_sd_response(pstr); status = STAT_COMPLETE; break;
 
 #endif // MARLIN_COMPAT_ENABLED
 
@@ -849,6 +850,18 @@ stat_t _execute_gcode_block(char *active_comment)
 
 #if MARLIN_COMPAT_ENABLED == true
     // Handle Marlin specifics
+
+    // Check for sequential line numbers
+    if (gf.linenum)
+    {
+        if ((gv.next_action != NEXT_ACTION_MARLIN_RESET_LINE_NUMBERS) &&
+            (gv.linenum != cm.gmx.last_line_number+1)
+            )
+        {
+            return STAT_LINE_NUMBER_OUT_OF_SEQUENCE;
+        }
+        cm.gmx.last_line_number = gv.linenum;
+    }
 
     // E should ONLY be seen in marlin flavor
     if (gf.E_word) {
@@ -986,8 +999,8 @@ stat_t _execute_gcode_block(char *active_comment)
         }
         case NEXT_ACTION_MARLIN_RESET_LINE_NUMBERS:{      // M110
             js.json_mode = MARLIN_COMM_MODE;
-            // TODO: care about line numbers
-            break;
+            // we already did this above
+            return STAT_OK;
         }
         case NEXT_ACTION_DEFAULT: {
             if (cm.gmx.marlin_flavor) {
@@ -1006,6 +1019,9 @@ stat_t _execute_gcode_block(char *active_comment)
             }
             break;
         }
+        default:
+            // quiet the compiler warning about all the things we don't handle
+            break;
     } // switch (gv.next_action)
 #endif // MARLIN_COMPAT_ENABLED
 
@@ -1049,6 +1065,9 @@ stat_t _execute_gcode_block(char *active_comment)
             ritorno(cm_cancel_tl_offset());
             break;
         }
+        default:
+            // quiet the compiler warning about all the things we don't handle
+            break;
     }
 
     EXEC_FUNC(cm_set_coord_system, coord_system);           // G54, G55, G56, G57, G58, G59
@@ -1108,6 +1127,9 @@ stat_t _execute_gcode_block(char *active_comment)
             }
             cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_OFF);     // un-set absolute override once the move is planned
         }
+        default:
+            // quiet the compiler warning about all the things we don't handle
+            break;
     }
 
     // do the program stops and ends : M0, M1, M2, M30, M60

@@ -427,8 +427,9 @@ typedef struct GCodeStateExtended {     // Gcode dynamic state extensions - used
 //  float cutter_length;                // H - cutter length compensation (0 is off)
 
 #if MARLIN_COMPAT_ENABLED == true
-    bool marlin_flavor;
-    cmExtruderMode extruder_mode;      // Mode of the extruder - changes how "E" is interpreted
+    bool marlin_flavor;                 // true if we are parsing gcode as Marlin-flavor
+    cmExtruderMode extruder_mode;       // Mode of the extruder - changes how "E" is interpreted
+    uint32_t last_line_number;          // keep track of the last issued line number
 #endif // MARLIN_COMPAT_ENABLED
 
     uint16_t magic_end;

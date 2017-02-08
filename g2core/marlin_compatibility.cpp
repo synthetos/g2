@@ -151,11 +151,14 @@ void _report_position(char *(&str)) {
  */
 stat_t marlin_verify_checksum(char *str)
 {
-    if (*str != 'N') { return STAT_OK; } // we only check if we have a line number
+    bool has_line_number = false; // -1 means we don't have one
+    if (*str == 'N') {
+        has_line_number = true;
+    }
 
     char checksum = 0;
     char c = *str++;
-    while (c && (c != '*')) {
+    while (c && (c != '*') && (c != '\n') && (c != '\r')) {
         checksum ^= c;
         c = *str++;
     }
@@ -166,6 +169,9 @@ stat_t marlin_verify_checksum(char *str)
         *(str-1) = 0; // null terminate, the parser won't like this * here!
         if (strtol(str, NULL, 10) != checksum) {
             return STAT_CHECKSUM_MATCH_FAILED;
+        }
+        if (!has_line_number) {
+            return STAT_MISSING_LINE_NUMBER_WITH_CHECKSUM;
         }
     }
     return STAT_OK;
@@ -261,6 +267,8 @@ void marlin_response(const stat_t status, char *buf)
     char buffer[128];
     char *str = buffer;
 
+    bool request_resend = false;
+
     if (cs.responses_suppressed) {
         return;
     }
@@ -283,9 +291,19 @@ void marlin_response(const stat_t status, char *buf)
 //        }
 //        sprintf(p, "\n");
 
-    } else {
-//        str += sprintf(p, "echo:M%d %s", (int)status, get_status_message(status), buf);
-        str += sprintf(str, "Error:%d %s", (int)status, get_status_message(status));
+    }
+    else if (status == STAT_CHECKSUM_MATCH_FAILED) {
+        str_concat(str, "Error:checksum mismatch, Last Line: ");
+        str += inttoa(str, cm.gmx.last_line_number);
+        request_resend = true;
+    }
+    else if (status == STAT_LINE_NUMBER_OUT_OF_SEQUENCE) {
+        str_concat(str, "Error:Line Number is not Last Line Number+1, Last Line: ");
+        str += inttoa(str, cm.gmx.last_line_number);
+        request_resend = true;
+    }
+    else {
+        str += sprintf(str, "Error:%s", get_status_message(status));
     }
 
     *str++ = '\n';
@@ -296,6 +314,16 @@ void marlin_response(const stat_t status, char *buf)
     position_requested = false;
 
     xio_writeline(buffer);
+
+
+    if (request_resend) {
+        str = buffer;
+        str_concat(str, "Resend: ");
+        str += inttoa(str, cm.gmx.last_line_number+1);
+        *str++ = '\n';
+        *str++ = 0;
+        xio_writeline(buffer);
+    }
 }
 
 
