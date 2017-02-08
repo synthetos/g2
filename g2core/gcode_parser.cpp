@@ -580,7 +580,7 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
                     break;
                 }
 				case 49: SET_NON_MODAL (next_action, NEXT_ACTION_CANCEL_TL_OFFSET);
-                case 53: SET_NON_MODAL (absolute_override, true);
+                case 53: SET_NON_MODAL (absolute_override, ABSOLUTE_OVERRIDE_ON_AND_DISPLAY);
                 case 54: SET_MODAL (MODAL_GROUP_G12, coord_system, G54);
                 case 55: SET_MODAL (MODAL_GROUP_G12, coord_system, G55);
                 case 56: SET_MODAL (MODAL_GROUP_G12, coord_system, G56);
@@ -826,7 +826,7 @@ static stat_t _execute_gcode_block(char *active_comment)
 //      case NEXT_ACTION_JSON_COMMAND_IMMEDIATE:  { status = mp_json_command_immediate(active_comment); break;} // M102
 
         case NEXT_ACTION_DEFAULT: {
-            cm_set_absolute_override(MODEL, gv.absolute_override);    // apply absolute override
+            cm_set_absolute_override(MODEL, gv.absolute_override); // apply absolute override & display as absolute
             switch (gv.motion_mode) {
                 case MOTION_MODE_CANCEL_MOTION_MODE: { cm->gm.motion_mode = gv.motion_mode; break;}             // G80
                 case MOTION_MODE_STRAIGHT_TRAVERSE:  { status = cm_straight_traverse(gv.target, gf.target); break;} // G0
@@ -842,7 +842,7 @@ static stat_t _execute_gcode_block(char *active_comment)
                                           }
                 default: break;
             }
-            cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_OFF);     // un-set absolute override once the move is planned
+            cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_OFF);  // un-set absolute override once the move is planned
         }
     }
 

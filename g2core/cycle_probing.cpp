@@ -324,6 +324,7 @@ static stat_t _probe_axis_move(const float target[], bool exact_position) {
     if (exact_position) {
         cm->gm.units_mode    = stored_units_mode;
         cm->gm.distance_mode = stored_distance_mode;
+        cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_OFF);  // ++++
     }
 
     // the last two arguments are ignored anyway

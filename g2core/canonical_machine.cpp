@@ -367,7 +367,7 @@ void cm_set_tool_number(GCodeState_t *gcode_state, const uint8_t tool)
 void cm_set_absolute_override(GCodeState_t *gcode_state, const uint8_t absolute_override)
 {
     gcode_state->absolute_override = (cmAbsoluteOverride)absolute_override;
-//    cm_set_work_offsets(MODEL);         // must reset offsets if you change absolute override
+    cm_set_work_offsets(MODEL);         // must reset offsets if you change absolute override
 }
 
 void cm_set_model_linenum(const uint32_t linenum)
@@ -410,16 +410,22 @@ void cm_set_model_linenum(const uint32_t linenum)
  *  which merely returns what's in the work_offset[] array.
  *
  *  Takes G5x, G92 into account to return the active offset for this move.
- *  If absolute_override is provided and is ON it will zero offsets for an absolute override move.
- *  If you don;t want that, just set absolute_override false in the function call.
+ *
+ *  Absolute Override is the Gcode G53 convention to allow one and only one Gcode block 
+ *  to be run in absolute coordinates, regardless of coordinate offsets, G92 offsets, and 
+ *  tool offsets. If absolute_override is set to ABSOLUTE_OVERRIDE_ON_AND_DISPLAY this  
+ *  function will return 0.0 for the offset value. This bit is here to support G28 and G30 
+ *  return moves and other moves that run in absolute override mode but may want position 
+ *  to be reported using all current offsets (work offsets), versus an explicit G53 move that 
+ *  should be displayed in absolute coordinates.
  */
 
-float cm_get_active_coord_offset(const uint8_t axis, const bool use_absolute_override)
+float cm_get_active_coord_offset(const uint8_t axis, const bool absolute)
 {
-    if (use_absolute_override) {
-        if (cm->gm.absolute_override == use_absolute_override) { // no offset if in absolute override mode
-            return (0.0);
-        }
+    // if absolute override is on and is to be displayed with no offsets: 
+//    if (cm->gm.absolute_override == ABSOLUTE_OVERRIDE_ON_AND_DISPLAY) { 
+    if (absolute & (cm->gm.absolute_override == ABSOLUTE_OVERRIDE_ON)) {
+        return (0.0);
     }
     float offset = cm->offset[cm->gm.coord_system][axis] + cm->tl_offset[axis];
     if (cm->gmx.origin_offset_enable == true) {
@@ -823,7 +829,7 @@ stat_t cm_set_arc_distance_mode(const uint8_t mode)
  *  during the Gcode cycle. The persist flag is used to persist offsets once the cycle
  *  has ended. You can also use $g54x - $g59c config functions to change offsets.
  *
- *  It also does not reset the work_offsets which may be accomplished by calling
+ *  It also does not reset the work offsets which may be accomplished by calling
  *  cm_set_work_offsets() immediately afterwards.
  */
 
@@ -934,6 +940,7 @@ stat_t cm_cancel_tl_offset()
 stat_t cm_set_coord_system(const uint8_t coord_system)  // set coordinate system sync'd with planner
 {
     cm->gm.coord_system = (cmCoordSystem)coord_system;
+    cm_set_work_offsets(MODEL);         // must reset offsets if you change coordinate system //++++++
 
     float value[] = { (float)coord_system };
     mp_queue_command(_exec_offset, value, nullptr);
@@ -949,7 +956,6 @@ static void _exec_offset(float *value, bool *flag)
                         (cm->gmx.origin_offset[axis] * cm->gmx.origin_offset_enable);
     }
     mp_set_runtime_work_offset(offsets);
-    cm_set_work_offsets(MODEL);                             // set work offsets in the Gcode model
 }
 
 /*
@@ -1138,7 +1144,7 @@ stat_t _goto_stored_position(const float stored_position[],     // always in mm
     // If G20 adjust stored position (always in mm) to inches so traverse will be correct
     float target[AXES]; // make a local stored position as it may be modified
     copy_vector(target, stored_position);
-    if (cm->gm.units_mode == INCHES) {
+       if (cm->gm.units_mode == INCHES) {
         for (uint8_t i=0; i<AXES; i++) {
             target[i] *= INCHES_PER_MM;
         }

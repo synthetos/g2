@@ -119,8 +119,9 @@ typedef enum {
 #define COORD_SYSTEM_MAX G59 // set this manually to the last one
 
 typedef enum {
-    ABSOLUTE_OVERRIDE_OFF = 0,// G53 enabled
-    ABSOLUTE_OVERRIDE_ON
+    ABSOLUTE_OVERRIDE_OFF = 0,          // G53 disabled
+    ABSOLUTE_OVERRIDE_ON,               // G53 enabled for movement
+    ABSOLUTE_OVERRIDE_ON_AND_DISPLAY    // G53 enabled for movement and display
 } cmAbsoluteOverride;
 
 typedef enum {              // G Modal Group 13
@@ -215,7 +216,7 @@ typedef struct GCodeState {             // Gcode model state - used by model, pl
 
     float target[AXES];                 // XYZABC where the move should go
     float target_comp[AXES];            // summation compensation (Kahan) overflow value
-    float work_offset[AXES];            // offset from the work coordinate system (for reporting only)
+    float work_offset[AXES];            // work offsets from the machine coordinate system (for reporting only)
 
     float feed_rate;                    // F - normalized to millimeters/minute or in inverse time mode
     float P_word;                       // P - parameter used for dwell time in seconds, G10 coord select...
