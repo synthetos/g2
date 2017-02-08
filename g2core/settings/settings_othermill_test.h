@@ -47,13 +47,9 @@
 #define ESC_BOOT_TIME               5000    // how long the ESC takes to boot, in milliseconds
 #define ESC_LOCKOUT_TIME            900     // how long the interlock needs to be engaged before killing power... actually 1s, but be conservative
 
-#define COOLANT_MIST_POLARITY       1       // 0=active low, 1=active high
-#define COOLANT_FLOOD_POLARITY      1       // 0=active low, 1=active high
-#define COOLANT_PAUSE_ON_HOLD       true
-
-// WARNING: Older Othermill machines use a 15deg can stack for their Z axis.
-// new machines use a stepper which has the same config as the other axis.
-//#define HAS_CANSTACK_Z_AXIS 0
+#define COOLANT_MIST_POLARITY 1   // 0=active low, 1=active high
+#define COOLANT_FLOOD_POLARITY 1  // 0=active low, 1=active high
+#define COOLANT_PAUSE_ON_HOLD true
 
 // Communications and reporting settings
 
@@ -292,7 +288,7 @@
 // Zmin                             // Z probe
 #define DI5_MODE                    IO_ACTIVE_LOW
 #define DI5_ACTION                  INPUT_ACTION_NONE
-#define DI5_FUNCTION                INPUT_FUNCTION_NONE
+#define DI5_FUNCTION                INPUT_FUNCTION_PROBE
 
 // Zmax                             // Z homing - see Z axis for setup
 #define DI6_MODE                    NORMALLY_CLOSED
@@ -333,17 +329,22 @@
 #define P1_MAPPING_CUBIC_X1         8.5854646785876479e-005
 #define P1_MAPPING_CUBIC_X0         -2.1301489219406905e-001
 
-// *** DEFAULT COORDINATE SYSTEM OFFSETS ***
+/*** User-Defined Data Defaults ***/
 /*
-constexpr float H1_DEFAULT_P = 7.0;
-constexpr float H1_DEFAULT_I = 0.2;
-constexpr float H1_DEFAULT_D = 100.0;
-
-constexpr float H2_DEFAULT_P = 7.0;
-constexpr float H2_DEFAULT_I = 0.2;
-constexpr float H2_DEFAULT_D = 100.0;
-
-constexpr float H3_DEFAULT_P = 7.0;
-constexpr float H3_DEFAULT_I = 0.2;
-constexpr float H3_DEFAULT_D = 100.0;
+#define USER_DATA_A0 0
+#define USER_DATA_A1 0
+#define USER_DATA_A2 0
+#define USER_DATA_A3 0
+#define USER_DATA_B0 0
+#define USER_DATA_B1 0
+#define USER_DATA_B2 0
+#define USER_DATA_B3 0
+#define USER_DATA_C0 0
+#define USER_DATA_C1 0
+#define USER_DATA_C2 0
+#define USER_DATA_C3 0
+#define USER_DATA_D0 0
+#define USER_DATA_D1 0
+#define USER_DATA_D2 0
+#define USER_DATA_D3 0
 */

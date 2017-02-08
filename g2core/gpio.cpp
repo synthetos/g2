@@ -335,11 +335,21 @@ void gpio_init(void)
 
 void outputs_reset(void) {
     // If the output is ACTIVE_LOW set it to 1. ACTIVE_HIGH gets set to 0.
+#if D_OUT_CHANNELS >= 1
     if (d_out[1-1].mode  != IO_MODE_DISABLED) { (output_1_pin    = (d_out[1-1].mode  == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
+#endif
+#if D_OUT_CHANNELS >= 2
     if (d_out[2-1].mode  != IO_MODE_DISABLED) { (output_2_pin    = (d_out[2-1].mode  == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
+#endif
+#if D_OUT_CHANNELS >= 3
     if (d_out[3-1].mode  != IO_MODE_DISABLED) { (output_3_pin    = (d_out[3-1].mode  == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
+#endif
+#if D_OUT_CHANNELS >= 4
     if (d_out[4-1].mode  != IO_MODE_DISABLED) { (output_4_pin    = (d_out[4-1].mode  == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
+#endif
+#if D_OUT_CHANNELS >= 5
     if (d_out[5-1].mode  != IO_MODE_DISABLED) { (output_5_pin    = (d_out[5-1].mode  == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
+#endif
 #if D_OUT_CHANNELS >= 6
     if (d_out[6-1].mode  != IO_MODE_DISABLED) { (output_6_pin    = (d_out[6-1].mode  == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
 #endif
@@ -422,6 +432,7 @@ void gpio_reset(void)
 /*
  * gpio_set_homing_mode()   - set/clear input to homing mode
  * gpio_set_probing_mode()  - set/clear input to probing mode
+ * gpio_get_probing_input() - get probing input
  * gpio_read_input()        - read conditioned input
  *
  (* Note: input_num_ext means EXTERNAL input number -- 1-based
@@ -440,6 +451,16 @@ void  gpio_set_probing_mode(const uint8_t input_num_ext, const bool is_probing)
         return;
     }
     d_in[input_num_ext-1].probing_mode = is_probing;
+}
+
+int8_t gpio_get_probing_input(void) 
+{
+    for (uint8_t i = 0; i <= D_IN_CHANNELS; i++) {
+        if (d_in[i-1].function == INPUT_FUNCTION_PROBE) {
+            return (i);
+        }
+    }
+    return (-1);
 }
 
 bool gpio_read_input(const uint8_t input_num_ext)
@@ -666,9 +687,9 @@ stat_t io_set_output(nvObj_t *nv)
 
 #ifdef __TEXT_MODE
 
-    static const char fmt_gpio_mo[] = "[%smo] input mode%17d [0=NO,1=NC,2=disabled]\n";
+    static const char fmt_gpio_mo[] = "[%smo] input mode%17d [0=active-low,1=active-hi,2=disabled]\n";
     static const char fmt_gpio_ac[] = "[%sac] input action%15d [0=none,1=stop,2=fast_stop,3=halt,4=alarm,5=shutdown,6=panic,7=reset]\n";
-    static const char fmt_gpio_fn[] = "[%sfn] input function%13d [0=none,1=limit,2=interlock,3=shutdown]\n";
+    static const char fmt_gpio_fn[] = "[%sfn] input function%13d [0=none,1=limit,2=interlock,3=shutdown,4=probe]\n";
     static const char fmt_gpio_in[] = "Input %s state: %5d\n";
 
     static const char fmt_gpio_domode[] = "[%smo] output mode%16d [0=active low,1=active high,2=disabled]\n";

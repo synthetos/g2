@@ -283,6 +283,7 @@ char *get_status_message(stat_t status);
 
 /* reserved for Gcode or other program errors */
 
+#define STAT_ERROR_182 182
 #define STAT_ERROR_183 183
 #define STAT_ERROR_184 184
 #define STAT_ERROR_185 185
@@ -363,9 +364,9 @@ char *get_status_message(stat_t status);
 
 #define STAT_PROBE_CYCLE_FAILED 250             // probing cycle did not complete
 #define STAT_PROBE_TRAVEL_TOO_SMALL 251
-#define STAT_NO_PROBE_SWITCH_CONFIGURED 252
+#define STAT_NO_PROBE_INPUT_CONFIGURED 252
 #define STAT_MULTIPLE_PROBE_SWITCHES_CONFIGURED 253
-#define STAT_PROBE_SWITCH_ON_ABC_AXIS 254
+#define STAT_PROBE_IS_ALREADY_TRIPPED 254
 
 #define STAT_ERROR_255 255
 
@@ -654,7 +655,7 @@ static const char stat_250[] = "Probe cycle failed";
 static const char stat_251[] = "Probe travel is too small";
 static const char stat_252[] = "No probe switch configured";
 static const char stat_253[] = "Multiple probe switches configured";
-static const char stat_254[] = "Probe switch configured on ABC axis";
+static const char stat_254[] = "Probe is already tripped";
 static const char stat_255[] = "255";
 
 static const char *const stat_msg[] = {

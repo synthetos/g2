@@ -94,6 +94,7 @@
 #include "controller.h"
 #include "json_parser.h"
 #include "text_parser.h"
+#include "settings.h"
 
 #include "plan_arc.h"
 #include "planner.h"
@@ -738,6 +739,8 @@ void cm_set_model_target(const float target[], const bool flags[])
 }
 
 /*
+ * cm_get_soft_limits()
+ * cm_set_soft_limits()
  * cm_test_soft_limits() - return error code if soft limit is exceeded
  *
  *  The target[] arg must be in absolute machine coordinates. Best done after cm_set_model_target().
@@ -747,6 +750,9 @@ void cm_set_model_target(const float target[], const bool flags[])
  *  a min or a max if the value is more than +/- 1000000 (plus or minus 1 million ).
  *  This allows a single end to be tested w/the other disabled, should that requirement ever arise.
  */
+
+bool cm_get_soft_limits() { return (cm->soft_limit_enable); }
+void cm_set_soft_limits(bool enable) { cm->soft_limit_enable = enable; }
 
 static stat_t _finalize_soft_limits(const stat_t status)
 {
@@ -780,7 +786,6 @@ stat_t cm_test_soft_limits(const float target[])
  ***********************************************************************************
  *  Organized by section number in the order they are found in NIST RS274 NGCv3
  **********************************************************************************/
-
 
 /***********************************************************************************
  **** Representation (4.3.3) *******************************************************
@@ -1105,9 +1110,8 @@ stat_t cm_straight_traverse(const float target[], const bool flags[])
     cm->gm.motion_mode = MOTION_MODE_STRAIGHT_TRAVERSE;
 
     // it's legal for a G0 to have no axis words but we don't want to process it
-    if (!(flags[AXIS_X] || flags[AXIS_Y] || flags[AXIS_Z] ||
-          flags[AXIS_A] || flags[AXIS_B] || flags[AXIS_C])) {
-          return(STAT_OK);
+    if (!(flags[AXIS_X] | flags[AXIS_Y] | flags[AXIS_Z] | flags[AXIS_A] | flags[AXIS_B] | flags[AXIS_C])) {
+        return(STAT_OK);
     }
 
     cm_set_model_target(target, flags);
@@ -1260,10 +1264,8 @@ stat_t cm_straight_feed(const float target[], const bool flags[])
     }
     cm->gm.motion_mode = MOTION_MODE_STRAIGHT_FEED;
 
-    // it's legal for a G1 to have no axis words but we don't want to process it
-    if (!(flags[AXIS_X] || flags[AXIS_Y] || flags[AXIS_Z] ||
-          flags[AXIS_A] || flags[AXIS_B] || flags[AXIS_C])) {
-          return(STAT_OK);
+    if (!(flags[AXIS_X] | flags[AXIS_Y] | flags[AXIS_Z] | flags[AXIS_A] | flags[AXIS_B] | flags[AXIS_C])) {
+        return(STAT_OK);
     }
 
     cm_set_model_target(target, flags);
