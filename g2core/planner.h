@@ -311,7 +311,7 @@ struct mpBuffer_to_clear {
     float block_time_ms;
     float plannable_time_ms;        // time in planner
     float plannable_length;         // length in planner
-    uint8_t meet_iterations;        // iterations needed in _get_meet_velocity
+    int8_t meet_iterations;         // iterations needed in _get_meet_velocity
     //+++++ to here
 
     bufferState buffer_state;       // used to manage queuing/dequeuing
