@@ -303,7 +303,7 @@ static void _dispatch_kernel(const devflags_t flags)
             // We ae switching to marlin_comm_mode, kill status reports and queue reports
             sr.status_report_verbosity = SR_OFF;
             qr.queue_report_verbosity = QR_OFF;
-            marlin_response(gcode_parser(cs.bufp), cs.saved_buf);
+            marlin_response(status, cs.saved_buf);
             return;
         }
 #endif
@@ -349,7 +349,7 @@ static stat_t _controller_state()
         _connection_timeout.set(10);
 #endif
     } else if ((cs.controller_state == CONTROLLER_STARTUP) && (_connection_timeout.isPast())) {        // first time through after reset
-        if (js.json_mode != MARLIN_COMM_MODE) { // MARLIN_COMM_MODE is always defined, just not always used
+        if (MARLIN_COMM_MODE != js.json_mode) { // MARLIN_COMM_MODE is always defined, just not always used
             _reset_comms_mode();
         }
         cs.controller_state = CONTROLLER_READY;
