@@ -432,6 +432,9 @@ void cm_set_model_linenum(const uint32_t linenum)
  
 float cm_get_combined_offset(const uint8_t axis)
 {
+    if (cm->gm.absolute_override >= ABSOLUTE_OVERRIDE_ON) {
+        return (0);
+    }
     float offset = cm->coord_offset[cm->gm.coord_system][axis] + cm->tool_offset[axis];
     if (cm->gmx.origin_offset_enable == true) {
         offset += cm->gmx.origin_offset[axis];
@@ -451,10 +454,17 @@ void cm_set_display_offsets(GCodeState_t *gcode_state)
         // if absolute override is on and position is to be displayed with no offsets
         if (cm->gm.absolute_override == ABSOLUTE_OVERRIDE_ON_AND_DISPLAY) {
             gcode_state->display_offset[axis] = 0;
-        } else {
-            gcode_state->display_offset[axis] = cm_get_combined_offset(axis);
+        } 
+
+        // if position is to be displayed with currently active offsets
+        else {
+            gcode_state->display_offset[axis] = cm->coord_offset[cm->gm.coord_system][axis] + 
+                                                cm->tool_offset[axis];
+            if (cm->gmx.origin_offset_enable == true) {
+                gcode_state->display_offset[axis] += cm->gmx.origin_offset[axis];
+            }
         }
-    }    
+    }
 }
 
 /*
