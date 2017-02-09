@@ -187,7 +187,7 @@ typedef struct cmArc {                      // planner and runtime variables for
     uint8_t run_state;                      // runtime state machine sequence
 
     float position[AXES];                   // accumulating runtime position
-    float offset[3];                        // arc IJK offsets
+    float ijk_offset[3];                    // arc IJK offsets
 
     float length;                           // length of line or helix in mm
     float radius;                           // Raw R value, or computed via offsets
@@ -227,8 +227,8 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     bool safety_interlock_enable;           // true to enable safety interlock system
 
     // Coordinate systems and offsets
-    float offset[COORDS+1][AXES];           // persistent coordinate offsets: absolute (G53) + G54,G55,G56,G57,G58,G59
-    float tl_offset[AXES];                  // current tool length offset
+    float coord_offset[COORDS+1][AXES];     // persistent coordinate offsets: absolute (G53) + G54,G55,G56,G57,G58,G59
+    float tool_offset[AXES];                // current tool offset
 
     // Axis settings
     cfgAxis_t a[AXES];
@@ -334,11 +334,11 @@ void cm_set_absolute_override(GCodeState_t *gcode_state, const uint8_t absolute_
 void cm_set_model_linenum(const uint32_t linenum);
 
 // Coordinate systems and offsets
-float cm_get_active_coord_offset(const uint8_t axis, const bool absolute);
-float cm_get_work_offset(const GCodeState_t *gcode_state, const uint8_t axis);
-void cm_set_work_offsets(GCodeState_t *gcode_state);
+float cm_get_combined_offset(const uint8_t axis);
+float cm_get_display_offset(const GCodeState_t *gcode_state, const uint8_t axis);
+void cm_set_display_offsets(GCodeState_t *gcode_state);
+float cm_get_display_position(const GCodeState_t *gcode_state, const uint8_t axis);
 float cm_get_absolute_position(const GCodeState_t *gcode_state, const uint8_t axis);
-float cm_get_work_position(const GCodeState_t *gcode_state, const uint8_t axis);
 
 // Critical helpers
 void cm_update_model_position_from_runtime(void);

@@ -591,8 +591,8 @@ bool mp_free_run_buffer(void);
 void mp_zero_segment_velocity(void);                    // getters and setters...
 float mp_get_runtime_velocity(void);
 float mp_get_runtime_absolute_position(mpPlannerRuntime_t *_mr, uint8_t axis);
-float mp_get_runtime_work_position(uint8_t axis);
-void mp_set_runtime_work_offset(float offset[]);
+float mp_get_runtime_display_position(uint8_t axis);
+void mp_set_runtime_display_offset(float offset[]);
 bool mp_get_runtime_busy(void);
 bool mp_runtime_is_idle(void);
 

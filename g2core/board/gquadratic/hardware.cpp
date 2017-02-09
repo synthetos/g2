@@ -92,7 +92,7 @@ void hardware_init()
 
 stat_t hardware_periodic()
 {
-    float x_pos = cm_get_work_position(ACTIVE_MODEL, AXIS_X);
+    float x_pos = cm_get_display_position(ACTIVE_MODEL, AXIS_X);
     if (fabs(LEDs::old_x_pos - x_pos) > 0.01) {
         LEDs::old_x_pos = x_pos;
 

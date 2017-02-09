@@ -160,20 +160,20 @@ const cfgItem_t cfgArray[] = {
     { "ofs","ofsc",_f0, 5, cm_print_ofs, cm_get_ofs, set_ro, (float *)&cs.null, 0 },   // C work offset
 
     { "hom","home",_f0, 0, cm_print_home,cm_get_home,cm_set_home,(float *)&cs.null,0 }, // homing state, invoke homing cycle
-    { "hom","homx",_f0, 0, cm_print_hom, cm_get_hom, set_ro, (float *)&cs.null, 0 },   // X homed - Homing status group
-    { "hom","homy",_f0, 0, cm_print_hom, cm_get_hom, set_ro, (float *)&cs.null, 0 },   // Y homed
-    { "hom","homz",_f0, 0, cm_print_hom, cm_get_hom, set_ro, (float *)&cs.null, 0 },   // Z homed
-    { "hom","homa",_f0, 0, cm_print_hom, cm_get_hom, set_ro, (float *)&cs.null, 0 },   // A homed
-    { "hom","homb",_f0, 0, cm_print_hom, cm_get_hom, set_ro, (float *)&cs.null, 0 },   // B homed
-    { "hom","homc",_f0, 0, cm_print_hom, cm_get_hom, set_ro, (float *)&cs.null, 0 },   // C homed
+    { "hom","homx",_f0, 0, cm_print_hom, cm_get_hom, set_ro, (float *)&cs.null, 0 },    // X homed - Homing status group
+    { "hom","homy",_f0, 0, cm_print_hom, cm_get_hom, set_ro, (float *)&cs.null, 0 },    // Y homed
+    { "hom","homz",_f0, 0, cm_print_hom, cm_get_hom, set_ro, (float *)&cs.null, 0 },    // Z homed
+    { "hom","homa",_f0, 0, cm_print_hom, cm_get_hom, set_ro, (float *)&cs.null, 0 },    // A homed
+    { "hom","homb",_f0, 0, cm_print_hom, cm_get_hom, set_ro, (float *)&cs.null, 0 },    // B homed
+    { "hom","homc",_f0, 0, cm_print_hom, cm_get_hom, set_ro, (float *)&cs.null, 0 },    // C homed
 
-    { "prb","prbe",_f0, 0, tx_print_nul, cm_get_prob,set_ro, (float *)&cs.null, 0 },   // probing state
-    { "prb","prbx",_f0, 5, tx_print_nul, cm_get_prb, set_ro, (float *)&cs.null, 0 },   // X probe results
-    { "prb","prby",_f0, 5, tx_print_nul, cm_get_prb, set_ro, (float *)&cs.null, 0 },   // Y probe results
-    { "prb","prbz",_f0, 5, tx_print_nul, cm_get_prb, set_ro, (float *)&cs.null, 0 },   // Z probe results
-    { "prb","prba",_f0, 5, tx_print_nul, cm_get_prb, set_ro, (float *)&cs.null, 0 },   // A probe results
-    { "prb","prbb",_f0, 5, tx_print_nul, cm_get_prb, set_ro, (float *)&cs.null, 0 },   // B probe results
-    { "prb","prbc",_f0, 5, tx_print_nul, cm_get_prb, set_ro, (float *)&cs.null, 0 },   // C probe results
+    { "prb","prbe",_f0, 0, tx_print_nul, cm_get_prob,set_ro, (float *)&cs.null, 0 },    // probing state
+    { "prb","prbx",_f0, 5, tx_print_nul, cm_get_prb, set_ro, (float *)&cs.null, 0 },    // X probe results
+    { "prb","prby",_f0, 5, tx_print_nul, cm_get_prb, set_ro, (float *)&cs.null, 0 },    // Y probe results
+    { "prb","prbz",_f0, 5, tx_print_nul, cm_get_prb, set_ro, (float *)&cs.null, 0 },    // Z probe results
+    { "prb","prba",_f0, 5, tx_print_nul, cm_get_prb, set_ro, (float *)&cs.null, 0 },    // A probe results
+    { "prb","prbb",_f0, 5, tx_print_nul, cm_get_prb, set_ro, (float *)&cs.null, 0 },    // B probe results
+    { "prb","prbc",_f0, 5, tx_print_nul, cm_get_prb, set_ro, (float *)&cs.null, 0 },    // C probe results
 
     { "jog","jogx",_f0, 0, tx_print_nul, get_nul, cm_run_jog, (float *)&cs.null, 0},    // jog in X axis
     { "jog","jogy",_f0, 0, tx_print_nul, get_nul, cm_run_jog, (float *)&cs.null, 0},    // jog in Y axis
@@ -182,58 +182,8 @@ const cfgItem_t cfgArray[] = {
     { "jog","jogb",_f0, 0, tx_print_nul, get_nul, cm_run_jog, (float *)&cs.null, 0},    // jog in B axis
     { "jog","jogc",_f0, 0, tx_print_nul, get_nul, cm_run_jog, (float *)&cs.null, 0},    // jog in C axis
 
-	{ "pwr","pwr1",_f0, 3, st_print_pwr, st_get_pwr, set_ro, (float *)&cs.null, 0},	// motor power readouts
+	{ "pwr","pwr1",_f0, 3, st_print_pwr, st_get_pwr, set_ro, (float *)&cs.null, 0},	    // motor power readouts
 	{ "pwr","pwr2",_f0, 3, st_print_pwr, st_get_pwr, set_ro, (float *)&cs.null, 0},
-/*=======
-    { "mpo","mpox",_f0, 3, cm_print_mpo, cm_get_mpo, set_ro, (float *)&cs.null, 0 },        // X machine position
-    { "mpo","mpoy",_f0, 3, cm_print_mpo, cm_get_mpo, set_ro, (float *)&cs.null, 0 },        // Y machine position
-    { "mpo","mpoz",_f0, 3, cm_print_mpo, cm_get_mpo, set_ro, (float *)&cs.null, 0 },        // Z machine position
-    { "mpo","mpoa",_f0, 3, cm_print_mpo, cm_get_mpo, set_ro, (float *)&cs.null, 0 },        // A machine position
-    { "mpo","mpob",_f0, 3, cm_print_mpo, cm_get_mpo, set_ro, (float *)&cs.null, 0 },        // B machine position
-    { "mpo","mpoc",_f0, 3, cm_print_mpo, cm_get_mpo, set_ro, (float *)&cs.null, 0 },        // C machine position
-
-    { "pos","posx",_f0, 3, cm_print_pos, cm_get_pos, set_ro, (float *)&cs.null, 0 },        // X work position
-    { "pos","posy",_f0, 3, cm_print_pos, cm_get_pos, set_ro, (float *)&cs.null, 0 },        // Y work position
-    { "pos","posz",_f0, 3, cm_print_pos, cm_get_pos, set_ro, (float *)&cs.null, 0 },        // Z work position
-    { "pos","posa",_f0, 3, cm_print_pos, cm_get_pos, set_ro, (float *)&cs.null, 0 },        // A work position
-    { "pos","posb",_f0, 3, cm_print_pos, cm_get_pos, set_ro, (float *)&cs.null, 0 },        // B work position
-    { "pos","posc",_f0, 3, cm_print_pos, cm_get_pos, set_ro, (float *)&cs.null, 0 },        // C work position
-
-    { "ofs","ofsx",_f0, 3, cm_print_ofs, cm_get_ofs, set_ro, (float *)&cs.null, 0 },        // X work offset
-    { "ofs","ofsy",_f0, 3, cm_print_ofs, cm_get_ofs, set_ro, (float *)&cs.null, 0 },        // Y work offset
-    { "ofs","ofsz",_f0, 3, cm_print_ofs, cm_get_ofs, set_ro, (float *)&cs.null, 0 },        // Z work offset
-    { "ofs","ofsa",_f0, 3, cm_print_ofs, cm_get_ofs, set_ro, (float *)&cs.null, 0 },        // A work offset
-    { "ofs","ofsb",_f0, 3, cm_print_ofs, cm_get_ofs, set_ro, (float *)&cs.null, 0 },        // B work offset
-    { "ofs","ofsc",_f0, 3, cm_print_ofs, cm_get_ofs, set_ro, (float *)&cs.null, 0 },        // C work offset
-
-    { "hom","home",_f0, 0, cm_print_home,cm_get_home,set_01,(float *)&cm.homing_state, 0 },     // homing state, invoke homing cycle
-    { "hom","homx",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_X], false },  // X homed - Homing status group
-    { "hom","homy",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_Y], false },  // Y homed
-    { "hom","homz",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_Z], false },  // Z homed
-    { "hom","homa",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_A], false },  // A homed
-    { "hom","homb",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_B], false },  // B homed
-    { "hom","homc",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_C], false },  // C homed
-
-    { "prb","prbe",_f0, 0, tx_print_nul, get_ui8, set_ro, (float *)&cm.probe_state[0], 0 },     // probing state
-    { "prb","prbx",_f0, 3, tx_print_nul, get_flt, set_ro, (float *)&cm.probe_results[0][AXIS_X], 0 },
-    { "prb","prby",_f0, 3, tx_print_nul, get_flt, set_ro, (float *)&cm.probe_results[0][AXIS_Y], 0 },
-    { "prb","prbz",_f0, 3, tx_print_nul, get_flt, set_ro, (float *)&cm.probe_results[0][AXIS_Z], 0 },
-    { "prb","prba",_f0, 3, tx_print_nul, get_flt, set_ro, (float *)&cm.probe_results[0][AXIS_A], 0 },
-    { "prb","prbb",_f0, 3, tx_print_nul, get_flt, set_ro, (float *)&cm.probe_results[0][AXIS_B], 0 },
-    { "prb","prbc",_f0, 3, tx_print_nul, get_flt, set_ro, (float *)&cm.probe_results[0][AXIS_C], 0 },
-    { "prb","prbr",_f0, 0, tx_print_nul, cm_get_prbr, cm_get_prbr, nullptr, 0 },    // enable probe report. Init in cm_init
-
-    { "jog","jogx",_f0, 0, tx_print_nul, get_nul, cm_run_jogx, (float *)&cm.jogging_dest, 0},
-    { "jog","jogy",_f0, 0, tx_print_nul, get_nul, cm_run_jogy, (float *)&cm.jogging_dest, 0},
-    { "jog","jogz",_f0, 0, tx_print_nul, get_nul, cm_run_jogz, (float *)&cm.jogging_dest, 0},
-    { "jog","joga",_f0, 0, tx_print_nul, get_nul, cm_run_joga, (float *)&cm.jogging_dest, 0},
-//  { "jog","jogb",_f0, 0, tx_print_nul, get_nul, cm_run_jogb, (float *)&cm.jogging_dest, 0},
-//  { "jog","jogc",_f0, 0, tx_print_nul, get_nul, cm_run_jogc, (float *)&cm.jogging_dest, 0},
-
-	{ "pwr","pwr1",_f0, 3, st_print_pwr, st_get_pwr, set_ro,  (float *)&cs.null, 0},	// motor power readouts
-	{ "pwr","pwr2",_f0, 3, st_print_pwr, st_get_pwr, set_ro,  (float *)&cs.null, 0},
->>>>>>> refs/heads/dev-237-probing-improvements
-*/
 #if (MOTORS > 2)
 	{ "pwr","pwr3",_f0, 3, st_print_pwr, st_get_pwr, set_ro, (float *)&cs.null, 0},
 #endif

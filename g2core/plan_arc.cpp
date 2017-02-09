@@ -216,24 +216,24 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
 
     // *** now get down to the rest of the work setting up the arc for execution ***
     cm->gm.motion_mode = motion_mode;
-    cm_set_work_offsets(&cm->gm);                           // capture the fully resolved offsets to gm
+    cm_set_display_offsets(&cm->gm);                        // capture the fully resolved offsets to gm
     memcpy(&(cm->arc.gm), &cm->gm, sizeof(GCodeState_t));   // copy GCode context to arc singleton - some will be overwritten to run segments
     copy_vector(cm->arc.position, cm->gmx.position);        // set initial arc position from gcode model
 
     // setup offsets
-    cm->arc.offset[OFS_I] = _to_millimeters(offset[OFS_I]); // copy offsets with conversion to canonical form (mm)
-    cm->arc.offset[OFS_J] = _to_millimeters(offset[OFS_J]);
-    cm->arc.offset[OFS_K] = _to_millimeters(offset[OFS_K]);
+    cm->arc.ijk_offset[OFS_I] = _to_millimeters(offset[OFS_I]); // copy offsets with conversion to canonical form (mm)
+    cm->arc.ijk_offset[OFS_J] = _to_millimeters(offset[OFS_J]);
+    cm->arc.ijk_offset[OFS_K] = _to_millimeters(offset[OFS_K]);
 
     if (cm->arc.gm.arc_distance_mode == ABSOLUTE_DISTANCE_MODE) { // adjust offsets if in absolute mode
-         cm->arc.offset[OFS_I] -= cm->arc.position[AXIS_X];
-         cm->arc.offset[OFS_J] -= cm->arc.position[AXIS_Y];
-         cm->arc.offset[OFS_K] -= cm->arc.position[AXIS_Z];
+         cm->arc.ijk_offset[OFS_I] -= cm->arc.position[AXIS_X];
+         cm->arc.ijk_offset[OFS_J] -= cm->arc.position[AXIS_Y];
+         cm->arc.ijk_offset[OFS_K] -= cm->arc.position[AXIS_Z];
     }
 
-    if ((fp_ZERO(cm->arc.offset[OFS_I])) &&                 // it's an error if no offsets are provided
-        (fp_ZERO(cm->arc.offset[OFS_J])) &&
-        (fp_ZERO(cm->arc.offset[OFS_K]))) {
+    if ((fp_ZERO(cm->arc.ijk_offset[OFS_I])) &&                 // it's an error if no offsets are provided
+        (fp_ZERO(cm->arc.ijk_offset[OFS_J])) &&
+        (fp_ZERO(cm->arc.ijk_offset[OFS_K]))) {
         return (cm_alarm(STAT_ARC_OFFSETS_MISSING_FOR_SELECTED_PLANE, "arc offsets missing or zero"));
     }
 
@@ -278,7 +278,7 @@ static stat_t _compute_arc(const bool radius_f)
     if (radius_f) {                         // indicates a radius arc
         _compute_arc_offsets_from_radius();
     } else {                                // compute start radius
-        cm->arc.radius = hypotf(-cm->arc.offset[cm->arc.plane_axis_0], -cm->arc.offset[cm->arc.plane_axis_1]);
+        cm->arc.radius = hypotf(-cm->arc.ijk_offset[cm->arc.plane_axis_0], -cm->arc.ijk_offset[cm->arc.plane_axis_1]);
     }
 
     // Test arc specification for correctness according to:
@@ -290,11 +290,11 @@ static stat_t _compute_arc(const bool radius_f)
     // Compute end radius from the center of circle (offsets) to target endpoint
     float end_0 = cm->arc.gm.target[cm->arc.plane_axis_0] - 
                   cm->arc.position[cm->arc.plane_axis_0] - 
-                  cm->arc.offset[cm->arc.plane_axis_0];
+                  cm->arc.ijk_offset[cm->arc.plane_axis_0];
                   
     float end_1 = cm->arc.gm.target[cm->arc.plane_axis_1] - 
                   cm->arc.position[cm->arc.plane_axis_1] - 
-                  cm->arc.offset[cm->arc.plane_axis_1];
+                  cm->arc.ijk_offset[cm->arc.plane_axis_1];
                   
     float err = fabs(hypotf(end_0, end_1) - cm->arc.radius);   // end radius - start radius
     if ((err > ARC_RADIUS_ERROR_MAX) ||
@@ -305,7 +305,7 @@ static stat_t _compute_arc(const bool radius_f)
     // Compute the angular travel
     // Calculate the theta angle of the current position (theta is also needed for calculating center point)
     // Note: gcc atan2 reverses args, i.e.: atan2(Y,X)
-    cm->arc.theta = atan2(-cm->arc.offset[cm->arc.plane_axis_0], -cm->arc.offset[cm->arc.plane_axis_1]);
+    cm->arc.theta = atan2(-cm->arc.ijk_offset[cm->arc.plane_axis_0], -cm->arc.ijk_offset[cm->arc.plane_axis_1]);
 
     // Compute angular travel if not a full circle arc
     if (!cm->arc.full_circle) {
@@ -470,9 +470,9 @@ static void _compute_arc_offsets_from_radius()
     }
 
     // Complete the operation by calculating the actual center of the arc
-    cm->arc.offset[cm->arc.plane_axis_0] = (x-(y*h_x2_div_d))/2;
-    cm->arc.offset[cm->arc.plane_axis_1] = (y+(x*h_x2_div_d))/2;
-    cm->arc.offset[cm->arc.linear_axis] = 0;
+    cm->arc.ijk_offset[cm->arc.plane_axis_0] = (x-(y*h_x2_div_d))/2;
+    cm->arc.ijk_offset[cm->arc.plane_axis_1] = (y+(x*h_x2_div_d))/2;
+    cm->arc.ijk_offset[cm->arc.linear_axis] = 0;
 }
 
 /*

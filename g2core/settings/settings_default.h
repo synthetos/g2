@@ -133,11 +133,6 @@
 #define PROBE_REPORT_ENABLE         true    // {prbr: 
 #endif
 
-/* 
- * The following is to fix an issue where feedrate override was being defined in some users
- * settings files but not others. This would otherwise cause an undefined compile error.
- *
-*/
 #ifndef MANUAL_FEEDRATE_OVERRIDE_ENABLE
 #define MANUAL_FEEDRATE_OVERRIDE_ENABLE false
 #endif

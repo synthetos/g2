@@ -69,18 +69,18 @@ static void _set_bf_diagnostics(mpBuf_t* bf) {
  * mp_zero_segment_velocity()         - correct velocity in last segment for reporting purposes
  * mp_get_runtime_velocity()          - returns current velocity (aggregate)
  * mp_get_runtime_machine_position()  - returns current axis position in machine coordinates
- * mp_set_runtime_work_offset()       - set offsets in the MR struct
- * mp_get_runtime_work_position()     - returns current axis position in work coordinates
+ * mp_set_runtime_display_offset()    - set combined display offsets in the MR struct
+ * mp_get_runtime_display_position()  - returns current axis position in work display coordinates
  *                                      that were in effect at move planning time
  */
 
 void  mp_zero_segment_velocity() { mr->segment_velocity = 0; }
 float mp_get_runtime_velocity(void) { return (mr->segment_velocity); }
 float mp_get_runtime_absolute_position(mpPlannerRuntime_t *_mr, uint8_t axis) { return (_mr->position[axis]); }
-void mp_set_runtime_work_offset(float offset[]) { copy_vector(mr->gm.work_offset, offset); }
+void mp_set_runtime_display_offset(float offset[]) { copy_vector(mr->gm.display_offset, offset); }
 
 // We have to handle rotation - "rotate" by the transverse of the matrix to got "normal" coordinates
-float mp_get_runtime_work_position(uint8_t axis) {
+float mp_get_runtime_display_position(uint8_t axis) {
     // Shorthand:
     // target_rotated[0] = a x_1 + b x_2 + c x_3
     // target_rotated[1] = a y_1 + b y_2 + c y_3
@@ -88,16 +88,16 @@ float mp_get_runtime_work_position(uint8_t axis) {
 
     if (axis == AXIS_X) {
         return mr->position[0] * cm->rotation_matrix[0][0] + mr->position[1] * cm->rotation_matrix[1][0] +
-               mr->position[2] * cm->rotation_matrix[2][0] - mr->gm.work_offset[0];
+               mr->position[2] * cm->rotation_matrix[2][0] - mr->gm.display_offset[0];
     } else if (axis == AXIS_Y) {
         return mr->position[0] * cm->rotation_matrix[0][1] + mr->position[1] * cm->rotation_matrix[1][1] +
-               mr->position[2] * cm->rotation_matrix[2][1] - mr->gm.work_offset[1];
+               mr->position[2] * cm->rotation_matrix[2][1] - mr->gm.display_offset[1];
     } else if (axis == AXIS_Z) {
         return mr->position[0] * cm->rotation_matrix[0][2] + mr->position[1] * cm->rotation_matrix[1][2] +
-               mr->position[2] * cm->rotation_matrix[2][2] - cm->rotation_z_offset - mr->gm.work_offset[2];
+               mr->position[2] * cm->rotation_matrix[2][2] - cm->rotation_z_offset - mr->gm.display_offset[2];
     } else {
         // ABC, UVW, we don't rotate them
-        return (mr->position[axis] - mr->gm.work_offset[axis]);
+        return (mr->position[axis] - mr->gm.display_offset[axis]);
     }
 }
 

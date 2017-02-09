@@ -368,7 +368,7 @@ void cm_set_tool_number(GCodeState_t *gcode_state, const uint8_t tool)
 void cm_set_absolute_override(GCodeState_t *gcode_state, const uint8_t absolute_override)
 {
     gcode_state->absolute_override = (cmAbsoluteOverride)absolute_override;
-    cm_set_work_offsets(MODEL);         // must reset offsets if you change absolute override
+    cm_set_display_offsets(MODEL);         // must reset offsets if you change absolute override
 }
 
 void cm_set_model_linenum(const uint32_t linenum)
@@ -384,72 +384,100 @@ void cm_set_model_linenum(const uint32_t linenum)
  * These functions are not part of the NIST defined functions
  ***********************************************************************************/
 /*
+ * cm_get_combined_offset() - return the combined offsets for an axis (G53-G59, G92, Tools)
+ * cm_get_display_offset()  - return the current display offset from pecified Gcode model
+ * cm_set_display_offsets() - capture combined offsets from the model into absolute values in the active Gcode dynamic model
+ *
  * Notes on Coordinate System and Offset functions
  *
  * All positional information in the canonical machine is kept as absolute coords and in
- *    canonical units (mm). The offsets are only used to translate in and out of canonical form
- *    during interpretation and response.
+ *    canonical units (mm, mm/min). The offsets are only used to translate in and out of 
+ *    canonical form during incoming processing, and for displays in responses.
  *
  * Managing the coordinate systems & offsets is somewhat complicated. The following affect offsets:
- *    - coordinate system selected. 1-9 correspond to G54-G59
- *    - absolute override: forces current move to be interpreted in machine coordinates: G53 (system 0)
+ *    - coordinate system selected. 1-6 correspond to G54-G59
  *    - G92 offsets are added "on top of" the coord system offsets -- if origin_offset_enable == true
- *    - G28 and G30 moves; these are run in absolute coordinates
+ *    - tool offsets are also accounted for
  *
- * The offsets themselves are considered static, are kept in cm, and are supposed to be persistent.
+ * Position displays {pos:n} are always in work coordinates aka using 'display' offsets
+ *    - position displays are assembled by applying all active offsets to the current machine position
+ *    - an absolute override forces current move to be interpreted in machine coordinates: G53 (system 0)
+ *    - G53 is an explicit absolute override requested by the program, so displays in absolute coords
+ *    - G28 and G30 moves are run in absolute coordinates but display using current offsets
+ *    - Probing also has a very short move that behaves this way
  *
- * To reduce complexity and data load the following is done:
- *    - Full data for coordinates/offsets is only accessible by the canonical machine, not the downstream
- *    - A fully resolved set of coord and G92 offsets, with per-move exceptions can be captured as "work_offsets"
- *    - The core gcode context (gm) only knows about the active coord system and the work offsets
- */
-
-/*
- * cm_get_active_coord_offset() - return the currently active coordinate offset for an axis
+ * The offsets themselves are "the truth". These are:
+ *    - cm.coord_offset[coord][axis]    coordinate offsets for G53-G59, by axis - persistent
+ *    - cm.tool_offset[axis]            offsets for currently selected and active tool - persistent
+ *    - cm.gmx.origin_offset[axis]      G92 origin offset. Not persistent
  *
- *  This function is typically used to evaluate and set offsets, as opposed to cm_get_work_offset()
- *  which merely returns what's in the work_offset[] array.
+ *    - cm_get_combined_offset() puts the above together to provide a combined, active offset. 
+ *      G92 offsets are only included if it is active
  *
- *  Takes G5x, G92 into account to return the active offset for this move.
- *
- *  Absolute Override is the Gcode G53 convention to allow one and only one Gcode block 
+ *  Display offsets
+ *    - cm_set_display_offsets() writes combined offsets to cm.gm.display_offset[]
+ *      *** This is for display purposes only and should not be used to set positions ***
+ *    - cm_set_display_offsets() should be called every time underlying data would cause a change
+ *    - cm_set_display_offsets() takes absolute override display rules into account
+ *    - Use cm_get_display_offset() to return the display offset value
+ */     
+/*  Absolute Override is the Gcode G53 convention to allow one and only one Gcode block 
  *  to be run in absolute coordinates, regardless of coordinate offsets, G92 offsets, and 
- *  tool offsets. If absolute_override is set to ABSOLUTE_OVERRIDE_ON_AND_DISPLAY this  
- *  function will return 0.0 for the offset value. This bit is here to support G28 and G30 
+ *  tool offsets. If absolute_override is set to ABSOLUTE_OVERRIDE_ON_AND_DISPLAY the display  
+ *  values will be set to 0.0 for the offset value. This bit is here to support G28 and G30 
  *  return moves and other moves that run in absolute override mode but may want position 
  *  to be reported using all current offsets (work offsets), versus an explicit G53 move that 
  *  should be displayed in absolute coordinates.
  */
-
-float cm_get_active_coord_offset(const uint8_t axis, const bool absolute)
+ 
+float cm_get_combined_offset(const uint8_t axis)
 {
-    // if absolute override is on and is to be displayed with no offsets: 
-//    if (cm->gm.absolute_override == ABSOLUTE_OVERRIDE_ON_AND_DISPLAY) { 
-    if (absolute & (cm->gm.absolute_override == ABSOLUTE_OVERRIDE_ON)) {
-        return (0.0);
-    }
-    float offset = cm->offset[cm->gm.coord_system][axis] + cm->tl_offset[axis];
+    float offset = cm->coord_offset[cm->gm.coord_system][axis] + cm->tool_offset[axis];
     if (cm->gmx.origin_offset_enable == true) {
-        offset += cm->gmx.origin_offset[axis];               // includes G5x and G92 components
+        offset += cm->gmx.origin_offset[axis];
     }
     return (offset);
+}    
+
+float cm_get_display_offset(const GCodeState_t *gcode_state, const uint8_t axis)
+{
+    return (gcode_state->display_offset[axis]);
+}
+
+void cm_set_display_offsets(GCodeState_t *gcode_state)
+{
+    for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
+        
+        // if absolute override is on and position is to be displayed with no offsets
+        if (cm->gm.absolute_override == ABSOLUTE_OVERRIDE_ON_AND_DISPLAY) {
+            gcode_state->display_offset[axis] = 0;
+        } else {
+            gcode_state->display_offset[axis] = cm_get_combined_offset(axis);
+        }
+    }    
 }
 
 /*
- * cm_get_work_offset() - return a coord offset from the active Gcode dynamic model
- * cm_set_work_offsets() - capture coord offsets from the model into absolute values in the active Gcode dynamic model
+ * cm_get_display_position() - return position in external form from the active Gcode dynamic model
+ *
+ *    ... that means in prevailing units (mm/inch) and with all offsets applied
  */
 
-float cm_get_work_offset(const GCodeState_t *gcode_state, const uint8_t axis)
+float cm_get_display_position(const GCodeState_t *gcode_state, const uint8_t axis)
 {
-    return (gcode_state->work_offset[axis]);
-}
+    float position;
 
-void cm_set_work_offsets(GCodeState_t *gcode_state)
-{
-    for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-        gcode_state->work_offset[axis] = cm_get_active_coord_offset(axis, false);
+    if (gcode_state == MODEL) {
+        position = cm->gmx.position[axis] - cm_get_display_offset(MODEL, axis);
+    } else {
+        position = mp_get_runtime_display_position(axis);
     }
+    if (axis <= AXIS_Z) {
+        if (gcode_state->units_mode == INCHES) {
+            position /= MM_PER_INCH;
+        }
+    }
+    return (position);
 }
 
 /*
@@ -464,29 +492,6 @@ float cm_get_absolute_position(const GCodeState_t *gcode_state, const uint8_t ax
         return (cm->gmx.position[axis]);
     }
     return (mp_get_runtime_absolute_position(mr, axis));
-}
-
-/*
- * cm_get_work_position() - return work position in external form from the active Gcode dynamic model
- *
- *    ... that means in prevailing units (mm/inch) and with all offsets applied
- */
-
-float cm_get_work_position(const GCodeState_t *gcode_state, const uint8_t axis)
-{
-    float position;
-
-    if (gcode_state == MODEL) {
-        position = cm->gmx.position[axis] - cm_get_active_coord_offset(axis, false);
-    } else {
-        position = mp_get_runtime_work_position(axis);
-    }
-    if (axis <= AXIS_Z) {
-        if (gcode_state->units_mode == INCHES) {
-            position /= MM_PER_INCH;
-        }
-    }
-    return (position);
 }
 
 /***********************************************************************************
@@ -533,7 +538,7 @@ stat_t cm_deferred_write_callback()
             for (uint8_t j=0; j<AXES; j++) {
                 sprintf((char *)nv.token, "g%2d%c", 53+i, ("xyzabc")[j]);
                 nv.index = nv_get_index((const char *)"", nv.token);
-                nv.value = cm->offset[i][j];
+                nv.value = cm->coord_offset[i][j];
                 nv_persist(&nv);                // Note: only writes values that have changed
             }
         }
@@ -715,7 +720,7 @@ void cm_set_model_target(const float target[], const bool flags[])
             continue;        // skip axis if not flagged for update or its disabled
         } else if ((cm->a[axis].axis_mode == AXIS_STANDARD) || (cm->a[axis].axis_mode == AXIS_INHIBITED)) {
             if (cm->gm.distance_mode == ABSOLUTE_DISTANCE_MODE) {
-                cm->gm.target[axis] = cm_get_active_coord_offset(axis, true) + _to_millimeters(target[axis]);
+                cm->gm.target[axis] = cm_get_combined_offset(axis) + _to_millimeters(target[axis]);
             } else {
                 cm->gm.target[axis] += _to_millimeters(target[axis]);
             }
@@ -730,7 +735,7 @@ void cm_set_model_target(const float target[], const bool flags[])
             tmp = _calc_ABC(axis, target);
         }
         if (cm->gm.distance_mode == ABSOLUTE_DISTANCE_MODE) {
-            cm->gm.target[axis] = tmp + cm_get_active_coord_offset(axis, true); // sacidu93's fix to Issue #22
+            cm->gm.target[axis] = tmp + cm_get_combined_offset(axis); // sacidu93's fix to Issue #22
         } else {
             cm->gm.target[axis] += tmp;
         }
@@ -835,7 +840,7 @@ stat_t cm_set_arc_distance_mode(const uint8_t mode)
  *  has ended. You can also use $g54x - $g59c config functions to change offsets.
  *
  *  It also does not reset the work offsets which may be accomplished by calling
- *  cm_set_work_offsets() immediately afterwards.
+ *  cm_set_display_offsets() immediately afterwards.
  */
 
 stat_t cm_set_g10_data(const uint8_t P_word, const bool P_flag,
@@ -855,12 +860,12 @@ stat_t cm_set_g10_data(const uint8_t P_word, const bool P_flag,
         for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
             if (flag[axis]) {
                 if (L_word == 2) {
-                    cm->offset[P_word][axis] = _to_millimeters(offset[axis]);
+                    cm->coord_offset[P_word][axis] = _to_millimeters(offset[axis]);
                 } else {
                     // Should L20 take into account G92 offsets?
-                    cm->offset[P_word][axis] = cm->gmx.position[axis] - 
+                    cm->coord_offset[P_word][axis] = cm->gmx.position[axis] - 
                         _to_millimeters(offset[axis]) - 
-                        cm->tl_offset[axis];
+                        cm->tool_offset[axis];
                 }
                 // persist offsets once machining cycle is over
                 cm->deferred_write_flag = true;
@@ -880,7 +885,7 @@ stat_t cm_set_g10_data(const uint8_t P_word, const bool P_flag,
                     // L10 should also take into account G92 offset
                     tt.tt_offset[P_word][axis] =
                         cm->gmx.position[axis] - _to_millimeters(offset[axis]) - 
-                        cm->offset[cm->gm.coord_system][axis] - 
+                        cm->coord_offset[cm->gm.coord_system][axis] - 
                         (cm->gmx.origin_offset[axis] * cm->gmx.origin_offset_enable);
                 }
                 // persist offsets once machining cycle is over
@@ -920,11 +925,11 @@ stat_t cm_set_tl_offset(const uint8_t H_word, const bool H_flag, const bool appl
     }
     if (apply_additional) {
         for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-            cm->tl_offset[axis] += tt.tt_offset[tool][axis];
+            cm->tool_offset[axis] += tt.tt_offset[tool][axis];
         }
     } else {
         for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-            cm->tl_offset[axis] = tt.tt_offset[tool][axis];
+            cm->tool_offset[axis] = tt.tt_offset[tool][axis];
         }
     }
     float value[] = { (float)cm->gm.coord_system };     // pass coordinate system in value[0] element
@@ -935,7 +940,7 @@ stat_t cm_set_tl_offset(const uint8_t H_word, const bool H_flag, const bool appl
 stat_t cm_cancel_tl_offset()
 {
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-        cm->tl_offset[axis] = 0;
+        cm->tool_offset[axis] = 0;
     }
     float value[] = { (float)cm->gm.coord_system };
     mp_queue_command(_exec_offset, value, nullptr);
@@ -945,7 +950,7 @@ stat_t cm_cancel_tl_offset()
 stat_t cm_set_coord_system(const uint8_t coord_system)  // set coordinate system sync'd with planner
 {
     cm->gm.coord_system = (cmCoordSystem)coord_system;
-    cm_set_work_offsets(MODEL);         // must reset offsets if you change coordinate system //++++++
+    cm_set_display_offsets(MODEL);                      // must reset display offsets if you change coordinate system
 
     float value[] = { (float)coord_system };
     mp_queue_command(_exec_offset, value, nullptr);
@@ -957,10 +962,10 @@ static void _exec_offset(float *value, bool *flag)
     uint8_t coord_system = ((uint8_t)value[0]);             // coordinate system is passed in value[0] element
     float offsets[AXES];
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-        offsets[axis] = cm->offset[coord_system][axis] + cm->tl_offset[axis] + 
+        offsets[axis] = cm->coord_offset[coord_system][axis] + cm->tool_offset[axis] + 
                         (cm->gmx.origin_offset[axis] * cm->gmx.origin_offset_enable);
     }
-    mp_set_runtime_work_offset(offsets);
+    mp_set_runtime_display_offset(offsets);
 }
 
 /*
@@ -1060,8 +1065,8 @@ stat_t cm_set_origin_offsets(const float offset[], const bool flag[])
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         if (flag[axis]) {
             cm->gmx.origin_offset[axis] = cm->gmx.position[axis] -
-                                          cm->offset[cm->gm.coord_system][axis] - 
-                                          cm->tl_offset[axis] -
+                                          cm->coord_offset[cm->gm.coord_system][axis] - 
+                                          cm->tool_offset[axis] -
                                           _to_millimeters(offset[axis]);
         }
     }
@@ -1116,7 +1121,7 @@ stat_t cm_straight_traverse(const float target[], const bool flags[])
 
     cm_set_model_target(target, flags);
     ritorno (cm_test_soft_limits(cm->gm.target));   // test soft limits; exit if thrown
-    cm_set_work_offsets(&cm->gm);                   // capture the fully resolved offsets to the state
+    cm_set_display_offsets(&cm->gm);                // capture the fully resolved offsets to the state
     cm_cycle_start();                               // required for homing & other cycles
     stat_t status = mp_aline(&cm->gm);              // send the move to the planner
 
@@ -1270,7 +1275,7 @@ stat_t cm_straight_feed(const float target[], const bool flags[])
 
     cm_set_model_target(target, flags);
     ritorno (cm_test_soft_limits(cm->gm.target));   // test soft limits; exit if thrown
-    cm_set_work_offsets(&cm->gm);                   // capture the fully resolved offsets to the state
+    cm_set_display_offsets(&cm->gm);                // capture the fully resolved offsets to the state
     cm_cycle_start();                               // required for homing & other cycles
     stat_t status = mp_aline(&cm->gm);              // send the move to the planner
 
@@ -1580,7 +1585,7 @@ static void _exec_program_finalize(float *value, bool *flag)
         cm_reset_overrides();                               // reset feedrate the spindle overrides
         temperature_reset();                                // turn off all heaters and fans
     }
-    cm_set_work_offsets(MODEL);                             // reset work offsets for display porpoises
+    cm_set_display_offsets(MODEL);                          // reset work offsets for display porpoises
     sr_request_status_report(SR_REQUEST_IMMEDIATE);         // request a final and full status report (not filtered)
 }
 
@@ -1999,9 +2004,9 @@ stat_t cm_get_vel(nvObj_t *nv)
 }
 
 stat_t cm_get_feed(nvObj_t *nv) { return (get_float(nv, cm_get_feed_rate(ACTIVE_MODEL))); }
-stat_t cm_get_pos(nvObj_t *nv)  { return (get_float(nv, cm_get_work_position(ACTIVE_MODEL, _axis(nv)))); }
+stat_t cm_get_pos(nvObj_t *nv)  { return (get_float(nv, cm_get_display_position(ACTIVE_MODEL, _axis(nv)))); }
 stat_t cm_get_mpo(nvObj_t *nv)  { return (get_float(nv, cm_get_absolute_position(ACTIVE_MODEL, _axis(nv)))); }
-stat_t cm_get_ofs(nvObj_t *nv)  { return (get_float(nv, cm_get_work_offset(ACTIVE_MODEL, _axis(nv)))); }
+stat_t cm_get_ofs(nvObj_t *nv)  { return (get_float(nv, cm_get_display_offset(ACTIVE_MODEL, _axis(nv)))); }
 
 stat_t cm_get_home(nvObj_t *nv) { return(_get_msg_helper(nv, msg_home, cm_get_homing_state())); }
 stat_t cm_set_home(nvObj_t *nv) { return (set_int(nv, ((uint8_t &)(cm->homing_state)), false, true)); }
@@ -2010,8 +2015,8 @@ stat_t cm_get_hom(nvObj_t *nv)  { return (get_int(nv, cm->homed[_axis(nv)])); }
 stat_t cm_get_prob(nvObj_t *nv) { return(_get_msg_helper(nv, msg_probe, cm_get_probe_state())); }
 stat_t cm_get_prb(nvObj_t *nv)  { return (get_float(nv, cm->probe_results[0][_axis(nv)])); }
 
-stat_t cm_get_coord(nvObj_t *nv) { return (get_float(nv, cm->offset[_coord(nv)][_axis(nv)])); }
-stat_t cm_set_coord(nvObj_t *nv) { return (set_float(nv, cm->offset[_coord(nv)][_axis(nv)])); }
+stat_t cm_get_coord(nvObj_t *nv) { return (get_float(nv, cm->coord_offset[_coord(nv)][_axis(nv)])); }
+stat_t cm_set_coord(nvObj_t *nv) { return (set_float(nv, cm->coord_offset[_coord(nv)][_axis(nv)])); }
 
 stat_t cm_get_g92(nvObj_t *nv)   { return (get_float(nv, cm->gmx.origin_offset[_axis(nv)])); }
 stat_t cm_get_g28(nvObj_t *nv)   { return (get_float(nv, cm->gmx.g28_position[_axis(nv)])); }
@@ -2029,8 +2034,8 @@ static uint8_t _tool(nvObj_t *nv)
     return (atoi(&nv->token[2]));       // ttNNx is all in the token
 }
 
-stat_t cm_get_tof(nvObj_t *nv) { return (get_float(nv, cm->tl_offset[_axis(nv)])); }
-stat_t cm_set_tof(nvObj_t *nv) { return (set_float(nv, cm->tl_offset[_axis(nv)])); }
+stat_t cm_get_tof(nvObj_t *nv) { return (get_float(nv, cm->tool_offset[_axis(nv)])); }
+stat_t cm_set_tof(nvObj_t *nv) { return (set_float(nv, cm->tool_offset[_axis(nv)])); }
 
 stat_t cm_get_tt(nvObj_t *nv)
 {   
