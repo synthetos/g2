@@ -368,7 +368,7 @@ void cm_set_tool_number(GCodeState_t *gcode_state, const uint8_t tool)
 void cm_set_absolute_override(GCodeState_t *gcode_state, const uint8_t absolute_override)
 {
     gcode_state->absolute_override = (cmAbsoluteOverride)absolute_override;
-    cm_set_display_offsets(MODEL);         // must reset offsets if you change absolute override
+    cm_set_display_offsets(MODEL);      // must reset offsets if you change absolute override
 }
 
 void cm_set_model_linenum(const uint32_t linenum)
@@ -451,12 +451,12 @@ void cm_set_display_offsets(GCodeState_t *gcode_state)
 {
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         
-        // if absolute override is on and position is to be displayed with no offsets
+        // if absolute override is on for G53 so position should be displayed with no offsets
         if (cm->gm.absolute_override == ABSOLUTE_OVERRIDE_ON_AND_DISPLAY) {
             gcode_state->display_offset[axis] = 0;
         } 
 
-        // if position is to be displayed with currently active offsets
+        // all other cases: position should be displayed with currently active offsets
         else {
             gcode_state->display_offset[axis] = cm->coord_offset[cm->gm.coord_system][axis] + 
                                                 cm->tool_offset[axis];
@@ -864,8 +864,7 @@ stat_t cm_set_g10_data(const uint8_t P_word, const bool P_flag,
     if ((L_word == 2) || (L_word == 20)) {
         // coordinate system offset command
         if ((P_word < G54) || (P_word > COORD_SYSTEM_MAX)) {
-            // you can't set G53
-            return (STAT_P_WORD_IS_INVALID);
+            return (STAT_P_WORD_IS_INVALID);                // you can't set G53
         }
         for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
             if (flag[axis]) {
@@ -877,29 +876,25 @@ stat_t cm_set_g10_data(const uint8_t P_word, const bool P_flag,
                         _to_millimeters(offset[axis]) - 
                         cm->tool_offset[axis];
                 }
-                // persist offsets once machining cycle is over
-                cm->deferred_write_flag = true;
+                cm->deferred_write_flag = true;         // persist offsets once machining cycle is over
             }
         }
     }
     else if ((L_word == 1) || (L_word == 10)) {
-        // tool table offset command. L11 not supported atm.
-        if ((P_word < 1) || (P_word > TOOLS)) {
+        if ((P_word < 1) || (P_word > TOOLS)) {         // tool table offset command. L11 not supported atm.
             return (STAT_P_WORD_IS_INVALID);
         }
         for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
             if (flag[axis]) {
                 if (L_word == 1) {
                     tt.tt_offset[P_word][axis] = _to_millimeters(offset[axis]);
-                } else {
-                    // L10 should also take into account G92 offset
+                } else {                                // L10 should also take into account G92 offset
                     tt.tt_offset[P_word][axis] =
                         cm->gmx.position[axis] - _to_millimeters(offset[axis]) - 
                         cm->coord_offset[cm->gm.coord_system][axis] - 
                         (cm->gmx.origin_offset[axis] * cm->gmx.origin_offset_enable);
                 }
-                // persist offsets once machining cycle is over
-                cm->deferred_write_flag = true;
+                cm->deferred_write_flag = true;         // persist offsets once machining cycle is over
             }
         }
     }
@@ -1128,7 +1123,6 @@ stat_t cm_straight_traverse(const float target[], const bool flags[])
     if (!(flags[AXIS_X] | flags[AXIS_Y] | flags[AXIS_Z] | flags[AXIS_A] | flags[AXIS_B] | flags[AXIS_C])) {
         return(STAT_OK);
     }
-
     cm_set_model_target(target, flags);
     ritorno (cm_test_soft_limits(cm->gm.target));   // test soft limits; exit if thrown
     cm_set_display_offsets(&cm->gm);                // capture the fully resolved offsets to the state
@@ -1341,6 +1335,7 @@ stat_t cm_change_tool(const uint8_t tool_change)
 static void _exec_change_tool(float *value, bool *flag)
 {
     cm->gm.tool = (uint8_t)value[0];
+    // TODO - change tool offsets and update display offsets
 }
 
 /***********************************************************************************
@@ -1595,7 +1590,6 @@ static void _exec_program_finalize(float *value, bool *flag)
         cm_reset_overrides();                               // reset feedrate the spindle overrides
         temperature_reset();                                // turn off all heaters and fans
     }
-    cm_set_display_offsets(MODEL);                          // reset work offsets for display porpoises
     sr_request_status_report(SR_REQUEST_IMMEDIATE);         // request a final and full status report (not filtered)
 }
 
