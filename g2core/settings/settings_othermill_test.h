@@ -328,23 +328,3 @@
 #define P1_MAPPING_CUBIC_X2         -7.2900167282605129e-009
 #define P1_MAPPING_CUBIC_X1         8.5854646785876479e-005
 #define P1_MAPPING_CUBIC_X0         -2.1301489219406905e-001
-
-/*** User-Defined Data Defaults ***/
-/*
-#define USER_DATA_A0 0
-#define USER_DATA_A1 0
-#define USER_DATA_A2 0
-#define USER_DATA_A3 0
-#define USER_DATA_B0 0
-#define USER_DATA_B1 0
-#define USER_DATA_B2 0
-#define USER_DATA_B3 0
-#define USER_DATA_C0 0
-#define USER_DATA_C1 0
-#define USER_DATA_C2 0
-#define USER_DATA_C3 0
-#define USER_DATA_D0 0
-#define USER_DATA_D1 0
-#define USER_DATA_D2 0
-#define USER_DATA_D3 0
-*/

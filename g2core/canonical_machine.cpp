@@ -1580,6 +1580,7 @@ static void _exec_program_finalize(float *value, bool *flag)
         cm_reset_overrides();                               // reset feedrate the spindle overrides
         temperature_reset();                                // turn off all heaters and fans
     }
+    cm_set_work_offsets(MODEL);                             // reset work offsets for display porpoises
     sr_request_status_report(SR_REQUEST_IMMEDIATE);         // request a final and full status report (not filtered)
 }
 
