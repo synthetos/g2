@@ -658,7 +658,6 @@ const cfgItem_t cfgArray[] = {
     { "sp","spmo", _fip, 0, sp_print_spmo, sp_get_spmo, sp_set_spmo, (float *)&cs.null, SPINDLE_MODE },
     { "sp","spph", _fip, 0, sp_print_spph, sp_get_spph, sp_set_spph, (float *)&cs.null, SPINDLE_PAUSE_ON_HOLD },
     { "sp","spde", _fip, 2, sp_print_spde, sp_get_spde, sp_set_spde, (float *)&cs.null, SPINDLE_SPINUP_DELAY },
-  //{ "sp","spdn", _fip, 2, sp_print_spdn, sp_get_spdn, sp_set_spdn, (float *)&cs.null, SPINDLE_SPINDOWN_DELAY },
     { "sp","spsn", _fip, 2, sp_print_spsn, sp_get_spsn, sp_set_spsn, (float *)&cs.null, SPINDLE_SPEED_MIN},
     { "sp","spsm", _fip, 2, sp_print_spsm, sp_get_spsm, sp_set_spsm, (float *)&cs.null, SPINDLE_SPEED_MAX},
     { "sp","spep", _fip, 0, sp_print_spep, sp_get_spep, sp_set_spep, (float *)&cs.null, SPINDLE_ENABLE_POLARITY },

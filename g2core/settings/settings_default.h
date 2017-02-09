@@ -101,10 +101,6 @@
 #define SPINDLE_SPINUP_DELAY        0     // {spde:
 #endif
 
-#ifndef SPINDLE_SPINDOWN_DELAY
-#define SPINDLE_SPINDOWN_DELAY      0     // {spdn:
-#endif
-
 #ifndef SPINDLE_DWELL_MAX
 #define SPINDLE_DWELL_MAX   10000000.0      // maximum allowable dwell time. May be overridden in settings files
 #endif
@@ -127,6 +123,10 @@
 
 #ifndef COOLANT_PAUSE_ON_HOLD
 #define COOLANT_PAUSE_ON_HOLD       true    // {coph:
+#endif
+
+#ifndef FEEDHOLD_Z_LIFT
+#define FEEDHOLD_Z_LIFT             0       // {zl: mm to lift Z on feedhold
 #endif
 
 #ifndef PROBE_REPORT_ENABLE 
