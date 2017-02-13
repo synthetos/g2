@@ -309,19 +309,19 @@ typedef struct mpBuffer {
     // *** CAUTION *** These two pointers are not reset by _clear_buffer()
     struct mpBuffer *pv;                // static pointer to previous buffer
     struct mpBuffer *nx;                // static pointer to next buffer
-    uint8_t buffer_number;              //+++++ DIAGNOSTIC for easier debugging
+    uint8_t buffer_number;              // DIAGNOSTIC for easier debugging
 
     stat_t (*bf_func)(struct mpBuffer *bf); // callback to buffer exec function
     cm_exec_t cm_func;                  // callback to canonical machine execution function
 
-    //+++++ DIAGNOSTICS for easier debugging
+    // DIAGNOSTICS for easier debugging...
     uint32_t linenum;                   // mirror of bf->gm.linenum
     int iterations;
     float block_time_ms;
     float plannable_time_ms;            // time in planner
     float plannable_length;             // length in planner
     uint8_t meet_iterations;            // iterations needed in _get_meet_velocity
-    //+++++ to here
+    //...to here
 
     bufferState buffer_state;           // used to manage queuing/dequeuing
     blockType block_type;               // used to dispatch to run routine
@@ -480,7 +480,7 @@ typedef struct mpPlannerRuntime {       // persistent runtime variables
 typedef struct mpPlanner {              // common variables for a planner context
     magic_t magic_start;                // magic number to test memory integrity
 
-    //+++++ DIAGNOSTICS
+    // DIAGNOSTICS
     float run_time_remaining_ms;
     float plannable_time_ms;
 

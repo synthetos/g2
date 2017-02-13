@@ -36,7 +36,7 @@
 #include "report.h"
 #include "util.h"
 #include "spindle.h"
-#include "xio.h"    //+++++DIAGNOSTIC
+#include "xio.h"    // DIAGNOSTIC
 
 // execute routines (NB: These are all called from the LO interrupt)
 static stat_t _exec_aline_head(mpBuf_t *bf); // passing bf because body might need it, and it might call body
@@ -494,7 +494,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             }
             else {
                 // Uh oh! We have a move that's all body, and is still too short!!
-                // while (1); // ++++ RG For now, we'll consider this impossible.
+                // while (1); // RG: For now, we'll consider this impossible.
                 cs.exec_aline_assertion_failure = true;
                 return (STAT_EXEC_ALINE_ASSERTION_FAILURE);
             }

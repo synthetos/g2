@@ -32,7 +32,7 @@
 #include "report.h"
 #include "util.h"
 
-//+++++ DIAGNOSTICS
+// DIAGNOSTICS
 
 //#if IN_DEBUGGER < 1
 #define LOG_RETURN(msg)  // LOG_RETURN with no action (production)
@@ -60,7 +60,7 @@
     }
 #endif
 
-//+++++ END DIAGNOSTICS
+// END DIAGNOSTICS
 
 /* local functions */
 
@@ -116,7 +116,7 @@ static float _get_meet_velocity(const float          v_0,
 
 void _zoid_exit(mpBuf_t* bf, zoidExitPoint exit_point) 
 {
-    //+++++ DIAGNOSTIC
+    // DIAGNOSTIC
     //    bf->zoid_exit = exit_point;
     if (mp_runtime_is_idle()) {  // normally the runtime keeps this value fresh
                                  //        bf->time_in_plan_ms += bf->block_time_ms;

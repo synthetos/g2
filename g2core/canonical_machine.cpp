@@ -573,7 +573,7 @@ stat_t cm_set_tram(nvObj_t *nv)
 
         // if passed false/0, we will clear the rotation matrix
         if (!do_set) {
-            canonical_machine_reset_rotation(cm);   //++++++
+            canonical_machine_reset_rotation(cm);
             return (STAT_OK);
         }
 

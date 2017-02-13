@@ -210,8 +210,7 @@ struct ioDigitalInputExt {
                 cm->safety_interlock_reengaged = ext_pin_number;
             }
         }
-
-        sr_request_status_report(SR_REQUEST_TIMED);   //+++++ Put this one back in.
+        sr_request_status_report(SR_REQUEST_TIMED);
     };
 };
 

@@ -55,12 +55,12 @@ static void _calculate_jerk(mpBuf_t* bf);
 static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const float axis_square[]);
 static void _calculate_junction_vmax(mpBuf_t* bf);
 
-//+++++DIAGNOSTICS
+// DIAGNOSTICS
 #pragma GCC optimize("O0")  // this pragma is required to force the planner to actually set these unused values
 //#pragma GCC reset_options
 static void _set_bf_diagnostics(mpBuf_t* bf) {
     bf->linenum = bf->gm.linenum;
-//  UPDATE_BF_DIAGNOSTICS(bf);   //+++++
+//  UPDATE_BF_DIAGNOSTICS(bf);
 }
 #pragma GCC reset_options
 
@@ -222,7 +222,7 @@ stat_t mp_aline(GCodeState_t* gm_in)
     }
     _calculate_jerk(bf);                                // compute bf->jerk values
     _calculate_vmaxes(bf, axis_length, axis_square);    // compute cruise_vmax and absolute_vmax
-    _set_bf_diagnostics(bf);                            //+++++DIAGNOSTIC
+    _set_bf_diagnostics(bf);                            // DIAGNOSTIC
 
     // Note: these next lines must remain in exact order. Position must update before committing the buffer.
     copy_vector(mp->position, bf->gm.target);           // set the planner position
@@ -263,7 +263,7 @@ void mp_plan_block_list()
         bf = _plan_block(bf);  // returns next block to plan
 
         planned_something = true;
-        mp->p = bf;  //+++++ DIAGNOSTIC - this is not needed but is set here for debugging purposes
+        mp->p = bf;  // DIAGNOSTIC - this is not needed but is set here for debugging purposes
     }
     if (mp->planner_state > PLANNER_STARTUP) {
         if (planned_something && (cm->hold_state != FEEDHOLD_HOLD)) {

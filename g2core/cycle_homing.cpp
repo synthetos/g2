@@ -174,7 +174,7 @@ stat_t cm_homing_cycle_start(const float axes[], const bool flags[]) {
     hm.set_coordinates = true;
 
     // clear rotation matrix
-    canonical_machine_reset_rotation(cm);   //+++++ cleanup
+    canonical_machine_reset_rotation(cm);
 
     hm.axis          = -1;                  // set to retrieve initial axis
     hm.func          = _homing_axis_start;  // bind initial processing function
