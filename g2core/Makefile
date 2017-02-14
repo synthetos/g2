@@ -58,5 +58,8 @@ endif
 ifeq ($(DEBUG),2)
 	DEVICE_DEFINES += DEBUG=1 IN_DEBUGGER=1
 endif
+ifeq ($(DEBUG),3)
+	DEVICE_DEFINES += DEBUG=1 IN_DEBUGGER=1 DEBUG_SEMIHOSTING=1
+endif
 
 # *** EOF ***
