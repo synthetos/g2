@@ -349,10 +349,7 @@ void dda_timer_type::interrupt()
 void st_request_exec_move()
 {
     stepper_debug("e");
-    if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_EXEC) { // bother interrupting
-        exec_timer.setInterruptPending();
-        return;
-    }
+    exec_timer.setInterruptPending();
     stepper_debug("!\n");
 }
 
@@ -438,7 +435,16 @@ static void _load_move()
         return;                                                    // exit if the runtime is busy
     }
     if (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_LOADER) {    // if there are no moves to load...
-		
+
+        if (cm.motion_state == MOTION_RUN)  {
+#if IN_DEBUGGER == 1
+//#warning debbugger REQUIRED for running this firmware!
+//            __asm__("BKPT"); // attempted to _load_move with PREP_BUFFER_OWNED_BY_EXEC and cm.motion_state == MOTION_RUN
+#endif
+            st_request_exec_move();
+            return;
+        }
+
 	// ...start motor power timeouts
 	//	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
 	//		Motors[motor]->motionStopped();    
@@ -659,8 +665,8 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
         return (cm_panic(STAT_PREP_LINE_MOVE_TIME_IS_INFINITE, "st_prep_line()"));
     } else if (isnan(segment_time)) {                           // never supposed to happen
         return (cm_panic(STAT_PREP_LINE_MOVE_TIME_IS_NAN, "st_prep_line()"));
-    } else if (segment_time < EPSILON) {
-        return (STAT_MINIMUM_TIME_MOVE);
+//    } else if (segment_time < EPSILON) {
+//        return (STAT_MINIMUM_TIME_MOVE);
     }
     // setup segment parameters
     // - dda_ticks is the integer number of DDA clock ticks needed to play out the segment
