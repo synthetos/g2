@@ -219,7 +219,11 @@ stat_t st_motor_power_callback()     // called by controller
     }
 
     bool have_actually_stopped = false;
-    if ((!st_runtime_isbusy()) && (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_LOADER)) {    // if there are no moves to load...
+    if ((!st_runtime_isbusy()) &&
+        (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_LOADER) &&
+        (cm_get_cycle_state() == CYCLE_OFF)
+        )
+    {    // if there are no moves to load...
         have_actually_stopped = true;
     }
 
