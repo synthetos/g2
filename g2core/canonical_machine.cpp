@@ -833,7 +833,6 @@ stat_t cm_set_units_mode(const uint8_t mode)
 stat_t cm_set_distance_mode(const uint8_t mode)
 {
     cm->gm.distance_mode = (cmDistanceMode)mode;         // 0 = absolute mode, 1 = incremental
-    LAGER_cm("set distance mode");
     return (STAT_OK);
 }
 

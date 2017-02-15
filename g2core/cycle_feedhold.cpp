@@ -36,7 +36,7 @@
 #include "spindle.h"
 #include "coolant.h"
 #include "util.h"
-#include "xio.h"        // DIAGNOSTIC
+//#include "xio.h"        // DIAGNOSTIC
 
 static stat_t _run_p1_hold_entry_actions(void);
 static void   _sync_to_p1_hold_entry_actions_done(float* vect, bool* flag);
@@ -133,7 +133,6 @@ bool cm_has_hold()
 
 void cm_start_hold()
 {
-//    if ((cm1.hold_state != FEEDHOLD_REQUESTED) && (mp_has_runnable_buffer(mp))) { // meaning there's something running
     // Can only request a feedhold if the machine is in motion and there not one is not already in progress 
     if ((cm1.hold_state == FEEDHOLD_OFF) && (mp_has_runnable_buffer(mp))) {
         cm_set_motion_state(MOTION_HOLD);
@@ -173,11 +172,9 @@ void cm_request_feedhold(void)  // !
     // Only generate request if not already in a feedhold and the machine is in motion    
     if ((cm1.hold_state == FEEDHOLD_OFF) && (cm1.motion_state != MOTION_STOP)) {
         cm1.hold_state = FEEDHOLD_REQUESTED;
-        LAGER("p1 request feedhold");
     } else 
     if ((cm2.hold_state == FEEDHOLD_OFF) && (cm2.motion_state != MOTION_STOP)) {
         cm2.hold_state = FEEDHOLD_REQUESTED;
-        LAGER("p2 - request feedhold");
     }
 }
 
@@ -185,7 +182,6 @@ void cm_request_exit_hold(void)  // ~
 {
     if (cm1.hold_state != FEEDHOLD_OFF) {
         cm1.hold_exit_requested = true;
-        LAGER_cm("request exit hold");
     }
 }
 
@@ -195,7 +191,6 @@ void cm_request_queue_flush()   // %
     if ((cm1.hold_state != FEEDHOLD_OFF) &&         // don't honor request unless you are in a feedhold
         (cm1.flush_state == FLUSH_OFF)) {           // ...and only once
         cm1.flush_state = FLUSH_REQUESTED;          // request planner flush once motion has stopped
-        LAGER_cm("request queue flush");
     }
 }
 
@@ -229,36 +224,30 @@ stat_t cm_feedhold_sequencing_callback()
     // invoking a p1 feedhold is a 2 step process - get to the stop, then execute the hold actions
     if (cm1.hold_state == FEEDHOLD_REQUESTED) {
         if (mp_has_runnable_buffer(&mp1)) {         // bypass cm_start_hold() to start from here
-            LAGER("p1 start feedhold");
             cm_set_motion_state(MOTION_HOLD);
             cm1.hold_state = FEEDHOLD_SYNC;         // invokes hold from aline execution
         }
     }
     if (cm1.hold_state == FEEDHOLD_ACTIONS_START) { // perform Z lift, spindle & coolant actions
-        LAGER("p1 start enter hold actions");
         _run_p1_hold_entry_actions();
-        LAGER("p1 complete enter hold actions");
     }
 
     // p2 feedhold states - feedhold in feedhold
     if (cm2.hold_state == FEEDHOLD_REQUESTED) {
         if (mp_has_runnable_buffer(&mp2)) {
-            LAGER("p2 start feedhold");
             cm_set_motion_state(MOTION_HOLD);
             cm2.hold_state = FEEDHOLD_SYNC;
         }
     }
     if (cm2.hold_state == FEEDHOLD_P2_EXIT) {
-        LAGER("p2 exit feedhold");
         return(_finalize_p2_hold_exit());
     }
 
     // queue flush won't run until the hold is complete and all (subsequent) motion has stopped
     if ((cm1.flush_state == FLUSH_REQUESTED) && (cm1.hold_state == FEEDHOLD_HOLD) &&
         (mp_runtime_is_idle())) {                   // don't flush planner during movement
-            LAGER("p1 queue flush");
             cm_queue_flush(&cm1);
-            cm1.hold_exit_requested = true;          // p1 queue flush always ends the hold
+            cm1.hold_exit_requested = true;         // p1 queue flush always ends the hold
             qr_request_queue_report(0);             // request a queue report, since we've changed the number of buffers available
     }
 
@@ -270,21 +259,18 @@ stat_t cm_feedhold_sequencing_callback()
             return (STAT_OK);
         } 
         if (cm1.hold_state == FEEDHOLD_HOLD) {      // don't run end_hold until fully into a hold
-            LAGER("p1 start exit hold actions");
             cm1.hold_exit_requested = false;
             _run_p1_hold_exit_actions();            // runs once only
-            LAGER("p1 complete exit hold actions");
         }       
     }
     if (cm1.hold_state == FEEDHOLD_P1_EXIT) {
-        LAGER("p1 finalize hold");
         return(_finalize_p1_hold_exit());           // run multiple times until actions are complete
     }
     return (STAT_OK);
 }
     
 /***********************************************************************************
- * _run_p1_hold_entry_actions()         - run actions in p2 that complete the p1 hold
+ * _run_p1_hold_entry_actions()          - run actions in p2 that complete the p1 hold
  * _sync_to_p1_hold_entry_actions_done() - final state change occurs here
  *
  *  This function assumes that the feedhold sequencing callback has resolved all 
@@ -292,7 +278,17 @@ stat_t cm_feedhold_sequencing_callback()
  *  directly. Always use the feedhold sequencing callback.
  *
  *  Moving between planners is only safe when the machine is completely stopped.
+ *
+ *  _sync_to_p1_hold_entry_actions_done() is a callback to run when the ACTIONS from 
+ *  feedhold in p1 are finished. This function hits cm1 directly as ACTIONS for a 
+ *  feedhold in p1 actually run in the secondary planner (p2). Feedholds from p2 do 
+ *  not run actions, so this function is never called for p2 feedholds. It's called 
+ *  from an interrupt, so it only sets a flag.
  */
+static void _sync_to_p1_hold_entry_actions_done(float* vect, bool* flag)
+{
+    cm1.hold_state = FEEDHOLD_HOLD;
+}
 
 static stat_t _run_p1_hold_entry_actions()
 {    
@@ -338,23 +334,9 @@ static stat_t _run_p1_hold_entry_actions()
         cm_set_distance_mode(stored_distance_mode);
     }
     spindle_control_sync(SPINDLE_PAUSE);                // optional spindle pause
-    coolant_control_sync(COOLANT_PAUSE, COOLANT_BOTH);  // optional coolant pause
-    
-    LAGER_cm("mp_queue_command entry actions done");    
+    coolant_control_sync(COOLANT_PAUSE, COOLANT_BOTH);  // optional coolant pause    
     mp_queue_command(_sync_to_p1_hold_entry_actions_done, nullptr, nullptr);
     return (STAT_OK);
-}
-
-// Callback to run when the ACTIONS from feedhold in planner 1 are finished.
-// This function hits cm1 directly as ACTIONS for a feedhold in planner 1
-// actually run in the secondary planner. Feedholds from planner 2 do not run
-// actions, so this function is never called for planner 2 feedholds.
-// It's called from an interrupt, so it only sets a flag.
-
-static void _sync_to_p1_hold_entry_actions_done(float* vect, bool* flag)
-{
-    cm1.hold_state = FEEDHOLD_HOLD;
-    LAGER("p1 hold_state = FEEDHOLD_HOLD");
 }
 
 /***********************************************************************************

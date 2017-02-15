@@ -535,7 +535,6 @@ stat_t mp_planner_callback()
     // Test if the planner has transitioned to an IDLE state
     if ((mp_get_planner_buffers(mp) == mp->q.queue_size) &&     // detect and set IDLE state
         (cm->motion_state == MOTION_STOP) && (cm->hold_state == FEEDHOLD_OFF)) {
-        if (mp->planner_state != PLANNER_IDLE) { LAGER_cm("Planner entering IDLE state");}
         mp->planner_state = PLANNER_IDLE;
         return (STAT_OK);
     }
@@ -543,7 +542,6 @@ stat_t mp_planner_callback()
     bool _timed_out = mp->block_timeout.isPast();
     if (_timed_out) {
         mp->block_timeout.clear();                   // timer is set on commit_write_buffer()
-        LAGER_cm("Blocks timed out");
     }
 
     if (!mp->request_planning && !_timed_out) {      // Exit if no request or timeout
@@ -554,14 +552,12 @@ stat_t mp_planner_callback()
     if (mp->planner_state == PLANNER_IDLE) {
         mp->p = mp_get_r();                         // initialize planner pointer to run buffer
         mp->planner_state = PLANNER_STARTUP;
-        LAGER_cm("Planner entering STARTUP state");
     }
     if (mp->planner_state == PLANNER_STARTUP) {
         if (!mp_planner_is_full(mp) && !_timed_out) {
             return (STAT_OK);                       // remain in STARTUP
         }
         mp->planner_state = PLANNER_PRIMING;
-        LAGER_cm("Planner entering PRIMING state");
     }
     mp_plan_block_list();
     return (STAT_OK);
@@ -809,13 +805,6 @@ void mp_commit_write_buffer(const blockType block_type)
     q->w = q->w->nx;                        // advance write buffer pointer
     mp->block_timeout.set(BLOCK_TIMEOUT_MS);// reset the block timer
     qr_request_queue_report(+1);            // request QR and add to "added buffers" count
-
-    char msg[64];
-    sprintf(msg, "commit buffer:%d block state:%d timeout.isPast:%d", 
-            q->w->buffer_number, 
-            q->w->block_state,
-            mp->block_timeout.isPast());
-    LAGER_cm(msg);
 }
 
 // Note: mp_get_run_buffer() is only called by mp_exec_move(), which is inside an interrupt
@@ -837,7 +826,6 @@ mpBuf_t * mp_get_run_buffer()
 // Clearing and advancing must be done atomically as other interrupts may be using the run buffer
 bool mp_free_run_buffer()           // EMPTY current run buffer & advance to the next
 {
-//    mpQueue_t *q = &mb.q[mb.active_q];
     mpPlannerQueue_t *q = &(mp->q);
     
     mpBuf_t *r_now = q->r;          // save this pointer is to avoid a race condition when clearing the buffer
