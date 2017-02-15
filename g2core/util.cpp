@@ -33,12 +33,33 @@
 
 #include "g2core.h"
 #include "util.h"
+#include "canonical_machine.h"  // for LAGERs
+#include "xio.h"                // for LAGERs
+
 
 bool FLAGS_NONE[AXES] = { false, false, false, false, false, false };
 bool FLAGS_ONE[AXES]  = { true, false, false, false, false, false };
 bool FLAGS_ALL[AXES]  = { true, true, true, true, true, true };
 
 //*** debug utilities ***
+
+void LAGER(const char * msg)
+{
+    char message[64];
+    sprintf(message, "%lu: %s\n", SysTickTimer_getValue(), msg);
+    xio_writeline(message);
+}
+
+void LAGER_cm(const char * msg)
+{
+    char message[64];
+    if (cm == &cm1) {
+        sprintf(message, "%lu: p1 %s\n", SysTickTimer_getValue(), msg);
+        } else {
+        sprintf(message, "%lu: p2 %s\n", SysTickTimer_getValue(), msg);
+    }
+    xio_writeline(message);
+}
 
 /**** Vector utilities ****
  * copy_vector()            - copy vector of arbitrary length

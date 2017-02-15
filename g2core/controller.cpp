@@ -166,7 +166,8 @@ static void _controller_HSM()
     DISPATCH(cm_probing_cycle_callback());      // probing cycle operation (G38.2)
     DISPATCH(cm_jogging_cycle_callback());      // jog cycle operation
     DISPATCH(cm_deferred_write_callback());     // persist G10 changes when not in machining cycle
-
+//    DISPATCH(cm_feedhold_command_blocker());    // blocks new commands from arriving while in feedhold
+    
 //----- command readers and parsers --------------------------------------------------//
 
     DISPATCH(_sync_to_planner());               // ensure there is at least one free buffer in planning queue
@@ -237,7 +238,7 @@ static void _dispatch_kernel(const devflags_t flags)
     // trap single character commands
     if      (*cs.bufp == '!') { cm_request_feedhold(); }
     else if (*cs.bufp == '%') { cm_request_queue_flush(); xio_flush_to_command(); }
-    else if (*cs.bufp == '~') { cm_request_end_hold(); }
+    else if (*cs.bufp == '~') { cm_request_exit_hold(); }
     else if (*cs.bufp == EOT) { cm_alarm(STAT_KILL_JOB, "EOT Received"); }
     else if (*cs.bufp == ENQ) { controller_request_enquiry(); }
     else if (*cs.bufp == CAN) { hw_hard_reset(); }          // reset immediately
@@ -440,10 +441,8 @@ static stat_t _interlock_handler(void)
         // interlock restored
         if ((cm->safety_interlock_reengaged != 0) && (mp_runtime_is_idle())) {
             cm->safety_interlock_reengaged = 0;
-            cm->safety_interlock_state = SAFETY_INTERLOCK_ENGAGED;   // interlock restored
-            // restart spindle with dwell
-            cm_request_end_hold();                                // use cm_request_end_hold() instead of just ending
-            // restart coolant
+            cm->safety_interlock_state = SAFETY_INTERLOCK_ENGAGED;  // interlock restored
+            cm_request_exit_hold();                                 // use cm_request_exit_hold() instead of just ending
         }
     }
     return(STAT_OK);

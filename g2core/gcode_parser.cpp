@@ -821,24 +821,24 @@ static stat_t _execute_gcode_block(char *active_comment)
         case NEXT_ACTION_SUSPEND_ORIGIN_OFFSETS: { status = cm_suspend_origin_offsets(); break;}                // G92.2
         case NEXT_ACTION_RESUME_ORIGIN_OFFSETS:  { status = cm_resume_origin_offsets(); break;}                 // G92.3
 
-        case NEXT_ACTION_JSON_COMMAND_SYNC:       { status = cm_json_command(active_comment); break;}           // M100
-        case NEXT_ACTION_JSON_WAIT:               { status = cm_json_wait(active_comment); break;}              // M101
-//      case NEXT_ACTION_JSON_COMMAND_IMMEDIATE:  { status = mp_json_command_immediate(active_comment); break;} // M102
+        case NEXT_ACTION_JSON_COMMAND_SYNC:      { status = cm_json_command(active_comment); break;}            // M100
+        case NEXT_ACTION_JSON_WAIT:              { status = cm_json_wait(active_comment); break;}               // M101
+//      case NEXT_ACTION_JSON_COMMAND_IMMEDIATE: { status = mp_json_command_immediate(active_comment); break;}  // M102
 
         case NEXT_ACTION_DEFAULT: {
             cm_set_absolute_override(MODEL, gv.absolute_override); // apply absolute override & display as absolute
             switch (gv.motion_mode) {
-                case MOTION_MODE_CANCEL_MOTION_MODE: { cm->gm.motion_mode = gv.motion_mode; break;}             // G80
+                case MOTION_MODE_CANCEL_MOTION_MODE: { cm->gm.motion_mode = gv.motion_mode; break;}                 // G80
                 case MOTION_MODE_STRAIGHT_TRAVERSE:  { status = cm_straight_traverse(gv.target, gf.target); break;} // G0
-                case MOTION_MODE_STRAIGHT_FEED:      { status = cm_straight_feed(gv.target, gf.target); break;} // G1
-                case MOTION_MODE_CW_ARC:                                                                        // G2
-                case MOTION_MODE_CCW_ARC: { status = cm_arc_feed(gv.target,     gf.target,                      // G3
+                case MOTION_MODE_STRAIGHT_FEED:      { status = cm_straight_feed(gv.target, gf.target); break;}     // G1
+                case MOTION_MODE_CW_ARC:                                                                            // G2
+                case MOTION_MODE_CCW_ARC: { status = cm_arc_feed(gv.target,     gf.target,                          // G3
                                                                  gv.arc_offset, gf.arc_offset,
                                                                  gv.arc_radius, gf.arc_radius,
                                                                  gv.P_word,     gf.P_word,
                                                                  gp.modals[MODAL_GROUP_G1],
                                                                  gv.motion_mode);
-                                                                 break;
+                                            break;
                                           }
                 default: break;
             }

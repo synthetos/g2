@@ -65,6 +65,9 @@ inline void _debug_trap(const char *reason) {
 }
 #pragma GCC reset_options
 
+void LAGER(const char * msg);
+void LAGER_cm(const char * msg);
+
 //*** vector utilities ***
 
 extern float vector[AXES]; // vector of axes for passing to subroutines

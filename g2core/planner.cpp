@@ -202,8 +202,13 @@ void planner_init(mpPlanner_t *_mp, mpPlannerRuntime_t *_mr, mpBuf_t *queue, uin
 
 void planner_reset(mpPlanner_t *_mp)        // reset planner queue, cease MR activity, but leave positions alone
 {
+    // selectively reset mpPlanner and mpPlannerRuntime w/o actually wiping them
+    _mp->reset();
+    _mp->mr->reset();
+//    _mp->mr->block_state = BLOCK_INACTIVE;  // this resets the MR structure without actually wiping it
+    
+    // completely reset the planner queue
     _init_planner_queue(_mp, _mp->q.bf, _mp->q.queue_size);
-    _mp->mr->block_state = BLOCK_INACTIVE;  // this resets the MR structure without actually wiping it
 }
 
 stat_t planner_test_assertions(const mpPlanner_t *_mp)
@@ -490,7 +495,7 @@ bool mp_is_phat_city_time()
     return ((mp->plannable_time <= 0.0) || (PHAT_CITY_TIME < mp->plannable_time));
 }
 
-/*
+/***********************************************************************************
  * mp_planner_callback()
  *
  *  mp_planner_callback()'s job is to invoke backward planning intelligently.
@@ -508,7 +513,8 @@ bool mp_is_phat_city_time()
  *
  *  - _plan_block() is the backward planning function for a single buffer.
  *
- *  - Just-in-time forward planning is performed by mp_plan_move() in the plan_exec.cpp runtime executive
+ *  - Just-in-time forward planning is performed by mp_plan_move() in the 
+ *    plan_exec.cpp runtime executive
  *
  *  Some Items to note:
  *
@@ -528,8 +534,8 @@ stat_t mp_planner_callback()
 {
     // Test if the planner has transitioned to an IDLE state
     if ((mp_get_planner_buffers(mp) == mp->q.queue_size) &&     // detect and set IDLE state
-        (cm->motion_state == MOTION_STOP) &&
-        (cm->hold_state == FEEDHOLD_OFF)) {
+        (cm->motion_state == MOTION_STOP) && (cm->hold_state == FEEDHOLD_OFF)) {
+        if (mp->planner_state != PLANNER_IDLE) { LAGER_cm("Planner entering IDLE state");}
         mp->planner_state = PLANNER_IDLE;
         return (STAT_OK);
     }
@@ -537,6 +543,7 @@ stat_t mp_planner_callback()
     bool _timed_out = mp->block_timeout.isPast();
     if (_timed_out) {
         mp->block_timeout.clear();                   // timer is set on commit_write_buffer()
+        LAGER_cm("Blocks timed out");
     }
 
     if (!mp->request_planning && !_timed_out) {      // Exit if no request or timeout
@@ -547,12 +554,14 @@ stat_t mp_planner_callback()
     if (mp->planner_state == PLANNER_IDLE) {
         mp->p = mp_get_r();                         // initialize planner pointer to run buffer
         mp->planner_state = PLANNER_STARTUP;
+        LAGER_cm("Planner entering STARTUP state");
     }
     if (mp->planner_state == PLANNER_STARTUP) {
         if (!mp_planner_is_full(mp) && !_timed_out) {
             return (STAT_OK);                       // remain in STARTUP
         }
         mp->planner_state = PLANNER_PRIMING;
+        LAGER_cm("Planner entering PRIMING state");
     }
     mp_plan_block_list();
     return (STAT_OK);
@@ -798,8 +807,15 @@ void mp_commit_write_buffer(const blockType block_type)
     q->w->plannable = true;                 // enable block for planning
     mp->request_planning = true;
     q->w = q->w->nx;                        // advance write buffer pointer
-    mp->block_timeout.set(BLOCK_TIMEOUT_MS); // reset the block timer
+    mp->block_timeout.set(BLOCK_TIMEOUT_MS);// reset the block timer
     qr_request_queue_report(+1);            // request QR and add to "added buffers" count
+
+    char msg[64];
+    sprintf(msg, "commit buffer:%d block state:%d timeout.isPast:%d", 
+            q->w->buffer_number, 
+            q->w->block_state,
+            mp->block_timeout.isPast());
+    LAGER_cm(msg);
 }
 
 // Note: mp_get_run_buffer() is only called by mp_exec_move(), which is inside an interrupt

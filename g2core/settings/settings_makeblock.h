@@ -59,15 +59,15 @@
 
 #define USB_SERIAL_PORTS_EXPOSED    1       // Valid options are 1 or 2, only!
 
-#define COMM_MODE               JSON_MODE   // one of: TEXT_MODE, JSON_MODE
+#define COMM_MODE                   JSON_MODE   // one of: TEXT_MODE, JSON_MODE
 
-#define TEXT_VERBOSITY          TV_VERBOSE  // one of: TV_SILENT, TV_VERBOSE
-#define JSON_VERBOSITY          JV_MESSAGES // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
-#define QUEUE_REPORT_VERBOSITY  QR_OFF      // one of: QR_OFF, QR_SINGLE, QR_TRIPLE
+#define TEXT_VERBOSITY              TV_VERBOSE  // one of: TV_SILENT, TV_VERBOSE
+#define JSON_VERBOSITY              JV_MESSAGES // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
+#define QUEUE_REPORT_VERBOSITY      QR_OFF      // one of: QR_OFF, QR_SINGLE, QR_TRIPLE
 
-#define STATUS_REPORT_VERBOSITY SR_FILTERED // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
-#define STATUS_REPORT_MIN_MS        200                     // milliseconds - enforces a viable minimum
-#define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
+#define STATUS_REPORT_VERBOSITY     SR_FILTERED // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
+#define STATUS_REPORT_MIN_MS        200         // milliseconds - enforces a viable minimum
+#define STATUS_REPORT_INTERVAL_MS   250         // milliseconds - set $SV=0 to disable
 
 #define STATUS_REPORT_DEFAULTS      "line","stat","posx","posy","posz",\
                                     "vel", "unit","feed","coor","momo",\

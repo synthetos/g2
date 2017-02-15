@@ -288,10 +288,30 @@ typedef enum {
 
 /* Diagnostics */
 
-//#define ASCII_ART(s)            xio_writeline(s)
+//#define __PLANNER_DIAGNOSTICS   // comment this out to drop diagnostics
+
+#ifdef __PLANNER_DIAGNOSTICS
+#define ASCII_ART(s) xio_writeline(s)
+
+#define UPDATE_BF_DIAGNOSTICS(bf)   { bf->linenum = bf->gm.linenum; \
+                                      bf->block_time_ms = bf->block_time*60000; \
+                                      bf->plannable_time_ms = bf->plannable_time*60000; }
+                                    
+#define UPDATE_MP_DIAGNOSTICS       { mp->plannable_time_ms = mp->plannable_time*60000; }
+#define SET_PLANNER_ITERATIONS(i)   { bf->iterations = i; }
+#define INC_PLANNER_ITERATIONS      { bf->iterations++; }
+#define SET_MEET_ITERATIONS(i)      { bf->meet_iterations = i; }
+#define INC_MEET_ITERATIONS         { bf->meet_iterations++; }
+
+#else
 #define ASCII_ART(s)
-//#define UPDATE_BF_DIAGNOSTICS(bf) { bf->block_time_ms = bf->block_time*60000; bf->plannable_time_ms = bf->plannable_time*60000; }
-#define UPDATE_MP_DIAGNOSTICS     { mp->plannable_time_ms = mp->plannable_time*60000; }
+#define UPDATE_BF_DIAGNOSTICS
+#define UPDATE_MP_DIAGNOSTICS
+#define SET_PLANNER_ITERATIONS(i)
+#define INC_PLANNER_ITERATIONS
+#define SET_MEET_ITERATIONS(i)
+#define INC_MEET_ITERATIONS
+#endif
 
 /*
  *  Planner structures
@@ -314,14 +334,14 @@ typedef struct mpBuffer {
     stat_t (*bf_func)(struct mpBuffer *bf); // callback to buffer exec function
     cm_exec_t cm_func;                  // callback to canonical machine execution function
 
-    // DIAGNOSTICS for easier debugging...
+#ifdef __PLANNER_DIAGNOSTICS
     uint32_t linenum;                   // mirror of bf->gm.linenum
     int iterations;
     float block_time_ms;
     float plannable_time_ms;            // time in planner
     float plannable_length;             // length in planner
     uint8_t meet_iterations;            // iterations needed in _get_meet_velocity
-    //...to here
+#endif
 
     bufferState buffer_state;           // used to manage queuing/dequeuing
     blockType block_type;               // used to dispatch to run routine
@@ -367,12 +387,14 @@ typedef struct mpBuffer {
         bf_func = nullptr;
         cm_func = nullptr;
 
+#ifdef __PLANNER_DIAGNOSTICS
         linenum = 0;
         iterations = 0;
         block_time_ms = 0;
         plannable_time_ms = 0;
         plannable_length = 0;
         meet_iterations = 0;
+#endif
 
         buffer_state = MP_BUFFER_EMPTY;
         block_type = BLOCK_TYPE_NULL;
@@ -473,6 +495,14 @@ typedef struct mpPlannerRuntime {       // persistent runtime variables
     GCodeState_t gm;                    // gcode model state currently executing
 
     magic_t magic_end;
+
+   // resets mpPlannerRuntime structure without actually wiping it
+    void reset() {
+        block_state = BLOCK_INACTIVE;
+        section = SECTION_HEAD;
+        section_state = SECTION_OFF;
+    }
+        
 } mpPlannerRuntime_t;
 
 //**** Master Planner Structure ***
@@ -515,6 +545,19 @@ typedef struct mpPlanner {              // common variables for a planner contex
     mpPlannerQueue_t q;                 // embed a planner buffer queue manager
     
     magic_t magic_end;
+    
+    // clears mpPlanner structure but leaves position alone
+    void reset() {
+        run_time_remaining = 0;
+        plannable_time = 0;
+        planner_state = PLANNER_IDLE;
+        request_planning = false;
+        backplanning = false;
+        mfo_active = false;
+        ramp_active = false;
+        entry_changed = false;
+        block_timeout.clear();
+    }
 } mpPlanner_t;
 
 // Reference global scope structures

@@ -833,6 +833,7 @@ stat_t cm_set_units_mode(const uint8_t mode)
 stat_t cm_set_distance_mode(const uint8_t mode)
 {
     cm->gm.distance_mode = (cmDistanceMode)mode;         // 0 = absolute mode, 1 = incremental
+    LAGER_cm("set distance mode");
     return (STAT_OK);
 }
 
@@ -1273,7 +1274,8 @@ stat_t cm_straight_feed(const float target[], const bool flags[])
     }
     cm->gm.motion_mode = MOTION_MODE_STRAIGHT_FEED;
 
-    if (!(flags[AXIS_X] | flags[AXIS_Y] | flags[AXIS_Z] | flags[AXIS_A] | flags[AXIS_B] | flags[AXIS_C])) {
+    if (!(flags[AXIS_X] | flags[AXIS_Y] | flags[AXIS_Z] | 
+          flags[AXIS_A] | flags[AXIS_B] | flags[AXIS_C])) {
         return(STAT_OK);
     }
 

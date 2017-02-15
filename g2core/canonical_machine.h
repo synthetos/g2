@@ -439,9 +439,10 @@ stat_t cm_json_wait(char *json_string);                         // M102
 
 // Feedhold and related functions (cycle_feedhold.cpp)
 void cm_request_feedhold(void);
-void cm_request_end_hold(void);
+void cm_request_exit_hold(void);
 void cm_request_queue_flush(void);
 stat_t cm_feedhold_sequencing_callback(void);                   // process feedhold, cycle start and queue flush requests
+stat_t cm_feedhold_command_blocker(void);
 
 bool cm_has_hold(void);                                         // has hold in primary planner
 void cm_start_hold(void);                                       // starts hold in primary planner

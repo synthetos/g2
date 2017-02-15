@@ -116,14 +116,14 @@ static float _get_meet_velocity(const float          v_0,
 
 void _zoid_exit(mpBuf_t* bf, zoidExitPoint exit_point) 
 {
-    // DIAGNOSTIC
+#ifdef __PLANNER_DIAGNOSTICS
     //    bf->zoid_exit = exit_point;
     if (mp_runtime_is_idle()) {  // normally the runtime keeps this value fresh
-                                 //        bf->time_in_plan_ms += bf->block_time_ms;
+//      bf->time_in_plan_ms += bf->block_time_ms;
         bf->plannable_time_ms += bf->block_time_ms;
     }
+#endif
 }
-
 
 // Hint will be one of these from back-planning: COMMAND_BLOCK, PERFECT_DECELERATION, PERFECT_CRUISE,
 // MIXED_DECELERATION, ASYMMETRIC_BUMP
@@ -501,9 +501,7 @@ static float _get_meet_velocity(const float          v_0,
         block->head_length = L / 2.0;
         block->body_length = 0;
         block->tail_length = L - block->head_length;
-
-        bf->meet_iterations = -1;
-
+        SET_PLANNER_ITERATIONS(-1);     // DIAGNOSTIC
         return v_1;
     }
 
@@ -587,8 +585,6 @@ static float _get_meet_velocity(const float          v_0,
 
         v_1 = v_1 - (l_c * recip_l_d);
     }
-
-    bf->meet_iterations = i;
-
+    SET_MEET_ITERATIONS(i);     // DIAGNOSTIC
     return v_1;
 }

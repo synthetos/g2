@@ -55,14 +55,15 @@ static void _calculate_jerk(mpBuf_t* bf);
 static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const float axis_square[]);
 static void _calculate_junction_vmax(mpBuf_t* bf);
 
-// DIAGNOSTICS
+#ifdef __PLANNER_DIAGNOSTICS
 #pragma GCC optimize("O0")  // this pragma is required to force the planner to actually set these unused values
-//#pragma GCC reset_options
 static void _set_bf_diagnostics(mpBuf_t* bf) {
-    bf->linenum = bf->gm.linenum;
-//  UPDATE_BF_DIAGNOSTICS(bf);
+    UPDATE_BF_DIAGNOSTICS(bf);
 }
 #pragma GCC reset_options
+#else
+static void _set_bf_diagnostics(mpBuf_t* bf) {}
+#endif
 
 /* Runtime-specific setters and getters
  *
@@ -324,7 +325,7 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
         for (; bf->plannable || (braking_velocity < bf->exit_velocity); bf = bf->pv) {
             // Timings from *here*
 
-            bf->iterations++;
+            INC_PLANNER_ITERATIONS    // DIAGNOSTIC
             bf->plannable = bf->plannable && !optimal;  // Don't accidentally enable plannable!
 
             // Let's be mindful that forward planning may change exit_vmax, and our exit velocity may be lowered
