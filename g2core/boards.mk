@@ -153,6 +153,12 @@ ifeq ("$(CONFIG)","EggBot")
     endif
     SETTINGS_FILE="settings_eggbot.h"
 endif
+ifeq ("$(CONFIG)","AxiDrawv3")
+    ifeq ("$(BOARD)","NONE")
+        BOARD=gquadratic-b
+    endif
+    SETTINGS_FILE="settings_axidraw_v3.h"
+endif
 
 
 include $(wildcard ./board/$(STAR).mk)

@@ -1,5 +1,5 @@
 /*
- * settings_eggbot.h - settings for the EggBot
+ * settings_watercolorbot_v2.h - settings for the WaterColorBot v2 (http://watercolorbot.com/)
  * This file is part of the g2core project
  *
  * Copyright (c) 2016 Alden S. Hart Jr.
@@ -92,15 +92,19 @@
 
 #define M1_MOTOR_MAP                AXIS_Y                  // 1ma
 #define M1_STEP_ANGLE               1.8                     // 1sa
-#define M1_TRAVEL_PER_REV           125.66370614            // 1tr
+// According to the EiBB settings here:
+// https://github.com/evil-mad/axidraw/blob/master/inkscape%20driver/axidraw_conf.py
+// At 16x microstepping, it's 2032 steps per INCH, which is ((16/2032)*25.4) = 0.2mm per FULL step
+// With a 200 step/revolution (1.8º/step) motor, that's 0.2*200=40mm per revolution
+#define M1_TRAVEL_PER_REV           40                      // 1tr
 #define M1_MICROSTEPS               32                      // 1mi        1,2,4,8
-#define M1_POLARITY                 1                       // 1po        0=normal, 1=reversed
+#define M1_POLARITY                 0                       // 1po        0=normal, 1=reversed
 #define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm        standard
 #define M1_POWER_LEVEL              0.4
 
 #define M2_MOTOR_MAP                AXIS_X
 #define M2_STEP_ANGLE               1.8
-#define M2_TRAVEL_PER_REV           125.66370614
+#define M2_TRAVEL_PER_REV           40
 #define M2_MICROSTEPS               32
 #define M2_POLARITY                 1
 #define M2_POWER_MODE               MOTOR_POWER_MODE
@@ -118,13 +122,6 @@
 #define M3_POWER_MODE               MOTOR_ALWAYS_POWERED
 #define M3_POWER_LEVEL              0.50                    // this is ignored
 
-#define M4_MOTOR_MAP                AXIS_A
-#define M4_STEP_ANGLE               1.8
-#define M4_TRAVEL_PER_REV           360                     // degrees moved per motor rev
-#define M4_MICROSTEPS               32
-#define M4_POLARITY                 0
-#define M4_POWER_MODE               MOTOR_POWER_MODE
-#define M4_POWER_LEVEL              0.6
 
 // *** axis settings **********************************************************************************
 
@@ -171,60 +168,6 @@
 #define Z_LATCH_VELOCITY            100
 #define Z_LATCH_BACKOFF             10
 #define Z_ZERO_BACKOFF              2
-
-// Rotary values are chosen to make the motor react the same as X for testing
-/***************************************************************************************
- * To calculate the speeds here, in Wolfram Alpha-speak:
- *
- *   c=2*pi*r, r=0.609, d=c/360, s=((S*60)/d), S=40 for s
- *   c=2*pi*r, r=5.30516476972984, d=c/360, s=((S*60)/d), S=40 for s
- *
- * Change r to A_RADIUS, and S to the desired speed, in mm/s or mm/s/s/s.
- *
- * It will return s= as the value you want to enter.
- *
- * If the value is over 1 million, the code will divide it by 1 million,
- * so you have to pre-multiply it by 1000000.0. (The value is in millions, btw.)
- *
- * Note that you need these to be floating point values, so always have a .0 at the end!
- *
- ***************************************************************************************/
-
-#define A_AXIS_MODE             AXIS_RADIUS
-#define A_RADIUS                5.30516476972984
-//#define A_VELOCITY_MAX        25920.0 // ~40 mm/s, 2,400 mm/min
-//#define A_FEEDRATE_MAX        25920.0/2.0 // ~20 mm/s, 1,200 mm/min
-#define A_VELOCITY_MAX          77760.0 // G0 rate ~120 mm/s, 2,400 mm/min
-#define A_FEEDRATE_MAX          9720.0 // 9720.0 = G1 rate ~15 mm/s, 900 mm/min
-#define A_TRAVEL_MIN            0
-#define A_TRAVEL_MAX            10
-#define A_JERK_MAX              648000 // 1,000 million mm/min^3 = 648000
-                                       // * a million IF it's over a million
-                                       // c=2*pi*r, r=5.30516476972984, d=c/360, s=((1000*60)/d)
-#define A_HOMING_INPUT          0
-#define A_HOMING_DIRECTION      0
-#define A_SEARCH_VELOCITY       2000
-#define A_LATCH_VELOCITY        2000
-#define A_LATCH_BACKOFF         5
-#define A_ZERO_BACKOFF          2
-#define A_JERK_HIGH_SPEED       A_JERK_MAX
-
-#define B_AXIS_MODE             AXIS_DISABLED
-#define B_RADIUS                1
-#define B_VELOCITY_MAX          3600
-#define B_FEEDRATE_MAX          B_VELOCITY_MAX
-#define B_TRAVEL_MIN            0
-#define B_TRAVEL_MAX            -1
-//#define B_JERK_MAX            20000000
-#define B_JERK_MAX              20
-#define B_HOMING_INPUT          0
-#define B_HOMING_DIRECTION      0
-#define B_SEARCH_VELOCITY       600
-#define B_LATCH_VELOCITY        100
-#define B_LATCH_BACKOFF         10
-#define B_ZERO_BACKOFF          2
-#define B_JERK_HIGH_SPEED       A_JERK_MAX
-
 
 //*** Input / output settings ***
 /*
@@ -321,28 +264,6 @@
 #define DO13_MODE                   IO_ACTIVE_HIGH
 
 
-/*** Extruders / Heaters ***/
-/*
-#define MIN_FAN_TEMP                40.0
-#define MAX_FAN_TEMP                150.0
-
-#define H1_DEFAULT_ENABLE           true
-#define H1_DEFAULT_P                9.0
-#define H1_DEFAULT_I                0.12
-#define H1_DEFAULT_D                400.0
-
-#define H2_DEFAULT_ENABLE           false
-#define H2_DEFAULT_P                9.0
-#define H2_DEFAULT_I                0.12
-#define H2_DEFAULT_D                400.0
-
-#define H3_DEFAULT_ENABLE           false
-#define H3_DEFAULT_P                9.0
-#define H3_DEFAULT_I                0.12
-#define H3_DEFAULT_D                400.0
-*/
-
-
 // *** PWM SPINDLE CONTROL ***
 
 #define P1_PWM_FREQUENCY            100             // in Hz
@@ -399,3 +320,10 @@
 #define G59_A_OFFSET 0
 #define G59_B_OFFSET 0
 #define G59_C_OFFSET 0
+
+// *** DEFAULT COORDINATE SYSTEM ROTATION ***
+
+// values are in radians, and are floating point values
+#define ROTATION_ABOUT_X 0.0
+#define ROTATION_ABOUT_Y 0.0
+#define ROTATION_ABOUT_Z -0.7853981634 // ((2pi)/360)*45

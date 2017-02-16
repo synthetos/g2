@@ -283,6 +283,20 @@
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
+		D492E5AE1E54C2B4005ED97D /* G2 gQuadratic AxiDraw v3 */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=AxiDrawv3 DEBUG=2";
+			buildConfigurationList = D492E5AF1E54C2B4005ED97D /* Build configuration list for PBXLegacyTarget "G2 gQuadratic AxiDraw v3" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "G2 gQuadratic AxiDraw v3";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
 		D4AC391A1C7BAB8E0098D685 /* G2 sbv300 */ = {
 			isa = PBXLegacyTarget;
 			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=sbv300 DEBUG=2";
@@ -406,6 +420,7 @@
 				D4782AAE1D9B16BE00B32136 /* G2 Probotix */,
 				D457112317053BFB00EA19A8 /* index */,
 				D4782AB61D9E39EC00B32136 /* G2 EggBot */,
+				D492E5AE1E54C2B4005ED97D /* G2 gQuadratic AxiDraw v3 */,
 			);
 		};
 /* End PBXProject section */
@@ -679,6 +694,22 @@
 			};
 			name = Release;
 		};
+		D492E5B01E54C2B4005ED97D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		D492E5B11E54C2B4005ED97D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		D4AC391C1C7BAB8E0098D685 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -830,6 +861,15 @@
 			buildConfigurations = (
 				D4782AB81D9E39EC00B32136 /* Debug */,
 				D4782AB91D9E39EC00B32136 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D492E5AF1E54C2B4005ED97D /* Build configuration list for PBXLegacyTarget "G2 gQuadratic AxiDraw v3" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D492E5B01E54C2B4005ED97D /* Debug */,
+				D492E5B11E54C2B4005ED97D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
