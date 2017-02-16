@@ -633,7 +633,7 @@ stat_t io_get_output(nvObj_t *nv)
 }
 
 /*
- *  io_set_output() - return input state given an nv object
+ *  io_set_output() - return output state given an nv object
  */
 stat_t io_set_output(nvObj_t *nv)
 {
