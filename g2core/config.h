@@ -176,7 +176,7 @@ typedef uint16_t index_t;               // use this if there are > 255 indexed o
 #define NV_MESSAGE_LEN 128              // sufficient space to contain end-user messages
 
                                         // pre-allocated defines (take RAM permanently)
-#define NV_SHARED_STRING_LEN 512        // shared string for string values
+#define NV_SHARED_STRING_LEN 1024        // shared string for string values
 #define NV_BODY_LEN 40                  // body elements - allow for 1 parent + N children
 #define NV_EXEC_LEN 10                  // elements reserved for exec, which won't directly respond
 // (each body element takes about 30 bytes of RAM)

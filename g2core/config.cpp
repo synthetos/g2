@@ -184,8 +184,7 @@ stat_t config_test_assertions()
         (BAD_MAGIC(nvl.magic_start)) ||
         (BAD_MAGIC(nvl.magic_end)) ||
         (BAD_MAGIC(nvStr.magic_start)) ||
-        (BAD_MAGIC(nvStr.magic_end)) ||
-        (global_string_buf[GLOBAL_STRING_LEN-1] != NUL)) {
+        (BAD_MAGIC(nvStr.magic_end))) {
         return(cm_panic(STAT_CONFIG_ASSERTION_FAILURE, "config_test_assertions()"));
     }
     return (STAT_OK);

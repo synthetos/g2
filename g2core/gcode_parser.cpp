@@ -207,7 +207,7 @@ stat_t gcode_parser(char *block)
  *   - block_delete_flag is set true if block delete encountered, false otherwise
  */
 
-static char _normalize_scratch[RX_BUFFER_MIN_SIZE];
+char _normalize_scratch[RX_BUFFER_SIZE];
 
 static void _normalize_gcode_block(char *str, char **active_comment, uint8_t *block_delete_flag)
 {
@@ -457,7 +457,7 @@ static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value)
     char *end;
     *value = strtof(*pstr, &end);
     if(end == *pstr) {
-        return(STAT_BAD_NUMBER_FORMAT);
+            return(STAT_BAD_NUMBER_FORMAT);
     }    // more robust test then checking for value=0;
     *pstr = end;
     return (STAT_OK);            // pointer points to next character after the word
@@ -678,7 +678,7 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
             case 'K': SET_NON_MODAL (arc_offset[2], value);
             case 'L': SET_NON_MODAL (L_word, value);
             case 'R': SET_NON_MODAL (arc_radius, value);
-            case 'N': SET_NON_MODAL (linenum,(uint32_t)value);        // line number
+            case 'N': SET_NON_MODAL (linenum,(uint32_t)value);      // line number
             default: status = STAT_GCODE_COMMAND_UNSUPPORTED;
         }
         if(status != STAT_OK) break;
@@ -782,8 +782,8 @@ static stat_t _execute_gcode_block(char *active_comment)
             break; 
         }
         case NEXT_ACTION_CANCEL_TL_OFFSET: {                // G49
-            ritorno(cm_cancel_tl_offset()); 
-            break; 
+            ritorno(cm_cancel_tl_offset());
+            break;
         }
     }
 

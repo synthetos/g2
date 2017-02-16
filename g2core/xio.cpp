@@ -50,6 +50,8 @@ using Motate::TXBuffer;
 #include "text_parser.h"
 #endif
 
+// defines for assertions
+
 /**** HIGH LEVEL EXPLANATION OF XIO ****
  *
  * The XIO subsystem serves three purposes:
@@ -102,14 +104,6 @@ struct xioDeviceWrapperBase {                // C++ base class for device primit
     uint8_t caps;                            // bitfield for capabilities flags (these are persistent)
     devflags_t flags;                        // bitfield for device state flags (these are not)
     devflags_t next_flags;                   // bitfield for next-state transitions
-
-    // line reader functions
-//    uint16_t read_index;                    // index into line being read
-//    const uint16_t read_buf_size;           // static variable set at init time
-//    char read_buf[USB_LINE_BUFFER_SIZE];    // buffer for reading lines
-
-    // Internal use only:
-//    bool _ready_to_send;
 
     // Checks against class flags variable:
 //  bool canRead() { return caps & DEV_CAN_READ; }
@@ -411,7 +405,7 @@ extern xio_t xio;
 
 // LineRXBuffer takes the Motate RXBuffer (which handles "transfers", usually DMA), and adds G2 line-reading
 // semantics to it.
-template <uint16_t _size, typename owner_type, uint8_t _header_count = 8, uint16_t _line_buffer_size = 255>
+template <uint16_t _size, typename owner_type, uint8_t _header_count = 8, uint16_t _line_buffer_size = RX_BUFFER_SIZE>
 struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
     typedef RXBuffer<_size, owner_type, char> parent_type;
 
@@ -429,7 +423,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
     // START OF LineRXBuffer PROPER
     static_assert(((_header_count-1)&_header_count)==0, "_header_count must be 2^N");
 
-    char _line_buffer[_line_buffer_size]; // hold exactly one line to return
+    char _line_buffer[_line_buffer_size+1]; // hold exactly one line to return
     uint32_t _line_end_guard = 0xBEEF;
 
     // General term usage:
@@ -437,7 +431,9 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
     // * "offset" means it's a character in the _data array
 
     uint16_t _scan_offset;          // offset into data of the last character scanned
-    uint16_t _line_start_offset;    // offset into first character of the line
+    uint16_t _line_start_offset;    // offset into first character of the line, or the first char to ignore (too-long lines)
+    uint16_t _last_line_length;     // used for ensuring lines aren't too long
+    bool     _ignore_until_next_line; // if we get a too-long-line, we ignore the rest by setting this flag
     bool     _at_start_of_line;     // true if the last character scanned was the end of a line
 
     uint16_t _lines_found;          // count of complete non-control lines that were found during scanning.
@@ -611,13 +607,30 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 
             // Look for line endings
             if (c == '\r' || c == '\n') {
-                if (!_at_start_of_line) {   // We only mark ends_line for the first end-line char, and if
+                if (_ignore_until_next_line) {
+                    // we finally ended the line we were ignoring
+                    // add a skip section to jump over the overage
+                    _skip_sections.addSkip(_line_start_offset, _scan_offset);
+                    // move the start of the next skip section to after this skip
+                    _line_start_offset = _scan_offset;
+
+                    // we DON'T want to end it normally (by counting a line)
+                    _at_start_of_line = true;
+                    _ignore_until_next_line = false;
+
+                    _last_line_length = 0;
+                }
+                else if (!_at_start_of_line) {   // We only mark ends_line for the first end-line char, and if
                     ends_line  = true;      // _at_start_of_line is already true, this is not the first.
                 }
             }
+            // prevent going furnther if we are ignoring
+            else if (_ignore_until_next_line)
+            {
+                // don't do anything
+            }
             // Classify the line if it's a single character 
-            else
-            if (_at_start_of_line &&
+            else if (_at_start_of_line &&
                 ((c == '!')         ||
                  (c == '~')         ||
                  (c == ENQ)         ||        // request ENQ/ack
@@ -637,12 +650,14 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                 if (_at_start_of_line) {
                     // This is the first character at the beginning of the line.
                     _line_start_offset = _scan_offset;
+                    _last_line_length = 0;
                 }
                 _at_start_of_line = false;
             }
 
             // bump the _scan_offset
             _scan_offset = _getNextScanOffset();
+            _last_line_length++;
 
             if (ends_line) {
                 // _scan_offset is now one past the end of the line,
@@ -650,7 +665,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                 _at_start_of_line = true;
 
                 // Here we classify the line.
-                // If we are is_control is already true, it's an already classified
+                // If is_control is already true, it's an already classified
                 // single-character command.
                 if (!is_control) {
                     // TODO --- Call a function to do this
@@ -676,7 +691,25 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                     _lines_found++;
                 }
             } // if ends_line
+            else if (_last_line_length == (_line_buffer_size - 1)) {
+                // force an end-of-line, splitting this line into two lines
+                _ignore_until_next_line = true;
+                _line_start_offset = _scan_offset;
+                _lines_found++;
+            }
         } //while (_isMoreToScan())
+
+        // special edge case: we ran out of items to scan (buffer full?), but we're ignoring because a line was too long
+        // example: we get a line that it multiple-times the length of the buffer
+        // so we'll dump skip sections to the readline will move the read pointer forward
+        if (_ignore_until_next_line && (_line_start_offset != _scan_offset)) {
+            // add a skip section to jump over the overage
+            _skip_sections.addSkip(_line_start_offset, _scan_offset);
+            // move the start of the next skip section to after this skip
+            _line_start_offset = _scan_offset;
+        }
+
+
         return false; // no control was found
     };
 
@@ -725,11 +758,8 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                 }
             }
 
-            while ((_scan_offset != _line_start_offset) &&
-                   (line_size < (_line_buffer_size - 2))) {
-//                if (!_canBeRead(read_offset)) { // This test should NEVER fail.
-//                    _debug_trap("readline hit unreadable and shouldn't have!");
-//                }
+            // note that if it's marked as a control, it's guaranteed to fit in the line buffer
+            while (_scan_offset != _line_start_offset) {
 
                 // copy the charater to _line_buffer
                 char c = _data[_line_start_offset];
@@ -749,38 +779,6 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             if (ctrl_is_at_beginning_of_data) {
                 _read_offset = _scan_offset;
             }
-//            else {
-//                // special case: if the return value is '%'
-//                // then we actually consider everything before it to be read
-//
-//                if ('%' == _line_buffer[0]) {
-//                    // Things that must be managed here:
-//                    // * _read_offset -- we're skipping data
-//                    // * _lines_found -- we shouldn't have any lines "left"
-//                    // * _skip_sections -- there's nothing to skip, we just did
-//
-//                    // Things that won't be changed (further):
-//                    // * _scan_offset -- we're not changing past where it's scanned
-//                    // * _line_start_offset -- we've already adjusted it
-//                    // * _at_start_of_line -- should always be true when we're here
-//
-//                    // move the read buffer up to where we're scanning
-//                    _read_offset = _scan_offset;
-//
-//                    // record that we have 0 lines (of data) in the buffer
-//                    _lines_found = 0;
-//
-//                    // and clear out any skip sections we have
-//                    while (!_skip_sections.isEmpty()) {
-//                        _skip_sections.popSkip();
-//                    }
-//                }
-//            }
-
-//            if (ctrl_is_at_beginning_of_data) {
-//                // attempt to request more data
-//                _restartTransfer();
-//            }
 
             return _line_buffer;
         } // end if (found_control)
@@ -790,12 +788,15 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             return nullptr;
         }
 
+        // skip sections will always start at the beginning of a line
+        // handle this, even with no line, in case we're ignoring a huge too-long line
+        _skip_sections.skip(_read_offset);
+
         if (_lines_found == 0) {
             // nothing to return
             line_size = 0;
             return nullptr;
         }
-
 
         // By the time we get here, we know we have at least one line in _data.
 
@@ -803,9 +804,6 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
         if (_data[_read_offset] == 0) {
             _debug_trap("read ran into NULL");
         }
-
-        // skip sections will always start at the beginning of a line
-        _skip_sections.skip(_read_offset);
 
         // scan past any leftover CR or LF from the previous line
         char c = _data[_read_offset];
@@ -819,11 +817,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             c = _data[_read_offset];
         }
 
-        while (line_size < (_line_buffer_size - 2)) {
-//            if (!_canBeRead(read_offset)) { // This test should NEVER fail.
-//                _debug_trap("readline hit unreadable and shouldn't have!");
-//            }
-
+        while (line_size < (_line_buffer_size - 1)) {
             _read_offset = (_read_offset+1)&(_size-1);
 
             if ( c == '\r' ||
@@ -840,6 +834,10 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             dst_ptr++;
 
             c = _data[_read_offset];
+        }
+        if (line_size == (_line_buffer_size - 1)) {
+            // add a line-ending
+            *dst_ptr++ = '\n';
         }
 
         --_lines_found;
@@ -1091,7 +1089,7 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
 
 
 // Specialization for xio_flash_file -- we don't need most of the structure around a Device for xio_flash_file
-template<uint16_t _line_buffer_size = 255>
+template<uint16_t _line_buffer_size = 512>
 struct xioFlashFileDeviceWrapper : xioDeviceWrapperBase {    // describes a device for reading and writing
     xio_flash_file *_current_file = nullptr;
 

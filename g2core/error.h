@@ -53,9 +53,6 @@
 typedef uint8_t stat_t;
 extern stat_t status_code;
 
-#define GLOBAL_STRING_LEN 256  // allow sufficient space for JSON responses and message strings
-extern char global_string_buf[];
-
 char *get_status_message(stat_t status);
 
 // ritorno is a handy way to provide exception returns

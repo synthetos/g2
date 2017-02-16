@@ -427,7 +427,7 @@ static void _load_move()
     // Be aware that dda_ticks_downcount must equal zero for the loader to run.
     // So the initial load must also have this set to zero as part of initialization
     if (st_runtime_isbusy()) {
-        return;                                                 // exit if the runtime is busy
+        return;                     // exit if the runtime is busy
     }
 
     // If there are no moves to load start motor power timeouts
@@ -646,8 +646,8 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
         return (cm_panic(STAT_PREP_LINE_MOVE_TIME_IS_INFINITE, "st_prep_line()"));
     } else if (isnan(segment_time)) {                           // never supposed to happen
         return (cm_panic(STAT_PREP_LINE_MOVE_TIME_IS_NAN, "st_prep_line()"));
-    } else if (segment_time < EPSILON) {
-        return (STAT_MINIMUM_TIME_MOVE);
+//    } else if (segment_time < EPSILON) {
+//        return (STAT_MINIMUM_TIME_MOVE);
     }
     // setup segment parameters
     // - dda_ticks is the integer number of DDA clock ticks needed to play out the segment

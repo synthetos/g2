@@ -80,7 +80,7 @@ mpBuf_t mp2_queue[SECONDARY_QUEUE_SIZE];   // storage allocation for secondary p
 #define JSON_COMMAND_BUFFER_SIZE 3
 
 struct json_command_buffer_t {
-    char buf[RX_BUFFER_MIN_SIZE];
+    char buf[RX_BUFFER_SIZE];
     json_command_buffer_t *pv;
     json_command_buffer_t *nx;
 };
