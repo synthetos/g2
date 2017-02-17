@@ -50,8 +50,8 @@ typedef enum {                  // how spindle controls are presented by the Gco
     SPINDLE_OFF = 0,            // M5
     SPINDLE_CW = 1,             // M3 and store CW to spindle.direction
     SPINDLE_CCW = 2,            // M4 and store CCW to spsindle.direction
-    SPINDLE_PAUSE,              // request PAUSE and store PAUSED state to spindle.state
-    SPINDLE_RESUME,             // request RESUME and revert spindle.state to CW, CCW
+    SPINDLE_PAUSE = 3,          // request PAUSE and store PAUSED state to spindle.state
+    SPINDLE_RESUME = 4,         // request RESUME and revert spindle.state to CW, CCW
     SPINDLE_NOP,                // no operation
     SPINDLE_REV                 // operation to reverse spindle direction    
 } spControl;

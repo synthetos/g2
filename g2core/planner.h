@@ -581,7 +581,7 @@ extern mpBuf_t mp2_queue[SECONDARY_QUEUE_SIZE]; // storage allocation for second
 
 void planner_init(mpPlanner_t *_mp, mpPlannerRuntime_t *_mr, mpBuf_t *queue, uint8_t queue_size);
 void planner_reset(mpPlanner_t *_mp);
-stat_t planner_test_assertions(const mpPlanner_t *_mp);
+stat_t planner_assert(const mpPlanner_t *_mp);
 
 void mp_halt_runtime(void);
 

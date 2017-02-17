@@ -471,12 +471,12 @@ static stat_t _test_assertions()
 stat_t _test_system_assertions()
 {
     // these functions will panic if an assertion fails
-    _test_assertions();                     // controller assertions (local)
+    _test_assertions();         // controller assertions (local)
     config_test_assertions();
     canonical_machine_test_assertions(&cm1);
     canonical_machine_test_assertions(&cm2);
-    planner_test_assertions(&mp1);
-    planner_test_assertions(&mp2);
+    planner_assert(&mp1);
+    planner_assert(&mp2);
     stepper_test_assertions();
     encoder_test_assertions();
     xio_test_assertions();

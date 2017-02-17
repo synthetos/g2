@@ -141,9 +141,9 @@ static stat_t _exec_command(mpBuf_t *bf);
 static stat_t _exec_json_wait(mpBuf_t *bf);
 
 /*
- * planner_init()
- * planner_reset()
- * planner_test_assertions() - test assertions, PANIC if violation exists
+ * planner_init() - initialize MP, MR and planner queue buffers
+ * planner_reset() - selective reset MP and MR structures
+ * planner_assert() - test planner assertions, PANIC if violation exists
  */
 
 // initialize a planner queue
@@ -205,19 +205,14 @@ void planner_reset(mpPlanner_t *_mp)        // reset planner queue, cease MR act
     // selectively reset mpPlanner and mpPlannerRuntime w/o actually wiping them
     _mp->reset();
     _mp->mr->reset();
-//    _mp->mr->block_state = BLOCK_INACTIVE;  // this resets the MR structure without actually wiping it
-    
-    // completely reset the planner queue
-    _init_planner_queue(_mp, _mp->q.bf, _mp->q.queue_size);
+    _init_planner_queue(_mp, _mp->q.bf, _mp->q.queue_size); // reset planner buffers
 }
 
-stat_t planner_test_assertions(const mpPlanner_t *_mp)
+stat_t planner_assert(const mpPlanner_t *_mp)
 {
-    if (
-        (BAD_MAGIC(_mp->magic_start))     || (BAD_MAGIC(_mp->magic_end)) ||
-        (BAD_MAGIC(_mp->mr->magic_start)) || (BAD_MAGIC(_mp->mr->magic_end))
-        ) {
-        return (cm_panic(STAT_PLANNER_ASSERTION_FAILURE, "planner_test_assertions()"));
+    if ((BAD_MAGIC(_mp->magic_start))     || (BAD_MAGIC(_mp->magic_end)) ||
+        (BAD_MAGIC(_mp->mr->magic_start)) || (BAD_MAGIC(_mp->mr->magic_end))) {
+        return (cm_panic(STAT_PLANNER_ASSERTION_FAILURE, "planner_assert()"));
     }
     for (uint8_t i=0; i < _mp->q.queue_size; i++) {
         if ((_mp->q.bf[i].nx == nullptr) || (_mp->q.bf[i].pv == nullptr)) {

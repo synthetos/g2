@@ -288,6 +288,7 @@ stat_t cm_feedhold_sequencing_callback()
 static void _sync_to_p1_hold_entry_actions_done(float* vect, bool* flag)
 {
     cm1.hold_state = FEEDHOLD_HOLD;
+    sr_request_status_report(SR_REQUEST_IMMEDIATE);
 }
 
 static stat_t _run_p1_hold_entry_actions()
@@ -372,6 +373,7 @@ static stat_t _run_p1_hold_exit_actions()     // LATER: if value == true return 
 static void _sync_to_p1_hold_exit_actions_done(float* vect, bool* flag)
 {
     cm1.hold_state = FEEDHOLD_P1_EXIT;      // penultimate state before transitioning to FEEDHOLD_OFF
+    sr_request_status_report(SR_REQUEST_IMMEDIATE);
 }
 
 static stat_t _finalize_p1_hold_exit()
@@ -403,7 +405,6 @@ static stat_t _finalize_p1_hold_exit()
         cm_set_motion_state(MOTION_STOP);
         cm_cycle_end();
     }
-    sr_request_status_report(SR_REQUEST_IMMEDIATE);
     return (STAT_OK);
 }
 
