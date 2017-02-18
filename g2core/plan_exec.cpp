@@ -62,7 +62,6 @@ static void _init_forward_diffs(float v_0, float v_1);
  *  See also: Planner Overview notes in planner.h
  * 
  *  It examines the currently running buffer and its adjacent buffers to:
- *
  *  - Stop the system from re-planning or planning something that's not prepped
  *  - Plan the next available ALINE (movement) block past the COMMAND blocks
  *  - Skip past/ or pre-plan COMMAND blocks while labeling them as PLANNED
@@ -149,38 +148,25 @@ static void _init_forward_diffs(float v_0, float v_1);
  *                                                              (Note: all COMMAND(s) in j. should be in PLANNED state)
  */
 
-static mpBuf_t *_plan_commands(mpBuf_t *bf, bool &planned)  // plan or skip commands; return bf past last command
+// _plan_aline() - mp_forward_plan() helper
+//
+// Calculate ramps for the current planning block and the next PREPPED buffer
+// The PREPPED buffer will be set to PLANNED later...
+//
+// Pass in the bf buffer that will "link" with the planned block
+// The block and the buffer are implicitly linked for exec_aline()
+//
+// Note that that can only be one PLANNED move at a time.
+// This is to help sync mr->p to point to the next planned mr->bf
+// mr->p is only advanced in mp_exec_aline(), after mp.r = mr->p.
+// This code aligns the buffers and the blocks for exec_aline().
+
+static stat_t _plan_aline(mpBuf_t *bf, float entry_velocity)
 {
-    planned = false;
-
-    // must test for buffer state first as the buffer is only "safe" once it's >= PREPPED
-    while ((bf->buffer_state >= MP_BUFFER_PREPPED) && (bf->block_type >= BLOCK_TYPE_COMMAND)) {
-        bf->buffer_state = MP_BUFFER_PLANNED;           // "planning" is just setting the state (for now)
-        planned = true;
-        bf = bf->nx;
-    }
-    return (bf);
-}
-
-static stat_t _plan_move(mpBuf_t *bf, float entry_velocity)
-{
-    // Calculate ramps for the current planning block and the next PREPPED buffer
-    // The PREPPED buffer will be set to PLANNED later...
-    //
-    // Pass in the bf buffer that will "link" with the planned block
-    // The block and the buffer are implicitly linked for exec_aline()
-    //
-    // Note that that can only be one PLANNED move at a time.
-    // This is to help sync mr->p to point to the next planned mr->bf
-    // mr->p is only advanced in mp_exec_aline(), after mp.r = mr->p.
-    // This code aligns the buffers and the blocks for exec_aline().
-
     mpBlockRuntimeBuf_t* block = mr->p;              // set a local planning block so it doesn't change on you
     mp_calculate_ramps(block, bf, entry_velocity);  // (which it will if you don't do this)
 
-    // diagnostic traps
-
-#ifdef IN_DEBUGGER
+#ifdef IN_DEBUGGER      // DIAGNOSTIC
     if (block->exit_velocity > block->cruise_velocity)  {
         __asm__("BKPT");                            // exit > cruise after calculate_block
     }
@@ -216,12 +202,17 @@ stat_t mp_forward_plan()
         entry_velocity = mr->entry_velocity;         // set Note 2 entry velocity (command cases)
     }
 
-    // bf points to command; start cases 1f, 1g, 1h, 1i, 1j, 1k, 2c, 2d, 2e, 2h, 2i, 2j
+    // bf points to a command block; start cases 1f, 1g, 1h, 1i, 1j, 1k, 2c, 2d, 2e, 2h, 2i, 2j
     bool planned_something = false;
 
     if (bf->block_type != BLOCK_TYPE_ALINE) {       // meaning it's a COMMAND
-        bf = _plan_commands(bf, planned_something); // plan commands or skip past already planned commands
-
+        while (bf->block_type >= BLOCK_TYPE_COMMAND) {
+            if (bf->buffer_state == MP_BUFFER_PREPPED) {
+                bf->buffer_state = MP_BUFFER_PLANNED;// "planning" is just setting the state (for now)
+                planned_something = true;
+            }            
+            bf = bf->nx;
+        }
         // Note: bf now points to the first non-command buffer past the command(s)
         if ((bf->block_type == BLOCK_TYPE_ALINE) && (bf->buffer_state > MP_BUFFER_PREPPED )) { // case 1i
             entry_velocity = mr->r->exit_velocity;   // set entry_velocity for Note 1a
@@ -232,7 +223,7 @@ stat_t mp_forward_plan()
     // process move                           
     if (bf->block_type == BLOCK_TYPE_ALINE) {       // do cases 1a - 1e; finish cases 1f - 1k
         if (bf->buffer_state == MP_BUFFER_PREPPED) {// do 1a; finish 1f, 1j, 2d, 2i
-            _plan_move(bf, entry_velocity);
+            _plan_aline(bf, entry_velocity);
             planned_something = true;
         }
     }
@@ -301,11 +292,12 @@ stat_t mp_exec_move()
             mp_planner_time_accounting();
         }
 
+        // Go ahead and *ask* for a forward planning of the next move.
+        // This won't call mp_plan_move until we leave this function
+        // (and have called mp_exec_aline via bf->bf_func).
+        // This also allows mp_exec_aline to advance mr->p first.
         if (bf->nx->buffer_state >= MP_BUFFER_PREPPED) {
-            // We go ahead and *ask* for a forward planning of the next move.
-            // This won't call mp_plan_move until we leave this function
-            // (and have called mp_exec_aline via bf->bf_func).
-            // This also allows mp_exec_aline to advance mr->p first.
+//        if (bf->nx->buffer_state == MP_BUFFER_PREPPED) {
             st_request_forward_plan();
         }
 
