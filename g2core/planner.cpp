@@ -821,12 +821,10 @@ mpBuf_t * mp_get_run_buffer()
 // Clearing and advancing must be done atomically as other interrupts may be using the run buffer
 bool mp_free_run_buffer()           // EMPTY current run buffer & advance to the next
 {
-    mpPlannerQueue_t *q = &(mp->q);
-    
+    mpPlannerQueue_t *q = &(mp->q);    
     mpBuf_t *r_now = q->r;          // save this pointer is to avoid a race condition when clearing the buffer
 
     _audit_buffers();               // DIAGNOSTIC audit for buffer chain integrity (only runs in DEBUG mode)
-
     q->r = q->r->nx;                // advance to next run buffer first,
     _clear_buffer(r_now);           // ... then clear out the old buffer (& set MP_BUFFER_EMPTY)
     q->buffers_available++;

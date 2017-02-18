@@ -34,7 +34,7 @@
 
 // DIAGNOSTICS
 
-//#if IN_DEBUGGER < 1
+//#ifndef IN_DEBUGGER
 #define LOG_RETURN(msg)  // LOG_RETURN with no action (production)
 //#else
 //#include "xio.h"
@@ -50,7 +50,7 @@
 //#define LOG_RETURN(msg) { _logger(msg, bf); }
 //#endif
 
-#if IN_DEBUGGER < 1
+#ifndef IN_DEBUGGER
 #define TRAP_ZERO(t,m)
 #else
 #define TRAP_ZERO(t, m)                             \

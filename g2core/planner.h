@@ -250,9 +250,12 @@ typedef enum {
 #define JUNCTION_INTEGRATION_MIN    (0.05)              // JT minimum allowable setting
 #define JUNCTION_INTEGRATION_MAX    (5.00)              // JT maximum allowable setting
 
+#ifndef MIN_SEGMENT_MS                                  // boards can override this value in hardware.h
 #define MIN_SEGMENT_MS              ((float)0.75)       // minimum segment milliseconds
-#define NOM_SEGMENT_MS              ((float)1.5)        // nominal segment ms (at LEAST MIN_SEGMENT_MS * 2)
-#define MIN_BLOCK_MS                ((float)1.5)        // minimum block (whole move) milliseconds
+#endif
+#define NOM_SEGMENT_MS              ((float)MIN_SEGMENT_MS * 2) // nominal segment ms (at LEAST MIN_SEGMENT_MS * 2)
+#define MIN_BLOCK_MS                ((float)MIN_SEGMENT_MS * 2) // minimum block (whole move) milliseconds
+
 #define BLOCK_TIMEOUT_MS            ((float)30.0)       // MS before deciding there are no new blocks arriving
 #define PHAT_CITY_MS                ((float)100.0)      // if you have at least this much time in the planner
 
@@ -395,7 +398,6 @@ typedef struct mpBuffer {
         plannable_length = 0;
         meet_iterations = 0;
 #endif
-
         buffer_state = MP_BUFFER_EMPTY;
         block_type = BLOCK_TYPE_NULL;
         block_state = BLOCK_INACTIVE;
@@ -405,7 +407,6 @@ typedef struct mpBuffer {
             unit[i] = 0;
             axis_flags[i] = 0;
         }
-
         plannable = false;
         length = 0.0;
         block_time = 0.0;
