@@ -31,6 +31,7 @@
 #include "stepper.h"
 #include "kinematics.h"
 #include "util.h"
+#include "settings.h"
 
 static void _inverse_kinematics(const float travel[], float joint[]);
 
@@ -113,11 +114,46 @@ void kn_inverse_kinematics(const float travel[], float steps[]) {
  *	size or performance penalty for breaking this out
  */
 static void _inverse_kinematics(const float travel[], float joint[]) {
-    memcpy(joint, travel, sizeof(float) * AXES);  // just do a memcpy for Cartesian machines
+#if KINEMATICS==KINE_CARTESIAN
+    joint[AXIS_X]=travel[AXIS_X];
+    joint[AXIS_Y]=travel[AXIS_Y];
+#endif
+#if KINEMATICS==KINE_CORE_XY
+    /* CoreXY Kinematics - http://corexy.com/
+     deltaA=deltaX+deltaY
+     deltaB=deltaX-deltaY
+     
+     Note: Don't confuse axis A with CoreXY deltaA, they are different!
+     */
+    joint[AXIS_COREXY_A]=travel[AXIS_X]+travel[AXIS_Y];
+    joint[AXIS_COREXY_B]=travel[AXIS_X]-travel[AXIS_Y];
+#endif
 
-    //	for (uint8_t i=0; i<AXES; i++) {
-    //		joint[i] = travel[i];
-    //	}
+#if (KINEMATICS==KINE_CARTESIAN) || (KINEMATICS==KINE_CORE_XY)
+    joint[AXIS_Z]=travel[AXIS_Z];
+
+#if AXES > 2
+    joint[3]=travel[3];
+#endif
+#if AXES > 3
+    joint[4]=travel[4];
+#endif
+#if AXES > 4
+    joint[5]=travel[5];
+#endif
+#if AXES > 5
+    joint[6]=travel[6];
+#endif
+#if AXES > 6
+    joint[7]=travel[7];
+#endif
+#if AXES > 7
+    joint[8]=travel[8];
+#endif
+#if AXES > 8
+    joint[9]=travel[9];
+#endif
+#endif
 }
 
 /*
@@ -152,11 +188,27 @@ void kn_forward_kinematics(const float steps[], float travel[]) {
                     best_steps_per_unit[axis] = st_cfg.mot[motor].steps_per_unit;
                     travel[axis]              = steps[motor] * st_cfg.mot[motor].units_per_step;
 
-                    // If a econd motor has the same reolution for the same axis, we'll average their values
+                    // If a second motor has the same reolution for the same axis, we'll average their values
                 } else if (fp_EQ(best_steps_per_unit[axis], st_cfg.mot[motor].steps_per_unit)) {
                     travel[axis] = (travel[axis] + (steps[motor] * st_cfg.mot[motor].units_per_step)) / 2.0;
                 }
             }
         }
     }
+
+#if KINEMATICS==KINE_CORE_XY
+    /* CoreXY Kinematics - http://corexy.com/
+     deltaX=1/2(deltaA+deltaB)
+     deltaY=1/2(deltaA-deltaB)
+     
+     At this moment, travel[0] = deltaA, and travel[1] = deltaB.
+     We want travel[0] = deltaX, and travel[1] = deltaY.
+     */
+
+    float deltaA = travel[AXIS_COREXY_A];
+    float deltaB = travel[AXIS_COREXY_B];
+
+    travel[AXIS_X] = 0.5 * (deltaA + deltaB);
+    travel[AXIS_Y] = 0.5 * (deltaA - deltaB);
+#endif
 }

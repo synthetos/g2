@@ -87,10 +87,10 @@
 #define MOTOR_POWER_MODE            MOTOR_POWERED_IN_CYCLE  // default motor power mode (see cmMotorPowerMode in stepper.h)
 #define MOTOR_POWER_TIMEOUT         2.00                    // motor power timeout in seconds
 
-#define MOTOR_POWER_MODE            MOTOR_POWERED_IN_CYCLE  // default motor power mode (see cmMotorPowerMode in stepper.h)
-#define MOTOR_POWER_TIMEOUT         2.00                    // motor power timeout in seconds
+#define KINEMATICS KINE_CORE_XY                             // X and Y MUST use the same settings!
 
-#define M1_MOTOR_MAP                AXIS_Y                  // 1ma
+
+#define M1_MOTOR_MAP                AXIS_COREXY_A           // 1ma
 #define M1_STEP_ANGLE               1.8                     // 1sa
 // According to the EiBB settings here:
 // https://github.com/evil-mad/axidraw/blob/master/inkscape%20driver/axidraw_conf.py
@@ -102,7 +102,7 @@
 #define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm        standard
 #define M1_POWER_LEVEL              0.4
 
-#define M2_MOTOR_MAP                AXIS_X
+#define M2_MOTOR_MAP                AXIS_COREXY_B
 #define M2_STEP_ANGLE               1.8
 #define M2_TRAVEL_PER_REV           40
 #define M2_MICROSTEPS               32

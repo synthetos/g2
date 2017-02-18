@@ -69,7 +69,9 @@ typedef enum {
     AXIS_C,
     AXIS_U,     // reserved
     AXIS_V,     // reserved
-    AXIS_W      // reserved
+    AXIS_W,     // reserved
+    AXIS_COREXY_A = AXIS_X, // CoreXY uses A and B
+    AXIS_COREXY_B = AXIS_Y,
 } cmAxes;
 
 typedef enum {

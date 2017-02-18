@@ -198,6 +198,15 @@
 //*** Motor Settings **********************************************************
 //*****************************************************************************
 
+// KINEMATICS (which may later change the following values)
+#define KINE_CARTESIAN 0
+#define KINE_CORE_XY 1
+
+#ifndef KINEMATICS
+#define KINEMATICS KINE_CARTESIAN
+#endif
+
+
 // MOTOR 1
 #ifndef M1_MOTOR_MAP
 #define M1_MOTOR_MAP                AXIS_X                  // {1ma: AXIS_X, AXIS_Y...
