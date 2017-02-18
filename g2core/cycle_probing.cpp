@@ -74,6 +74,26 @@ static stat_t _probing_finalize_exit();
 static stat_t _probing_error_exit(int8_t axis);
 static stat_t _probe_axis_move(const float target[], bool exact_position);
 static void _probe_axis_move_callback(float* vect, bool* flag);
+void _prepare_for_probe();
+void _store_probe_position();
+
+/**** JSON INTERFACE *******************************************************************
+ * cm_set_probe() - a command to tell it to store the current point as a probe point
+ */
+
+stat_t cm_set_probe(nvObj_t *nv)
+{
+    if (!fp_ZERO(nv->value)) {
+        nv->valuetype = TYPE_BOOL;
+        nv->value = true;
+        
+        _prepare_for_probe();
+        cm.probe_state[0] = PROBE_SUCCEEDED;
+        _store_probe_position();
+    }
+    return (STAT_OK);
+}
+
 
 /**** HELPERS ***************************************************************************
  * _set_pb_func() - a convenience for setting the next dispatch vector and exiting
@@ -82,6 +102,22 @@ static void _probe_axis_move_callback(float* vect, bool* flag);
 static stat_t _set_pb_func(uint8_t (*func)()) {
     pb.func = func;
     return (STAT_EAGAIN);
+}
+
+void _prepare_for_probe() {
+    // if the previous probe succeeded, roll probes to the next position
+    if (cm.probe_state[0] == PROBE_SUCCEEDED) {
+        for (uint8_t n = PROBES_STORED - 1; n > 0; n--) {
+            cm.probe_state[n] = cm.probe_state[n - 1];
+            for (uint8_t axis = 0; axis < AXES; axis++) { cm.probe_results[n][axis] = cm.probe_results[n - 1][axis]; }
+        }
+    }
+}
+
+void _store_probe_position() {
+    for (uint8_t axis = 0; axis < AXES; axis++) {
+        cm.probe_results[0][axis] = cm_get_absolute_position(ACTIVE_MODEL, axis);
+    }
 }
 
 /***********************************************************************************
@@ -155,13 +191,7 @@ uint8_t cm_straight_probe(float target[], bool flags[], bool failure_is_fatal, b
     copy_vector(pb.target, target);  // set probe move endpoint
     copy_vector(pb.flags, flags);    // set axes involved on the move
 
-    // if the previous probe succeeded, roll probes to the next position
-    if (cm.probe_state[0] == PROBE_SUCCEEDED) {
-        for (uint8_t n = PROBES_STORED - 1; n > 0; n--) {
-            cm.probe_state[n] = cm.probe_state[n - 1];
-            for (uint8_t axis = 0; axis < AXES; axis++) { cm.probe_results[n][axis] = cm.probe_results[n - 1][axis]; }
-        }
-    }
+    _prepare_for_probe();
 
     // clear the old probe position
     clear_vector(cm.probe_results[0]);
@@ -349,9 +379,7 @@ static void _probe_axis_move_callback(float* vect, bool* flag) { pb.waiting_for_
  */
 
 static stat_t _probing_finish() {
-    for (uint8_t axis = 0; axis < AXES; axis++) {
-        cm.probe_results[0][axis] = cm_get_absolute_position(ACTIVE_MODEL, axis);
-    }
+    _store_probe_position();
 
     // If probe was successful the 'e' word == 1, otherwise e == 0 to signal an error
     char  buf[32];

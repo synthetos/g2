@@ -831,6 +831,9 @@ stat_t cm_set_jh(nvObj_t *nv);          // set jerk high with 1,000,000 correcti
 stat_t cm_set_mfo(nvObj_t *nv);         // set manual feedrate override factor
 stat_t cm_set_mto(nvObj_t *nv);         // set manual traverse override factor
 
+stat_t cm_set_probe(nvObj_t *nv);       // store current position as the latest probe
+
+
 stat_t cm_set_tram(nvObj_t *nv);        // attempt setting the rotation matrix
 stat_t cm_get_tram(nvObj_t *nv);        // return if the rotation matrix is non-identity
 
