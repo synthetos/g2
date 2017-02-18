@@ -150,6 +150,7 @@
 #define PLANNER_H_ONCE
 
 #include "canonical_machine.h"    // used for GCodeState_t
+#include "hardware.h"             // for MIN_SEGMENT_MS
 
 using Motate::Timeout;
 
@@ -250,9 +251,11 @@ typedef enum {
 #define JUNCTION_INTEGRATION_MIN    (0.05)              // minimum allowable setting
 #define JUNCTION_INTEGRATION_MAX    (5.00)              // maximum allowable setting
 
+#ifndef MIN_SEGMENT_MS
 #define MIN_SEGMENT_MS              ((float)0.75)       // minimum segment milliseconds
-#define NOM_SEGMENT_MS              ((float)1.5)        // nominal segment ms (at LEAST MIN_SEGMENT_MS * 2)
-#define MIN_BLOCK_MS                ((float)1.5)        // minimum block (whole move) milliseconds
+#endif
+#define NOM_SEGMENT_MS              ((float)MIN_SEGMENT_MS*2.0)        // nominal segment ms (at LEAST MIN_SEGMENT_MS * 2)
+#define MIN_BLOCK_MS                ((float)MIN_SEGMENT_MS*2.0)        // minimum block (whole move) milliseconds
 #define BLOCK_TIMEOUT_MS            ((float)30.0)       // MS before deciding there are no new blocks arriving
 #define PHAT_CITY_MS                ((float)100.0)      // if you have at least this much time in the planner
 

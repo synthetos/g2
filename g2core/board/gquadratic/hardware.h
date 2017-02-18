@@ -124,6 +124,8 @@ using Motate::OutputPin;
 #define FREQUENCY_DDA 150000UL  // Hz step frequency. Interrupts actually fire at 2x (300 KHz)
 #define FREQUENCY_DWELL 1000UL
 
+#define MIN_SEGMENT_MS ((float)0.125)       // S70 can handle much much smaller segements
+
 /**** Motate Definitions ****/
 
 // Timer definitions. See stepper.h and other headers for setup
@@ -132,7 +134,6 @@ typedef TimerChannel<10, 0> exec_timer_type;       // request exec timer in step
 typedef TimerChannel<11, 0> fwd_plan_timer_type;   // request exec timer in stepper.cpp
 
 // Pin assignments
-
 pin_number                              indicator_led_pin_num = Motate::kLEDPWM_PinNumber;
 static OutputPin<indicator_led_pin_num> IndicatorLed;
 
