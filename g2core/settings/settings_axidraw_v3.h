@@ -33,7 +33,7 @@
 // ***> NOTE: The init message must be a single line with no CRs or LFs
 #define INIT_MESSAGE "Initializing configs to WaterColorBot v2 settings"
 
-#define JUNCTION_INTEGRATION_TIME   1.50    // cornering - usually between 0.5 and 2.0 (higher is faster)
+#define JUNCTION_INTEGRATION_TIME   2.5    // cornering - usually between 0.5 and 2.0 (higher is faster)
 #define CHORDAL_TOLERANCE           0.01    // chordal accuracy for arc drawing (in mm)
 
 #define SOFT_LIMIT_ENABLE           0                       // 0=off, 1=on
@@ -92,23 +92,19 @@
 
 #define M1_MOTOR_MAP                AXIS_COREXY_A           // 1ma
 #define M1_STEP_ANGLE               1.8                     // 1sa
-// According to the EiBB settings here:
-// https://github.com/evil-mad/axidraw/blob/master/inkscape%20driver/axidraw_conf.py
-// At 16x microstepping, it's 2032 steps per INCH, which is ((16/2032)*25.4) = 0.2mm per FULL step
-// With a 200 step/revolution (1.8º/step) motor, that's 0.2*200=40mm per revolution
 #define M1_TRAVEL_PER_REV           40                      // 1tr
 #define M1_MICROSTEPS               32                      // 1mi        1,2,4,8
 #define M1_POLARITY                 0                       // 1po        0=normal, 1=reversed
 #define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm        standard
-#define M1_POWER_LEVEL              0.4
+#define M1_POWER_LEVEL              0.6
 
 #define M2_MOTOR_MAP                AXIS_COREXY_B
 #define M2_STEP_ANGLE               1.8
 #define M2_TRAVEL_PER_REV           40
 #define M2_MICROSTEPS               32
-#define M2_POLARITY                 1
+#define M2_POLARITY                 0
 #define M2_POWER_MODE               MOTOR_POWER_MODE
-#define M2_POWER_LEVEL              0.4
+#define M2_POWER_LEVEL              0.6
 
 #define M3_MOTOR_MAP                AXIS_Z
                                                             // This "stepper" is a hobby servo. Note that all hobby
@@ -125,11 +121,11 @@
 
 // *** axis settings **********************************************************************************
 
-#define JERK_MAX    20000
+#define JERK_MAX    2000
 
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX              50000                    // xvm  G0 max velocity in mm/min
-#define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
+#define X_VELOCITY_MAX              10000                   // xvm  G0 max velocity in mm/min
+#define X_FEEDRATE_MAX              10000          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX                400                     // xtm  maximum travel - used by soft limits and homing
 #define X_JERK_MAX                  JERK_MAX                // xjm
@@ -142,8 +138,8 @@
 #define X_ZERO_BACKOFF              2                       // xzb  mm
 
 #define Y_AXIS_MODE                 AXIS_STANDARD
-#define Y_VELOCITY_MAX              50000
-#define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
+#define Y_VELOCITY_MAX              10000
+#define Y_FEEDRATE_MAX              10000
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                175
 #define Y_JERK_MAX                  JERK_MAX
@@ -156,11 +152,11 @@
 #define Y_ZERO_BACKOFF              2
 
 #define Z_AXIS_MODE                 AXIS_STANDARD
-#define Z_VELOCITY_MAX              15000
+#define Z_VELOCITY_MAX              10000
 #define Z_FEEDRATE_MAX              Z_VELOCITY_MAX
 #define Z_TRAVEL_MIN                0
 #define Z_TRAVEL_MAX                75
-#define Z_JERK_MAX                  5000
+#define Z_JERK_MAX                  1000
 #define Z_JERK_HIGH_SPEED           Z_JERK_MAX
 #define Z_HOMING_INPUT              6
 #define Z_HOMING_DIRECTION          1
