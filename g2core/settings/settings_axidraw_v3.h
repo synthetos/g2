@@ -320,10 +320,3 @@
 #define G59_A_OFFSET 0
 #define G59_B_OFFSET 0
 #define G59_C_OFFSET 0
-
-// *** DEFAULT COORDINATE SYSTEM ROTATION ***
-
-// values are in radians, and are floating point values
-#define ROTATION_ABOUT_X 0.0
-#define ROTATION_ABOUT_Y 0.0
-#define ROTATION_ABOUT_Z -0.7853981634 // ((2pi)/360)*45

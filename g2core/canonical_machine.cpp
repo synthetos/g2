@@ -106,6 +106,7 @@
 #include "temperature.h"
 #include "hardware.h"
 #include "util.h"
+#include "settings.h"
 #include "xio.h"            // for serial queue flush
 
 /***********************************************************************************
@@ -709,15 +710,6 @@ void canonical_machine_reset_rotation() {
     cm.rotation_matrix[1][1] = 1.0;
     cm.rotation_matrix[2][2] = 1.0;
     cm.rotation_z_offset = 0.0;
-
-#ifdef ROTATION_ABOUT_Z
-    float cos_z = cos(ROTATION_ABOUT_Z);
-    float sin_z = sin(ROTATION_ABOUT_Z);
-    cm.rotation_matrix[0][0] = -cos_z;
-    cm.rotation_matrix[0][1] =  sin_z;
-    cm.rotation_matrix[1][0] = -sin_z;
-    cm.rotation_matrix[1][1] = -cos_z;
-#endif
 }
 
 void canonical_machine_reset()
