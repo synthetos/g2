@@ -226,6 +226,7 @@ typedef enum {                      // code blocks for planning and trapezoid ge
     ASYMMETRIC_BUMP,                // (Ve != Vx) < Vc
 } blockHint;
 
+/*
 typedef enum {
     ZOID_EXIT_NULL = 0,
     ZOID_EXIT_1a,
@@ -240,6 +241,7 @@ typedef enum {
     ZOID_EXIT_3d2,
     ZOID_EXIT_3a2
 } zoidExitPoint;
+*/
 
 /*** Most of these factors are the result of a lot of tweaking. Change with caution.***/
 
@@ -646,7 +648,7 @@ void mp_plan_block_list(void);
 void mp_plan_block_forward(mpBuf_t *bf);
 
 //**** plan_zoid.c functions
-void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float entry_velocity);
+stat_t mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float entry_velocity);
 float mp_get_target_length(const float v_0, const float v_1, const mpBuf_t *bf);
 float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t *bf); // acceleration ONLY
 float mp_get_decel_velocity(const float v_0, const float L, const mpBuf_t *bf);  // deceleration ONLY

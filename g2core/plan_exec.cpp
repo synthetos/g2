@@ -163,7 +163,7 @@ static void _init_forward_diffs(float v_0, float v_1);
 
 static stat_t _plan_aline(mpBuf_t *bf, float entry_velocity)
 {
-    mpBlockRuntimeBuf_t* block = mr->p;              // set a local planning block so it doesn't change on you
+    mpBlockRuntimeBuf_t* block = mr->p;             // set a local planning block so it doesn't change on you
     mp_calculate_ramps(block, bf, entry_velocity);  // (which it will if you don't do this)
 
 #ifdef IN_DEBUGGER      // DIAGNOSTIC
