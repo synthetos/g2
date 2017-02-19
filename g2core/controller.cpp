@@ -166,7 +166,6 @@ static void _controller_HSM()
     DISPATCH(cm_probing_cycle_callback());      // probing cycle operation (G38.2)
     DISPATCH(cm_jogging_cycle_callback());      // jog cycle operation
     DISPATCH(cm_deferred_write_callback());     // persist G10 changes when not in machining cycle
-//    DISPATCH(cm_feedhold_sequencing_callback());// feedhold state machine runner
     DISPATCH(cm_feedhold_command_blocker());    // blocks new Gcode from arriving while in feedhold
 
 //----- command readers and parsers --------------------------------------------------//

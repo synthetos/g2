@@ -913,8 +913,8 @@ static stat_t _exec_aline_head(mpBuf_t *bf)
 /*********************************************************************************************
  * _exec_aline_body()
  *
- *    The body is broken into little segments even though it is a straight line so that
- *    feed holds can happen in the middle of a line with a minimum of latency
+ *  The body is broken into little segments even though it is a straight line 
+ *  so that feed holds can happen in the middle of a line with minimum latency
  */
 static stat_t _exec_aline_body(mpBuf_t *bf)
 {
@@ -935,11 +935,11 @@ static stat_t _exec_aline_body(mpBuf_t *bf)
         }
 
         mr->section = SECTION_BODY;
-        mr->section_state = SECTION_RUNNING;                 // uses PERIOD_2 so last segment detection works
+        mr->section_state = SECTION_RUNNING;                // uses PERIOD_2 so last segment detection works
     }
     if (_exec_aline_segment() == STAT_OK) {                 // OK means this section is done
         if (fp_ZERO(mr->r->tail_length)) {
-            return(STAT_OK);                                    // ends the move
+            return(STAT_OK);                                // ends the move
         }
         mr->section = SECTION_TAIL;
         mr->section_state = SECTION_NEW;
@@ -954,16 +954,16 @@ static stat_t _exec_aline_body(mpBuf_t *bf)
 static stat_t _exec_aline_tail(mpBuf_t *bf)
 {
     bool first_pass = false;
-    if (mr->section_state == SECTION_NEW) {                          // INITIALIZATION
+    if (mr->section_state == SECTION_NEW) {                 // INITIALIZATION
         first_pass = true;
 
         // Mark the block as unplannable
         bf->plannable = false;
 
-        if (fp_ZERO(mr->r->tail_length)) { return(STAT_OK);}         // end the move
+        if (fp_ZERO(mr->r->tail_length)) { return(STAT_OK);} // end the move
         mr->segments = ceil(uSec(mr->r->tail_time) / NOM_SEGMENT_USEC);// # of segments for the section
         mr->segment_count = (uint32_t)mr->segments;
-        mr->segment_time = mr->r->tail_time / mr->segments;             // time to advance for each segment
+        mr->segment_time = mr->r->tail_time / mr->segments;     // time to advance for each segment
 
         if (mr->segment_count == 1) {
             mr->segment_velocity = mr->r->tail_length / mr->segment_time;
@@ -972,8 +972,8 @@ static stat_t _exec_aline_tail(mpBuf_t *bf)
         }
         if (mr->segment_time < MIN_SEGMENT_TIME) {
             _debug_trap("mr->segment_time < MIN_SEGMENT_TIME");
-            return(STAT_OK);                                        // exit without advancing position, say we're done
-         // return(STAT_MINIMUM_TIME_MOVE);                         // exit without advancing position
+            return(STAT_OK);                                    // exit without advancing position, say we're done
+         // return(STAT_MINIMUM_TIME_MOVE);                     // exit without advancing position
         }
         mr->section = SECTION_TAIL;
         mr->section_state = SECTION_RUNNING;

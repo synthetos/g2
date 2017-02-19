@@ -198,7 +198,8 @@ stat_t mp_aline(GCodeState_t* gm_in)
     length = sqrt(length_square);
 
     // exit if the move has zero movement. At all.
-    if (fp_ZERO(length)) {
+//    if (fp_ZERO(length)) {
+    if (length < 0.00002) {  // this value is 2x EPSILON and prevents trap failures in _plan_aline()
         sr_request_status_report(SR_REQUEST_TIMED_FULL);  // Was SR_REQUEST_IMMEDIATE_FULL
         return (STAT_MINIMUM_LENGTH_MOVE);                // STAT_MINIMUM_LENGTH_MOVE needed to end cycle
     }
