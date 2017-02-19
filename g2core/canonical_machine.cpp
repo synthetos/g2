@@ -510,11 +510,9 @@ float cm_get_absolute_position(const GCodeState_t *gcode_state, const uint8_t ax
  * Core functions supporting the canonical machining functions
  * These functions are not part of the NIST defined functions
  ***********************************************************************************/
+
 /*
- * cm_finalize_move() - perform final operations for a traverse or feed
- * cm_update_model_position_from_runtime() - set endpoint position from final runtime position
- *
- *  These routines set the point position in the gcode model.
+ * cm_update_model_position() - set gmx endpoint position for a traverse, feed or arc
  *
  *  Note: As far as the canonical machine is concerned the final position of a Gcode block (move)
  *    is achieved as soon as the move is planned and the move target becomes the new model position.
@@ -522,14 +520,9 @@ float cm_get_absolute_position(const GCodeState_t *gcode_state, const uint8_t ax
  *    execution, and the real tool position is still close to the starting point.
  */
 
-void cm_finalize_move()
+void cm_update_model_position()
 {
-    copy_vector(cm->gmx.position, cm->gm.target);     // update model position
-}
-
-void cm_update_model_position_from_runtime()
-{
-    copy_vector(cm->gmx.position, mr->gm.target);
+    copy_vector(cm->gmx.position, cm->gm.target);   // would be mr->gm.target if from runtime
 }
 
 /*
@@ -1128,12 +1121,18 @@ stat_t cm_straight_traverse(const float target[], const bool flags[])
     cm_set_display_offsets(&cm->gm);                // capture the fully resolved offsets to the state
     cm_cycle_start();                               // required for homing & other cycles
     stat_t status = mp_aline(&cm->gm);              // send the move to the planner
+    cm_update_model_position();                     // update gmx.position to ready for next incoming move
 
-    cm_finalize_move();
 
-    if (status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer(mp)) { //applies to currently active machine
-        cm_cycle_end();
-        return (STAT_OK);
+//    if (status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer(mp)) { //mp applies to currently active planner
+//        cm_cycle_end();
+//        return (STAT_OK);
+//    }
+    if (status == STAT_MINIMUM_LENGTH_MOVE) {
+        if (!mp_has_runnable_buffer(mp)) {          // handle condition where zero-length move is last or only move
+            cm_cycle_end();                         // ...otherwise cycle will not end properly
+        }
+        status = STAT_OK;
     }
     return (status);
 }
@@ -1273,8 +1272,8 @@ stat_t cm_straight_feed(const float target[], const bool flags[])
     }
     cm->gm.motion_mode = MOTION_MODE_STRAIGHT_FEED;
 
-    if (!(flags[AXIS_X] | flags[AXIS_Y] | flags[AXIS_Z] | 
-          flags[AXIS_A] | flags[AXIS_B] | flags[AXIS_C])) {
+    // it's legal for a G1 to have no axis words but we don't want to process it
+    if (!(flags[AXIS_X] | flags[AXIS_Y] | flags[AXIS_Z] | flags[AXIS_A] | flags[AXIS_B] | flags[AXIS_C])) {
         return(STAT_OK);
     }
 
@@ -1283,12 +1282,17 @@ stat_t cm_straight_feed(const float target[], const bool flags[])
     cm_set_display_offsets(&cm->gm);                // capture the fully resolved offsets to the state
     cm_cycle_start();                               // required for homing & other cycles
     stat_t status = mp_aline(&cm->gm);              // send the move to the planner
+    cm_update_model_position();                     // <-- ONLY safe because we don't care about status...
 
-    cm_finalize_move(); // <-- ONLY safe because we don't care about status...
-
-    if (status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer(mp)) {
-        cm_cycle_end();
-        return (STAT_OK);
+//    if (status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer(mp)) { //mp applies to currently active planner
+//        cm_cycle_end();
+//        return (STAT_OK);
+//    }
+    if (status == STAT_MINIMUM_LENGTH_MOVE) {
+        if (!mp_has_runnable_buffer(mp)) {          // handle condition where zero-length move is last or only move
+            cm_cycle_end();                         // ...otherwise cycle will not end properly
+        }
+        status = STAT_OK;
     }
     return (status);
 }
@@ -1605,7 +1609,7 @@ void cm_cycle_start()
 
 void cm_cycle_end()
 {
-    if(cm->cycle_state == CYCLE_MACHINING) {
+    if (cm->cycle_state == CYCLE_MACHINING) {
         float value[] = { (float)MACHINE_PROGRAM_STOP };
         _exec_program_finalize(value, nullptr);
     }

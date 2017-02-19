@@ -341,8 +341,7 @@ float cm_get_display_position(const GCodeState_t *gcode_state, const uint8_t axi
 float cm_get_absolute_position(const GCodeState_t *gcode_state, const uint8_t axis);
 
 // Critical helpers
-void cm_update_model_position_from_runtime(void);
-void cm_finalize_move(void);
+void cm_update_model_position(void);
 stat_t cm_deferred_write_callback(void);
 void cm_set_model_target(const float target[], const bool flag[]);
 bool cm_get_soft_limits(void);

@@ -325,7 +325,10 @@ void mp_calculate_ramps(mpBlockRuntimeBuf_t* block, mpBuf_t* bf, const float ent
     // Rate-limited asymmetric cases (3)
     // compute meet velocity to see if the cruise velocity rises above the entry and/or exit velocities
     block->cruise_velocity = _get_meet_velocity(entry_velocity, block->exit_velocity, bf->length, bf, block);
-    TRAP_ZERO(block->cruise_velocity, "zoid() Vc=0 asymmetric HT case");
+//    TRAP_ZERO(block->cruise_velocity, "zoid() Vc=0 asymmetric HT case");
+    if (fp_ZERO(block->cruise_velocity)) {
+            __asm__("BKPT");
+    }
 
     // We now store the head/tail lengths we computed in _get_meet_velocity.
     // treat as a full up and down (head and tail)

@@ -250,7 +250,7 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
 
     cm_cycle_start();                                       // if not already started
     cm->arc.run_state = BLOCK_ACTIVE;                       // enable arc to be run from the callback
-    cm_finalize_move();
+    cm_update_model_position();
     return (STAT_OK);
 }
 
