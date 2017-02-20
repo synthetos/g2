@@ -190,28 +190,28 @@ inline T avg(const T a,const T b) {return (a+b)/2; }
  */
 
 /*
- * _debug_trap() - trap unconditionally
- * _debug_trap_if_zero() - trap if floating point value is zero
- * _debug_trap_if_true() - trap if condition is true
+ * debug_trap() - trap unconditionally
+ * debug_trap_if_zero() - trap if floating point value is zero
+ * debug_trap_if_true() - trap if condition is true
  *
  *  The 'reason' value will display in GDB (but maybe not in AS7), and can also be passed
  *  to a downstream logger if these are introduced into the function.
  *
- *  Note that it may be possible to print or generate exceptions in _debug_trap(), but  
+ *  Note that it may be possible to print or generate exceptions in debug_trap(), but  
  *  it MIGHT interrupt other output, or might have been called deep in an ISR, 
  *  so we had better just _NOP() and hope for the best.
  */
 #pragma GCC push_options
 #pragma GCC optimize ("O0")
 
-inline void __debug_trap(const char *reason) {
+inline void debug_trap(const char *reason) {
     __NOP();
 #if IN_DEBUGGER == 1
     __asm__("BKPT");
 #endif
 }
 
-inline void __debug_trap_if_zero(float value, const char *reason) {
+inline void debug_trap_if_zero(float value, const char *reason) {
     if (fp_ZERO(value)) {
         __NOP();
 #if IN_DEBUGGER == 1
@@ -220,7 +220,7 @@ inline void __debug_trap_if_zero(float value, const char *reason) {
     }    
 }
 
-inline void __debug_trap_if_true(bool condition, const char *reason) {
+inline void debug_trap_if_true(bool condition, const char *reason) {
     if (condition) {
         __NOP();
 #if IN_DEBUGGER == 1

@@ -166,10 +166,10 @@ static stat_t _plan_aline(mpBuf_t *bf, float entry_velocity)
     mpBlockRuntimeBuf_t* block = mr->p;             // set a local planning block so it doesn't change on you
     mp_calculate_ramps(block, bf, entry_velocity);  // (which it will if you don't do this)
 
-    __debug_trap_if_true((block->exit_velocity > block->cruise_velocity), 
+    debug_trap_if_true((block->exit_velocity > block->cruise_velocity), 
         "_plan_line() exit velocity > cruise velocity after calculate_ramps()");
 
-    __debug_trap_if_true((block->head_length < 0.00001 && block->body_length < 0.00001 && block->tail_length < 0.00001),
+    debug_trap_if_true((block->head_length < 0.00001 && block->body_length < 0.00001 && block->tail_length < 0.00001),
         "_plan_line() zero or negative length block after calculate_ramps()");
 
     bf->buffer_state = MP_BUFFER_PLANNED;           //...here
@@ -256,28 +256,28 @@ stat_t mp_exec_move()
         // first-time operations
         if (bf->buffer_state != MP_BUFFER_RUNNING) {
             if ((bf->buffer_state < MP_BUFFER_PREPPED) && (cm->motion_state == MOTION_RUN)) {
-                __debug_trap("mp_exec_move() buffer is not prepped"); // IMPORTANT: can't rpt_exception from here!
+                debug_trap("mp_exec_move() buffer is not prepped. Starvation"); // IMPORTANT: can't rpt_exception from here!
                 st_prep_null();
                 return (STAT_NOOP);
             }
-            if (bf->nx->buffer_state < MP_BUFFER_PREPPED) {
+            if ((bf->nx->buffer_state < MP_BUFFER_PREPPED) && (bf->nx->buffer_state > MP_BUFFER_EMPTY)) {
                 // This detects buffer starvation, but also can be a single-line "jog" or command
                 // rpt_exception(42, "mp_exec_move() next buffer is empty");
                 // ^^^ CAUSES A CRASH. We can't rpt_exception from here!
+                debug_trap("mp_exec_move() no buffer prepped - starvation");
             }
 
             if (bf->buffer_state == MP_BUFFER_PREPPED) {
-                if (cm->motion_state == MOTION_RUN) {
-                    __debug_trap("mp_exec_move() don't have a block planned"); // IMPORTANT: can't rpt_exception from here!
-                }
-                // We need to have it planned. We don't want to do this here, as it
-                // might already be happening in a lower interrupt.
+                debug_trap_if_true((cm->motion_state == MOTION_RUN), "mp_exec_move() buffer prepped but not planned");
+                // IMPORTANT: can't rpt_exception from here!
+                // We need to have it planned. We don't want to do this here,
+                // as it might already be happening in a lower interrupt.
                 st_request_forward_plan();
                 return (STAT_NOOP);
             }
 
             if (bf->buffer_state == MP_BUFFER_PLANNED) {
-                bf->buffer_state = MP_BUFFER_RUNNING;               // must precede mp_planner_time_acccounting()
+                bf->buffer_state = MP_BUFFER_RUNNING;       // must precede mp_planner_time_acccounting()
             } else {
                 return (STAT_NOOP);
             }
@@ -289,7 +289,6 @@ stat_t mp_exec_move()
         // (and have called mp_exec_aline via bf->bf_func).
         // This also allows mp_exec_aline to advance mr->p first.
         if (bf->nx->buffer_state >= MP_BUFFER_PREPPED) {
-//        if (bf->nx->buffer_state == MP_BUFFER_PREPPED) {
             st_request_forward_plan();
         }
 
@@ -877,7 +876,7 @@ static stat_t _exec_aline_head(mpBuf_t *bf)
             _init_forward_diffs(mr->entry_velocity, mr->r->cruise_velocity); // <-- sets inital segment_velocity
         }
         if (mr->segment_time < MIN_SEGMENT_TIME) {
-            __debug_trap("mr->segment_time < MIN_SEGMENT_TIME (head)");
+            debug_trap("mr->segment_time < MIN_SEGMENT_TIME (head)");
             return(STAT_OK);                                        // exit without advancing position, say we're done
         }
         mr->section = SECTION_HEAD;
@@ -922,7 +921,7 @@ static stat_t _exec_aline_body(mpBuf_t *bf)
         mr->segment_velocity = mr->r->cruise_velocity;
         mr->segment_count = (uint32_t)mr->segments;
         if (mr->segment_time < MIN_SEGMENT_TIME) {
-            __debug_trap("mr->segment_time < MIN_SEGMENT_TIME (body)");
+            debug_trap("mr->segment_time < MIN_SEGMENT_TIME (body)");
             return(STAT_OK);                                // exit without advancing position, say we're done
         }
 
@@ -963,7 +962,7 @@ static stat_t _exec_aline_tail(mpBuf_t *bf)
             _init_forward_diffs(mr->r->cruise_velocity, mr->r->exit_velocity); // <-- sets inital segment_velocity
         }
         if (mr->segment_time < MIN_SEGMENT_TIME) {
-            __debug_trap("mr->segment_time < MIN_SEGMENT_TIME (tail)");
+            debug_trap("mr->segment_time < MIN_SEGMENT_TIME (tail)");
             return(STAT_OK);                                    // exit without advancing position, say we're done
          // return(STAT_MINIMUM_TIME_MOVE);                     // exit without advancing position
         }

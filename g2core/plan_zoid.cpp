@@ -125,8 +125,8 @@ stat_t mp_calculate_ramps(mpBlockRuntimeBuf_t* block, mpBuf_t* bf, const float e
         bf->hint = COMMAND_BLOCK;
         return (STAT_NOOP);                             // NOOP status is informative, not actionable
     }
-    __debug_trap_if_zero(bf->length, "mp_calculate_ramps() - got L=0");
-    __debug_trap_if_zero(bf->cruise_velocity, "mp_calculate_ramps() - got Vc=0");
+    debug_trap_if_zero(bf->length, "mp_calculate_ramps() - got L=0");
+    debug_trap_if_zero(bf->cruise_velocity, "mp_calculate_ramps() - got Vc=0");
 
     // Timings from *here*
 
@@ -303,7 +303,7 @@ stat_t mp_calculate_ramps(mpBlockRuntimeBuf_t* block, mpBuf_t* bf, const float e
     // Rate-limited asymmetric cases (3)
     // compute meet velocity to see if the cruise velocity rises above the entry and/or exit velocities
     block->cruise_velocity = _get_meet_velocity(entry_velocity, block->exit_velocity, bf->length, bf, block);
-    __debug_trap_if_zero(block->cruise_velocity, "mp_calculate_ramps() Vc=0 asymmetric HT case");
+    debug_trap_if_zero(block->cruise_velocity, "mp_calculate_ramps() Vc=0 asymmetric HT case");
 
     // We now store the head/tail lengths we computed in _get_meet_velocity.
     // treat as a full up and down (head and tail)

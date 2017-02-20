@@ -230,7 +230,7 @@ stat_t cm_shutdown(const stat_t status, const char *msg)
 
 stat_t cm_panic(const stat_t status, const char *msg)
 {
-    __debug_trap(msg);
+    debug_trap(msg);
 
     if (cm->machine_state == MACHINE_PANIC) {    // only do this once
         return (STAT_OK);
