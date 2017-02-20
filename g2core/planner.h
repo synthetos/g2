@@ -226,23 +226,6 @@ typedef enum {                      // code blocks for planning and trapezoid ge
     ASYMMETRIC_BUMP,                // (Ve != Vx) < Vc
 } blockHint;
 
-/*
-typedef enum {
-    ZOID_EXIT_NULL = 0,
-    ZOID_EXIT_1a,
-    ZOID_EXIT_1c,
-    ZOID_EXIT_1d,
-    ZOID_EXIT_2a,
-    ZOID_EXIT_2c,
-    ZOID_EXIT_2d,
-    ZOID_EXIT_3c,
-    ZOID_EXIT_3s,
-    ZOID_EXIT_3s2,
-    ZOID_EXIT_3d2,
-    ZOID_EXIT_3a2
-} zoidExitPoint;
-*/
-
 /*** Most of these factors are the result of a lot of tweaking. Change with caution.***/
 
 #define PLANNER_QUEUE_SIZE          ((uint8_t)48)       // Suggest 12 min. Limit is 255
@@ -292,7 +275,7 @@ typedef enum {
 #define Veq2_lo 1.0
 #define VELOCITY_ROUGHLY_EQ(v0,v1) ( (v0 > Vthr2) ? fabs(v0-v1) < Veq2_hi : fabs(v0-v1) < Veq2_lo )
 
-/* Diagnostics */
+/* Planner Diagnostics */
 
 //#define __PLANNER_DIAGNOSTICS   // comment this out to drop diagnostics
 

@@ -50,24 +50,6 @@ using Motate::SysTickTimer;
 
 /****** Global Scope Variables and Functions ******/
 
-//*** debug utilities ***
-
-#pragma GCC push_options
-#pragma GCC optimize ("O0")
-//#pragma GCC reset_options
-inline void _debug_trap(const char *reason) {
-    // We might be able to put a print here, but it MIGHT interrupt other output
-    // and might be deep in an ISR, so we had better just _NOP() and hope for the best.
-    __NOP();
-#ifdef IN_DEBUGGER
-    __asm__("BKPT");
-#endif
-}
-#pragma GCC reset_options
-
-void LAGER(const char * msg);
-void LAGER_cm(const char * msg);
-
 //*** vector utilities ***
 
 extern float vector[AXES]; // vector of axes for passing to subroutines
@@ -177,5 +159,80 @@ inline T avg(const T a,const T b) {return (a+b)/2; }
 //constexpr int c_strreverse(char * const t, const int count_, char hold = 0) {
 //    return count_>1 ? (hold=*t, *t=*(t+(count_-1)), *(t+(count_-1))=hold), c_strreverse(t+1, count_-2), count_ : count_;
 //}
+
+/*** Debug and DIAGNOSTICS  ***
+ *
+ *  This section collects debug and DIAGNOSTIC functions used by the project. 
+ *
+ *  The debug levels are set in the build line and may be one of:
+ *    <omitted>  - debug is off, IN_DEBUGGER == 0 (See Makefile for the logic)
+ *     DEBUG=0   - debug is off, IN_DEBUGGER == 0
+ *     DEBUG=1   - debug is on,  IN_DEBUGGER == 0
+ *     DEBUG=2   - debug is on,  IN_DEBUGGER == 1. Requires HW debugger to be connected
+ *     DEBUG=3   - debug is on,  IN_DEBUGGER == 1. Requires HW debugger and Semihosting to be enabled and running in the debugger
+ *   
+ *  These settings are applied in the Makefile.
+ *  In addition, MotateDebug.h contains the bulk of the Semihosting definitions
+ *
+ *  The *reason value is provided as it will be shown in the __asm__("BKPT") backtrace, 
+ *  or on the __NOP() if a breakpoint is set
+ *
+ *  Try to use the functions provided below for debug statements to keep the code clean. If these 
+ *  are insufficient you can bracket diagnostics like so to enable then for any non-zero debug level:
+ *
+ #if IN_DEBUGGER == 1
+     if (block->exit_velocity > block->cruise_velocity)  {
+         __asm__("BKPT");   // exit > cruise after calculate_block
+     }
+ #endif
+ * 
+ * ...or add a new debug functions to the ones below
+ */
+
+/*
+ * _debug_trap() - trap unconditionally
+ * _debug_trap_if_zero() - trap if floating point value is zero
+ * _debug_trap_if_true() - trap if condition is true
+ *
+ *  The 'reason' value will display in GDB (but maybe not in AS7), and can also be passed
+ *  to a downstream logger if these are introduced into the function.
+ *
+ *  Note that it may be possible to print or generate exceptions in _debug_trap(), but  
+ *  it MIGHT interrupt other output, or might have been called deep in an ISR, 
+ *  so we had better just _NOP() and hope for the best.
+ */
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
+
+inline void __debug_trap(const char *reason) {
+    __NOP();
+#if IN_DEBUGGER == 1
+    __asm__("BKPT");
+#endif
+}
+
+inline void __debug_trap_if_zero(float value, const char *reason) {
+    if (fp_ZERO(value)) {
+        __NOP();
+#if IN_DEBUGGER == 1
+        __asm__("BKPT");
+#endif
+    }    
+}
+
+inline void __debug_trap_if_true(bool condition, const char *reason) {
+    if (condition) {
+        __NOP();
+#if IN_DEBUGGER == 1
+        __asm__("BKPT");
+#endif
+    }
+}
+
+#pragma GCC reset_options
+
+void LAGER(const char * msg);
+void LAGER_cm(const char * msg);
+
 
 #endif    // End of include guard: UTIL_H_ONCE

@@ -62,7 +62,7 @@
 #include "report.h"
 #include "util.h"
 #include "json_parser.h"
-#include "xio.h"    // DIAGNOSTIC - only needed if xio_writeline() direct prints are used
+#include "xio.h"
 
 // Allocate planner structures
 

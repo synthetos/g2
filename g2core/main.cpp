@@ -50,17 +50,19 @@
 
 stat_t status_code;						    // allocate a variable for the ritorno macro
 
-/************* System Globals For Diagnostics ****************/
+/************* System Globals For Debugging and Diagnostics ****************/
+// See also: util.h for debugging and diagnostics
 
 // Using motate pins for profiling
-// see https://github.com/synthetos/g2/wiki/Using-Pin-Changes-for-Timing-(and-light-debugging)
+// Usage: https://github.com/synthetos/g2/wiki/Using-Pin-Changes-for-Timing-(and-light-debugging)
 
 using namespace Motate;
 OutputPin<kDebug1_PinNumber> debug_pin1;
 OutputPin<kDebug2_PinNumber> debug_pin2;
 OutputPin<kDebug3_PinNumber> debug_pin3;
-//OutputPin<kDebug4_PinNumber> debug_pin4;
+OutputPin<kDebug4_PinNumber> debug_pin4;
 
+// or these to disable the pin
 //OutputPin<-1> debug_pin1;
 //OutputPin<-1> debug_pin2;
 //OutputPin<-1> debug_pin3;
@@ -72,7 +74,7 @@ using namespace Motate;
 extern OutputPin<kDebug1_PinNumber> debug_pin1;
 extern OutputPin<kDebug2_PinNumber> debug_pin2;
 extern OutputPin<kDebug3_PinNumber> debug_pin3;
-//extern OutputPin<kDebug4_PinNumber> debug_pin4;
+extern OutputPin<kDebug4_PinNumber> debug_pin4;
 
 //extern OutputPin<-1> debug_pin1;
 //extern OutputPin<-1> debug_pin2;

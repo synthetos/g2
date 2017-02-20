@@ -44,18 +44,9 @@
 
 #include "MotateDebug.h"
 
-/* Note: stepper_debug statements removed 1/16/17 in SHA eb0905ccae03c04f99e6f471cbe029002f0324c6. See earlier commits to recover
-// Unless debugging, this should always read "#if 0 && ..."
-// DON'T COMMIT with anything else!
-// 
-#if 0 && (IN_DEBUGGER == 1)
-template<int32_t len>
-void stepper_debug(const char (&str)[len]) { Motate::debug.write(str); };
-#else
-template<int32_t len>
-void stepper_debug(const char (&str)[len]) { ; };
-#endif
-*/
+/* Note: stepper_debug statements removed 1/16/17 in SHA eb0905ccae03c04f99e6f471cbe029002f0324c6. 
+ * See earlier commits to recover
+ */
 
 /**** Allocate structures ****/
 
@@ -66,9 +57,6 @@ static stRunSingleton_t st_run;
 /**** Static functions ****/
 
 static void _load_move(void);
-
-// handy macro
-//#define _f_to_period(f) (uint16_t)((float)F_CPU / (float)f)
 
 /**** Setup motate ****/
 

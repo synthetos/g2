@@ -31,11 +31,11 @@
 #include "planner.h"
 #include "report.h"
 #include "util.h"
-#include "xio.h"    // only need for DIAGNOSTICS
+//#include "xio.h"    // only need for_ramp_exit_logger
 
 // DIAGNOSTICS
 
-stat_t _exit_logger(mpBuf_t* bf, const char *msg)
+stat_t _ramp_exit_logger(mpBuf_t* bf, const char *msg)
 {
     #ifdef __PLANNER_DIAGNOSTICS
     if (mp_runtime_is_idle()) {  // normally the runtime keeps this value fresh
@@ -44,31 +44,22 @@ stat_t _exit_logger(mpBuf_t* bf, const char *msg)
     }
     #endif
 
-    #ifdef IN_DEBUGGER
-// insert logger functions here
-//static char logbuf[128];
-//static void _logger(const char *msg, const mpBuf_t *bf)         // LOG_RETURN with full state dump
-//{
-//    sprintf(logbuf, "[%2d] %s (%d) mt:%5.2f, L:%1.3f [%1.3f, %1.3f, %1.3f] V:[%1.2f, %1.2f, %1.2f]\n",
-//                    bf->buffer_number, msg, bf->hint, (bf->block_time * 60000),
-//                    bf->length, bf->head_length, bf->body_length, bf->tail_length,
-//                    bf->pv->exit_velocity, bf->cruise_velocity, bf->exit_velocity);
-//    xio_writeline(logbuf);
-//}
-    #endif
+/* insert logger functions here if needed:
 
+    // LOG_RETURN with full state dump
+    #if IN_DEBUGGER == 1
+
+    static char logbuf[128];
+
+    sprintf(logbuf, "[%2d] %s (%d) mt:%5.2f, L:%1.3f [%1.3f, %1.3f, %1.3f] V:[%1.2f, %1.2f, %1.2f]\n",
+                    bf->buffer_number, msg, bf->hint, (bf->block_time * 60000),
+                    bf->length, bf->head_length, bf->body_length, bf->tail_length,
+                    bf->pv->exit_velocity, bf->cruise_velocity, bf->exit_velocity);
+    xio_writeline(logbuf);
+    #endif
+*/
     return (STAT_OK);
 }
-
-#ifndef IN_DEBUGGER
-#define TRAP_ZERO(t,m)
-#else
-#define TRAP_ZERO(t, m)                             \
-    if (fp_ZERO(t)) {                               \
-        rpt_exception(STAT_MINIMUM_LENGTH_MOVE, m); \
-        _debug_trap(m);                             \
-    }
-#endif
 
 // END DIAGNOSTICS
 
@@ -134,8 +125,8 @@ stat_t mp_calculate_ramps(mpBlockRuntimeBuf_t* block, mpBuf_t* bf, const float e
         bf->hint = COMMAND_BLOCK;
         return (STAT_NOOP);                             // NOOP status is informative, not actionable
     }
-    TRAP_ZERO(bf->length, "zoid() got L=0");            //+++++ Move this outside of zoid
-    TRAP_ZERO(bf->cruise_velocity, "zoid() got Vc=0");  // move this outside
+    __debug_trap_if_zero(bf->length, "mp_calculate_ramps() - got L=0");
+    __debug_trap_if_zero(bf->cruise_velocity, "mp_calculate_ramps() - got Vc=0");
 
     // Timings from *here*
 
@@ -171,7 +162,7 @@ stat_t mp_calculate_ramps(mpBlockRuntimeBuf_t* block, mpBuf_t* bf, const float e
             block->body_length = bf->length;
             block->body_time   = block->body_length / block->cruise_velocity;
             bf->block_time     = block->body_time;
-            return (_exit_logger(bf, "1c"));
+            return (_ramp_exit_logger(bf, "1c"));
         } 
         else {  // degrade the hint to MIXED_ACCELERATION
             bf->hint = MIXED_ACCELERATION;
@@ -203,7 +194,7 @@ stat_t mp_calculate_ramps(mpBlockRuntimeBuf_t* block, mpBuf_t* bf, const float e
             block->body_time = block->body_length / block->cruise_velocity;
             block->tail_time = block->tail_length * 2 / (block->exit_velocity + block->cruise_velocity);
             bf->block_time   = block->body_time + block->tail_time;
-            return (_exit_logger(bf, "2d"));
+            return (_ramp_exit_logger(bf, "2d"));
         }
 
         // PERFECT_DECELERATION (1d) single tail segment (deltaV == delta_vmax)
@@ -213,7 +204,7 @@ stat_t mp_calculate_ramps(mpBlockRuntimeBuf_t* block, mpBuf_t* bf, const float e
             block->cruise_velocity = entry_velocity;
             block->tail_time       = block->tail_length * 2 / (block->exit_velocity + block->cruise_velocity);
             bf->block_time         = block->tail_time;
-            return (_exit_logger(bf, "1d"));
+            return (_ramp_exit_logger(bf, "1d"));
         }
 
         // Reset entry_changed. We won't likely be changing the next block's entry velocity.
@@ -246,7 +237,7 @@ stat_t mp_calculate_ramps(mpBlockRuntimeBuf_t* block, mpBuf_t* bf, const float e
             block->cruise_velocity = block->exit_velocity;
             block->head_time       = (block->head_length * 2.0) / (entry_velocity + block->cruise_velocity);
             bf->block_time         = block->head_time;
-            return (_exit_logger(bf, "1a"));
+            return (_ramp_exit_logger(bf, "1a"));
         } 
         else {  // it's hit the cusp
 
@@ -271,7 +262,7 @@ stat_t mp_calculate_ramps(mpBlockRuntimeBuf_t* block, mpBuf_t* bf, const float e
                 block->head_time   = (block->head_length * 2.0) / (entry_velocity + block->cruise_velocity);
                 block->body_time   = block->body_length / block->cruise_velocity;
                 bf->block_time     = block->head_time + block->body_time;
-                return (_exit_logger(bf, "2a"));
+                return (_ramp_exit_logger(bf, "2a"));
             }
         }
     }
@@ -303,7 +294,7 @@ stat_t mp_calculate_ramps(mpBlockRuntimeBuf_t* block, mpBuf_t* bf, const float e
         bf->block_time   = block->head_time + block->body_time + block->tail_time;
 
         bf->hint = ASYMMETRIC_BUMP;
-        return (_exit_logger(bf, "2c"));
+        return (_ramp_exit_logger(bf, "2c"));
     }
 
     // *** Rate-Limited-Fit cases (3) ***
@@ -312,14 +303,8 @@ stat_t mp_calculate_ramps(mpBlockRuntimeBuf_t* block, mpBuf_t* bf, const float e
     // Rate-limited asymmetric cases (3)
     // compute meet velocity to see if the cruise velocity rises above the entry and/or exit velocities
     block->cruise_velocity = _get_meet_velocity(entry_velocity, block->exit_velocity, bf->length, bf, block);
-#if (0)
-    TRAP_ZERO(block->cruise_velocity, "zoid() Vc=0 asymmetric HT case");
-#else
-    if (fp_ZERO(block->cruise_velocity)) {
-//        return (STAT_MINIMUM_LENGTH_MOVE);  // This error case needs to be recovered upstream
-        __asm__("BKPT");
-    }
-#endif
+    __debug_trap_if_zero(block->cruise_velocity, "mp_calculate_ramps() Vc=0 asymmetric HT case");
+
     // We now store the head/tail lengths we computed in _get_meet_velocity.
     // treat as a full up and down (head and tail)
     bf->hint = ASYMMETRIC_BUMP;
@@ -337,7 +322,7 @@ stat_t mp_calculate_ramps(mpBlockRuntimeBuf_t* block, mpBuf_t* bf, const float e
         block->tail_time = (block->tail_length * 2.0) / (block->exit_velocity + block->cruise_velocity);
     }
     bf->block_time = block->head_time + block->body_time + block->tail_time;
-    return (_exit_logger(bf, "3c"));  // 550us worst case
+    return (_ramp_exit_logger(bf, "3c"));  // 550us worst case
 }
 
 /**** Planner helpers ****

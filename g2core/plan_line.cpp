@@ -36,7 +36,6 @@
 #include "util.h"
 #include "spindle.h"
 #include "settings.h"
-
 #include "xio.h"
 
 // using Motate::Timeout;
@@ -55,7 +54,9 @@ static void _calculate_jerk(mpBuf_t* bf);
 static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const float axis_square[]);
 static void _calculate_junction_vmax(mpBuf_t* bf);
 
+
 #ifdef __PLANNER_DIAGNOSTICS
+#pragma GCC push_options
 #pragma GCC optimize("O0")  // this pragma is required to force the planner to actually set these unused values
 static void _set_bf_diagnostics(mpBuf_t* bf) {
     UPDATE_BF_DIAGNOSTICS(bf);
@@ -64,6 +65,7 @@ static void _set_bf_diagnostics(mpBuf_t* bf) {
 #else
 static void _set_bf_diagnostics(mpBuf_t* bf) {}
 #endif
+
 
 /* Runtime-specific setters and getters
  *

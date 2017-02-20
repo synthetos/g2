@@ -600,7 +600,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             char c = _data[_scan_offset];
 
             if (c == 0) {
-                _debug_trap("scan ran into NULL");
+                __debug_trap("_scanBuffer() scan ran into NULL");
                 flush(); // consider the connection and all data trashed
                 return false;
             }
@@ -624,7 +624,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                     ends_line  = true;      // _at_start_of_line is already true, this is not the first.
                 }
             }
-            // prevent going furnther if we are ignoring
+            // prevent going further if we are ignoring
             else if (_ignore_until_next_line)
             {
                 // don't do anything
@@ -747,14 +747,14 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             // Either way, _scan_offset is one past the end, so we don't care which.
 
             if (_data[_line_start_offset] == 0) {
-                _debug_trap("read ran into NULL");
+                __debug_trap("readline() read ran into NULL");
             }
 
             // scan past any leftover CR or LF from the previous line
             while ((_data[_line_start_offset] == '\n') || (_data[_line_start_offset] == '\r')) {
                 _line_start_offset = (_line_start_offset+1)&(_size-1);
                 if (_scan_offset == _line_start_offset) {
-                    _debug_trap("read ran into scan (1)");
+                    __debug_trap("readline() read ran into scan (1)");
                 }
             }
 
@@ -802,7 +802,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 
 
         if (_data[_read_offset] == 0) {
-            _debug_trap("read ran into NULL");
+            __debug_trap("readline() read ran into NULL");
         }
 
         // scan past any leftover CR or LF from the previous line
@@ -810,7 +810,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
         while ((c == '\n') || (c == '\r')) {
             _read_offset = (_read_offset+1)&(_size-1);
             if (_scan_offset == _read_offset) {
-                _debug_trap("read ran into scan (2)");
+                __debug_trap("readline() read ran into scan (2)");
             }
             // this also counts as the beginning of a line
             _skip_sections.skip(_read_offset);

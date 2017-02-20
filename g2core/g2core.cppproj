@@ -1177,7 +1177,7 @@
     <OutputPath>bin\Makeblock-v9\</OutputPath>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>CONFIG=Makeblock COLOR=0 VERBOSE=1</BuildTarget>
+    <BuildTarget>CONFIG=Makeblock COLOR=0 VERBOSE=1 DEBUG=2</BuildTarget>
     <CleanTarget>clean CONFIG=Makeblock</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <ToolchainSettings>
