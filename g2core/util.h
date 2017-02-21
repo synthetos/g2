@@ -205,28 +205,28 @@ inline T avg(const T a,const T b) {return (a+b)/2; }
 #pragma GCC optimize ("O0")
 
 inline void debug_trap(const char *reason) {
-    __NOP();
 #if IN_DEBUGGER == 1
+    __NOP();
     __asm__("BKPT");
 #endif
 }
 
 inline void debug_trap_if_zero(float value, const char *reason) {
+#if IN_DEBUGGER == 1
     if (fp_ZERO(value)) {
         __NOP();
-#if IN_DEBUGGER == 1
         __asm__("BKPT");
+    }
 #endif
-    }    
 }
 
 inline void debug_trap_if_true(bool condition, const char *reason) {
+#if IN_DEBUGGER == 1
     if (condition) {
         __NOP();
-#if IN_DEBUGGER == 1
         __asm__("BKPT");
+    }    
 #endif
-    }
 }
 
 #pragma GCC reset_options

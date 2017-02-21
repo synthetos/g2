@@ -295,6 +295,8 @@ static stat_t _run_p1_hold_entry_actions()
 {    
     cm->hold_state = FEEDHOLD_ACTIONS_WAIT;   // penultimate state before transitioning to HOLD
     
+    debug_trap_if_true(st_runtime_isbusy(), "_run_p1_hold_entry_actions() - runtime is busy");
+    
     // copy the primary canonical machine to the secondary, 
     // fix the planner pointer, and reset the secondary planner
     memcpy(&cm2, &cm1, sizeof(cmMachine_t));
@@ -326,16 +328,15 @@ static stat_t _run_p1_hold_entry_actions()
     cm_set_motion_state(MOTION_STOP);
 
     // execute feedhold actions
-    if (fp_NOT_ZERO(cm->feedhold_z_lift)) {             // optional Z lift
-        float stored_distance_mode = cm_get_distance_mode(MODEL);
+    if (fp_NOT_ZERO(cm->feedhold_z_lift)) {                 // optional Z lift
         cm_set_distance_mode(INCREMENTAL_DISTANCE_MODE);
         bool flags[] = { 0,0,1,0,0,0 };            
         float target[] = { 0,0, _to_inches(cm->feedhold_z_lift), 0,0,0 };   // convert to inches if in inches mode
         cm_straight_traverse(target, flags);
-        cm_set_distance_mode(stored_distance_mode);
+        cm_set_distance_mode(cm1.gm.distance_mode);         // restore distance mode to p1 setting
     }
-    spindle_control_sync(SPINDLE_PAUSE);                // optional spindle pause
-    coolant_control_sync(COOLANT_PAUSE, COOLANT_BOTH);  // optional coolant pause    
+    spindle_control_sync(SPINDLE_PAUSE);                    // optional spindle pause
+    coolant_control_sync(COOLANT_PAUSE, COOLANT_BOTH);      // optional coolant pause    
     mp_queue_command(_sync_to_p1_hold_entry_actions_done, nullptr, nullptr);
     return (STAT_OK);
 }

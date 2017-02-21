@@ -400,12 +400,27 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     // Initialize all new blocks, regardless of normal or feedhold operation
     if (mr->block_state == BLOCK_INACTIVE) {
 
-        // Zero length moves (and other too-short moves) should have already been removed...
-        // ...so the following code is no longer needed.
+        // ASSERTIONS
+        
+        // Zero length moves (and other too-short moves) should have already been removed earlier
         // But let's still alert the condition should it ever occur
-        if (fp_ZERO(bf->length)) {                        // ...looks for an actual zero here
-            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "mp_exec_aline() zero length move");
-        }
+//        if (fp_ZERO(bf->length)) {                        // ...looks for an actual zero here
+//            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "mp_exec_aline() zero length move");
+//        }
+        debug_trap_if_zero(bf->length, "mp_exec_aline() zero length move");
+
+        // Equalities that must be true for this to work:
+        //   entry velocity <= cruise velocity &&
+        //   exit velocity  <= cruise velocity
+        //
+        // Even if the move is head or tail only, cruise velocity needs to be valid.
+        // This is because a "head" is *always* entry->cruise, and a "tail" is *always* cruise->exit,
+        // even if there are no other sections in the move. (This is a significant time savings.)
+        debug_trap_if_true((mr->entry_velocity > mr->r->cruise_velocity), 
+            "mp_exec_aline() mr->entry_velocity > mr->r->cruise_velocity");
+
+        debug_trap_if_true((mr->r->exit_velocity > mr->r->cruise_velocity),
+            "mp_exec_aline() mr->exit_velocity > mr->r->cruise_velocity");
 
         // Start a new move by setting up the runtime singleton (mr)
         memcpy(&mr->gm, &(bf->gm), sizeof(GCodeState_t));   // copy in the gcode model state
@@ -415,20 +430,14 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         mr->section = SECTION_HEAD;
         mr->section_state = SECTION_NEW;
 
-        // This is the only place in the system where mr->r and mr->p are allowed to be changed
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // !!! THIS IS THE ONLY PLACE WHERE mr->r AND mr->p ARE ALLOWED TO BE CHANGED !!!
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // Swap P and R blocks
         mr->r = mr->p;        // we are now going to run the planning block
         mr->p = mr->p->nx;    // re-use the old running block as the new planning block
 
-        // Equalities that must be true for this to work:
-        //   entry velocity  <= cruise velocity && 
-        //   cruise velocity >= exit velocity
-        //
-        // Even if the move is head or tail only, cruise velocity needs to be valid.
-        // This is because a "head" is *always* entry->cruise, and a "tail" is *always* cruise->exit,
-        // even if there are not other sections in the move. (This is a significant time savings.)
-
-        // Here we will check to make sure that the sections are longer than MIN_SEGMENT_TIME
-
+        // Check to make sure no sections are less than MIN_SEGMENT_TIME & adjust if necessary
         if ((!fp_ZERO(mr->r->head_length)) && (mr->r->head_time < MIN_SEGMENT_TIME)) {
             // head_time !== body_time
             // We have to compute the new body time addition.
@@ -529,6 +538,11 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         // Case (6) - Wait for the steppers to stop
         if (cm->hold_state == FEEDHOLD_STOPPING) {
             if (mp_runtime_is_idle()) {                         // wait for steppers to actually finish
+                // finalize position and velocity
+                copy_vector(mr->position, mr->gm.target);                       // update position from target
+                bf->length = get_axis_vector_length(mr->target, mr->position);  // reset length in buffer //+++++ TEsT
+                mp_zero_segment_velocity();                                     // for reporting purposes
+
                 // when homing or probing don't stay in HOLD or execute entry actions
                 if ((cm->cycle_state == CYCLE_HOMING) || (cm->cycle_state == CYCLE_PROBE)) {
                     cm->hold_state = FEEDHOLD_OFF;
@@ -537,7 +551,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                 }  else {
                     cm->hold_state = FEEDHOLD_ACTIONS_START;    // perform Z-lift, spindle, coolant actions
                 }
-                mp_zero_segment_velocity();                     // for reporting purposes
+
                 sr_request_status_report(SR_REQUEST_IMMEDIATE);
                 cs.controller_state = CONTROLLER_READY;         // remove controller readline() PAUSE
             }
@@ -549,7 +563,6 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         if (cm->hold_state == FEEDHOLD_DECEL_END) {
             mr->block_state = BLOCK_INACTIVE;                   // invalidate mr buffer to reset the new move
             bf->block_state = BLOCK_INITIAL_ACTION;             // tell _exec to re-use the bf buffer
-            bf->length = get_axis_vector_length(mr->target, mr->position);// reset length
             cm->hold_state = FEEDHOLD_STOPPING;
 
             // No point bothering with the rest of this move if homing or probing
@@ -859,15 +872,15 @@ static void _init_forward_diffs(const float v_0, const float v_1)
 static stat_t _exec_aline_head(mpBuf_t *bf)
 {
     bool first_pass = false;
-    if (mr->section_state == SECTION_NEW) {                          // INITIALIZATION
+    if (mr->section_state == SECTION_NEW) {                         // INITIALIZATION
         first_pass = true;
         if (fp_ZERO(mr->r->head_length)) {
             mr->section = SECTION_BODY;
-            return(_exec_aline_body(bf));                            // skip ahead to the body generator
+            return(_exec_aline_body(bf));                           // skip ahead to the body generator
         }
         mr->segments = ceil(uSec(mr->r->head_time) / NOM_SEGMENT_USEC);// # of segments for the section
         mr->segment_count = (uint32_t)mr->segments;
-        mr->segment_time = mr->r->head_time / mr->segments;             // time to advance for each segment
+        mr->segment_time = mr->r->head_time / mr->segments;         // time to advance for each segment
 
         if (mr->segment_count == 1) {
             // We will only have one segment, simply average the velocities
@@ -1016,8 +1029,8 @@ static stat_t _exec_aline_segment()
         copy_vector(mr->gm.target, mr->waypoint[mr->section]);
     } else {
         float segment_length = mr->segment_velocity * mr->segment_time;
-        // see https://en.wikipedia.org/wiki/Kahan_summation_algorithm
-        //   for the summation compensation description
+        // See https://en.wikipedia.org/wiki/Kahan_summation_algorithm
+        // for the summation compensation description
         for (uint8_t a=0; a<AXES; a++) {
             float to_add = (mr->unit[a] * segment_length) - mr->gm.target_comp[a];
             float target = mr->position[a] + to_add;
@@ -1032,16 +1045,15 @@ static stat_t _exec_aline_segment()
     // Bucket-brigade the old target down the chain before getting the new target from kinematics
     //
     // NB: The direct manipulation of steps to compute travel_steps only works for Cartesian kinematics.
-    //       Other kinematics may require transforming travel distance as opposed to simply subtracting steps.
-
+    //     Other kinematics may require transforming travel distance as opposed to simply subtracting steps.
 
     for (uint8_t m=0; m<MOTORS; m++) {
-        mr->commanded_steps[m] = mr->position_steps[m];       // previous segment's position, delayed by 1 segment
-        mr->position_steps[m] = mr->target_steps[m];          // previous segment's target becomes position
-        mr->encoder_steps[m] = en_read_encoder(m);           // get current encoder position (time aligns to commanded_steps)
+        mr->commanded_steps[m] = mr->position_steps[m];     // previous segment's position, delayed by 1 segment
+        mr->position_steps[m] = mr->target_steps[m];        // previous segment's target becomes position
+        mr->encoder_steps[m] = en_read_encoder(m);          // get current encoder position (time aligns to commanded_steps)
         mr->following_error[m] = mr->encoder_steps[m] - mr->commanded_steps[m];
     }
-    kn_inverse_kinematics(mr->gm.target, mr->target_steps);   // now determine the target steps...
+    kn_inverse_kinematics(mr->gm.target, mr->target_steps); // now determine the target steps...
     for (uint8_t m=0; m<MOTORS; m++) {                      // and compute the distances to be traveled
         travel_steps[m] = mr->target_steps[m] - mr->position_steps[m];
     }
@@ -1054,7 +1066,7 @@ static stat_t _exec_aline_segment()
 
     // Call the stepper prep function
     ritorno(st_prep_line(travel_steps, mr->following_error, mr->segment_time));
-    copy_vector(mr->position, mr->gm.target);                 // update position from target
+    copy_vector(mr->position, mr->gm.target);               // update position from target
     if (mr->segment_count == 0) {
         return (STAT_OK);                                   // this section has run all its segments
     }
