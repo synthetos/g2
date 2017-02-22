@@ -325,7 +325,7 @@ static stat_t _run_p1_hold_entry_actions()
 
     // set motion state and ACTIVE_MODEL. This must be performed after cm is set to cm2
     cm_set_g30_position();
-    cm_set_motion_state(MOTION_STOP);
+    cm_set_motion_state(MOTION_STOP);   // sets cm2 active model to MODEL
 
     // execute feedhold actions
     if (fp_NOT_ZERO(cm->feedhold_z_lift)) {                 // optional Z lift

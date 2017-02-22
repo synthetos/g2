@@ -139,11 +139,16 @@ stat_t mp_calculate_ramps(mpBlockRuntimeBuf_t* block, mpBuf_t* bf, const float e
     block->body_length = 0;
     block->tail_length = 0;
 
-    block->cruise_velocity = min(bf->cruise_velocity, bf->cruise_vmax);
+    // these conditions should have been met earlier, but if they are not trap and correct them
+    debug_trap_if_true((bf->exit_velocity > bf->exit_vmax), "mp_calculate_ramps() - Vexit > Vexit_max");
     block->exit_velocity   = min(bf->exit_velocity, bf->exit_vmax);
 
+    // +++++ THIS WILL NEED TO CHANGE TO SUPPORT OVERRIDES
+//    debug_trap_if_true((bf->cruise_velocity, bf->cruise_vmax), "mp_calculate_ramps() - Vcruise > Vcruise_max");
+    block->cruise_velocity = min(bf->cruise_velocity, bf->cruise_vmax);
+
     // We *might* do this exact computation later, so cache the value
-    float test_velocity       = 0;
+    float test_velocity = 0;
     bool  test_velocity_valid = false;  // record if we have a validly cached value
 
     // *** Perfect-Fit Cases (1) *** Cases where curve fitting has already been done
@@ -397,7 +402,7 @@ float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t* bf)
 /*
  * mp_get_decel_velocity() - mp_get_target_velocity but ONLY for deceleration
  *
- *  Get "the velocity" that we would end up at if we *decelerated* from v_0,
+ *  Get the velocity that we would end up at if we decelerated from v_0,
  *  over the provided L (length) and J (jerk, provided in the bf structure).
  *
  *  We have to use a root finding solution, since there is actually three possible
@@ -409,6 +414,9 @@ float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t* bf)
  *
  *  This function may generate minor errors in target velocity, and should only
  *  be used to compute feedholds or other cases where exact velocity is not mandatory. 
+ *
+ *  This function can fail if the length is too short to get a good answer. 
+ *  Failures return (float)-1.0  Negative velocities should never be returned.
  */
 
 float mp_get_decel_velocity(const float v_0, const float L, const mpBuf_t* bf) 
@@ -426,7 +434,7 @@ float mp_get_decel_velocity(const float v_0, const float L, const mpBuf_t* bf)
         // The return condition allows a minor error in length (in mm). 
         // Note: This comparison does NOT affect actual lengths or steps, which would be bad.
         //       The actual lengths traveled must be controlled by the caller.
-        if (fabs(l_t) < 0.001) {    
+        if (fabs(l_t) < 0.001) {
             break;
         }
         // For the first pass we tested velocity 0. If velocity 0 yields a l_t > 0, 
@@ -439,9 +447,17 @@ float mp_get_decel_velocity(const float v_0, const float L, const mpBuf_t* bf)
         const float v_1x3 = 3 * v_1;
         const float recip_l_t = (2 * sqrt_delta_v_0) / ((v_0 - v_1x3) * q_recip_2_sqrt_j);
         v_1 = v_1 - (l_t * recip_l_t);
+        
+        // hack for cases where there is no solution because the length is so short
+        if (v_1 > v_0) {
+//            return (-1.0);    // cannot decelerate. Return an error
+            return (v_0);       // cannot decelerate. Return entry velocity
+        }
     }
     return v_1;
 }
+
+//Is there a way to derive the average slope of a deceleration given the starting velocity, length and jerk? We don't need the
 
 /*
  * _get_meet_velocity() - find intersection velocity

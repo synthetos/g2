@@ -655,7 +655,7 @@ static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const floa
 /*
  * _calculate_junction_vmax() - Giseburt's Algorithm ;-)
  *
- *  WARNING: This description is out of date and needs updated.
+ *  WARNING: This description is out of date and needs to be updated.
  *
  *  Computes the maximum allowable junction speed by finding the velocity that will not
  *  violate the jerk value of any axis.
@@ -664,14 +664,14 @@ static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const floa
  *  of the corner, at the point from vector a to vector b. The unit vectors of those two
  *  moves are provided as the current block (a_unit) and previous block (b_unit).
  *
- *      Delta[i]       = (b_unit[i] - a_unit[i])                   (1)
+ *      Delta[i] = (b_unit[i] - a_unit[i])                  (1)
  *
  *  We take, axis by axis, the difference in "unit velocity" to get a vector that
  *  represents the direction of acceleration - which may be the opposite direction
  *  as that of the "a" vector to achieve deceleration. To get the actual acceleration,
  *  we use the corner velocity (what we intend to calculate) as the magnitude.
  *
- *      Acceleration[i] = UnitAccel[i] * Velocity[i]               (2)
+ *      Acceleration[i] = UnitAccel[i] * Velocity[i]        (2)
  *
  *  Since we need the jerk value, which is defined as the "rate of change of acceleration,
  *  that is, the derivative of acceleration with respect to time" (Wikipedia), we need to
@@ -679,14 +679,14 @@ static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const floa
  *  physics. That will give us the time over which to "apply" the change of acceleration
  *  in order to get a physically realistic jerk. The yields a fairly simple formula:
  *
- *      Jerk[i] = Acceleration[i] / Time                           (3)
+ *      Jerk[i] = Acceleration[i] / Time                    (3)
  *
  *  Now that we can compute the jerk for a given corner, we need to know the maximum
  *  velocity that we can take the corner without violating that jerk for any axis.
  *  Let's incorporate formula (2) into formula (3), and solve for Velocity, using
  *  the known max Jerk and UnitAccel for this corner:
  *
- *      Velocity[i] = (Jerk[i] * Time) / UnitAccel[i]              (4)
+ *      Velocity[i] = (Jerk[i] * Time) / UnitAccel[i]       (4)
  *
  *  We then compute (4) for each axis, and use the smallest (most limited) result or
  *  vmax, whichever is smaller.

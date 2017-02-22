@@ -1123,11 +1123,6 @@ stat_t cm_straight_traverse(const float target[], const bool flags[])
     stat_t status = mp_aline(&cm->gm);              // send the move to the planner
     cm_update_model_position();                     // update gmx.position to ready for next incoming move
 
-
-//    if (status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer(mp)) { //mp applies to currently active planner
-//        cm_cycle_end();
-//        return (STAT_OK);
-//    }
     if (status == STAT_MINIMUM_LENGTH_MOVE) {
         if (!mp_has_runnable_buffer(mp)) {          // handle condition where zero-length move is last or only move
             cm_cycle_end();                         // ...otherwise cycle will not end properly
@@ -1284,10 +1279,6 @@ stat_t cm_straight_feed(const float target[], const bool flags[])
     stat_t status = mp_aline(&cm->gm);              // send the move to the planner
     cm_update_model_position();                     // <-- ONLY safe because we don't care about status...
 
-//    if (status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer(mp)) { //mp applies to currently active planner
-//        cm_cycle_end();
-//        return (STAT_OK);
-//    }
     if (status == STAT_MINIMUM_LENGTH_MOVE) {
         if (!mp_has_runnable_buffer(mp)) {          // handle condition where zero-length move is last or only move
             cm_cycle_end();                         // ...otherwise cycle will not end properly
@@ -1564,7 +1555,7 @@ stat_t cm_tro_control(const float P_word, const bool P_flag) // M50.1
 static void _exec_program_finalize(float *value, bool *flag)
 {
     cmMachineState machine_state = (cmMachineState)value[0];
-    cm_set_motion_state(MOTION_STOP);
+    cm_set_motion_state(MOTION_STOP);                   // also changes active model back to MODEL
 
     // Allow update in the alarm state, to accommodate queue flush (RAS)
     if ((cm->cycle_state == CYCLE_MACHINING || cm->cycle_state == CYCLE_OFF) &&

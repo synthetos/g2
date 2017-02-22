@@ -294,13 +294,13 @@ stat_t mp_exec_move()
 
         // Manage motion state transitions
         if ((cm->motion_state != MOTION_RUN) && (cm->motion_state != MOTION_HOLD)) {
-            cm_set_motion_state(MOTION_RUN);
+            cm_set_motion_state(MOTION_RUN);                // also sets active model to RUNTIME
         }
     }
     if (bf->bf_func == NULL) {
         return(cm_panic(STAT_INTERNAL_ERROR, "mp_exec_move()")); // never supposed to get here
     }
-    return (bf->bf_func(bf));                             // run the move callback in the planner buffer
+    return (bf->bf_func(bf));                               // run the move callback in the planner buffer
 }
 
 /*************************************************************************/
@@ -404,9 +404,6 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         
         // Zero length moves (and other too-short moves) should have already been removed earlier
         // But let's still alert the condition should it ever occur
-//        if (fp_ZERO(bf->length)) {                        // ...looks for an actual zero here
-//            rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, "mp_exec_aline() zero length move");
-//        }
         debug_trap_if_zero(bf->length, "mp_exec_aline() zero length move");
 
         // Equalities that must be true for this to work:
@@ -425,10 +422,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         // Start a new move by setting up the runtime singleton (mr)
         memcpy(&mr->gm, &(bf->gm), sizeof(GCodeState_t));   // copy in the gcode model state
         bf->block_state = BLOCK_ACTIVE;                     // note that this buffer is running
-                                                            // note the planner doesn't look at block_state
-        mr->block_state = BLOCK_INITIAL_ACTION;
-        mr->section = SECTION_HEAD;
-        mr->section_state = SECTION_NEW;
+        mr->block_state = BLOCK_INITIAL_ACTION;             // note the planner doesn't look at block_state
 
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         // !!! THIS IS THE ONLY PLACE WHERE mr->r AND mr->p ARE ALLOWED TO BE CHANGED !!!
@@ -436,6 +430,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         // Swap P and R blocks
         mr->r = mr->p;        // we are now going to run the planning block
         mr->p = mr->p->nx;    // re-use the old running block as the new planning block
+
 
         // Check to make sure no sections are less than MIN_SEGMENT_TIME & adjust if necessary
         if ((!fp_ZERO(mr->r->head_length)) && (mr->r->head_time < MIN_SEGMENT_TIME)) {
@@ -495,9 +490,20 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             }
         }
 
+        // transfer move parameters from planner buffer to the runtime
         copy_vector(mr->unit, bf->unit);
-        copy_vector(mr->target, bf->gm.target);          // save the final target of the move
+        copy_vector(mr->target, bf->gm.target);
         copy_vector(mr->axis_flags, bf->axis_flags);
+
+        // characterize the move for starting section - head/body/tail 
+        mr->section_state = SECTION_NEW;
+        mr->section = SECTION_HEAD;
+        if (fp_ZERO(mr->r->head_length)) {
+            mr->section = SECTION_BODY;
+            if (fp_ZERO(mr->r->body_length)) {
+                mr->section = SECTION_TAIL;
+            }
+        }
 
         // generate the way points for position correction at section ends
         for (uint8_t axis=0; axis<AXES; axis++) {
@@ -540,7 +546,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             if (mp_runtime_is_idle()) {                         // wait for steppers to actually finish
                 // finalize position and velocity
                 copy_vector(mr->position, mr->gm.target);                       // update position from target
-                bf->length = get_axis_vector_length(mr->target, mr->position);  // reset length in buffer //+++++ TEsT
+                bf->length = get_axis_vector_length(mr->target, mr->position);  // reset length in buffer //+++++ TEST THIS
                 mp_zero_segment_velocity();                                     // for reporting purposes
 
                 // when homing or probing don't stay in HOLD or execute entry actions
@@ -560,7 +566,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
         // Case (5) - Decelerated to zero. See also Feedhold Case (5, continued), toward end of mp_exec_aline()
         // Update the run buffer then force a replan of the whole planner queue. Replans from 0 velocity
-        if (cm->hold_state == FEEDHOLD_DECEL_END) {
+        if (cm->hold_state == FEEDHOLD_DECEL_COMPLETE) {
             mr->block_state = BLOCK_INACTIVE;                   // invalidate mr buffer to reset the new move
             bf->block_state = BLOCK_INITIAL_ACTION;             // tell _exec to re-use the bf buffer
             cm->hold_state = FEEDHOLD_STOPPING;
@@ -579,7 +585,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
            ((cm->hold_state == FEEDHOLD_DECEL_CONTINUE) && (mr->block_state == BLOCK_INITIAL_ACTION))) {
 
             // Case (3a) - Already decelerating, continue the deceleration.
-            if (mr->section == SECTION_TAIL) {   // if already in a tail don't decelerate. You already are
+            if (mr->section == SECTION_TAIL) {                  // if already in a tail don't decelerate. You already are
                 if (mr->r->exit_velocity < EPSILON2) {          // allow near-zero velocities to be treated as zero
                     cm->hold_state = FEEDHOLD_DECEL_TO_ZERO;
                 } else {
@@ -595,6 +601,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                 mr->section_state = SECTION_NEW;
                 mr->r->head_length = 0;
                 mr->r->body_length = 0;
+                mr->r->head_time = 0;           // +++++ can this be taken out?
+                mr->r->body_time = 0;           // +++++ ditto
                 float available_length = get_axis_vector_length(mr->target, mr->position);
                 mr->r->tail_length = mp_get_target_length(0, mr->r->cruise_velocity, bf);  // braking length
 
@@ -606,7 +614,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                     mr->r->tail_length = available_length;
                     mr->r->exit_velocity = 0;
 
-                // (1b) The deceleration clearly has to span multiple moves
+                // (1b) The deceleration has to span multiple moves
                 } else if (available_length < mr->r->tail_length) {
                     mr->r->tail_length = available_length;
                     mr->r->exit_velocity = mp_get_decel_velocity(mr->r->cruise_velocity, mr->r->tail_length, bf);
@@ -617,12 +625,13 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                         cm->hold_state = FEEDHOLD_DECEL_CONTINUE;
                     }
 
-                // (1a) The deceleration will fit easily into the current move
-                } else {                                                
+                // (1a) The deceleration will fit into the current move
+                } else {
                     cm->hold_state = FEEDHOLD_DECEL_TO_ZERO;
                     mr->r->exit_velocity = 0;
                 }
                 mr->r->tail_time = mr->r->tail_length*2 / (mr->r->exit_velocity + mr->r->cruise_velocity);
+                bf->block_time = mr->r->tail_time;
             }
         }
     }
@@ -656,7 +665,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     // Feedhold Case (5, continued): Look for the end of the deceleration to go into HOLD state
     if (cm->hold_state == FEEDHOLD_DECEL_TO_ZERO) {
         if ((status == STAT_OK) || (status == STAT_NOOP)) {
-            cm->hold_state = FEEDHOLD_DECEL_END;
+            cm->hold_state = FEEDHOLD_DECEL_COMPLETE;
             bf->block_state = BLOCK_INITIAL_ACTION;     // reset bf so it can restart the rest of the move
         }
     }
@@ -872,15 +881,15 @@ static void _init_forward_diffs(const float v_0, const float v_1)
 static stat_t _exec_aline_head(mpBuf_t *bf)
 {
     bool first_pass = false;
-    if (mr->section_state == SECTION_NEW) {                         // INITIALIZATION
+    if (mr->section_state == SECTION_NEW) {                 // INITIALIZATION
         first_pass = true;
         if (fp_ZERO(mr->r->head_length)) {
             mr->section = SECTION_BODY;
-            return(_exec_aline_body(bf));                           // skip ahead to the body generator
+            return(_exec_aline_body(bf));                   // skip ahead to the body generator
         }
         mr->segments = ceil(uSec(mr->r->head_time) / NOM_SEGMENT_USEC);// # of segments for the section
         mr->segment_count = (uint32_t)mr->segments;
-        mr->segment_time = mr->r->head_time / mr->segments;         // time to advance for each segment
+        mr->segment_time = mr->r->head_time / mr->segments; // time to advance for each segment
 
         if (mr->segment_count == 1) {
             // We will only have one segment, simply average the velocities
@@ -890,22 +899,22 @@ static stat_t _exec_aline_head(mpBuf_t *bf)
         }
         if (mr->segment_time < MIN_SEGMENT_TIME) {
             debug_trap("mr->segment_time < MIN_SEGMENT_TIME (head)");
-            return(STAT_OK);                                        // exit without advancing position, say we're done
+            return(STAT_OK);                                // exit without advancing position, say we're done
         }
-        mr->section = SECTION_HEAD;
+        mr->section = SECTION_HEAD;                         // +++++ Redundant???
         mr->section_state = SECTION_RUNNING;
     } else {
         mr->segment_velocity += mr->forward_diff_5;
     }
 
-    if (_exec_aline_segment() == STAT_OK) {                     // set up for second half
+    if (_exec_aline_segment() == STAT_OK) {                 // set up for second half
         if ((fp_ZERO(mr->r->body_length)) && (fp_ZERO(mr->r->tail_length))) {
-            return(STAT_OK);                                    // ends the move
+            return(STAT_OK);                                // ends the move
         }
-
-        mr->section = SECTION_BODY;
+        mr->section = SECTION_BODY;                         // advance to body
         mr->section_state = SECTION_NEW;
-    } else if (!first_pass) {
+    }
+    else if (!first_pass) {
         mr->forward_diff_5 += mr->forward_diff_4;
         mr->forward_diff_4 += mr->forward_diff_3;
         mr->forward_diff_3 += mr->forward_diff_2;
@@ -925,9 +934,8 @@ static stat_t _exec_aline_body(mpBuf_t *bf)
     if (mr->section_state == SECTION_NEW) {
         if (fp_ZERO(mr->r->body_length)) {
             mr->section = SECTION_TAIL;
-            return(_exec_aline_tail(bf));                   // skip ahead to tail periods
+            return(_exec_aline_tail(bf));                   // skip ahead to tail generator
         }
-
         float body_time = mr->r->body_time;
         mr->segments = ceil(uSec(body_time) / NOM_SEGMENT_USEC);
         mr->segment_time = body_time / mr->segments;
@@ -938,14 +946,14 @@ static stat_t _exec_aline_body(mpBuf_t *bf)
             return(STAT_OK);                                // exit without advancing position, say we're done
         }
 
-        mr->section = SECTION_BODY;
+        mr->section = SECTION_BODY;                         // +++++ Redundant???
         mr->section_state = SECTION_RUNNING;                // uses PERIOD_2 so last segment detection works
     }
     if (_exec_aline_segment() == STAT_OK) {                 // OK means this section is done
         if (fp_ZERO(mr->r->tail_length)) {
             return(STAT_OK);                                // ends the move
         }
-        mr->section = SECTION_TAIL;
+        mr->section = SECTION_TAIL;                         // advance to tail
         mr->section_state = SECTION_NEW;
     }
     return(STAT_EAGAIN);
@@ -960,34 +968,34 @@ static stat_t _exec_aline_tail(mpBuf_t *bf)
     bool first_pass = false;
     if (mr->section_state == SECTION_NEW) {                 // INITIALIZATION
         first_pass = true;
+        bf->plannable = false;                              // Mark the block as unplannable
 
-        // Mark the block as unplannable
-        bf->plannable = false;
-
-        if (fp_ZERO(mr->r->tail_length)) { return(STAT_OK);} // end the move
+        if (fp_ZERO(mr->r->tail_length)) {                  // end the move
+            return(STAT_OK);
+        }
         mr->segments = ceil(uSec(mr->r->tail_time) / NOM_SEGMENT_USEC);// # of segments for the section
         mr->segment_count = (uint32_t)mr->segments;
-        mr->segment_time = mr->r->tail_time / mr->segments;     // time to advance for each segment
+        mr->segment_time = mr->r->tail_time / mr->segments; // time to advance for each segment
 
         if (mr->segment_count == 1) {
             mr->segment_velocity = mr->r->tail_length / mr->segment_time;
         } else {
-            _init_forward_diffs(mr->r->cruise_velocity, mr->r->exit_velocity); // <-- sets inital segment_velocity
+            _init_forward_diffs(mr->r->cruise_velocity, mr->r->exit_velocity); // sets initial segment_velocity
         }
         if (mr->segment_time < MIN_SEGMENT_TIME) {
             debug_trap("mr->segment_time < MIN_SEGMENT_TIME (tail)");
-            return(STAT_OK);                                    // exit without advancing position, say we're done
-         // return(STAT_MINIMUM_TIME_MOVE);                     // exit without advancing position
+            return(STAT_OK);                                // exit without advancing position, say we're done
         }
-        mr->section = SECTION_TAIL;
+        mr->section = SECTION_TAIL;                         // +++++ Redundant???
         mr->section_state = SECTION_RUNNING;
     } else {
         mr->segment_velocity += mr->forward_diff_5;
     }
 
     if (_exec_aline_segment() == STAT_OK) {
-        return(STAT_OK);                                        // STAT_OK completes the move
-    } else if (!first_pass) {
+        return(STAT_OK);                                    // STAT_OK completes the move
+    } 
+    else if (!first_pass) {
         mr->forward_diff_5 += mr->forward_diff_4;
         mr->forward_diff_4 += mr->forward_diff_3;
         mr->forward_diff_3 += mr->forward_diff_2;
