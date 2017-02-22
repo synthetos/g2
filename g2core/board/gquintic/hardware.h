@@ -58,7 +58,7 @@ enum hwPlatform {
 
 #define AXES        6           // number of axes supported in this version
 #define HOMING_AXES 4           // number of axes that can be homed (assumes Zxyabc sequence)
-#define MOTORS      5           // number of motors on the board
+#define MOTORS      6           // number of motors on the board - 5 Trinamics + 1 servo
 #define COORDS      6           // number of supported coordinate systems (index starts at 1)
 #define PWMS        2           // number of supported PWM channels
 #define TOOLS       32          // number of entries in tool table (index starts at 1)
@@ -120,8 +120,10 @@ using Motate::OutputPin;
 /**** Stepper DDA and dwell timer settings ****/
 
 //#define FREQUENCY_DDA    200000UL    // Hz step frequency. Interrupts actually fire at 2x (400 KHz)
-#define FREQUENCY_DDA    300000UL    // Hz step frequency. Interrupts actually fire at 2x (300 KHz)
-#define FREQUENCY_DWELL    1000UL
+#define FREQUENCY_DDA 200000UL  // Hz step frequency. Interrupts actually fire at 2x (300 KHz)
+#define FREQUENCY_DWELL 1000UL
+
+#define MIN_SEGMENT_MS ((float)0.125)       // S70 can handle much much smaller segements
 
 /**** Motate Definitions ****/
 

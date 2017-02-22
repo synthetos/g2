@@ -130,7 +130,8 @@ _MAKE_MOTATE_PIN(kI2C1_SDAPinNumber, 'A', 3);                 //
 _MAKE_MOTATE_PIN(kI2C1_SCLPinNumber, 'A', 4);                 //
 _MAKE_MOTATE_PIN(kOutput11_PinNumber, 'A', 5);                       //
 _MAKE_MOTATE_PIN(kExternalClock1_PinNumber, 'A', 6);          // CPU_CLK
-_MAKE_MOTATE_PIN(kOutput7_PinNumber, 'A', 7);                        //
+//_MAKE_MOTATE_PIN(kOutput7_PinNumber, 'A', 7);                        //
+_MAKE_MOTATE_PIN(kServo1_PinNumber, 'A', 7);                        //
 _MAKE_MOTATE_PIN(kSerial_RTSPinNumber, 'A', 8);                       //
 _MAKE_MOTATE_PIN(kSerial_RXPinNumber, 'A', 9);                         //
 _MAKE_MOTATE_PIN(kSerial_TXPinNumber, 'A', 10);                        //
@@ -146,7 +147,8 @@ _MAKE_MOTATE_PIN(kADC1_PinNumber, 'A', 19);                   //
 _MAKE_MOTATE_PIN(kADC0_PinNumber, 'A', 20);                   //
 _MAKE_MOTATE_PIN(kSerial_CTSPinNumber, 'A', 21);                      //
 _MAKE_MOTATE_PIN(kSocket1_EnablePinNumber, 'A', 22);  //
-_MAKE_MOTATE_PIN(kOutput10_PinNumber, 'A', 23);                //
+//_MAKE_MOTATE_PIN(kOutput10_PinNumber, 'A', 23);                //
+_MAKE_MOTATE_PIN(kServo1_PinNumber, 'A', 23);                //
 _MAKE_MOTATE_PIN(kSocket3_EnablePinNumber, 'A', 24);               //
 _MAKE_MOTATE_PIN(kSocket2_DirPinNumber, 'A', 25);                //
 _MAKE_MOTATE_PIN(kOutput5_PinNumber, 'A', 26);                // On Timer 2!

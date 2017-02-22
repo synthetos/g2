@@ -176,6 +176,7 @@ pin_number kGRBL_FeedHoldPinNumber     = -1;
 pin_number kGRBL_CycleStartPinNumber   = -1;
 pin_number kGRBL_CommonEnablePinNumber = -1;
 
+    
 // g2ref extensions
 // These first 5 may replace the Spindle and Coolant pins, above
 pin_number kOutput1_PinNumber = 130;  // DO_1: Extruder1_PWM
@@ -187,8 +188,8 @@ pin_number kOutput5_PinNumber = 134;  // DO_5: Fan2A_PWM
 pin_number kOutput6_PinNumber  = 135;  // See Spindle Enable
 pin_number kOutput7_PinNumber  = 136;  // See Spindle Direction
 pin_number kOutput8_PinNumber  = 137;  // See Coolant Enable
-pin_number kOutput9_PinNumber  = 138;  // SAFE signal
-pin_number kOutput10_PinNumber = 139;  // DO_10: Fan2B_PWM
+pin_number kOutput9_PinNumber  = 138;  // DO_09: May be resued for Servo1
+pin_number kOutput10_PinNumber = 139;  // DO_10: May be resued for Servo2
 
 pin_number kOutput11_PinNumber = 140;  // DO_11: Heated Bed FET
 pin_number kOutput12_PinNumber = 141;  // DO_12: Indicator_LED
@@ -215,8 +216,12 @@ pin_number kADC14_PinNumber = 164;  // Not physically pinned out
 
 pin_number kExternalClock1_PinNumber = 170;  // External pins for exporting a clock signal (for Trinamics)
 
+pin_number kServo1_PinNumber = 171;  //
+pin_number kServo2_PinNumber = 172;  //
+pin_number kServo3_PinNumber = 173;  //
 
-// start next sequence at 171
+
+// start next sequence at 174
 
 // blank spots for unassigned pins - all unassigned pins need a unique number (do not re-use numbers)
 

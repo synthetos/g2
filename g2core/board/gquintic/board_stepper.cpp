@@ -63,7 +63,9 @@ Trinamic2130<SPIBus_used_t::SPIBusDevice,
              Motate::kSocket5_EnablePinNumber>
     motor_5{spiBus, spiCSPinMux.getCS(0)};
 
-Stepper* Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5};
+StepDirHobbyServo<Motate::kServo1_PinNumber> motor_6;
+
+Stepper* Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5, &motor_6};
 
 void board_stepper_init() {
     spiBus.init();

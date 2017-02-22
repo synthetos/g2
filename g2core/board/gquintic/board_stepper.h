@@ -30,6 +30,7 @@
 
 #include "hardware.h"  // for MOTORS
 #include "tmc2130.h"
+#include "step_dir_hobbyservo.h"
 
 typedef Motate::SPIBus<Motate::kSPI_MISOPinNumber, Motate::kSPI_MOSIPinNumber, Motate::kSPI_SCKPinNumber, kSPI_ServiceCallNumber> SPIBus_used_t;
 
@@ -59,6 +60,7 @@ extern Trinamic2130<SPIBus_used_t::SPIBusDevice,
                     Motate::kSocket5_DirPinNumber,
                     Motate::kSocket5_EnablePinNumber>
     motor_5;
+extern StepDirHobbyServo<Motate::kServo1_PinNumber> motor_6;
 
 extern Stepper* Motors[MOTORS];
 
