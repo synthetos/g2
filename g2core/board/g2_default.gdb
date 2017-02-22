@@ -8,11 +8,14 @@ set history expansion on
 
 set print pretty on
 
-monitor adapter_khz 5000
+# monitor adapter_khz 5000
 
 define reset
   boot_from_flash
-  monitor reset init
+  # for openocd
+  # monitor reset init
+  # for jlink
+  monitor reset
 end
 
 define flash
