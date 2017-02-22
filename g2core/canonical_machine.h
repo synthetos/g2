@@ -116,7 +116,7 @@ typedef enum {                  // feedhold state machine
     FEEDHOLD_DECEL_CONTINUE,    // in deceleration that will not end at zero
     FEEDHOLD_DECEL_TO_ZERO,     // in deceleration that will go to zero
     FEEDHOLD_DECEL_COMPLETE,    // feedhold deceleration has completed
-    FEEDHOLD_STOPPING,          // waiting to complete deceleration once planner motion stops
+    FEEDHOLD_MOTORS_STOPPING,   // waiting to complete deceleration once planner motion stops
     FEEDHOLD_ACTIONS_START,     // enter secondary planner and perform feedhold actions (once)
     FEEDHOLD_ACTIONS_WAIT,      // wait for feedhold actions to complete
     FEEDHOLD_HOLD,              // holding (steady state) Must be last state

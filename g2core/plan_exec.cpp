@@ -519,12 +519,13 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     // Feedhold Processing - We need to handle the following cases (listed in rough sequence order):
     //  (1) - We have a block midway through normal execution and a new feedhold request
     //   (1a) - The deceleration will fit in the length remaining in the running block (mr)
-    //   (1b) - The deceleration will not fit in the running block
-    //   (1c) - 1a, except the remaining length would be zero or EPSILON close to zero (unlikely)
+    //   (1b) - 1a, except the remaining length would be zero or EPSILON2 close to zero (unlikely)
+    //   (1c) - The deceleration will not fit in the running block
     //  (2) - We have a new block and a new feedhold request that arrived at EXACTLY the same time (unlikely, but handled)
     //  (3) - We are in the middle of a block
     //   (3a) - The block is currently accelerating (we wait for the body to start)
-    //   (3b) - The block is currently in the tail (we wait until the end of the block)
+    //   (3b) - The block is in a body (or has not yet started the head) - start deceleration
+    //   (3c) - The block is currently in the tail (we wait until the end of the block)
     //  (4) - We have decelerated a block to some velocity > zero (needs continuation in next block)
     //  (5) - We have decelerated a block to zero velocity
     //  (6) - We have finished all the runtime work now we have to wait for the steppers to stop
@@ -542,7 +543,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         }
 
         // Case (6) - Wait for the steppers to stop
-        if (cm->hold_state == FEEDHOLD_STOPPING) {
+        if (cm->hold_state == FEEDHOLD_MOTORS_STOPPING) {
             if (mp_runtime_is_idle()) {                         // wait for steppers to actually finish
                 // finalize position and velocity
                 copy_vector(mr->position, mr->gm.target);                       // update position from target
@@ -565,11 +566,11 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         }
 
         // Case (5) - Decelerated to zero. See also Feedhold Case (5, continued), toward end of mp_exec_aline()
-        // Update the run buffer then force a replan of the whole planner queue. Replans from 0 velocity
+        // Update the run buffer then force a replan of the whole planner queue. Replans from zero velocity
         if (cm->hold_state == FEEDHOLD_DECEL_COMPLETE) {
             mr->block_state = BLOCK_INACTIVE;                   // invalidate mr buffer to reset the new move
             bf->block_state = BLOCK_INITIAL_ACTION;             // tell _exec to re-use the bf buffer
-            cm->hold_state = FEEDHOLD_STOPPING;
+            cm->hold_state = FEEDHOLD_MOTORS_STOPPING;          // wait for the motors to come to a complete stop
 
             // No point bothering with the rest of this move if homing or probing
             if ((cm->cycle_state == CYCLE_HOMING) || (cm->cycle_state == CYCLE_PROBE)) {
@@ -579,12 +580,12 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             return (STAT_OK);
         }
 
-        // Cases (1a, 1b), Case (2), Case (4)
+        // Cases (1a, 1b, 1c), Case (2), Case (4)
         // Build a tail-only move from here. Decelerate as fast as possible in the space we have.
         if ((cm->hold_state == FEEDHOLD_SYNC) ||
            ((cm->hold_state == FEEDHOLD_DECEL_CONTINUE) && (mr->block_state == BLOCK_INITIAL_ACTION))) {
 
-            // Case (3a) - Already decelerating, continue the deceleration.
+            // Case (3c) - Already decelerating (in a tail), continue the deceleration.
             if (mr->section == SECTION_TAIL) {                  // if already in a tail don't decelerate. You already are
                 if (mr->r->exit_velocity < EPSILON2) {          // allow near-zero velocities to be treated as zero
                     cm->hold_state = FEEDHOLD_DECEL_TO_ZERO;
@@ -592,46 +593,39 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                     cm->hold_state = FEEDHOLD_DECEL_CONTINUE;
                 }
 
-            // Case (3b) - Currently accelerating - is simply skipped and waited for. 
+            // Case (3a) - Currently accelerating (in a head), skip and waited for body or tail
             //             This is true because to do otherwise the jerk would not have returned to zero.
             // Small exception, if we *just started* the head, then we're not actually accelerating yet.
+
+            // Case (3b) - Block is in a body, or about to start a new head. Turn it into a new tail.
             } else if ((mr->section != SECTION_HEAD) || (mr->section_state == SECTION_NEW)) {
-                mr->entry_velocity = mr->segment_velocity;
                 mr->section = SECTION_TAIL;
                 mr->section_state = SECTION_NEW;
+                mr->entry_velocity = mr->segment_velocity;
                 mr->r->head_length = 0;
                 mr->r->body_length = 0;
-                mr->r->head_time = 0;           // +++++ can this be taken out?
-                mr->r->body_time = 0;           // +++++ ditto
-                float available_length = get_axis_vector_length(mr->target, mr->position);
+                mr->r->head_time = 0;
+                mr->r->body_time = 0;
                 mr->r->tail_length = mp_get_target_length(0, mr->r->cruise_velocity, bf);  // braking length
-
+                
                 // (1c) The deceleration distance is almost exactly the remaining of the current move.
                 // This happens mostly when the tail in the move was already planned to zero. 
                 // EPSILON2 deals with floating point rounding errors that might mis-classify this move.
-                if (fabs(available_length - mr->r->tail_length) < EPSILON2) {
-                    cm->hold_state = FEEDHOLD_DECEL_TO_ZERO;
-                    mr->r->tail_length = available_length;
-                    mr->r->exit_velocity = 0;
+                float available_length = get_axis_vector_length(mr->target, mr->position);
 
-                // (1b) The deceleration has to span multiple moves
-                } else if (available_length < mr->r->tail_length) {
+                if ((available_length + EPSILON2 - mr->r->tail_length) < 0) {    // it will fit
+                    cm->hold_state = FEEDHOLD_DECEL_TO_ZERO;
+                    mr->r->exit_velocity = 0;
+                    mr->r->tail_time = mr->r->tail_length*2 / (mr->r->exit_velocity + mr->r->cruise_velocity);
+//                    bf->block_time = mr->r->tail_time;
+                }
+                else {
+                    cm->hold_state = FEEDHOLD_DECEL_TO_ZERO;
                     mr->r->tail_length = available_length;
                     mr->r->exit_velocity = mp_get_decel_velocity(mr->r->cruise_velocity, mr->r->tail_length, bf);
-
-                    if (fp_ZERO(mr->r->exit_velocity)) {        // this takes care of an odd case where the move
-                        cm->hold_state = FEEDHOLD_DECEL_TO_ZERO;// was previously mis-classified as a CONTINUE move
-                    } else {
-                        cm->hold_state = FEEDHOLD_DECEL_CONTINUE;
-                    }
-
-                // (1a) The deceleration will fit into the current move
-                } else {
-                    cm->hold_state = FEEDHOLD_DECEL_TO_ZERO;
-                    mr->r->exit_velocity = 0;
-                }
-                mr->r->tail_time = mr->r->tail_length*2 / (mr->r->exit_velocity + mr->r->cruise_velocity);
-                bf->block_time = mr->r->tail_time;
+                    mr->r->tail_time = mr->r->tail_length*2 / (mr->r->exit_velocity + mr->r->cruise_velocity);
+//                    bf->block_time = mr->r->tail_time;
+                }              
             }
         }
     }

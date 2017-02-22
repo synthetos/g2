@@ -704,7 +704,8 @@ static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const floa
 static void _calculate_junction_vmax(mpBuf_t* bf) 
 {
     // If we change cruise_vmax, we'll need to recompute junction_vmax, if we do this:
-    float velocity = min(bf->cruise_vmax, bf->nx->cruise_vmax);  // start with our maximum possible velocity
+//    float velocity = min(bf->cruise_vmax, bf->nx->cruise_vmax);  // start with our maximum possible velocity
+    float velocity = 8675309;
 
     // cmAxes jerk_axis = AXIS_X;   // a diagnostic in case you want to find the limiting axis
 
