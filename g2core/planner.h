@@ -467,6 +467,7 @@ typedef struct mpPlannerRuntime {       // persistent runtime variables
     mpBlockRuntimeBuf_t bf[2];          // buffer holding the two blocks
 
     float entry_velocity;               // entry values for the currently running block
+    float previous_exit_velocity;
 
     float segments;                     // number of segments in line (also used by arc generation)
     uint32_t segment_count;             // count of running segments

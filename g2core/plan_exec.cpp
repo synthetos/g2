@@ -43,6 +43,7 @@ static stat_t _exec_aline_head(mpBuf_t *bf); // passing bf because body might ne
 static stat_t _exec_aline_body(mpBuf_t *bf); // passing bf so that body can extend itself if the exit velocity rises.
 static stat_t _exec_aline_tail(mpBuf_t *bf);
 static stat_t _exec_aline_segment(void);
+static stat_t _exec_feedhold_processing(mpBuf_t *bf);
 
 static void _init_forward_diffs(float v_0, float v_1);
 
@@ -393,6 +394,8 @@ stat_t mp_exec_move()
 
 stat_t mp_exec_aline(mpBuf_t *bf)
 {
+    stat_t status;
+
     if (bf->block_state == BLOCK_INACTIVE) {
         return (STAT_NOOP);
     }
@@ -428,6 +431,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         // !!! THIS IS THE ONLY PLACE WHERE mr->r AND mr->p ARE ALLOWED TO BE CHANGED !!!
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         // Swap P and R blocks
+        mr->previous_exit_velocity = mr->r->exit_velocity;
         mr->r = mr->p;        // we are now going to run the planning block
         mr->p = mr->p->nx;    // re-use the old running block as the new planning block
 
@@ -514,133 +518,23 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     }
 
     // Feed Override Processing - We need to handle the following cases (listed in rough sequence order):
-    //  (1) - We've received a feed override request in the middle of a cycle
 
     // Feedhold Processing - We need to handle the following cases (listed in rough sequence order):
-    //  (1) - We have a block midway through normal execution and a new feedhold request
-    //   (1a) - The deceleration will fit in the length remaining in the running block (mr)
-    //   (1b) - 1a, except the remaining length would be zero or EPSILON2 close to zero (unlikely)
-    //   (1c) - The deceleration will not fit in the running block
-    //  (2) - We have a new block and a new feedhold request that arrived at EXACTLY the same time (unlikely, but handled)
-    //  (3) - We are in the middle of a block
-    //   (3a) - The block is currently accelerating (we wait for the body to start)
-    //   (3b) - The block is in a body (or has not yet started the head) - start deceleration
-    //   (3c) - The block is currently in the tail (we wait until the end of the block)
-    //  (4) - We have decelerated a block to some velocity > zero (needs continuation in next block)
-    //  (5) - We have decelerated a block to zero velocity
-    //  (6) - We have finished all the runtime work now we have to wait for the steppers to stop
-    //   (6a) - It's a homing or probing feedhold - ditch the remaining buffer & go directly to OFF  
-    //   (6b) - It's a p2 feedhold - ditch the remaining buffer & signal we want a p2 queue flush
-    //   (6c) - It's a normal feedhold - signal we want the entry action
-    //  (7) - The steppers have stopped. No motion should occur. Allows hold actions to complete
-    //  (8) - We are removing the hold state and there is queued motion (handled outside this routine)
-    //  (9) - We are removing the hold state and there is no queued motion (also handled outside this routine)
-
     if (cm->motion_state == MOTION_HOLD) {
-        // Case (7) - All motion has ceased
-        if (cm->hold_state >= FEEDHOLD_ACTIONS_START) { // FEEDHOLD_ACTIONS_START, FEEDHOLD_ACTIONS_WAIT or FEEDHOLD HOLD
-            return (STAT_NOOP);                         // VERY IMPORTANT to exit as a NOOP. No more movement
-        }
-
-        // Case (6) - Wait for the steppers to stop
-        if (cm->hold_state == FEEDHOLD_MOTORS_STOPPING) {
-            if (mp_runtime_is_idle()) {                         // wait for steppers to actually finish
-                // finalize position and velocity
-                copy_vector(mr->position, mr->gm.target);                       // update position from target
-                bf->length = get_axis_vector_length(mr->target, mr->position);  // reset length in buffer //+++++ TEST THIS
-                mp_zero_segment_velocity();                                     // for reporting purposes
-
-                // when homing or probing don't stay in HOLD or execute entry actions
-                if ((cm->cycle_state == CYCLE_HOMING) || (cm->cycle_state == CYCLE_PROBE)) {
-                    cm->hold_state = FEEDHOLD_OFF;
-                } else if (cm == &cm2) {                        // if in p2 hold set up a flush
-                    cm->hold_state = FEEDHOLD_P2_EXIT;
-                }  else {
-                    cm->hold_state = FEEDHOLD_ACTIONS_START;    // perform Z-lift, spindle, coolant actions
-                }
-
-                sr_request_status_report(SR_REQUEST_IMMEDIATE);
-                cs.controller_state = CONTROLLER_READY;         // remove controller readline() PAUSE
-            }
-            return (STAT_OK);                                   // hold here. No more movement
-        }
-
-        // Case (5) - Decelerated to zero. See also Feedhold Case (5, continued), toward end of mp_exec_aline()
-        // Update the run buffer then force a replan of the whole planner queue. Replans from zero velocity
-        if (cm->hold_state == FEEDHOLD_DECEL_COMPLETE) {
-            mr->block_state = BLOCK_INACTIVE;                   // invalidate mr buffer to reset the new move
-            bf->block_state = BLOCK_INITIAL_ACTION;             // tell _exec to re-use the bf buffer
-            cm->hold_state = FEEDHOLD_MOTORS_STOPPING;          // wait for the motors to come to a complete stop
-
-            // No point bothering with the rest of this move if homing or probing
-            if ((cm->cycle_state == CYCLE_HOMING) || (cm->cycle_state == CYCLE_PROBE)) {
-                mp_free_run_buffer();
-            }
-            mp_replan_queue(mp_get_r());                        // make it replan all the blocks
-            return (STAT_OK);
-        }
-
-        // Cases (1a, 1b, 1c), Case (2), Case (4)
-        // Build a tail-only move from here. Decelerate as fast as possible in the space we have.
-        if ((cm->hold_state == FEEDHOLD_SYNC) ||
-           ((cm->hold_state == FEEDHOLD_DECEL_CONTINUE) && (mr->block_state == BLOCK_INITIAL_ACTION))) {
-
-            // Case (3c) - Already decelerating (in a tail), continue the deceleration.
-            if (mr->section == SECTION_TAIL) {                  // if already in a tail don't decelerate. You already are
-                if (mr->r->exit_velocity < EPSILON2) {          // allow near-zero velocities to be treated as zero
-                    cm->hold_state = FEEDHOLD_DECEL_TO_ZERO;
-                } else {
-                    cm->hold_state = FEEDHOLD_DECEL_CONTINUE;
-                }
-
-            // Case (3a) - Currently accelerating (in a head), skip and waited for body or tail
-            //             This is true because to do otherwise the jerk would not have returned to zero.
-            // Small exception, if we *just started* the head, then we're not actually accelerating yet.
-
-            // Case (3b) - Block is in a body, or about to start a new head. Turn it into a new tail.
-            } else if ((mr->section != SECTION_HEAD) || (mr->section_state == SECTION_NEW)) {
-                mr->section = SECTION_TAIL;
-                mr->section_state = SECTION_NEW;
-                mr->entry_velocity = mr->segment_velocity;
-                mr->r->head_length = 0;
-                mr->r->body_length = 0;
-                mr->r->head_time = 0;
-                mr->r->body_time = 0;
-                mr->r->tail_length = mp_get_target_length(0, mr->r->cruise_velocity, bf);  // braking length
-                
-                // (1a, 1b) The deceleration distance either fits in the available length (1a) or fits 
-                // exactly or close enough (to EPSILON2) (1b). Case 1b happens when the tail in the move 
-                // was already planned to zero. This is also case (2). EPSILON2 deals with floating point 
-                // rounding errors that can mis-classify this case.
-                float available_length = get_axis_vector_length(mr->target, mr->position);
-
-                if ((available_length + EPSILON2 - mr->r->tail_length) > 0) {    // it will fit
-                    cm->hold_state = FEEDHOLD_DECEL_TO_ZERO;
-                    mr->r->exit_velocity = 0;
-                    mr->r->tail_time = mr->r->tail_length*2 / (mr->r->exit_velocity + mr->r->cruise_velocity);
-                    bf->block_time = mr->r->tail_time;
-                }
-                else {
-                    cm->hold_state = FEEDHOLD_DECEL_CONTINUE;
-                    mr->r->tail_length = available_length;
-                    mr->r->exit_velocity = mp_get_decel_velocity(mr->r->cruise_velocity, mr->r->tail_length, bf);
-                    mr->r->tail_time = mr->r->tail_length*2 / (mr->r->exit_velocity + mr->r->cruise_velocity);
-                    bf->block_time = mr->r->tail_time;
-                }              
-            }
+        if ((status = _exec_feedhold_processing(bf)) != STAT_EAGAIN) {
+            return (status);
         }
     }
-    // End Feedhold Processing
     
     mr->block_state = BLOCK_ACTIVE;
 
     // NB: from this point on the contents of the bf buffer do not affect execution
 
     //**** main dispatcher to process segments ***
-    stat_t status = STAT_OK;
-         if (mr->section == SECTION_HEAD) { status = _exec_aline_head(bf);}
-    else if (mr->section == SECTION_BODY) { status = _exec_aline_body(bf);}
-    else if (mr->section == SECTION_TAIL) { status = _exec_aline_tail(bf);}
+    status = STAT_OK;
+         if (mr->section == SECTION_HEAD) { status = _exec_aline_head(bf); }
+    else if (mr->section == SECTION_BODY) { status = _exec_aline_body(bf); }
+    else if (mr->section == SECTION_TAIL) { status = _exec_aline_tail(bf); }
     else    { return(cm_panic(STAT_INTERNAL_ERROR, "exec_aline()"));}    // never supposed to get here
 
     // Conditionally set the move to be unplannable. We can't use the if/else block above, 
@@ -878,7 +772,7 @@ static stat_t _exec_aline_head(mpBuf_t *bf)
     bool first_pass = false;
     if (mr->section_state == SECTION_NEW) {                 // INITIALIZATION
         first_pass = true;
-        if (fp_ZERO(mr->r->head_length)) {
+        if (fp_ZERO(mr->r->head_length)) {                  // Needed here as feedhold may have changed the block
             mr->section = SECTION_BODY;
             return(_exec_aline_body(bf));                   // skip ahead to the body generator
         }
@@ -890,7 +784,7 @@ static stat_t _exec_aline_head(mpBuf_t *bf)
             // We will only have one segment, simply average the velocities
             mr->segment_velocity = mr->r->head_length / mr->segment_time;
         } else {
-            _init_forward_diffs(mr->entry_velocity, mr->r->cruise_velocity); // <-- sets inital segment_velocity
+            _init_forward_diffs(mr->entry_velocity, mr->r->cruise_velocity); // sets initial segment_velocity
         }
         if (mr->segment_time < MIN_SEGMENT_TIME) {
             debug_trap("mr->segment_time < MIN_SEGMENT_TIME (head)");
@@ -927,7 +821,7 @@ static stat_t _exec_aline_head(mpBuf_t *bf)
 static stat_t _exec_aline_body(mpBuf_t *bf)
 {
     if (mr->section_state == SECTION_NEW) {
-        if (fp_ZERO(mr->r->body_length)) {
+        if (fp_ZERO(mr->r->body_length)) {                  // Needed here as feedhold may have changed the block
             mr->section = SECTION_TAIL;
             return(_exec_aline_tail(bf));                   // skip ahead to tail generator
         }
@@ -965,8 +859,8 @@ static stat_t _exec_aline_tail(mpBuf_t *bf)
         first_pass = true;
         bf->plannable = false;                              // Mark the block as unplannable
 
-        if (fp_ZERO(mr->r->tail_length)) {                  // end the move
-            return(STAT_OK);
+        if (fp_ZERO(mr->r->tail_length)) {                  // Needed here as feedhold may have changed the block
+            return(STAT_OK);                                // end the move
         }
         mr->segments = ceil(uSec(mr->r->tail_time) / NOM_SEGMENT_USEC);// # of segments for the section
         mr->segment_count = (uint32_t)mr->segments;
@@ -1074,4 +968,138 @@ static stat_t _exec_aline_segment()
         return (STAT_OK);                                   // this section has run all its segments
     }
     return (STAT_EAGAIN);                                   // this section still has more segments to run
+}
+
+
+/*********************************************************************************************
+ * _exec_feedhold_processing() - 
+
+// Feedhold Processing - We need to handle the following cases (listed in rough sequence order):
+//  (1) - We have a block midway through normal execution and a new feedhold request
+//   (1a) - The deceleration will fit in the length remaining in the running block (mr)
+//   (1b) - 1a, except the remaining length would be zero or EPSILON2 close to zero (unlikely)
+//   (1c) - The deceleration will not fit in the running block
+//  (2) - We have a new block and a new feedhold request that arrived at EXACTLY the same time (unlikely, but handled)
+//  (3) - We are in the middle of a block
+//   (3a) - The block is currently accelerating (we wait for the body to start)
+//   (3b) - The block is in a body (or has not yet started the head) - start deceleration
+//   (3c) - The block is currently in the tail (we wait until the end of the block)
+//  (4) - We have decelerated a block to some velocity > zero (needs continuation in next block)
+//  (5) - We have decelerated a block to zero velocity
+//  (6) - We have finished all the runtime work now we have to wait for the steppers to stop
+//   (6a) - It's a homing or probing feedhold - ditch the remaining buffer & go directly to OFF
+//   (6b) - It's a p2 feedhold - ditch the remaining buffer & signal we want a p2 queue flush
+//   (6c) - It's a normal feedhold - signal we want the entry action
+//  (7) - The steppers have stopped. No motion should occur. Allows hold actions to complete
+//  (8) - We are removing the hold state and there is queued motion (handled outside this routine)
+//  (9) - We are removing the hold state and there is no queued motion (also handled outside this routine)
+
+* STAT_OK stops move execution
+* STAT_NOOP stops move execution and prevents the next move from loading. Should only be used on an inactive block
+* STAT_EAGAIN continues execution of mp_exec_aline()
+*/
+
+static stat_t _exec_feedhold_processing(mpBuf_t *bf) 
+{    
+    if (cm->hold_state >= FEEDHOLD_ACTIONS_START) { // FEEDHOLD_ACTIONS_START, FEEDHOLD_ACTIONS_WAIT or FEEDHOLD HOLD
+        return (STAT_NOOP);                         // VERY IMPORTANT to exit as a NOOP. No more movement
+    }
+
+    // Case (6) - Wait for the steppers to stop
+    if (cm->hold_state == FEEDHOLD_MOTORS_STOPPING) {
+        if (mp_runtime_is_idle()) {                         // wait for steppers to actually finish
+            // finalize position and velocity
+            copy_vector(mr->position, mr->gm.target);                       // update position from target
+            bf->length = get_axis_vector_length(mr->target, mr->position);  // reset length in buffer //+++++ TEST THIS
+            mp_zero_segment_velocity();                                     // for reporting purposes
+
+            // when homing or probing don't stay in HOLD or execute entry actions
+            if ((cm->cycle_state == CYCLE_HOMING) || (cm->cycle_state == CYCLE_PROBE)) {
+                cm->hold_state = FEEDHOLD_OFF;
+            } else if (cm == &cm2) {                        // if in p2 hold set up a flush
+                cm->hold_state = FEEDHOLD_P2_EXIT;
+            }  else {
+                cm->hold_state = FEEDHOLD_ACTIONS_START;    // perform Z-lift, spindle, coolant actions
+            }
+
+            sr_request_status_report(SR_REQUEST_IMMEDIATE);
+            cs.controller_state = CONTROLLER_READY;         // remove controller readline() PAUSE
+        }
+        return (STAT_OK);                                   // hold here. No more movement
+    }
+
+    // Case (5) - Decelerated to zero. See also Feedhold Case (5, continued), toward end of mp_exec_aline()
+    // Update the run buffer then force a replan of the whole planner queue. Replans from zero velocity
+    if (cm->hold_state == FEEDHOLD_DECEL_COMPLETE) {
+        mr->block_state = BLOCK_INACTIVE;                   // invalidate mr buffer to reset the new move
+        bf->block_state = BLOCK_INITIAL_ACTION;             // tell _exec to re-use the bf buffer
+        cm->hold_state = FEEDHOLD_MOTORS_STOPPING;          // wait for the motors to come to a complete stop
+
+        // No point bothering with the rest of this move if homing or probing
+        if ((cm->cycle_state == CYCLE_HOMING) || (cm->cycle_state == CYCLE_PROBE)) {
+            mp_free_run_buffer();
+        }
+        mp_replan_queue(mp_get_r());                        // make it replan all the blocks
+        return (STAT_OK);
+    }
+
+    // Cases (1a, 1b, 1c), Case (2), Case (4)
+    // Build a tail-only move from here. Decelerate as fast as possible in the space we have.
+    if ((cm->hold_state == FEEDHOLD_SYNC) ||
+    ((cm->hold_state == FEEDHOLD_DECEL_CONTINUE) && (mr->block_state == BLOCK_INITIAL_ACTION))) {
+
+        // Case (3c) - Already decelerating (in a tail), continue the deceleration.
+        if (mr->section == SECTION_TAIL) {                  // if already in a tail don't decelerate. You already are
+            if (mr->r->exit_velocity < EPSILON2) {          // allow near-zero velocities to be treated as zero
+                cm->hold_state = FEEDHOLD_DECEL_TO_ZERO;
+            } else {
+                cm->hold_state = FEEDHOLD_DECEL_CONTINUE;
+            }
+            return (STAT_EAGAIN);
+        }
+
+        // Case (3a) - Currently accelerating (in a head), skip and waited for body or tail
+        //             This is true because to do otherwise the jerk would not have returned to zero.
+        // Small exception, if we *just started* the head, then we're not actually accelerating yet.
+        if ((mr->section == SECTION_HEAD) && (mr->section_state != SECTION_NEW)) {
+            return (STAT_EAGAIN);
+        }
+
+        // Case (3b) - Block is in a body, or about to start a new head. Turn it into a new tail.
+        //            else if ((mr->section != SECTION_HEAD) || (mr->section_state == SECTION_NEW)) {
+
+        // In the new head case plan deceleration move (tail) starting at the at the entry velocity
+        if ((mr->section != SECTION_HEAD) || (mr->section_state == SECTION_NEW)) {
+            mr->section = SECTION_TAIL;
+            mr->section_state = SECTION_NEW;
+            mr->entry_velocity = mr->segment_velocity;
+            mr->r->cruise_velocity = mr->entry_velocity;    // cruise velocity must be set even if there's no body
+            mr->r->head_length = 0;
+            mr->r->body_length = 0;
+            mr->r->head_time = 0;
+            mr->r->body_time = 0;
+            mr->r->tail_length = mp_get_target_length(0, mr->r->cruise_velocity, bf);  // braking length
+            
+            // (1a, 1b) The deceleration distance either fits in the available length (1a) or fits
+            // exactly or close enough (to EPSILON2) (1b). Case 1b happens when the tail in the move
+            // was already planned to zero. This is also case (2). EPSILON2 deals with floating point
+            // rounding errors that can mis-classify this case.
+            float available_length = get_axis_vector_length(mr->target, mr->position);
+
+            if ((available_length + EPSILON2 - mr->r->tail_length) > 0) {    // it will fit
+                cm->hold_state = FEEDHOLD_DECEL_TO_ZERO;
+                mr->r->exit_velocity = 0;
+                mr->r->tail_time = mr->r->tail_length*2 / (mr->r->exit_velocity + mr->r->cruise_velocity);
+                bf->block_time = mr->r->tail_time;
+            }
+            else {
+                cm->hold_state = FEEDHOLD_DECEL_CONTINUE;
+                mr->r->tail_length = available_length;
+                mr->r->exit_velocity = mp_get_decel_velocity(mr->r->cruise_velocity, mr->r->tail_length, bf);
+                mr->r->tail_time = mr->r->tail_length*2 / (mr->r->exit_velocity + mr->r->cruise_velocity);
+                bf->block_time = mr->r->tail_time;
+            }
+        }
+    }
+    return (STAT_EAGAIN);
 }
