@@ -58,7 +58,7 @@ void stepper_debug(const char (&str)[len]) { ; };
 
 stConfig_t st_cfg;
 stPrepSingleton_t st_pre;
-static stRunSingleton_t st_run;
+static stRunSingleton_t st_run HOT_DATA;
 
 /**** Static functions ****/
 
@@ -256,6 +256,9 @@ stat_t st_motor_power_callback()     // called by controller
  */
 
 namespace Motate {            // Must define timer interrupts inside the Motate namespace
+    template<>
+    void dda_timer_type::interrupt() HOT_FUNC;
+
 template<>
 void dda_timer_type::interrupt()
 {
@@ -359,6 +362,9 @@ void st_request_exec_move()
 
 namespace Motate {    // Define timer inside Motate namespace
     template<>
+    void exec_timer_type::interrupt() HOT_FUNC;
+
+    template<>
     void exec_timer_type::interrupt()
     {
         exec_timer.getInterruptCause();                    // clears the interrupt condition
@@ -382,6 +388,9 @@ void st_request_forward_plan()
 }
 
 namespace Motate {    // Define timer inside Motate namespace
+    template<>
+    void fwd_plan_timer_type::interrupt() HOT_FUNC;
+
     template<>
     void fwd_plan_timer_type::interrupt()
     {

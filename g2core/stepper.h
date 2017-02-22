@@ -423,8 +423,8 @@ typedef struct stPrepSingleton {
     magic_t magic_end;
 } stPrepSingleton_t;
 
-extern stConfig_t st_cfg;                   // config struct is exposed. The rest are private
-extern stPrepSingleton_t st_pre;            // only used by config_app diagnostics
+extern stConfig_t st_cfg        HOT_DATA;   // config struct is exposed. The rest are private
+extern stPrepSingleton_t st_pre HOT_DATA;   // only used by config_app diagnostics
 
 
 /**** Stepper (base object) ****/
@@ -569,15 +569,14 @@ stat_t st_clc(nvObj_t *nv);
 void st_set_motor_power(const uint8_t motor);
 stat_t st_motor_power_callback(void);
 
-void st_request_forward_plan(void);
-void st_request_exec_move(void);
-void st_request_load_move(void);
+void st_request_forward_plan(void) HOT_FUNC;
+void st_request_exec_move(void) HOT_FUNC;
+void st_request_load_move(void) HOT_FUNC;
 void st_prep_null(void);
 void st_prep_command(void *bf);        // use a void pointer since we don't know about mpBuf_t yet)
 void st_prep_dwell(float microseconds);
 void st_request_out_of_band_dwell(float microseconds);
-//stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time);
-stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time);
+stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time)  HOT_FUNC;
 
 stat_t st_set_ma(nvObj_t *nv);
 stat_t st_set_sa(nvObj_t *nv);

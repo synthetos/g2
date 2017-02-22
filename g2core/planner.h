@@ -514,9 +514,9 @@ typedef struct mpMotionRuntimeSingleton {    // persistent runtime variables
 } mpMotionRuntimeSingleton_t;
 
 // Reference global scope structures
-extern mpBufferPool_t mb;               // buffer pool management
-extern mpMotionPlannerSingleton_t mp;   // context for block planning
-extern mpMotionRuntimeSingleton_t mr;   // context for block runtime
+extern mpBufferPool_t mb             HOT_DATA; // buffer pool management
+extern mpMotionPlannerSingleton_t mp HOT_DATA; // context for block planning
+extern mpMotionRuntimeSingleton_t mr HOT_DATA; // context for block runtime
 
 /*
  * Global Scope Functions
@@ -566,30 +566,30 @@ void mp_init_buffers(void);
 #define mp_get_prev_buffer(b) ((mpBuf_t *)(b->pv))
 #define mp_get_next_buffer(b) ((mpBuf_t *)(b->nx))
 
-mpBuf_t * mp_get_write_buffer(void);
-void mp_commit_write_buffer(const blockType block_type);
-mpBuf_t * mp_get_run_buffer(void);
-bool mp_free_run_buffer(void);
+mpBuf_t * mp_get_write_buffer(void)  HOT_FUNC;
+void mp_commit_write_buffer(const blockType block_type)  HOT_FUNC;
+mpBuf_t * mp_get_run_buffer(void)  HOT_FUNC;
+bool mp_free_run_buffer(void)  HOT_FUNC;
 
 // plan_line.c functions
-void mp_zero_segment_velocity(void);                    // getters and setters...
-float mp_get_runtime_velocity(void);
+void mp_zero_segment_velocity(void) HOT_FUNC;                    // getters and setters...
+float mp_get_runtime_velocity(void) HOT_FUNC;
 float mp_get_runtime_absolute_position(uint8_t axis);
 float mp_get_runtime_work_position(uint8_t axis);
 void mp_set_runtime_work_offset(float offset[]);
-bool mp_get_runtime_busy(void);
-bool mp_runtime_is_idle(void);
+bool mp_get_runtime_busy(void) HOT_FUNC;
+bool mp_runtime_is_idle(void) HOT_FUNC;
 
-stat_t mp_aline(GCodeState_t *gm_in);                   // line planning...
-void mp_plan_block_list(void);
-void mp_plan_block_forward(mpBuf_t *bf);
+stat_t mp_aline(GCodeState_t *gm_in) HOT_FUNC;                   // line planning...
+void mp_plan_block_list(void) HOT_FUNC;
+void mp_plan_block_forward(mpBuf_t *bf) HOT_FUNC;
 
 // plan_zoid.c functions
-void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float entry_velocity);
-float mp_get_target_length(const float v_0, const float v_1, const mpBuf_t *bf);
-float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t *bf); // acceleration ONLY
-float mp_get_decel_velocity(const float v_0, const float L, const mpBuf_t *bf);  // deceleration ONLY
-float mp_find_t(const float v_0, const float v_1, const float L, const float totalL, const float initial_t, const float T);
+void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float entry_velocity)  HOT_FUNC;
+float mp_get_target_length(const float v_0, const float v_1, const mpBuf_t *bf) HOT_FUNC;
+float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t *bf) HOT_FUNC; // acceleration ONLY
+float mp_get_decel_velocity(const float v_0, const float L, const mpBuf_t *bf) HOT_FUNC;  // deceleration ONLY
+float mp_find_t(const float v_0, const float v_1, const float L, const float totalL, const float initial_t, const float T) HOT_FUNC;
 
 float mp_calc_v(const float t, const float v_0, const float v_1);                // compute the velocity along the curve accelerating from v_0 to v_1, at position t=[0,1]
 float mp_calc_a(const float t, const float v_0, const float v_1, const float T); // compute acceleration over curve accelerating from v_0 to v_1, at position t=[0,1], total time T
@@ -597,9 +597,9 @@ float mp_calc_j(const float t, const float v_0, const float v_1, const float T);
 //float mp_calc_l(const float t, const float v_0, const float v_1, const float T); // compute length over curve accelerating from v_0 to v_1, at position t=[0,1], total time T
 
 // plan_exec.c functions
-stat_t mp_forward_plan(void);
-stat_t mp_exec_move(void);
-stat_t mp_exec_aline(mpBuf_t *bf);
+stat_t mp_forward_plan(void)  HOT_FUNC;
+stat_t mp_exec_move(void)  HOT_FUNC;
+stat_t mp_exec_aline(mpBuf_t *bf) HOT_FUNC;
 void mp_exit_hold_state(void);
 
 void mp_dump_planner(mpBuf_t *bf_start);

@@ -46,6 +46,8 @@
 using Motate::RXBuffer;
 using Motate::TXBuffer;
 
+#include "MotateUtilities.h" // for HOT_DATA and HOT_FUNC
+
 #ifdef __TEXT_MODE
 #include "text_parser.h"
 #endif
@@ -1026,12 +1028,12 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
 // ALLOCATIONS
 // Declare a device wrapper class for SerialUSB and SerialUSB1
 #if XIO_HAS_USB == 1
-xioDeviceWrapper<decltype(&SerialUSB)> serialUSB0Wrapper {
+xioDeviceWrapper<decltype(&SerialUSB)> serialUSB0Wrapper HOT_DATA {
     &SerialUSB,
     (DEV_CAN_READ | DEV_CAN_WRITE | DEV_CAN_BE_CTRL | DEV_CAN_BE_DATA)
 };
 #if USB_SERIAL_PORTS_EXPOSED == 2
-xioDeviceWrapper<decltype(&SerialUSB1)> serialUSB1Wrapper {
+xioDeviceWrapper<decltype(&SerialUSB1)> serialUSB1Wrapper HOT_DATA {
     &SerialUSB1,
     (DEV_CAN_READ | DEV_CAN_WRITE | DEV_CAN_BE_CTRL | DEV_CAN_BE_DATA)
 };
@@ -1043,7 +1045,7 @@ constexpr devflags_t _serial0ExtraFlags = DEV_IS_ALWAYS_BOTH | DEV_IS_MUTE_SECON
 #else
 constexpr devflags_t _serial0ExtraFlags = DEV_IS_ALWAYS_BOTH;
 #endif
-xioDeviceWrapper<decltype(&Serial)> serial0Wrapper {
+xioDeviceWrapper<decltype(&Serial)> serial0Wrapper HOT_DATA {
     &Serial,
     (DEV_CAN_READ | DEV_CAN_WRITE | _serial0ExtraFlags)
 };

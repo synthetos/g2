@@ -69,7 +69,7 @@ static float _get_meet_velocity(const float          v_0,
                                 const float          v_2,
                                 const float          L,
                                 mpBuf_t*             bf,
-                                mpBlockRuntimeBuf_t* block);
+                                mpBlockRuntimeBuf_t* block) HOT_FUNC;
 
 /****************************************************************************************
  * mp_calculate_ramps() - calculate trapezoid-like ramp parameters for a block
@@ -114,7 +114,8 @@ static float _get_meet_velocity(const float          v_0,
  *
  */
 
-void _zoid_exit(mpBuf_t* bf, zoidExitPoint exit_point) 
+void _zoid_exit(mpBuf_t* bf, zoidExitPoint exit_point)  HOT_FUNC;
+void _zoid_exit(mpBuf_t* bf, zoidExitPoint exit_point)
 {
     //+++++ DIAGNOSTIC
     //    bf->zoid_exit = exit_point;
