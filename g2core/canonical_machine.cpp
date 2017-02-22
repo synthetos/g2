@@ -738,7 +738,7 @@ void canonical_machine_reset()
     cm.cycle_state = CYCLE_OFF;
     cm.motion_state = MOTION_STOP;
     cm.hold_state = FEEDHOLD_OFF;
-    cm.esc_boot_timer = SysTickTimer_getValue();
+    cm.esc_boot_timer = SysTickTimer.getValue();
     cm.gmx.block_delete_switch = true;
     cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE; // never start in a motion mode
     cm.machine_state = MACHINE_READY;

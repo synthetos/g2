@@ -140,7 +140,7 @@ void setup(void)
 {
     // application setup
     application_init_services();
-    while (SysTickTimer_getValue() < 400);  // delay 400 ms for USB to come up
+    while (SysTickTimer.getValue() < 400);  // delay 400 ms for USB to come up
 
     application_init_machine();
     application_init_startup();

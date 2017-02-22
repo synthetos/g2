@@ -359,8 +359,8 @@ static stat_t _led_indicator()
         cs.led_blink_rate =  blink_rate;
         cs.led_timer = 0;
     }
-    if (SysTickTimer_getValue() > cs.led_timer) {
-        cs.led_timer = SysTickTimer_getValue() + cs.led_blink_rate;
+    if (SysTickTimer.getValue() > cs.led_timer) {
+        cs.led_timer = SysTickTimer.getValue() + cs.led_blink_rate;
         IndicatorLed.toggle();
     }
     return (STAT_OK);

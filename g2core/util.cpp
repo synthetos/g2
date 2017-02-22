@@ -243,14 +243,14 @@ uint16_t compute_checksum(char const *string, const uint16_t length)
     return (h % HASHMASK);
 }
 
-/*
- * SysTickTimer_getValue() - this is a hack to get around some compatibility problems
- */
-
-uint32_t SysTickTimer_getValue()
-{
-    return (SysTickTimer.getValue());
-}
+///*
+// * SysTickTimer_getValue() - this is a hack to get around some compatibility problems
+// */
+//
+//uint32_t SysTickTimer_getValue()
+//{
+//    return (SysTickTimer.getValue());
+//}
 
 /***********************************************
  **** Very Fast Number to ASCII Conversions ****
