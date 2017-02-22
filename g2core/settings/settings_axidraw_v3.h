@@ -89,23 +89,36 @@
 
 #define KINEMATICS KINE_CORE_XY                             // X and Y MUST use the same settings!
 
+#if MOTORS == 3
+// gQuadratic
+#define A_B_POWER_LEVEL 0.4
+#define A_B_MICROSTEPS 32
+#define JERK_MAX    2000
+#endif
+#if MOTORS == 6
+// gQuintic
+#define A_B_POWER_LEVEL 0.7
+#define A_B_MICROSTEPS 64
+#define JERK_MAX    3000
+#endif
 
 #define M1_MOTOR_MAP                AXIS_COREXY_A           // 1ma
 #define M1_STEP_ANGLE               1.8                     // 1sa
 #define M1_TRAVEL_PER_REV           40                      // 1tr
-#define M1_MICROSTEPS               32                      // 1mi        1,2,4,8
+#define M1_MICROSTEPS               A_B_MICROSTEPS          // 1mi        1,2,4,8
 #define M1_POLARITY                 0                       // 1po        0=normal, 1=reversed
 #define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm        standard
-#define M1_POWER_LEVEL              0.6
+#define M1_POWER_LEVEL              A_B_POWER_LEVEL
 
 #define M2_MOTOR_MAP                AXIS_COREXY_B
 #define M2_STEP_ANGLE               1.8
 #define M2_TRAVEL_PER_REV           40
-#define M2_MICROSTEPS               32
+#define M2_MICROSTEPS               A_B_MICROSTEPS
 #define M2_POLARITY                 0
 #define M2_POWER_MODE               MOTOR_POWER_MODE
-#define M2_POWER_LEVEL              0.6
+#define M2_POWER_LEVEL              A_B_POWER_LEVEL
 
+#if MOTORS == 3
 #define M3_MOTOR_MAP                AXIS_Z
                                                             // This "stepper" is a hobby servo. Note that all hobby
                                                             //   servo settings are per full servo range, instead of
@@ -117,15 +130,28 @@
 #define M3_POLARITY                 1
 #define M3_POWER_MODE               MOTOR_ALWAYS_POWERED
 #define M3_POWER_LEVEL              0.50                    // this is ignored
+#endif
 
+#if MOTORS == 6
+#define M6_MOTOR_MAP                AXIS_Z
+// This "stepper" is a hobby servo. Note that all hobby
+//   servo settings are per full servo range, instead of
+//   per revolution.
+#define M6_STEP_ANGLE               1.8                     // hobby servos are simulated with 200 "full steps"
+#define M6_TRAVEL_PER_REV           26                      // this is actually the full travel of the servo, not
+//   necessarily covering a revolution
+#define M6_MICROSTEPS               32                      // the max step resolution for a hobby servo is 1/32
+#define M6_POLARITY                 1
+#define M6_POWER_MODE               MOTOR_ALWAYS_POWERED
+#define M6_POWER_LEVEL              0.50                    // this is ignored
+#endif
 
 // *** axis settings **********************************************************************************
 
-#define JERK_MAX    2000
 
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX              10000                   // xvm  G0 max velocity in mm/min
-#define X_FEEDRATE_MAX              10000          // xfr  G1 max feed rate in mm/min
+#define X_VELOCITY_MAX              15000                   // xvm  G0 max velocity in mm/min
+#define X_FEEDRATE_MAX              15000          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX                400                     // xtm  maximum travel - used by soft limits and homing
 #define X_JERK_MAX                  JERK_MAX                // xjm
@@ -138,8 +164,8 @@
 #define X_ZERO_BACKOFF              2                       // xzb  mm
 
 #define Y_AXIS_MODE                 AXIS_STANDARD
-#define Y_VELOCITY_MAX              10000
-#define Y_FEEDRATE_MAX              10000
+#define Y_VELOCITY_MAX              15000
+#define Y_FEEDRATE_MAX              15000
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                175
 #define Y_JERK_MAX                  JERK_MAX
