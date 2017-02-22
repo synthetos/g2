@@ -608,23 +608,24 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                 mr->r->body_time = 0;
                 mr->r->tail_length = mp_get_target_length(0, mr->r->cruise_velocity, bf);  // braking length
                 
-                // (1c) The deceleration distance is almost exactly the remaining of the current move.
-                // This happens mostly when the tail in the move was already planned to zero. 
-                // EPSILON2 deals with floating point rounding errors that might mis-classify this move.
+                // (1a, 1b) The deceleration distance either fits in the available length (1a) or fits 
+                // exactly or close enough (to EPSILON2) (1b). Case 1b happens when the tail in the move 
+                // was already planned to zero. This is also case (2). EPSILON2 deals with floating point 
+                // rounding errors that can mis-classify this case.
                 float available_length = get_axis_vector_length(mr->target, mr->position);
 
-                if ((available_length + EPSILON2 - mr->r->tail_length) < 0) {    // it will fit
+                if ((available_length + EPSILON2 - mr->r->tail_length) > 0) {    // it will fit
                     cm->hold_state = FEEDHOLD_DECEL_TO_ZERO;
                     mr->r->exit_velocity = 0;
                     mr->r->tail_time = mr->r->tail_length*2 / (mr->r->exit_velocity + mr->r->cruise_velocity);
-//                    bf->block_time = mr->r->tail_time;
+                    bf->block_time = mr->r->tail_time;
                 }
                 else {
-                    cm->hold_state = FEEDHOLD_DECEL_TO_ZERO;
+                    cm->hold_state = FEEDHOLD_DECEL_CONTINUE;
                     mr->r->tail_length = available_length;
                     mr->r->exit_velocity = mp_get_decel_velocity(mr->r->cruise_velocity, mr->r->tail_length, bf);
                     mr->r->tail_time = mr->r->tail_length*2 / (mr->r->exit_velocity + mr->r->cruise_velocity);
-//                    bf->block_time = mr->r->tail_time;
+                    bf->block_time = mr->r->tail_time;
                 }              
             }
         }

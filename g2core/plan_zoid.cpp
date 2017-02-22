@@ -447,12 +447,13 @@ float mp_get_decel_velocity(const float v_0, const float L, const mpBuf_t* bf)
         const float v_1x3 = 3 * v_1;
         const float recip_l_t = (2 * sqrt_delta_v_0) / ((v_0 - v_1x3) * q_recip_2_sqrt_j);
         v_1 = v_1 - (l_t * recip_l_t);
-        
+/*        
         // hack for cases where there is no solution because the length is so short
         if (v_1 > v_0) {
             return (-1.0);    // cannot decelerate. Return an error
 //            return (v_0);       // cannot decelerate. Return entry velocity
         }
+*/
     }
     return v_1;
 }
