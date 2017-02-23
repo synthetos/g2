@@ -50,26 +50,9 @@
 #define COOLANT_FLOOD_POLARITY      1                       // 0=active low, 1=active high
 #define COOLANT_PAUSE_ON_HOLD       true
 
-/*
-#define JUNCTION_INTEGRATION_TIME 0.75      // cornering - between 0.10 and 2.00 (higher is faster)
-#define CHORDAL_TOLERANCE       0.1         // chordal tolerance for arcs (in mm)
-
-#define SOFT_LIMIT_ENABLE       0           // 0=off, 1=on
-#define HARD_LIMIT_ENABLE       0           // 0=off, 1=on
-#define SAFETY_INTERLOCK_ENABLE 1           // 0=off, 1=on
-
-#define SPINDLE_ENABLE_POLARITY 1           // 0=active low, 1=active high
-#define SPINDLE_DIR_POLARITY    0           // 0=clockwise is low, 1=clockwise is high
-#define SPINDLE_PAUSE_ON_HOLD   true
-#define SPINDLE_DWELL_TIME      1.0
-
-#define COOLANT_MIST_POLARITY   1           // 0=active low, 1=active high
-#define COOLANT_FLOOD_POLARITY  1           // 0=active low, 1=active high
-#define COOLANT_PAUSE_ON_HOLD   false
-*/
-
 // Communications and reporting settings
 
+#define MARLIN_COMPAT_ENABLED       true                    // enable marlin compatibility mode
 #define COMM_MODE                   JSON_MODE               // one of: TEXT_MODE, JSON_MODE
 #define XIO_ENABLE_FLOW_CONTROL     FLOW_CONTROL_RTS        // FLOW_CONTROL_OFF, FLOW_CONTROL_RTS
 #define USB_SERIAL_PORTS_EXPOSED    1
