@@ -3,8 +3,8 @@ language: c
 before_install:
 - sudo apt-get update -q
 
-#install:
-#- sudo apt-get install -qq lib32z1
+install:
+- sudo apt-get install -qq ia32-libs
 
 script:
   - cd ${TRAVIS_BUILD_DIR}/g2core
