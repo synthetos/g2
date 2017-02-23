@@ -2,8 +2,8 @@
  * gcode_parser.cpp - rs274/ngc Gcode parser
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2016 Rob Giseburt
+ * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
+ * Copyright (c) 2016 - 2017 Rob Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -107,7 +107,7 @@ stat_t gcode_parser(char *block)
  *   - block_delete_flag is set true if block delete encountered, false otherwise
  */
 
-static char _normalize_scratch[RX_BUFFER_MIN_SIZE];
+char _normalize_scratch[RX_BUFFER_SIZE];
 
 static void _normalize_gcode_block(char *str, char **active_comment, uint8_t *block_delete_flag)
 {
@@ -359,7 +359,7 @@ static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value)
     char *end;
     *value = strtof(*pstr, &end);
     if(end == *pstr) {
-        return(STAT_BAD_NUMBER_FORMAT);
+            return(STAT_BAD_NUMBER_FORMAT);
     }    // more robust test then checking for value=0;
     *pstr = end;
     return (STAT_OK);            // pointer points to next character after the word
@@ -409,9 +409,9 @@ static stat_t _validate_gcode_block(char *active_comment)
 
 static stat_t _parse_gcode_block(char *buf, char *active_comment)
 {
-    char *pstr = (char *)buf;       // persistent pointer into gcode block for parsing words
-    char letter;                    // parsed letter, eg.g. G or X or Y
-    float value = 0;                // value parsed from letter (e.g. 2 for G2)
+    char *pstr = (char *)buf;                   // persistent pointer into gcode block for parsing words
+    char letter;                                // parsed letter, eg.g. G or X or Y
+    float value = 0;                            // value parsed from letter (e.g. 2 for G2)
     stat_t status = STAT_OK;
 
     // set initial state for new move
@@ -574,7 +574,7 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
             case 'K': SET_NON_MODAL (arc_offset[2], value);
             case 'L': SET_NON_MODAL (L_word, value);
             case 'R': SET_NON_MODAL (arc_radius, value);
-            case 'N': SET_NON_MODAL (linenum,(uint32_t)value);        // line number
+            case 'N': SET_NON_MODAL (linenum,(uint32_t)value);      // line number
             default: status = STAT_GCODE_COMMAND_UNSUPPORTED;
         }
         if(status != STAT_OK) break;
@@ -660,15 +660,15 @@ static stat_t _execute_gcode_block(char *active_comment)
     switch (cm.gn.next_action) {                            // Tool length offsets
         case NEXT_ACTION_SET_TL_OFFSET: {                   // G43
             ritorno(cm_set_tl_offset(cm.gn.H_word, false)); 
-            break; 
+            break;
         }
         case NEXT_ACTION_SET_ADDITIONAL_TL_OFFSET: {        // G43.2
             ritorno(cm_set_tl_offset(cm.gn.H_word, true)); 
-            break; 
+            break;
         }
         case NEXT_ACTION_CANCEL_TL_OFFSET: {                // G49
-            ritorno(cm_cancel_tl_offset()); 
-            break; 
+            ritorno(cm_cancel_tl_offset());
+            break;
         }
     }
 
@@ -681,9 +681,9 @@ static stat_t _execute_gcode_block(char *active_comment)
     //--> set retract mode goes here
 
     switch (cm.gn.next_action) {
-        case NEXT_ACTION_SET_G28_POSITION:  { status = cm_set_g28_position(); break;}                               // G28.1
+        case NEXT_ACTION_SET_G28_POSITION:  { status = cm_set_g28_position(); break;}                           // G28.1
         case NEXT_ACTION_GOTO_G28_POSITION: { status = cm_goto_g28_position(cm.gn.target, cm.gf.target); break;}    // G28
-        case NEXT_ACTION_SET_G30_POSITION:  { status = cm_set_g30_position(); break;}                               // G30.1
+        case NEXT_ACTION_SET_G30_POSITION:  { status = cm_set_g30_position(); break;}                           // G30.1
         case NEXT_ACTION_GOTO_G30_POSITION: { status = cm_goto_g30_position(cm.gn.target, cm.gf.target); break;}    // G30
 
         case NEXT_ACTION_SEARCH_HOME:         { status = cm_homing_cycle_start(); break;}                           // G28.2
@@ -697,12 +697,12 @@ static stat_t _execute_gcode_block(char *active_comment)
 
         case NEXT_ACTION_SET_G10_DATA:           { status = cm_set_g10_data(cm.gn.parameter, cm.gn.L_word, cm.gn.target, cm.gf.target); break;}
         case NEXT_ACTION_SET_ORIGIN_OFFSETS:     { status = cm_set_origin_offsets(cm.gn.target, cm.gf.target); break;}// G92
-        case NEXT_ACTION_RESET_ORIGIN_OFFSETS:   { status = cm_reset_origin_offsets(); break;}                      // G92.1
-        case NEXT_ACTION_SUSPEND_ORIGIN_OFFSETS: { status = cm_suspend_origin_offsets(); break;}                    // G92.2
-        case NEXT_ACTION_RESUME_ORIGIN_OFFSETS:  { status = cm_resume_origin_offsets(); break;}                     // G92.3
+        case NEXT_ACTION_RESET_ORIGIN_OFFSETS:   { status = cm_reset_origin_offsets(); break;}                  // G92.1
+        case NEXT_ACTION_SUSPEND_ORIGIN_OFFSETS: { status = cm_suspend_origin_offsets(); break;}                // G92.2
+        case NEXT_ACTION_RESUME_ORIGIN_OFFSETS:  { status = cm_resume_origin_offsets(); break;}                 // G92.3
 
         case NEXT_ACTION_JSON_COMMAND_SYNC:       { status = cm_json_command(active_comment); break;}               // M100
-        case NEXT_ACTION_JSON_WAIT:               { status = cm_json_wait(active_comment); break;}                  // M101
+        case NEXT_ACTION_JSON_WAIT:               { status = cm_json_wait(active_comment); break;}              // M101
 //      case NEXT_ACTION_JSON_COMMAND_IMMEDIATE:  { status = mp_json_command_immediate(active_comment); break;}     // M102
 
         case NEXT_ACTION_DEFAULT: {
@@ -711,7 +711,7 @@ static stat_t _execute_gcode_block(char *active_comment)
                 case MOTION_MODE_CANCEL_MOTION_MODE: { cm.gm.motion_mode = cm.gn.motion_mode; break;}               // G80
                 case MOTION_MODE_STRAIGHT_TRAVERSE:  { status = cm_straight_traverse(cm.gn.target, cm.gf.target); break;} // G0
                 case MOTION_MODE_STRAIGHT_FEED:      { status = cm_straight_feed(cm.gn.target, cm.gf.target); break;} // G1
-                case MOTION_MODE_CW_ARC:                                                                            // G2
+                case MOTION_MODE_CW_ARC:                                                                        // G2
                 case MOTION_MODE_CCW_ARC: { status = cm_arc_feed(cm.gn.target,     cm.gf.target,                    // G3
                                                                  cm.gn.arc_offset, cm.gf.arc_offset,
                                                                  cm.gn.arc_radius, cm.gf.arc_radius,

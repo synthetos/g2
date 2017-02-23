@@ -60,8 +60,6 @@
 #undef  _FDEV_EOF
 #define _FDEV_EOF -2
 
-#define USB_LINE_BUFFER_SIZE    255         // text buffer size
-
 //*** Device flags ***
 typedef uint16_t devflags_t;                // might need to bump to 32 be 16 or 32
 
@@ -110,7 +108,7 @@ enum xioSPIMode {
 
 /**** readline stuff *****/
 
-#define RX_BUFFER_MIN_SIZE       256        // minimum requested buffer size (they are usually larger)
+#define RX_BUFFER_SIZE       512            // maximum length of recieved lines from xio_readline
 
 /**** function prototypes ****/
 
