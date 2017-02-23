@@ -48,7 +48,7 @@
 #define JOGGING_START_VELOCITY ((float)10.0)
 #define DISABLE_SOFT_LIMIT (999999)
 #define JERK_INPUT_MIN (0.01)               // minimum allowable jerk setting in millions mm/min^3
-#define JERK_INPUT_MAX (1000000)             // maximum allowable jerk setting in millions mm/min^3
+#define JERK_INPUT_MAX (1000000)            // maximum allowable jerk setting in millions mm/min^3
 #define PROBES_STORED 3                     // we store three probes for coordinate rotation computation
 
 
@@ -140,7 +140,7 @@ typedef enum {                  // applies to cm.homing_state
 typedef enum {                  // applies to cm.probe_state
     PROBE_FAILED = 0,           // probe reached endpoint without triggering
     PROBE_SUCCEEDED = 1,        // probe was triggered, cm.probe_results has position
-    PROBE_WAITING               // probe is waiting to be started
+    PROBE_WAITING = 2           // probe is waiting to be started or is running
 } cmProbeState;
 
 typedef enum {
@@ -509,6 +509,7 @@ typedef struct cmSingleton {                // struct to manage cm globals and c
     cmHomingState homing_state;             // home: homing cycle sub-state machine
     uint8_t homed[AXES];                    // individual axis homing flags
 
+    bool probe_report_enable;                 // 0=disabled, 1=enabled
     cmProbeState probe_state[PROBES_STORED];  // probing state machine (simple)
     float probe_results[PROBES_STORED][AXES]; // probing results
 
@@ -589,6 +590,9 @@ void cm_update_model_position_from_runtime(void);
 void cm_finalize_move(void);
 stat_t cm_deferred_write_callback(void);
 void cm_set_model_target(const float target[], const bool flag[]);
+bool cm_get_soft_limits(void);
+void cm_set_soft_limits(bool enable);
+
 stat_t cm_test_soft_limits(const float target[]);
 
 /*--- Canonical machining functions (loosely) defined by NIST [organized by NIST Gcode doc] ---*/
@@ -711,11 +715,11 @@ stat_t cm_homing_cycle_start_no_set(const float axes[], const bool flags[]); // 
 stat_t cm_homing_cycle_callback(void);                          // G28.2/.4 main loop callback
 
 // Probe cycles
-stat_t cm_straight_probe(float target[],
-                         bool flags[],
-                         bool failure_is_fatal,
-                         bool moving_toward_switch);            // G38.x
+stat_t cm_straight_probe(float target[], bool flags[],          // G38.x
+                         bool trip_sense, bool alarm_flag);
 stat_t cm_probing_cycle_callback(void);                         // G38.x main loop callback
+stat_t cm_get_prbr(nvObj_t *nv);                                // enable/disable probe report
+stat_t cm_set_prbr(nvObj_t *nv);
 
 // Jogging cycle
 stat_t cm_jogging_cycle_callback(void);                         // jogging cycle main loop

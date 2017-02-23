@@ -2,7 +2,7 @@
  * settings_makeblock.h - makeblock engraving table
  * This file is part of the g2core project
  *
- * Copyright (c) 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2016 - 2017 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -50,6 +50,8 @@
 #define COOLANT_FLOOD_POLARITY      1                       // 0=active low, 1=active high
 #define COOLANT_PAUSE_ON_HOLD       true
 
+#define PROBE_REPORT_ENABLE         true
+
 // Communications and reporting settings
 
 #define MARLIN_COMPAT_ENABLED       true                    // enable marlin compatibility mode
@@ -66,28 +68,13 @@
 #define STATUS_REPORT_MIN_MS        200                     // milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
 
-#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","vel","unit","stat","feed","coor","momo","plan","path","dist","mpox","mpoy","mpoz","admo","frmo","cycs","hold"
+#define STATUS_REPORT_DEFAULTS      "line","stat","posx","posy","posz",\
+                                    "vel", "unit","feed","coor","momo",\
+                                    "plan","path","dist","prbe","prbz",\
+                                    "mpox","mpoy","mpoz",\
+                                    "admo","frmo","cycs","hold"
+//                                     "_ts1","_cs1","_es1","_xs1","_fe1"
 
-/*
-#define COMM_MODE JSON_MODE                 // one of: TEXT_MODE, JSON_MODE
-
-#define TEXT_VERBOSITY TV_VERBOSE           // one of: TV_SILENT, TV_VERBOSE
-#define JSON_VERBOSITY JV_MESSAGES          // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
-#define QUEUE_REPORT_VERBOSITY QR_OFF       // one of: QR_OFF, QR_SINGLE, QR_TRIPLE
-
-#define STATUS_REPORT_VERBOSITY SR_FILTERED // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
-#define STATUS_REPORT_MIN_MS 100            // milliseconds - enforces a viable minimum
-#define STATUS_REPORT_INTERVAL_MS 250       // milliseconds - set $SV=0 to disable
-
-//#define STATUS_REPORT_DEFAULTS
-//"line","posx","posy","posz","posa","bcr","feed","vel","unit","coor","dist","admo","frmo","momo","stat"
-#define STATUS_REPORT_DEFAULTS "line", "posx", "posy", "posz", "feed", "vel", "momo", "stat"
-
-// Alternate SRs that report in drawable units
-//#define STATUS_REPORT_DEFAULTS
-//"line","vel","mpox","mpoy","mpoz","mpoa","coor","ofsa","ofsx","ofsy","ofsz","dist","unit","stat","homz","homy","homx","momo"
-//#define STATUS_REPORT_DEFAULTS "_ts1","_cs1","_es1","_xs1","_fe1","line","posx","posy","posz","vel","stat"
-*/
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS             MILLIMETERS         // MILLIMETERS or INCHES
 #define GCODE_DEFAULT_PLANE CANON_PLANE_XY                  // CANON_PLANE_XY, CANON_PLANE_XZ, or CANON_PLANE_YZ
@@ -103,7 +90,6 @@
                                                         // 2=MOTOR_POWERED_IN_CYCLE, 
                                                         // 3=MOTOR_POWERED_ONLY_WHEN_MOVING
 #define M1_POWER_LEVEL          0.4                     // 0.0 = off, 1.0 = max
-//.#define MOTOR_POWER_TIMEOUT     2.00                    // motor power timeout in seconds
 #define MOTOR_POWER_TIMEOUT     10.00                    // motor power timeout in seconds
 
 #define M1_MOTOR_MAP            AXIS_X                  // 1ma
@@ -129,6 +115,14 @@
 #define M3_POLARITY             0
 #define M3_POWER_MODE           MOTOR_POWER_MODE
 #define M3_POWER_LEVEL          0.4
+
+#define M4_MOTOR_MAP            AXIS_A
+#define M4_STEP_ANGLE           1.8
+#define M4_TRAVEL_PER_REV       1.25
+#define M4_MICROSTEPS           8
+#define M4_POLARITY             0
+#define M4_POWER_MODE           MOTOR_POWER_MODE
+#define M4_POWER_LEVEL          0.4
 
 // *** axis settings **********************************************************************************
 
@@ -175,3 +169,87 @@
 #define Z_LATCH_VELOCITY        25
 #define Z_LATCH_BACKOFF         4
 #define Z_ZERO_BACKOFF          2
+
+#define A_AXIS_MODE             AXIS_STANDARD
+#define A_RADIUS                1
+#define A_VELOCITY_MAX          360000
+#define A_FEEDRATE_MAX          A_VELOCITY_MAX
+#define A_TRAVEL_MIN            -1
+#define A_TRAVEL_MAX            -1
+#define A_JERK_MAX              100000
+#define A_JERK_HIGH_SPEED       A_JERK_MAX
+#define A_HOMING_INPUT          0
+#define A_HOMING_DIRECTION      0
+#define A_SEARCH_VELOCITY       600
+#define A_LATCH_VELOCITY        100
+#define A_LATCH_BACKOFF         10
+#define A_ZERO_BACKOFF          2
+
+//*** Input / output settings ***
+/*
+    See gpio.h GPIO defines for options
+
+    Homing and probing settings are independent of ACTION and FUNCTION settings
+    but rely on proper switch MODE setting (i.e. NC or NO)
+
+    INPUT_MODE_DISABLED
+    INPUT_ACTIVE_LOW    aka NORMALLY_OPEN
+    INPUT_ACTIVE_HIGH   aka NORMALLY_CLOSED
+
+    INPUT_ACTION_NONE
+    INPUT_ACTION_STOP
+    INPUT_ACTION_FAST_STOP
+    INPUT_ACTION_HALT
+    INPUT_ACTION_RESET
+
+    INPUT_FUNCTION_NONE
+    INPUT_FUNCTION_LIMIT
+    INPUT_FUNCTION_INTERLOCK
+    INPUT_FUNCTION_SHUTDOWN
+    INPUT_FUNCTION_PROBE
+*/
+
+// Xmin on v9 board                         // X homing - see X axis setup
+#define DI1_MODE        NORMALLY_CLOSED
+#define DI1_ACTION      INPUT_ACTION_NONE
+#define DI1_FUNCTION    INPUT_FUNCTION_NONE
+
+// Xmax                                     // External ESTOP
+#define DI2_MODE        IO_ACTIVE_HIGH
+#define DI2_ACTION      INPUT_ACTION_HALT
+#define DI2_FUNCTION    INPUT_FUNCTION_SHUTDOWN
+
+// Ymin                                     // Y homing - see Y axis setup
+#define DI3_MODE        NORMALLY_CLOSED
+#define DI3_ACTION      INPUT_ACTION_NONE
+#define DI3_FUNCTION    INPUT_FUNCTION_NONE
+
+// Ymax                                     // Safety interlock
+#define DI4_MODE        IO_ACTIVE_HIGH
+#define DI4_ACTION      INPUT_ACTION_NONE  // (hold is performed by Interlock function)
+#define DI4_FUNCTION    INPUT_FUNCTION_INTERLOCK
+
+// Zmin                                     // Z probe
+#define DI5_MODE        IO_ACTIVE_LOW
+#define DI5_ACTION      INPUT_ACTION_NONE
+#define DI5_FUNCTION    INPUT_FUNCTION_PROBE
+
+// Zmax                                     // Z homing - see Z axis for setup
+#define DI6_MODE        NORMALLY_CLOSED
+#define DI6_ACTION      INPUT_ACTION_NONE
+#define DI6_FUNCTION    INPUT_FUNCTION_NONE
+
+// Amin                                     // Unused
+#define DI7_MODE        IO_MODE_DISABLED
+#define DI7_ACTION      INPUT_ACTION_NONE
+#define DI7_FUNCTION    INPUT_FUNCTION_NONE
+
+// Amax                                     // Unused
+#define DI8_MODE        IO_MODE_DISABLED
+#define DI8_ACTION      INPUT_ACTION_NONE
+#define DI8_FUNCTION    INPUT_FUNCTION_NONE
+
+// Safety line w/HW timer                   // Unused
+#define DI9_MODE        IO_MODE_DISABLED
+#define DI9_ACTION      INPUT_ACTION_NONE
+#define DI9_FUNCTION    INPUT_FUNCTION_NONE
