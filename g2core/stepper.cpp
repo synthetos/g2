@@ -76,7 +76,6 @@ extern OutputPin<kDebug3_PinNumber> debug_pin3;
 //extern OutputPin<kDebug4_PinNumber> debug_pin4;
 
 dda_timer_type dda_timer     {kTimerUpToMatch, FREQUENCY_DDA};      // stepper pulse generation
-//load_timer_type load_timer;         // triggers load of next stepper segment
 exec_timer_type exec_timer;         // triggers calculation of next+1 stepper segment
 fwd_plan_timer_type fwd_plan_timer; // triggers planning of next block
 
@@ -124,9 +123,6 @@ void stepper_init()
     // optimal for 200 KHz DDA clock before the time in the OFF cycle is too short.
     // If you need more pulse width you need to drop the DDA clock rate
     dda_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
-
-    // setup software interrupt load timer
-//    load_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityHigh);
 
     // setup software interrupt exec timer & initial condition
     exec_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityMedium);
@@ -353,10 +349,7 @@ void dda_timer_type::interrupt()
 void st_request_exec_move()
 {
     stepper_debug("e");
-    if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_EXEC) { // bother interrupting
-        exec_timer.setInterruptPending();
-        return;
-    }
+    exec_timer.setInterruptPending();
     stepper_debug("!\n");
 }
 
@@ -417,21 +410,9 @@ void st_request_load_move()
     stepper_debug("l");
     if (st_pre.buffer_state == PREP_BUFFER_OWNED_BY_LOADER) {       // bother interrupting
         stepper_debug("_");
-//        load_timer.setInterruptPending();
         _load_move();
     }
 }
-
-//namespace Motate {    // Define timer inside Motate namespace
-//    template<>
-//    void load_timer_type::interrupt()
-//    {
-//        load_timer.getInterruptCause();                             // read SR to clear interrupt condition
-//        stepper_debug("L>");
-//        _load_move();
-//        stepper_debug("L+\n");
-//    }
-//} // namespace Motate
 
 /****************************************************************************************
  * _load_move() - Dequeue move and load into stepper runtime structure
@@ -454,7 +435,16 @@ static void _load_move()
         return;                                                    // exit if the runtime is busy
     }
     if (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_LOADER) {    // if there are no moves to load...
-		
+
+        if (cm.motion_state == MOTION_RUN)  {
+#if IN_DEBUGGER == 1
+//#warning debbugger REQUIRED for running this firmware!
+//            __asm__("BKPT"); // attempted to _load_move with PREP_BUFFER_OWNED_BY_EXEC and cm.motion_state == MOTION_RUN
+#endif
+            st_request_exec_move();
+            return;
+        }
+
 	// ...start motor power timeouts
 	//	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
 	//		Motors[motor]->motionStopped();    
@@ -675,8 +665,8 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
         return (cm_panic(STAT_PREP_LINE_MOVE_TIME_IS_INFINITE, "st_prep_line()"));
     } else if (isnan(segment_time)) {                           // never supposed to happen
         return (cm_panic(STAT_PREP_LINE_MOVE_TIME_IS_NAN, "st_prep_line()"));
-    } else if (segment_time < EPSILON) {
-        return (STAT_MINIMUM_TIME_MOVE);
+//    } else if (segment_time < EPSILON) {
+//        return (STAT_MINIMUM_TIME_MOVE);
     }
     // setup segment parameters
     // - dda_ticks is the integer number of DDA clock ticks needed to play out the segment
