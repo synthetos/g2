@@ -431,25 +431,23 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         // !!! THIS IS THE ONLY PLACE WHERE mr->r AND mr->p ARE ALLOWED TO BE CHANGED !!!
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         // Swap P and R blocks
-        mr->previous_exit_velocity = mr->r->exit_velocity;
+        mr->previous_exit_velocity = mr->r->exit_velocity;    // +++++ DIAGNOSTIC
         mr->r = mr->p;        // we are now going to run the planning block
         mr->p = mr->p->nx;    // re-use the old running block as the new planning block
 
 
         // Check to make sure no sections are less than MIN_SEGMENT_TIME & adjust if necessary
-        if ((!fp_ZERO(mr->r->head_length)) && (mr->r->head_time < MIN_SEGMENT_TIME)) {
-            // head_time !== body_time
-            // We have to compute the new body time addition.
+        if ((mr->r->head_length > 0) && (mr->r->head_time < MIN_SEGMENT_TIME)) {
+            // Compute the new body time. head_time !== body_time
             mr->r->body_length += mr->r->head_length;
-            mr->r->body_time = mr->r->body_length/mr->r->cruise_velocity;
+            mr->r->body_time = mr->r->body_length / mr->r->cruise_velocity;
             mr->r->head_length = 0;
             mr->r->head_time = 0;
         }
-        if ((!fp_ZERO(mr->r->tail_length)) && (mr->r->tail_time < MIN_SEGMENT_TIME)) {
-            // tail_time !== body_time
-            // We have to compute the new body time addition.
+        if ((mr->r->tail_length > 0) && (mr->r->tail_time < MIN_SEGMENT_TIME)) {
+            // Compute the new body time. tail_time !== body_time
             mr->r->body_length += mr->r->tail_length;
-            mr->r->body_time = mr->r->body_length/mr->r->cruise_velocity;
+            mr->r->body_time = mr->r->body_length / mr->r->cruise_velocity;
             mr->r->tail_length = 0;
             mr->r->tail_time = 0;
         }
@@ -458,37 +456,32 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         // If the body is still too "short" (brief) we *might* be able to add it to a head or tail.
         // If there's still a head or a tail, we will add the body to whichever there is, maybe both.
         // We saved it for last since it's the most expensive.
-        if ((!fp_ZERO(mr->r->body_length)) && (mr->r->body_time < MIN_SEGMENT_TIME)) {
+        if ((mr->r->body_length > 0) && (mr->r->body_time < MIN_SEGMENT_TIME)) {
 
             // We'll add the time to either the head or the tail or split it
             if (mr->r->tail_length > 0) {
-                if (mr->r->head_length > 0) {
-                    // We'll split the body to the head and tail
-                    float body_split = mr->r->body_length/2.0;
+                if (mr->r->head_length > 0) {       // Split the body to the head and tail
+                    mr->r->head_length += mr->r->body_length * 0.5;
+                    mr->r->tail_length += mr->r->body_length * 0.5; // let the compiler optimize out one of these *
+                    mr->r->head_time = (2.0 * mr->r->head_length) / (mr->entry_velocity + mr->r->cruise_velocity);
+                    mr->r->tail_time = (2.0 * mr->r->tail_length) / (mr->r->cruise_velocity + mr->r->exit_velocity);
                     mr->r->body_length = 0;
                     mr->r->body_time = 0;
-                    mr->r->head_length += body_split;
-                    mr->r->tail_length += body_split;
-                    mr->r->head_time = (2.0 * mr->r->head_length)/(mr->entry_velocity + mr->r->cruise_velocity);
-                    mr->r->tail_time = (2.0 * mr->r->tail_length)/(mr->r->cruise_velocity + mr->r->exit_velocity);
-                } else {
-                    // We'll put it all in the tail
+                } else {                            // Put it all in the tail
                     mr->r->tail_length += mr->r->body_length;
+                    mr->r->tail_time = (2.0 * mr->r->tail_length) / (mr->r->cruise_velocity + mr->r->exit_velocity);
                     mr->r->body_length = 0;
                     mr->r->body_time = 0;
-                    mr->r->tail_time = (2.0 * mr->r->tail_length)/(mr->r->cruise_velocity + mr->r->exit_velocity);
                 }
             }
-            else if (mr->r->head_length > 0) {
-                // We'll put it all in the head
+            else if (mr->r->head_length > 0) {       // Put it all in the head
                 mr->r->head_length += mr->r->body_length;
+                mr->r->head_time = (2.0 * mr->r->head_length) / (mr->entry_velocity + mr->r->cruise_velocity);
                 mr->r->body_length = 0;
                 mr->r->body_time = 0;
-                mr->r->head_time = (2.0 * mr->r->head_length)/(mr->entry_velocity + mr->r->cruise_velocity);
             }
-            else {
-                // Uh oh! We have a move that's all body, and is still too short!!
-                // while (1); // RG: For now, we'll consider this impossible.
+            else {                                  // Uh oh! We have a move that's all body, and is still too short!!
+                debug_trap("mp_exec_aline() - found a move that is too short");
                 cs.exec_aline_assertion_failure = true;
                 return (STAT_EXEC_ALINE_ASSERTION_FAILURE);
             }
@@ -521,8 +514,11 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
     // Feedhold Processing - We need to handle the following cases (listed in rough sequence order):
     if (cm->motion_state == MOTION_HOLD) {
-        if ((status = _exec_feedhold_processing(bf)) != STAT_EAGAIN) {
-            return (status);
+        if (cm->hold_state >= FEEDHOLD_ACTIONS_START) { // FEEDHOLD_ACTIONS_START, FEEDHOLD_ACTIONS_WAIT or FEEDHOLD HOLD
+            return (STAT_NOOP);                         // VERY IMPORTANT to exit as a NOOP. No more movement
+        }
+        if (_exec_feedhold_processing(bf) == STAT_OK) { // anything but STAT_OK will continue processing the exec
+            return (STAT_OK);
         }
     }
     
@@ -973,38 +969,33 @@ static stat_t _exec_aline_segment()
 
 /*********************************************************************************************
  * _exec_feedhold_processing() - 
-
-// Feedhold Processing - We need to handle the following cases (listed in rough sequence order):
-//  (1) - We have a block midway through normal execution and a new feedhold request
-//   (1a) - The deceleration will fit in the length remaining in the running block (mr)
-//   (1b) - 1a, except the remaining length would be zero or EPSILON2 close to zero (unlikely)
-//   (1c) - The deceleration will not fit in the running block
-//  (2) - We have a new block and a new feedhold request that arrived at EXACTLY the same time (unlikely, but handled)
-//  (3) - We are in the middle of a block
-//   (3a) - The block is currently accelerating (we wait for the body to start)
-//   (3b) - The block is in a body (or has not yet started the head) - start deceleration
-//   (3c) - The block is currently in the tail (we wait until the end of the block)
-//  (4) - We have decelerated a block to some velocity > zero (needs continuation in next block)
-//  (5) - We have decelerated a block to zero velocity
-//  (6) - We have finished all the runtime work now we have to wait for the steppers to stop
-//   (6a) - It's a homing or probing feedhold - ditch the remaining buffer & go directly to OFF
-//   (6b) - It's a p2 feedhold - ditch the remaining buffer & signal we want a p2 queue flush
-//   (6c) - It's a normal feedhold - signal we want the entry action
-//  (7) - The steppers have stopped. No motion should occur. Allows hold actions to complete
-//  (8) - We are removing the hold state and there is queued motion (handled outside this routine)
-//  (9) - We are removing the hold state and there is no queued motion (also handled outside this routine)
-
-* STAT_OK stops move execution
-* STAT_NOOP stops move execution and prevents the next move from loading. Should only be used on an inactive block
-* STAT_EAGAIN continues execution of mp_exec_aline()
-*/
+ *
+ * Feedhold Processing - We need to handle the following cases (listed in rough sequence order):
+ *  (1) - We have a block midway through normal execution and a new feedhold request
+ *   (1a) - The deceleration will fit in the length remaining in the running block (mr)
+ *   (1b) - 1a, except the remaining length would be zero or EPSILON2 close to zero (unlikely)
+ *   (1c) - The deceleration will not fit in the running block
+ *  (2) - We have a new block and a new feedhold request that arrived at EXACTLY the same time (unlikely, but handled)
+ *  (3) - We are in the middle of a block
+ *   (3a) - The block is currently accelerating (we wait for the body to start)
+ *   (3b) - The block is in a body (or has not yet started the head) - start deceleration
+ *   (3c) - The block is currently in the tail (we wait until the end of the block)
+ *  (4) - We have decelerated a block to some velocity > zero (needs continuation in next block)
+ *  (5) - We have decelerated a block to zero velocity
+ *  (6) - We have finished all the runtime work now we have to wait for the steppers to stop
+ *   (6a) - It's a homing or probing feedhold - ditch the remaining buffer & go directly to OFF
+ *   (6b) - It's a p2 feedhold - ditch the remaining buffer & signal we want a p2 queue flush
+ *   (6c) - It's a normal feedhold - signal we want the entry action
+ *  (7) - The steppers have stopped. No motion should occur. Allows hold actions to complete
+ *  (8) - We are removing the hold state and there is queued motion (handled outside this routine)
+ *  (9) - We are removing the hold state and there is no queued motion (also handled outside this routine)
+ *
+ *  Returning STAT_OK stops move execution
+ *  Returning STAT_EAGAIN continues execution of mp_exec_aline()
+ */
 
 static stat_t _exec_feedhold_processing(mpBuf_t *bf) 
-{    
-    if (cm->hold_state >= FEEDHOLD_ACTIONS_START) { // FEEDHOLD_ACTIONS_START, FEEDHOLD_ACTIONS_WAIT or FEEDHOLD HOLD
-        return (STAT_NOOP);                         // VERY IMPORTANT to exit as a NOOP. No more movement
-    }
-
+{
     // Case (6) - Wait for the steppers to stop
     if (cm->hold_state == FEEDHOLD_MOTORS_STOPPING) {
         if (mp_runtime_is_idle()) {                         // wait for steppers to actually finish
@@ -1043,10 +1034,10 @@ static stat_t _exec_feedhold_processing(mpBuf_t *bf)
         return (STAT_OK);
     }
 
-    // Cases (1a, 1b, 1c), Case (2), Case (4)
-    // Build a tail-only move from here. Decelerate as fast as possible in the space we have.
+    // Cases (3), (1a, 1b, 1c), Case (2), Case (4)
+    // Build a tail-only move from here. Decelerate as fast as possible in the space available.
     if ((cm->hold_state == FEEDHOLD_SYNC) ||
-    ((cm->hold_state == FEEDHOLD_DECEL_CONTINUE) && (mr->block_state == BLOCK_INITIAL_ACTION))) {
+        ((cm->hold_state == FEEDHOLD_DECEL_CONTINUE) && (mr->block_state == BLOCK_INITIAL_ACTION))) {
 
         // Case (3c) - Already decelerating (in a tail), continue the deceleration.
         if (mr->section == SECTION_TAIL) {                  // if already in a tail don't decelerate. You already are
@@ -1066,39 +1057,36 @@ static stat_t _exec_feedhold_processing(mpBuf_t *bf)
         }
 
         // Case (3b) - Block is in a body, or about to start a new head. Turn it into a new tail.
-        //            else if ((mr->section != SECTION_HEAD) || (mr->section_state == SECTION_NEW)) {
-
         // In the new head case plan deceleration move (tail) starting at the at the entry velocity
-        if ((mr->section != SECTION_HEAD) || (mr->section_state == SECTION_NEW)) {
-            mr->section = SECTION_TAIL;
-            mr->section_state = SECTION_NEW;
-            mr->entry_velocity = mr->segment_velocity;
-            mr->r->cruise_velocity = mr->entry_velocity;    // cruise velocity must be set even if there's no body
-            mr->r->head_length = 0;
-            mr->r->body_length = 0;
-            mr->r->head_time = 0;
-            mr->r->body_time = 0;
-            mr->r->tail_length = mp_get_target_length(0, mr->r->cruise_velocity, bf);  // braking length
+        mr->section = SECTION_TAIL;
+        mr->section_state = SECTION_NEW;
+        mr->entry_velocity = mr->segment_velocity;
+//        mr->entry_velocity = mr->previous_exit_velocity;    // ++++ COMPARISON
+        mr->r->cruise_velocity = mr->entry_velocity;    // cruise velocity must be set even if there's no body
+        mr->r->tail_length = mp_get_target_length(0, mr->r->cruise_velocity, bf);  // braking length
+        mr->r->head_length = 0;
+        mr->r->body_length = 0;
+        mr->r->head_time = 0;
+        mr->r->body_time = 0;
             
-            // (1a, 1b) The deceleration distance either fits in the available length (1a) or fits
-            // exactly or close enough (to EPSILON2) (1b). Case 1b happens when the tail in the move
-            // was already planned to zero. This is also case (2). EPSILON2 deals with floating point
-            // rounding errors that can mis-classify this case.
-            float available_length = get_axis_vector_length(mr->target, mr->position);
+        // (1a, 1b) The deceleration distance either fits in the available length (1a) or fits
+        // exactly or close enough (to EPSILON2) (1b). Case 1b happens when the tail in the move
+        // was already planned to zero. This is also case (2). EPSILON2 deals with floating point
+        // rounding errors that can mis-classify this case.
+        float available_length = get_axis_vector_length(mr->target, mr->position);
 
-            if ((available_length + EPSILON2 - mr->r->tail_length) > 0) {    // it will fit
-                cm->hold_state = FEEDHOLD_DECEL_TO_ZERO;
-                mr->r->exit_velocity = 0;
-                mr->r->tail_time = mr->r->tail_length*2 / (mr->r->exit_velocity + mr->r->cruise_velocity);
-                bf->block_time = mr->r->tail_time;
-            }
-            else {
-                cm->hold_state = FEEDHOLD_DECEL_CONTINUE;
-                mr->r->tail_length = available_length;
-                mr->r->exit_velocity = mp_get_decel_velocity(mr->r->cruise_velocity, mr->r->tail_length, bf);
-                mr->r->tail_time = mr->r->tail_length*2 / (mr->r->exit_velocity + mr->r->cruise_velocity);
-                bf->block_time = mr->r->tail_time;
-            }
+        if ((available_length + EPSILON2 - mr->r->tail_length) > 0) {    // it will fit
+            cm->hold_state = FEEDHOLD_DECEL_TO_ZERO;
+            mr->r->exit_velocity = 0;
+            mr->r->tail_time = mr->r->tail_length*2 / (mr->r->exit_velocity + mr->r->cruise_velocity);
+            bf->block_time = mr->r->tail_time;
+        }
+        else {
+            cm->hold_state = FEEDHOLD_DECEL_CONTINUE;
+            mr->r->tail_length = available_length;
+            mr->r->exit_velocity = mp_get_decel_velocity(mr->r->cruise_velocity, mr->r->tail_length, bf);
+            mr->r->tail_time = mr->r->tail_length*2 / (mr->r->exit_velocity + mr->r->cruise_velocity);
+            bf->block_time = mr->r->tail_time;
         }
     }
     return (STAT_EAGAIN);
