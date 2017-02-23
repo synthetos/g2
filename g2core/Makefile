@@ -52,7 +52,7 @@ NEEDS_PRINTF_FLOAT=1
 # Now invoke the Motate compile system
 include $(MOTATE_PATH)/Motate.mk
 
-ifeq ($(DEBUG),1)
+ifeq ($(DEBUG),0)
 	DEVICE_DEFINES += DEBUG=0 IN_DEBUGGER=0
 endif
 ifeq ($(DEBUG),1)
