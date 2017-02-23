@@ -4,8 +4,7 @@ before_install:
   - sudo apt-get update -q
 
 install:
-  - sudo dpkg --add-architecture i386
-  - sudo apt-get install -qq lib32z1
+  - sudo apt-get install lib32z1 lib32ncurses5 lib32bz2-1.0
 
 script:
   - cd ${TRAVIS_BUILD_DIR}/g2core
