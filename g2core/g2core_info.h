@@ -21,7 +21,7 @@
 #ifndef G2CORE_INFO_H_ONCE
 #define G2CORE_INFO_H_ONCE
 
-#define G2CORE_FIRMWARE_BUILD			100.20  // Merged dev-209b-random-pauses to compelte USB changes
+#define G2CORE_FIRMWARE_BUILD			100.21  // Merged dev-209b-random-pauses to compelte USB changes (only fix travis-ci from 100.20)
 #ifdef GIT_VERSION
 #define G2CORE_FIRMWARE_BUILD_STRING	GIT_VERSION
 #else
