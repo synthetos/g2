@@ -132,7 +132,6 @@ extern "C" {
     int _write( int file, char *ptr, int len );
 }
 
-
 /* Some useful ASCII definitions */
 
 #define NUL (char)0x00      //  ASCII NUL char (0) (not "NULL" which is a pointer)

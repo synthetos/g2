@@ -56,7 +56,7 @@
 
 // Communications and reporting settings
 
-#define USB_SERIAL_PORTS_EXPOSED   2        // Valid options are 1 or 2, only!
+#define USB_SERIAL_PORTS_EXPOSED   1        // Valid options are 1 or 2, only!
 
 #define COMM_MODE JSON_MODE                      // one of: TEXT_MODE, JSON_MODE
 #define XIO_ENABLE_FLOW_CONTROL FLOW_CONTROL_RTS // FLOW_CONTROL_OFF, FLOW_CONTROL_RTS
