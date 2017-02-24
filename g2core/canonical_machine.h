@@ -36,6 +36,10 @@
 #include "hardware.h"                       // Note: hardware.h is specific to the hardware target selected
 #include "settings.h"
 
+#if MARLIN_COMPAT_ENABLED == true
+#include "marlin_compatibility.h"           // import Marlin definitions and enums
+#endif
+
 /* Defines, Macros, and Assorted Parameters */
 
 #define MODEL   (GCodeState_t *)&cm.gm      // absolute pointer from canonical machine gm model
@@ -347,14 +351,6 @@ typedef struct GCodeState {             // Gcode model state - used by model, pl
     };
 } GCodeState_t;
 
-#if MARLIN_COMPAT_ENABLED == true
-enum cmExtruderMode {
-    EXTRUDER_MOVES_NORMAL = 0,          // M82
-    EXTRUDER_MOVES_RELATIVE,            // M83
-    EXTRUDER_MOVES_VOLUMETRIC           // Ultimaker2Marlin
-};
-#endif // MARLIN_COMPAT_ENABLED
-
 typedef struct GCodeStateExtended {     // Gcode dynamic state extensions - used by model and arcs
     uint16_t magic_start;               // magic number to test memory integrity
     uint8_t next_action;                // handles G modal group 1 moves & non-modals
@@ -377,12 +373,6 @@ typedef struct GCodeStateExtended {     // Gcode dynamic state extensions - used
 // unimplemented gcode parameters
 //  float cutter_radius;                // D - cutter radius compensation (0 is off)
 //  float cutter_length;                // H - cutter length compensation (0 is off)
-
-#if MARLIN_COMPAT_ENABLED == true
-    bool marlin_flavor;                 // true if we are parsing gcode as Marlin-flavor
-    cmExtruderMode extruder_mode;       // Mode of the extruder - changes how "E" is interpreted
-    uint32_t last_line_number;          // keep track of the last issued line number
-#endif // MARLIN_COMPAT_ENABLED
 
     uint16_t magic_end;
 

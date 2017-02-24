@@ -24,18 +24,33 @@
 #include "g2core.h"  // #1
 #include "config.h"  // #2
 
+enum cmExtruderMode {
+    EXTRUDER_MOVES_NORMAL = 0,          // M82
+    EXTRUDER_MOVES_RELATIVE,            // M83
+    EXTRUDER_MOVES_VOLUMETRIC           // Ultimaker2Marlin
+};
+
+typedef struct MarlinStateExtended {    // Canonical machine extensions for Marlin
+    bool marlin_flavor;                 // true if we are parsing gcode as Marlin-flavor
+    cmExtruderMode extruder_mode;       // Mode of the extruder - changes how "E" is interpreted
+    uint32_t last_line_number;          // keep track of the last issued line number
+} MarlinStateExtended_t;
+
+extern MarlinStateExtended_t mst;       // Marlin state object
+
 /*
  * Global Scope Functions
  */
 
 // *** gcode and Mcode handling ***
+
 stat_t marlin_start_tramming_bed();                             // G29
 
 stat_t marlin_list_sd_response();                               // M20
 stat_t marlin_select_sd_response(const char *file);             // M23
-stat_t cm_marlin_set_extruder_mode(const uint8_t mode);         // M82, M82
+stat_t marlin_set_extruder_mode(const uint8_t mode);         // M82, M82
 stat_t marlin_disable_motors();                                 // M84
-stat_t marlin_set_motor_timeout(float s);                       // M84 Sxxx, M85 Sxxx, M18 Sxxx, 
+stat_t marlin_set_motor_timeout(float s);                       // M84 Sxxx, M85 Sxxx, M18 Sxxx
 
 stat_t marlin_set_temperature(uint8_t tool, float temperature, bool wait); // M104, M109, M140, M190
 stat_t marlin_request_temperature_report();                     // M105

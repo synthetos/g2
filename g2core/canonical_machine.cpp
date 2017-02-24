@@ -631,8 +631,8 @@ void cm_set_model_target(const float target[], const bool flags[])
 #if MARLIN_COMPAT_ENABLED == true
         // If we are in absolute mode (generally), but the extruder is relative,
         // then we adjust the extruder to a relative position
-        if (cm.gmx.marlin_flavor && (cm.a[axis].axis_mode == AXIS_RADIUS)) {
-            if ((cm.gm.distance_mode == INCREMENTAL_DISTANCE_MODE) || (cm.gmx.extruder_mode == EXTRUDER_MOVES_RELATIVE)) {
+        if (mst.marlin_flavor && (cm.a[axis].axis_mode == AXIS_RADIUS)) {
+            if ((cm.gm.distance_mode == INCREMENTAL_DISTANCE_MODE) || (mst.extruder_mode == EXTRUDER_MOVES_RELATIVE)) {
                 cm.gm.target[axis] += tmp;
             }
             else { // if (cm.gmx.extruder_mode == EXTRUDER_MOVES_NORMAL)

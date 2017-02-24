@@ -27,29 +27,33 @@
 #include "gcode_parser.h"
 #include "canonical_machine.h"
 #include "util.h"
-#include "xio.h"             // for char definitions
-#include "temperature.h"     // for temperature controls
+#include "xio.h"                // for char definitions
+#include "temperature.h"        // for temperature controls
 #include "json_parser.h"
 #include "planner.h"
-#include "stepper.h" // for MOTOR_TIMEOUT_SECONDS_MIN/MOTOR_TIMEOUT_SECONDS_MAX
-#include "MotateTimers.h"    // for char definitions
-#include "MotateUniqueID.h"  // for Motate::UUID
+#include "stepper.h"            // for MOTOR_TIMEOUT_SECONDS_MIN/MOTOR_TIMEOUT_SECONDS_MAX
+#include "MotateTimers.h"       // for char definitions
+#include "MotateUniqueID.h"     // for Motate::UUID
 
 // Structures used
 enum STK500 {
     // Success
-    STATUS_CMD_OK                       = 0x00,
+    STATUS_CMD_OK            = 0x00,
 
     // Warnings
-    STATUS_CMD_TOUT                     = 0x80,
-    STATUS_RDY_BSY_TOUT                 = 0x81,
-    STATUS_SET_PARAM_MISSING            = 0x82,
+    STATUS_CMD_TOUT          = 0x80,
+    STATUS_RDY_BSY_TOUT      = 0x81,
+    STATUS_SET_PARAM_MISSING = 0x82,
 
     // Errors
-    STATUS_CMD_FAILED                   = 0xC0,
-    STATUS_CKSUM_ERROR                  = 0xC1,
-    STATUS_CMD_UNKNOWN                  = 0xC9,
+    STATUS_CMD_FAILED        = 0xC0,
+    STATUS_CKSUM_ERROR       = 0xC1,
+    STATUS_CMD_UNKNOWN       = 0xC9,
 };
+
+// Global state variables
+
+MarlinStateExtended_t mst;       // Marlin state object
 
 // Local variables
 
@@ -198,9 +202,9 @@ stat_t marlin_select_sd_response(const char *file)
  *  EXTRUDER_MOVES_VOLUMETRIC       // Ultimaker2Marlin
  */
 
-stat_t cm_marlin_set_extruder_mode(const uint8_t mode)
+stat_t marlin_set_extruder_mode(const uint8_t mode)
 {
-    cm.gmx.extruder_mode = (cmExtruderMode)mode;
+    mst.extruder_mode = (cmExtruderMode)mode;
     return (STAT_OK);
 }
 
@@ -508,12 +512,12 @@ void marlin_response(const stat_t status, char *buf)
     }
     else if (status == STAT_CHECKSUM_MATCH_FAILED) {
         str_concat(str, "Error:checksum mismatch, Last Line: ");
-        str += inttoa(str, cm.gmx.last_line_number);
+        str += inttoa(str, mst.last_line_number);
         request_resend = true;
     }
     else if (status == STAT_LINE_NUMBER_OUT_OF_SEQUENCE) {
         str_concat(str, "Error:Line Number is not Last Line Number+1, Last Line: ");
-        str += inttoa(str, cm.gmx.last_line_number);
+        str += inttoa(str, mst.last_line_number);
         request_resend = true;
     }
     else {
@@ -533,7 +537,7 @@ void marlin_response(const stat_t status, char *buf)
     if (request_resend) {
         str = buffer;
         str_concat(str, "Resend: ");
-        str += inttoa(str, cm.gmx.last_line_number+1);
+        str += inttoa(str, mst.last_line_number+1);
         *str++ = '\n';
         *str++ = 0;
         xio_writeline(buffer);

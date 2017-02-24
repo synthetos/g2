@@ -26,11 +26,11 @@
 #include "spindle.h"
 #include "coolant.h"
 #include "util.h"
-#include "xio.h"            // for char definitions
+#include "xio.h"                    // for char definitions
 
 #if MARLIN_COMPAT_ENABLED == true
 #include "marlin_compatibility.h"
-#include "json_parser.h" // so we can switch js.comm_mode on a marlin M-code
+#include "json_parser.h"            // so we can switch js.comm_mode on a marlin M-code
 #endif
 
 static stat_t _execute_gcode_block_marlin(void);
@@ -82,6 +82,7 @@ typedef enum {                                  // these are in order to optimiz
     NEXT_ACTION_MARLIN_DISPLAY_ON_SCREEN,       // M117
     NEXT_ACTION_MARLIN_SET_BED_TEMP,            // M140, M190
 #endif
+
 } gpNextAction;
 
 // Structures used by Gcode parser
@@ -555,7 +556,7 @@ stat_t _get_next_gcode_word(char **pstr, char *letter, float *value)
 
     if(end == *pstr) {
 #if MARLIN_COMPAT_ENABLED == true
-        if (cm.gmx.marlin_flavor) {
+        if (mst.marlin_flavor) {
             *value = 0;
         } else {
             return(STAT_BAD_NUMBER_FORMAT);
@@ -659,7 +660,7 @@ stat_t _parse_gcode_block(char *buf, char *active_comment)
                 }
 #if MARLIN_COMPAT_ENABLED == true
                 case 29: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_TRAM_BED);
-#endif // MARLIN_COMPAT_ENABLED
+#endif
 
                 case 30: {
                     switch (_point(value)) {
@@ -781,7 +782,7 @@ stat_t _parse_gcode_block(char *buf, char *active_comment)
                 case 82: SET_NON_MODAL (marlin_relative_extruder_mode, false);              // set relative extruder mode off
                 case 83: SET_NON_MODAL (marlin_relative_extruder_mode, true);               // set relative extruder mode on
 
-                case 18: // compatibility alias for M84
+                case 18:                                                                    // compatibility alias for M84
                 case 84: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_DISABLE_MOTORS);    // disable all motors
                 case 85: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_SET_MT);            // set motor timeout
 
@@ -831,7 +832,7 @@ stat_t _parse_gcode_block(char *buf, char *active_comment)
             
 #if MARLIN_COMPAT_ENABLED == true
             case 'E': SET_NON_MODAL (E_word, value);                // extruder value
-#endif // MARLIN_COMPAT_ENABLED
+#endif
 
             default: status = STAT_GCODE_COMMAND_UNSUPPORTED;
         }
@@ -853,8 +854,9 @@ stat_t _parse_gcode_block(char *buf, char *active_comment)
  *    1. comment (includes message) [handled during block normalization]
  *    2. set feed rate mode (G93, G94 - inverse time or per minute)
  *    3. set feed rate (F)
- *    3a. set feed override rate (M50.1)
- *    3a. set traverse override rate (M50.2)
+ *    3a. Marlin functions (optional)
+ *    3b. set feed override rate (M50.1)
+ *    3c. set traverse override rate (M50.2)
  *    4. set spindle speed (S)
  *    4a. set spindle override rate (M51.1)
  *    5. select tool (T)
@@ -1017,36 +1019,32 @@ static stat_t _execute_gcode_block_marlin()
     // Check for sequential line numbers
     if (gf.linenum) {
         if ((gv.next_action != NEXT_ACTION_MARLIN_RESET_LINE_NUMBERS) &&
-            (gv.linenum != cm.gmx.last_line_number + 1)) {
+            (gv.linenum != mst.last_line_number + 1)) {
             return (STAT_LINE_NUMBER_OUT_OF_SEQUENCE);
         }
-        cm.gmx.last_line_number = gv.linenum;
+        mst.last_line_number = gv.linenum;
     }
 
     // E should ONLY be seen in marlin flavor
     if (gf.E_word) {
-        cm.gmx.marlin_flavor = true;
+        mst.marlin_flavor = true;
     }
 
     // adjust T real quick
-    if (cm.gmx.marlin_flavor && gf.tool_select) {
+    if (mst.marlin_flavor && gf.tool_select) {
         gv.tool_select += 1;
         cm.gm.tool_select = gv.tool_select; // We need to go ahead and apply to tool select, and in Marlin 0 is valid, so add 1
         cm.gm.tool = cm.gm.tool_select;     // Also, in Marlin, tool changes are effective immediately :facepalm:
         gf.tool_select = false;             // prevent a tool_select command from being buffered (planning to zero)
     }
     else if (cm.gm.tool_select == 0) {
-        cm.gm.tool_select = 1;              // We need to ensure we have a valid tool selected, often Malin gcode won't have a T word at all
+        cm.gm.tool_select = 1;              // We need to ensure we have a valid tool selected, often Marlin gcode won't have a T word at all
         cm.gm.tool = cm.gm.tool_select;     // Also, in Marlin, tool changes are effective immediately :facepalm:
     }
 
     // Deal with E
-
-//#define EXEC_FUNC(f,v) if(gf.v) { status=f(gv.v);}
-//EXEC_FUNC(cm_marlin_set_extruder_mode, marlin_relative_extruder_mode);  // M82, M83
-
     if (gf.marlin_relative_extruder_mode) {                 // M82, M83
-        cm_marlin_set_extruder_mode(gv.marlin_relative_extruder_mode);
+        marlin_set_extruder_mode(gv.marlin_relative_extruder_mode);
     }    
     if (gf.E_word) {
         // Ennn T0 -> Annn
@@ -1068,7 +1066,7 @@ static stat_t _execute_gcode_block_marlin()
         }
     }
 
-    if ((cm.gmx.marlin_flavor || (MARLIN_COMM_MODE == js.json_mode)) &&
+    if ((mst.marlin_flavor || (MARLIN_COMM_MODE == js.json_mode)) &&
         (NEXT_ACTION_GOTO_G28_POSITION == gv.next_action)) {
         gv.next_action = NEXT_ACTION_SEARCH_HOME;
     }
@@ -1086,7 +1084,7 @@ static stat_t _execute_gcode_block_marlin()
         }
         case NEXT_ACTION_MARLIN_SET_EXTRUDER_TEMP:          // M104 or M109
         case NEXT_ACTION_MARLIN_SET_BED_TEMP:       {       // M140 or M190
-            cm.gmx.marlin_flavor = true;                    // these gcodes are ONLY in marlin flavor
+            mst.marlin_flavor = true;                       // these gcodes are ONLY in marlin flavor
             float temp = 0;
             if (gf.S_word) { temp = gv.S_word; }
             if (gf.P_word) { temp = gv.P_word; }            // we treat them the same, for now
@@ -1105,12 +1103,12 @@ static stat_t _execute_gcode_block_marlin()
             break;
         }
         case NEXT_ACTION_MARLIN_TRAM_BED:       {           // G29
-            cm.gmx.marlin_flavor = true;                    // these gcodes are ONLY in marlin flavor
+            mst.marlin_flavor = true;                       // these gcodes are ONLY in marlin flavor
             ritorno(marlin_start_tramming_bed());
             break;
         }
         case NEXT_ACTION_MARLIN_SET_FAN_SPEED:  {           // M106
-            cm.gmx.marlin_flavor = true;                    // these gcodes are ONLY in marlin flavor
+            mst.marlin_flavor = true;                       // these gcodes are ONLY in marlin flavor
             ritorno(marlin_set_fan_speed(
                 gf.P_word? gv.P_word : 0,
                 gf.S_word? gv.S_word : 0));
@@ -1119,7 +1117,7 @@ static stat_t _execute_gcode_block_marlin()
             break;
         }
         case NEXT_ACTION_MARLIN_STOP_FAN:      {            // M107
-            cm.gmx.marlin_flavor = true;                    // these gcodes are ONLY in marlin flavor
+            mst.marlin_flavor = true;                       // these gcodes are ONLY in marlin flavor
             ritorno(marlin_set_fan_speed(gf.P_word ? gv.P_word : 0, 0));
             gf.P_word = false;
             gf.S_word = false;
@@ -1165,7 +1163,7 @@ static stat_t _execute_gcode_block_marlin()
             return (STAT_OK);
         }
         case NEXT_ACTION_DEFAULT: {
-            if (cm.gmx.marlin_flavor) {
+            if (mst.marlin_flavor) {
                 if (gf.motion_mode) {                       // adjust G0 to almost always be the same as G1
                     if (gf.E_word && (!gf.target[AXIS_X] && !gf.target[AXIS_Y] && !gf.target[AXIS_Z])) {
                         gv.motion_mode = MOTION_MODE_STRAIGHT_TRAVERSE; // G0
