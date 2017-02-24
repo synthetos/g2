@@ -355,18 +355,18 @@ struct xio_t {
 
         // Always check control-capable devices FIRST
         for (uint8_t dev=0; dev < _dev_count; dev++) {
-            if (!DeviceWrappers[dev]->isActive())
+            if (!DeviceWrappers[dev]->isActive()) {
                 continue;
-
+            }
+                        
             // If this channel is a DATA only, skip it this pass
-            if (!DeviceWrappers[dev]->isCtrl())
+            if (!DeviceWrappers[dev]->isCtrl()) {
                 continue;
-
+            }            
             ret_buffer = DeviceWrappers[dev]->readline(DEV_IS_CTRL, size);
 
             if (size > 0) {
                 flags = DeviceWrappers[dev]->flags;
-
                 return ret_buffer;
             }
         }
@@ -381,12 +381,10 @@ struct xio_t {
 
                 if (size > 0) {
                     flags = DeviceWrappers[dev]->flags;
-
                     return ret_buffer;
                 }
             }
         }
-
         size = 0;
         flags = 0;
 
@@ -633,9 +631,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
         while (_isMoreToScan()) {
             bool ends_line  = false;
             bool is_control = false;
-
             char c = _data[_scan_offset];
-
 
 #if MARLIN_COMPAT_ENABLED == true
             // it's possible something will try to talk stk500v2 to us.
@@ -647,8 +643,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                 return false;
             }
 
-            if (_stk_parser_state >= STK500V2_State::Timeout)
-            {
+            if (_stk_parser_state >= STK500V2_State::Timeout) {
                 if (_stk_parser_state == STK500V2_State::Timeout) {
                     if (_stk_timeout.isPast()) {
                         _stk_parser_state = STK500V2_State::Done;
@@ -668,15 +663,12 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                         _line_start_offset = _scan_offset;
                     }
                     else if ((c == '{') || (c == 'N') || (c == '\n') || (c == '\r') || (c == 'G') || (c == 'M')) {
-                        // jump out of bootloader mode
-                        _stk_parser_state = STK500V2_State::Done;
+                        _stk_parser_state = STK500V2_State::Done;           // jump out of bootloader mode
                         _read_offset = _scan_offset;
                         continue;
                     }
-
                 } else if (_stk_parser_state == STK500V2_State::Sequence) {
-                    // we ignore the sequence
-                    _stk_parser_state = STK500V2_State::Length_0;
+                    _stk_parser_state = STK500V2_State::Length_0;            // we ignore the sequence
                 } else if (_stk_parser_state == STK500V2_State::Length_0) {
                     _stk_packet_data_length = c << 8;
                     _stk_parser_state = STK500V2_State::Length_1;
@@ -686,42 +678,34 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                 } else if (_stk_parser_state == STK500V2_State::Header_End) {
                     if (c == 0x0E) {
                         _stk_parser_state = STK500V2_State::Data;
-                    } else {
-                        // end-of-header marker was corrupt, start over
+                    } else {   // end-of-header marker was corrupt, start over
                         _stk_packet_data_length = 0;
                         _read_offset = _scan_offset;
                         _stk_parser_state = STK500V2_State::Start;
                     }
                 } else if (_stk_parser_state == STK500V2_State::Data) {
-
-                    // we don't read the data here, just return it
-                    if (--_stk_packet_data_length == 0) {
+                    if (--_stk_packet_data_length == 0) {                   // we don't read the data here, just return it
                         _stk_parser_state = STK500V2_State::Checksum;
                     }
                 } else if (_stk_parser_state == STK500V2_State::Checksum) {
-                    // we do NOT check the checksum, since if it's corrupt, we
-                    // need to reply, and we can't reply here.
-
-                    // at this point, we at least have a complete packet
-                    // we will use the "control" return machanism to handle this
-                    // since controls don't have to be \r\n-terminated
+                    // We do NOT check the checksum, since if it's corrupt, we'd need to reply, and we can't reply here.
+                    // At this point, we at least have a complete packet we will use the "control" return mechanism to
+                    // handle this since controls don't have to be \r\n-terminated
                     is_control = true;
                     ends_line = true;
-
-                    // this line is complete, reset the state engine
-                    _stk_parser_state = STK500V2_State::Start;
+                    _stk_parser_state = STK500V2_State::Start;              // this line is complete, reset the state engine
                 }
             }
             else
-#else
+#else   // not MARLIN_COMPAT_ENABLED
 
             if (c == 0) {
                 _debug_trap("scan ran into NULL");
                 flush(); // consider the connection and all data trashed
                 return false;
             }
+#endif  // MARLIN_COMPAT_ENABLED
 
-#endif
             // Look for line endings
             if (c == '\r' || c == '\n') {
                 if (_ignore_until_next_line) {
@@ -790,7 +774,6 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                     if (_data[_line_start_offset] == '{') {
                         is_control = true;
                     }
-
                     // TODO ---
                 }
 
@@ -825,8 +808,6 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             // move the start of the next skip section to after this skip
             _line_start_offset = _scan_offset;
         }
-
-
         return false; // no control was found
     };
 
@@ -1119,9 +1100,7 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
 
                 setAsConnectedAndReady();
 
-
-                if (isAlwaysDataAndCtrl()) {
-                    // Case 1 (ignoring others)
+                if (isAlwaysDataAndCtrl()) {    // Case 1 (ignoring others)
                     setActive();
                     controller_set_connected(true);
 
@@ -1129,7 +1108,6 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
                     if (isMuteAsSecondary() && xio.othersConnected(this)) {
                         controller_set_muted(true); // something was muted
                     }
-
                     return;
                 }
 
@@ -1143,18 +1121,16 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
                         controller_set_muted(true); // something was muted
                     }
 #if MARLIN_COMPAT_ENABLED == true
-                    // start the "fake bootloader"
+                    // start the "fake bootloader" to signal the Host that Marlin (mode) is operating
                     _rx_buffer.startFakeBootloaderMode();
 #endif
                 }
-                else if (isMuteAsSecondary()) {
-                    // Case 2b
+                else if (isMuteAsSecondary()) {     // Case 2b
                     setAsMuted();
                     controller_set_connected(true); // it DID just just get connected
                     controller_set_muted(true);     // but it muted it too
                 }
-                else {
-                    // Case 2a
+                else {                              // Case 2a
                     xio.removeDataFromPrimary();
                     if (xio.checkMutedSecondaryChannels()) {
                         controller_set_muted(true); // something was muted

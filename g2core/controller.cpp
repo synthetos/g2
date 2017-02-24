@@ -172,7 +172,7 @@ static void _controller_HSM()
     DISPATCH(cm_deferred_write_callback());     // persist G10 changes when not in machining cycle
 
 #if MARLIN_COMPAT_ENABLED == true
-    DISPATCH(marlin_callback());                // handle marlin stuff - may return EAGAIN, must be after planner_callback!
+    DISPATCH(marlin_callback());                // handle Marlin stuff - may return EAGAIN, must be after planner_callback!
 #endif
 
 //----- command readers and parsers --------------------------------------------------//
@@ -234,7 +234,6 @@ static void _dispatch_kernel(const devflags_t flags)
     // marlin_handle_fake_stk500 returns true if it responded to a stk500v2 message
     if (marlin_handle_fake_stk500(cs.bufp)) {
         js.json_mode = MARLIN_COMM_MODE;
-
         sr.status_report_verbosity = SR_OFF;
         qr.queue_report_verbosity = QR_OFF;
         return;
@@ -282,6 +281,7 @@ static void _dispatch_kernel(const devflags_t flags)
         text_response(gcode_parser(cs.bufp), cs.saved_buf);
     }
 #endif
+
 #if MARLIN_COMPAT_ENABLED == true
     else if (js.json_mode == MARLIN_COMM_MODE) {                   // handle marlin-specific protocol gcode
         cs.comm_request_mode = MARLIN_COMM_MODE;                   // mode of this command
@@ -297,16 +297,18 @@ static void _dispatch_kernel(const devflags_t flags)
         nv_copy_string(nv, cs.bufp);                        // copy the Gcode line
         nv->valuetype = TYPE_STRING;
         status = gcode_parser(cs.bufp);
+        
 #if MARLIN_COMPAT_ENABLED == true
         if (js.json_mode == MARLIN_COMM_MODE) {             // in case a marlin-specific M-code was found
             cs.comm_request_mode = MARLIN_COMM_MODE;        // mode of this command
-            // We ae switching to marlin_comm_mode, kill status reports and queue reports
+            // We are switching to marlin_comm_mode, kill status reports and queue reports
             sr.status_report_verbosity = SR_OFF;
             qr.queue_report_verbosity = QR_OFF;
             marlin_response(status, cs.saved_buf);
             return;
         }
 #endif
+
         nv_print_list(status, TEXT_NO_PRINT, JSON_RESPONSE_FORMAT);
         sr_request_status_report(SR_REQUEST_TIMED);         // generate incremental status report to show any changes
     }
@@ -335,6 +337,7 @@ static stat_t _controller_state()
 {
     if (cs.controller_state == CONTROLLER_CONNECTED) {        // first time through after reset
         cs.controller_state = CONTROLLER_STARTUP;
+        
         // This is here just to put a small delay in before the startup message.
 #if MARLIN_COMPAT_ENABLED == true
         // For Marlin compatibility, we need this to be long enough for the UI to say something and reveal

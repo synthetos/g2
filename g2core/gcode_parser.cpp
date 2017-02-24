@@ -33,7 +33,11 @@
 #include "json_parser.h"            // so we can switch js.comm_mode on a marlin M-code
 #endif
 
+// Helpers 
+
 static stat_t _execute_gcode_block_marlin(void);
+
+// Locally used enums
 
 typedef enum {                          // Used for detecting gcode errors. See NIST section 3.4
     MODAL_GROUP_G0 = 0,                 // {G10,G28,G28.1,G92}  non-modal axis commands (note 1)
