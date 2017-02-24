@@ -21,7 +21,7 @@
 #ifndef G2CORE_INFO_H_ONCE
 #define G2CORE_INFO_H_ONCE
 
-#define G2CORE_FIRMWARE_BUILD			100.19  // dev-195 Laserweb support. Based on feedhold lift branch p24
+#define G2CORE_FIRMWARE_BUILD			100.21  // Merged dev-209b-random-pauses to complete USB changes (only fix travis-ci from 100.20)
 #define G2CORE_FIRMWARE_VERSION         0.99
 
 #ifdef GIT_VERSION
