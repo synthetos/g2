@@ -152,7 +152,7 @@ _MAKE_MOTATE_PIN(kOutput10_PinNumber, 'A', 23);                //
 _MAKE_MOTATE_PIN(kSocket3_EnablePinNumber, 'A', 24);               //
 _MAKE_MOTATE_PIN(kSocket2_DirPinNumber, 'A', 25);                //
 _MAKE_MOTATE_PIN(kOutput5_PinNumber, 'A', 26);                // On Timer 2!
-_MAKE_MOTATE_PIN(kSocket3_StepPinNumber, 'A', 27);                // On Timer 2!
+_MAKE_MOTATE_PIN(kSocket3_DirPinNumber, 'A', 27);                // On Timer 2!
 _MAKE_MOTATE_PIN(kUnassigned1, 'A', 28);                     // DIAG1
 _MAKE_MOTATE_PIN(kUnassigned2, 'A', 29);                 //
 _MAKE_MOTATE_PIN(kInput1_PinNumber, 'A', 30);                 //
@@ -193,7 +193,7 @@ _MAKE_MOTATE_PIN(kSocket5_EnablePinNumber, 'D', 14);     //
 _MAKE_MOTATE_PIN(kUnassigned5, 'D', 15);              //
 _MAKE_MOTATE_PIN(kSocket4_StepPinNumber, 'D', 16);  //
 _MAKE_MOTATE_PIN(kSocket4_DirPinNumber, 'D', 17);     //
-_MAKE_MOTATE_PIN(kSocket3_DirPinNumber, 'D', 18);              //
+_MAKE_MOTATE_PIN(kSocket3_StepPinNumber, 'D', 18);              //
 _MAKE_MOTATE_PIN(kUnassigned6, 'D', 19);  //
 _MAKE_MOTATE_PIN(kSPI0_MISOPinNumber, 'D', 20);    //
 _MAKE_MOTATE_PIN(kSPI0_MOSIPinNumber, 'D', 21);     //
