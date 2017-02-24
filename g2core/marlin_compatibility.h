@@ -28,30 +28,28 @@
  * Global Scope Functions
  */
 
-// gcode parsing and fack stk500v2
-stat_t marlin_verify_checksum(char *str);
-bool marlin_handle_fake_stk500(char *str);
+// *** gcode and Mcode handling ***
+stat_t marlin_start_tramming_bed();                             // G29
 
-// gcode handling
-stat_t marlin_start_tramming_bed(); //G29
-stat_t marlin_request_temperature_report(); // M105
-stat_t marlin_request_position_report();    // M114
+stat_t marlin_list_sd_response();                               // M20
+stat_t marlin_select_sd_response(const char *file);             // M23
+stat_t cm_marlin_set_extruder_mode(const uint8_t mode);         // M82, M82
+stat_t marlin_disable_motors();                                 // M84
+stat_t marlin_set_motor_timeout(float s);                       // M84 Sxxx, M85 Sxxx, M18 Sxxx, 
+
 stat_t marlin_set_temperature(uint8_t tool, float temperature, bool wait); // M104, M109, M140, M190
+stat_t marlin_request_temperature_report();                     // M105
+stat_t marlin_set_fan_speed(const uint8_t fan, float speed);    // M106, M107
 
-// response handler (primarily just prints "ok")
-void marlin_response(const stat_t status, char *buf);
+stat_t marlin_request_position_report();                        // M114
+stat_t marlin_report_version();                                 // M115
 
-// controller loop callback
-stat_t marlin_callback();
+// *** Marlin internal functions ***
 
-stat_t cm_marlin_set_extruder_mode(const uint8_t mode); // M82, M82
-stat_t marlin_set_fan_speed(const uint8_t fan, float speed); // M106, M107
+stat_t marlin_callback();                                       // controller loop callback
+void marlin_response(const stat_t status, char *buf);           // response handler (primarily just prints "ok")
+stat_t marlin_verify_checksum(char *str);                       // for gcode parsing and 
+bool marlin_handle_fake_stk500(char *str);                      // fake stk500v2
 
-stat_t marlin_disable_motors(); // M84
-stat_t marlin_set_motor_timeout(float s); // M18 Sxxx, M84 Sxxx, M85 Sxxx
 
-stat_t marlin_report_version(); // M115
-
-stat_t marlin_list_sd_response(); // M20
-stat_t marlin_select_sd_response(const char *file); // M23
 #endif  // End of include guard: MARLIN_COMPAT_H_ONCE

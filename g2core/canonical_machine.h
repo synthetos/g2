@@ -148,54 +148,6 @@ typedef enum {
     SAFETY_INTERLOCK_DISENGAGED
 } cmSafetyState;
 
-/* The difference between NextAction and MotionMode is that NextAction is
- * used by the current block, and may carry non-modal commands, whereas
- * MotionMode persists across blocks (as G modal group 1)
- */
-
-typedef enum {                          // these are in order to optimized CASE statement
-    NEXT_ACTION_DEFAULT = 0,            // Must be zero (invokes motion modes)
-    NEXT_ACTION_DWELL,                  // G4
-    NEXT_ACTION_SET_G10_DATA,           // G10
-    NEXT_ACTION_GOTO_G28_POSITION,      // G28 go to machine position
-    NEXT_ACTION_SET_G28_POSITION,       // G28.1 set position in abs coordinates
-    NEXT_ACTION_SEARCH_HOME,            // G28.2 homing cycle
-    NEXT_ACTION_SET_ABSOLUTE_ORIGIN,    // G28.3 origin set
-    NEXT_ACTION_HOMING_NO_SET,          // G28.4 homing cycle with no coordinate setting
-    NEXT_ACTION_GOTO_G30_POSITION,      // G30 go to machine position
-    NEXT_ACTION_SET_G30_POSITION,       // G30.1 set position in abs coordinates
-    NEXT_ACTION_STRAIGHT_PROBE_ERR,     // G38.2
-    NEXT_ACTION_STRAIGHT_PROBE,         // G38.3
-    NEXT_ACTION_STRAIGHT_PROBE_AWAY_ERR,// G38.4
-    NEXT_ACTION_STRAIGHT_PROBE_AWAY,    // G38.5
-    NEXT_ACTION_SET_TL_OFFSET,          // G43
-    NEXT_ACTION_SET_ADDITIONAL_TL_OFFSET,// G43.2
-    NEXT_ACTION_CANCEL_TL_OFFSET,       // G49
-    NEXT_ACTION_SET_ORIGIN_OFFSETS,     // G92
-    NEXT_ACTION_RESET_ORIGIN_OFFSETS,   // G92.1
-    NEXT_ACTION_SUSPEND_ORIGIN_OFFSETS, // G92.2
-    NEXT_ACTION_RESUME_ORIGIN_OFFSETS,  // G92.3
-    NEXT_ACTION_JSON_COMMAND_SYNC,      // M100
-    NEXT_ACTION_JSON_COMMAND_ASYNC,     // M100.1
-    NEXT_ACTION_JSON_WAIT,              // M101
-
-#if MARLIN_COMPAT_ENABLED == true
-    NEXT_ACTION_MARLIN_PRINT_TEMPERATURES,     // M105
-    NEXT_ACTION_MARLIN_PRINT_POSITION,         // M114
-    NEXT_ACTION_MARLIN_SET_EXTRUDER_TEMP,      // M104, M109
-    NEXT_ACTION_MARLIN_SET_BED_TEMP,           // M140, M190
-    NEXT_ACTION_MARLIN_CANCEL_WAIT_TEMP,       // M108
-    NEXT_ACTION_MARLIN_TRAM_BED,               // G29
-    NEXT_ACTION_MARLIN_SET_FAN_SPEED,          // M106
-    NEXT_ACTION_MARLIN_STOP_FAN,               // M107
-    NEXT_ACTION_MARLIN_DISABLE_MOTORS,         // M84
-    NEXT_ACTION_MARLIN_RESET_LINE_NUMBERS,     // M110
-    NEXT_ACTION_MARLIN_REPORT_VERSION,         // M115
-    NEXT_ACTION_MARLIN_DISPLAY_ON_SCREEN,      // M117
-    NEXT_ACTION_MARLIN_SET_MT,                 // M84 (with S), M85
-#endif
-} cmNextAction;
-
 typedef enum {                          // G Modal Group 1
     MOTION_MODE_STRAIGHT_TRAVERSE=0,    // G0 - straight traverse
     MOTION_MODE_STRAIGHT_FEED,          // G1 - straight feed
@@ -397,9 +349,9 @@ typedef struct GCodeState {             // Gcode model state - used by model, pl
 
 #if MARLIN_COMPAT_ENABLED == true
 enum cmExtruderMode {
-    EXTRUDER_MOVES_NORMAL = 0,    // M82
-    EXTRUDER_MOVES_RELATIVE,        // M83
-    EXTRUDER_MOVES_VOLUMETRIC       // Ultimaker2Marlin
+    EXTRUDER_MOVES_NORMAL = 0,          // M82
+    EXTRUDER_MOVES_RELATIVE,            // M83
+    EXTRUDER_MOVES_VOLUMETRIC           // Ultimaker2Marlin
 };
 #endif // MARLIN_COMPAT_ENABLED
 

@@ -76,27 +76,24 @@ Motate::Timeout temperature_update_timeout;
 
 // local helper functions and macros
 
-/*
- * _report_temperatures() - convenience function to get a value via the JSON NV system
+/***********************************************************************************
+ * _get_specific_nv() - convenience function to get an NV object
  */
-nvObj_t *_get_spcific_nv(const char *key) {
+nvObj_t *_get_specific_nv(const char *key) {
     nvObj_t *nv = nv_reset_nv_list();           // returns first object in the body
 
     strncpy(nv->token, key, TOKEN_LEN);
 
     // validate and post-process the token
     if ((nv->index = nv_get_index((const char *)"", nv->token)) == NO_MATCH) { // get index or fail it
-        // since we JUST provided the keys, this should never happen
-        return nullptr;
+        return nullptr;        // since we JUST provided the keys, this should never happen
     }
     strcpy(nv->group, cfgArray[nv->index].group); // capture the group string if there is one
-
     nv_get(nv);
-
     return nv;
 }
 
-/*
+/***********************************************************************************
  * _report_temperatures() - convenience function called from marlin_response() and marlin_callback()
  */
 void _report_temperatures(char *(&str)) {
@@ -120,7 +117,7 @@ void _report_temperatures(char *(&str)) {
     str += floattoa(str, cm_get_heater_output(3), 0);
 }
 
-/*
+/***********************************************************************************
  * _report_position() - convenience function called from marlin_response()
  */
 void _report_position(char *(&str)) {
@@ -139,103 +136,211 @@ void _report_position(char *(&str)) {
 }
 
 /***********************************************************************************
- * CONFIGURATION AND INTERFACE FUNCTIONS
- * Functions to get and set variables from the cfgArray table
+ *** MARLIN GCODES AND MCODES
+ *** Called from gcore_parser.cpp
  ***********************************************************************************/
 
-
-
-/*
- * marlin_verify_checksum() - check to see if we have a line number (cheaply) and a valid checksum
- *   called from gcode_parser
+/***********************************************************************************
+ * marlin_start_tramming_bed() - G29 called from gcode parser
+ * marlin G29 support - run a script to emulate a G29 homing command
  */
-stat_t marlin_verify_checksum(char *str)
-{
-    bool has_line_number = false; // -1 means we don't have one
-    if (*str == 'N') {
-        has_line_number = true;
-    }
 
-    char checksum = 0;
-    char c = *str++;
-    while (c && (c != '*') && (c != '\n') && (c != '\r')) {
-        checksum ^= c;
-        c = *str++;
-    }
+#ifdef MARLIN_G29_SCRIPT
+auto marlin_g29_file = make_xio_flash_file(MARLIN_G29_SCRIPT);
+#endif
 
-    // c might be 0 here, in which case we didn't get a checksum and we return STAT_OK
-
-    if (c == '*') {
-        *(str-1) = 0; // null terminate, the parser won't like this * here!
-        if (strtol(str, NULL, 10) != checksum) {
-            return STAT_CHECKSUM_MATCH_FAILED;
-        }
-        if (!has_line_number) {
-            return STAT_MISSING_LINE_NUMBER_WITH_CHECKSUM;
-        }
-    }
-    return STAT_OK;
+stat_t marlin_start_tramming_bed() {
+#ifndef MARLIN_G29_SCRIPT
+    return (STAT_G29_NOT_CONFIGURED);
+#else
+    xio_send_file(marlin_g29_file);
+    return (STAT_OK);
+#endif
 }
 
-/*
- * _marlin_fake_stk500_response() - convenience function for formang responses from marlin_handle_fake_stk500()
+/***********************************************************************************
+ * marlin_list_sd_response()    - M20 called from gcode parser
+ * marlin_select_sd_response()  - M23 called from gcode parser
  */
-void _marlin_fake_stk500_response(char *resp, uint16_t length)
+
+stat_t marlin_list_sd_response()
 {
-    char *str = resp;
+    char buffer[128];
+    char *str = buffer;
 
-    str[2] = (length >> 8) & 0xFF;
-    str[3] = (length) & 0xFF;
+    str_concat(str, "Begin file list\nEnd file list\n");
+    *str = 0;
+    xio_writeline(buffer);
 
-    uint8_t crc = 0;
-
-    for (uint16_t i = length + 5; i>0; i--) {
-        crc ^= *resp++;
-    }
-
-    *resp = crc;
-
-    xio_write(str, length + 6);
+    return (STAT_OK);
 }
 
-/*
- * marlin_handle_fake_stk500() - returns true if it handled something (IOW, don't futher process the line)
- */
-bool marlin_handle_fake_stk500(char *str)
+stat_t marlin_select_sd_response(const char *file)
 {
-    char *resp = str;
-    if (*str != 0x1B) { return false; }
+    char buffer[128];
+    char *str = buffer;
 
-    // we handle only a handful of messages ... poorly
-    // for example: this is where we should validate the checksum, but we are going to not for now.
+    str_concat(str, "open failed, File: ");
+    strncpy(str, file, Motate::strlen(file));
+    str += Motate::strlen(file);
+    str_concat(str, "\n");
+    *str = 0;
+    xio_writeline(buffer);
 
-    str += 1 + 1 + 2 + 1; // 1 for 0x1B, 1 for sequence, 2 for length, 1 for 0x0E
+    return (STAT_OK);
+}
 
-    char c = *str++;
+/***********************************************************************************
+ * cm_marlin_set_extruder_mode() - M82, M83 called from gcode parser (affects MODEL only)
+ *
+ *  EXTRUDER_MOVES_NORMAL   = 0,    // M82
+ *  EXTRUDER_MOVES_RELATIVE,        // M83
+ *  EXTRUDER_MOVES_VOLUMETRIC       // Ultimaker2Marlin
+ */
 
-    if ((c == 0x01) || // CMD_SIGN_ON
-        (c == 0x10) || // CMD_ENTER_PROGMODE_ISP
-        (c == 0x11)    // CMD_LEAVE_PROGMODE_ISP
-        )
-    {
-        *str = STATUS_CMD_OK;
-        _marlin_fake_stk500_response(resp, 2);
+stat_t cm_marlin_set_extruder_mode(const uint8_t mode)
+{
+    cm.gmx.extruder_mode = (cmExtruderMode)mode;
+    return (STAT_OK);
+}
 
-        if (c == 0x11) { // CMD_LEAVE_PROGMODE_ISP
-            xio_exit_fake_bootloader();
+/***********************************************************************************
+ * marlin_disable_motors() - M84 (without S) called from gcode parser
+ */
+
+stat_t marlin_disable_motors()
+{
+    char buffer[128];
+    char *str = buffer;
+
+    // TODO: support other parameters
+    str_concat(str, "{md:0}");
+    cm_json_command(buffer);
+
+    return (STAT_OK);
+}
+
+/***********************************************************************************
+ * marlin_set_motor_timeout() - M84 (with S), M85 Sxxx called from gcode parser
+ */
+
+stat_t marlin_set_motor_timeout(float s) // M18 Sxxx, M84 Sxxx, M85 Sxxx
+{
+    if (s < MOTOR_TIMEOUT_SECONDS_MIN) {
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    if (s > MOTOR_TIMEOUT_SECONDS_MAX) {
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+    }
+    char buffer[128];
+    char *str = buffer;
+
+    // TODO: support other fans, or remapping output
+    str_concat(str, "{mt:");
+    str += floattoa(str, s, 1);
+    str_concat(str, "}");
+
+    cm_json_command(buffer);
+    return (STAT_OK);
+}
+
+/***********************************************************************************
+ * marlin_set_temperature() - M104, M140, M109, M190 called from gcode parser
+ * _queue_next_temperature_comands() - returns true if it finished
+ * _marlin_start_temperature_updates()
+ * _marlin_end_temperature_updates()
+ */
+
+void _marlin_start_temperature_updates(float* vect, bool* flag) {
+    temperature_updates_requested = true;
+    temperature_update_timeout.set(1); // immediately
+}
+
+void _marlin_end_temperature_updates(float* vect, bool* flag) {
+    temperature_updates_requested = false;
+}
+
+bool _queue_next_temperature_commands()
+{
+    if (MarlinSetTempState::Idle != set_temp_state) {
+        if (mp_planner_is_full()) {
+            return false;
         }
 
-        return true;
-    }
+        char buffer[128];
+        char *str = buffer;
 
-    *str = STATUS_CMD_UNKNOWN;
-    _marlin_fake_stk500_response(resp, 2);
+        if ((MarlinSetTempState::SettingTemperature == set_temp_state) ||
+            (MarlinSetTempState::SettingTemperatureNoWait == set_temp_state))
+        {
+            str_concat(str, "{he");
+            str += inttoa(str, next_temperature_tool);
+            str_concat(str, "st:");
+            str += floattoa(str, next_temperature, 2);
+            str_concat(str, "}");
+            cm_json_command(buffer);
+
+            if (MarlinSetTempState::SettingTemperatureNoWait == set_temp_state) {
+                set_temp_state = MarlinSetTempState::Idle;
+                return true;
+            }
+
+            set_temp_state = MarlinSetTempState::StartingUpdates;
+            if (mp_planner_is_full()) {
+                return false;
+            }
+        }
+
+        if (MarlinSetTempState::StartingUpdates == set_temp_state) {
+            mp_queue_command(_marlin_start_temperature_updates, nullptr, nullptr);
+
+            set_temp_state = MarlinSetTempState::StartingWait;
+            if (mp_planner_is_full()) {
+                return false;
+            }
+        }
+
+        if (MarlinSetTempState::StartingWait == set_temp_state) {
+            str = buffer;
+            str_concat(str, "{he");
+            str += inttoa(str, next_temperature_tool);
+            str_concat(str, "at:t}");
+            cm_json_wait(buffer);
+
+            set_temp_state = MarlinSetTempState::StoppingUpdates;
+            if (mp_planner_is_full()) {
+                return false;
+            }
+        }
+
+        if (MarlinSetTempState::StoppingUpdates == set_temp_state) {
+            mp_queue_command(_marlin_end_temperature_updates, nullptr, nullptr);
+
+            set_temp_state = MarlinSetTempState::Idle;
+        }
+    }
     return true;
 }
 
+stat_t marlin_set_temperature(uint8_t tool, float temperature, bool wait) {
+    if (MarlinSetTempState::Idle != set_temp_state) {
+        return (STAT_BUFFER_FULL_FATAL); // we shouldn't be here
+    }
+    if ((tool < 1) || (tool > 2)) {
+        return STAT_INPUT_VALUE_RANGE_ERROR;
+    }
 
-/*
- * marlin_request_temperature_report() - called from the gcode parser for M105
+    set_temp_state = wait ? MarlinSetTempState::SettingTemperature : MarlinSetTempState::SettingTemperatureNoWait;
+    next_temperature = temperature;
+
+    next_temperature_tool = tool;
+
+    _queue_next_temperature_commands(); // we can ignore the return
+    return (STAT_OK);
+}
+
+/***********************************************************************************
+ * marlin_request_temperature_report() - M105 called from gcode parser
  */
 stat_t marlin_request_temperature_report() // M105
 {
@@ -248,9 +353,30 @@ stat_t marlin_request_temperature_report() // M105
     return STAT_OK;
 }
 
+/***********************************************************************************
+ * marlin_set_fan_speed() - M106, M107 called from gcode parser
+ */
 
-/*
- * marlin_request_temperature_report() - called from the gcode parser for M114
+stat_t marlin_set_fan_speed(const uint8_t fan, float speed)
+{
+    char buffer[128];
+    char *str = buffer;
+    if ((fan != 0) || (speed < 0.0) || (speed > 255.0)) {
+        return STAT_INPUT_VALUE_RANGE_ERROR;
+    }
+
+    // TODO: support other fans, or remapping output
+    str_concat(str, "{out4:");
+    str += floattoa(str, (speed < 1.0) ? speed : (speed / 255.0), 4);
+    str_concat(str, "}");
+
+    cm_json_command(buffer);
+
+    return (STAT_OK);
+}
+
+/***********************************************************************************
+ * marlin_request_position_report() - M114 called from gcode parser
  */
 stat_t marlin_request_position_report() // M114
 {
@@ -258,8 +384,96 @@ stat_t marlin_request_position_report() // M114
     return STAT_OK;
 }
 
+/***********************************************************************************
+ * marlin_report_version() - M115
+ */
 
-/*
+stat_t marlin_report_version()
+{
+    char buffer[128];
+    char *str = buffer;
+
+    str_concat(str, "ok FIRMWARE_NAME:Marlin g2core-");
+    str_concat(str, G2CORE_FIRMWARE_BUILD_STRING);
+    *str = 0;
+    xio_writeline(buffer);
+    str = buffer;
+    *str = 0;
+
+    str_concat(str, " SOURCE_CODE_URL:https://github.com/synthetos/g2");
+    *str = 0;
+    xio_writeline(buffer);
+    str = buffer; *str = 0;
+
+    str_concat(str, " PROTOCOL_VERSION:1.0");
+    *str = 0;
+    xio_writeline(buffer);
+    str = buffer; *str = 0;
+
+    str_concat(str, " MACHINE_TYPE:");
+#ifdef SETTINGS_FILE
+#define settings_file_string1(s) #s
+#define settings_file_string2(s) settings_file_string1(s)
+    str_concat(str, settings_file_string2(SETTINGS_FILE));
+#undef settings_file_string1
+#undef settings_file_string2
+#else
+    str_concat(str, "<default-settings>");
+#endif
+    *str = 0;
+    xio_writeline(buffer);
+    str = buffer; *str = 0;
+
+    // TODO: make this configurable, based on the tool table
+    str_concat(str, " EXTRUDER_COUNT:1");
+    *str = 0;
+    xio_writeline(buffer);
+    str = buffer; *str = 0;
+
+    str_concat(str, " UUID:");
+    const char *uuid = Motate::UUID;
+    strncpy(str, uuid, Motate::strlen(uuid));
+    str += Motate::strlen(uuid);
+    str_concat(str, "\n");
+    *str = 0;
+    xio_writeline(buffer);
+    str = buffer; *str = 0;
+
+    return (STAT_OK);
+}
+
+
+/***********************************************************************************
+ *** MARLIN INTERNAL FUNCTIONS
+ ***********************************************************************************/
+
+/***********************************************************************************
+ * marlin_callback() - called by controller dispatcher - return STAT_EAGAIN if it failed
+ */
+stat_t marlin_callback()
+{
+    if ((js.json_mode == MARLIN_COMM_MODE) && temperature_updates_requested && (temperature_update_timeout.isPast())) {
+        char buffer[128];
+        char *str = buffer;
+
+        _report_temperatures(str);
+
+        *str++ = '\n';
+        *str++ = 0;
+
+        temperature_update_timeout.set(1000); // every second
+
+        xio_writeline(buffer);
+    } // temperature updates
+
+    if (!_queue_next_temperature_commands()) {
+        return STAT_EAGAIN;
+    }
+
+    return STAT_OK;
+}
+
+/***********************************************************************************
  * marlin_response() - marlin mirror of text_response(), called from _dispatch_kernel() in controller.cpp
  */
 void marlin_response(const stat_t status, char *buf)
@@ -326,329 +540,92 @@ void marlin_response(const stat_t status, char *buf)
     }
 }
 
-
-/*
- * _marlin_start_temperature_updates()/_marlin_end_temperature_updates() -
- *    calls from commands in the buffer to manage temperature_updates_requested
+/***********************************************************************************
+ * marlin_verify_checksum() - check to see if we have a line number (cheaply) and a valid checksum
+ *   called from gcode_parser
  */
-void _marlin_start_temperature_updates(float* vect, bool* flag) {
-    temperature_updates_requested = true;
-    temperature_update_timeout.set(1); // immediately
-}
-void _marlin_end_temperature_updates(float* vect, bool* flag) {
-    temperature_updates_requested = false;
-}
-
-
-/*
- * _queue_next_temperature_comands() - returns true if it finished
- */
-bool _queue_next_temperature_commands()
+stat_t marlin_verify_checksum(char *str)
 {
-    if (MarlinSetTempState::Idle != set_temp_state) {
-        if (mp_planner_is_full()) {
-            return false;
-        }
-
-        char buffer[128];
-        char *str = buffer;
-
-        if ((MarlinSetTempState::SettingTemperature == set_temp_state) ||
-            (MarlinSetTempState::SettingTemperatureNoWait == set_temp_state))
-        {
-            str_concat(str, "{he");
-            str += inttoa(str, next_temperature_tool);
-            str_concat(str, "st:");
-            str += floattoa(str, next_temperature, 2);
-            str_concat(str, "}");
-            cm_json_command(buffer);
-
-            if (MarlinSetTempState::SettingTemperatureNoWait == set_temp_state) {
-                set_temp_state = MarlinSetTempState::Idle;
-                return true;
-            }
-
-            set_temp_state = MarlinSetTempState::StartingUpdates;
-            if (mp_planner_is_full()) {
-                return false;
-            }
-        }
-
-        if (MarlinSetTempState::StartingUpdates == set_temp_state) {
-            mp_queue_command(_marlin_start_temperature_updates, nullptr, nullptr);
-
-            set_temp_state = MarlinSetTempState::StartingWait;
-            if (mp_planner_is_full()) {
-                return false;
-            }
-        }
-
-        if (MarlinSetTempState::StartingWait == set_temp_state) {
-            str = buffer;
-            str_concat(str, "{he");
-            str += inttoa(str, next_temperature_tool);
-            str_concat(str, "at:t}");
-            cm_json_wait(buffer);
-
-            set_temp_state = MarlinSetTempState::StoppingUpdates;
-            if (mp_planner_is_full()) {
-                return false;
-            }
-        }
-
-        if (MarlinSetTempState::StoppingUpdates == set_temp_state) {
-            mp_queue_command(_marlin_end_temperature_updates, nullptr, nullptr);
-
-            set_temp_state = MarlinSetTempState::Idle;
-        }
+    bool has_line_number = false; // -1 means we don't have one
+    if (*str == 'N') {
+        has_line_number = true;
     }
 
-    return true;
-}
-
-
-/*
- * marlin_callback() - called by controller dispatcher - return STAT_EAGAIN if it failed
- */
-stat_t marlin_callback()
-{
-    if ((js.json_mode == MARLIN_COMM_MODE) && temperature_updates_requested && (temperature_update_timeout.isPast())) {
-        char buffer[128];
-        char *str = buffer;
-
-        _report_temperatures(str);
-
-        *str++ = '\n';
-        *str++ = 0;
-
-        temperature_update_timeout.set(1000); // every second
-
-        xio_writeline(buffer);
-    } // temperature updates
-
-    if (!_queue_next_temperature_commands()) {
-        return STAT_EAGAIN;
+    char checksum = 0;
+    char c = *str++;
+    while (c && (c != '*') && (c != '\n') && (c != '\r')) {
+        checksum ^= c;
+        c = *str++;
     }
 
+    // c might be 0 here, in which case we didn't get a checksum and we return STAT_OK
+
+    if (c == '*') {
+        *(str-1) = 0; // null terminate, the parser won't like this * here!
+        if (strtol(str, NULL, 10) != checksum) {
+            return STAT_CHECKSUM_MATCH_FAILED;
+        }
+        if (!has_line_number) {
+            return STAT_MISSING_LINE_NUMBER_WITH_CHECKSUM;
+        }
+    }
     return STAT_OK;
 }
 
-
-/*
- * marlin_set_temperature() - called from the gcode parser for M104,M140,M109,M190
- */
-stat_t marlin_set_temperature(uint8_t tool, float temperature, bool wait) {
-    if (MarlinSetTempState::Idle != set_temp_state) {
-        return (STAT_BUFFER_FULL_FATAL); // we shouldn't be here
-    }
-    if ((tool < 1) || (tool > 2)) {
-        return STAT_INPUT_VALUE_RANGE_ERROR;
-    }
-
-    set_temp_state = wait ? MarlinSetTempState::SettingTemperature : MarlinSetTempState::SettingTemperatureNoWait;
-    next_temperature = temperature;
-
-    next_temperature_tool = tool;
-
-    _queue_next_temperature_commands(); // we can ignore the return
-    return (STAT_OK);
-}
-
-
-#ifdef MARLIN_G29_SCRIPT
-auto marlin_g29_file = make_xio_flash_file(MARLIN_G29_SCRIPT);
-#endif
-
-/*
- * marlin_start_tramming_bed() - called from the gcode parser for G29
- */
-stat_t marlin_start_tramming_bed() {
-#ifndef MARLIN_G29_SCRIPT
-    return (STAT_G29_NOT_CONFIGURED);
-#else
-    xio_send_file(marlin_g29_file);
-    return (STAT_OK);
-#endif
-}
-
-
-
-/*
- * cm_marlin_set_extruder_mode() - M82, M83 (affects MODEL only)
- *
- *  EXTRUDER_MOVES_NORMAL   = 0,    // M82
- *  EXTRUDER_MOVES_RELATIVE,        // M83
- *  EXTRUDER_MOVES_VOLUMETRIC       // Ultimaker2Marlin
+/***********************************************************************************
+ * marlin_handle_fake_stk500() - returns true if it handled something (IOW, don't futher process the line)
+ * _marlin_fake_stk500_response() - convenience function for formang responses from marlin_handle_fake_stk500()
  */
 
-stat_t cm_marlin_set_extruder_mode(const uint8_t mode)
+void _marlin_fake_stk500_response(char *resp, uint16_t length)
 {
-    cm.gmx.extruder_mode = (cmExtruderMode)mode;
-    return (STAT_OK);
-}
+    char *str = resp;
 
+    str[2] = (length >> 8) & 0xFF;
+    str[3] = (length) & 0xFF;
 
-/*
- * marlin_set_fan_speed() - M106, M107
- *
- */
+    uint8_t crc = 0;
 
-stat_t marlin_set_fan_speed(const uint8_t fan, float speed)
-{
-    char buffer[128];
-    char *str = buffer;
-    if ((fan != 0) || (speed < 0.0) || (speed > 255.0)) {
-        return STAT_INPUT_VALUE_RANGE_ERROR;
+    for (uint16_t i = length + 5; i>0; i--) {
+        crc ^= *resp++;
     }
 
-    // TODO: support other fans, or remapping output
-    str_concat(str, "{out4:");
-    str += floattoa(str, (speed < 1.0) ? speed : (speed / 255.0), 4);
-    str_concat(str, "}");
+    *resp = crc;
 
-    cm_json_command(buffer);
-
-    return (STAT_OK);
+    xio_write(str, length + 6);
 }
 
-
-/*
- * marlin_disable_motors() - M84 (without S)
- *
- */
-
-stat_t marlin_disable_motors()
+bool marlin_handle_fake_stk500(char *str)
 {
-    char buffer[128];
-    char *str = buffer;
+    char *resp = str;
+    if (*str != 0x1B) { return false; }
 
-    // TODO: support other parameters
-    str_concat(str, "{md:0}");
-    cm_json_command(buffer);
+    // we handle only a handful of messages ... poorly
+    // for example: this is where we should validate the checksum, but we are going to not for now.
 
-    return (STAT_OK);
-}
+    str += 1 + 1 + 2 + 1; // 1 for 0x1B, 1 for sequence, 2 for length, 1 for 0x0E
 
-/*
- * marlin_set_motor_timeout() - M84 (with S), M85 Sxxx
- *
- */
+    char c = *str++;
 
-stat_t marlin_set_motor_timeout(float s) // M18 Sxxx, M84 Sxxx, M85 Sxxx
-{
-    if (s < MOTOR_TIMEOUT_SECONDS_MIN) {
-        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
-    }
-    if (s > MOTOR_TIMEOUT_SECONDS_MAX) {
-        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+    if ((c == 0x01) || // CMD_SIGN_ON
+        (c == 0x10) || // CMD_ENTER_PROGMODE_ISP
+        (c == 0x11)    // CMD_LEAVE_PROGMODE_ISP
+        )
+    {
+        *str = STATUS_CMD_OK;
+        _marlin_fake_stk500_response(resp, 2);
+
+        if (c == 0x11) { // CMD_LEAVE_PROGMODE_ISP
+            xio_exit_fake_bootloader();
+        }
+
+        return true;
     }
 
-    char buffer[128];
-    char *str = buffer;
-
-    // TODO: support other fans, or remapping output
-    str_concat(str, "{mt:");
-    str += floattoa(str, s, 1);
-    str_concat(str, "}");
-
-    cm_json_command(buffer);
-
-    return (STAT_OK);
+    *str = STATUS_CMD_UNKNOWN;
+    _marlin_fake_stk500_response(resp, 2);
+    return true;
 }
 
-
-/*
- * marlin_report_version() - M115
- *
- */
-
-stat_t marlin_report_version()
-{
-    char buffer[128];
-    char *str = buffer;
-
-    str_concat(str, "ok FIRMWARE_NAME:Marlin g2core-");
-    str_concat(str, G2CORE_FIRMWARE_BUILD_STRING);
-    *str = 0;
-    xio_writeline(buffer);
-    str = buffer;
-    *str = 0;
-
-    str_concat(str, " SOURCE_CODE_URL:https://github.com/synthetos/g2");
-    *str = 0;
-    xio_writeline(buffer);
-    str = buffer; *str = 0;
-
-    str_concat(str, " PROTOCOL_VERSION:1.0");
-    *str = 0;
-    xio_writeline(buffer);
-    str = buffer; *str = 0;
-
-    str_concat(str, " MACHINE_TYPE:");
-#ifdef SETTINGS_FILE
-#define settings_file_string1(s) #s
-#define settings_file_string2(s) settings_file_string1(s)
-    str_concat(str, settings_file_string2(SETTINGS_FILE));
-#undef settings_file_string1
-#undef settings_file_string2
-#else
-    str_concat(str, "<default-settings>");
-#endif
-    *str = 0;
-    xio_writeline(buffer);
-    str = buffer; *str = 0;
-
-    // TODO: make this configurable, based on the tool table
-    str_concat(str, " EXTRUDER_COUNT:1");
-    *str = 0;
-    xio_writeline(buffer);
-    str = buffer; *str = 0;
-
-    str_concat(str, " UUID:");
-    const char *uuid = Motate::UUID;
-    strncpy(str, uuid, Motate::strlen(uuid));
-    str += Motate::strlen(uuid);
-    str_concat(str, "\n");
-    *str = 0;
-    xio_writeline(buffer);
-    str = buffer; *str = 0;
-
-    return (STAT_OK);
-}
-
-/*
- * marlin_list_sd_response() - M20
- *
- */
-stat_t marlin_list_sd_response()
-{
-    char buffer[128];
-    char *str = buffer;
-
-    str_concat(str, "Begin file list\nEnd file list\n");
-    *str = 0;
-    xio_writeline(buffer);
-
-    return (STAT_OK);
-}
-
-/*
- * marlin_select_sd_response() - M23
- *
- */
-stat_t marlin_select_sd_response(const char *file)
-{
-    char buffer[128];
-    char *str = buffer;
-
-    str_concat(str, "open failed, File: ");
-    strncpy(str, file, Motate::strlen(file));
-    str += Motate::strlen(file);
-    str_concat(str, "\n");
-    *str = 0;
-    xio_writeline(buffer);
-
-    return (STAT_OK);
-}
 
 #endif // MARLIN_COMPAT_ENABLED == true
