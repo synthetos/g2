@@ -170,27 +170,6 @@ typedef enum {                          // G Modal Group 1
     MOTION_MODE_CANNED_CYCLE_89         // G89 - boring, dwell, feed out
 } cmMotionMode;
 
-typedef enum {                          // Used for detecting gcode errors. See NIST section 3.4
-    MODAL_GROUP_G0 = 0,                 // {G10,G28,G28.1,G92}  non-modal axis commands (note 1)
-    MODAL_GROUP_G1,                     // {G0,G1,G2,G3,G80}    motion
-    MODAL_GROUP_G2,                     // {G17,G18,G19}        plane selection
-    MODAL_GROUP_G3,                     // {G90,G91}            distance mode
-    MODAL_GROUP_G5,                     // {G93,G94}            feed rate mode
-    MODAL_GROUP_G6,                     // {G20,G21}            units
-    MODAL_GROUP_G7,                     // {G40,G41,G42}        cutter radius compensation
-    MODAL_GROUP_G8,                     // {G43,G49}            tool length offset
-    MODAL_GROUP_G9,                     // {G98,G99}            return mode in canned cycles
-    MODAL_GROUP_G12,                    // {G54,G55,G56,G57,G58,G59} coordinate system selection
-    MODAL_GROUP_G13,                    // {G61,G61.1,G64}      path control mode
-    MODAL_GROUP_M4,                     // {M0,M1,M2,M30,M60}   stopping
-    MODAL_GROUP_M6,                     // {M6}                 tool change
-    MODAL_GROUP_M7,                     // {M3,M4,M5}           spindle turning
-    MODAL_GROUP_M8,                     // {M7,M8,M9}           coolant (M7 & M8 may be active together)
-    MODAL_GROUP_M9                      // {M48,M49}            speed/feed override switches
-} cmModalGroup;
-#define MODAL_GROUP_COUNT (MODAL_GROUP_M9+1)
-// Note 1: Our G0 omits G4,G30,G53,G92.1,G92.2,G92.3 as these have no axis components to error check
-
 typedef enum {              // canonical plane - translates to:
                             //     axis_0  axis_1  axis_2
     CANON_PLANE_XY = 0,     // G17    X      Y      Z
