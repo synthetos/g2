@@ -44,7 +44,7 @@ static stat_t _exec_aline_body(mpBuf_t *bf); // passing bf so that body can exte
 static stat_t _exec_aline_tail(mpBuf_t *bf);
 static stat_t _exec_aline_segment(void);
 static void   _exec_aline_normalize_block(mpBlockRuntimeBuf_t *b);
-static stat_t _exec_aline_feedhold_processing(mpBuf_t *bf);
+static stat_t _exec_aline_feedhold(mpBuf_t *bf);
 
 static void _init_forward_diffs(float v_0, float v_1);
 
@@ -466,7 +466,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         if (cm->hold_state >= FEEDHOLD_ACTIONS_START) { // handles _exec_aline_feedhold_processing case (7)
             return (STAT_NOOP);                         // VERY IMPORTANT to exit as a NOOP. No more movement
         }
-        if (_exec_aline_feedhold_processing(bf) == STAT_OK) {
+        if (_exec_aline_feedhold(bf) == STAT_OK) {
             return (STAT_OK);                           // STAT_OK terminates aline execution for this move
         }
     }
@@ -975,7 +975,7 @@ static void _exec_aline_normalize_block(mpBlockRuntimeBuf_t *b)
 }
 
 /*********************************************************************************************
- * _exec_aline_feedhold_processing() - feedhold helper for mp_exec_aline()
+ * _exec_aline_feedhold() - feedhold helper for mp_exec_aline()
  *
  *  This function performs the bulk of the feedhold state machine processing from within 
  *  mp_exec_aline(). There is also a little chunk labeled "Feedhold Case (3-continued)".
@@ -984,33 +984,9 @@ static void _exec_aline_normalize_block(mpBlockRuntimeBuf_t *b)
  *
  *  Returning STAT_OK ends the move. (i.e. returns STAT_OK from mp_exec_aline())
  *  Returning STAT_EAGAIN allows mp_exec_aline() to continue execution
- *
- * Feedhold Processing - We need to handle the following cases (listed in rough sequence order):
- *  (1) - Feedhold arrives while we are in the middle executing of a block
- *   (1a) - The block is currently accelerating - wait for the end of acceleration
- *   (1b) - The block is in a body - start deceleration
- *    (1b1) - The deceleration fits into the current block
- *    (1b2) - The deceleration does not fit and needs to continue in the next block
- *   (1c) - The block is in a head, but has not started execution yet - start deceleration
- *    (1c1) - The deceleration fits into the current block
- *    (1c2) - The deceleration does not fit and needs to continue in the next block
- *   (1d) - The block is currently in the tail - wait until the end of the block
- *   (1e) - We have a new block and a new feedhold request that arrived at EXACTLY the same time
- *          (unlikely, but handled as 1c).
- *  (2) - The block has decelerated to some velocity > zero, so needs continuation into next block
- *  (3) - The block has decelerated to zero velocity
- *   (3a) - The end of deceleration is detected (inline in mp_exec_aline())
- *   (3b) - The end of deceleration is signeled and transitioned
- *  (4) - We have finished all the runtime work now we have to wait for the motors to stop
- *   (4a) - It's a homing or probing feedhold - ditch the remaining buffer & go directly to OFF
- *   (4b) - It's a p2 feedhold - ditch the remaining buffer & signal we want a p2 queue flush
- *   (4c) - It's a normal feedhold - signal we want the p2 entry actions to execute
- *  (5) - The steppers have stopped. No motion should occur. Allows hold actions to complete
- *  (6) - Removing the hold state and there is queued motion - see cycle_feedhold.cpp
- *  (7) - Removing the hold state and there is no queued motion - see cycle_feedhold.cpp
  */
 
-static stat_t _exec_aline_feedhold_processing(mpBuf_t *bf) 
+static stat_t _exec_aline_feedhold(mpBuf_t *bf) 
 {
     // Case (4) - Wait for the steppers to stop
     if (cm->hold_state == FEEDHOLD_MOTORS_STOPPING) {
