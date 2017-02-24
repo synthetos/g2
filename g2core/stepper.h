@@ -282,11 +282,6 @@ typedef enum {
     MOTOR_POWER_MODE_MAX_VALUE          // for input range checking
 } stPowerMode;
 
-// Stepper power management settings
-#define Vcc         3.3                 // volts
-#define MaxVref    2.25                 // max vref for driver circuit. Our ckt is 2.25 volts
-#define POWER_LEVEL_SCALE_FACTOR ((MaxVref/Vcc)) // scale power level setting for voltage range
-
 // Min/Max timeouts allowed for motor disable. Allow for inertial stop; must be non-zero
 #define MOTOR_TIMEOUT_SECONDS_MIN   (float)0.1      // seconds !!! SHOULD NEVER BE ZERO !!!
 #define MOTOR_TIMEOUT_SECONDS_MAX   (float)4294967  // (4294967295/1000) -- for conversion to uint32_t
@@ -359,9 +354,6 @@ typedef struct cfgMotor {                   // per-motor configs
     float travel_rev;                       // mm or deg of travel per motor revolution
     float steps_per_unit;                   // microsteps per mm (or degree) of travel
     float units_per_step;                   // mm or degrees of travel per microstep
-
-    // private
-    float power_level_scaled;               // scaled to internal range - must be between 0 and 1
 } cfgMotor_t;
 
 typedef struct stConfig {                   // stepper configs

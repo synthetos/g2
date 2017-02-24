@@ -40,6 +40,11 @@ using Motate::kStartHigh;
 using Motate::kNormal;
 using Motate::Timeout;
 
+// Stepper power management settings
+// These should be more flexible, but for now this will do
+#define Vcc         3.3                 // volts
+#define MaxVref    2.25                 // max vref for driver circuit. Our ckt is 2.25 volts
+#define POWER_LEVEL_SCALE_FACTOR ((MaxVref/Vcc)) // scale power level setting for voltage range
 
 // Motor structures
 template <pin_number step_num,  // Setup a stepper template to hold our pins
@@ -141,7 +146,7 @@ struct StepDirStepper final : Stepper  {
 
     void setPowerLevel(float new_pl) override {
         if (!_vref.isNull()) {
-            _vref = new_pl;
+            _vref = new_pl * POWER_LEVEL_SCALE_FACTOR;
         }
     };
 };

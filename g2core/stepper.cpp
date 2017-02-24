@@ -133,8 +133,8 @@ void stepper_init()
 
     // setup motor power levels and apply power level to stepper drivers
     for (uint8_t motor=0; motor<MOTORS; motor++) {
-        Motors[motor]->setPowerLevel(st_cfg.mot[motor].power_level_scaled);
-        st_run.mot[motor].power_level_dynamic = st_cfg.mot[motor].power_level_scaled;
+        Motors[motor]->setPowerLevel(st_cfg.mot[motor].power_level);
+        st_run.mot[motor].power_level_dynamic = st_cfg.mot[motor].power_level;
     }
     board_stepper_init();
     stepper_reset();                            // reset steppers to known state
@@ -1000,9 +1000,9 @@ stat_t st_set_pl(nvObj_t *nv)    // motor power level
     set_flt(nv);    // set power_setting value in the motor config struct (st)
 
     uint8_t motor = _get_motor(nv->index);
-    st_cfg.mot[motor].power_level_scaled = (nv->value * POWER_LEVEL_SCALE_FACTOR);
-    st_run.mot[motor].power_level_dynamic = (st_cfg.mot[motor].power_level_scaled);
-    Motors[motor]->setPowerLevel(st_cfg.mot[motor].power_level_scaled);
+    st_cfg.mot[motor].power_level = nv->value;
+    st_run.mot[motor].power_level_dynamic = (st_cfg.mot[motor].power_level);
+    Motors[motor]->setPowerLevel(st_cfg.mot[motor].power_level);
 
     return(STAT_OK);
 }
