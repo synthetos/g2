@@ -2,7 +2,8 @@
  * kinematics.cpp - inverse kinematics routines
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
+ * Copyright (c) 2016 - 2017 Rob Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -127,7 +128,6 @@ static void _inverse_kinematics(const float travel[], float joint[]) {
  *
  * This function is NOT to be used where high-speed is important. If that becomes the case,
  * there are many opportunities for caching and optimization for performance here.
- *
  */
 
 void kn_forward_kinematics(const float steps[], float travel[]) {
@@ -139,7 +139,7 @@ void kn_forward_kinematics(const float steps[], float travel[]) {
         best_steps_per_unit[axis] = -1.0;
     }
 
-    // Scan through each axis, and then through each motor
+    // Scan through each axis then through each motor
     for (uint8_t axis = 0; axis < AXES; axis++) {
         if (cm->a[axis].axis_mode == AXIS_INHIBITED) {
             travel[axis] = 0.0;
@@ -147,13 +147,12 @@ void kn_forward_kinematics(const float steps[], float travel[]) {
         }
         for (uint8_t motor = 0; motor < MOTORS; motor++) {
             if (st_cfg.mot[motor].motor_map == axis) {
-                // If this motor has a better (or the only) resolution, then we use this motor's value
+                // If this motor has a better (or the only) resolution, then use this motor's value
                 if (best_steps_per_unit[axis] < st_cfg.mot[motor].steps_per_unit) {
                     best_steps_per_unit[axis] = st_cfg.mot[motor].steps_per_unit;
                     travel[axis]              = steps[motor] * st_cfg.mot[motor].units_per_step;
-
-                    // If a econd motor has the same reolution for the same axis, we'll average their values
-                } else if (fp_EQ(best_steps_per_unit[axis], st_cfg.mot[motor].steps_per_unit)) {
+                } // If a second motor has the same resolution for the same axis average their values
+                else if (fp_EQ(best_steps_per_unit[axis], st_cfg.mot[motor].steps_per_unit)) {
                     travel[axis] = (travel[axis] + (steps[motor] * st_cfg.mot[motor].units_per_step)) / 2.0;
                 }
             }

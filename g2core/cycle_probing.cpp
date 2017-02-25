@@ -39,7 +39,8 @@
 #include "util.h"
 #include "xio.h"
 
-/**** Probe singleton structure ****/
+
+/**** Local stuff ****/
 
 #define MINIMUM_PROBE_TRAVEL 0.254      // mm of travel below which the probe will err out
 
@@ -71,13 +72,8 @@ static stat_t _probing_backoff();
 static stat_t _probing_finish();
 static stat_t _probing_exception_exit(stat_t status);
 static stat_t _probe_move(const float target[], const bool flags[]);
+static void _motion_end_callback(float* vect, bool* flag);
 static void _send_probe_report(void);
-
-// helper
-static void _motion_end_callback(float* vect, bool* flag)
-{
-    pb.wait_for_motion_end = false;
-}
 
 /***********************************************************************************
  **** G38.x Probing Cycle **********************************************************
@@ -147,7 +143,7 @@ uint8_t cm_straight_probe(float target[], bool flags[], bool trip_sense, bool al
 
     // initialize the probe input; error if no probe input specified
     if ((pb.probe_input = gpio_get_probing_input()) == -1) {
-        return(cm_alarm(STAT_NO_PROBE_INPUT_CONFIGURED, "No probe input"));
+        return(cm_alarm(STAT_NO_PROBE_INPUT_CONFIGURED, "Probe input not configured"));
     }
 
     // setup
@@ -273,18 +269,27 @@ static stat_t _probing_backoff()
 }
 
 /***********************************************************************************
- * _probe_move() - function to execute probing moves
+ * _probe_move()          - function to execute probing moves
+ * _motion_end_callback() - callback completes when motion has stopped
  *
  *  target[] must be provided in machine canonical coordinates (absolute, mm)
  *  cm_set_absolute_override() also zeros work offsets, which are restored on exit.
  */
 
+static void _motion_end_callback(float* vect, bool* flag)
+{
+    while (!mp_runtime_is_idle()) {
+        __NOP();                        // block until current segment is done 
+    };
+    pb.wait_for_motion_end = false;
+}
+
 static stat_t _probe_move(const float target[], const bool flags[])
 {
     cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_ON);  
     pb.wait_for_motion_end = true;          // set this BEFORE the motion starts
-    cm_straight_feed(target, flags);
-    mp_queue_command(_motion_end_callback, nullptr, nullptr);      // the last two arguments are ignored anyway
+    cm_straight_feed(target, flags);        // NB: feed rate was set earlier, so it's OK
+    mp_queue_command(_motion_end_callback, nullptr, nullptr); // the last two arguments are ignored anyway
     return (STAT_EAGAIN);
 }
 

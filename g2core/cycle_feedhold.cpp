@@ -91,8 +91,8 @@ static stat_t _finalize_p2_hold_exit(void);
  *          (unlikely, but handled as 1b).
  *  (2) - The block has decelerated to some velocity > zero, so needs continuation into next block
  *  (3) - The block has decelerated to zero velocity
- *   (3a) - The end of deceleration is detected (inline in mp_exec_aline())
- *   (3b) - The end of deceleration is signeled and transitioned
+ *   (3a) - The end of deceleration is detected inline in mp_exec_aline()
+ *   (3b) - The end of deceleration is signaled and state is transitioned
  *  (4) - We have finished all the runtime work now we have to wait for the motors to stop
  *   (4a) - It's a homing or probing feedhold - ditch the remaining buffer & go directly to OFF
  *   (4b) - It's a p2 feedhold - ditch the remaining buffer & signal we want a p2 queue flush
