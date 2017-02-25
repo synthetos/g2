@@ -993,21 +993,24 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
         if (mp_runtime_is_idle()) {                         // wait for steppers to actually finish
             mp_zero_segment_velocity();                     // finalize velocity for reporting purposes
 
-            // if probing or homing exit the move and advance to the _motion_end finalization command
-            if ((cm->cycle_state == CYCLE_HOMING) || (cm->cycle_state == CYCLE_PROBE)) {
+            // If in a p2 hold, exit the p2 hold set up a flush of the p2 planner queue
+            if (cm == &cm2) {
+//                copy_vector(mp->position, mr->position);    // update planner position from runtime
+                cm->hold_state = FEEDHOLD_P2_EXIT;
+            }
+            // At this point we know we are in a p1 hold
+
+            // If probing or homing exit the move and advance to the _motion_end finalization command.
+            // Stop the runtime, clear the bun buffer and do not transition to p2 planner
+            else if ((cm->cycle_state == CYCLE_HOMING) || (cm->cycle_state == CYCLE_PROBE)) {
                 mr->block_state = BLOCK_INACTIVE;           // disable the rest of the runtime movement
                 copy_vector(mp->position, mr->position);    // update planner position from runtime
                 mp_free_run_buffer();                       // free buffer and enable finalization move to get loaded
                 cm->hold_state = FEEDHOLD_OFF;
             } 
-            
-            // if exiting a p2 hold set up a flush of the p2 planner queue
-            else if (cm == &cm2) {
-//                copy_vector(mp->position, mr->position);    // update planner position from runtime
-                cm->hold_state = FEEDHOLD_P2_EXIT;
-            }
-            
-            // if exiting a regular p1 hold perform Z-lift, spindle, coolant actions
+                        
+            // If exiting a regular p1 hold set state to FEEDHOLD_ACTIONS_START.
+            // This enables transition to p2 planner; then Z-lift, spindle, coolant actions
             else {
                 cm->hold_state = FEEDHOLD_ACTIONS_START;
             }

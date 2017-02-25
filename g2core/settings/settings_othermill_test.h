@@ -47,9 +47,12 @@
 #define ESC_BOOT_TIME               5000    // how long the ESC takes to boot, in milliseconds
 #define ESC_LOCKOUT_TIME            900     // how long the interlock needs to be engaged before killing power... actually 1s, but be conservative
 
-#define COOLANT_MIST_POLARITY 1   // 0=active low, 1=active high
-#define COOLANT_FLOOD_POLARITY 1  // 0=active low, 1=active high
-#define COOLANT_PAUSE_ON_HOLD true
+#define COOLANT_MIST_POLARITY       1       // 0=active low, 1=active high
+#define COOLANT_FLOOD_POLARITY      1       // 0=active low, 1=active high
+#define COOLANT_PAUSE_ON_HOLD       true
+
+#define FEEDHOLD_Z_LIFT             3       // mm to lift Z on feedhold
+#define PROBE_REPORT_ENABLE         true
 
 // Communications and reporting settings
 
@@ -196,8 +199,8 @@
 #define Z_ZERO_BACKOFF              0.4
 
 // Rotary values are chosen to make the motor react the same as X for testing
-#define A_AXIS_MODE                 AXIS_DISABLED                                    // DISABLED
-#define A_VELOCITY_MAX              ((X_VELOCITY_MAX / M1_TRAVEL_PER_REV) * 360)  // set to the same speed as X axis
+#define A_AXIS_MODE                 AXIS_DISABLED                                   // DISABLED
+#define A_VELOCITY_MAX              ((X_VELOCITY_MAX / M1_TRAVEL_PER_REV) * 360)    // set to the same speed as X axis
 #define A_FEEDRATE_MAX              A_VELOCITY_MAX
 #define A_TRAVEL_MIN                -1  // min/max the same means infinite, no limit
 #define A_TRAVEL_MAX                -1
@@ -323,8 +326,10 @@
 #define P1_CCW_PHASE_HI             0.1
 #define P1_PWM_PHASE_OFF            0.1
 
+/*
 #define P1_USE_MAPPING_CUBIC
 #define P1_MAPPING_CUBIC_X3         2.1225328766717546e-013
 #define P1_MAPPING_CUBIC_X2         -7.2900167282605129e-009
 #define P1_MAPPING_CUBIC_X1         8.5854646785876479e-005
 #define P1_MAPPING_CUBIC_X0         -2.1301489219406905e-001
+*/
