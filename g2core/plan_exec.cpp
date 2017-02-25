@@ -991,21 +991,25 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
     // Case (4) - Wait for the steppers to stop
     if (cm->hold_state == FEEDHOLD_MOTORS_STOPPING) {
         if (mp_runtime_is_idle()) {                         // wait for steppers to actually finish
-            // finalize position and velocity
-//            copy_vector(mr->position, mr->gm.target);                       // update position from target
-//            copy_vector(mp->position, mr->position);        // update the planner position from the runtime
-//            bf->length = get_axis_vector_length(mr->target, mr->position);  // reset length in buffer //+++++ TEST THIS
-            mp_zero_segment_velocity();                                     // for reporting purposes
+            mp_zero_segment_velocity();                     // finalize velocity for reporting purposes
 
-            // when homing or probing don't stay in HOLD or execute entry actions
+            // if probing or homing exit the move and advance to the _motion_end finalization command
             if ((cm->cycle_state == CYCLE_HOMING) || (cm->cycle_state == CYCLE_PROBE)) {
-                copy_vector(mp->position, mr->position);        // update the planner position from the runtime
-                bf->length = get_axis_vector_length(mr->target, mr->position);  // reset length in buffer //+++++ TEST THIS
+                mr->block_state = BLOCK_INACTIVE;           // disable the rest of the runtime movement
+                copy_vector(mp->position, mr->position);    // update planner position from runtime
+                mp_free_run_buffer();                       // free buffer and enable finalization move to get loaded
                 cm->hold_state = FEEDHOLD_OFF;
-            } else if (cm == &cm2) {                        // if in a p2 hold set up a flush of the p2 planner queue
+            } 
+            
+            // if exiting a p2 hold set up a flush of the p2 planner queue
+            else if (cm == &cm2) {
+//                copy_vector(mp->position, mr->position);    // update planner position from runtime
                 cm->hold_state = FEEDHOLD_P2_EXIT;
-            }  else {
-                cm->hold_state = FEEDHOLD_ACTIONS_START;    // otherwise perform Z-lift, spindle, coolant actions
+            }
+            
+            // if exiting a regular p1 hold perform Z-lift, spindle, coolant actions
+            else {
+                cm->hold_state = FEEDHOLD_ACTIONS_START;
             }
 
             sr_request_status_report(SR_REQUEST_IMMEDIATE);
@@ -1026,7 +1030,7 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
 //            mp_free_run_buffer();
 //        }
         mp_replan_queue(mp_get_r());                        // make it replan all the blocks
-        return (STAT_OK);                                   // stop mp_exec_aline() from further execution
+        return (STAT_OK);                                   // exit from mp_exec_aline()
     }
 
     // Cases (1x), Case (2)
