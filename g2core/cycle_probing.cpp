@@ -278,9 +278,6 @@ static stat_t _probing_backoff()
 
 static void _motion_end_callback(float* vect, bool* flag)
 {
-    while (!mp_runtime_is_idle()) {
-        __NOP();                        // block until current segment is done 
-    };
     pb.wait_for_motion_end = false;
 }
 

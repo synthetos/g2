@@ -992,17 +992,20 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
     if (cm->hold_state == FEEDHOLD_MOTORS_STOPPING) {
         if (mp_runtime_is_idle()) {                         // wait for steppers to actually finish
             // finalize position and velocity
-            copy_vector(mr->position, mr->gm.target);                       // update position from target
-            bf->length = get_axis_vector_length(mr->target, mr->position);  // reset length in buffer //+++++ TEST THIS
+//            copy_vector(mr->position, mr->gm.target);                       // update position from target
+//            copy_vector(mp->position, mr->position);        // update the planner position from the runtime
+//            bf->length = get_axis_vector_length(mr->target, mr->position);  // reset length in buffer //+++++ TEST THIS
             mp_zero_segment_velocity();                                     // for reporting purposes
 
             // when homing or probing don't stay in HOLD or execute entry actions
             if ((cm->cycle_state == CYCLE_HOMING) || (cm->cycle_state == CYCLE_PROBE)) {
+                copy_vector(mp->position, mr->position);        // update the planner position from the runtime
+                bf->length = get_axis_vector_length(mr->target, mr->position);  // reset length in buffer //+++++ TEST THIS
                 cm->hold_state = FEEDHOLD_OFF;
-            } else if (cm == &cm2) {                        // if in p2 hold set up a flush
+            } else if (cm == &cm2) {                        // if in a p2 hold set up a flush of the p2 planner queue
                 cm->hold_state = FEEDHOLD_P2_EXIT;
             }  else {
-                cm->hold_state = FEEDHOLD_ACTIONS_START;    // perform Z-lift, spindle, coolant actions
+                cm->hold_state = FEEDHOLD_ACTIONS_START;    // otherwise perform Z-lift, spindle, coolant actions
             }
 
             sr_request_status_report(SR_REQUEST_IMMEDIATE);
@@ -1019,9 +1022,9 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
         cm->hold_state = FEEDHOLD_MOTORS_STOPPING;          // wait for the motors to come to a complete stop
 
         // No point bothering with the rest of this move if homing or probing
-        if ((cm->cycle_state == CYCLE_HOMING) || (cm->cycle_state == CYCLE_PROBE)) {
-            mp_free_run_buffer();
-        }
+//        if ((cm->cycle_state == CYCLE_HOMING) || (cm->cycle_state == CYCLE_PROBE)) {
+//            mp_free_run_buffer();
+//        }
         mp_replan_queue(mp_get_r());                        // make it replan all the blocks
         return (STAT_OK);                                   // stop mp_exec_aline() from further execution
     }
