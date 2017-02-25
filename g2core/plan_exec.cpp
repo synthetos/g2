@@ -993,18 +993,17 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
         if (mp_runtime_is_idle()) {                         // wait for steppers to actually finish
             mp_zero_segment_velocity();                     // finalize velocity for reporting purposes
 
-            // If in a p2 hold, exit the p2 hold set up a flush of the p2 planner queue
+            // If in a p2 hold, exit the p2 hold set up a flush of the p2 planner queue            
             if (cm == &cm2) {
 //                copy_vector(mp->position, mr->position);    // update planner position from runtime
                 cm->hold_state = FEEDHOLD_P2_EXIT;
             }
             // At this point we know we are in a p1 hold
 
-            // If probing or homing exit the move and advance to the _motion_end finalization command.
-            // Stop the runtime, clear the bun buffer and do not transition to p2 planner
+            // If probing or homing, exit the move and advance to the _motion_end_callback()'s.
+            // Stop the runtime, clear the run buffer and do not transition to p2 planner.
             else if ((cm->cycle_state == CYCLE_HOMING) || (cm->cycle_state == CYCLE_PROBE)) {
                 mr->block_state = BLOCK_INACTIVE;           // disable the rest of the runtime movement
-                copy_vector(mp->position, mr->position);    // update planner position from runtime
                 mp_free_run_buffer();                       // free buffer and enable finalization move to get loaded
                 cm->hold_state = FEEDHOLD_OFF;
             } 
@@ -1027,11 +1026,6 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
         mr->block_state = BLOCK_INACTIVE;                   // invalidate mr buffer to reset the new move
         bf->block_state = BLOCK_INITIAL_ACTION;             // tell _exec to re-use the bf buffer
         cm->hold_state = FEEDHOLD_MOTORS_STOPPING;          // wait for the motors to come to a complete stop
-
-        // No point bothering with the rest of this move if homing or probing
-//        if ((cm->cycle_state == CYCLE_HOMING) || (cm->cycle_state == CYCLE_PROBE)) {
-//            mp_free_run_buffer();
-//        }
         mp_replan_queue(mp_get_r());                        // make it replan all the blocks
         return (STAT_OK);                                   // exit from mp_exec_aline()
     }

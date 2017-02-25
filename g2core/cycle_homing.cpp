@@ -362,8 +362,8 @@ static void _motion_end_callback(float* vect, bool* flag)
 }
 
 static stat_t _homing_axis_move(int8_t axis, float target, float velocity) {
-    float vect[]  = {0, 0, 0, 0, 0, 0};
-    bool  flags[] = {false, false, false, false, false, false};
+    float vect[]  = {0,0,0,0,0,0};
+    bool  flags[] = {0,0,0,0,0,0};
 
     hm.waiting_for_motion_end = true;
 
@@ -379,7 +379,6 @@ static stat_t _homing_axis_move(int8_t axis, float target, float velocity) {
 
     // the last two arguments are ignored anyway
     mp_queue_command(_motion_end_callback, nullptr, nullptr);
-
     return (STAT_EAGAIN);
 }
 
