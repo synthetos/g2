@@ -37,7 +37,7 @@
 #include "temperature.h"
 #include "util.h"
 
-/********************************************************************************
+/****************************************************************************************
  * ALARM, SHUTDOWN, and PANIC are nested dolls.
  *
  * cm_alrm()  - invoke alarm from command
@@ -71,7 +71,7 @@ stat_t cm_clr(nvObj_t *nv)                // clear alarm or shutdown from comman
     return (STAT_OK);
 }
 
-/*
+/****************************************************************************************
  * cm_clear() - clear ALARM and SHUTDOWN states
  * cm_parse_clear() - parse incoming gcode for M30 or M2 clears if in ALARM state
  *
@@ -99,7 +99,7 @@ void cm_parse_clear(const char *s)
     }
 }
 
-/*
+/****************************************************************************************
  * cm_is_alarmed() - return alarm status code or OK if no alarms
  */
 
@@ -111,7 +111,7 @@ stat_t cm_is_alarmed()
     return (STAT_OK);
 }
 
-/*
+/****************************************************************************************
  * cm_halt_all() - stop, spindle and coolant immediately
  * cm_halt_motion() - stop motion immediately. Does not affect spindle, coolant, or other IO
  *
@@ -136,7 +136,7 @@ void cm_halt_motion(void)
     cm->hold_state = FEEDHOLD_OFF;
 }
 
-/*
+/****************************************************************************************
  * cm_alarm() - enter ALARM state
  *
  * An ALARM sets the ALARM machine state, starts a feedhold to stop motion, stops the
@@ -165,7 +165,8 @@ stat_t cm_alarm(const stat_t status, const char *msg)
         (cm->machine_state == MACHINE_PANIC)) {
         return (STAT_OK);                       // don't alarm if already in an alarm state
     }
-    cm->machine_state = MACHINE_ALARM;
+    cm1.machine_state = MACHINE_ALARM;          // alarm both machines
+    cm2.machine_state = MACHINE_ALARM;
     cm_request_feedhold();                      // stop motion
     cm_request_queue_flush();                   // do a queue flush once runtime is not busy
 
@@ -180,7 +181,8 @@ stat_t cm_alarm(const stat_t status, const char *msg)
     sr_request_status_report(SR_REQUEST_TIMED);
     return (status);
 }
-/*
+
+/****************************************************************************************
  * cm_shutdown() - enter shutdown state
  *
  * SHUTDOWN stops all motion, spindle and coolant immediately, sets a SHUTDOWN machine
@@ -213,12 +215,13 @@ stat_t cm_shutdown(const stat_t status, const char *msg)
     }
     cm->homing_state = HOMING_NOT_HOMED;
 
-    cm->machine_state = MACHINE_SHUTDOWN;       // do this after all other activity
+    cm1.machine_state = MACHINE_SHUTDOWN;       // shut down both machines...
+    cm2.machine_state = MACHINE_SHUTDOWN;       //...do this after all other activity
     rpt_exception(status, msg);                 // send exception report
     return (status);
 }
 
-/*
+/****************************************************************************************
  * cm_panic() - enter panic state
  *
  * PANIC occurs if the firmware has detected an unrecoverable internal error
@@ -241,7 +244,8 @@ stat_t cm_panic(const stat_t status, const char *msg)
     temperature_reset();                        // turn off heaters and fans
     cm_queue_flush(&cm1);                       // flush all queues and reset positions
 
-    cm->machine_state = MACHINE_PANIC;          // don't reset anything. Panics are not recoverable
+    cm1.machine_state = MACHINE_PANIC;          // don't reset anything. Panics are not recoverable
+    cm2.machine_state = MACHINE_PANIC;          // don't reset anything. Panics are not recoverable
     rpt_exception(status, msg);                 // send panic report
     return (status);
 }

@@ -45,10 +45,12 @@ static stat_t _run_p1_hold_exit_actions(void);
 static void   _sync_to_p1_hold_exit_actions_done(float* vect, bool* flag);
 static stat_t _finalize_p1_hold_exit(void);
 static stat_t _finalize_p2_hold_exit(void);
+static stat_t _feedhold_alarm_exit(void);
 
-/***********************************************************************************
- **** Feedholds ********************************************************************
- ***********************************************************************************/
+
+/****************************************************************************************
+ **** Feedholds *************************************************************************
+ ****************************************************************************************/
 /*
  *  Feedholds, queue flushes and end_holds are all related and are performed in this
  *  file and in plan_exec.cpp. Feedholds are implemented as a state machine 
@@ -105,7 +107,7 @@ static stat_t _finalize_p2_hold_exit(void);
  *  (7) - Removing the hold state and there is no queued motion - see cycle_feedhold.cpp
  */
 
-/***********************************************************************************
+/****************************************************************************************
  * cm_has_hold()   - return true if a hold condition exists (or a pending hold request)
  */
 bool cm_has_hold()
@@ -113,7 +115,7 @@ bool cm_has_hold()
     return (cm1.hold_state != FEEDHOLD_OFF);
 }
 
-/***********************************************************************************
+/****************************************************************************************
  * cm_request_feedhold()
  * cm_request_exit_hold()
  * cm_request_queue_flush()
@@ -179,7 +181,7 @@ void cm_start_hold()
     }
 }
 
-/***********************************************************************************
+/****************************************************************************************
  * cm_feedhold_sequencing_callback() - sequence feedhold, queue_flush, and end_hold requests
  *
  * Expected behaviors: (no-hold means machine is not in hold, etc)
@@ -228,6 +230,12 @@ stat_t cm_feedhold_sequencing_callback()
             qr_request_queue_report(0);             // request a queue report, since we've changed the number of buffers available
     }
 
+    // special handling for alarms and job kill
+    if ((cm1.hold_state == FEEDHOLD_HOLD) && (cm_is_alarmed())) {
+        cm1.hold_exit_requested = false;
+        return(_feedhold_alarm_exit());
+    }
+
     // exit_hold runs for both ~ and % feedhold ends
     if (cm1.hold_exit_requested) {
         
@@ -246,7 +254,7 @@ stat_t cm_feedhold_sequencing_callback()
     return (STAT_OK);
 }
 
-/***********************************************************************************
+/****************************************************************************************
  * cm_feedhold_command_blocker() - prevents new Gcode commands from queueing to p2 planner
  */
 
@@ -257,8 +265,8 @@ stat_t cm_feedhold_command_blocker()
     }
     return (STAT_OK);
 }
- 
-/***********************************************************************************
+
+/****************************************************************************************
  * _run_p1_hold_entry_actions()          - run actions in p2 that complete the p1 hold
  * _sync_to_p1_hold_entry_actions_done() - final state change occurs here
  *
@@ -274,6 +282,7 @@ stat_t cm_feedhold_command_blocker()
  *  not run actions, so this function is never called for p2 feedholds. It's called 
  *  from an interrupt, so it only sets a flag.
  */
+
 static void _sync_to_p1_hold_entry_actions_done(float* vect, bool* flag)
 {
     cm1.hold_state = FEEDHOLD_HOLD;
@@ -281,11 +290,15 @@ static void _sync_to_p1_hold_entry_actions_done(float* vect, bool* flag)
 }
 
 static stat_t _run_p1_hold_entry_actions()
-{    
+{
+    // do not perform entry actions if in alarm state
+    if (cm_is_alarmed()) {
+        cm1.hold_state = FEEDHOLD_HOLD;
+        return (STAT_OK);
+    }
+    
     cm->hold_state = FEEDHOLD_ACTIONS_WAIT;   // penultimate state before transitioning to HOLD
-    
-    debug_trap_if_true(st_runtime_isbusy(), "_run_p1_hold_entry_actions() - runtime is busy");
-    
+        
     // copy the primary canonical machine to the secondary, 
     // fix the planner pointer, and reset the secondary planner
     memcpy(&cm2, &cm1, sizeof(cmMachine_t));
@@ -330,7 +343,7 @@ static stat_t _run_p1_hold_entry_actions()
     return (STAT_OK);
 }
 
-/***********************************************************************************
+/****************************************************************************************
  *  _run_p1_hold_exit_actions()          - initiate return from feedhold planner
  *  _sync_to_p1_hold_exit_actions_done() - callback to sync to end of planner operations
  *  _finalize_p1_hold_exit()             - callback to finsh return once moves are done 
@@ -399,7 +412,7 @@ static stat_t _finalize_p1_hold_exit()
     return (STAT_OK);
 }
 
-/***********************************************************************************
+/****************************************************************************************
  * _finalize_p2_hold_exit()
  */
 
@@ -418,7 +431,26 @@ static stat_t _finalize_p2_hold_exit()
     return (STAT_OK);
 }
 
-/***********************************************************************************
+/****************************************************************************************
+ * _feedhold_alarm_exit()
+ */
+
+static stat_t _feedhold_alarm_exit()
+{
+    cm = &cm1;                              // return to primary planner (p1)
+    mp = (mpPlanner_t *)cm->mp;             // cm->mp is a void pointer
+    mr = mp->mr;
+    
+    if (cm1.flush_state == FLUSH_WAS_RUN) { // adjust p1 planner positions to runtime positions
+        cm_reset_position_to_absolute_position(cm);
+        cm1.flush_state = FLUSH_OFF;
+    }
+    cm->cycle_state = CYCLE_OFF;
+    cm->hold_state = FEEDHOLD_OFF;
+    return (STAT_OK);
+}
+
+/****************************************************************************************
  * Queue Flush operations
  *
  * This one's complicated. See here first:
