@@ -182,7 +182,7 @@ void cm_start_hold()
 /***********************************************************************************
  * cm_feedhold_sequencing_callback() - sequence feedhold, queue_flush, and end_hold requests
  *
- * Expected behaviors:           (no-hold means machine is not in hold, etc)
+ * Expected behaviors: (no-hold means machine is not in hold, etc)
  *
  *  (no-cycle) !    No action. Feedhold is not run (nothing to hold!)
  *  (no-hold)  ~    No action. Cannot exit a feedhold that does not exist
@@ -195,14 +195,6 @@ void cm_start_hold()
  *  (in-cycle) !%~  Same as above
  *  (in-cycle) !~%  Same as above (this one's an anomaly, but the intent would be to Q flush)
  */
-
-stat_t cm_feedhold_command_blocker()
-{
-    if (cm1.hold_state != FEEDHOLD_OFF) {
-        return (STAT_EAGAIN);
-    }
-    return (STAT_OK);
-}
 
 stat_t cm_feedhold_sequencing_callback()
 {
@@ -253,7 +245,19 @@ stat_t cm_feedhold_sequencing_callback()
     }
     return (STAT_OK);
 }
-    
+
+/***********************************************************************************
+ * cm_feedhold_command_blocker() - prevents new Gcode commands from queueing to p2 planner
+ */
+
+stat_t cm_feedhold_command_blocker()
+{
+    if (cm1.hold_state != FEEDHOLD_OFF) {
+        return (STAT_EAGAIN);
+    }
+    return (STAT_OK);
+}
+ 
 /***********************************************************************************
  * _run_p1_hold_entry_actions()          - run actions in p2 that complete the p1 hold
  * _sync_to_p1_hold_entry_actions_done() - final state change occurs here
@@ -358,7 +362,8 @@ static stat_t _run_p1_hold_exit_actions()     // LATER: if value == true return 
 
 static void _sync_to_p1_hold_exit_actions_done(float* vect, bool* flag)
 {
-    cm1.hold_state = FEEDHOLD_P1_EXIT;      // penultimate state before transitioning to FEEDHOLD_OFF
+    cm1.hold_state = FEEDHOLD_P1_EXIT;          // penultimate state before transitioning to FEEDHOLD_OFF
+ //   copy_vector(mp->position, mr->position);    // +++++ Compensate for amount of move already performed
     sr_request_status_report(SR_REQUEST_IMMEDIATE);
 }
 
@@ -382,7 +387,6 @@ static stat_t _finalize_p1_hold_exit()
     }
 
     // resume motion from primary planner or end cycle if no moves in planner
-    cm1.hold_state = FEEDHOLD_OFF;
     if (mp_has_runnable_buffer(&mp1)) {
         cm_set_motion_state(MOTION_RUN);
         cm_cycle_start();
@@ -391,6 +395,7 @@ static stat_t _finalize_p1_hold_exit()
         cm_set_motion_state(MOTION_STOP);
         cm_cycle_end();
     }
+    cm1.hold_state = FEEDHOLD_OFF;
     return (STAT_OK);
 }
 

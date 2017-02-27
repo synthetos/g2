@@ -296,16 +296,13 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
                 bf->pv->exit_vmax = min3(bf->pv->junction_vmax, bf->pv->cruise_vmax, bf->cruise_vmax);
             }
         }
-        _calculate_override(bf);  // adjust cruise_vmax for feed/traverse override
+        _calculate_override(bf);                        // adjust cruise_vmax for feed/traverse override
  //     bf->plannable_time = bf->pv->plannable_time;    // set plannable time - excluding current move
         bf->buffer_state = MP_BUFFER_IN_PROCESS;
-
-        // +++++ Why do we have to do this here?
-        // bf->pv_group = bf->pv;
-
-        bf->hint = NO_HINT;     // ensure we've cleared the hints
+        bf->hint = NO_HINT;                             // ensure we've cleared the hints
+        
         // Time: 12us-41us
-        if (bf->nx->plannable) {  // read in new buffers until EMPTY
+        if (bf->nx->plannable) {                        // read in new buffers until EMPTY
             return (bf->nx);
         }
         mp->planning_return = bf->nx;                   // where to return after planning is complete
@@ -422,7 +419,7 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
                 optimal = true;   // We can't improve this entry more
             }
 
-            // +++++
+            // DIAGNOSTICS
             if (bf->buffer_state == MP_BUFFER_EMPTY) {
             //     _debug_trap("Exec apparently cleared this block while we were planning it.");
                 break;  // exit the loop, we've hit and passed the running buffer
@@ -461,24 +458,24 @@ static void _calculate_override(mpBuf_t* bf)  // execute ramp to adjust cruise v
     // generate ramp term is a ramp is active
     if (mp->ramp_active) {
         bf->override_factor += mp->ramp_dvdt * bf->block_time;
-        if (mp->ramp_dvdt > 0) {  // positive is an acceleration ramp
+        if (mp->ramp_dvdt > 0) {                            // positive is an acceleration ramp
             if (bf->override_factor > mp->ramp_target) {
                 bf->override_factor = mp->ramp_target;
-                mp->ramp_active      = false;  // detect end of ramp
+                mp->ramp_active = false;                    // detect end of ramp
             }
             bf->cruise_velocity *= bf->override_factor;
             if (bf->cruise_velocity > bf->absolute_vmax) {  // test max cruise_velocity
                 bf->cruise_velocity = bf->absolute_vmax;
-                mp->ramp_active      = false;  // don't allow exceeding absolute_vmax
+                mp->ramp_active = false;                    // don't allow exceeding absolute_vmax
             }
         } else {  // negative is deceleration ramp
             if (bf->override_factor < mp->ramp_target) {
                 bf->override_factor = mp->ramp_target;
                 mp->ramp_active      = false;
             }
-            bf->cruise_velocity *= bf->override_factor;  // +++++ this is probably wrong
+            bf->cruise_velocity *= bf->override_factor;     // +++++ this is probably wrong
             //  bf->exit_velocity *= bf->mfo_factor;        //...but I'm not sure this is right,
-            //  bf->cruise_velocity = bf->pv->exit_velocity;   //...either
+            //  bf->cruise_velocity = bf->pv->exit_velocity;//...either
         }
     } else {
         bf->cruise_velocity *= bf->override_factor;  // apply original or changed factor

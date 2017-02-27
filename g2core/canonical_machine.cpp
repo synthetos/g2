@@ -1110,6 +1110,10 @@ stat_t cm_resume_origin_offsets()
 
 stat_t cm_straight_traverse(const float target[], const bool flags[])
 {
+    if (target[AXIS_Y] == 20) { // +++ DEBUG TRAP
+        cm->gm.P_word = 20;
+    }
+
     cm->gm.motion_mode = MOTION_MODE_STRAIGHT_TRAVERSE;
 
     // it's legal for a G0 to have no axis words but we don't want to process it
@@ -1151,7 +1155,8 @@ stat_t _goto_stored_position(const float stored_position[],     // always in mm
     // If G20 adjust stored position (always in mm) to inches so traverse will be correct
     float target[AXES]; // make a local stored position as it may be modified
     copy_vector(target, stored_position);
-       if (cm->gm.units_mode == INCHES) {
+
+    if (cm->gm.units_mode == INCHES) {
         for (uint8_t i=0; i<AXES; i++) {
             target[i] *= INCHES_PER_MM;
         }

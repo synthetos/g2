@@ -2,8 +2,8 @@
  * xio.cpp - extended IO functions
  * This file is part of the g2core project
  *
- * Copyright (c) 2013 - 2016 Alden S. Hart Jr.
- * Copyright (c) 2013 - 2016 Robert Giseburt
+ * Copyright (c) 2013 - 2017 Alden S. Hart Jr.
+ * Copyright (c) 2013 - 2017 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -403,8 +403,8 @@ extern xio_t xio;
 // See here for a discussion of what this means if you are not familiar with C++
 // https://github.com/synthetos/g2/wiki/Dual-Endpoint-USB-Internals#c-classes-virtual-functions-and-inheritance
 
-// LineRXBuffer takes the Motate RXBuffer (which handles "transfers", usually DMA), and adds G2 line-reading
-// semantics to it.
+// LineRXBuffer takes the Motate RXBuffer (which handles "transfers", usually DMA), 
+// and adds G2 line-reading semantics to it.
 template <uint16_t _size, typename owner_type, uint8_t _header_count = 8, uint16_t _line_buffer_size = RX_BUFFER_SIZE>
 struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
     typedef RXBuffer<_size, owner_type, char> parent_type;
@@ -430,15 +430,15 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
     // * "index" indicates it's in to _headers array
     // * "offset" means it's a character in the _data array
 
-    uint16_t _scan_offset;          // offset into data of the last character scanned
-    uint16_t _line_start_offset;    // offset into first character of the line, or the first char to ignore (too-long lines)
-    uint16_t _last_line_length;     // used for ensuring lines aren't too long
-    bool     _ignore_until_next_line; // if we get a too-long-line, we ignore the rest by setting this flag
-    bool     _at_start_of_line;     // true if the last character scanned was the end of a line
+    uint16_t _scan_offset;              // offset into data of the last character scanned
+    uint16_t _line_start_offset;        // offset into first character of the line, or the first char to ignore (too-long lines)
+    uint16_t _last_line_length;         // used for ensuring lines aren't too long
+    bool     _ignore_until_next_line;   // if we get a too-long-line, we ignore the rest by setting this flag
+    bool     _at_start_of_line;         // true if the last character scanned was the end of a line
 
-    uint16_t _lines_found;          // count of complete non-control lines that were found during scanning.
+    uint16_t _lines_found;              // count of complete non-control lines that were found during scanning.
 
-    volatile uint16_t _last_scan_offset;  // DEBUGGING
+    volatile uint16_t _last_scan_offset;  // DIAGNOSTIC
 
     bool _last_returned_a_control = false;
 
@@ -708,8 +708,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             // move the start of the next skip section to after this skip
             _line_start_offset = _scan_offset;
         }
-
-
+        
         return false; // no control was found
     };
 

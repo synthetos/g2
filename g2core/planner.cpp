@@ -194,10 +194,10 @@ void planner_init(mpPlanner_t *_mp, mpPlannerRuntime_t *_mr, mpBuf_t *queue, uin
     _mr->magic_start = MAGICNUM;        // mr assertions 
     _mr->magic_end = MAGICNUM;
  
-    _mr->bf[0].nx = &_mr->bf[1];        // Handle the two "stub blocks" in the runtime structure
-    _mr->bf[1].nx = &_mr->bf[0];
-    _mr->r = &_mr->bf[0];
-    _mr->p = &_mr->bf[1];
+    _mr->block[0].nx = &_mr->block[1];  // Handle the two "stub blocks" in the runtime structure
+    _mr->block[1].nx = &_mr->block[0];
+    _mr->r = &_mr->block[0];
+    _mr->p = &_mr->block[1];
 }
 
 void planner_reset(mpPlanner_t *_mp)        // reset planner queue, cease MR activity, but leave positions alone

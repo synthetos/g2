@@ -114,7 +114,6 @@ stat_t cm_jogging_cycle_start(uint8_t axis) {
     return (STAT_OK);
 }
 
-
 /* Jogging axis moves - these execute in sequence for each axis
  * cm_jogging_cycle_callback()  - main loop callback for running the jogging cycle
  *  _set_jogging_func()         - a convenience for setting the next dispatch vector and exiting
@@ -132,7 +131,7 @@ stat_t cm_jogging_cycle_callback(void) {
         return (STAT_EAGAIN);  // sync to planner move ends
     }
     //    if (jog.func == _jogging_axis_ramp_jog && mp_get_buffers_available() < PLANNER_BUFFER_HEADROOM) {
-    if (jog.func == _jogging_axis_ramp_jog && mp_planner_is_full(mp)) { //+++++
+    if (jog.func == _jogging_axis_ramp_jog && mp_planner_is_full(mp)) {     //+++++
         return (STAT_EAGAIN);  // prevent flooding the queue with jog moves
     }
     return (jog.func(jog.axis));  // execute the current jogging move

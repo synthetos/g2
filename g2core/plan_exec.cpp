@@ -403,6 +403,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     if (mr->block_state == BLOCK_INACTIVE) {
 
         // ASSERTIONS
+
         // Zero length moves (and other too-short moves) should have already been removed earlier
         // But let's still alert the condition should it ever occur
         debug_trap_if_zero(bf->length, "mp_exec_aline() zero length move");
@@ -440,6 +441,9 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         copy_vector(mr->target, bf->gm.target);
         copy_vector(mr->axis_flags, bf->axis_flags);
 
+        mr->run_bf = bf;                                // DIAGNOSTIC: points to running bf
+        mr->plan_bf = bf->nx;                           // DIAGNOSTIC: points to next bf to forward plan
+
         // characterize the move for starting section - head/body/tail 
         mr->section_state = SECTION_NEW;
         mr->section = SECTION_HEAD;
@@ -456,6 +460,9 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             mr->waypoint[SECTION_BODY][axis] = mr->position[axis] + mr->unit[axis] * (mr->r->head_length + mr->r->body_length);
             mr->waypoint[SECTION_TAIL][axis] = mr->position[axis] + mr->unit[axis] * (mr->r->head_length + mr->r->body_length + mr->r->tail_length);
         }
+//        if (mr->waypoint[SECTION_TAIL][AXIS_X] < 0) {   //+++++
+//            bf->hint = (blockHint)0;
+//        }
     }
 
     // Feed Override Processing - We need to handle the following cases (listed in rough sequence order):
@@ -735,7 +742,7 @@ static stat_t _exec_aline_head(mpBuf_t *bf)
         if (mr->segment_time < MIN_SEGMENT_TIME) {
             debug_trap("mr->segment_time < MIN_SEGMENT_TIME (head)");
             return (STAT_OK);                               // exit without advancing position, say we're done
-        }
+        }        
         mr->section = SECTION_HEAD;                         // +++++ Redundant???
         mr->section_state = SECTION_RUNNING;
     } else {
@@ -924,7 +931,6 @@ static stat_t _exec_aline_segment()
 
 static void _exec_aline_normalize_block(mpBlockRuntimeBuf_t *b)
 {
-
     if ((b->head_length > 0) && (b->head_time < MIN_SEGMENT_TIME)) {
         // Compute the new body time. head_time !== body_time
         b->body_length += b->head_length;
@@ -995,7 +1001,7 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
 
             // If in a p2 hold, exit the p2 hold set up a flush of the p2 planner queue            
             if (cm == &cm2) {
-//                copy_vector(mp->position, mr->position);    // update planner position from runtime
+//                copy_vector(mp->position, mr->position);    // +++++ update planner position from runtime
                 cm->hold_state = FEEDHOLD_P2_EXIT;
             }
             // At this point we know we are in a p1 hold
@@ -1011,6 +1017,11 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
             // If exiting a regular p1 hold set state to FEEDHOLD_ACTIONS_START.
             // This enables transition to p2 planner; then Z-lift, spindle, coolant actions
             else {
+                if (bf->gm.linenum == 10) { // +++ DEBUG TRAP
+                    bf->override_factor *= 1.01;
+                }
+//              copy_vector(mp->position, mr->position);    // ++++ update planner position from runtime
+//              bf->length = get_axis_vector_length(mr->position, mr->target); //+++++
                 cm->hold_state = FEEDHOLD_ACTIONS_START;
             }
 

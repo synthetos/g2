@@ -464,7 +464,10 @@ typedef struct mpPlannerRuntime {       // persistent runtime variables
 
     mpBlockRuntimeBuf_t *r;             // block that is running
     mpBlockRuntimeBuf_t *p;             // block that is being planned, p might == r
-    mpBlockRuntimeBuf_t bf[2];          // buffer holding the two blocks
+    mpBlockRuntimeBuf_t block[2];       // buffer holding the two blocks
+
+    mpBuf_t *plan_bf;                   // DIAGNOSTIC - pointer to next buffer to plan
+    mpBuf_t *run_bf;                    // DIAGNOSTIC - pointer to currently running buffer
 
     float entry_velocity;               // entry values for the currently running block
 

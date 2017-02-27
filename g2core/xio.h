@@ -2,8 +2,8 @@
  * xio.h - extended IO functions
  * This file is part of the g2core project
  *
- * Copyright (c) 2013 - 2016 Alden S. Hart Jr.
- * Copyright (c) 2013 - 2016 Robert Giseburt
+ * Copyright (c) 2013 - 2017 Alden S. Hart Jr.
+ * Copyright (c) 2013 - 2017 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -154,13 +154,11 @@ extern "C" {
 
 /* Signal character mappings */
 
-#define CHAR_RESET CAN
-#define CHAR_ALARM EOT
-#define CHAR_FEEDHOLD (char)'!'
-#define CHAR_CYCLE_START (char)'~'
-#define CHAR_QUEUE_FLUSH (char)'%'
-//#define CHAR_BOOTLOADER ESC
-
+#define CHAR_RESET CAN              // Control X - Reset Board
+#define CHAR_ALARM EOT              // Control D - Kill Job
+#define CHAR_FEEDHOLD (char)'!'     // Feedhold
+#define CHAR_CYCLE_START (char)'~'  // Feedhold Exit and Resume
+#define CHAR_QUEUE_FLUSH (char)'%'  // Feedhold Exit and Flush  
 
 /**** xio_flash_file - object to hold in-flash (compiled-in) "files" to run ****/
 
