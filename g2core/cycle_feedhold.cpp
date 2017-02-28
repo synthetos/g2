@@ -78,7 +78,7 @@ static stat_t _feedhold_alarm_exit(void);
  * Feedhold Processing - Performs the following cases (listed in rough sequence order):
  *  (0) - Feedhold request arrives or cm_start_hold()
  *
- *  Control transfers to plan_exec.cpp feedhold functions:
+ * Control transfers to plan_exec.cpp feedhold functions:
  *
  *  (1) - Feedhold arrives while we are in the middle executing of a block
  *   (1a) - The block is currently accelerating - wait for the end of acceleration
@@ -91,24 +91,28 @@ static stat_t _feedhold_alarm_exit(void);
  *   (1d) - The block is currently in the tail - wait until the end of the block
  *   (1e) - We have a new block and a new feedhold request that arrived at EXACTLY the same time
  *          (unlikely, but handled as 1b).
+ *
  *  (2) - The block has decelerated to some velocity > zero, so needs continuation into next block
+ *
  *  (3) - The block has decelerated to zero velocity
  *   (3a) - The end of deceleration is detected inline in mp_exec_aline()
  *   (3b) - The end of deceleration is signaled and state is transitioned
- *  (4) - We have finished all the runtime work now we have to wait for the motors to stop
+ *
+ *  (4) - Finished all the runtime work, now wait for the motors to stop
  *   (4a) - It's a homing or probing feedhold - ditch the remaining buffer & go directly to OFF
  *   (4b) - It's a p2 feedhold - ditch the remaining buffer & signal we want a p2 queue flush
  *   (4c) - It's a normal feedhold - signal we want the p2 entry actions to execute
+ *
  *  (5) - The steppers have stopped. No motion should occur. Allows hold actions to complete
  *
- *  Control transfers back to cycle_feedhold.cpp feedhold functions:
+ * Control transfers back to cycle_feedhold.cpp feedhold functions:
  *
  *  (6) - Removing the hold state and there is queued motion - see cycle_feedhold.cpp
  *  (7) - Removing the hold state and there is no queued motion - see cycle_feedhold.cpp
  */
 
 /****************************************************************************************
- * cm_has_hold()   - return true if a hold condition exists (or a pending hold request)
+ * cm_has_hold() - return true if a hold condition exists (or a pending hold request)
  */
 bool cm_has_hold()
 {

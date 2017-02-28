@@ -460,9 +460,6 @@ stat_t mp_exec_aline(mpBuf_t *bf)
             mr->waypoint[SECTION_BODY][axis] = mr->position[axis] + mr->unit[axis] * (mr->r->head_length + mr->r->body_length);
             mr->waypoint[SECTION_TAIL][axis] = mr->position[axis] + mr->unit[axis] * (mr->r->head_length + mr->r->body_length + mr->r->tail_length);
         }
-//        if (mr->waypoint[SECTION_TAIL][AXIS_X] < 0) {   //+++++
-//            bf->hint = (blockHint)0;
-//        }
     }
 
     // Feed Override Processing - We need to handle the following cases (listed in rough sequence order):
@@ -994,14 +991,14 @@ static void _exec_aline_normalize_block(mpBlockRuntimeBuf_t *b)
 
 static stat_t _exec_aline_feedhold(mpBuf_t *bf) 
 {
-    // Case (4) - Wait for the steppers to stop
+    // Case (4) - Completing the feedhold - Wait for the steppers to stop
     if (cm->hold_state == FEEDHOLD_MOTORS_STOPPING) {
         if (mp_runtime_is_idle()) {                         // wait for steppers to actually finish
             mp_zero_segment_velocity();                     // finalize velocity for reporting purposes
 
             // If in a p2 hold, exit the p2 hold set up a flush of the p2 planner queue            
             if (cm == &cm2) {
-//                copy_vector(mp->position, mr->position);    // +++++ update planner position from runtime
+//              copy_vector(mp->position, mr->position);    // +++++ update planner position from runtime
                 cm->hold_state = FEEDHOLD_P2_EXIT;
             }
             // At this point we know we are in a p1 hold
@@ -1017,12 +1014,17 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
             // If exiting a regular p1 hold set state to FEEDHOLD_ACTIONS_START.
             // This enables transition to p2 planner; then Z-lift, spindle, coolant actions
             else {
-                if (bf->gm.linenum == 10) { // +++ DEBUG TRAP
-                    bf->override_factor *= 1.01;
-                }
-//              copy_vector(mp->position, mr->position);    // ++++ update planner position from runtime
-//              bf->length = get_axis_vector_length(mr->position, mr->target); //+++++
-                cm->hold_state = FEEDHOLD_ACTIONS_START;
+                mr->block_state = BLOCK_INACTIVE;           // invalidate mr buffer to reset the new move
+                bf->block_state = BLOCK_INITIAL_ACTION;     // tell _exec to re-use the bf buffer
+  
+                bf->length = get_axis_vector_length(mr->position, mr->target); // get remaining length in move
+//                copy_vector(mr->position, mr->target);      // update position from previous target
+                copy_vector(mp->position, mr->position);    // update planner position from runtime
+
+                bf->plannable = true;                       // needed so black can be adjusted
+                mp_replan_queue(mp_get_r());                // make it replan all the blocks
+  
+                cm->hold_state = FEEDHOLD_ACTIONS_START;    // executes entirely out of p2 planner
             }
 
             sr_request_status_report(SR_REQUEST_IMMEDIATE);
@@ -1034,10 +1036,11 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
     // Case (3b) - Decelerated to zero. See also Feedhold Case (3a) in mp_exec_aline()
     // Update the run buffer then force a replan of the whole planner queue. Replans from zero velocity
     if (cm->hold_state == FEEDHOLD_DECEL_COMPLETE) {
-        mr->block_state = BLOCK_INACTIVE;                   // invalidate mr buffer to reset the new move
-        bf->block_state = BLOCK_INITIAL_ACTION;             // tell _exec to re-use the bf buffer
         cm->hold_state = FEEDHOLD_MOTORS_STOPPING;          // wait for the motors to come to a complete stop
-        mp_replan_queue(mp_get_r());                        // make it replan all the blocks
+//        mr->block_state = BLOCK_INACTIVE;                   // invalidate mr buffer to reset the new move
+//        bf->block_state = BLOCK_INITIAL_ACTION;             // tell _exec to re-use the bf buffer
+//        bf->plannable = true;                               // needed so black can be adjusted
+//        mp_replan_queue(mp_get_r());                        // make it replan all the blocks
         return (STAT_OK);                                   // exit from mp_exec_aline()
     }
 

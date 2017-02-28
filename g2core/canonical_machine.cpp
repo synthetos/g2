@@ -1110,10 +1110,6 @@ stat_t cm_resume_origin_offsets()
 
 stat_t cm_straight_traverse(const float target[], const bool flags[])
 {
-    if (target[AXIS_Y] == 20) { // +++ DEBUG TRAP
-        cm->gm.P_word = 20;
-    }
-
     cm->gm.motion_mode = MOTION_MODE_STRAIGHT_TRAVERSE;
 
     // it's legal for a G0 to have no axis words but we don't want to process it
