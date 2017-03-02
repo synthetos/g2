@@ -176,7 +176,7 @@ typedef enum {              // axis modes (ordered: see _cm_get_feed_time())
 
 /* Gcode state structures */
 
-/*****************************************************************************
+/****************************************************************************************
  * GCODE MODEL - The following GCodeModel/GCodeInput structs are used:
  *
  * - gm is the core Gcode model state. It keeps the internal gcode state model in
@@ -193,22 +193,23 @@ typedef enum {              // axis modes (ordered: see _cm_get_feed_time())
  *   Other Gcode model state is kept in the singletons for various sub-systems, such
  *   as arcs, spindle, coolant, and others (i.e. not ALL gcode global state is in gmx)
  *
- * - gn is used by the gcode interpreter and is re-initialized for each
- *   gcode block.It accepts data in the new gcode block in the formats
- *   present in the block (pre-normalized forms). During initialization
- *   some state elements are necessarily restored from gm.
+ * - gn is used by the gcode interpreter and is re-initialized for each gcode block.
+ *   It accepts data in the new gcode block in the formats present in the block 
+ *   (pre-normalized forms). During initialization some state elements are necessarily 
+ *    restored from gm.
  *
- * - gf is used by the gcode parser interpreter to hold flags for any data
- *   that has changed in gn during the parse. gf.target[] values are also used
- *   by the canonical machine during set_target().
+ * - gf is used by the gcode parser interpreter to hold flags for any data that has 
+ *   changed in gn during the parse. gf.target[] values are also used by the 
+ *   canonical machine during set_target().
  *
- * - cfg (config struct in config.h) is also used heavily and contains some
- *   values that might be considered to be Gcode model values. The distinction
- *   is that all values in the config are persisted and restored, whereas the
- *   gm structs are transient. So cfg has the G54 - G59 offsets, but gm has the
- *   G92 offsets. cfg has the power-on / reset gcode default values, but gm has
- *   the operating state for the values (which may have changed).
+ * - cfg (config struct in config.h) is also used heavily and contains some values 
+ *   that might be considered to be Gcode model values. The distinction is that all 
+ *   values in the config are persisted and restored, whereas the gm structs are 
+ *   transient. So cfg has the G54 - G59 offsets, but gm has the G92 offsets. 
+ *   cfg has the power-on / reset gcode default values, but gm has the operating 
+ *   state for the values (which may have changed).
  */
+
 typedef struct GCodeState {             // Gcode model state - used by model, planning and runtime
     uint32_t linenum;                   // Gcode block line number
     cmMotionMode motion_mode;           // Group1: G0, G1, G2, G3, G38.2, G80, G81,
