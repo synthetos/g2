@@ -564,6 +564,7 @@ stat_t mp_planner_callback()
  *  We don't actually need to invalidate back-planning. Only forward planning.
  *
  */
+
 void mp_replan_queue(mpBuf_t *bf)
 {
     do {

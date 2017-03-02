@@ -229,7 +229,7 @@ stat_t mp_aline(GCodeState_t* gm_in)
     _set_bf_diagnostics(bf);                            // DIAGNOSTIC
 
     // Note: these next lines must remain in exact order. Position must update before committing the buffer.
-    copy_vector(mp->position, bf->gm.target);           // set the planner position
+    copy_vector(mp->position, bf->gm.target);           // update the planner position for the next move
     mp_commit_write_buffer(BLOCK_TYPE_ALINE);           // commit current block (must follow the position update)
     return (STAT_OK);
 }

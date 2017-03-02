@@ -399,6 +399,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         return (STAT_NOOP);
     }
 
+    stat_t status;
+
     // Initialize all new blocks, regardless of normal or feedhold operation
     if (mr->block_state == BLOCK_INACTIVE) {
 
@@ -468,10 +470,15 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     if (cm->motion_state == MOTION_HOLD) {
         // if FEEDHOLD_ACTIONS_START, FEEDHOLD_ACTIONS_WAIT, FEEDHOLD HOLD or FEEDHOLD_P2_EXIT
         if (cm->hold_state >= FEEDHOLD_ACTIONS_START) { // handles _exec_aline_feedhold_processing case (7)
-            return (STAT_NOOP);                         // VERY IMPORTANT to exit as a NOOP. No more movement
+            return (STAT_NOOP);                 // VERY IMPORTANT to exit as a NOOP. Do not load another move
         }
-        if (_exec_aline_feedhold(bf) == STAT_OK) {
-            return (STAT_OK);                           // STAT_OK terminates aline execution for this move
+//        if (_exec_aline_feedhold(bf) == STAT_OK) {
+//            return (STAT_OK);                         
+//        }
+        status = _exec_aline_feedhold(bf);
+        if ((status == STAT_OK) ||              // STAT_OK terminates aline execution for this move
+            (status == STAT_NOOP)) {            // STAT_NOOP terminates execution and does not load another move
+            return (status);
         }
     }
     
@@ -480,7 +487,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     // NB: from this point on the contents of the bf buffer do not affect execution
 
     //**** main dispatcher to process segments ***
-    stat_t status = STAT_OK;
+    status = STAT_OK;
          if (mr->section == SECTION_HEAD) { status = _exec_aline_head(bf); }
     else if (mr->section == SECTION_BODY) { status = _exec_aline_body(bf); }
     else if (mr->section == SECTION_TAIL) { status = _exec_aline_tail(bf); }
@@ -985,8 +992,16 @@ static void _exec_aline_normalize_block(mpBlockRuntimeBuf_t *b)
  *  Feedhold processing mostly manages the deceleration phase into the hold, and sets 
  *  state variables used in cycle_feedhold.cpp
  *
- *  Returning STAT_OK ends the move. (i.e. returns STAT_OK from mp_exec_aline())
- *  Returning STAT_EAGAIN allows mp_exec_aline() to continue execution
+ *  Returns:
+ *
+ *    STAT_OK     exits from mp_exec_aline() but allows another segment to be loaded  
+ *                and executed. This is used when the hold is still in continuous motion.
+ *
+ *    STAT_NOOP   exits from mp_exec_aline() and prevents another segment loading and
+ *                executing. This is used when the hold has stopped at the hold point.
+ *  
+ *    STAT_EAGAIN allows mp_exec_aline() to continue execution, playing out a head, body
+ *                or tail.
  */
 
 static stat_t _exec_aline_feedhold(mpBuf_t *bf) 
@@ -996,13 +1011,14 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
         if (mp_runtime_is_idle()) {                         // wait for steppers to actually finish
             mp_zero_segment_velocity();                     // finalize velocity for reporting purposes
 
-            // If in a p2 hold, exit the p2 hold set up a flush of the p2 planner queue            
+            // If in a p2 hold, exit the p2 hold immediately set up a flush of the p2 planner queue            
             if (cm == &cm2) {
 //              copy_vector(mp->position, mr->position);    // +++++ update planner position from runtime
                 cm->hold_state = FEEDHOLD_P2_EXIT;
+                return (STAT_OK);                           // will end this exec_aline() with no more movement
             }
             // At this point we know we are in a p1 hold
-
+    
             // If probing or homing, exit the move and advance to the _motion_end_callback()'s.
             // Stop the runtime, clear the run buffer and do not transition to p2 planner.
             else if ((cm->cycle_state == CYCLE_HOMING) || (cm->cycle_state == CYCLE_PROBE)) {
@@ -1010,27 +1026,30 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
                 mp_free_run_buffer();                       // free buffer and enable finalization move to get loaded
                 cm->hold_state = FEEDHOLD_OFF;
             } 
-                        
-            // If exiting a regular p1 hold set state to FEEDHOLD_ACTIONS_START.
-            // This enables transition to p2 planner; then Z-lift, spindle, coolant actions
+
+            // In a regular p1 hold
             else {
-                mr->block_state = BLOCK_INACTIVE;           // invalidate mr buffer to reset the new move
-                bf->block_state = BLOCK_INITIAL_ACTION;     // tell _exec to re-use the bf buffer
   
+                // Reset the state of the p1 planner regardless of how hold will ultimately be exited.
                 bf->length = get_axis_vector_length(mr->position, mr->target); // get remaining length in move
-//                copy_vector(mr->position, mr->target);      // update position from previous target
                 copy_vector(mp->position, mr->position);    // update planner position from runtime
 
+                bf->block_state = BLOCK_INITIAL_ACTION;     // tell _exec to re-use the bf buffer
+                mr->block_state = BLOCK_INACTIVE;           // invalidate mr buffer to reset the new move
                 bf->plannable = true;                       // needed so black can be adjusted
-                mp_replan_queue(mp_get_r());                // make it replan all the blocks
-  
+                mp_replan_queue(mp_get_r());                // unplan current forward plan (bf head block), and reset all blocks
+//                st_request_forward_plan();                  // queue replan of the current bf block
+                mp_forward_plan();                          // replan current bf block
+                copy_vector(mp->position, mr->target);      // update planner position to the target
+                
+                // Set state to enable transition to p2 and perform entry actions in the p2 planner
                 cm->hold_state = FEEDHOLD_ACTIONS_START;    // executes entirely out of p2 planner
             }
 
             sr_request_status_report(SR_REQUEST_IMMEDIATE);
             cs.controller_state = CONTROLLER_READY;         // remove controller readline() PAUSE
         }
-        return (STAT_OK);                                   // hold here. No more movement
+        return (STAT_NOOP);                                 // hold here. leave with a NOOP so it does not attempt another load and exec.
     }
 
     // Case (3b) - Decelerated to zero. See also Feedhold Case (3a) in mp_exec_aline()
@@ -1056,7 +1075,7 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
             } else {
                 cm->hold_state = FEEDHOLD_DECEL_CONTINUE;
             }
-            return (STAT_EAGAIN);
+            return (STAT_EAGAIN);                           // exiting with EAGAIN will continue exec_aline() execution
         }
 
         // Case (1a) - Currently accelerating (in a head), skip and waited for body or tail
@@ -1114,5 +1133,5 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
         }
         _exec_aline_normalize_block(mr->r);
     }
-    return (STAT_EAGAIN);
+    return (STAT_EAGAIN);                           // exiting with EAGAIN will continue exec_aline() execution
 }
