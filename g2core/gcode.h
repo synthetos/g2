@@ -214,7 +214,7 @@ typedef struct GCodeState {             // Gcode model state - used by model, pl
     cmMotionMode motion_mode;           // Group1: G0, G1, G2, G3, G38.2, G80, G81,
                                         // G82, G83 G84, G85, G86, G87, G88, G89
 
-    float target[AXES];                 // XYZABC where the move should go
+    float target[AXES];                 // XYZABC target where the move should go
     float target_comp[AXES];            // summation compensation (Kahan) overflow value
     float display_offset[AXES];         // work offsets from the machine coordinate system (for reporting only)
 
@@ -267,6 +267,7 @@ typedef struct GCodeStateExtended {     // Gcode dynamic state extensions - used
     float origin_offset[AXES];          // XYZABC G92 offsets (Note: not used in gn or gf)
     float g28_position[AXES];           // XYZABC stored machine position for G28
     float g30_position[AXES];           // XYZABC stored machine position for G30
+    float p1_position[AXES];            // XYZABC stored machine position for return to p1 planner
 
     bool m48_enable;                    // master feedrate / spindle speed override enable
     bool mfo_enable;                    // feedrate override enable

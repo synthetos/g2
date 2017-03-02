@@ -338,6 +338,7 @@ typedef struct mpBuffer {
     blockHint hint;                     // hint the block for zoid and other planning operations. Must be accurate or NO_HINT
 
     // block parameters
+//    float position[AXES];               // XYZABC position at start of move
     float unit[AXES];                   // unit vector for axis scaling & planning
     bool axis_flags[AXES];              // set true for axes participating in the move & for command parameters
 
@@ -390,6 +391,7 @@ typedef struct mpBuffer {
         hint = NO_HINT;
 
         for (uint8_t i = 0; i< AXES; i++) {
+//            position[i] = 0;
             unit[i] = 0;
             axis_flags[i] = 0;
         }
@@ -454,6 +456,7 @@ typedef struct mpPlannerRuntime {       // persistent runtime variables
     bool axis_flags[AXES];              // set true for axes participating in the move
     float target[AXES];                 // final target for bf (used to correct rounding errors)
     float position[AXES];               // current move position
+    float end_position[AXES];           // endpoint position of previous move
     float waypoint[SECTIONS][AXES];     // head/body/tail endpoints for correction
 
     float target_steps[MOTORS];         // current MR target (absolute target as steps)
@@ -629,7 +632,7 @@ void mp_set_runtime_display_offset(float offset[]);
 bool mp_get_runtime_busy(void);
 bool mp_runtime_is_idle(void);
 
-stat_t mp_aline(GCodeState_t *gm_in);                   // line planning...
+stat_t mp_aline(GCodeState_t *_gm);                   // line planning...
 void mp_plan_block_list(void);
 void mp_plan_block_forward(mpBuf_t *bf);
 

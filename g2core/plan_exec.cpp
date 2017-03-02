@@ -472,16 +472,14 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         if (cm->hold_state >= FEEDHOLD_ACTIONS_START) { // handles _exec_aline_feedhold_processing case (7)
             return (STAT_NOOP);                 // VERY IMPORTANT to exit as a NOOP. Do not load another move
         }
-//        if (_exec_aline_feedhold(bf) == STAT_OK) {
-//            return (STAT_OK);                         
-//        }
+        // STAT_OK terminates aline execution for this move
+        // STAT_NOOP terminates execution and does not load another move
         status = _exec_aline_feedhold(bf);
-        if ((status == STAT_OK) ||              // STAT_OK terminates aline execution for this move
-            (status == STAT_NOOP)) {            // STAT_NOOP terminates execution and does not load another move
+        if ((status == STAT_OK) || (status == STAT_NOOP)) {            
             return (status);
         }
     }
-    
+
     mr->block_state = BLOCK_ACTIVE;
 
     // NB: from this point on the contents of the bf buffer do not affect execution
@@ -542,6 +540,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                 st_request_forward_plan();
             }
         }
+        copy_vector(mr->end_position, mr->position);    // record end position
+        copy_vector(mp->position, mr->position);        // record end position
     }
     return (status);
 }
@@ -1033,12 +1033,12 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
                 // Reset the state of the p1 planner regardless of how hold will ultimately be exited.
                 bf->length = get_axis_vector_length(mr->position, mr->target); // get remaining length in move
                 copy_vector(mp->position, mr->position);    // update planner position from runtime
+                copy_vector(mr->end_position, mr->position);// record end position
 
                 bf->block_state = BLOCK_INITIAL_ACTION;     // tell _exec to re-use the bf buffer
                 mr->block_state = BLOCK_INACTIVE;           // invalidate mr buffer to reset the new move
                 bf->plannable = true;                       // needed so black can be adjusted
                 mp_replan_queue(mp_get_r());                // unplan current forward plan (bf head block), and reset all blocks
-//                st_request_forward_plan();                  // queue replan of the current bf block
                 mp_forward_plan();                          // replan current bf block
                 copy_vector(mp->position, mr->target);      // update planner position to the target
                 

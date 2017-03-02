@@ -142,7 +142,7 @@ bool mp_runtime_is_idle() { return (!st_runtime_isbusy()); }
  *        exceeds the minimums.
  */
 
-stat_t mp_aline(GCodeState_t* gm_in)
+stat_t mp_aline(GCodeState_t* _gm)
 {
     float target_rotated[AXES] = {0,0,0,0,0,0};
     float axis_square[AXES]    = {0,0,0,0,0,0};
@@ -153,7 +153,7 @@ stat_t mp_aline(GCodeState_t* gm_in)
 
     // A few notes about the rotated coordinate space:
     // These are positions PRE-rotation:
-    //  gm_in.* (anything in gm_in)
+    //  _gm.* (anything in _gm)
     //
     // These are positions POST-rotation:
     //  target_rotated (after the rotation here, of course)
@@ -170,23 +170,23 @@ stat_t mp_aline(GCodeState_t* gm_in)
     //  c being target[2],
     //  x_1 being cm->rotation_matrix[1][0]
 
-    target_rotated[0] = gm_in->target[0] * cm->rotation_matrix[0][0] + 
-                        gm_in->target[1] * cm->rotation_matrix[0][1] +
-                        gm_in->target[2] * cm->rotation_matrix[0][2];
+    target_rotated[0] = _gm->target[0] * cm->rotation_matrix[0][0] + 
+                        _gm->target[1] * cm->rotation_matrix[0][1] +
+                        _gm->target[2] * cm->rotation_matrix[0][2];
 
-    target_rotated[1] = gm_in->target[0] * cm->rotation_matrix[1][0] + 
-                        gm_in->target[1] * cm->rotation_matrix[1][1] +
-                        gm_in->target[2] * cm->rotation_matrix[1][2];
+    target_rotated[1] = _gm->target[0] * cm->rotation_matrix[1][0] + 
+                        _gm->target[1] * cm->rotation_matrix[1][1] +
+                        _gm->target[2] * cm->rotation_matrix[1][2];
 
-    target_rotated[2] = gm_in->target[0] * cm->rotation_matrix[2][0] + 
-                        gm_in->target[1] * cm->rotation_matrix[2][1] +
-                        gm_in->target[2] * cm->rotation_matrix[2][2] + 
+    target_rotated[2] = _gm->target[0] * cm->rotation_matrix[2][0] + 
+                        _gm->target[1] * cm->rotation_matrix[2][1] +
+                        _gm->target[2] * cm->rotation_matrix[2][2] + 
                         cm->rotation_z_offset;
 
     // copy rotation axes for ABC (no changes)
-    target_rotated[3] = gm_in->target[3];
-    target_rotated[4] = gm_in->target[4];
-    target_rotated[5] = gm_in->target[5];
+    target_rotated[3] = _gm->target[3];
+    target_rotated[4] = _gm->target[4];
+    target_rotated[5] = _gm->target[5];
 
     for (uint8_t axis = 0; axis < AXES; axis++) {
         axis_length[axis] = target_rotated[axis] - mp->position[axis];
@@ -212,13 +212,12 @@ stat_t mp_aline(GCodeState_t* gm_in)
     if (bf == NULL) {                                   // never supposed to fail
         return (cm_panic(STAT_FAILED_GET_PLANNER_BUFFER, "aline()"));
     }
-    memcpy(&bf->gm, gm_in, sizeof(GCodeState_t));
-    // Since bf->gm.target is being used all over the place, we'll make it the rotated target
+    memcpy(&bf->gm, _gm, sizeof(GCodeState_t));
     copy_vector(bf->gm.target, target_rotated);         // copy the rotated target in place
 
     // setup the buffer
     bf->bf_func = mp_exec_aline;                        // register the callback to the exec function
-    bf->length  = length;                               // record the length
+    bf->length = length;                                // record the length
     for (uint8_t axis = 0; axis < AXES; axis++) {       // compute the unit vector and set flags
         if ((bf->axis_flags[axis] = flags[axis])) {     // yes, this is supposed to be = and not ==
             bf->unit[axis] = axis_length[axis] / length;// nb: bf-> unit was cleared by mp_get_write_buffer()
