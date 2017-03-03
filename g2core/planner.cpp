@@ -753,7 +753,7 @@ mpBuf_t * mp_get_write_buffer()     // get & clear a buffer
     mpPlannerQueue_t *q = &(mp->q);
        
     if (q->w->buffer_state == MP_BUFFER_EMPTY) {
-        _clear_buffer(q->w);        // NB: this is no longer redundant, as it was not just cleared in mp_free_run_buffer
+        _clear_buffer(q->w);        // NB: this is redundant if the buffer was cleared mp_free_run_buffer()
         q->w->buffer_state = MP_BUFFER_INITIALIZING;
         q->buffers_available--;
         return (mp_get_w());
@@ -827,8 +827,8 @@ bool mp_free_run_buffer()           // EMPTY current run buffer & advance to the
 
     _audit_buffers();               // DIAGNOSTIC audit for buffer chain integrity (only runs in DEBUG mode)
     q->r = q->r->nx;                // advance to next run buffer first...
-//    _clear_buffer(r_now);           // ... then clear out the old buffer (& set MP_BUFFER_EMPTY)
-    r_now->buffer_state = MP_BUFFER_EMPTY; //... then mark the buffer empty while perserving content for debug inspection
+    _clear_buffer(r_now);           // ... then clear out the old buffer (& set MP_BUFFER_EMPTY)
+//    r_now->buffer_state = MP_BUFFER_EMPTY; //... then mark the buffer empty while preserving content for debug inspection
     q->buffers_available++;
     qr_request_queue_report(-1);    // request a QR and add to the "removed buffers" count
     return (q->w == q->r);          // return true if the queue emptied
