@@ -568,10 +568,10 @@ stat_t mp_planner_callback()
 void mp_replan_queue(mpBuf_t *bf)
 {
     do {
-        if (bf->buffer_state >= MP_BUFFER_PLANNED) {    // revert from PLANNED state
-            bf->buffer_state = MP_BUFFER_PREPPED;
-        } else {                                        // If it's not "planned" then it's either PREPPED or earlier.
-            break;                                      // We don't need to adjust it.           
+        if (bf->buffer_state >= MP_BUFFER_FULLY_PLANNED) {  // revert from FULLY PLANNED state
+            bf->buffer_state = MP_BUFFER_BACK_PLANNED;
+        } else {                                            // If it's not "planned" then it's either backplanned or earlier.
+            break;                                          // We don't need to adjust it.           
         }
     } while ((bf = mp_get_next_buffer(bf)) != mp_get_r());
 
@@ -842,13 +842,20 @@ void mp_copy_buffer(mpBuf_t *bf, const mpBuf_t *bp)
 }
 */
 
+
+/************************************************************************************
+ *** DIAGNOSTICS ********************************************************************
+ ************************************************************************************/
+
 /************************************************************************************
  * mp_dump_planner
  * _planner_report()
- * _audit_buffers() - a DEBUG diagnostic
+ * _audit_buffers()
  */
 
 //#define __DUMP_PLANNER
+//#define __PLANNER_REPORT_ENABLED
+//#define __AUDIT_BUFFERS
 
 #ifdef __DUMP_PLANNER
 void mp_dump_planner(mpBuf_t *bf_start)   // starting at bf
@@ -884,31 +891,41 @@ void mp_dump_planner(mpBuf_t *bf_start)   // starting at bf
 }
 #endif // __DUMP_PLANNER
 
-#if 0 && defined(DEBUG)
-
-#warning DEBUG TRAPS ENABLED
-
-//static void _planner_report(const char *msg)
-//{
-//    rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, msg);
-//
-//    for (uint8_t i=0; i<PLANNER_BUFFER_POOL_SIZE; i++) {
-//        printf("{\"er\":{\"stat\":%d, \"type\":%d, \"lock\":%d, \"plannable\":%d",
-//                mb.bf[i].buffer_state,
-//                mb.bf[i].block_type,
-//                mb.bf[i].locked,
-//                mb.bf[i].plannable);
-//        if (&mb.bf[i] == mb.r) {
-//            printf(", \"RUN\":t");}
-//        if (&mb.bf[i] == mb.w) {
-//            printf(", \"WRT\":t");}
-//        printf("}}\n");
-//    }
-//}
+//#if 0 && defined(DEBUG)
+//#warning DEBUG TRAPS ENABLED
 
 /*
  * _audit_buffers() - diagnostic to determine if buffers are sane
+ * _planner_report() - a detailed report for buffer audits
  */
+
+#ifndef __AUDIT_BUFFERS
+
+static void _audit_buffers()
+{
+    // empty stub
+}
+#else 
+
+static void _planner_report(const char *msg)
+{
+    #ifdef __PLANNER_REPORT_ENABLED
+    rpt_exception(STAT_PLANNER_ASSERTION_FAILURE, msg);
+
+    for (uint8_t i=0; i<PLANNER_BUFFER_POOL_SIZE; i++) {
+        printf("{\"er\":{\"stat\":%d, \"type\":%d, \"lock\":%d, \"plannable\":%d",
+            mb.bf[i].buffer_state,
+            mb.bf[i].block_type,
+            mb.bf[i].locked,
+            mb.bf[i].plannable);
+            if (&mb.bf[i] == mb.r) {
+            printf(", \"RUN\":t");}
+            if (&mb.bf[i] == mb.w) {
+            printf(", \"WRT\":t");}
+        printf("}}\n");
+    }
+    #endif
+}
 
 static void _audit_buffers()
 {
@@ -916,15 +933,15 @@ static void _audit_buffers()
 
     // Current buffer should be in the running state.
     if (mb.r->buffer_state != MP_BUFFER_RUNNING) {
-//        _planner_report("buffer audit1");
+        _planner_report("buffer audit1");
         __NOP();
-//        _debug_trap();
+        debug_trap("buffer audit1");
     }
 
     // Check that the next from the previous is correct.
     if (mb.r->pv->nx != mb.r || mb.r->nx->pv != mb.r){
-//        _planner_report("buffer audit2");
-        _debug_trap("buffer audit2");
+        _planner_report("buffer audit2");
+        debug_trap("buffer audit2");
     }
 
     // Now check every buffer, in order we would execute them.
@@ -932,8 +949,8 @@ static void _audit_buffers()
     while (bf != mb.r) {
         // Check that the next from the previous is correct.
         if (bf->pv->nx != bf || bf->nx->pv != bf){
-//            _planner_report("buffer audit3");
-            _debug_trap("buffer audit3");
+            _planner_report("buffer audit3");
+            debug_trap("buffer audit3");
         }
 
         // Order should be:
@@ -954,8 +971,8 @@ static void _audit_buffers()
             if ((bf->buffer_state == MP_BUFFER_INITIALIZING) || (bf->buffer_state == MP_BUFFER_IN_PROCESS)) {
                 __NOP();
             } else {
-//                _planner_report("buffer audit4");
-                _debug_trap("buffer audit4");
+                _planner_report("buffer audit4");
+                debug_trap("buffer audit4");
             }
         }
 
@@ -965,8 +982,8 @@ static void _audit_buffers()
             bf->buffer_state != MP_BUFFER_INITIALIZING &&
             bf->buffer_state != MP_BUFFER_IN_PROCESS &&
             bf->buffer_state != MP_BUFFER_EMPTY) {
-//            _planner_report("buffer audit5");
-            _debug_trap("buffer audit5");
+            _planner_report("buffer audit5");
+            debug_trap("buffer audit5");
         }
 
         // After PREPPED, we can see PREPPED, INITED, IN_PROCESS, or EMPTY
@@ -975,14 +992,14 @@ static void _audit_buffers()
             bf->buffer_state != MP_BUFFER_INITIALIZING &&
             bf->buffer_state != MP_BUFFER_IN_PROCESS &&
             bf->buffer_state != MP_BUFFER_EMPTY) {
-//            _planner_report("buffer audit6");
-            _debug_trap("buffer audit6");
+            _planner_report("buffer audit6");
+            debug_trap("buffer audit6");
         }
 
         // After EMPTY, we should only see EMPTY
         if (bf->pv->buffer_state == MP_BUFFER_EMPTY && bf->buffer_state != MP_BUFFER_EMPTY) {
-//            _planner_report("buffer audit7");
-            _debug_trap("buffer audit7");
+            _planner_report("buffer audit7");
+            debug_trap("buffer audit7");
         }
         // Now look at the next one.
         bf = bf->nx;
@@ -990,15 +1007,7 @@ static void _audit_buffers()
     __enable_irq();
 }
 
-#else
-
-static void _audit_buffers()
-{
-    // empty stub
-}
-
-#endif // 0
-
+#endif // __AUDIT_BUFFERS
 
 /****************************
  * END OF PLANNER FUNCTIONS *

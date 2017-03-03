@@ -263,10 +263,9 @@ void mp_plan_block_list()
             return;
         }
 
-        bf = _plan_block(bf);  // returns next block to plan
-
+        bf = _plan_block(bf);       // returns next block to plan
         planned_something = true;
-        mp->p = bf;  // DIAGNOSTIC - this is not needed but is set here for debugging purposes
+        mp->p = bf;                 // DIAGNOSTIC - this is not needed but is set here for debugging purposes
     }
     if (mp->planner_state > PLANNER_STARTUP) {
         if (planned_something && (cm->hold_state != FEEDHOLD_HOLD)) {
@@ -297,7 +296,7 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
         }
         _calculate_override(bf);                        // adjust cruise_vmax for feed/traverse override
  //     bf->plannable_time = bf->pv->plannable_time;    // set plannable time - excluding current move
-        bf->buffer_state = MP_BUFFER_IN_PROCESS;
+        bf->buffer_state = MP_BUFFER_NOT_PLANNED;
         bf->hint = NO_HINT;                             // ensure we've cleared the hints
         
         // Time: 12us-41us
@@ -418,18 +417,18 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
                 optimal = true;   // We can't improve this entry more
             }
 
-            // DIAGNOSTICS
+            // Exit the loop if we've hit and passed the running buffer. It can happen.
             if (bf->buffer_state == MP_BUFFER_EMPTY) {
-            //     _debug_trap("Exec apparently cleared this block while we were planning it.");
-                break;  // exit the loop, we've hit and passed the running buffer
+                break;  
             }
-            // if (fp_ZERO(bf->exit_velocity) && !fp_ZERO(bf->exit_vmax)) {
-            //     _debug_trap(); // why zero?
+            
+            // if (fp_ZERO(bf->exit_velocity) && !fp_ZERO(bf->exit_vmax)) { // DIAGNOSTIC
+            //     debug_trap("_plan_block(): Why is exit velocity zero?");
             // }
 
             // We might back plan into the running or planned buffer, so we have to check.
-            if (bf->buffer_state < MP_BUFFER_PREPPED) {
-                bf->buffer_state = MP_BUFFER_PREPPED;
+            if (bf->buffer_state < MP_BUFFER_BACK_PLANNED) {
+                bf->buffer_state = MP_BUFFER_BACK_PLANNED;
             }
         }  // for loop
     }      // exits with bf pointing to a locked or EMPTY block

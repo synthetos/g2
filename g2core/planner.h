@@ -164,15 +164,15 @@ typedef enum {                      // planner operating state
     PLANNER_IDLE = 0,               // planner and movement are idle
     PLANNER_STARTUP,                // ingesting blocks before movement is started
     PLANNER_PRIMING,                // preparing new moves for planning ("stitching")
-    PLANNER_BACK_PLANNING           // plan by planning all blocks, from the newest added to the running block
+    PLANNER_BACK_PLANNING           // actively backplanning all blocks, from the newest added to the running block
 } plannerState;
 
 typedef enum {                      // bf->buffer_state values in incresing order so > and < can be used
     MP_BUFFER_EMPTY = 0,            // buffer is available for use (MUST BE 0)
     MP_BUFFER_INITIALIZING,         // buffer has been checked out and is being initialzed by aline() or a command
-    MP_BUFFER_IN_PROCESS,           // planning is in progress - at least vmaxes have been set
-    MP_BUFFER_PREPPED,              // buffer ready for final planning; velocities have been set
-    MP_BUFFER_PLANNED,              // buffer fully planned. May still be replanned
+    MP_BUFFER_NOT_PLANNED,          // planning is in progress - at least vmaxes have been set
+    MP_BUFFER_BACK_PLANNED,         // buffer ready for final planning; velocities have been set
+    MP_BUFFER_FULLY_PLANNED,        // buffer fully planned. May still be replanned
     MP_BUFFER_RUNNING,              // current running buffer
     MP_BUFFER_POLAND,               // Hitler used Poland as a buffer state
     MP_BUFFER_UKRAINE               // Later Stalin did the same to Ukraine
