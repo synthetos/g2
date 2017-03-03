@@ -104,7 +104,7 @@ float mp_get_runtime_display_position(uint8_t axis) {
     }
 }
 
-/*
+/****************************************************************************************
  * mp_get_runtime_busy() - returns TRUE if motion control busy (i.e. robot is moving)
  * mp_runtime_is_idle()  - returns TRUE is steppers are not actively moving
  *
@@ -233,7 +233,7 @@ stat_t mp_aline(GCodeState_t* _gm)
     return (STAT_OK);
 }
 
-/*
+/****************************************************************************************
  * mp_plan_block_list() - plan all the blocks in the list
  *
  *  This parent function is just a dispatcher that reads forward in the list
@@ -275,8 +275,8 @@ void mp_plan_block_list()
     mp->p = bf;  // update planner pointer
 }
 
-/*
- * _plan_block() - the block chain using pessimistic assumptions
+/****************************************************************************************
+ * _plan_block() - stitch and backplan a new block to the planner queue
  */
 
 static mpBuf_t* _plan_block(mpBuf_t* bf) 
@@ -492,7 +492,7 @@ static void _calculate_override(mpBuf_t* bf)  // execute ramp to adjust cruise v
     // }
 }
 
-/*
+/****************************************************************************************
  * _calculate_jerk() - calculate jerk given the dynamic state
  *
  *  Set the jerk scaling to the lowest axis with a non-zero unit vector.
@@ -542,7 +542,7 @@ static void _calculate_jerk(mpBuf_t* bf)
     bf->q_recip_2_sqrt_j = q / (2 * sqrt_j);
 }
 
-/*
+/****************************************************************************************
  * _calculate_vmaxes() - compute cruise_vmax and absolute_vmax based on velocity constraints
  *
  *  The following feeds and times are compared and the longest (slowest velocity) is returned:
@@ -647,7 +647,7 @@ static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const floa
     bf->block_time    = block_time;               // initial estimate - used for ramp computations
 }
 
-/*
+/****************************************************************************************
  * _calculate_junction_vmax() - Giseburt's Algorithm ;-)
  *
  *  WARNING: This description is out of date and needs to be updated.

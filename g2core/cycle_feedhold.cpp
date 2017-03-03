@@ -380,7 +380,6 @@ static stat_t _run_p1_hold_exit_actions()     // LATER: if value == true return 
 static void _sync_to_p1_hold_exit_actions_done(float* vect, bool* flag)
 {
     cm1.hold_state = FEEDHOLD_P1_EXIT;          // penultimate state before transitioning to FEEDHOLD_OFF
- //   copy_vector(mp->position, mr->position);    // +++++ Compensate for amount of move already performed
     sr_request_status_report(SR_REQUEST_IMMEDIATE);
 }
 

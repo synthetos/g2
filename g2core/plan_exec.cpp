@@ -552,8 +552,6 @@ stat_t mp_exec_aline(mpBuf_t *bf)
                 st_request_forward_plan();
             }
         }
-//+++++        copy_vector(mr->end_position, mr->position);    // record end position
-        copy_vector(mp->position, mr->position);        // record actual end position of the move
     }
     return (status);
 }
@@ -803,7 +801,6 @@ static stat_t _exec_aline_body(mpBuf_t *bf)
             debug_trap("mr->segment_time < MIN_SEGMENT_TIME (body)");
             return (STAT_OK);                               // exit without advancing position, say we're done
         }
-
         mr->section = SECTION_BODY;                         // +++++ Redundant???
         mr->section_state = SECTION_RUNNING;                // uses PERIOD_2 so last segment detection works
     }
@@ -1025,7 +1022,6 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
 
             // If in a p2 hold, exit the p2 hold immediately set up a flush of the p2 planner queue            
             if (cm == &cm2) {
-//              copy_vector(mp->position, mr->position);    // +++++ update planner position from runtime
                 cm->hold_state = FEEDHOLD_P2_EXIT;
                 return (STAT_OK);                           // will end this exec_aline() with no more movement
             }
@@ -1043,16 +1039,12 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
             else {
   
                 // Reset the state of the p1 planner regardless of how hold will ultimately be exited.
-                bf->length = get_axis_vector_length(mr->position, mr->target); // get remaining length in move
-                copy_vector(mp->position, mr->position);    // update planner position from runtime position
-  
+                bf->length = get_axis_vector_length(mr->position, mr->target); // update bf w/remaining length in move
                 bf->block_state = BLOCK_INITIAL_ACTION;     // tell _exec to re-use the bf buffer
                 mr->block_state = BLOCK_INACTIVE;           // invalidate mr buffer to reset the new move
                 bf->plannable = true;                       // needed so black can be adjusted
                 mp_replan_queue(mp_get_r());                // unplan current forward plan (bf head block), and reset all blocks
                 st_request_forward_plan();                  // replan the current bf buffer
-//                mp_forward_plan();                          // the one case where you can call this function directly
-                copy_vector(mp->position, mr->target);      // update planner position to the target
                 
                 // Set state to enable transition to p2 and perform entry actions in the p2 planner
                 cm->hold_state = FEEDHOLD_ACTIONS_START;    // executes entirely out of p2 planner
@@ -1068,10 +1060,6 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
     // Update the run buffer then force a replan of the whole planner queue. Replans from zero velocity
     if (cm->hold_state == FEEDHOLD_DECEL_COMPLETE) {
         cm->hold_state = FEEDHOLD_MOTORS_STOPPING;          // wait for the motors to come to a complete stop
-//        mr->block_state = BLOCK_INACTIVE;                   // invalidate mr buffer to reset the new move
-//        bf->block_state = BLOCK_INITIAL_ACTION;             // tell _exec to re-use the bf buffer
-//        bf->plannable = true;                               // needed so black can be adjusted
-//        mp_replan_queue(mp_get_r());                        // make it replan all the blocks
         return (STAT_OK);                                   // exit from mp_exec_aline()
     }
 

@@ -454,7 +454,6 @@ typedef struct mpPlannerRuntime {       // persistent runtime variables
     bool axis_flags[AXES];              // set true for axes participating in the move
     float target[AXES];                 // final target for bf (used to correct rounding errors)
     float position[AXES];               // current move position
-//    float end_position[AXES];           // endpoint position of previous move +++++
     float waypoint[SECTIONS][AXES];     // head/body/tail endpoints for correction
 
     float target_steps[MOTORS];         // current MR target (absolute target as steps)
