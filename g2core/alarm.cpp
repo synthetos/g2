@@ -249,3 +249,18 @@ stat_t cm_panic(const stat_t status, const char *msg)
     rpt_exception(status, msg);                 // send panic report
     return (status);
 }
+
+/****************************************************************************************
+ * cm_job_kill() - Control-D handler
+ */
+
+void cm_job_kill()
+{
+    cm->job_kill_requested = true;
+    
+    if (cm->machine_state == MACHINE_ALARM) {
+        cm->machine_state = MACHINE_PROGRAM_STOP;
+    } else if (cm->machine_state == MACHINE_SHUTDOWN) {
+        cm->machine_state = MACHINE_READY;
+    }
+}

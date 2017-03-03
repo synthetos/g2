@@ -240,6 +240,13 @@ stat_t mp_exec_move()
 {
     mpBuf_t *bf;
 
+    // It is possible to try to try to exec from a priming planner if coming off a hold
+    // This occurs if new p1 commands (and were held back) arrived while in a hold
+//    if (mp->planner_state <= PLANNER_PRIMING) {
+//        st_prep_null();
+//        return (STAT_NOOP);
+//    }
+
     // Run an out of band dwell. It was probably set in the previous st_load_move()
     if (mr->out_of_band_dwell_flag) {
         mr->out_of_band_dwell_flag = false;
@@ -258,7 +265,7 @@ stat_t mp_exec_move()
         // first-time operations
         if (bf->buffer_state != MP_BUFFER_RUNNING) {
             if ((bf->buffer_state < MP_BUFFER_PREPPED) && (cm->motion_state == MOTION_RUN)) {
-                debug_trap("mp_exec_move() buffer is not prepped. Starvation"); // IMPORTANT: can't rpt_exception from here!
+//                debug_trap("mp_exec_move() buffer is not prepped. Starvation"); // IMPORTANT: can't rpt_exception from here!
                 st_prep_null();
                 return (STAT_NOOP);
             }

@@ -260,6 +260,7 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     uint8_t shutdown_requested;             // set non-zero to request shutdown in support of external estop (value is input number)
     bool deferred_write_flag;               // G10 data has changed (e.g. offsets) - flag to persist them
     bool hold_exit_requested;               // request exit from feedhold
+    bool job_kill_requested;                // ^d job kill received 
     bool return_flags[AXES];                // flags for recording which axes moved - used in feedhold exit move
 
     cmHomingState homing_state;             // home: homing cycle sub-state machine
@@ -477,6 +478,7 @@ void cm_halt_motion(void);                                      // halt motion (
 stat_t cm_alarm(const stat_t status, const char *msg);          // enter alarm state - preserve Gcode state
 stat_t cm_shutdown(const stat_t status, const char *msg);       // enter shutdown state - dump all state
 stat_t cm_panic(const stat_t status, const char *msg);          // enter panic state - needs RESET
+void cm_job_kill(void);                                         // control-D handler
 
 /**** cfgArray interface functions ****/
 

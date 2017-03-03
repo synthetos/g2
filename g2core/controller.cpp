@@ -239,7 +239,7 @@ static void _dispatch_kernel(const devflags_t flags)
     if      (*cs.bufp == '!') { cm_request_feedhold(); }
     else if (*cs.bufp == '%') { cm_request_queue_flush(); xio_flush_to_command(); }
     else if (*cs.bufp == '~') { cm_request_exit_hold(); }
-    else if (*cs.bufp == EOT) { cm_alarm(STAT_KILL_JOB, "EOT Received"); }
+    else if (*cs.bufp == EOT) { cm_job_kill(); }
     else if (*cs.bufp == ENQ) { controller_request_enquiry(); }
     else if (*cs.bufp == CAN) { hw_hard_reset(); }          // reset immediately
 
