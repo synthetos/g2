@@ -591,10 +591,8 @@ stat_t cm_set_tram(nvObj_t *nv)
 
             // Step 1b: compute the combined magnitude
             // since sqrt(a)*sqrt(b) = sqrt(a*b), we can save a sqrt in making the unit normal
-            float combined_magnitude_inv = 1.0/sqrt(
-                                            (d0_x*d0_x + d0_y*d0_y + d0_z*d0_z)*
-                                            (d2_x*d2_x + d2_y*d2_y + d2_z*d2_z)
-                                            );
+            float combined_magnitude_inv = 1.0/sqrt((d0_x*d0_x + d0_y*d0_y + d0_z*d0_z) *
+                                                    (d2_x*d2_x + d2_y*d2_y + d2_z*d2_z));
 
             // Step 1c: compute the cross product and normalize
             float n_x = (d0_z*d2_y - d0_y*d2_z)*combined_magnitude_inv;
@@ -894,6 +892,7 @@ stat_t cm_set_g10_data(const uint8_t P_word, const bool P_flag,
     else {
         return (STAT_L_WORD_IS_INVALID);
     }
+    cm_set_display_offsets(MODEL);
     return (STAT_OK);
 }
 
@@ -1071,6 +1070,7 @@ stat_t cm_set_origin_offsets(const float offset[], const bool flag[])
     // now pass the offset to the callback - setting the coordinate system also applies the offsets
     float value[] = { (float)cm->gm.coord_system }; // pass coordinate system in value[0] element
     mp_queue_command(_exec_offset, value, nullptr);
+    cm_set_display_offsets(MODEL);
     return (STAT_OK);
 }
 
@@ -1082,6 +1082,7 @@ stat_t cm_reset_origin_offsets()
     }
     float value[] = { (float)cm->gm.coord_system };
     mp_queue_command(_exec_offset, value, nullptr);
+    cm_set_display_offsets(MODEL);
     return (STAT_OK);
 }
 
@@ -1090,6 +1091,7 @@ stat_t cm_suspend_origin_offsets()
     cm->gmx.origin_offset_enable = false;
     float value[] = { (float)cm->gm.coord_system };
     mp_queue_command(_exec_offset, value, nullptr);
+    cm_set_display_offsets(MODEL);
     return (STAT_OK);
 }
 
@@ -1098,6 +1100,7 @@ stat_t cm_resume_origin_offsets()
     cm->gmx.origin_offset_enable = true;
     float value[] = { (float)cm->gm.coord_system };
     mp_queue_command(_exec_offset, value, nullptr);
+    cm_set_display_offsets(MODEL);
     return (STAT_OK);
 }
 

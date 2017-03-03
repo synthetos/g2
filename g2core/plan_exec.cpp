@@ -756,7 +756,8 @@ static stat_t _exec_aline_head(mpBuf_t *bf)
         if (mr->segment_time < MIN_SEGMENT_TIME) {
             debug_trap("mr->segment_time < MIN_SEGMENT_TIME (head)");
             return (STAT_OK);                               // exit without advancing position, say we're done
-        }        
+        }
+        debug_trap_if_true(mr->section != SECTION_HEAD, "exec_aline() Not section head");
         mr->section = SECTION_HEAD;                         // +++++ Redundant???
         mr->section_state = SECTION_RUNNING;
     } else {
@@ -801,6 +802,7 @@ static stat_t _exec_aline_body(mpBuf_t *bf)
             debug_trap("mr->segment_time < MIN_SEGMENT_TIME (body)");
             return (STAT_OK);                               // exit without advancing position, say we're done
         }
+        debug_trap_if_true(mr->section != SECTION_BODY, "exec_aline() Not section body");
         mr->section = SECTION_BODY;                         // +++++ Redundant???
         mr->section_state = SECTION_RUNNING;                // uses PERIOD_2 so last segment detection works
     }
@@ -841,6 +843,7 @@ static stat_t _exec_aline_tail(mpBuf_t *bf)
             debug_trap("mr->segment_time < MIN_SEGMENT_TIME (tail)");
             return (STAT_OK);                               // exit without advancing position, say we're done
         }
+        debug_trap_if_true(mr->section != SECTION_TAIL, "exec_aline() Not section tail");
         mr->section = SECTION_TAIL;                         // +++++ Redundant???
         mr->section_state = SECTION_RUNNING;
     } else {
