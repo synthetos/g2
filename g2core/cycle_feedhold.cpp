@@ -67,7 +67,7 @@ static stat_t _feedhold_alarm_exit(void);
  *  A feedhold exit request (~) received while in either p1 or p2 will execute the 
  *  feedhold exit actions:
  *    - Resume coolant (if paused)
- *    - Resume spindle (if paseud) with spinup delay
+ *    - Resume spindle (if paused) with spinup delay
  *    - Move back to starting location in XY, then plunge in Z
  *  Motion will resume in p1 after the exit actions complete
  *
@@ -76,7 +76,8 @@ static stat_t _feedhold_alarm_exit(void);
  */
 /*
  * Feedhold Processing - Performs the following cases (listed in rough sequence order):
- *  (0) - Feedhold request arrives or cm_start_hold()
+ *
+ *  (0) - Feedhold request arrives or cm_start_hold() is called
  *
  * Control transfers to plan_exec.cpp feedhold functions:
  *
@@ -93,22 +94,17 @@ static stat_t _feedhold_alarm_exit(void);
  *          (unlikely, but handled as 1b).
  *
  *  (2) - The block has decelerated to some velocity > zero, so needs continuation into next block
- *
- *  (3) - The block has decelerated to zero velocity
- *   (3a) - The end of deceleration is detected inline in mp_exec_aline()
- *   (3b) - The end of deceleration is signaled and state is transitioned
- *
- *  (4) - Finished all the runtime work, now wait for the motors to stop
+ *  (3) - The end of deceleration is detected inline in mp_exec_aline()
+ *  (4) - Finished all runtime work, now wait for the motors to stop on HOLD point. When they do:
  *   (4a) - It's a homing or probing feedhold - ditch the remaining buffer & go directly to OFF
  *   (4b) - It's a p2 feedhold - ditch the remaining buffer & signal we want a p2 queue flush
  *   (4c) - It's a normal feedhold - signal we want the p2 entry actions to execute
  *
- *  (5) - The steppers have stopped. No motion should occur. Allows hold actions to complete
- *
  * Control transfers back to cycle_feedhold.cpp feedhold functions:
  *
- *  (6) - Removing the hold state and there is queued motion - see cycle_feedhold.cpp
- *  (7) - Removing the hold state and there is no queued motion - see cycle_feedhold.cpp
+ *  (5) - Run the P2 entry actions and transition to HOLD state when complete
+ *  (6) - Remove the hold state / there is queued motion - see cycle_feedhold.cpp
+ *  (7) - Remove the hold state / there is no queued motion - see cycle_feedhold.cpp
  */
 
 /****************************************************************************************
@@ -211,7 +207,7 @@ stat_t cm_feedhold_sequencing_callback()
             cm1.hold_state = FEEDHOLD_SYNC;         // invokes hold from aline execution
         }
     }
-    if (cm1.hold_state == FEEDHOLD_ACTIONS_START) { // perform Z lift, spindle & coolant actions
+    if (cm1.hold_state == FEEDHOLD_P2_START) {      // enter p2 planner; perform Z lift, spindle & coolant actions
         _run_p1_hold_entry_actions();
     }
 
@@ -271,7 +267,7 @@ stat_t cm_feedhold_command_blocker()
 }
 
 /****************************************************************************************
- * _run_p1_hold_entry_actions()          - run actions in p2 that complete the p1 hold
+ * _run_p1_hold_entry_actions()          - run actions in p2 that complete the p1 hold 
  * _sync_to_p1_hold_entry_actions_done() - final state change occurs here
  *
  *  This function assumes that the feedhold sequencing callback has resolved all 
@@ -287,13 +283,13 @@ stat_t cm_feedhold_command_blocker()
  *  from an interrupt, so it only sets a flag.
  */
 
-static void _sync_to_p1_hold_entry_actions_done(float* vect, bool* flag)
+static void _sync_to_p1_hold_entry_actions_done(float* vect, bool* flag)  // Complete case (5)
 {
     cm1.hold_state = FEEDHOLD_HOLD;
     sr_request_status_report(SR_REQUEST_IMMEDIATE);
 }
 
-static stat_t _run_p1_hold_entry_actions()
+static stat_t _run_p1_hold_entry_actions()  // Execute Case (5)
 {
     // do not perform entry actions if in alarm state
     if (cm_is_alarmed()) {
@@ -301,7 +297,7 @@ static stat_t _run_p1_hold_entry_actions()
         return (STAT_OK);
     }
     
-    cm->hold_state = FEEDHOLD_ACTIONS_WAIT;   // penultimate state before transitioning to HOLD
+    cm->hold_state = FEEDHOLD_P2_WAIT;      // penultimate state before transitioning to HOLD
         
     // copy the primary canonical machine to the secondary, 
     // fix the planner pointer, and reset the secondary planner
@@ -360,7 +356,7 @@ static stat_t _run_p1_hold_entry_actions()
  *  the sync runs from an interrupt. Finalization needs to run from the main loop.
  */
 
-static stat_t _run_p1_hold_exit_actions()     // LATER: if value == true return with offset corrections
+static stat_t _run_p1_hold_exit_actions()     // Execute Cases (6) and (7)
 {
     // perform end-hold actions --- while still in secondary machine
     coolant_control_sync(COOLANT_RESUME, COOLANT_BOTH); // resume coolant if paused

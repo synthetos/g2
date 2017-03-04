@@ -115,10 +115,10 @@ typedef enum {                  // feedhold state machine
     FEEDHOLD_SYNC,              // start hold - sync to latest aline segment
     FEEDHOLD_DECEL_CONTINUE,    // in deceleration that will not end at zero
     FEEDHOLD_DECEL_TO_ZERO,     // in deceleration that will go to zero
-    FEEDHOLD_DECEL_COMPLETE,    // feedhold deceleration has completed
-    FEEDHOLD_MOTORS_STOPPING,   // waiting to complete deceleration once planner motion stops
-    FEEDHOLD_ACTIONS_START,     // enter secondary planner and perform feedhold actions (once)
-    FEEDHOLD_ACTIONS_WAIT,      // wait for feedhold actions to complete
+    FEEDHOLD_DECEL_COMPLETE,    // feedhold deceleration has completed, but motors may not have stopped yet
+    FEEDHOLD_MOTORS_STOPPING,   // waiting for motors to have stopped on hold point (motion stop)
+    FEEDHOLD_P2_START,          // enter secondary planner and perform feedhold actions (once)
+    FEEDHOLD_P2_WAIT,           // wait for feedhold actions to complete
     FEEDHOLD_HOLD,              // holding (steady state) Must be last state
     FEEDHOLD_P2_EXIT            // set when p2 feedhold is finishing
 } cmFeedholdState;

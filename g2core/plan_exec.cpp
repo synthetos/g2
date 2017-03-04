@@ -480,9 +480,9 @@ stat_t mp_exec_aline(mpBuf_t *bf)
 
     // Feedhold Processing - We need to handle the following cases (listed in rough sequence order):
     if (cm->motion_state == MOTION_HOLD) {
-        // if FEEDHOLD_ACTIONS_START, FEEDHOLD_ACTIONS_WAIT, FEEDHOLD HOLD or FEEDHOLD_P2_EXIT
-        if (cm->hold_state >= FEEDHOLD_ACTIONS_START) { // handles _exec_aline_feedhold_processing case (7)
-            return (STAT_NOOP);                 // VERY IMPORTANT to exit as a NOOP. Do not load another move
+        // if FEEDHOLD_P2_START, FEEDHOLD_P2_WAIT, FEEDHOLD HOLD or FEEDHOLD_P2_EXIT
+        if (cm->hold_state >= FEEDHOLD_P2_START) { // handles _exec_aline_feedhold_processing case (7)
+            return (STAT_NOOP);                    // VERY IMPORTANT to exit as a NOOP. Do not load another move
         }
         // STAT_OK terminates aline execution for this move
         // STAT_NOOP terminates execution and does not load another move
@@ -517,7 +517,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         bf->plannable = false;
     }
 
-    // Feedhold Case (3b): Look for the end of the deceleration to transition HOLD states
+    // Feedhold Case (3): Look for the end of the deceleration to transition HOLD states
     // This code sets states used by _exec_feedhold_processing() helper.
     if (cm->hold_state == FEEDHOLD_DECEL_TO_ZERO) {
         if ((status == STAT_OK) || (status == STAT_NOOP)) {
@@ -1050,7 +1050,7 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
                 st_request_forward_plan();                  // replan the current bf buffer
                 
                 // Set state to enable transition to p2 and perform entry actions in the p2 planner
-                cm->hold_state = FEEDHOLD_ACTIONS_START;    // executes entirely out of p2 planner
+                cm->hold_state = FEEDHOLD_P2_START;         // executes entirely out of p2 planner
             }
             
             sr_request_status_report(SR_REQUEST_IMMEDIATE);
@@ -1059,8 +1059,9 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
         return (STAT_NOOP);                                 // hold here. leave with a NOOP so it does not attempt another load and exec.
     }
 
-    // Case (3b) - Decelerated to zero. See also Feedhold Case (3a) in mp_exec_aline()
+    // Case (3') - Decelerated to zero. See also Feedhold Case (3) in mp_exec_aline()
     // Update the run buffer then force a replan of the whole planner queue. Replans from zero velocity
+    // This state might not appear necessary, but it is to handle closely packed !~ and other cases
     if (cm->hold_state == FEEDHOLD_DECEL_COMPLETE) {
         cm->hold_state = FEEDHOLD_MOTORS_STOPPING;          // wait for the motors to come to a complete stop
         return (STAT_OK);                                   // exit from mp_exec_aline()
