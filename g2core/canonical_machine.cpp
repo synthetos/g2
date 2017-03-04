@@ -929,6 +929,8 @@ stat_t cm_set_tl_offset(const uint8_t H_word, const bool H_flag, const bool appl
             cm->tool_offset[axis] = tt.tt_offset[tool][axis];
         }
     }
+    cm_set_display_offsets(MODEL);                      // display new offsets in the model right now
+
     float value[] = { (float)cm->gm.coord_system };     // pass coordinate system in value[0] element
     mp_queue_command(_exec_offset, value, nullptr);     // second vector (flags) is not used, so fake it
     return (STAT_OK);
@@ -939,8 +941,10 @@ stat_t cm_cancel_tl_offset()
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         cm->tool_offset[axis] = 0;
     }
+    cm_set_display_offsets(MODEL);                      // display new offsets in the model right now
+
     float value[] = { (float)cm->gm.coord_system };
-    mp_queue_command(_exec_offset, value, nullptr);
+    mp_queue_command(_exec_offset, value, nullptr);     // changes it in the runtime when executed
     return (STAT_OK);
 }
 
@@ -956,7 +960,7 @@ stat_t cm_set_coord_system(const uint8_t coord_system)  // set coordinate system
 
 static void _exec_offset(float *value, bool *flag)
 {
-    uint8_t coord_system = ((uint8_t)value[0]);             // coordinate system is passed in value[0] element
+    uint8_t coord_system = ((uint8_t)value[0]);         // coordinate system is passed in value[0] element
     float offsets[AXES];
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         offsets[axis] = cm->coord_offset[coord_system][axis] + cm->tool_offset[axis] + 
