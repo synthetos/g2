@@ -256,11 +256,12 @@ stat_t cm_panic(const stat_t status, const char *msg)
 
 void cm_job_kill()
 {
-    cm->job_kill_requested = true;
+    cm1.hold_abort_requested = true;
+    cm_program_end();
     
-    if (cm->machine_state == MACHINE_ALARM) {
-        cm->machine_state = MACHINE_PROGRAM_STOP;
-    } else if (cm->machine_state == MACHINE_SHUTDOWN) {
-        cm->machine_state = MACHINE_READY;
-    }
+//    if (cm->machine_state == MACHINE_ALARM) {
+//        cm->machine_state = MACHINE_PROGRAM_STOP;
+//    } else if (cm->machine_state == MACHINE_SHUTDOWN) {
+//        cm->machine_state = MACHINE_READY;
+//    }
 }

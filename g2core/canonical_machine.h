@@ -259,8 +259,8 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     uint8_t limit_requested;                // set non-zero to request limit switch processing (value is input number)
     uint8_t shutdown_requested;             // set non-zero to request shutdown in support of external estop (value is input number)
     bool deferred_write_flag;               // G10 data has changed (e.g. offsets) - flag to persist them
-    bool hold_exit_requested;               // request exit from feedhold
-    bool job_kill_requested;                // ^d job kill received 
+    bool hold_exit_requested;               // request normal exit from feedhold
+    bool hold_abort_requested;              // request emergency exit from feedhold (typically ^d job kill) 
     bool return_flags[AXES];                // flags for recording which axes moved - used in feedhold exit move
 
     cmHomingState homing_state;             // home: homing cycle sub-state machine
