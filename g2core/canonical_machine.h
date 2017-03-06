@@ -94,6 +94,12 @@ typedef enum {
 } cmMachineState;
 
 typedef enum {
+    MOTION_STOP = 0,            // motion has stopped: set when the steppers reach the end of the planner queue
+    MOTION_RUN,                 // machine is in motion: set when the steppers execute an ALINE segment
+    MOTION_HOLD                 // feedhold in progress: set whenever we leave FEEDHOLD_OFF, unset whenever we enter FEEDHOLD_OFF
+} cmMotionState;
+
+typedef enum {
     CYCLE_NONE = 0,             // machine is not ins a cycle
     CYCLE_MACHINING,            // in normal machining cycle
     CYCLE_HOMING,               // in homing cycle
@@ -102,13 +108,6 @@ typedef enum {
 //  CYCLE_G81                   // illustration of canned cycles
 //  ...
 } cmCycleType;
-
-typedef enum {
-    MOTION_STOP = 0,            // motion has stopped: set when the steppers reach the end of the planner queue
-    MOTION_PLANNING,            // machine has planned an ALINE segment, but not yet started to execute them
-    MOTION_RUN,                 // machine is in motion: set when the steppers execute an ALINE segment
-    MOTION_HOLD                 // feedhold in progress: set whenever we leave FEEDHOLD_OFF, unset whenever we enter FEEDHOLD_OFF
-} cmMotionState;
 
 typedef enum {                  // feedhold requests
     FEEDHOLD_NO_REQUEST = 0,    // no pending request; reverts here when complete (read-only; cannot be set)

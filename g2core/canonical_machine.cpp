@@ -262,7 +262,6 @@ void cm_set_motion_state(const cmMotionState motion_state)
 
     switch (motion_state) {
         case (MOTION_STOP):     { ACTIVE_MODEL = MODEL; break; }
-        case (MOTION_PLANNING): { ACTIVE_MODEL = RUNTIME; break; }
         case (MOTION_RUN):      { ACTIVE_MODEL = RUNTIME; break; }
         case (MOTION_HOLD):     { ACTIVE_MODEL = RUNTIME; break; }
     }
@@ -311,7 +310,6 @@ cmCombinedState cm_get_combined_state(cmMachine_t *_cm)
                 case CYCLE_MACHINING: case CYCLE_NONE: {
                     switch(_cm->motion_state) {
                         case MOTION_STOP:     { return (COMBINED_RUN); }    // See NOTE_1, above
-                        case MOTION_PLANNING: { return (COMBINED_RUN); }
                         case MOTION_RUN:      { return (COMBINED_RUN); }
                         case MOTION_HOLD:     { return (COMBINED_HOLD); }
                         default: {

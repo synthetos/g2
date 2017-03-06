@@ -785,11 +785,7 @@ void mp_commit_write_buffer(const blockType block_type)
     q->w->block_type = block_type;
     q->w->block_state = BLOCK_INITIAL_ACTION;
 
-    if (block_type == BLOCK_TYPE_ALINE) {
-        if (cm->motion_state == MOTION_STOP) {
-            cm_set_motion_state(MOTION_PLANNING);
-        }
-    } else {
+    if (block_type != BLOCK_TYPE_ALINE) {
         if ((mp->planner_state > PLANNER_STARTUP) && (cm->hold_state == FEEDHOLD_OFF)) {
             // NB: BEWARE! the requested exec may result in the planner buffer being
             // processed IMMEDIATELY and then freed - invalidating the contents
