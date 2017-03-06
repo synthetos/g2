@@ -108,6 +108,28 @@ typedef enum {
     MOTION_HOLD                 // feedhold in progress: set whenever we leave FEEDHOLD_OFF, unset whenever we enter FEEDHOLD_OFF
 } cmMotionState;
 
+typedef enum {                  // feedhold requests
+    FEEDHOLD_NO_REQUEST =0,     // no pending request; reverts here when complete (read-only; cannot be set)
+    FEEDHOLD_HOLD_P1 =1,        // enter p1 feedhold, enter HOLD state in p1
+    FEEDHOLD_HOLD_P2 =2,        // (!) enter p1 feedhold, enter p2 with entry actions 
+    FEEDHOLD_EXIT_RESUME =3,    // (~) exit feedhold, perform exit actions if in p2, resume p1 motion
+    FEEDHOLD_EXIT_FLUSH =4,     // (%) exit feedhold, perform exit actions if in p2, flush planner queue, enter p1 PROGRAM_STOP
+
+    // Feedholds with specialized  exits 
+    // If not in hold, perform hold (or halt), then perform the exit immediately
+    // If already in hold just perform the exit
+    FEEDHOLD_HOLD_SKIP,         // enter p1 feedhold, skip remainder of block, resume from next block (for homing & probes)
+    FEEDHOLD_HOLD_STOP,         // enter p1 feedhold, enter PROGRAM_STOP state
+    FEEDHOLD_HOLD_FAST_STOP,    // enter p1 feedhold, perform FAST_STOP, enter STOP state
+    FEEDHOLD_HOLD_HALT,         // enter p1 feedhold, enter PROGRAM_STOP state
+    FEEDHOLD_HOLD_END,          // enter p1 feedhold, flush queue, perform PROGRAM_END
+    FEEDHOLD_HOLD_END_ALARM,    // enter p1 feedhold, flush queue, perform PROGRAM_END, trigger ALARM
+    FEEDHOLD_HOLD_ALARM,        // enter p1 feedhold, flush queue, trigger ALARM
+    FEEDHOLD_HOLD_SHUTDOWN,     // enter p1 feedhold, flush queue, trigger SHUTDOWN
+    FEEDHOLD_HOLD_PANIC,        // perform HALT, trigger PANIC
+    FEEDHOLD_HOLD_INTERLOCK     // enter p1 feedhold, trigger and release INTERLOCK
+} cmFeedholdRequest;
+
 typedef enum {                  // feedhold state machine
     FEEDHOLD_P1_EXIT = -1,      // set when p1 feedhold is due to exit
     FEEDHOLD_OFF = 0,           // no feedhold in effect

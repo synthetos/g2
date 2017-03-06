@@ -75,6 +75,73 @@ static void _feedhold_abort(void);
  *  exit actions, flush the p1 and p2 queues, then stop motion at the hold point.
  */
 /*
+ * Feedhold Enumerations and Use Cases
+ *
+ *  The cmFeedholdRequest enum supports the following feedhold use cases. Feedholds and 
+ *  feedhold exits using these enums to get specific behaviors. First the normal ones:
+ *
+ *  - FEEDHOLD_NO_REQUEST   No request pending. Requests transition here when complete.
+ *                          This value cannot be set (i.e. there is no CANCEL command).
+ *
+ *  - FEEDHOLD_HOLD_P1      Enter HOLD state in P1. Do not enter p2 or perform entry actions.
+ *
+ *  - FEEDHOLD_HOLD_P2      (!) Enter HOLD state in P1. Enter p2 and perform entry actions.
+ *                          If this command is received while in p2, a FEEDHOLD_HOLD_SKIP
+ *                          is executed in p2.
+ *
+ *  - FEEDHOLD_EXIT_RESUME  (~) Exit HOLD state in P1 or p2. If in p2 perform exit actions,
+ *                          then resume motion in p1 planner.
+ *
+ *  - FEEDHOLD_EXIT_FLUSH   (%) Exit HOLD state in P1 or p2. If in p2 perform exit actions,
+ *                          then flush p1 planner. End in PROGRAM_STOP state.
+ *
+ *  Now the specialized ones. If these are called with FEEDHOLD_OFF (i.e. while not in a feedhold)
+ *  A feedhold is performed followed by the indicated actions. If called while in a feedhold the
+ *  feedhold is exited with the indicated actions. Most of these commands are not available in p2.
+ *
+ *  - FEEDHOLD_HOLD_SKIP    Enter HOLD state in P1 or P2. Skip the remainder of the move in the 
+ *                          held block. If the next block following held block is labeled as a
+ *                          SYNC block, execute it. Otherwise flush the queue and STOP. Used
+ *                          by homing and probing to stop motion and trigger next actions.
+ *
+ *  - FEEDHOLD_HOLD_STOP    Enter HOLD state in P1. Enter PROGRAM_STOP state. A cycle start or
+ *                          FEEDHOLD_EXIT_RESUME will restart motion.
+ *
+ *  - FEEDHOLD_HOLD_FAST_STOP  Enter HOLD state in P1 using a fast hold. Perform PROGRAM_STOP. 
+ *                          A cycle start or FEEDHOLD_EXIT_RESUME will restart motion.
+ *
+ *  - FEEDHOLD_HOLD_HALT    Enter HOLD state in P1 using a HALT. Perform PROGRAM_STOP. 
+ *                          A cycle start or FEEDHOLD_EXIT_RESUME will restart motion.
+ *
+ *  - FEEDHOLD_HOLD_END     Enter HOLD state in P1. Flush planner queue. Perform PROGRAM_END. 
+ *                          This has the effect of entering an asynchronous M30. Useful for Job Kill
+ *                          if the sender knows there are no commands following the HOLD command.
+ *
+ *  - FEEDHOLD_HOLD_END_ALARM Enter HOLD state in P1. Flush planner queue. Perform PROGRAM_END.
+ *                          Trigger ALARM. Useful for Job Kill if there may be subsequent commands
+ *                          queued by the sender. Requires {clear:n} or M2/M30 to recover operation.
+ *
+ *  - FEEDHOLD_HOLD_ALARM   Enter HOLD state in P1. Flush planner queue. Trigger ALARM.
+ *                          Requires {clear:n} or M2/M30 to recover operation.
+ *
+ *  - FEEDHOLD_HOLD_SHUTDOWN Enter HOLD state in P1. Flush planner queue. Trigger SHUTDOWN.
+ *                          Requires {clear:n} or M2/M30 to recover operation.
+ *
+ *  - FEEDHOLD_HOLD_PANIC   Enter HOLD state in P1 using a HALT. Trigger PANIC.
+ *                          Requires reset to recover operation.
+ *
+ *  Interlocks are also handled here. Invoking FEEDHOLD_HOLD_INTERLOCK when the interlock is 
+ *  not active will engage it. Invoking it while engaged releases the interlock and resumes 
+ *  normal operation.
+ *
+ *  - FEEDHOLD_HOLD_INTERLOCK Enter HOLD state in P1. Enter INTERLOCK_DISENGAGED state.
+ *                          Exit hold and resume motion when interlock is cleared. This may 
+ *                          require some combination of interlock switch transitions, interlock 
+ *                          JSON commands and {clear:n} depending on interlock configuration.
+ *
+ *
+ */
+/*
  * Feedhold Processing - Performs the following cases (listed in rough sequence order):
  *
  *  (0) - Feedhold request arrives or cm_start_hold() is called
@@ -116,14 +183,16 @@ bool cm_has_hold()
 }
 
 /****************************************************************************************
- * cm_request_feedhold()
- * cm_request_exit_hold()
- * cm_request_queue_flush()
- * cm_start_hold() - start a feedhhold external to feedhold request & sequencing
+ * cm_start_hold()          - start a feedhhold external to feedhold request equencing
+ * cm_request_feedhold()    - reqeust a feedhold
+ * cm_request_exit_hold()   - reqeust feedhold exit with resume motion
+ * cm_request_queue_flush() - request feedhold exit with queue flush
  *
  *  p1 is the primary planner, p2 is the secondary planner, which is active if the 
  *  primary planner is in hold. IOW p2 can only be in a hold if p1 is already in one.
  *  Request_feedhold, request_end_hold, and request_queue_flush are contextual:
+ *
+ *  It's OK to call start_hold directly in order to get a hold quickly (see gpio.cpp)
  * 
  *  request_feedhold:
  *    - If p1 is not in HOLD & is in motion, request_feedhold requests a p1 hold
@@ -141,9 +210,16 @@ bool cm_has_hold()
  *    - If p1 is in HOLD request_queue_flush will end p1 hold & queue flush (stop motion).
  *      Pre-defined exit actions (coolant, spindle, Z move) are completed first
  *      Any executing or pending "in-hold" moves are stopped prior to the exit actions
- *
- *  It's OK to call start_hold directly in order to get a hold quickly (see gpio.cpp)
  */
+
+void cm_start_hold()
+{
+    // Can only request a feedhold if the machine is in motion and there not one is not already in progress
+    if ((cm1.hold_state == FEEDHOLD_OFF) && (mp_has_runnable_buffer(mp))) {
+        cm_set_motion_state(MOTION_HOLD);
+        cm1.hold_state = FEEDHOLD_SYNC;   // invokes hold from aline execution
+    }
+}
 
 void cm_request_feedhold(void)  // !
 {
@@ -169,15 +245,6 @@ void cm_request_queue_flush()   // %
     if ((cm1.hold_state != FEEDHOLD_OFF) &&         // don't honor request unless you are in a feedhold
         (cm1.flush_state == FLUSH_OFF)) {           // ...and only once
         cm1.flush_state = FLUSH_REQUESTED;          // request planner flush once motion has stopped
-    }
-}
-
-void cm_start_hold()
-{
-    // Can only request a feedhold if the machine is in motion and there not one is not already in progress
-    if ((cm1.hold_state == FEEDHOLD_OFF) && (mp_has_runnable_buffer(mp))) {
-        cm_set_motion_state(MOTION_HOLD);
-        cm1.hold_state = FEEDHOLD_SYNC;   // invokes hold from aline execution
     }
 }
 
