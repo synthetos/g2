@@ -83,23 +83,25 @@ typedef enum {                  // check alignment with messages in config.c / m
 
 typedef enum {
     MACHINE_INITIALIZING = 0,   // machine is initializing
-    MACHINE_READY,              // machine is ready for use
-    MACHINE_ALARM,              // machine in alarm state
+    MACHINE_READY,              // machine is ready for use but idle
+    MACHINE_ALARM,              // machine is in alarm state
     MACHINE_PROGRAM_STOP,       // no blocks to run; like PROGRAM_END but without the M2 to reset gcode state
     MACHINE_PROGRAM_END,        // program end (same as MACHINE_READY, really...)
-    MACHINE_CYCLE,              // machine is running; blocks still to run, or steppers are busy
-    MACHINE_INTERLOCK,          // machine in interlock state
-    MACHINE_SHUTDOWN,           // machine in shutdown state
-    MACHINE_PANIC               // machine in panic state
+    MACHINE_CYCLE,              // machine is in cycle, running; blocks still to run, or steppers are busy
+    MACHINE_INTERLOCK,          // machine is in interlock state
+    MACHINE_SHUTDOWN,           // machine is in shutdown state
+    MACHINE_PANIC               // machine is in panic state
 } cmMachineState;
 
 typedef enum {
-    CYCLE_OFF = 0,              // machine is idle
+    CYCLE_NONE = 0,             // machine is not ins a cycle
     CYCLE_MACHINING,            // in normal machining cycle
     CYCLE_HOMING,               // in homing cycle
     CYCLE_PROBE,                // in probe cycle
     CYCLE_JOG                   // in jogging cycle
-} cmCycleState;
+//  CYCLE_G81                   // illustration of canned cycles
+//  ...
+} cmCycleType;
 
 typedef enum {
     MOTION_STOP = 0,            // motion has stopped: set when the steppers reach the end of the planner queue
@@ -109,11 +111,11 @@ typedef enum {
 } cmMotionState;
 
 typedef enum {                  // feedhold requests
-    FEEDHOLD_NO_REQUEST =0,     // no pending request; reverts here when complete (read-only; cannot be set)
-    FEEDHOLD_HOLD_P1 =1,        // enter p1 feedhold, enter HOLD state in p1
-    FEEDHOLD_HOLD_P2 =2,        // (!) enter p1 feedhold, enter p2 with entry actions 
-    FEEDHOLD_EXIT_RESUME =3,    // (~) exit feedhold, perform exit actions if in p2, resume p1 motion
-    FEEDHOLD_EXIT_FLUSH =4,     // (%) exit feedhold, perform exit actions if in p2, flush planner queue, enter p1 PROGRAM_STOP
+    FEEDHOLD_NO_REQUEST = 0,    // no pending request; reverts here when complete (read-only; cannot be set)
+    FEEDHOLD_HOLD_P1,           // enter p1 feedhold, enter HOLD state in p1
+    FEEDHOLD_HOLD_P2,           // (!) enter p1 feedhold, enter p2 with entry actions 
+    FEEDHOLD_CYCLE_START,       // (~) exit feedhold, perform exit actions if in p2, resume p1 motion
+    FEEDHOLD_EXIT_FLUSH,        // (%) exit feedhold, perform exit actions if in p2, flush planner queue, enter p1 PROGRAM_STOP
 
     // Feedholds with specialized  exits 
     // If not in hold, perform hold (or halt), then perform the exit immediately
@@ -267,11 +269,17 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     // Global state variables and flags
 
     cmMachineState machine_state;           // macs: machine/cycle/motion is the actual machine state
-    cmCycleState cycle_state;               // cycs
+    cmCycleType cycle_type;                 // cycs
     cmMotionState motion_state;             // momo
+    
     cmFeedholdState hold_state;             // hold: feedhold state machine
+    cmFeedholdRequest hold_request;         // hold: pending feedhold request
+    cmFeedholdRequest hold_exit;            // hold: pending feedhold exit request 
+    cmFlushState flush_state;               // hold: queue flush state machine
+    bool hold_exit_requested;               // request normal exit from feedhold
+    bool hold_abort_requested;              // request emergency exit from feedhold (typically ^d job kill)
+
     cmOverrideState mfo_state;              // feed override state machine
-    cmFlushState flush_state;               // queue flush state machine
 
     uint8_t safety_interlock_disengaged;    // set non-zero to start interlock processing (value is input number)
     uint8_t safety_interlock_reengaged;     // set non-zero to end interlock processing (value is input number)
@@ -281,8 +289,7 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     uint8_t limit_requested;                // set non-zero to request limit switch processing (value is input number)
     uint8_t shutdown_requested;             // set non-zero to request shutdown in support of external estop (value is input number)
     bool deferred_write_flag;               // G10 data has changed (e.g. offsets) - flag to persist them
-    bool hold_exit_requested;               // request normal exit from feedhold
-    bool hold_abort_requested;              // request emergency exit from feedhold (typically ^d job kill) 
+
     bool return_flags[AXES];                // flags for recording which axes moved - used in feedhold exit move
 
     cmHomingState homing_state;             // home: homing cycle sub-state machine
@@ -328,7 +335,7 @@ extern cmToolTable_t tt;
 // Model state getters and setters
 cmCombinedState cm_get_combined_state(cmMachine_t *_cm);
 cmMachineState cm_get_machine_state(void);
-cmCycleState cm_get_cycle_state(void);
+cmCycleType cm_get_cycle_type(void);
 cmMotionState cm_get_motion_state(void);
 cmFeedholdState cm_get_hold_state(void);
 cmHomingState cm_get_homing_state(void);

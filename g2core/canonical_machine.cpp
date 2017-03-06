@@ -199,7 +199,7 @@ void canonical_machine_reset(cmMachine_t *_cm)
     _cm->shutdown_requested = 0;                    // ditto
 
     // set initial state and signal that the machine is ready for action
-    _cm->cycle_state = CYCLE_OFF;
+    _cm->cycle_type = CYCLE_NONE;
     _cm->motion_state = MOTION_STOP;
     _cm->hold_state = FEEDHOLD_OFF;
     _cm->esc_boot_timer = SysTickTimer_getValue();
@@ -271,13 +271,13 @@ void cm_set_motion_state(const cmMotionState motion_state)
 /*
  * cm_get_machine_state()
  * cm_get_motion_state()
- * cm_get_cycle_state()
+ * cm_get_cycle_type()
  * cm_get_hold_state()
  * cm_get_homing_state()
  * cm_get_probe_state()
  */
 cmMachineState  cm_get_machine_state() { return cm->machine_state;}
-cmCycleState    cm_get_cycle_state()   { return cm->cycle_state;}
+cmCycleType     cm_get_cycle_type()    { return cm->cycle_type;}
 cmMotionState   cm_get_motion_state()  { return cm->motion_state;}
 cmFeedholdState cm_get_hold_state()    { return cm->hold_state;}
 cmHomingState   cm_get_homing_state()  { return cm->homing_state;}
@@ -304,11 +304,11 @@ cmCombinedState cm_get_combined_state(cmMachine_t *_cm)
         case MACHINE_SHUTDOWN:      { return (COMBINED_SHUTDOWN); }
         case MACHINE_PANIC:         { return (COMBINED_PANIC); }
         case MACHINE_CYCLE: {
-            switch(_cm->cycle_state) {
+            switch(_cm->cycle_type) {
                 case CYCLE_HOMING:  { return (COMBINED_HOMING); }
                 case CYCLE_PROBE:   { return (COMBINED_PROBE); }
                 case CYCLE_JOG:     { return (COMBINED_JOG); }
-                case CYCLE_MACHINING: case CYCLE_OFF: {
+                case CYCLE_MACHINING: case CYCLE_NONE: {
                     switch(_cm->motion_state) {
                         case MOTION_STOP:     { return (COMBINED_RUN); }    // See NOTE_1, above
                         case MOTION_PLANNING: { return (COMBINED_RUN); }
@@ -534,7 +534,7 @@ void cm_update_model_position()
 
 stat_t cm_deferred_write_callback()
 {
-    if ((cm->cycle_state == CYCLE_OFF) && (cm->deferred_write_flag == true)) {
+    if ((cm->cycle_type == CYCLE_NONE) && (cm->deferred_write_flag == true)) {
         cm->deferred_write_flag = false;
         nvObj_t nv;
         for (uint8_t i=1; i<=COORDS; i++) {
@@ -1563,18 +1563,18 @@ stat_t cm_tro_control(const float P_word, const bool P_flag) // M50.1
 static void _exec_program_finalize(float *value, bool *flag)
 {
     cmMachineState machine_state = (cmMachineState)value[0];
-    cm_set_motion_state(MOTION_STOP);                   // also changes active model back to MODEL
+    cm_set_motion_state(MOTION_STOP);                       // also changes active model back to MODEL
 
     // Allow update in the alarm state, to accommodate queue flush (RAS)
-    if ((cm->cycle_state == CYCLE_MACHINING || cm->cycle_state == CYCLE_OFF) &&
-//      (cm->machine_state != MACHINE_ALARM) &&         // omitted by OMC (RAS)
+    if ((cm->cycle_type == CYCLE_MACHINING || cm->cycle_type == CYCLE_NONE) &&
+//      (cm->machine_state != MACHINE_ALARM) &&             // omitted by OMC (RAS)
         (cm->machine_state != MACHINE_SHUTDOWN)) {
-        cm->machine_state = machine_state;              // don't update macs/cycs if we're in the middle of a canned cycle,
-        cm->cycle_state = CYCLE_OFF;                    // or if we're in machine alarm/shutdown mode
+        cm->machine_state = machine_state;                  // don't update macs/cycs if we're in the middle of a canned cycle,
+        cm->cycle_type = CYCLE_NONE;                        // or if we're in machine alarm/shutdown mode
     }
 
     // reset the rest of the states
-    cm->cycle_state = CYCLE_OFF;
+    cm->cycle_type = CYCLE_NONE;
     cm->hold_state = FEEDHOLD_OFF;
     mp_zero_segment_velocity();                             // for reporting purposes
 
@@ -1599,16 +1599,16 @@ static void _exec_program_finalize(float *value, bool *flag)
 
 void cm_cycle_start()
 {
-    if (cm->cycle_state == CYCLE_OFF) {                     // don't (re)start homing, probe or other canned cycles
+    if (cm->cycle_type == CYCLE_NONE) {                     // don't (re)start homing, probe or other canned cycles
+        cm->cycle_type = CYCLE_MACHINING;
         cm->machine_state = MACHINE_CYCLE;
-        cm->cycle_state = CYCLE_MACHINING;
         qr_init_queue_report();                             // clear queue reporting buffer counts
     }
 }
 
 void cm_cycle_end()
 {
-    if (cm->cycle_state == CYCLE_MACHINING) {
+    if (cm->cycle_type == CYCLE_MACHINING) {
         float value[] = { (float)MACHINE_PROGRAM_STOP };
         _exec_program_finalize(value, nullptr);
     }
@@ -1616,7 +1616,7 @@ void cm_cycle_end()
 
 void cm_canned_cycle_end()
 {
-    cm->cycle_state = CYCLE_OFF;
+    cm->cycle_type = CYCLE_NONE;
     float value[] = { (float)MACHINE_PROGRAM_STOP };
     _exec_program_finalize(value, nullptr);
 }
@@ -1979,7 +1979,7 @@ stat_t _get_msg_helper(nvObj_t *nv, const char *const msg_array[], uint8_t value
 stat_t cm_get_stat(nvObj_t *nv) { return(_get_msg_helper(nv, msg_stat, cm_get_combined_state(&cm1)));}
 stat_t cm_get_stat2(nvObj_t *nv) { return(_get_msg_helper(nv, msg_stat, cm_get_combined_state(&cm2)));}
 stat_t cm_get_macs(nvObj_t *nv) { return(_get_msg_helper(nv, msg_macs, cm_get_machine_state()));}
-stat_t cm_get_cycs(nvObj_t *nv) { return(_get_msg_helper(nv, msg_cycs, cm_get_cycle_state()));}
+stat_t cm_get_cycs(nvObj_t *nv) { return(_get_msg_helper(nv, msg_cycs, cm_get_cycle_type()));}
 stat_t cm_get_mots(nvObj_t *nv) { return(_get_msg_helper(nv, msg_mots, cm_get_motion_state()));}
 stat_t cm_get_hold(nvObj_t *nv) { return(_get_msg_helper(nv, msg_hold, cm_get_hold_state()));}
 

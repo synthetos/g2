@@ -131,7 +131,7 @@ void cm_halt_motion(void)
 {
     mp_halt_runtime();                  // stop the runtime. Do this immediately. (Reset is in cm_clear)
     canonical_machine_reset(cm);        // halt the currently active machine
-    cm->cycle_state = CYCLE_OFF;        // Note: leaves machine_state alone
+    cm->cycle_type = CYCLE_NONE;        // Note: leaves machine_state alone
     cm->motion_state = MOTION_STOP;
     cm->hold_state = FEEDHOLD_OFF;
 }

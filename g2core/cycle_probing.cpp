@@ -184,7 +184,7 @@ uint8_t cm_straight_probe(float target[], bool flags[], bool trip_sense, bool al
 
 uint8_t cm_probing_cycle_callback(void) 
 {
-    if ((cm->cycle_state != CYCLE_PROBE) && (cm->probe_state[0] != PROBE_WAITING)) { 
+    if ((cm->cycle_type != CYCLE_PROBE) && (cm->probe_state[0] != PROBE_WAITING)) { 
         return (STAT_NOOP);         // exit if not in a probing cycle
     }
     if (pb.wait_for_motion_end) {   // sync to planner move ends (using callback)
@@ -207,7 +207,7 @@ static uint8_t _probing_start()
     
     cm->probe_state[0] = PROBE_FAILED;
     cm->machine_state = MACHINE_CYCLE;
-    cm->cycle_state = CYCLE_PROBE;
+    cm->cycle_type = CYCLE_PROBE;
 
     // save relevant non-axis parameters from Gcode model
     pb.saved_distance_mode = (cmDistanceMode)cm_get_distance_mode(ACTIVE_MODEL);

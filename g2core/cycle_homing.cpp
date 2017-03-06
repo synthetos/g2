@@ -170,7 +170,7 @@ stat_t cm_homing_cycle_start(const float axes[], const bool flags[]) {
     hm.axis          = -1;                  // set to retrieve initial axis
     hm.func          = _homing_axis_start;  // bind initial processing function
     cm->machine_state = MACHINE_CYCLE;
-    cm->cycle_state   = CYCLE_HOMING;
+    cm->cycle_type    = CYCLE_HOMING;
     cm->homing_state  = HOMING_NOT_HOMED;
     return (STAT_OK);
 }
@@ -186,7 +186,7 @@ stat_t cm_homing_cycle_start_no_set(const float axes[], const bool flags[]) {
  */
 
 stat_t cm_homing_cycle_callback(void) {
-    if (cm->cycle_state != CYCLE_HOMING) {  // exit if not in a homing cycle
+    if (cm->cycle_type != CYCLE_HOMING) {   // exit if not in a homing cycle
         return (STAT_NOOP);
     }
     if (hm.waiting_for_motion_end) {        // sync to planner move ends (using callback)

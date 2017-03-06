@@ -1032,7 +1032,7 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
     
             // If probing or homing, exit the move and advance to the _motion_end_callback()'s.
             // Stop the runtime, clear the run buffer and do not transition to p2 planner.
-            else if ((cm->cycle_state == CYCLE_HOMING) || (cm->cycle_state == CYCLE_PROBE)) {
+            else if ((cm->cycle_type == CYCLE_HOMING) || (cm->cycle_type == CYCLE_PROBE)) {
                 mr->block_state = BLOCK_INACTIVE;           // disable the rest of the runtime movement
                 mp_free_run_buffer();                       // free buffer and enable finalization move to get loaded
                 cm->hold_state = FEEDHOLD_OFF;

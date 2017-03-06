@@ -89,7 +89,7 @@ static void _feedhold_abort(void);
  *                          If this command is received while in p2, a FEEDHOLD_HOLD_SKIP
  *                          is executed in p2.
  *
- *  - FEEDHOLD_EXIT_RESUME  (~) Exit HOLD state in P1 or p2. If in p2 perform exit actions,
+ *  - FEEDHOLD_CYCLE_START  (~) Exit HOLD state in P1 or p2. If in p2 perform exit actions,
  *                          then resume motion in p1 planner.
  *
  *  - FEEDHOLD_EXIT_FLUSH   (%) Exit HOLD state in P1 or p2. If in p2 perform exit actions,
@@ -138,8 +138,6 @@ static void _feedhold_abort(void);
  *                          Exit hold and resume motion when interlock is cleared. This may 
  *                          require some combination of interlock switch transitions, interlock 
  *                          JSON commands and {clear:n} depending on interlock configuration.
- *
- *
  */
 /*
  * Feedhold Processing - Performs the following cases (listed in rough sequence order):
@@ -225,7 +223,9 @@ void cm_request_feedhold(void)  // !
 {
     // Only generate request if not already in a feedhold and the machine is in motion    
     if ((cm1.hold_state == FEEDHOLD_OFF) && (cm1.motion_state != MOTION_STOP)) {
-        cm1.hold_state = FEEDHOLD_REQUESTED;
+        cm1.hold_request = FEEDHOLD_HOLD_P2;        // request a hold to p2
+        cm1.hold_exit    = FEEDHOLD_NO_REQUEST;     // no exit specified
+        cm1.hold_state   = FEEDHOLD_REQUESTED;      // signal request to state machine
     } else 
     if ((cm2.hold_state == FEEDHOLD_OFF) && (cm2.motion_state != MOTION_STOP)) {
         cm2.hold_state = FEEDHOLD_REQUESTED;
@@ -235,6 +235,7 @@ void cm_request_feedhold(void)  // !
 void cm_request_exit_hold(void)  // ~
 {
     if (cm1.hold_state != FEEDHOLD_OFF) {
+        cm1.hold_exit = FEEDHOLD_CYCLE_START;       // signal a normal feedhold resume as exit
         cm1.hold_exit_requested = true;
     }
 }
@@ -244,6 +245,7 @@ void cm_request_queue_flush()   // %
     // NOTE: this function used to flush input buffers, but this is handled in xio *prior* to queue flush now
     if ((cm1.hold_state != FEEDHOLD_OFF) &&         // don't honor request unless you are in a feedhold
         (cm1.flush_state == FLUSH_OFF)) {           // ...and only once
+        cm1.hold_exit = FEEDHOLD_EXIT_FLUSH;        // signal a flush exit
         cm1.flush_state = FLUSH_REQUESTED;          // request planner flush once motion has stopped
     }
 }
