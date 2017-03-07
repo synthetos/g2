@@ -512,12 +512,12 @@ void marlin_response(const stat_t status, char *buf)
     }
     else if (status == STAT_CHECKSUM_MATCH_FAILED) {
         str_concat(str, "Error:checksum mismatch, Last Line: ");
-        str += inttoa(str, mst.last_line_number);
+        str += inttoa(str, cm.gmx.last_line_number);
         request_resend = true;
     }
     else if (status == STAT_LINE_NUMBER_OUT_OF_SEQUENCE) {
         str_concat(str, "Error:Line Number is not Last Line Number+1, Last Line: ");
-        str += inttoa(str, mst.last_line_number);
+        str += inttoa(str, cm.gmx.last_line_number);
         request_resend = true;
     }
     else {
@@ -537,43 +537,11 @@ void marlin_response(const stat_t status, char *buf)
     if (request_resend) {
         str = buffer;
         str_concat(str, "Resend: ");
-        str += inttoa(str, mst.last_line_number+1);
+        str += inttoa(str, cm.gmx.last_line_number+1);
         *str++ = '\n';
         *str++ = 0;
         xio_writeline(buffer);
     }
-}
-
-/***********************************************************************************
- * marlin_verify_checksum() - check to see if we have a line number (cheaply) and a valid checksum
- *   called from gcode_parser
- */
-stat_t marlin_verify_checksum(char *str)
-{
-    bool has_line_number = false; // -1 means we don't have one
-    if (*str == 'N') {
-        has_line_number = true;
-    }
-
-    char checksum = 0;
-    char c = *str++;
-    while (c && (c != '*') && (c != '\n') && (c != '\r')) {
-        checksum ^= c;
-        c = *str++;
-    }
-
-    // c might be 0 here, in which case we didn't get a checksum and we return STAT_OK
-
-    if (c == '*') {
-        *(str-1) = 0; // null terminate, the parser won't like this * here!
-        if (strtol(str, NULL, 10) != checksum) {
-            return STAT_CHECKSUM_MATCH_FAILED;
-        }
-        if (!has_line_number) {
-            return STAT_MISSING_LINE_NUMBER_WITH_CHECKSUM;
-        }
-    }
-    return STAT_OK;
 }
 
 /***********************************************************************************

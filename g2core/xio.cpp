@@ -638,7 +638,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             // See https://github.com/synthetos/g2/wiki/Marlin-Compatibility#stk500v2
 
             if ((_stk_parser_state == STK500V2_State::Done) && (c == 0)) {
-                _debug_trap("scan ran into NULL");
+                _debug_trap("scan ran into NULL (Marlin-mode)");
                 flush(); // consider the connection and all data trashed
                 return false;
             }

@@ -33,7 +33,6 @@ enum cmExtruderMode {
 typedef struct MarlinStateExtended {    // Canonical machine extensions for Marlin
     bool marlin_flavor;                 // true if we are parsing gcode as Marlin-flavor
     cmExtruderMode extruder_mode;       // Mode of the extruder - changes how "E" is interpreted
-    uint32_t last_line_number;          // keep track of the last issued line number
 } MarlinStateExtended_t;
 
 extern MarlinStateExtended_t mst;       // Marlin state object
@@ -63,7 +62,6 @@ stat_t marlin_report_version();                                 // M115
 
 stat_t marlin_callback();                                       // controller loop callback
 void marlin_response(const stat_t status, char *buf);           // response handler (primarily just prints "ok")
-stat_t marlin_verify_checksum(char *str);                       // for gcode parsing and 
 bool marlin_handle_fake_stk500(char *str);                      // fake stk500v2
 
 

@@ -195,6 +195,8 @@ typedef struct GCodeFlags {         // Gcode input flags
     bool mto_control;
     bool sso_control;
 
+    bool checksum;
+
 #if MARLIN_COMPAT_ENABLED == true
     bool E_word;
     bool marlin_wait_for_temp;      // M140 or M190 - wait for temperature (Marlin-only)
@@ -281,12 +283,33 @@ stat_t gcode_parser(char *block)
  */
 stat_t _verify_checksum(char *str)
 {
-#if MARLIN_COMPAT_ENABLED == true
-//    if (MARLIN_COMM_MODE == js.json_mode) {
-        return marlin_verify_checksum(str);
-//    }
-#endif
-    return STAT_OK;    // for now, always assume it's ok
+    bool has_line_number = false; // -1 means we don't have one
+    if (*str == 'N') {
+        has_line_number = true;
+    }
+
+    char checksum = 0;
+    char c = *str++;
+    while (c && (c != '*') && (c != '\n') && (c != '\r')) {
+        checksum ^= c;
+        c = *str++;
+    }
+
+    // c might be 0 here, in which case we didn't get a checksum and we return STAT_OK
+
+    if (c == '*') {
+        *(str-1) = 0; // null terminate, the parser won't like this * here!
+        gf.checksum = true;
+        if (strtol(str, NULL, 10) != checksum) {
+            _debug_trap("checksum failure");
+            return STAT_CHECKSUM_MATCH_FAILED;
+        }
+        if (!has_line_number) {
+            _debug_trap("line number missing with checksum");
+            return STAT_MISSING_LINE_NUMBER_WITH_CHECKSUM;
+        }
+    }
+    return STAT_OK;
 }
 
 /*
@@ -913,11 +936,16 @@ stat_t _execute_gcode_block(char *active_comment)
 {
     stat_t status = STAT_OK;
 
-    cm_set_model_linenum(gv.linenum);
+    if (gf.linenum) {
+        cm_set_model_linenum(gv.linenum);
+    }
     EXEC_FUNC(cm_set_feed_rate_mode, feed_rate_mode);       // G93, G94
     EXEC_FUNC(cm_set_feed_rate, F_word);                    // F
 
     ritorno(_execute_gcode_block_marlin());                 // execute Marlin commands if Marlin compatibility enabled
+    if (gf.linenum && gf.checksum) {
+        ritorno(cm_check_linenum());
+    }
 
     EXEC_FUNC(cm_set_spindle_speed, S_word);                // S
     if (gf.sso_control) {                                   // spindle speed override
@@ -1042,12 +1070,14 @@ static stat_t _execute_gcode_block_marlin()
 #if MARLIN_COMPAT_ENABLED == true
 {
     // Check for sequential line numbers
-    if (gf.linenum) {
-        if ((gv.next_action != NEXT_ACTION_MARLIN_RESET_LINE_NUMBERS) &&
-            (gv.linenum != mst.last_line_number + 1)) {
-            return (STAT_LINE_NUMBER_OUT_OF_SEQUENCE);
+    if (gf.linenum && gf.checksum) {
+        if (gv.next_action != NEXT_ACTION_MARLIN_RESET_LINE_NUMBERS) {
+            ritorno(cm_check_linenum());
         }
-        mst.last_line_number = gv.linenum;
+        cm.gmx.last_line_number = cm.gm.linenum;
+
+        // since this is handled, clear gf.checksum so it doesn't again
+        gf.checksum = false;
     }
 
     // E should ONLY be seen in marlin flavor

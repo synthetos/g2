@@ -260,6 +260,15 @@ void cm_set_model_linenum(const uint32_t linenum)
     nv_add_object((const char *)"n");   // then add the line number to the nv list
 }
 
+stat_t cm_check_linenum() {
+    if (cm.gmx.last_line_number != cm.gm.linenum) {
+        _debug_trap("line number out of sequence");
+        return STAT_LINE_NUMBER_OUT_OF_SEQUENCE;
+    }
+    cm.gmx.last_line_number = cm.gm.linenum;
+    return STAT_OK;
+}
+
 /***********************************************************************************
  * COORDINATE SYSTEMS AND OFFSETS
  * Functions to get, set and report coordinate systems and work offsets
@@ -562,6 +571,31 @@ stat_t cm_get_tram(nvObj_t *nv)
         nv->value = false;
     }
     nv->valuetype = TYPE_BOOL;
+    return (STAT_OK);
+}
+
+
+/*
+ * cm_set_nxt_line() - JSON command to set the next line number
+ * cm_get_nxt_line() - JSON query to get the next expected line number
+ *
+ * There MUST be three valid probes stored.
+ */
+
+stat_t cm_set_nxln(nvObj_t *nv)
+{
+    if (nv->valuetype == TYPE_INT || nv->valuetype == TYPE_FLOAT)
+    {
+        cm.gmx.last_line_number = ((int32_t)nv->value) - 1;
+        return (STAT_OK);
+    }
+    return (STAT_INPUT_VALUE_RANGE_ERROR);
+}
+
+stat_t cm_get_nxln(nvObj_t *nv)
+{
+    nv->value = cm.gmx.last_line_number+1;
+    nv->valuetype = TYPE_INT;
     return (STAT_OK);
 }
 
@@ -2796,7 +2830,8 @@ static const char fmt_mfoe[] = "[mfoe] manual feed override enab%3d [0=disable,1
 static const char fmt_mfo[]  = "[mfo]  manual feedrate override%8.3f [0.05 < mfo < 2.00]\n";
 static const char fmt_mtoe[] = "[mtoe] manual traverse over enab%3d [0=disable,1=enable]\n";
 static const char fmt_mto[]  = "[mto]  manual traverse override%8.3f [0.05 < mto < 1.00]\n";
-static const char fmt_tram[] = "[tram]  is coordinate space rotated to be tram %s\n";
+static const char fmt_tram[] = "[tram] is coordinate space rotated to be tram %s\n";
+static const char fmt_nxln[] = "[nxln] the next line number expected is %10d\n";
 
 void cm_print_m48e(nvObj_t *nv) { text_print(nv, fmt_m48e);}    // TYPE_INT
 void cm_print_mfoe(nvObj_t *nv) { text_print(nv, fmt_mfoe);}    // TYPE INT
@@ -2804,6 +2839,7 @@ void cm_print_mfo(nvObj_t *nv)  { text_print(nv, fmt_mfo);}     // TYPE FLOAT
 void cm_print_mtoe(nvObj_t *nv) { text_print(nv, fmt_mtoe);}    // TYPE INT
 void cm_print_mto(nvObj_t *nv)  { text_print(nv, fmt_mto);}     // TYPE FLOAT
 void cm_print_tram(nvObj_t *nv) { text_print(nv, fmt_tram);};   // TYPE BOOL
+void cm_print_nxln(nvObj_t *nv) { text_print(nv, fmt_nxln);};   // TYPE INT
 
 /*
  * axis print functions

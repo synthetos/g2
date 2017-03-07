@@ -353,6 +353,8 @@ typedef struct GCodeStateExtended {     // Gcode dynamic state extensions - used
 //  float cutter_radius;                // D - cutter radius compensation (0 is off)
 //  float cutter_length;                // H - cutter length compensation (0 is off)
 
+    uint32_t last_line_number;          // keep track of the last issued line number
+
     uint16_t magic_end;
 
 } GCodeStateX_t;
@@ -498,6 +500,7 @@ void cm_set_motion_mode(GCodeState_t *gcode_state, const uint8_t motion_mode);
 void cm_set_tool_number(GCodeState_t *gcode_state, const uint8_t tool);
 void cm_set_absolute_override(GCodeState_t *gcode_state, const uint8_t absolute_override);
 void cm_set_model_linenum(const uint32_t linenum);
+stat_t cm_check_linenum();
 
 // Coordinate systems and offsets
 float cm_get_active_coord_offset(const uint8_t axis);
@@ -704,6 +707,9 @@ stat_t cm_set_mto(nvObj_t *nv);         // set manual traverse override factor
 stat_t cm_set_tram(nvObj_t *nv);        // attempt setting the rotation matrix
 stat_t cm_get_tram(nvObj_t *nv);        // return if the rotation matrix is non-identity
 
+stat_t cm_set_nxln(nvObj_t *nv);    // set what value we expect the next line number to have
+stat_t cm_get_nxln(nvObj_t *nv);    // return what value we expect the next line number to have
+
 /*--- text_mode support functions ---*/
 
 #ifdef __TEXT_MODE
@@ -754,6 +760,7 @@ stat_t cm_get_tram(nvObj_t *nv);        // return if the rotation matrix is non-
     void cm_print_mto(nvObj_t *nv);
 
     void cm_print_tram(nvObj_t *nv);        // print if the axis has been rotated
+    void cm_print_nxln(nvObj_t *nv);    // print the value of the next line number expected
 
     void cm_print_am(nvObj_t *nv);          // axis print functions
     void cm_print_fr(nvObj_t *nv);
@@ -818,6 +825,9 @@ stat_t cm_get_tram(nvObj_t *nv);        // return if the rotation matrix is non-
     #define cm_print_mfo tx_print_stub
     #define cm_print_mtoe tx_print_stub
     #define cm_print_mto tx_print_stub
+
+    #define cm_print_tram tx_print_stub
+    #define cm_print_nxln tx_print_stub
 
     #define cm_print_am tx_print_stub    // axis print functions
     #define cm_print_fr tx_print_stub

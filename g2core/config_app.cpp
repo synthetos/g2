@@ -878,6 +878,7 @@ const cfgItem_t cfgArray[] = {
     { "sys","qv", _fipn, 0, qr_print_qv,  get_ui8, set_012,    (float *)&qr.queue_report_verbosity,  QR_OFF}, // default to OFF, set to QUEUE_REPORT_VERBOSITY after connected
     { "sys","sv", _fipn, 0, sr_print_sv,  get_ui8, set_012,    (float *)&sr.status_report_verbosity, SR_OFF}, // default to OFF, set to STATUS_REPORT_VERBOSITY after connectied
     { "sys","si", _fipn, 0, sr_print_si,  get_int, sr_set_si,  (float *)&sr.status_report_interval, STATUS_REPORT_INTERVAL_MS },
+    { "", "nxln", _f0,   0, cm_print_nxln,cm_get_nxln,cm_set_nxln,(float *)&cs.null,                0 },
 
     // Gcode defaults
     // NOTE: The ordering within the gcode defaults is important for token resolution. gc must follow gco
