@@ -300,7 +300,7 @@
 // Zmin
 #define DI5_MODE                    IO_ACTIVE_LOW   // Z probe
 #define DI5_ACTION                  INPUT_ACTION_NONE
-#define DI5_FUNCTION                INPUT_FUNCTION_NONE
+#define DI5_FUNCTION                INPUT_FUNCTION_PROBE
 
 // Zmax
 #define DI6_MODE                    IO_MODE_DISABLED
