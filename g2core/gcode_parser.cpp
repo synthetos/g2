@@ -1066,9 +1066,8 @@ stat_t _execute_gcode_block(char *active_comment)
  */
 
 static stat_t _execute_gcode_block_marlin()
-
-#if MARLIN_COMPAT_ENABLED == true
 {
+#if MARLIN_COMPAT_ENABLED == true
     // Check for sequential line numbers
     if (gf.linenum && gf.checksum) {
         if (gv.next_action != NEXT_ACTION_MARLIN_RESET_LINE_NUMBERS) {
@@ -1113,10 +1112,7 @@ static stat_t _execute_gcode_block_marlin()
             gv.target[AXIS_B] = gv.E_word;
         }
         else {
-#if IN_DEBUGGER == 1
-            __asm__("BKPT");    // mp_exec_move() buffer is not prepped
-#endif
-//            debug_trap("_execute_gcode_block_marlin() - mp_exec_move() buffer is not prepped");
+            _debug_trap("invalid tool selection");
             return (STAT_INPUT_VALUE_RANGE_ERROR);
         }
     }
