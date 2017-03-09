@@ -84,9 +84,9 @@
 #define INPUT13_AVAILABLE 0
 
 
-#define ADC0_AVAILABLE 0
-#define ADC1_AVAILABLE 0
-#define ADC2_AVAILABLE 0
+#define ADC0_AVAILABLE 1
+#define ADC1_AVAILABLE 1
+#define ADC2_AVAILABLE 1
 #define ADC3_AVAILABLE 0
 
 #define XIO_HAS_USB 1
@@ -94,7 +94,7 @@
 #define XIO_HAS_SPI 0
 #define XIO_HAS_I2C 0
 
-#define TEMPERATURE_OUTPUT_ON 0  // NO ADC yet
+#define TEMPERATURE_OUTPUT_ON 1  // NO ADC yet
 
 // Some pins, if the PWM capability is turned on, it will cause timer conflicts.
 // So we have to explicitly enable them as PWM pins.

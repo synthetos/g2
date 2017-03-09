@@ -109,7 +109,7 @@ struct Thermistor {
     float c1, c2, c3, pullup_resistance, inline_resistance;
     // We'll pull adc top value from the adc_pin.getTop()
 
-    ADCPin<adc_pin_num> adc_pin;
+    ADCPin<adc_pin_num> adc_pin {kNormal, [&]{this->adc_has_new_value();} };
     uint16_t raw_adc_value = 0;
 
     typedef Thermistor<adc_pin_num, min_temp, max_temp, table_size> type;
@@ -205,42 +205,42 @@ Thermistor<kADC1_PinNumber> thermistor1 {
     /*R1:*/ 140000.0, /*R2:*/  593.0, /*R3:*/ 189.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
     };
 
-#if ADC1_AVAILABLE == 1
-namespace Motate {
-template<>
-void ADCPin<kADC1_PinNumber>::interrupt() {
-    thermistor1.adc_has_new_value();
-};
-}
-#endif
+//#if ADC1_AVAILABLE == 1
+//namespace Motate {
+//template<>
+//void ADCPin<kADC1_PinNumber>::interrupt() {
+//    thermistor1.adc_has_new_value();
+//};
+//}
+//#endif
 
 // Extruder 2
 Thermistor<kADC2_PinNumber> thermistor2 {
     /*T1:*/     20.0, /*T2:*/  190.0, /*T3:*/ 255.0,
     /*R1:*/ 140000.0, /*R2:*/  490.0, /*R3:*/ 109.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
     };
-#if ADC2_AVAILABLE == 1
-namespace Motate {
-template<>
-void ADCPin<kADC2_PinNumber>::interrupt() {
-    thermistor2.adc_has_new_value();
-};
-}
-#endif
+//#if ADC2_AVAILABLE == 1
+//namespace Motate {
+//template<>
+//void ADCPin<kADC2_PinNumber>::interrupt() {
+//    thermistor2.adc_has_new_value();
+//};
+//}
+//#endif
 
 // Heated bed
 Thermistor<kADC0_PinNumber> thermistor3 {
     /*T1:*/     20.0, /*T2:*/  190.0, /*T3:*/ 255.0,
     /*R1:*/ 140000.0, /*R2:*/  490.0, /*R3:*/ 109.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
     };
-#if ADC0_AVAILABLE == 1
-namespace Motate {
-template<>
-void ADCPin<kADC0_PinNumber>::interrupt() {
-    thermistor3.adc_has_new_value();
-};
-}
-#endif
+//#if ADC0_AVAILABLE == 1
+//namespace Motate {
+//template<>
+//void ADCPin<kADC0_PinNumber>::interrupt() {
+//    thermistor3.adc_has_new_value();
+//};
+//}
+//#endif
 
 float last_reported_temp1 = 0; // keep track of what we've reported for SR generation
 float last_reported_temp2 = 0;
@@ -300,12 +300,14 @@ PWMOutputPin<-1> fet_pin3;// {kPWMPinInverted};
 #if TEMPERATURE_OUTPUT_ON == 1
 
 // We're going to register a SysTick event
-const int16_t fet_pin1_sample_freq = 10; // every fet_pin1_sample_freq interrupts, sample
-int16_t fet_pin1_sample_counter = fet_pin1_sample_freq;
+const int16_t temperature_sample_freq = 10; // every fet_pin1_sample_freq interrupts, sample
+int16_t temperature_sample_counter = temperature_sample_freq;
 SysTickEvent adc_tick_event {[&] {
-    if (!--fet_pin1_sample_counter) {
-        ADC_Module::startSampling();
-        fet_pin1_sample_counter = fet_pin1_sample_freq;
+    if (!--temperature_sample_counter) {
+        thermistor1.adc_pin.startSampling();
+        thermistor2.adc_pin.startSampling();
+        thermistor3.adc_pin.startSampling();
+        temperature_sample_counter = temperature_sample_freq;
     }
 }, nullptr};
 
