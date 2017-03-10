@@ -160,6 +160,7 @@ static void _controller_HSM()
     DISPATCH(qr_queue_report_callback());       // conditionally send queue report
 
     DISPATCH(cm_feedhold_sequencing_callback());// feedhold state machine runner
+    DISPATCH(cm_operation_callback());          // operation action runner
     DISPATCH(mp_planner_callback());            // motion planner
     DISPATCH(cm_arc_callback(cm));              // arc generation runs as a cycle above lines
     DISPATCH(cm_homing_cycle_callback());       // homing cycle operation (G28.2)

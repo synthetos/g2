@@ -81,7 +81,7 @@ typedef enum {                  // check alignment with messages in config.c / m
 } cmCombinedState;
 //### END CRITICAL REGION ###
 
-typedef enum {
+typedef enum {                  // Note: MachineState signals if the machine is in cycle (5) or some other non-cycle state
     MACHINE_INITIALIZING = 0,   // machine is initializing
     MACHINE_READY,              // machine is ready for use but idle
     MACHINE_ALARM,              // machine is in alarm state
@@ -109,27 +109,27 @@ typedef enum {
 //  ...
 } cmCycleType;
 
-typedef enum {                  // feedhold requests
-    FEEDHOLD_NO_REQUEST = 0,    // no pending request; reverts here when complete (read-only; cannot be set)
-    FEEDHOLD_HOLD_P1,           // enter p1 feedhold, enter HOLD state in p1
-    FEEDHOLD_HOLD_P2,           // (!) enter p1 feedhold, enter p2 with entry actions 
-    FEEDHOLD_CYCLE_START,       // (~) exit feedhold, perform exit actions if in p2, resume p1 motion
-    FEEDHOLD_EXIT_FLUSH,        // (%) exit feedhold, perform exit actions if in p2, flush planner queue, enter p1 PROGRAM_STOP
-
-    // Feedholds with specialized  exits 
-    // If not in hold, perform hold (or halt), then perform the exit immediately
-    // If already in hold just perform the exit
-    FEEDHOLD_HOLD_SKIP,         // enter p1 feedhold, skip remainder of block, resume from next block (for homing & probes)
-    FEEDHOLD_HOLD_STOP,         // enter p1 feedhold, enter PROGRAM_STOP state
-    FEEDHOLD_HOLD_FAST_STOP,    // enter p1 feedhold, perform FAST_STOP, enter STOP state
-    FEEDHOLD_HOLD_HALT,         // enter p1 feedhold, enter PROGRAM_STOP state
-    FEEDHOLD_HOLD_END,          // enter p1 feedhold, flush queue, perform PROGRAM_END
-    FEEDHOLD_HOLD_END_ALARM,    // enter p1 feedhold, flush queue, perform PROGRAM_END, trigger ALARM
-    FEEDHOLD_HOLD_ALARM,        // enter p1 feedhold, flush queue, trigger ALARM
-    FEEDHOLD_HOLD_SHUTDOWN,     // enter p1 feedhold, flush queue, trigger SHUTDOWN
-    FEEDHOLD_HOLD_PANIC,        // perform HALT, trigger PANIC
-    FEEDHOLD_HOLD_INTERLOCK     // enter p1 feedhold, trigger and release INTERLOCK
-} cmFeedholdRequest;
+typedef enum {                  // cycle start and feedhold requests
+    OPERATION_NULL = 0,         // no operation; reverts here when complete
+    OPERATION_CYCLE_START,      // perform a cycle start with no other actions
+    OPERATION_HOLD_TO_P2,       // feedhold into p2 with p2 entry actions
+    OPERATION_P1_FAST_HOLD,     // perform a fast hold in p1
+    OPERATION_EXIT_HOLD_RESUME, // exit p1 or p2 hold and resume motion in p1 planner
+    OPERATION_EXIT_HOLD_FLUSH,  // exit p1 or p2 hold and flush p1 planner
+    OPERATION_HOLD_TO_SYNC,     // hold in p1 or p2, skip remainder of move; exec SYNC command or flush
+    OPERATION_JOB_KILL,         // fast hold followed by queue flush and program end
+    OPERATION_END_JOG,          // fast hold followed by program stop
+    OPERATION_SOFT_LIMIT_HIT,   // actions to run when a soft limit is hit
+    OPERATION_HARD_LIMIT_HIT,   // actions to run when a hard limit is hit
+    OPERATION_SHUTDOWN,         // actions to run when a shutdown is received
+    OPERATION_PANIC,            // actions to run when a panic is received
+    OPERATION_INTERLOCK_START,  // enter an interlock state
+    OPERATION_INTERLOCK_END,    // exit interlocked state
+    OPERATION_DI_FUNC_STOP,     // run digital input STOP function
+    OPERATION_DI_FUNC_FAST_STOP,// run digital input FAST_STOP function
+    OPERATION_DI_FUNC_HALT,     // run digital input HALT function
+    OPERATION_TOOL_CHANGE       // run a tool change sequence
+} cmOperationType;
 
 typedef enum {                  // feedhold state machine
     FEEDHOLD_P1_EXIT = -1,      // set when p1 feedhold is due to exit
@@ -272,8 +272,6 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     cmMotionState motion_state;             // momo
     
     cmFeedholdState hold_state;             // hold: feedhold state machine
-    cmFeedholdRequest hold_request;         // hold: pending feedhold request
-    cmFeedholdRequest hold_exit;            // hold: pending feedhold exit request 
     cmFlushState flush_state;               // hold: queue flush state machine
     bool hold_exit_requested;               // request normal exit from feedhold
     bool hold_abort_requested;              // request emergency exit from feedhold (typically ^d job kill)
@@ -469,6 +467,8 @@ stat_t cm_json_wait(char *json_string);                         // M102
 void cm_request_feedhold(void);
 void cm_request_exit_hold(void);
 void cm_request_queue_flush(void);
+stat_t cm_request_operation(cmOperationType operation);         // request a new operation
+stat_t cm_operation_callback(void);                             // operation action runner
 stat_t cm_feedhold_sequencing_callback(void);                   // process feedhold, cycle start and queue flush requests
 stat_t cm_feedhold_command_blocker(void);
 

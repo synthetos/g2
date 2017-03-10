@@ -47,6 +47,198 @@ static void _feedhold_p1_exit(void);
 static void _feedhold_p2_exit(void);
 static void _feedhold_abort(void);
 
+static stat_t action_hold(float* value, bool* flag);
+static stat_t action_halt(float* value, bool* flag);
+static stat_t action_p2_entry(float* value, bool* flag);
+static stat_t action_p2_exit(float* value, bool* flag);
+static stat_t action_parking_move(float* value, bool* flag);
+static stat_t action_return_move(float* value, bool* flag);
+static stat_t action_spindle_control(float* value, bool* flag);
+static stat_t action_coolant_control(float* value, bool* flag);
+static stat_t action_heater_control(float* value, bool* flag);
+static stat_t action_output_control(float* value, bool* flag);
+static stat_t action_cycle_start(float* value, bool* flag);
+static stat_t action_queue_flush(float* value, bool* flag);
+static stat_t action_input_function(float* value, bool* flag);
+static stat_t action_finalize_program(float* value, bool* flag);
+static stat_t action_trigger_alarm(float* value, bool* flag);
+
+typedef enum {                  // Operation Actions
+    // Initiation actions
+    ACTION_NULL = 0,            // no pending action; reverts here when complete (read-only; cannot be set)
+    ACTION_P1_HOLD,             // p1 feedhold at normal jerk ending in HOLD state in p1
+    ACTION_P2_HOLD,             // p2 feedhold at normal jerk ending in HOLD state in p2 (not used)
+    ACTION_P1_FAST_HOLD,        // p1 feedhold at high jerk ending in HOLD state in p1
+    ACTION_P2_FAST_HOLD,        // p2 feedhold at high jerk ending in HOLD state in p2
+    ACTION_HALT_MOTION,         // halt all motion immediately (regardless of p1 or p2)
+    
+    // Hold Entry Actions - run when motion has stopped
+    ACTION_P2_ENTRY,            // Z lift, spindle and coolant actions (bundled)
+    ACTION_PARKING_MOVE,        // perform a pre-defined toolhead parking move
+    ACTION_PAUSE_SPINDLE,
+    ACTION_PAUSE_COOLANT,
+    ACTION_PAUSE_HEATERS,
+    ACTION_PAUSE_OUTPUTS,       // programmed special purpose outputs
+    ACTION_STOP_SPINDLE,
+    ACTION_STOP_COOLANT,
+    ACTION_STOP_HEATERS,
+    ACTION_STOP_OUTPUTS,
+    
+    // In-Hold actions
+    ACTION_TOOL_CHANGE,
+    
+    // Feedhold Exit Actions    // This set is kept in a separate vector, so the bit shifts start over.
+    ACTION_P2_EXIT,             // coolant, spindle, return move actions (bundled)
+    ACTION_RESUME_HEATERS,
+    ACTION_RESUME_COOLANT,
+    ACTION_RESUME_SPINDLE,
+    ACTION_RESUME_OUTPUTS,      // programmed special purpose outputs
+    ACTION_RETURN_MOVE,         // returns to hold pint an re-enters p1
+    
+    // Cycle start, restart, exit hold
+    ACTION_SKIP_TO_SYNC,        // discard remaining length, execute next block if SYNC command, otherwise flush buffer
+    ACTION_CYCLE_START,         // (~) exit feedhold, perform exit actions if in p2, resume p1 motion
+    ACTION_QUEUE_FLUSH,         // (%) exit feedhold, perform exit actions if in p2, flush planner queue, enter p1 PROGRAM_STOP
+    
+    // Finalization actions
+    ACTION_DI_FUNCTION,         // function as assigned by digital input configuration (TBD)
+    ACTION_PROGRAM_STOP,        // invoke PROGRAM_STOP
+    ACTION_PROGRAM_END,         // invoke PROGRAM_END
+    ACTION_TRIGGER_ALARM,       // trigger ALARM
+    ACTION_TRIGGER_SHUTDOWN,    // trigger SHUTDOWN
+    ACTION_TRIGGER_PANIC,       // trigger PANIC state
+    ACTION_PERFORM_RESET,       // defined, but not implemented
+} cmOpAction;
+
+
+/*** Object Definitions ***/
+
+#define ACTION_MAX 12
+typedef stat_t (*action_exec_t)(float[], bool[]); // callback to operation action execution function
+
+typedef struct cmAction {               // struct to manage execution of operations
+    struct cmAction *nx;                // static pointer to next buffer
+
+    action_exec_t func;                 // callback to operation action function. NULL == disabled
+    float value[AXES];                  // parameters for the function
+    bool flag[AXES];
+
+    // clears this structure (except the pointer)
+    void reset() {
+        func = NULL;
+    }
+} cmAction_t;
+
+typedef struct cmOperation {            // struct to manage execution of operations
+    cmAction action[ACTION_MAX];        // singly linked list of action control structures
+
+    cmAction *current_action;           // current action being worked
+
+    void add_action(stat_t(*action_exec)(float[], bool[]), float* value, bool* flag) {
+        if (action_exec == NULL) {
+            return;
+        }
+        current_action->func = action_exec;
+
+        for (uint8_t i = 0; i < AXES; i++) {
+            current_action->value[i] = value[i];
+            current_action->flag[i] = flag[i];
+        }
+    };
+
+    stat_t run_action(void) {
+        stat_t status;
+        status = current_action->func(current_action->value, current_action->flag);
+        if (status == STAT_OK) {
+            current_action = current_action->nx;
+        }
+        return (status);
+    };
+
+    void reset(void) {
+        for (uint8_t i=0; i < ACTION_MAX; i++) {
+            action[i].reset();
+            action[i].nx = &action[i+1];
+        }
+        action[ACTION_MAX-1].nx = &action[0];
+        current_action = &action[0];
+    };
+    
+} cmOperation_t;
+
+cmOperation_t op;   // operations runner
+
+/****************************************************************************************
+ **** Operations ************************************************************************
+ ****************************************************************************************/
+
+/****************************************************************************************
+ * cm_request_operation()
+ * cm_operation_callback()
+ */
+
+stat_t cm_request_operation(cmOperationType operation)
+{
+    op.reset();         // start with a fresh operation controller
+    
+    switch (operation) {
+
+        case OP_CYCLE_START: { 
+            op.add_action(action_cycle_start, nullptr, nullptr);
+            break;
+        }
+        
+        default: {
+            
+        }
+    }
+    return (STAT_OK);    
+}
+
+stat_t cm_operation_callback()
+{
+    stat_t status = STAT_OK;
+    while ((status = op.run_action()) == STAT_OK);
+    
+    return (status);
+}
+
+/****************************************************************************************
+ * cm_action_functions
+ *
+ *  Coding an action:
+ *
+ *  Actions can complete in one call or take multiple calls (continuations). 
+ *  In the latter case they will be called multiple times by the action runner.
+ *  The returned status defines this:
+ * 
+ *    STAT_OK - signals completion of the action. Runner will run the next action
+ *    STAT_EAGAIN - signals that the action needs to be called again later to complete
+ *    STAT_(anything else) - aborts the operation
+ */
+
+static stat_t action_hold(float* value, bool* flag) { return (STAT_OK); }    // p1, p2, regular and fast holds
+static stat_t action_halt(float* value, bool* flag) { return (STAT_OK); }
+static stat_t action_p2_entry(float* value, bool* flag) { return (STAT_OK); }    // p2 entry actions, bundled
+static stat_t action_p2_exit(float* value, bool* flag) { return (STAT_OK); }     // p2 exit actions, bundled
+static stat_t action_parking_move(float* value, bool* flag) { return (STAT_OK); }
+static stat_t action_return_move(float* value, bool* flag) { return (STAT_OK); }
+static stat_t action_spindle_control(float* value, bool* flag) { return (STAT_OK); }
+static stat_t action_coolant_control(float* value, bool* flag) { return (STAT_OK); }
+static stat_t action_heater_control(float* value, bool* flag) { return (STAT_OK); }
+static stat_t action_output_control(float* value, bool* flag) { return (STAT_OK); }
+static stat_t action_queue_flush(float* value, bool* flag) { return (STAT_OK); }
+static stat_t action_input_function(float* value, bool* flag) { return (STAT_OK); }
+static stat_t action_finalize_program(float* value, bool* flag) { return (STAT_OK); }
+static stat_t action_trigger_alarm(float* value, bool* flag) { return (STAT_OK); }
+
+static stat_t action_cycle_start(float* value, bool* flag) 
+{
+    cm_set_motion_state(MOTION_RUN);
+    cm_cycle_start();
+    st_request_exec_move();
+    return (STAT_OK); 
+}
 
 /****************************************************************************************
  **** Feedholds *************************************************************************
@@ -181,10 +373,11 @@ bool cm_has_hold()
 }
 
 /****************************************************************************************
- * cm_start_hold()          - start a feedhhold external to feedhold request equencing
  * cm_request_feedhold()    - reqeust a feedhold
  * cm_request_exit_hold()   - reqeust feedhold exit with resume motion
  * cm_request_queue_flush() - request feedhold exit with queue flush
+ * cm_start_hold()          - start a feedhhold external to feedhold request equencing
+ * cm_feedhold_command_blocker() - prevents new Gcode commands from queueing to p2 planner
  *
  *  p1 is the primary planner, p2 is the secondary planner, which is active if the 
  *  primary planner is in hold. IOW p2 can only be in a hold if p1 is already in one.
@@ -210,21 +403,10 @@ bool cm_has_hold()
  *      Any executing or pending "in-hold" moves are stopped prior to the exit actions
  */
 
-void cm_start_hold()
-{
-    // Can only request a feedhold if the machine is in motion and there not one is not already in progress
-    if ((cm1.hold_state == FEEDHOLD_OFF) && (mp_has_runnable_buffer(mp))) {
-        cm_set_motion_state(MOTION_HOLD);
-        cm1.hold_state = FEEDHOLD_SYNC;   // invokes hold from aline execution
-    }
-}
-
 void cm_request_feedhold(void)  // !
 {
     // Only generate request if not already in a feedhold and the machine is in motion    
     if ((cm1.hold_state == FEEDHOLD_OFF) && (cm1.motion_state != MOTION_STOP)) {
-        cm1.hold_request = FEEDHOLD_HOLD_P2;        // request a hold to p2
-        cm1.hold_exit    = FEEDHOLD_NO_REQUEST;     // no exit specified
         cm1.hold_state   = FEEDHOLD_REQUESTED;      // signal request to state machine
     } else 
     if ((cm2.hold_state == FEEDHOLD_OFF) && (cm2.motion_state != MOTION_STOP)) {
@@ -235,7 +417,6 @@ void cm_request_feedhold(void)  // !
 void cm_request_exit_hold(void)  // ~
 {
     if (cm1.hold_state != FEEDHOLD_OFF) {
-        cm1.hold_exit = FEEDHOLD_CYCLE_START;       // signal a normal feedhold resume as exit
         cm1.hold_exit_requested = true;
     }
 }
@@ -245,9 +426,25 @@ void cm_request_queue_flush()   // %
     // NOTE: this function used to flush input buffers, but this is handled in xio *prior* to queue flush now
     if ((cm1.hold_state != FEEDHOLD_OFF) &&         // don't honor request unless you are in a feedhold
         (cm1.flush_state == FLUSH_OFF)) {           // ...and only once
-        cm1.hold_exit = FEEDHOLD_EXIT_FLUSH;        // signal a flush exit
         cm1.flush_state = FLUSH_REQUESTED;          // request planner flush once motion has stopped
     }
+}
+
+void cm_start_hold()
+{
+    // Can only request a feedhold if the machine is in motion and there not one is not already in progress
+    if ((cm1.hold_state == FEEDHOLD_OFF) && (mp_has_runnable_buffer(mp))) {
+        cm_set_motion_state(MOTION_HOLD);
+        cm1.hold_state = FEEDHOLD_SYNC;   // invokes hold from aline execution
+    }
+}
+
+stat_t cm_feedhold_command_blocker()
+{
+    if (cm1.hold_state != FEEDHOLD_OFF) {
+        return (STAT_EAGAIN);
+    }
+    return (STAT_OK);
 }
 
 /****************************************************************************************
@@ -319,18 +516,6 @@ stat_t cm_feedhold_sequencing_callback()
     }
     if (cm1.hold_state == FEEDHOLD_P1_EXIT) {
         _feedhold_p1_exit();                        // run multiple times until actions are complete
-    }
-    return (STAT_OK);
-}
-
-/****************************************************************************************
- * cm_feedhold_command_blocker() - prevents new Gcode commands from queueing to p2 planner
- */
-
-stat_t cm_feedhold_command_blocker()
-{
-    if (cm1.hold_state != FEEDHOLD_OFF) {
-        return (STAT_EAGAIN);
     }
     return (STAT_OK);
 }

@@ -407,6 +407,12 @@ stat_t mp_exec_move()
 
 stat_t mp_exec_aline(mpBuf_t *bf)
 {
+    // don't run the block if the machine is not in cycle
+    if (cm_get_machine_state() != MACHINE_CYCLE) {
+        return (STAT_NOOP);
+    }
+
+    // don't run the block if the block is inactive
     if (bf->block_state == BLOCK_INACTIVE) {
         return (STAT_NOOP);
     }
