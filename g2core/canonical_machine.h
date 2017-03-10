@@ -55,9 +55,9 @@
  * MACHINE STATE MODEL
  *
  * The following main variables track canonical machine state and state transitions.
- *    - cm->machine_state  - overall state of machine and program execution
- *    - cm->cycle_state  - what cycle the machine is executing (or none)
+ *    - cm->machine_state - overall state of machine and program execution
  *    - cm->motion_state  - state of movement
+ *    - cm->cycle_type    - what type of cycle the machine is executing (or none)
  */
 // *** Note: check config printout strings align with all the state variables
 
@@ -100,7 +100,7 @@ typedef enum {
 } cmMotionState;
 
 typedef enum {
-    CYCLE_NONE = 0,             // machine is not ins a cycle
+    CYCLE_NONE = 0,             // not in a cycle
     CYCLE_MACHINING,            // in normal machining cycle
     CYCLE_HOMING,               // in homing cycle
     CYCLE_PROBE,                // in probe cycle
@@ -112,11 +112,12 @@ typedef enum {
 typedef enum {                  // cycle start and feedhold requests
     OPERATION_NULL = 0,         // no operation; reverts here when complete
     OPERATION_CYCLE_START,      // perform a cycle start with no other actions
-    OPERATION_HOLD_TO_P2,       // feedhold into p2 with p2 entry actions
-    OPERATION_P1_FAST_HOLD,     // perform a fast hold in p1
+    OPERATION_HOLD,             // feedhold in p1 or p2 with no entry actions
+    OPERATION_HOLD_WITH_ACTIONS,// feedhold into p2 with entry actions
+//    OPERATION_P1_FAST_HOLD,     // perform a fast hold in p1
+//    OPERATION_HOLD_TO_SYNC,     // hold in p1 or p2, skip remainder of move; exec SYNC command or flush
     OPERATION_EXIT_HOLD_RESUME, // exit p1 or p2 hold and resume motion in p1 planner
     OPERATION_EXIT_HOLD_FLUSH,  // exit p1 or p2 hold and flush p1 planner
-    OPERATION_HOLD_TO_SYNC,     // hold in p1 or p2, skip remainder of move; exec SYNC command or flush
     OPERATION_JOB_KILL,         // fast hold followed by queue flush and program end
     OPERATION_END_JOG,          // fast hold followed by program stop
     OPERATION_SOFT_LIMIT_HIT,   // actions to run when a soft limit is hit
@@ -134,12 +135,13 @@ typedef enum {                  // cycle start and feedhold requests
 typedef enum {                  // feedhold state machine
     FEEDHOLD_P1_EXIT = -1,      // set when p1 feedhold is due to exit
     FEEDHOLD_OFF = 0,           // no feedhold in effect
-    FEEDHOLD_REQUESTED,         // feedhold has been requested but not started yet
+    FEEDHOLD_INITIATED,         // feedhold has been requested but not started yet
     FEEDHOLD_SYNC,              // start hold - sync to latest aline segment
     FEEDHOLD_DECEL_CONTINUE,    // in deceleration that will not end at zero
     FEEDHOLD_DECEL_TO_ZERO,     // in deceleration that will go to zero
     FEEDHOLD_DECEL_COMPLETE,    // feedhold deceleration has completed, but motors may not have stopped yet
-    FEEDHOLD_MOTORS_STOPPING,   // waiting for motors to have stopped on hold point (motion stop)
+    FEEDHOLD_MOTION_STOPPING,   // waiting for motors to have stopped at hold point (motion stop)
+    FEEDHOLD_MOTION_STOPPED,    // motion has stopped at hold point
     FEEDHOLD_P2_START,          // enter secondary planner and perform feedhold actions (once)
     FEEDHOLD_P2_WAIT,           // wait for feedhold actions to complete
     FEEDHOLD_HOLD,              // holding (steady state) Must be last state
@@ -269,7 +271,7 @@ typedef struct cmMachine {                  // struct to manage canonical machin
 
     cmMachineState machine_state;           // macs: machine/cycle/motion is the actual machine state
     cmCycleType cycle_type;                 // cycs
-    cmMotionState motion_state;             // momo
+    cmMotionState motion_state;             // mots
     
     cmFeedholdState hold_state;             // hold: feedhold state machine
     cmFlushState flush_state;               // hold: queue flush state machine
@@ -467,7 +469,7 @@ stat_t cm_json_wait(char *json_string);                         // M102
 void cm_request_feedhold(void);
 void cm_request_exit_hold(void);
 void cm_request_queue_flush(void);
-stat_t cm_request_operation(cmOperationType operation);         // request a new operation
+stat_t cm_request_operation(cmOperationType operation, float *param); // request an operation
 stat_t cm_operation_callback(void);                             // operation action runner
 stat_t cm_feedhold_sequencing_callback(void);                   // process feedhold, cycle start and queue flush requests
 stat_t cm_feedhold_command_blocker(void);

@@ -1025,9 +1025,10 @@ static void _exec_aline_normalize_block(mpBlockRuntimeBuf_t *b)
 static stat_t _exec_aline_feedhold(mpBuf_t *bf) 
 {
     // Case (4) - Completing the feedhold - Wait for the steppers to stop
-    if (cm->hold_state == FEEDHOLD_MOTORS_STOPPING) {
+    if (cm->hold_state == FEEDHOLD_MOTION_STOPPING) {
         if (mp_runtime_is_idle()) {                         // wait for steppers to actually finish
             mp_zero_segment_velocity();                     // finalize velocity for reporting purposes
+            cm->hold_state = FEEDHOLD_MOTION_STOPPED;
 
             // If in a p2 hold, exit the p2 hold immediately set up a flush of the p2 planner queue            
             if (cm == &cm2) {
@@ -1069,7 +1070,7 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
     // Update the run buffer then force a replan of the whole planner queue. Replans from zero velocity
     // This state might not appear necessary, but it is to handle closely packed !~ and other cases
     if (cm->hold_state == FEEDHOLD_DECEL_COMPLETE) {
-        cm->hold_state = FEEDHOLD_MOTORS_STOPPING;          // wait for the motors to come to a complete stop
+        cm->hold_state = FEEDHOLD_MOTION_STOPPING;          // wait for motion to come to a complete stop
         return (STAT_OK);                                   // exit from mp_exec_aline()
     }
 

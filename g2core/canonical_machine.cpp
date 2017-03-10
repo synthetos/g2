@@ -307,16 +307,24 @@ cmCombinedState cm_get_combined_state(cmMachine_t *_cm)
                 case CYCLE_HOMING:  { return (COMBINED_HOMING); }
                 case CYCLE_PROBE:   { return (COMBINED_PROBE); }
                 case CYCLE_JOG:     { return (COMBINED_JOG); }
-                case CYCLE_MACHINING: case CYCLE_NONE: {
-                    switch(_cm->motion_state) {
-                        case MOTION_STOP:     { return (COMBINED_RUN); }    // See NOTE, above
-                        case MOTION_RUN:      { return (COMBINED_RUN); }
-                        case MOTION_HOLD:     { return (COMBINED_HOLD); }
-                        default: {
-                            cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "cm_get_combined_state() mots bad");// "mots has impossible value"
-                            return (COMBINED_PANIC);
-                        }
+//                case CYCLE_MACHINING: case CYCLE_NONE: {
+//                    switch(_cm->motion_state) {
+//                        case MOTION_STOP:     { return (COMBINED_RUN); }    // See NOTE, above
+//                        case MOTION_RUN:      { return (COMBINED_RUN); }
+//                        case MOTION_HOLD:     { return (COMBINED_HOLD); }
+//                        default: {
+//                            cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "cm_get_combined_state() mots bad");// "mots has impossible value"
+//                            return (COMBINED_PANIC);
+//                        }
+//                    }
+
+                case CYCLE_MACHINING: {
+                    if (_cm->hold_state != FEEDHOLD_OFF) {
+                        return (COMBINED_HOLD);
+                    } else {
+                        return (COMBINED_RUN);                        
                     }
+
                 }
                 default: {
                     cm_panic(STAT_STATE_MANAGEMENT_ASSERTION_FAILURE, "cm_get_combined_state() cycs bad");    // "cycs has impossible value"
