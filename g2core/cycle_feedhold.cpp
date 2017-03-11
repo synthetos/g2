@@ -47,21 +47,22 @@ static void _feedhold_p1_exit(void);
 static void _feedhold_p2_exit(void);
 static void _feedhold_abort(void);
 
-static stat_t _action_hold(float *param);
-static stat_t _action_halt(float *param);
-static stat_t _action_p2_entry(float* param);
-static stat_t _action_p2_exit(float *param);
-static stat_t _action_parking_move(float *param);
-static stat_t _action_return_move(float *param);
-static stat_t _action_spindle_control(float *param);
-static stat_t _action_coolant_control(float *param);
-static stat_t _action_heater_control(float *param);
-static stat_t _action_output_control(float *param);
 static stat_t _action_cycle_start(float *param);
-static stat_t _action_queue_flush(float *param);
-static stat_t _action_input_function(float *param);
-static stat_t _action_finalize_program(float *param);
-static stat_t _action_trigger_alarm(float *param);
+static stat_t _action_hold(float *param);
+
+//static stat_t _action_halt(float *param);
+//static stat_t _action_p2_entry(float* param);
+//static stat_t _action_p2_exit(float *param);
+//static stat_t _action_parking_move(float *param);
+//static stat_t _action_return_move(float *param);
+//static stat_t _action_spindle_control(float *param);
+//static stat_t _action_coolant_control(float *param);
+//static stat_t _action_heater_control(float *param);
+//static stat_t _action_output_control(float *param);
+//static stat_t _action_queue_flush(float *param);
+//static stat_t _action_input_function(float *param);
+//static stat_t _action_finalize_program(float *param);
+//static stat_t _action_trigger_alarm(float *param);
 
 typedef enum {                  // Operation Actions
     // Initiation actions
@@ -111,6 +112,20 @@ typedef enum {                  // Operation Actions
     ACTION_PERFORM_RESET,       // defined, but not implemented
 } cmOpAction;
 
+/*
+ * Operations work by queueing a set of actions, then running then in sequence until the 
+ * operation is complete or an error occurs. Works like this:
+ *
+ *  - Invoke an operation by calling cm_request_operation(), possibly with one or more parameters
+ *    - The operation runner must be idle: an operation cannot interrupt a currently running operation
+ *    - There may be need for Cancel Operation semantics, but this could get overcomplicated
+ *  - When a new operation is requested the operations runner object is cleared
+ *    and one or more actions are queued by calling add_action() on the object.
+ *  - The operation will be started immediately if run_action() is called during the request. 
+ *    If run_action() is not called the operation will begin the next time cm_operation_callback()
+ *    
+ *    
+ */
 
 /*** Object Definitions ***/
 
@@ -147,6 +162,9 @@ typedef struct cmOperation {            // struct to manage execution of operati
     };
 
     stat_t run_action(void) {
+        if (current_action->func == NULL) {
+            return (STAT_NOOP);
+        }
         stat_t status;
         status = current_action->func(current_action->param);
         if (status == STAT_OK) {
@@ -199,7 +217,7 @@ stat_t cm_request_operation(cmOperationType operation, float *param)
 
         // Generate hold request if not already in a hold and machine is in motion
         case OPERATION_HOLD: {
-            op.add_action(_action_cycle_start, param);
+            op.add_action(_action_hold, param);
             break;
         }
         
@@ -233,9 +251,20 @@ stat_t cm_operation_callback()
  */
 
 /*
- * _action_hold() - initiate hold, retirn STAT_OK once hold has been reached
- *
- *  Initiate a feedhold in the active planner - p1 or p2
+ * _action_cycle_start() - start a cycle or restart from hold
+ */
+static stat_t _action_cycle_start(float *param)
+{
+    //    cm_set_motion_state(MOTION_RUN);
+    cm_cycle_start();
+    st_request_exec_move();
+    return (STAT_OK);
+}
+
+/*
+ * _action_hold() - initiate a feedhold in the active planner - p1 or p2
+ *  
+ * Return STAT_OK once hold has been reached
  */
 static stat_t _action_hold(float *param)     // p1, p2, regular and fast holds
 {
@@ -256,27 +285,19 @@ static stat_t _action_hold(float *param)     // p1, p2, regular and fast holds
 }
 
 
-static stat_t _action_halt(float *param) { return (STAT_OK); }
-static stat_t _action_p2_entry(float *param) { return (STAT_OK); }    // p2 entry actions, bundled
-static stat_t _action_p2_exit(float *param) { return (STAT_OK); }     // p2 exit actions, bundled
-static stat_t _action_parking_move(float *param) { return (STAT_OK); }
-static stat_t _action_return_move(float *param) { return (STAT_OK); }
-static stat_t _action_spindle_control(float *param) { return (STAT_OK); }
-static stat_t _action_coolant_control(float *param) { return (STAT_OK); }
-static stat_t _action_heater_control(float *param) { return (STAT_OK); }
-static stat_t _action_output_control(float *param) { return (STAT_OK); }
-static stat_t _action_queue_flush(float *param) { return (STAT_OK); }
-static stat_t _action_input_function(float *param) { return (STAT_OK); }
-static stat_t _action_finalize_program(float *param) { return (STAT_OK); }
-static stat_t _action_trigger_alarm(float *param) { return (STAT_OK); }
-
-static stat_t _action_cycle_start(float *param) 
-{
-//    cm_set_motion_state(MOTION_RUN);
-    cm_cycle_start();
-    st_request_exec_move();
-    return (STAT_OK); 
-}
+//static stat_t _action_halt(float *param) { return (STAT_OK); }
+//static stat_t _action_p2_entry(float *param) { return (STAT_OK); }    // p2 entry actions, bundled
+//static stat_t _action_p2_exit(float *param) { return (STAT_OK); }     // p2 exit actions, bundled
+//static stat_t _action_parking_move(float *param) { return (STAT_OK); }
+//static stat_t _action_return_move(float *param) { return (STAT_OK); }
+//static stat_t _action_spindle_control(float *param) { return (STAT_OK); }
+//static stat_t _action_coolant_control(float *param) { return (STAT_OK); }
+//static stat_t _action_heater_control(float *param) { return (STAT_OK); }
+//static stat_t _action_output_control(float *param) { return (STAT_OK); }
+//static stat_t _action_queue_flush(float *param) { return (STAT_OK); }
+//static stat_t _action_input_function(float *param) { return (STAT_OK); }
+//static stat_t _action_finalize_program(float *param) { return (STAT_OK); }
+//static stat_t _action_trigger_alarm(float *param) { return (STAT_OK); }
 
 /****************************************************************************************
  **** Feedholds *************************************************************************
