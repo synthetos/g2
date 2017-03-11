@@ -297,7 +297,7 @@ void mp_set_steps_to_runtime_position()
  *  and makes keeping the queue full much easier - therefore avoiding Q starvation
  */
 
-void mp_queue_command(void(*cm_exec)(float[], bool[]), float *value, bool *flag)
+void mp_queue_command(void(*cm_exec)(float *, bool *), float *value, bool *flag)
 {
     mpBuf_t *bf;
 

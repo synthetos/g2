@@ -465,11 +465,13 @@ stat_t cm_json_wait(char *json_string);                         // M102
 /**** Cycles and External FIles ****/
 
 // Feedhold and related functions (cycle_feedhold.cpp)
+void cm_operation_init(void);
+stat_t cm_operation_callback(void);                             // operation action runner
+stat_t cm_request_operation(cmOperationType operation, float *param); // request an operation
+
 void cm_request_feedhold(void);
 void cm_request_exit_hold(void);
 void cm_request_queue_flush(void);
-stat_t cm_request_operation(cmOperationType operation, float *param); // request an operation
-stat_t cm_operation_callback(void);                             // operation action runner
 stat_t cm_feedhold_sequencing_callback(void);                   // process feedhold, cycle start and queue flush requests
 stat_t cm_feedhold_command_blocker(void);
 

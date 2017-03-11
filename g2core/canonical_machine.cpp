@@ -207,6 +207,8 @@ void canonical_machine_reset(cmMachine_t *_cm)
     _cm->gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE; // never start in a motion mode
     _cm->machine_state = MACHINE_READY;
 
+    cm_operation_init();                            // reset operations runner
+
     canonical_machine_reset_rotation(_cm);
     memset(&_cm->probe_state, 0, sizeof(cmProbeState)*PROBES_STORED);
     memset(&_cm->probe_results, 0, sizeof(float)*PROBES_STORED*AXES);
@@ -1571,11 +1573,15 @@ static void _exec_program_finalize(float *value, bool *flag)
 
 void cm_cycle_start()
 {
+#if (1) // +++++
+    cm_request_operation(OPERATION_CYCLE_START, nullptr);
+#else 
     if (cm->cycle_type == CYCLE_NONE) {                     // don't (re)start homing, probe or other canned cycles
         cm->cycle_type = CYCLE_MACHINING;
         cm->machine_state = MACHINE_CYCLE;
         qr_init_queue_report();                             // clear queue reporting buffer counts
     }
+#endif
 }
 
 void cm_cycle_end()

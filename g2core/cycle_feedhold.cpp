@@ -47,8 +47,8 @@ static void _feedhold_p1_exit(void);
 static void _feedhold_p2_exit(void);
 static void _feedhold_abort(void);
 
-static stat_t _action_cycle_start(float *param);
-static stat_t _action_hold(float *param);
+stat_t _action_cycle_start(float *param);
+stat_t _action_hold(float *param);
 
 //static stat_t _action_halt(float *param);
 //static stat_t _action_p2_entry(float* param);
@@ -112,79 +112,111 @@ typedef enum {                  // Operation Actions
     ACTION_PERFORM_RESET,       // defined, but not implemented
 } cmOpAction;
 
-/*
+/****************************************************************************************
  * Operations work by queueing a set of actions, then running then in sequence until the 
  * operation is complete or an error occurs. Works like this:
  *
- *  - Invoke an operation by calling cm_request_operation(), possibly with one or more parameters
+ *  - Invoke an operation by calling cm_request_operation(); may require one or more parameters
  *    - The operation runner must be idle: an operation cannot interrupt a currently running operation
- *    - There may be need for Cancel Operation semantics, but this could get overcomplicated
- *  - When a new operation is requested the operations runner object is cleared
- *    and one or more actions are queued by calling add_action() on the object.
- *  - The operation will be started immediately if run_action() is called during the request. 
- *    If run_action() is not called the operation will begin the next time cm_operation_callback()
- *    
- *    
+ *    - Future may need Cancel Operation semantics, but this could get overcomplicated quickly
+ *
+ *  - When a new operation is requested the operations runner object is cleared and one or 
+ *    more actions are queued by calling add_action() on the object.
+ *
+ *  - To start the operation immediately call run_action() at the end of the request. 
+ *    Otherwise the operation will begin the next time cm_operation_callback().
+ *
+ *  It is assumed that all actions are added at once, and that this cannot be interrupted
+ *  by a run request. So no attempt is made at mutual exclusion. Just behave.
  */
 
 /*** Object Definitions ***/
 
-#define ACTION_MAX 12           // maximum actions that can be queued for an operation
-#define PARAM_MAX 4             // maximum number of parameters that can be passed in param
-typedef stat_t (*action_exec_t)(float *); // callback to operation action execution function
+#define PARAM_MAX 4                         // maximum number of parameters that can be passed in param
+#define ACTION_MAX 12                       // maximum actions that can be queued for an operation
+typedef stat_t (*action_exec_t)(float *);   // callback to action execution function
 
-typedef struct cmAction {       // struct to manage execution of operations
-    struct cmAction *nx;        // static pointer to next buffer
+typedef struct cmAction {                   // struct to manage execution of operations
 
-    action_exec_t func;         // callback to operation action function. NULL == disabled
-    float param[PARAM_MAX];     // parameters for the function
+    uint8_t number;
+    struct cmAction *nx;                    // static pointer to next buffer
+    action_exec_t func;                     // callback to operation action function. NULL == disabled
+    float param[PARAM_MAX];                 // parameters for the function
 
-    // clears this structure (except the pointer)
-    void reset() {
+    void reset() {                          // clears this structure (except the pointer)
         func = NULL;
-    }
+    };
 } cmAction_t;
 
-typedef struct cmOperation {            // struct to manage execution of operations
-    cmAction action[ACTION_MAX];        // singly linked list of action control structures
+typedef struct cmOperation {                // struct to manage execution of operations
 
-    cmAction *current_action;           // current action being worked
-
-    void add_action(stat_t(*action_exec)(float *), float* param) {
-        if (action_exec == NULL) {
-            return;
-        }
-        current_action->func = action_exec;
-
-        for (uint8_t i = 0; i < AXES; i++) {
-            current_action->param[i] = param[i];
-        }
-    };
-
-    stat_t run_action(void) {
-        if (current_action->func == NULL) {
-            return (STAT_NOOP);
-        }
-        stat_t status;
-        status = current_action->func(current_action->param);
-        if (status == STAT_OK) {
-            current_action = current_action->nx;
-        }
-        return (status);
-    };
+    cmAction action[ACTION_MAX];            // singly linked list of action control structures
+    cmAction *add;                          // pointer to next action to be added
+    cmAction *run;                          // pointer to action being executed
+    bool in_operation;                      // set true when an operation is running
 
     void reset(void) {
         for (uint8_t i=0; i < ACTION_MAX; i++) {
-            action[i].reset();
-            action[i].nx = &action[i+1];
+            action[i].reset();              // reset the action controller object
+            action[i].number = i;
+            action[i].nx = &action[i+1];    // link to the next action
         }
-        action[ACTION_MAX-1].nx = &action[0];
-        current_action = &action[0];
+        action[ACTION_MAX-1].nx = NULL;     // set last action (end of list)
+        add = action;
+        run = action;
+    };
+
+    stat_t add_action(stat_t(*action_exec)(float *), float* param) {
+        
+        if (in_operation) {                 // error if an operation is currently running
+            return (STAT_COMMAND_NOT_ACCEPTED);
+        }
+//        if (action_exec == NULL) {          // illegal input
+//            return (STAT_INVALID_OR_MALFORMED_COMMAND);
+//        }
+        if (add == NULL) {                  // no more room for a new action
+            return (STAT_INPUT_EXCEEDS_MAX_LENGTH);
+        }
+        add->func = action_exec;
+        if (param != NULL) {
+            for (uint8_t i=0; i<PARAM_MAX; i++) {
+                add->param[i] = param[i];
+            }
+        };
+        add = add->nx;
+        return (STAT_OK);
+    };
+
+    stat_t run_operation(void) {
+
+        if (run->func == NULL) {            // not an error if nothing to run
+            return (STAT_NOOP);             // break out of cm_operation_callback() run loop
+        }
+        in_operation = true;                // disable add_action during operations
+        stat_t status = run->func(run->param);
+        if (status == STAT_EAGAIN) {        // continuation: return with no change to action pointer
+            return (status);
+        }
+        if (status == STAT_OK) {            // current action complete, advance to next action
+            run = run->nx;
+            if (run->func != NULL) {        // action is complete but operation is not yet complete
+                return (STAT_OK);
+            }
+            in_operation = false;
+            status = STAT_COMPLETE;         // break out of the cm_operation_callback() run loop
+        }
+        reset();                            // reset the operation if complete or if action threw an error
+        return (status);                    // return error or COMPLETE
     };
     
 } cmOperation_t;
 
 cmOperation_t op;   // operations runner
+
+void cm_operation_init()
+{
+    op.reset();
+}
 
 /****************************************************************************************
  **** Operations ************************************************************************
@@ -206,13 +238,15 @@ cmOperation_t op;   // operations runner
 
 stat_t cm_request_operation(cmOperationType operation, float *param)
 {
-    op.reset();         // start with a fresh operation controller
+    if (op.in_operation) {
+        return (STAT_COMMAND_NOT_ACCEPTED);     // already has a current running action
+    }
     
     switch (operation) {
 
         case OPERATION_CYCLE_START: {
             op.add_action(_action_cycle_start, nullptr);
-            break;
+            return(op.run_operation());
         }
 
         // Generate hold request if not already in a hold and machine is in motion
@@ -231,7 +265,7 @@ stat_t cm_request_operation(cmOperationType operation, float *param)
 stat_t cm_operation_callback()
 {
     stat_t status = STAT_OK;
-    while ((status = op.run_action()) == STAT_OK);
+    while ((status = op.run_operation()) == STAT_OK);
     
     return (status);
 }
@@ -253,11 +287,16 @@ stat_t cm_operation_callback()
 /*
  * _action_cycle_start() - start a cycle or restart from hold
  */
-static stat_t _action_cycle_start(float *param)
+//static stat_t _action_cycle_start(float *param)
+stat_t _action_cycle_start(float *param)
 {
-    //    cm_set_motion_state(MOTION_RUN);
-    cm_cycle_start();
-    st_request_exec_move();
+//    cm_cycle_start();
+    if (cm->cycle_type == CYCLE_NONE) {                     // don't (re)start homing, probe or other canned cycles
+        cm->cycle_type = CYCLE_MACHINING;
+        cm->machine_state = MACHINE_CYCLE;
+//        qr_init_queue_report();                             // clear queue reporting buffer counts
+        st_request_exec_move();
+    }
     return (STAT_OK);
 }
 
@@ -266,7 +305,8 @@ static stat_t _action_cycle_start(float *param)
  *  
  * Return STAT_OK once hold has been reached
  */
-static stat_t _action_hold(float *param)     // p1, p2, regular and fast holds
+//static stat_t _action_hold(float *param)     // p1, p2, regular and fast holds
+stat_t _action_hold(float *param)     // p1, p2, regular and fast holds
 {
     // Not in feedhold
     if ((cm1.hold_state == FEEDHOLD_OFF) && (cm1.motion_state != MOTION_STOP)) {

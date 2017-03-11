@@ -579,7 +579,7 @@ void mp_set_planner_position(uint8_t axis, const float position);
 void mp_set_runtime_position(uint8_t axis, const float position);
 void mp_set_steps_to_runtime_position(void);
 
-void mp_queue_command(void(*cm_exec_t)(float[], bool[]), float *value, bool *flag);
+void mp_queue_command(void(*cm_exec)(float *, bool *), float *value, bool *flag);
 stat_t mp_runtime_command(mpBuf_t *bf);
 
 stat_t mp_json_command(char *json_string);
