@@ -307,8 +307,8 @@ stat_t mp_exec_move()
         }
 
         // Manage motion state transitions
-        if ((cm->motion_state != MOTION_RUN) && (cm->motion_state != MOTION_HOLD)) {
-// +++++       if (cm->motion_state != MOTION_RUN) {
+//        if ((cm->motion_state != MOTION_RUN) && (cm->motion_state != MOTION_HOLD)) {
+        if (cm->motion_state != MOTION_RUN) {
             cm_set_motion_state(MOTION_RUN);                // also sets active model to RUNTIME
         }
     }
@@ -486,7 +486,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     // Feed Override Processing - We need to handle the following cases (listed in rough sequence order):
 
     // Feedhold Processing - We need to handle the following cases (listed in rough sequence order):
-    if (cm->motion_state == MOTION_HOLD) {
+//    if (cm->motion_state == MOTION_HOLD) {
+    if (cm->hold_state != FEEDHOLD_OFF) {
         // if FEEDHOLD_P2_START, FEEDHOLD_P2_WAIT, FEEDHOLD HOLD or FEEDHOLD_P2_EXIT
         if (cm->hold_state >= FEEDHOLD_P2_START) { // handles _exec_aline_feedhold_processing case (7)
             return (STAT_NOOP);                    // VERY IMPORTANT to exit as a NOOP. Do not load another move
@@ -899,7 +900,8 @@ static stat_t _exec_aline_segment()
     // Otherwise if not at a section waypoint compute target from segment time and velocity
     // Don't do waypoint correction if you are going into a hold.
 
-    if ((--mr->segment_count == 0) && (cm->motion_state != MOTION_HOLD)) {
+//    if ((--mr->segment_count == 0) && (cm->motion_state != MOTION_HOLD)) {
+    if ((--mr->segment_count == 0) && (cm->hold_state == FEEDHOLD_OFF)) {
         copy_vector(mr->gm.target, mr->waypoint[mr->section]);
     } else {
         float segment_length = mr->segment_velocity * mr->segment_time;

@@ -95,8 +95,8 @@ typedef enum {                  // Note: MachineState signals if the machine is 
 
 typedef enum {
     MOTION_STOP = 0,            // motion has stopped: set when the steppers reach the end of the planner queue
-    MOTION_RUN,                 // machine is in motion: set when the steppers execute an ALINE segment
-    MOTION_HOLD                 // feedhold in progress: set whenever we leave FEEDHOLD_OFF, unset whenever we enter FEEDHOLD_OFF
+    MOTION_RUN                  // machine is in motion: set when the steppers execute an ALINE segment
+//    MOTION_HOLD                 // feedhold in progress: set whenever we leave FEEDHOLD_OFF, unset whenever we enter FEEDHOLD_OFF
 } cmMotionState;
 
 typedef enum {

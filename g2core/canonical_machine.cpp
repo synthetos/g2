@@ -259,12 +259,13 @@ stat_t canonical_machine_test_assertions(cmMachine_t *_cm)
 void cm_set_motion_state(const cmMotionState motion_state)
 {
     cm->motion_state = motion_state;
+    ACTIVE_MODEL = (motion_state ? MODEL : RUNTIME);
 
-    switch (motion_state) {
-        case (MOTION_STOP): { ACTIVE_MODEL = MODEL; break; }
-        case (MOTION_RUN):  { ACTIVE_MODEL = RUNTIME; break; }
-        case (MOTION_HOLD): { ACTIVE_MODEL = RUNTIME; break; }
-    }
+//    switch (motion_state) {
+//        case (MOTION_STOP): { ACTIVE_MODEL = MODEL; break; }
+//        case (MOTION_RUN):  { ACTIVE_MODEL = RUNTIME; break; }
+//        case (MOTION_HOLD): { ACTIVE_MODEL = RUNTIME; break; }
+//    }
 }
 
 /*

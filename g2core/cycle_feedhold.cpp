@@ -428,7 +428,7 @@ void cm_start_hold()
 {
     // Can only request a feedhold if the machine is in motion and there not one is not already in progress
     if ((cm1.hold_state == FEEDHOLD_OFF) && (mp_has_runnable_buffer(mp))) {
-        cm_set_motion_state(MOTION_HOLD);
+//        cm_set_motion_state(MOTION_HOLD);
         cm1.hold_state = FEEDHOLD_SYNC;   // invokes hold from aline execution
     }
 }
@@ -463,7 +463,7 @@ stat_t cm_feedhold_sequencing_callback()
     // invoking a p1 feedhold is a 2 step process - get to the stop, then execute the hold actions
     if (cm1.hold_state == FEEDHOLD_INITIATED) {
         if (mp_has_runnable_buffer(&mp1)) {         // bypass cm_start_hold() to start from here
-            cm_set_motion_state(MOTION_HOLD);
+//            cm_set_motion_state(MOTION_HOLD);
             cm1.hold_state = FEEDHOLD_SYNC;         // invokes hold from aline execution
         }
     }
@@ -474,7 +474,7 @@ stat_t cm_feedhold_sequencing_callback()
     // p2 feedhold states - feedhold in feedhold
     if (cm2.hold_state == FEEDHOLD_INITIATED) {
         if (mp_has_runnable_buffer(&mp2)) {
-            cm_set_motion_state(MOTION_HOLD);
+//            cm_set_motion_state(MOTION_HOLD);
             cm2.hold_state = FEEDHOLD_SYNC;
         }
     }
