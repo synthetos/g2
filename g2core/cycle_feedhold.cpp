@@ -137,7 +137,6 @@ typedef enum {                  // Operation Actions
 typedef stat_t (*action_exec_t)(float *);   // callback to action execution function
 
 typedef struct cmAction {                   // struct to manage execution of operations
-
     uint8_t number;
     struct cmAction *nx;                    // static pointer to next buffer
     action_exec_t func;                     // callback to operation action function. NULL == disabled
@@ -167,16 +166,8 @@ typedef struct cmOperation {                // struct to manage execution of ope
     };
 
     stat_t add_action(stat_t(*action_exec)(float *), float* param) {
-        
-        if (in_operation) {                 // error if an operation is currently running
-            return (STAT_COMMAND_NOT_ACCEPTED);
-        }
-//        if (action_exec == NULL) {          // illegal input
-//            return (STAT_INVALID_OR_MALFORMED_COMMAND);
-//        }
-        if (add == NULL) {                  // no more room for a new action
-            return (STAT_INPUT_EXCEEDS_MAX_LENGTH);
-        }
+        if (in_operation) { return (STAT_COMMAND_NOT_ACCEPTED); }       // can't add
+        if (add == NULL)  { return (STAT_INPUT_EXCEEDS_MAX_LENGTH); }   // no more room
         add->func = action_exec;
         if (param != NULL) {
             for (uint8_t i=0; i<PARAM_MAX; i++) {
@@ -188,10 +179,7 @@ typedef struct cmOperation {                // struct to manage execution of ope
     };
 
     stat_t run_operation(void) {
-
-        if (run->func == NULL) {            // not an error if nothing to run
-            return (STAT_NOOP);             // break out of cm_operation_callback() run loop
-        }
+        if (run->func == NULL) { return (STAT_NOOP); }  // not an error. This is normal
         in_operation = true;                // disable add_action during operations
         stat_t status = run->func(run->param);
         if (status == STAT_EAGAIN) {        // continuation: return with no change to action pointer
