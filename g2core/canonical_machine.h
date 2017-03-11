@@ -64,20 +64,20 @@
 // ### LAYER 8 CRITICAL REGION ###
 // ### DO NOT CHANGE THESE ENUMERATIONS WITHOUT COMMUNITY INPUT ###
 typedef enum {                  // check alignment with messages in config.c / msg_stat strings
-    COMBINED_INITIALIZING = 0,  // [0] machine is initializing          //iff macs == MACHINE_INITIALIZING
-    COMBINED_READY,             // [1] machine is ready for use         //iff macs == MACHINE_READY
-    COMBINED_ALARM,             // [2] machine in alarm state           //iff macs == MACHINE_ALARM
-    COMBINED_PROGRAM_STOP,      // [3] program stop/no more blocks      //iff macs == MACHINE_PROGRAM_STOP
-    COMBINED_PROGRAM_END,       // [4] program end                      //iff macs == MACHINE_PROGRAM_END
-    COMBINED_RUN,               // [5] machine is running               //iff macs == MACHINE_CYCLE, cycs == CYCLE_OFF, mots != MOTION_HOLD
-    COMBINED_HOLD,              // [6] machine is holding               //iff macs == MACHINE_CYCLE, cycs == CYCLE_OFF, mots == MOTION_HOLD
-    COMBINED_PROBE,             // [7] probe cycle active               //iff macs == MACHINE_CYCLE, cycs == CYCLE_PROBE
-    COMBINED_CYCLE,             // [8] reserved for canned cycles       < not used >
-    COMBINED_HOMING,            // [9] homing cycle active              //iff macs == MACHINE_CYCLE, cycs = CYCLE_HOMING
-    COMBINED_JOG,               // [10] jogging cycle active            //iff macs == MACHINE_CYCLE, cycs = CYCLE_JOG
-    COMBINED_INTERLOCK,         // [11] machine in safety interlock hold//iff macs == MACHINE_INTERLOCK
-    COMBINED_SHUTDOWN,          // [12] machine in shutdown state       //iff macs == MACHINE_SHUTDOWN
-    COMBINED_PANIC              // [13] machine in panic state          //iff macs == MACHINE_PANIC
+    COMBINED_INITIALIZING = 0,  // [0] machine is initializing
+    COMBINED_READY,             // [1] machine is ready for use
+    COMBINED_ALARM,             // [2] machine in alarm state
+    COMBINED_PROGRAM_STOP,      // [3] program stop/no more blocks
+    COMBINED_PROGRAM_END,       // [4] program end
+    COMBINED_RUN,               // [5] machine is running
+    COMBINED_HOLD,              // [6] machine is holding
+    COMBINED_PROBE,             // [7] probe cycle activ
+    COMBINED_CYCLE,             // [8] reserved for canned cycles
+    COMBINED_HOMING,            // [9] homing cycle active
+    COMBINED_JOG,               // [10] jogging cycle active
+    COMBINED_INTERLOCK,         // [11] machine in safety interlock hold
+    COMBINED_SHUTDOWN,          // [12] machine in shutdown state
+    COMBINED_PANIC              // [13] machine in panic state
 } cmCombinedState;
 //### END CRITICAL REGION ###
 
@@ -96,7 +96,6 @@ typedef enum {                  // Note: MachineState signals if the machine is 
 typedef enum {
     MOTION_STOP = 0,            // motion has stopped: set when the steppers reach the end of the planner queue
     MOTION_RUN                  // machine is in motion: set when the steppers execute an ALINE segment
-//    MOTION_HOLD                 // feedhold in progress: set whenever we leave FEEDHOLD_OFF, unset whenever we enter FEEDHOLD_OFF
 } cmMotionState;
 
 typedef enum {

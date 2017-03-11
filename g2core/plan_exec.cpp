@@ -306,11 +306,8 @@ stat_t mp_exec_move()
             st_request_forward_plan();
         }
 
-        // Manage motion state transitions
-//        if ((cm->motion_state != MOTION_RUN) && (cm->motion_state != MOTION_HOLD)) {
-        if (cm->motion_state != MOTION_RUN) {
-            cm_set_motion_state(MOTION_RUN);                // also sets active model to RUNTIME
-        }
+        // Perform motion state transition. Also sets active model to RUNTIME
+        if (cm->motion_state != MOTION_RUN) { cm_set_motion_state(MOTION_RUN); }
     }
     if (bf->bf_func == NULL) {
         return(cm_panic(STAT_INTERNAL_ERROR, "mp_exec_move()")); // never supposed to get here
@@ -486,7 +483,6 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     // Feed Override Processing - We need to handle the following cases (listed in rough sequence order):
 
     // Feedhold Processing - We need to handle the following cases (listed in rough sequence order):
-//    if (cm->motion_state == MOTION_HOLD) {
     if (cm->hold_state != FEEDHOLD_OFF) {
         // if FEEDHOLD_P2_START, FEEDHOLD_P2_WAIT, FEEDHOLD HOLD or FEEDHOLD_P2_EXIT
         if (cm->hold_state >= FEEDHOLD_P2_START) { // handles _exec_aline_feedhold_processing case (7)
@@ -767,7 +763,7 @@ static stat_t _exec_aline_head(mpBuf_t *bf)
             return (STAT_OK);                               // exit without advancing position, say we're done
         }
         debug_trap_if_true(mr->section != SECTION_HEAD, "exec_aline() Not section head");
-        mr->section = SECTION_HEAD;                         // +++++ Redundant???
+//        mr->section = SECTION_HEAD;                         // +++++ Redundant???
         mr->section_state = SECTION_RUNNING;
     } else {
         mr->segment_velocity += mr->forward_diff_5;
@@ -812,7 +808,7 @@ static stat_t _exec_aline_body(mpBuf_t *bf)
             return (STAT_OK);                               // exit without advancing position, say we're done
         }
         debug_trap_if_true(mr->section != SECTION_BODY, "exec_aline() Not section body");
-        mr->section = SECTION_BODY;                         // +++++ Redundant???
+//        mr->section = SECTION_BODY;                         // +++++ Redundant???
         mr->section_state = SECTION_RUNNING;                // uses PERIOD_2 so last segment detection works
     }
     if (_exec_aline_segment() == STAT_OK) {                 // OK means this section is done
@@ -853,7 +849,7 @@ static stat_t _exec_aline_tail(mpBuf_t *bf)
             return (STAT_OK);                               // exit without advancing position, say we're done
         }
         debug_trap_if_true(mr->section != SECTION_TAIL, "exec_aline() Not section tail");
-        mr->section = SECTION_TAIL;                         // +++++ Redundant???
+//        mr->section = SECTION_TAIL;                         // +++++ Redundant???
         mr->section_state = SECTION_RUNNING;
     } else {
         mr->segment_velocity += mr->forward_diff_5;
@@ -900,7 +896,6 @@ static stat_t _exec_aline_segment()
     // Otherwise if not at a section waypoint compute target from segment time and velocity
     // Don't do waypoint correction if you are going into a hold.
 
-//    if ((--mr->segment_count == 0) && (cm->motion_state != MOTION_HOLD)) {
     if ((--mr->segment_count == 0) && (cm->hold_state == FEEDHOLD_OFF)) {
         copy_vector(mr->gm.target, mr->waypoint[mr->section]);
     } else {
