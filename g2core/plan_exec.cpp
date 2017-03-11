@@ -308,6 +308,7 @@ stat_t mp_exec_move()
 
         // Manage motion state transitions
         if ((cm->motion_state != MOTION_RUN) && (cm->motion_state != MOTION_HOLD)) {
+// +++++       if (cm->motion_state != MOTION_RUN) {
             cm_set_motion_state(MOTION_RUN);                // also sets active model to RUNTIME
         }
     }
@@ -552,6 +553,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         if (bf->block_state == BLOCK_ACTIVE) {
             if (mp_free_run_buffer()) {                 // returns true of the buffer is empty
                 if (cm->hold_state == FEEDHOLD_OFF) {
+                    cm_set_motion_state(MOTION_STOP);   // also sets active model to RUNTIME
                     cm_cycle_end();                     // free buffer & end cycle if planner is empty
                 }
             } else {
