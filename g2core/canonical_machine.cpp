@@ -1320,9 +1320,12 @@ stat_t cm_straight_traverse(const float target[], const bool flags[])
     cm_cycle_start();                               // required for homing & other cycles
     stat_t status = mp_aline(&cm.gm);               // send the move to the planner
     cm_finalize_move();
-    if (status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer()) {
-        cm_cycle_end();
-        return (STAT_OK);
+    
+    if (status == STAT_MINIMUM_LENGTH_MOVE) {
+        if (!mp_has_runnable_buffer()) {            // handle condition where zero-length move is last or only move
+            cm_cycle_end();                         // ...otherwise cycle will not end properly
+        }
+        status = STAT_OK;
     }
     return (status);
 }
@@ -1478,9 +1481,11 @@ stat_t cm_straight_feed(const float target[], const bool flags[])
 
     cm_finalize_move(); // <-- ONLY safe because we don't care about status...
 
-    if (status == STAT_MINIMUM_LENGTH_MOVE && !mp_has_runnable_buffer()) {
-        cm_cycle_end();
-        return (STAT_OK);
+    if (status == STAT_MINIMUM_LENGTH_MOVE) {
+        if (!mp_has_runnable_buffer()) {            // handle condition where zero-length move is last or only move
+            cm_cycle_end();                         // ...otherwise cycle will not end properly
+        }
+        status = STAT_OK;
     }
     return (status);
 }
