@@ -97,7 +97,7 @@
 #define STATUS_REPORT_INTERVAL_MS 250       // milliseconds - set $SV=0 to disable
 
 //#define STATUS_REPORT_DEFAULTS
-//"line","posx","posy","posz","posa","bcr","feed","vel","unit","coor","dist","admo","frmo","momo","stat"
+//"line","posx","posy","posz","posa","feed","vel","unit","coor","dist","admo","frmo","momo","stat"
 #define STATUS_REPORT_DEFAULTS "line", "posx", "posy", "posz", "feed", "vel", "momo", "stat"
 
 // Alternate SRs that report in drawable units
