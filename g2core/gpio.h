@@ -157,6 +157,7 @@ stat_t io_set_output(nvObj_t *nv);
     #define io_print_fn tx_print_stub
     #define io_print_in tx_print_stub
     #define io_print_st tx_print_stub
+    #define io_print_domode tx_print_stub
     #define io_print_out tx_print_stub
 #endif // __TEXT_MODE
 

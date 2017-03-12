@@ -2,7 +2,7 @@
  * config.h - configuration sub-system generic part (see config_app for application part)
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -318,6 +318,7 @@ bool nv_index_lt_groups(index_t index); // (see config_app.c)
 bool nv_group_is_prefixed(char *group);
 
 // generic internal functions and accessors
+stat_t set_noop(nvObj_t *nv);           // set nothing and return OK
 stat_t set_nul(nvObj_t *nv);            // set nothing, return OK
 stat_t set_ro(nvObj_t *nv);             // set nothing, return read-only error
 stat_t set_ui8(nvObj_t *nv);            // set uint8_t value
