@@ -607,7 +607,7 @@ static stat_t _run_p1_hold_entry_actions()  // Execute Case (5)
         cm_set_distance_mode(INCREMENTAL_DISTANCE_MODE);
         bool flags[] = { 0,0,1,0,0,0 };            
         float target[] = { 0,0, _to_inches(cm->feedhold_z_lift), 0,0,0 };   // convert to inches if in inches mode
-        cm_straight_traverse(target, flags);
+        cm_straight_traverse(target, flags, PROFILE_NORMAL);
         cm_set_distance_mode(cm1.gm.distance_mode);         // restore distance mode to p1 setting
     }
     spindle_control_sync(SPINDLE_PAUSE);                    // optional spindle pause

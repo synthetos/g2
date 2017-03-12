@@ -112,7 +112,7 @@ typedef enum {                  // cycle start and feedhold requests
     OPERATION_NULL = 0,         // no operation; reverts here when complete
     OPERATION_CYCLE_START,      // perform a cycle start with no other actions
     OPERATION_HOLD,             // feedhold in p1 or p2 with no entry actions
-    OPERATION_HOLD_WITH_ACTIONS,// feedhold into p2 with entry actions
+//    OPERATION_HOLD_WITH_ACTIONS,// feedhold into p2 with entry actions
 //    OPERATION_P1_FAST_HOLD,     // perform a fast hold in p1
 //    OPERATION_HOLD_TO_SYNC,     // hold in p1 or p2, skip remainder of move; exec SYNC command or flush
     OPERATION_EXIT_HOLD_RESUME, // exit p1 or p2 hold and resume motion in p1 planner
@@ -176,6 +176,11 @@ typedef enum {                  // queue flush state machine
     FLUSH_WAS_RUN               // transient state to note that a queue flush has been run 
 } cmFlushState;
 
+typedef enum {                  // Motion profiles
+    PROFILE_NORMAL = 0,         // Normal jerk in effect
+    PROFILE_FAST                // High speed jerk in effect
+} cmMotion_profile;
+
 /*****************************************************************************
  * CANONICAL MACHINE STRUCTURES
  */
@@ -186,16 +191,17 @@ typedef struct cmAxis {
     cmAxisMode axis_mode;                   // see cmAxisMode above
     float velocity_max;                     // max velocity in mm/min or deg/min
     float feedrate_max;                     // max velocity in mm/min or deg/min
-    float travel_min;                       // min work envelope for soft limits
-    float travel_max;                       // max work envelope for soft limits
     float jerk_max;                         // max jerk (Jm) in mm/min^3 divided by 1 million
     float jerk_high;                        // high speed deceleration jerk (Jh) in mm/min^3 divided by 1 million
+    float travel_min;                       // min work envelope for soft limits
+    float travel_max;                       // max work envelope for soft limits
     float radius;                           // radius in mm for rotary axis modes
 
-    // derived
+    // internal derived variables - computed during data entry and cached for computational efficiency
     float recip_velocity_max;
     float recip_feedrate_max;
-    float max_junction_accel;               // high speed deceleration jerk (Jh) in mm/min^3 divided by 1 million
+    float max_junction_accel;
+    float high_junction_accel;
 
     // homing settings
     uint8_t homing_input;                   // set 1-N for homing input. 0 will disable homing
@@ -411,7 +417,9 @@ stat_t cm_suspend_origin_offsets(void);                                     // G
 stat_t cm_resume_origin_offsets(void);                                      // G92.3
 
 // Free Space Motion (4.3.4)
-stat_t cm_straight_traverse(const float target[], const bool flags[]);      // G0
+//stat_t cm_straight_traverse(const float target[], const bool flags[]);      // G0
+//stat_t cm_straight_traverse(const float *target, const bool *flags);      // G0
+stat_t cm_straight_traverse(const float *target, const bool *flags, const uint8_t motion_profile); // G0
 stat_t cm_set_g28_position(void);                                           // G28.1
 stat_t cm_goto_g28_position(const float target[], const bool flags[]);      // G28
 stat_t cm_set_g30_position(void);                                           // G30.1
@@ -423,7 +431,9 @@ stat_t cm_set_feed_rate_mode(const uint8_t mode);                           // G
 stat_t cm_set_path_control(GCodeState_t *gcode_state, const uint8_t mode);  // G61, G61.1, G64
 
 // Machining Functions (4.3.6)
-stat_t cm_straight_feed(const float target[], const bool flags[]);          // G1
+//stat_t cm_straight_feed(const float target[], const bool flags[]);          // G1
+//stat_t cm_straight_feed(const float *target, const bool *flags);          // G1
+stat_t cm_straight_feed(const float *target, const bool *flags, const uint8_t motion_profile); //G1
 stat_t cm_dwell(const float seconds);                                       // G4, P parameter
 
 stat_t cm_arc_feed(const float target[], const bool target_f[],             // G2/G3 - target endpoint
@@ -575,7 +585,8 @@ stat_t cm_get_ra(nvObj_t *nv);          // get radius
 stat_t cm_set_ra(nvObj_t *nv);          // set radius
 
 float cm_get_axis_jerk(const uint8_t axis);
-void cm_set_axis_jerk(const uint8_t axis, const float jerk);
+void cm_set_axis_max_jerk(const uint8_t axis, const float jerk);
+void cm_set_axis_high_jerk(const uint8_t axis, const float jerk);
 
 stat_t cm_get_vm(nvObj_t *nv);          // get velocity max
 stat_t cm_set_vm(nvObj_t *nv);          // set velocity max and reciprocal

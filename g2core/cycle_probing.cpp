@@ -222,7 +222,7 @@ static uint8_t _probing_start()
     // Save the current jerk settings & change to the high-speed jerk settings
     for (uint8_t axis = 0; axis < AXES; axis++) {
         pb.saved_jerk[axis] = cm_get_axis_jerk(axis);  // save the max jerk value
-        cm_set_axis_jerk(axis, cm->a[axis].jerk_high);  // use the high-speed jerk for probe
+        cm_set_axis_max_jerk(axis, cm->a[axis].jerk_high);  // use the high-speed jerk for probe
     }
 
     // Error if the probe target is too close to the current position
@@ -285,7 +285,7 @@ static stat_t _probe_move(const float target[], const bool flags[])
 {
     cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_ON);  
     pb.wait_for_motion_end = true;          // set this BEFORE the motion starts
-    cm_straight_feed(target, flags);        // NB: feed rate was set earlier, so it's OK
+    cm_straight_feed(target, flags, PROFILE_FAST); // NB: feed rate was set earlier, so it's OK
     mp_queue_command(_motion_end_callback, nullptr, nullptr); // the last two arguments are ignored anyway
     return (STAT_EAGAIN);
 }

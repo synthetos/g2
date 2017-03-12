@@ -111,18 +111,18 @@
 #include "util.h"
 #include "xio.h"
 
-/***********************************************************************************
- **** CM GLOBALS & STRUCTURE ALLOCATIONS *******************************************
- ***********************************************************************************/
+/****************************************************************************************
+ **** CM GLOBALS & STRUCTURE ALLOCATIONS ************************************************
+ ****************************************************************************************/
 
 cmMachine_t *cm;            // pointer to active canonical machine
 cmMachine_t cm1;            // canonical machine primary machine
 cmMachine_t cm2;            // canonical machine secondary machine
 cmToolTable_t tt;           // global tool table
 
-/***********************************************************************************
- **** GENERIC STATIC FUNCTIONS AND VARIABLES ***************************************
- ***********************************************************************************/
+/****************************************************************************************
+ **** GENERIC STATIC FUNCTIONS AND VARIABLES ********************************************
+ ****************************************************************************************/
 
 // command execution callbacks from planner queue
 static void _exec_offset(float *value, bool *flag);
@@ -133,13 +133,13 @@ static void _exec_program_finalize(float *value, bool *flag);
 
 static int8_t _axis(const nvObj_t *nv);
 
-/***********************************************************************************
- **** CODE *************************************************************************
- ***********************************************************************************/
+/****************************************************************************************
+ **** CODE ******************************************************************************
+ ****************************************************************************************/
 
-/***********************************************************************************
- **** Initialization ***************************************************************
- ***********************************************************************************/
+/****************************************************************************************
+ **** Initialization ********************************************************************
+ ****************************************************************************************/
 /*
  * canonical_machine_inits() - combined cm inits
  * canonical_machine_init()  - initialize cm struct
@@ -227,7 +227,7 @@ void canonical_machine_reset_rotation(cmMachine_t *_cm) {
     _cm->rotation_z_offset = 0.0;
 }
 
-/*
+/****************************************************************************************
  * canonical_machine_init_assertions()
  * canonical_machine_test_assertions() - test assertions, return error code if violation exists
  */
@@ -252,9 +252,9 @@ stat_t canonical_machine_test_assertions(cmMachine_t *_cm)
     return (STAT_OK);
 }
 
-/***********************************************************************************
- **** Canonical Machine State Management *******************************************
- ***********************************************************************************/
+/****************************************************************************************
+ **** Canonical Machine State Management ************************************************
+ ****************************************************************************************/
 /*
  * cm_set_motion_state() - adjusts active model pointer as well
  */
@@ -307,9 +307,9 @@ cmCombinedState cm_get_combined_state(cmMachine_t *_cm)
     return (COMBINED_PANIC);
 }
 
-/***********************************************************************************
- **** Model State Getters and Setters **********************************************
- ***********************************************************************************/
+/****************************************************************************************
+ **** Model State Getters and Setters ***************************************************
+ ****************************************************************************************/
 /*  These getters and setters will work on any gm model with inputs:
  *    MODEL         (GCodeState_t *)&cm->gm          // absolute pointer from canonical machine gm model
  *    RUNTIME       (GCodeState_t *)&mr->gm          // absolute pointer from runtime mm struct
@@ -351,16 +351,17 @@ void cm_set_model_linenum(const uint32_t linenum)
     nv_add_object((const char *)"n");   // then add the line number to the nv list
 }
 
-/***********************************************************************************
- **** COORDINATE SYSTEMS AND OFFSETS ***********************************************
- ***********************************************************************************
+/****************************************************************************************
+ **** COORDINATE SYSTEMS AND OFFSETS ****************************************************
+ ****************************************************************************************
  * Functions to get, set and report coordinate systems and work offsets
  * These functions are not part of the NIST defined functions
- ***********************************************************************************/
+ ****************************************************************************************/
 /*
  * cm_get_combined_offset() - return the combined offsets for an axis (G53-G59, G92, Tools)
  * cm_get_display_offset()  - return the current display offset from pecified Gcode model
- * cm_set_display_offsets() - capture combined offsets from the model into absolute values in the active Gcode dynamic model
+ * cm_set_display_offsets() - capture combined offsets from the model into absolute values 
+ *                            in the active Gcode dynamic model
  *
  * Notes on Coordinate System and Offset functions
  *
@@ -478,12 +479,12 @@ float cm_get_absolute_position(const GCodeState_t *gcode_state, const uint8_t ax
     return (mp_get_runtime_absolute_position(mr, axis));
 }
 
-/***********************************************************************************
- **** CRITICAL HELPERS *************************************************************
- ***********************************************************************************
+/****************************************************************************************
+ **** CRITICAL HELPERS ******************************************************************
+ ****************************************************************************************
  * Core functions supporting the canonical machining functions
  * These functions are not part of the NIST defined functions
- ***********************************************************************************/
+ ****************************************************************************************/
 
 /*
  * cm_update_model_position() - set gmx endpoint position for a traverse, feed or arc
@@ -499,7 +500,7 @@ void cm_update_model_position()
     copy_vector(cm->gmx.position, cm->gm.target);   // would be mr->gm.target if from runtime
 }
 
-/*
+/****************************************************************************************
  * cm_deferred_write_callback() - write any changed G10 values back to persistence
  *
  *  Only runs if there is G10 data to write, there is no movement, and the serial queues are quiescent
@@ -523,7 +524,7 @@ stat_t cm_deferred_write_callback()
     return (STAT_OK);
 }
 
-/*
+/****************************************************************************************
  * cm_set_tram() - JSON command to trigger computing the rotation matrix
  * cm_get_tram() - JSON query to determine if the rotation matrix is set (non-identity)
  *
@@ -649,7 +650,7 @@ stat_t cm_get_tram(nvObj_t *nv)
     return (STAT_OK);
 }
 
-/*
+/****************************************************************************************
  * cm_set_model_target() - set target vector in GM model
  *
  * This is a core routine. It handles:
@@ -718,7 +719,7 @@ void cm_set_model_target(const float target[], const bool flags[])
     }
 }
 
-/*
+/****************************************************************************************
  * cm_get_soft_limits()
  * cm_set_soft_limits()
  * cm_test_soft_limits() - return error code if soft limit is exceeded
@@ -761,17 +762,17 @@ stat_t cm_test_soft_limits(const float target[])
     return (STAT_OK);
 }
 
-/***********************************************************************************
- **** CANONICAL MACHINING FUNCTIONS ************************************************
- ***********************************************************************************
+/****************************************************************************************
+ **** CANONICAL MACHINING FUNCTIONS *****************************************************
+ ****************************************************************************************
  *  Organized by section number in the order they are found in NIST RS274 NGCv3
- **********************************************************************************/
+ ***************************************************************************************/
 
-/***********************************************************************************
- **** Representation (4.3.3) *******************************************************
- ***********************************************************************************/
+/****************************************************************************************
+ **** Representation (4.3.3) ************************************************************
+ ****************************************************************************************/
 
-/************************************************************************************
+/*****************************************************************************************
  * Representation functions that affect the Gcode model only (asynchronous)
  *
  *  cm_select_plane()           - G17,G18,G19 select axis plane
@@ -807,7 +808,7 @@ stat_t cm_set_arc_distance_mode(const uint8_t mode)
     return (STAT_OK);
 }
 
-/*
+/****************************************************************************************
  * cm_set_g10_data() - G10 L1/L2/L10/L20 Pn (affects MODEL only)
  *
  *  This function applies the offset to the GM model but does not persist the offsets
@@ -943,7 +944,7 @@ static void _exec_offset(float *value, bool *flag)
     mp_set_runtime_display_offset(offsets);
 }
 
-/*
+/******************************************************************************************
  * cm_set_position_by_axis() - set the position of a single axis in the model, planner and runtime
  * cm_reset_position_to_absolute_position() - set all positions to current absolute position in mr
  *
@@ -981,7 +982,8 @@ void cm_reset_position_to_absolute_position(cmMachine_t *_cm)
     }
 }
 
-/*** G28.3 functions and support ***
+/****************************************************************************************
+ *** G28.3 functions and support ***
  *
  * cm_set_absolute_origin() - G28.3 - model, planner and queue to runtime
  * _exec_absolute_origin()  - callback from planner
@@ -1023,7 +1025,7 @@ static void _exec_absolute_origin(float *value, bool *flag)
     mp_set_steps_to_runtime_position();
 }
 
-/*
+/******************************************************************************************
  * cm_set_origin_offsets()     - G92
  * cm_reset_origin_offsets()   - G92.1
  * cm_suspend_origin_offsets() - G92.2
@@ -1082,14 +1084,15 @@ stat_t cm_resume_origin_offsets()
     return (STAT_OK);
 }
 
-/***********************************************************************************
- **** Free Space Motion (4.3.4) ****************************************************
- ***********************************************************************************/
+/****************************************************************************************
+ **** Free Space Motion (4.3.4) *********************************************************
+ ****************************************************************************************/
 /*
  * cm_straight_traverse() - G0 linear rapid
  */
 
-stat_t cm_straight_traverse(const float target[], const bool flags[])
+//stat_t cm_straight_traverse(const float target[], const bool flags[])
+stat_t cm_straight_traverse(const float *target, const bool *flags, const uint8_t motion_profile)
 {
     cm->gm.motion_mode = MOTION_MODE_STRAIGHT_TRAVERSE;
 
@@ -1113,7 +1116,7 @@ stat_t cm_straight_traverse(const float target[], const bool flags[])
     return (status);
 }
 
-/***********************************************************************************
+/****************************************************************************************
  * cm_set_g28_position()   - G28.1
  * cm_goto_g28_position()  - G28
  * cm_set_g30_position()   - G30.1
@@ -1127,7 +1130,7 @@ stat_t _goto_stored_position(const float stored_position[],     // always in mm
 {
     // Go through intermediate point if one is provided
     while (mp_planner_is_full(mp));                             // Make sure you have available buffers
-    ritorno(cm_straight_traverse(intermediate_target, flags));  // w/no action if no axis flags
+    ritorno(cm_straight_traverse(intermediate_target, flags, PROFILE_NORMAL));  // w/no action if no axis flags
 
     // If G20 adjust stored position (always in mm) to inches so traverse will be correct
     float target[AXES]; // make a local stored position as it may be modified
@@ -1147,7 +1150,7 @@ stat_t _goto_stored_position(const float stored_position[],     // always in mm
     cm_set_distance_mode(ABSOLUTE_DISTANCE_MODE);           // Must run in absolute distance mode
 
     bool flags2[] = { 1,1,1,1,1,1 };
-    stat_t status = cm_straight_traverse(target, flags2);   // Go to stored position
+    stat_t status = cm_straight_traverse(target, flags2, PROFILE_NORMAL);   // Go to stored position
     cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_OFF);
     cm_set_distance_mode(saved_distance_mode);              // Restore distance mode
     return (status);
@@ -1175,9 +1178,9 @@ stat_t cm_goto_g30_position(const float target[], const bool flags[])
     return (_goto_stored_position(cm->gmx.g30_position, target, flags));
 }
 
-/***********************************************************************************
- **** Machining Attributes (4.3.5) *************************************************
- ***********************************************************************************/
+/****************************************************************************************
+ **** Machining Attributes (4.3.5) ******************************************************
+ ****************************************************************************************/
 /*
  * cm_set_feed_rate() - F parameter (affects MODEL only)
  *
@@ -1197,7 +1200,7 @@ stat_t cm_set_feed_rate(const float feed_rate)
     return (STAT_OK);
 }
 
-/***********************************************************************************
+/****************************************************************************************
  * cm_set_feed_rate_mode() - G93, G94 (affects MODEL only)
  *
  *  INVERSE_TIME_MODE = 0,          // G93
@@ -1211,7 +1214,7 @@ stat_t cm_set_feed_rate_mode(const uint8_t mode)
     return (STAT_OK);
 }
 
-/***********************************************************************************
+/****************************************************************************************
  * cm_set_path_control() - G61, G61.1, G64
  */
 
@@ -1221,14 +1224,14 @@ stat_t cm_set_path_control(GCodeState_t *gcode_state, const uint8_t mode)
     return (STAT_OK);
 }
 
-/***********************************************************************************
- **** Machining Functions (4.3.6) **************************************************
- ***********************************************************************************/
+/****************************************************************************************
+ **** Machining Functions (4.3.6) *******************************************************
+ ****************************************************************************************/
 /*
  * cm_arc_feed() - SEE plan_arc.cpp
  */
 
-/***********************************************************************************
+/****************************************************************************************
  * cm_dwell() - G4, P parameter (seconds)
  */
 stat_t cm_dwell(const float seconds)
@@ -1238,10 +1241,12 @@ stat_t cm_dwell(const float seconds)
     return (STAT_OK);
 }
 
-/***********************************************************************************
+/****************************************************************************************
  * cm_straight_feed() - G1
  */
-stat_t cm_straight_feed(const float target[], const bool flags[])
+//stat_t cm_straight_feed(const float target[], const bool flags[])
+//stat_t cm_straight_feed(const float *target, const bool *flags)
+stat_t cm_straight_feed(const float *target, const bool *flags, const uint8_t motion_profile)
 {
     // trap zero feed rate condition
     if (fp_ZERO(cm->gm.feed_rate)) {
@@ -1573,15 +1578,12 @@ static void _exec_program_finalize(float *value, bool *flag)
 
 void cm_cycle_start()
 {
-#if (1) // +++++
     cm_request_operation(OPERATION_CYCLE_START, nullptr);
-#else 
-    if (cm->cycle_type == CYCLE_NONE) {                     // don't (re)start homing, probe or other canned cycles
-        cm->cycle_type = CYCLE_MACHINING;
-        cm->machine_state = MACHINE_CYCLE;
-        qr_init_queue_report();                             // clear queue reporting buffer counts
-    }
-#endif
+//    if (cm->cycle_type == CYCLE_NONE) {                     // don't (re)start homing, probe or other canned cycles
+//        cm->cycle_type = CYCLE_MACHINING;
+//        cm->machine_state = MACHINE_CYCLE;
+//        qr_init_queue_report();                             // clear queue reporting buffer counts//
+//    }
 }
 
 void cm_cycle_end()
@@ -1618,7 +1620,7 @@ void cm_program_end()
 }
 
 /***********************************************************************************
- **** Additional Fucntions *********************************************************
+ **** Additional Functions *********************************************************
  ***********************************************************************************/
 /*
  * cm_json_command() - M100
@@ -2089,8 +2091,8 @@ stat_t cm_get_ra(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv)].radius));
 stat_t cm_set_ra(nvObj_t *nv) { return (set_float_range(nv, cm->a[_axis(nv)].radius, RADIUS_MIN, 1000000)); }
 
 /**** Axis Jerk Primitives
- * cm_get_axis_jerk() - returns jerk for an axis
- * cm_set_axis_jerk() - sets the jerk for an axis, including recirpcal and cached values
+ * cm_get_axis_jerk() - returns max jerk for an axis
+ * cm_set_axis_jerk() - sets the jerk for an axis, including reciprocal and cached values
  */
 float cm_get_axis_jerk(const uint8_t axis) { return (cm->a[axis].jerk_max); }
 
@@ -2100,17 +2102,23 @@ static const float _junction_accel_multiplier = sqrt(3.0)/10.0;
 
 // Important note: Actual jerk is stored jerk * JERK_MULTIPLIER, and
 // Time Quanta is junction_integration_time / 1000.
-void _cm_recalc_max_junction_accel(const uint8_t axis) {
+void _cm_recalc_junction_accel(const uint8_t axis) {
     float T = cm->junction_integration_time / 1000.0;
     float T2 = T*T;
     cm->a[axis].max_junction_accel = _junction_accel_multiplier * T2 * (cm->a[axis].jerk_max * JERK_MULTIPLIER);
+    cm->a[axis].high_junction_accel = _junction_accel_multiplier * T2 * (cm->a[axis].jerk_high * JERK_MULTIPLIER);
 }
 
-void cm_set_axis_jerk(const uint8_t axis, const float jerk)
+void cm_set_axis_max_jerk(const uint8_t axis, const float jerk)
 {
     cm->a[axis].jerk_max = jerk;
-    _cm_recalc_max_junction_accel(axis);    // Must recalculate the max_junction_accel now that the jerk has changed.
+    _cm_recalc_junction_accel(axis);    // Must recalculate the max_junction_accel now that the jerk has changed.
+}
 
+void cm_set_axis_high_jerk(const uint8_t axis, const float jerk)
+{
+    cm->a[axis].jerk_high = jerk;
+    _cm_recalc_junction_accel(axis);    // Must recalculate the max_junction_accel now that the jerk has changed.
 }
 
 /**** Axis Velocity and Jerk Settings
@@ -2156,13 +2164,19 @@ stat_t cm_set_jm(nvObj_t *nv)
 {
     uint8_t axis = _axis(nv);
     ritorno(set_float_range(nv, cm->a[axis].jerk_max, JERK_INPUT_MIN, JERK_INPUT_MAX));
-    cm_set_axis_jerk(axis, nv->value);
+    cm_set_axis_max_jerk(axis, nv->value);
     return(STAT_OK);
 }
 
 stat_t cm_get_jh(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv)].jerk_high)); }
-stat_t cm_set_jh(nvObj_t *nv) { return (set_float_range(nv, cm->a[_axis(nv)].jerk_high, JERK_INPUT_MIN, JERK_INPUT_MAX)); }
-
+stat_t cm_set_jh(nvObj_t *nv)  
+//   { return (set_float_range(nv, cm->a[_axis(nv)].jerk_high, JERK_INPUT_MIN, JERK_INPUT_MAX)); }
+{
+    uint8_t axis = _axis(nv);
+    ritorno(set_float_range(nv, cm->a[axis].jerk_high, JERK_INPUT_MIN, JERK_INPUT_MAX));
+    cm_set_axis_high_jerk(axis, nv->value);
+    return(STAT_OK);
+}
 
 /**** Axis Homing Settings
  * cm_get_hi() - get homing input
@@ -2214,7 +2228,7 @@ stat_t cm_set_jt(nvObj_t *nv)
 {
     ritorno(set_float_range(nv, cm->junction_integration_time, JUNCTION_INTEGRATION_MIN, JUNCTION_INTEGRATION_MAX));
     for (uint8_t axis=0; axis<AXES; axis++) { // recalculate max_junction_accel now that time quanta has changed.
-        _cm_recalc_max_junction_accel(axis);
+        _cm_recalc_junction_accel(axis);
     }
     return(STAT_OK);
 }
