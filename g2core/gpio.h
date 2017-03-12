@@ -2,8 +2,8 @@
  * gpio.h - Digital IO  handling functions
  * This file is part of the g2core project
  *
- * Copyright (c) 2015 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2015 - 2016 Robert Giseburt
+ * Copyright (c) 2015 - 2017 Alden S. Hart, Jr.
+ * Copyright (c) 2015 - 2017 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -155,6 +155,7 @@ stat_t io_set_output(nvObj_t *nv);
     #define io_print_fn tx_print_stub
     #define io_print_in tx_print_stub
     #define io_print_st tx_print_stub
+    #define io_print_domode tx_print_stub
     #define io_print_out tx_print_stub
 #endif // __TEXT_MODE
 

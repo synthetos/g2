@@ -949,6 +949,8 @@ stat_t cm_get_tram(nvObj_t *nv);        // return if the rotation matrix is non-
     #define cm_print_mtoe tx_print_stub
     #define cm_print_mto tx_print_stub
 
+    #define cm_print_tram tx_print_stub
+
     #define cm_print_am tx_print_stub    // axis print functions
     #define cm_print_fr tx_print_stub
     #define cm_print_vm tx_print_stub

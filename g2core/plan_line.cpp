@@ -197,12 +197,12 @@ stat_t mp_aline(GCodeState_t* gm_in)
 
     // exit if the move has zero movement. At all.
     if (fp_ZERO(length)) {
-        sr_request_status_report(SR_REQUEST_TIMED_FULL);  // Was SR_REQUEST_IMMEDIATE_FULL
-        return (STAT_OK);                                 // preferred over STAT_MINIMUM_LENGTH_MOVE
+        sr_request_status_report(SR_REQUEST_TIMED_FULL);// Was SR_REQUEST_IMMEDIATE_FULL
+        return (STAT_MINIMUM_LENGTH_MOVE);              // STAT_MINIMUM_LENGTH_MOVE needed to end cycle
     }
 
     // get a cleared buffer and copy in the Gcode model state
-    if ((bf = mp_get_write_buffer()) == NULL) {  // never supposed to fail
+    if ((bf = mp_get_write_buffer()) == NULL) {         // never supposed to fail
         return (cm_panic(STAT_FAILED_GET_PLANNER_BUFFER, "aline()"));
     }
     memcpy(&bf->gm, gm_in, sizeof(GCodeState_t));
@@ -210,11 +210,11 @@ stat_t mp_aline(GCodeState_t* gm_in)
     copy_vector(bf->gm.target, target_rotated);  // copy the rotated taget in place
 
     // setup the buffer
-    bf->bf_func = mp_exec_aline;                          // register the callback to the exec function
-    bf->length  = length;                                 // record the length
-    for (uint8_t axis = 0; axis < AXES; axis++) {         // compute the unit vector and set flags
-        if ((bf->axis_flags[axis] = flags[axis])) {       // yes, this is supposed to be = and not ==
-            bf->unit[axis] = axis_length[axis] / length;  // nb: bf-> unit was cleared by mp_get_write_buffer()
+    bf->bf_func = mp_exec_aline;                        // register the callback to the exec function
+    bf->length  = length;                               // record the length
+    for (uint8_t axis = 0; axis < AXES; axis++) {       // compute the unit vector and set flags
+        if ((bf->axis_flags[axis] = flags[axis])) {     // yes, this is supposed to be = and not ==
+            bf->unit[axis] = axis_length[axis] / length;// nb: bf-> unit was cleared by mp_get_write_buffer()
         }
     }
     _calculate_jerk(bf);                              // compute bf->jerk values
