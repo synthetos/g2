@@ -2,8 +2,8 @@
  * config_app.cpp - application-specific part of configuration data
  * This file is part of the g2core project
  *
- * Copyright (c) 2013 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2016 Robert Giseburt
+ * Copyright (c) 2013 - 2017 Alden S. Hart, Jr.
+ * Copyright (c) 2016 - 2017 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -113,9 +113,7 @@ const cfgItem_t cfgArray[] = {
 
     // dynamic model attributes for reporting purposes (up front for speed)
     { "",   "stat",_f0, 0, cm_print_stat, cm_get_stat, set_ro, (float *)&cs.null, 0 },      // combined machine state
-//    { "",   "n",   _fi, 0, cm_print_line, cm_get_mline,set_ro, (float *)&cm.gm.linenum,0 }, // Model line number
-//    { "",   "line",_fi, 0, cm_print_line, cm_get_line, set_ro, (float *)&cm.gm.linenum,0 }, // Active line number - model or runtime line number
-    { "",   "n",   _fi, 0, cm_print_line, cm_get_mline,set_ro, (float *)&cs.null, 0 },      // Model line number
+    { "",   "n",   _fi, 0, cm_print_line, cm_get_mline,set_noop,(float *)&cs.null, 0 },     // Model line number
     { "",   "line",_fi, 0, cm_print_line, cm_get_line, set_ro, (float *)&cs.null, 0 },      // Active line number - model or runtime line number
     { "",   "vel", _f0, 2, cm_print_vel,  cm_get_vel,  set_ro, (float *)&cs.null, 0 },      // current velocity
     { "",   "feed",_f0, 2, cm_print_feed, cm_get_feed, set_ro, (float *)&cs.null, 0 },      // feed rate
