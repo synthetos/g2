@@ -192,11 +192,14 @@ void canonical_machine_reset(cmMachine_t *_cm)
 
     // reset request flags
     _cm->flush_state = FLUSH_OFF;
-    _cm->hold_exit_requested = false;
     _cm->limit_requested = 0;                       // resets switch closures that occurred during initialization
     _cm->safety_interlock_disengaged = 0;           // ditto
     _cm->safety_interlock_reengaged = 0;            // ditto
     _cm->shutdown_requested = 0;                    // ditto
+
+    _cm->request_interlock = false;
+    _cm->request_interlock_exit = false;
+    _cm->request_job_kill = false;
 
     // set initial state and signal that the machine is ready for action
     _cm->cycle_type = CYCLE_NONE;
@@ -1731,12 +1734,13 @@ char cm_get_axis_char(const int8_t axis)
  * cm_run_qf() - flush planner queue
  * cm_run_home() - run homing sequence
  */
-
+/*
 stat_t cm_run_qf(nvObj_t *nv)
 {
     cm_request_queue_flush();
     return (STAT_OK);
 }
+*/
 
 stat_t cm_run_home(nvObj_t *nv)
 {

@@ -477,7 +477,6 @@ HeaterFan<kOutput3_PinNumber> heater_fan1;
 
 /*
  * temperature_init()
- * temperature_init() - stop spindle, set speed to zero, and reset values
  */
 void temperature_init()
 {

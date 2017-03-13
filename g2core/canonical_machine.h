@@ -98,6 +98,12 @@ typedef enum {
     MOTION_RUN                  // machine is in motion: set when the steppers execute an ALINE segment
 } cmMotionState;
 
+typedef enum {                  // state machine for cycle start 
+    CYCLE_START_NONE = 0,       // not in a cycle
+    CYCLE_START_REQUESTED,
+    CYCLE_START_COMPLETE
+} cmCycleState;
+
 typedef enum {
     CYCLE_NONE = 0,             // not in a cycle
     CYCLE_MACHINING,            // in normal machining cycle
@@ -108,33 +114,27 @@ typedef enum {
 //  ...
 } cmCycleType;
 
-typedef enum {                  // cycle start and feedhold requests
-    OPERATION_NULL = 0,         // no operation; reverts here when complete
-    OPERATION_CYCLE_START,      // perform a cycle start with no other actions
-    OPERATION_HOLD,             // feedhold in p1 or p2 with no entry actions
-//    OPERATION_HOLD_WITH_ACTIONS,// feedhold into p2 with entry actions
-//    OPERATION_P1_FAST_HOLD,     // perform a fast hold in p1
-//    OPERATION_HOLD_TO_SYNC,     // hold in p1 or p2, skip remainder of move; exec SYNC command or flush
-    OPERATION_EXIT_HOLD_RESUME, // exit p1 or p2 hold and resume motion in p1 planner
-    OPERATION_EXIT_HOLD_FLUSH,  // exit p1 or p2 hold and flush p1 planner
-    OPERATION_JOB_KILL,         // fast hold followed by queue flush and program end
-    OPERATION_END_JOG,          // fast hold followed by program stop
-    OPERATION_SOFT_LIMIT_HIT,   // actions to run when a soft limit is hit
-    OPERATION_HARD_LIMIT_HIT,   // actions to run when a hard limit is hit
-    OPERATION_SHUTDOWN,         // actions to run when a shutdown is received
-    OPERATION_PANIC,            // actions to run when a panic is received
-    OPERATION_INTERLOCK_START,  // enter an interlock state
-    OPERATION_INTERLOCK_END,    // exit interlocked state
-    OPERATION_DI_FUNC_STOP,     // run digital input STOP function
-    OPERATION_DI_FUNC_FAST_STOP,// run digital input FAST_STOP function
-    OPERATION_DI_FUNC_HALT,     // run digital input HALT function
-    OPERATION_TOOL_CHANGE       // run a tool change sequence
-} cmOperationType;
+typedef enum {                  // feedhold type parameter
+    FEEDHOLD_TYPE_ACTIONS = 0,  // feedhold at max jerk with actions
+    FEEDHOLD_TYPE_NO_ACTIONS,   // feedhold at max jerk with no actions
+    FEEDHOLD_TYPE_SYNC,         // feedhold at max jerk with queue flush and sync command
+    FEEDHOLD_TYPE_FAST,         // feedhold at high jerk with no actions. Can resume
+    FEEDHOLD_TYPE_SCRAM         // feedhold at high jerk and stop all active devices
+} cmFeedholdType;
+
+typedef enum {                  // feedhold final operation 
+    FEEDHOLD_FINAL_NONE = 0,    // normal final state - HOLD or STOP, depending on type
+    FEEDHOLD_FINAL_STOP,        // perform program stop
+    FEEDHOLD_FINAL_END,         // perform program end
+    FEEDHOLD_FINAL_ALARM,       // perform alarm
+    FEEDHOLD_FINAL_SHUTDOWN,     // perform shutdown
+    FEEDHOLD_FINAL_INTERLOCK    // report as interlock
+} cmFeedholdFinal;
 
 typedef enum {                  // feedhold state machine
-    FEEDHOLD_P1_EXIT = -1,      // set when p1 feedhold is due to exit
+//    FEEDHOLD_P1_EXIT = -1,      // set when p1 feedhold is due to exit
     FEEDHOLD_OFF = 0,           // no feedhold in effect
-//    FEEDHOLD_INITIATED,         // feedhold has been requested but not started yet
+    FEEDHOLD_REQUESTED,         // feedhold has been requested but not started yet
     FEEDHOLD_SYNC,              // start hold - sync to latest aline segment
     FEEDHOLD_DECEL_CONTINUE,    // in deceleration that will not end at zero
     FEEDHOLD_DECEL_TO_ZERO,     // in deceleration that will go to zero
@@ -153,7 +153,7 @@ typedef enum {                  // feedhold state machine
     FEEDHOLD_HOLD_EXIT_PENDING, // performing exit actions
     FEEDHOLD_HOLD_EXIT_DONE,    // completed exit actions
 
-    FEEDHOLD_P2_EXIT            // set when p2 feedhold is finishing
+//    FEEDHOLD_P2_EXIT            // set when p2 feedhold is finishing
 } cmFeedholdState;
 
 typedef enum {                  // applies to cm->homing_state
@@ -273,24 +273,31 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     cfgAxis_t a[AXES];
 
     // gcode power-on default settings - defaults are not the same as the gm state
-    cmCoordSystem       default_coord_system;   // G10 active coordinate system default
-    cmCanonicalPlane    default_select_plane;   // G17,G18,G19 reset default
-    cmUnitsMode         default_units_mode;     // G20,G21 reset default
-    cmPathControl       default_path_control;   // G61,G61.1,G64 reset default
-    cmDistanceMode      default_distance_mode;  // G90,G91 reset default
+    cmCoordSystem    default_coord_system;  // G10 active coordinate system default
+    cmCanonicalPlane default_select_plane;  // G17,G18,G19 reset default
+    cmUnitsMode      default_units_mode;    // G20,G21 reset default
+    cmPathControl    default_path_control;  // G61,G61.1,G64 reset default
+    cmDistanceMode   default_distance_mode; // G90,G91 reset default
 
   /**** Runtime variables (PRIVATE) ****/
 
     // Global state variables and flags
 
-    cmMachineState machine_state;           // macs: machine/cycle/motion is the actual machine state
-    cmCycleType cycle_type;                 // cycs
-    cmMotionState motion_state;             // mots
+    cmMachineState  machine_state;          // macs: machine/cycle/motion is the actual machine state
+    cmCycleType     cycle_type;             // cycs
+    cmMotionState   motion_state;           // mots
+    cmCycleState    cycle_state;            // used to manage cycle start
     
+    cmFeedholdType  hold_type;              // hold: type of feedhold requested
+    cmFeedholdFinal hold_final;             // hold: final state of hold
     cmFeedholdState hold_state;             // hold: feedhold state machine
-    cmFlushState flush_state;               // hold: queue flush state machine
-    bool hold_exit_requested;               // request normal exit from feedhold
-    bool hold_abort_requested;              // request emergency exit from feedhold (typically ^d job kill)
+    cmFlushState    flush_state;            // hold: queue flush state machine
+//    bool hold_exit_requested;               // request normal exit from feedhold +++++
+//    bool hold_abort_requested;              // request emergency exit from feedhold (typically ^d job kill)
+
+    bool request_interlock;                 // enter interlock
+    bool request_interlock_exit;            // exit interlock
+    bool request_job_kill;                  // ^d - end hold, flush and alarm
 
     cmOverrideState mfo_state;              // feed override state machine
 
@@ -485,11 +492,12 @@ stat_t cm_json_wait(char *json_string);                         // M102
 
 // Feedhold and related functions (cycle_feedhold.cpp)
 void cm_operation_init(void);
-stat_t cm_operation_callback(void);                             // operation action runner
-stat_t cm_request_operation(cmOperationType operation, float *param); // request an operation
+stat_t cm_operation_sequencing_callback(void);                  // operation action runner
 
-void cm_request_feedhold(void);
-void cm_request_exit_hold(void);
+void cm_request_alarm(void);
+void cm_request_fasthold(void);
+void cm_request_cycle_start(void);
+void cm_request_feedhold(cmFeedholdType type, cmFeedholdFinal final);
 void cm_request_queue_flush(void);
 stat_t cm_feedhold_sequencing_callback(void);                   // process feedhold, cycle start and queue flush requests
 stat_t cm_feedhold_command_blocker(void);
@@ -523,7 +531,7 @@ stat_t cm_clr(nvObj_t *nv);                                     // clear alarm a
 void cm_clear(void);                                            // raw clear command
 void cm_parse_clear(const char *s);                             // parse gcode for M30 or M2 clear condition
 stat_t cm_is_alarmed(void);                                     // return non-zero status if alarm, shutdown or panic
-void cm_halt_all(void);                                         // halt motion, spindle and coolant
+void cm_halt(void);                                             // halt motion, spindle, coolant, heaters
 void cm_halt_motion(void);                                      // halt motion (immediate stop) but not spindle & other IO
 stat_t cm_alarm(const stat_t status, const char *msg);          // enter alarm state - preserve Gcode state
 stat_t cm_shutdown(const stat_t status, const char *msg);       // enter shutdown state - dump all state
@@ -574,7 +582,7 @@ stat_t cm_get_g92(nvObj_t *nv);         // get g92 offset
 stat_t cm_get_g28(nvObj_t *nv);         // get g28 offset
 stat_t cm_get_g30(nvObj_t *nv);         // get g30 offset
 
-stat_t cm_run_qf(nvObj_t *nv);          // run queue flush
+//stat_t cm_run_qf(nvObj_t *nv);          // run queue flush
 stat_t cm_run_home(nvObj_t *nv);        // start homing cycle
 
 //stat_t cm_dam(nvObj_t *nv);             // dump active model (debugging command)

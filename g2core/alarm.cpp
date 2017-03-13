@@ -112,7 +112,7 @@ stat_t cm_is_alarmed()
 }
 
 /****************************************************************************************
- * cm_halt_all() - stop, spindle and coolant immediately
+ * cm_halt() - stop motion, spindle, coolant and heaters immediately
  * cm_halt_motion() - stop motion immediately. Does not affect spindle, coolant, or other IO
  *
  * Stop motors and reset all system states accordingly.
@@ -120,11 +120,12 @@ stat_t cm_is_alarmed()
  * in order to prevent an axis from crashing.
  */
 
-void cm_halt_all(void)
+void cm_halt(void)
 {
     cm_halt_motion();
     spindle_control_immediate(SPINDLE_OFF);
     coolant_control_immediate(COOLANT_OFF, COOLANT_BOTH);
+    temperature_init();
 }
 
 void cm_halt_motion(void)
@@ -165,19 +166,8 @@ stat_t cm_alarm(const stat_t status, const char *msg)
         (cm->machine_state == MACHINE_PANIC)) {
         return (STAT_OK);                       // don't alarm if already in an alarm state
     }
-    cm1.machine_state = MACHINE_ALARM;          // alarm both machines
-    cm2.machine_state = MACHINE_ALARM;
-    cm_request_feedhold();                      // stop motion
-    cm_request_queue_flush();                   // do a queue flush once runtime is not busy
-
-//  TBD - these functions should probably be called - See cm_shutdown()
-//  cm_spindle_control_immediate(SPINDLE_OFF);
-//  cm_coolant_off_immediate();
-//  cm_spindle_optional_pause(spindle.pause_on_hold);
-//  cm_coolant_optional_pause(coolant.pause_on_hold);
-    rpt_exception(status, msg);                    // send alarm message
-
-    // If "stat" is in the status report, we need to poke it to send.
+    cm_request_feedhold(FEEDHOLD_TYPE_SCRAM, FEEDHOLD_FINAL_ALARM);  // fast stop and alarm
+    rpt_exception(status, msg);                 // send alarm message
     sr_request_status_report(SR_REQUEST_TIMED);
     return (status);
 }
@@ -204,20 +194,23 @@ stat_t cm_shutdown(const stat_t status, const char *msg)
     if ((cm->machine_state == MACHINE_SHUTDOWN) || (cm->machine_state == MACHINE_PANIC)) {
         return (STAT_OK);                       // don't shutdown if shutdown or panic'd
     }
-    cm_halt_motion();                           // halt motors (may have already been done from GPIO)
-    spindle_reset();                            // stop spindle immediately and set speed to 0 RPM
-    coolant_reset();                            // stop coolant immediately
-    temperature_reset();                        // turn off heaters and fans
-    cm_queue_flush(&cm1);                       // flush all queues and reset positions
+    cm_request_feedhold(FEEDHOLD_TYPE_SCRAM, FEEDHOLD_FINAL_SHUTDOWN);  // fast stop and shutdown
+
+//    cm_halt_motion();                           // halt motors (may have already been done from GPIO)
+//    spindle_reset();                            // stop spindle immediately and set speed to 0 RPM
+//    coolant_reset();                            // stop coolant immediately
+//    temperature_reset();                        // turn off heaters and fans
+//    cm_queue_flush(&cm1);                       // flush all queues and reset positions
 
     for (uint8_t i = 0; i < HOMING_AXES; i++) { // unhome axes and the machine
         cm->homed[i] = false;
     }
     cm->homing_state = HOMING_NOT_HOMED;
 
-    cm1.machine_state = MACHINE_SHUTDOWN;       // shut down both machines...
-    cm2.machine_state = MACHINE_SHUTDOWN;       //...do this after all other activity
+//    cm1.machine_state = MACHINE_SHUTDOWN;       // shut down both machines...
+//    cm2.machine_state = MACHINE_SHUTDOWN;       //...do this after all other activity
     rpt_exception(status, msg);                 // send exception report
+    sr_request_status_report(SR_REQUEST_TIMED);
     return (status);
 }
 
@@ -256,12 +249,5 @@ stat_t cm_panic(const stat_t status, const char *msg)
 
 void cm_job_kill()
 {
-    cm1.hold_abort_requested = true;
-    cm_program_end();
-    
-//    if (cm->machine_state == MACHINE_ALARM) {
-//        cm->machine_state = MACHINE_PROGRAM_STOP;
-//    } else if (cm->machine_state == MACHINE_SHUTDOWN) {
-//        cm->machine_state = MACHINE_READY;
-//    }
+    cm1.request_job_kill = true;
 }

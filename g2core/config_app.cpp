@@ -667,7 +667,7 @@ const cfgItem_t cfgArray[] = {
     { "", "qi",  _f0, 0, qr_print_qi,   qi_get,    set_nul,   (float *)&cs.null, 0 },   // get queue value - buffers added to queue
     { "", "qo",  _f0, 0, qr_print_qo,   qo_get,    set_nul,   (float *)&cs.null, 0 },   // get queue value - buffers removed from queue
     { "", "er",  _f0, 0, tx_print_nul,  rpt_er,    set_nul,   (float *)&cs.null, 0 },   // get bogus exception report for testing
-    { "", "qf",  _f0, 0, tx_print_nul,  get_nul,   cm_run_qf, (float *)&cs.null, 0 },   // SET to invoke queue flush
+//    { "", "qf",  _f0, 0, tx_print_nul,  get_nul,   cm_run_qf, (float *)&cs.null, 0 },   // SET to invoke queue flush
     { "", "rx",  _f0, 0, tx_print_int,  get_rx,    set_nul,   (float *)&cs.null, 0 },   // get RX buffer bytes or packets
     { "", "dw",  _f0, 0, tx_print_int,  st_get_dw, set_noop,  (float *)&cs.null, 0 },   // get dwell time remaining
     { "", "msg", _f0, 0, tx_print_str,  get_nul,   set_noop,  (float *)&cs.null, 0 },   // no operation on messages

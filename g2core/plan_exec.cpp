@@ -1032,7 +1032,7 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
 
             // If in a p2 hold, exit the p2 hold immediately set up a flush of the p2 planner queue            
             if (cm == &cm2) {
-                cm->hold_state = FEEDHOLD_P2_EXIT;
+                cm->hold_state = FEEDHOLD_HOLD_EXIT_PENDING;
                 return (STAT_OK);                           // will end this exec_aline() with no more movement
             }
             // At this point we know we are in a p1 hold

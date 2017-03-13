@@ -169,7 +169,7 @@ struct ioDigitalInputExt {
                 cm_start_hold();                        // for now is same as STOP
             }
             if (in->action == INPUT_ACTION_HALT) {
-                cm_halt_all();                            // hard stop, including spindle and coolant
+                cm_halt();                              // hard stop, including spindle, coolant and heaters
             }
             if (in->action == INPUT_ACTION_ALARM) {
                 char msg[10];
