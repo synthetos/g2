@@ -766,6 +766,8 @@ stat_t cm_set_gdi(nvObj_t *nv);         // set gcode default distance mode
     #define cm_print_tro tx_print_stub
     #define cm_print_tram tx_print_stub
 
+    #define cm_print_tram tx_print_stub
+
     #define cm_print_am tx_print_stub    // axis print functions
     #define cm_print_fr tx_print_stub
     #define cm_print_vm tx_print_stub

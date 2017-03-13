@@ -246,6 +246,7 @@ stat_t get_flt(nvObj_t *nv)
 /* Generic sets()
  *  set_noop() - set nothing and return OK
  *  set_nul()  - set nothing and return READ_ONLY error
+ *  set_ro()   - set nothing, return read-only error
  *  set_ui8()  - set value as 8 bit uint8_t value
  *  set_int8() - set value as an 8 bit int8_t value
  *  set_01()   - set a 0 or 1 uint8_t value with validation
@@ -264,12 +265,11 @@ stat_t set_noop(nvObj_t *nv) {
 stat_t set_nul(nvObj_t *nv) {
     nv->valuetype = TYPE_NULL;
     return (STAT_PARAMETER_IS_READ_ONLY);   // this is what it should be
-    return (STAT_OK);                       // hack until JSON is refactored
+//    return (STAT_OK);                       // hack until JSON is refactored
 }
 
 stat_t set_ro(nvObj_t *nv) {
-    // hack. If setting an SR it doesn't fail
-    if (strcmp(nv_body->token, "sr") == 0) {    
+    if (strcmp(nv_body->token, "sr") == 0) { // hack. If setting an SR it doesn't fail
         return (STAT_OK); 
     }
     nv->valuetype = TYPE_NULL;

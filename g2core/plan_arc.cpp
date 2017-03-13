@@ -176,7 +176,7 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
         if (fabs(cm->arc.radius) < MIN_ARC_RADIUS) {        // radius value must be > minimum radius
             return (STAT_ARC_RADIUS_OUT_OF_TOLERANCE);
         }
-    } 
+    }
     else {  // test that center format absolute distance mode arcs have both offsets specified
         if (cm->gm.arc_distance_mode == ABSOLUTE_DISTANCE_MODE) {
             if (!(offset_f[cm->arc.plane_axis_0] && offset_f[cm->arc.plane_axis_1])) {  // if one or both offsets are missing
@@ -220,21 +220,23 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
     memcpy(&(cm->arc.gm), &cm->gm, sizeof(GCodeState_t));   // copy GCode context to arc singleton - some will be overwritten to run segments
     copy_vector(cm->arc.position, cm->gmx.position);        // set initial arc position from gcode model
 
-    // setup offsets
-    cm->arc.ijk_offset[OFS_I] = _to_millimeters(offset[OFS_I]); // copy offsets with conversion to canonical form (mm)
-    cm->arc.ijk_offset[OFS_J] = _to_millimeters(offset[OFS_J]);
-    cm->arc.ijk_offset[OFS_K] = _to_millimeters(offset[OFS_K]);
+    // setup offsets if in center format mode
+    if (!radius_f) {
+        cm->arc.ijk_offset[OFS_I] = _to_millimeters(offset[OFS_I]); // copy offsets with conversion to canonical form (mm)
+        cm->arc.ijk_offset[OFS_J] = _to_millimeters(offset[OFS_J]);
+        cm->arc.ijk_offset[OFS_K] = _to_millimeters(offset[OFS_K]);
 
-    if (cm->arc.gm.arc_distance_mode == ABSOLUTE_DISTANCE_MODE) { // adjust offsets if in absolute mode
-         cm->arc.ijk_offset[OFS_I] -= cm->arc.position[AXIS_X];
-         cm->arc.ijk_offset[OFS_J] -= cm->arc.position[AXIS_Y];
-         cm->arc.ijk_offset[OFS_K] -= cm->arc.position[AXIS_Z];
-    }
+        if (cm->arc.gm.arc_distance_mode == ABSOLUTE_DISTANCE_MODE) {   // adjust offsets if in absolute mode
+             cm->arc.ijk_offset[OFS_I] -= cm->arc.position[AXIS_X];
+             cm->arc.ijk_offset[OFS_J] -= cm->arc.position[AXIS_Y];
+             cm->arc.ijk_offset[OFS_K] -= cm->arc.position[AXIS_Z];
+        }
 
-    if ((fp_ZERO(cm->arc.ijk_offset[OFS_I])) &&                 // it's an error if no offsets are provided
-        (fp_ZERO(cm->arc.ijk_offset[OFS_J])) &&
-        (fp_ZERO(cm->arc.ijk_offset[OFS_K]))) {
-        return (cm_alarm(STAT_ARC_OFFSETS_MISSING_FOR_SELECTED_PLANE, "arc offsets missing or zero"));
+        if ((fp_ZERO(cm->arc.ijk_offset[OFS_I])) &&                 // error if no offsets provided in center format mode
+            (fp_ZERO(cm->arc.ijk_offset[OFS_J])) &&
+            (fp_ZERO(cm->arc.ijk_offset[OFS_K]))) {
+            return (cm_alarm(STAT_ARC_OFFSETS_MISSING_FOR_SELECTED_PLANE, "arc offsets missing or zero"));
+        }
     }
 
     // compute arc runtime values

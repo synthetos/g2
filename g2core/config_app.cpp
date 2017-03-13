@@ -198,7 +198,6 @@ const cfgItem_t cfgArray[] = {
 #endif
 
     // Motor parameters
-// <<<<<<< HEAD
     { "1","1ma",_fip, 0, st_print_ma, st_get_ma, st_set_ma, (float *)&cs.null, M1_MOTOR_MAP },
     { "1","1sa",_fip, 3, st_print_sa, st_get_sa, st_set_sa, (float *)&cs.null, M1_STEP_ANGLE },
     { "1","1tr",_fipc,5, st_print_tr, st_get_tr, st_set_tr, (float *)&cs.null, M1_TRAVEL_PER_REV },
@@ -269,6 +268,7 @@ const cfgItem_t cfgArray[] = {
 //  { "6","6pi",_fip, 3, st_print_pi, st_get_pi, st_set_pi, (float *)&st_cfg.mot[MOTOR_6].power_idle,     M6_POWER_IDLE },
 //  { "6","6mt",_fip, 2, st_print_mt, st_get_mt, st_set_mt, (float *)&st_cfg.mot[MOTOR_6].motor_timeout,  M6_MOTOR_TIMEOUT },
 #endif
+
     // Axis parameters
     { "x","xam",_fip,  0, cm_print_am, cm_get_am, cm_set_am, (float *)&cs.null, X_AXIS_MODE },
     { "x","xvm",_fipc, 0, cm_print_vm, cm_get_vm, cm_set_vm, (float *)&cs.null, X_VELOCITY_MAX },
