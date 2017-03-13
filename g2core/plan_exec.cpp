@@ -485,7 +485,8 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     // Feedhold Processing - We need to handle the following cases (listed in rough sequence order):
     if (cm->hold_state != FEEDHOLD_OFF) {
         // if FEEDHOLD_P2_START, FEEDHOLD_P2_WAIT, FEEDHOLD HOLD or FEEDHOLD_P2_EXIT
-        if (cm->hold_state >= FEEDHOLD_P2_START) { // handles _exec_aline_feedhold_processing case (7)
+//        if (cm->hold_state >= FEEDHOLD_P2_START) { // handles _exec_aline_feedhold_processing case (7)
+        if (cm->hold_state >= FEEDHOLD_HOLD_ACTION_START) { // handles _exec_aline_feedhold_processing case (7)
             return (STAT_NOOP);                    // VERY IMPORTANT to exit as a NOOP. Do not load another move
         }
         // STAT_OK terminates aline execution for this move
@@ -1056,7 +1057,7 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
                 st_request_forward_plan();                  // replan the current bf buffer
                 
                 // Set state to enable transition to p2 and perform entry actions in the p2 planner
-                cm->hold_state = FEEDHOLD_P2_START;         // executes entirely out of p2 planner
+                cm->hold_state = FEEDHOLD_HOLD_ACTION_START; // signal operations runner to start actions
             }
             
             sr_request_status_report(SR_REQUEST_IMMEDIATE);

@@ -134,16 +134,25 @@ typedef enum {                  // cycle start and feedhold requests
 typedef enum {                  // feedhold state machine
     FEEDHOLD_P1_EXIT = -1,      // set when p1 feedhold is due to exit
     FEEDHOLD_OFF = 0,           // no feedhold in effect
-    FEEDHOLD_INITIATED,         // feedhold has been requested but not started yet
+//    FEEDHOLD_INITIATED,         // feedhold has been requested but not started yet
     FEEDHOLD_SYNC,              // start hold - sync to latest aline segment
     FEEDHOLD_DECEL_CONTINUE,    // in deceleration that will not end at zero
     FEEDHOLD_DECEL_TO_ZERO,     // in deceleration that will go to zero
     FEEDHOLD_DECEL_COMPLETE,    // feedhold deceleration has completed, but motors may not have stopped yet
     FEEDHOLD_MOTION_STOPPING,   // waiting for motors to have stopped at hold point (motion stop)
     FEEDHOLD_MOTION_STOPPED,    // motion has stopped at hold point
-    FEEDHOLD_P2_START,          // enter secondary planner and perform feedhold actions (once)
-    FEEDHOLD_P2_WAIT,           // wait for feedhold actions to complete
+//    FEEDHOLD_P2_START,          // enter secondary planner and perform feedhold actions (once)
+//    FEEDHOLD_P2_WAIT,           // wait for feedhold actions to complete
+    
+    FEEDHOLD_HOLD_ACTION_START,
+    FEEDHOLD_HOLD_PENDING,      // wait for feedhold actions to complete
+    FEEDHOLD_HOLD_DONE,         // 
+    
     FEEDHOLD_HOLD,              // holding (steady state) Must be last state
+
+    FEEDHOLD_HOLD_EXIT_PENDING, // performing exit actions
+    FEEDHOLD_HOLD_EXIT_DONE,    // completed exit actions
+
     FEEDHOLD_P2_EXIT            // set when p2 feedhold is finishing
 } cmFeedholdState;
 
