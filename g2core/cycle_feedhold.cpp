@@ -39,20 +39,21 @@
 //#include "xio.h"        // DIAGNOSTIC
 
 static void _initiate_feedhold(void);
-static stat_t _action_feedhold_actions(float *param);
-static stat_t _action_feedhold_no_actions(float *param);
-static stat_t _action_feedhold_sync(float *param);
-static stat_t _action_feedhold_exit_with_actions(float *param);
+static void _initiate_cycle_start(void);
+static void _initiate_queue_flush(void);
 
+static stat_t _action_feedhold_with_actions(float *param);
+static stat_t _action_feedhold_with_no_actions(float *param);
+static stat_t _action_feedhold_with_sync(float *param);
+static stat_t _action_feedhold_exit_with_actions(float *param);
+static stat_t _action_feedhold_exit_with_no_actions(float *param);
+
+//static stat_t _action_cycle_start(float *param);
 static stat_t _action_program_stop(float *param);
 static stat_t _action_program_end(float *param);
 static stat_t _action_alarm(float *param);
 static stat_t _action_shutdown(float *param);
 static stat_t _action_interlock(float *param);
-
-//static stat_t _action_cycle_start(float *param);
-//static stat_t _action_hold_no_actions(float *param);
-//static stat_t _action_hold_exit_no_actions(float *param);
 
 /****************************************************************************************
  * OPERATIONS AND ACTIONS
@@ -192,9 +193,14 @@ stat_t cm_operation_sequencing_callback()
     if (cm1.hold_state == FEEDHOLD_REQUESTED) {
         _initiate_feedhold();
     }
-//    if (cm1.flush_state == FLUSH_REQUESTED) {
-//        _initiate_queue_flush();
-//    }
+    if (cm1.flush_state == FLUSH_REQUESTED) {
+        _initiate_queue_flush();
+    }
+    if (cm1.cycle_state == CYCLE_START_REQUESTED) {
+        _initiate_cycle_start();
+    }
+    return (op.run_operation());
+}
 /*
 
     // queue flush won't run until the hold is complete and all (subsequent) motion has stopped
@@ -226,9 +232,7 @@ stat_t cm_operation_sequencing_callback()
         _feedhold_p1_exit();                        // run multiple times until actions are complete
     }
 */
-    return (op.run_operation());
 
-}
 /****************************************************************************************
  **** Functions *************************************************************************
  ****************************************************************************************/
@@ -272,21 +276,33 @@ void cm_request_cycle_start()
     cm->cycle_state = CYCLE_START_REQUESTED;
 }
 
-void cm_start_cycle_start()
+static void _initiate_cycle_start()
 {
     // Normal cycle start - not in a feedhold
-    if (cm1.hold_state != FEEDHOLD_OFF) {
+    if (cm1.hold_state == FEEDHOLD_OFF) {
         cm_cycle_start();                   // execute cycle start directly
         st_request_exec_move();
         return;
     }
 
     // Feedhold cycle starts run an operation to complete multiple actions
-    op.add_action(_action_feedhold_exit_with_actions, nullptr);
-    op.run_operation();
+    if (cm1.hold_state == FEEDHOLD_HOLD) {
+        switch (cm1.hold_type) {
+            case FEEDHOLD_TYPE_ACTIONS:    { op.add_action(_action_feedhold_exit_with_actions, nullptr); break; }
+            case FEEDHOLD_TYPE_NO_ACTIONS: { op.add_action(_action_feedhold_exit_with_no_actions, nullptr); break; }
+            default: {}
+        }
+//        switch (cm1.hold_final) {
+//            case FEEDHOLD_FINAL_STOP:      { op.add_action(_action_program_stop, nullptr); break; }
+//            case FEEDHOLD_FINAL_END:       { op.add_action(_action_program_end, nullptr); break; }
+//            case FEEDHOLD_FINAL_ALARM:     { op.add_action(_action_alarm, nullptr); break; }
+//            case FEEDHOLD_FINAL_SHUTDOWN:  { op.add_action(_action_shutdown, nullptr); break; }
+//            case FEEDHOLD_FINAL_INTERLOCK: { op.add_action(_action_interlock, nullptr); break; }
+//            default: {}
+//        }
+    } 
+    op.run_operation();    
 }
-
-
 
 /****************************************************************************************
  *  cm_request_feedhold()           - request a feedhold - d0 not run it yet
@@ -305,11 +321,12 @@ void cm_request_feedhold(cmFeedholdType type, cmFeedholdFinal final)
 static void _initiate_feedhold()
 {
     // This function is "safe" and will not initiate a feedhold unless it's OK to.
-    if ((cm1.hold_state == FEEDHOLD_OFF) && (cm1.motion_state == MOTION_RUN)) {
+
+    if ((cm1.hold_state == FEEDHOLD_REQUESTED) && (cm1.motion_state == MOTION_RUN)) {
         switch (cm1.hold_type) {
-            case FEEDHOLD_TYPE_ACTIONS:    { op.add_action(_action_feedhold_actions, nullptr); break; }
-            case FEEDHOLD_TYPE_NO_ACTIONS: { op.add_action(_action_feedhold_no_actions, nullptr); break; }
-            case FEEDHOLD_TYPE_SYNC:       { op.add_action(_action_feedhold_sync, nullptr); break; }
+            case FEEDHOLD_TYPE_ACTIONS:    { op.add_action(_action_feedhold_with_actions, nullptr); break; }
+            case FEEDHOLD_TYPE_NO_ACTIONS: { op.add_action(_action_feedhold_with_no_actions, nullptr); break; }
+            case FEEDHOLD_TYPE_SYNC:       { op.add_action(_action_feedhold_with_sync, nullptr); break; }
             default: {}
         }
         switch (cm1.hold_final) {
@@ -324,9 +341,9 @@ static void _initiate_feedhold()
         return;
     } 
     
-    // P2 feedhold
-    if ((cm2.hold_state == FEEDHOLD_OFF) && (cm2.motion_state == MOTION_RUN)) {
-        op.add_action(_action_feedhold_sync, nullptr);
+    // P2 feedholds only allow feedhold sync types
+    if ((cm2.hold_state == FEEDHOLD_REQUESTED) && (cm2.motion_state == MOTION_RUN)) {
+        op.add_action(_action_feedhold_with_sync, nullptr);
         cm2.hold_state = FEEDHOLD_SYNC;
     }
 }
@@ -337,12 +354,12 @@ static void _action_feedhold_sync_to_planner(float* vect, bool* flag)
     sr_request_status_report(SR_REQUEST_IMMEDIATE);
 }
 
-static stat_t _action_feedhold_no_actions(float *param)
+static stat_t _action_feedhold_with_no_actions(float *param)
 {
     return (STAT_OK);
 }
 
-static stat_t _action_feedhold_sync(float *param)
+static stat_t _action_feedhold_with_sync(float *param)
 {
     return (STAT_OK);
 }
@@ -373,7 +390,7 @@ static stat_t _action_interlock(float *param)
 }
 
 
-static stat_t _action_feedhold_actions(float *param)   // Execute Case (5)
+static stat_t _action_feedhold_with_actions(float *param)   // Execute Case (5)
 {
     // Check to run first-time code
     if (cm1.hold_state == FEEDHOLD_HOLD_ACTION_START) {
@@ -436,17 +453,22 @@ static stat_t _action_feedhold_actions(float *param)   // Execute Case (5)
 }
 
 /****************************************************************************************
- *  _action_hold_exit_sync() - planner callback to reach sync point
- *  _action_hold_exit_with_actions() - perform hold exit actions
+ *  _feedhold_exit_sync()                - planner callback to reach sync point
+ *  _action_feedhold_exit_with_actions() - perform hold exit actions
  */
 
-static void _action_hold_exit_sync(float* vect, bool* flag)
+static void _feedhold_exit_sync_to_planner(float* vect, bool* flag)
 {
     cm1.hold_state = FEEDHOLD_HOLD_EXIT_DONE;      // penultimate state before transitioning to FEEDHOLD_OFF
     sr_request_status_report(SR_REQUEST_IMMEDIATE);
 }
 
-static stat_t _action_hold_exit_with_actions(float *param)   // Execute Cases (6) and (7)
+static stat_t _action_feedhold_exit_with_no_actions(float *param)
+{
+    return (STAT_OK);
+}
+
+static stat_t _action_feedhold_exit_with_actions(float *param)   // Execute Cases (6) and (7)
 {
     // Check to run first-time code
     if (cm1.hold_state == FEEDHOLD_HOLD) {
@@ -457,7 +479,7 @@ static stat_t _action_hold_exit_with_actions(float *param)   // Execute Cases (6
         // do return move though an intermediate point; queue a wait
         cm2.return_flags[AXIS_Z] = false;
         cm_goto_g30_position(cm2.gmx.g30_position, cm2.return_flags);
-        mp_queue_command(_action_hold_exit_sync, nullptr, nullptr);
+        mp_queue_command(_feedhold_exit_sync_to_planner, nullptr, nullptr);
         cm1.hold_state = FEEDHOLD_HOLD_EXIT_PENDING;
         return (STAT_EAGAIN);
     }
@@ -547,6 +569,11 @@ static stat_t _action_hold_exit_with_actions(float *param)   // Execute Cases (6
 void cm_request_queue_flush()
 {
     cm->flush_state = FLUSH_REQUESTED;    
+}
+
+static void _initiate_queue_flush()
+{
+    cm_queue_flush(cm);
 }
 
 void cm_queue_flush(cmMachine_t *_cm)

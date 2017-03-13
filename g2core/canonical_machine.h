@@ -286,14 +286,12 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     cmMachineState  machine_state;          // macs: machine/cycle/motion is the actual machine state
     cmCycleType     cycle_type;             // cycs
     cmMotionState   motion_state;           // mots
-    cmCycleState    cycle_state;            // used to manage cycle start
     
     cmFeedholdType  hold_type;              // hold: type of feedhold requested
     cmFeedholdFinal hold_final;             // hold: final state of hold
     cmFeedholdState hold_state;             // hold: feedhold state machine
     cmFlushState    flush_state;            // hold: queue flush state machine
-//    bool hold_exit_requested;               // request normal exit from feedhold +++++
-//    bool hold_abort_requested;              // request emergency exit from feedhold (typically ^d job kill)
+    cmCycleState    cycle_state;            // used to manage cycle start
 
     bool request_interlock;                 // enter interlock
     bool request_interlock_exit;            // exit interlock
