@@ -42,18 +42,18 @@ static void _initiate_feedhold(void);
 static void _initiate_cycle_start(void);
 static void _initiate_queue_flush(void);
 
-static stat_t _action_feedhold_with_actions(float *param);
-static stat_t _action_feedhold_with_no_actions(float *param);
-static stat_t _action_feedhold_with_sync(float *param);
-static stat_t _action_feedhold_exit_with_actions(float *param);
-static stat_t _action_feedhold_exit_with_no_actions(float *param);
+static stat_t _feedhold_with_actions(float *param);
+static stat_t _feedhold_with_no_actions(float *param);
+static stat_t _feedhold_with_sync(float *param);
+static stat_t _feedhold_exit_with_actions(float *param);
+static stat_t _feedhold_exit_with_no_actions(float *param);
 
-//static stat_t _action_cycle_start(float *param);
-static stat_t _action_program_stop(float *param);
-static stat_t _action_program_end(float *param);
-static stat_t _action_alarm(float *param);
-static stat_t _action_shutdown(float *param);
-static stat_t _action_interlock(float *param);
+static stat_t _cycle_exit(float *param);
+static stat_t _program_stop(float *param);
+static stat_t _program_end(float *param);
+static stat_t _alarm(float *param);
+static stat_t _shutdown(float *param);
+static stat_t _interlock(float *param);
 
 /****************************************************************************************
  * OPERATIONS AND ACTIONS
@@ -244,7 +244,7 @@ bool cm_has_hold()
 {
     return (cm1.hold_state != FEEDHOLD_OFF);
 }
-
+/*
 void cm_start_hold()
 {
     // Can only request a feedhold if the machine is in motion and there not one is not already in progress
@@ -252,7 +252,7 @@ void cm_start_hold()
         cm1.hold_state = FEEDHOLD_SYNC;   // invokes hold from aline execution
     }
 }
-
+*/
 stat_t cm_feedhold_command_blocker()
 {
     if (cm1.hold_state != FEEDHOLD_OFF) {
@@ -288,27 +288,28 @@ static void _initiate_cycle_start()
     // Feedhold cycle starts run an operation to complete multiple actions
     if (cm1.hold_state == FEEDHOLD_HOLD) {
         switch (cm1.hold_type) {
-            case FEEDHOLD_TYPE_ACTIONS:    { op.add_action(_action_feedhold_exit_with_actions, nullptr); break; }
-            case FEEDHOLD_TYPE_NO_ACTIONS: { op.add_action(_action_feedhold_exit_with_no_actions, nullptr); break; }
+            case FEEDHOLD_TYPE_ACTIONS:    { op.add_action(_feedhold_exit_with_actions, nullptr); break; }
+            case FEEDHOLD_TYPE_NO_ACTIONS: { op.add_action(_feedhold_exit_with_no_actions, nullptr); break; }
             default: {}
         }
-//        switch (cm1.hold_final) {
-//            case FEEDHOLD_FINAL_STOP:      { op.add_action(_action_program_stop, nullptr); break; }
-//            case FEEDHOLD_FINAL_END:       { op.add_action(_action_program_end, nullptr); break; }
-//            case FEEDHOLD_FINAL_ALARM:     { op.add_action(_action_alarm, nullptr); break; }
-//            case FEEDHOLD_FINAL_SHUTDOWN:  { op.add_action(_action_shutdown, nullptr); break; }
-//            case FEEDHOLD_FINAL_INTERLOCK: { op.add_action(_action_interlock, nullptr); break; }
-//            default: {}
-//        }
+        switch (cm1.hold_final) {
+            case FEEDHOLD_FINAL_CYCLE:     { op.add_action(_cycle_exit, nullptr); break; }
+            case FEEDHOLD_FINAL_STOP:      { op.add_action(_program_stop, nullptr); break; }
+            case FEEDHOLD_FINAL_END:       { op.add_action(_program_end, nullptr); break; }
+            case FEEDHOLD_FINAL_ALARM:     { op.add_action(_alarm, nullptr); break; }
+            case FEEDHOLD_FINAL_SHUTDOWN:  { op.add_action(_shutdown, nullptr); break; }
+            case FEEDHOLD_FINAL_INTERLOCK: { op.add_action(_interlock, nullptr); break; }
+            default: {}
+        }
     } 
     op.run_operation();    
 }
 
 /****************************************************************************************
- *  cm_request_feedhold()           - request a feedhold - d0 not run it yet
- *  _initiate_feedhold()            - start feedhold of correct type and finalization
- *  _action_feedhold_sync()         - planner callback to reach sync point
- *  _action_feedhold_with_actions() - perform hold entry actions
+ *  cm_request_feedhold()    - request a feedhold - d0 not run it yet
+ *  _initiate_feedhold()     - start feedhold of correct type and finalization
+ *  _feedhold_sync()         - planner callback to reach sync point
+ *  _feedhold_with_actions() - perform hold entry actions
  */
 
 void cm_request_feedhold(cmFeedholdType type, cmFeedholdFinal final)
@@ -316,6 +317,7 @@ void cm_request_feedhold(cmFeedholdType type, cmFeedholdFinal final)
     cm->hold_type = type;
     cm->hold_final = final;
     cm->hold_state = FEEDHOLD_REQUESTED;
+    _initiate_feedhold();                   // attempt to run it immediately
 }
 
 static void _initiate_feedhold()
@@ -324,73 +326,73 @@ static void _initiate_feedhold()
 
     if ((cm1.hold_state == FEEDHOLD_REQUESTED) && (cm1.motion_state == MOTION_RUN)) {
         switch (cm1.hold_type) {
-            case FEEDHOLD_TYPE_ACTIONS:    { op.add_action(_action_feedhold_with_actions, nullptr); break; }
-            case FEEDHOLD_TYPE_NO_ACTIONS: { op.add_action(_action_feedhold_with_no_actions, nullptr); break; }
-            case FEEDHOLD_TYPE_SYNC:       { op.add_action(_action_feedhold_with_sync, nullptr); break; }
-            default: {}
+            case FEEDHOLD_TYPE_ACTIONS:    { op.add_action(_feedhold_with_actions, nullptr); break; }
+            case FEEDHOLD_TYPE_NO_ACTIONS: { op.add_action(_feedhold_with_no_actions, nullptr); break; }
+            case FEEDHOLD_TYPE_SYNC:       { op.add_action(_feedhold_with_sync, nullptr); break; }
+            default: { }
         }
         switch (cm1.hold_final) {
-            case FEEDHOLD_FINAL_STOP:      { op.add_action(_action_program_stop, nullptr); break; }
-            case FEEDHOLD_FINAL_END:       { op.add_action(_action_program_end, nullptr); break; }
-            case FEEDHOLD_FINAL_ALARM:     { op.add_action(_action_alarm, nullptr); break; }
-            case FEEDHOLD_FINAL_SHUTDOWN:  { op.add_action(_action_shutdown, nullptr); break; }
-            case FEEDHOLD_FINAL_INTERLOCK: { op.add_action(_action_interlock, nullptr); break; }
-            default: {}
+            case FEEDHOLD_FINAL_STOP:      { op.add_action(_program_stop, nullptr); break; }
+            case FEEDHOLD_FINAL_END:       { op.add_action(_program_end, nullptr); break; }
+            case FEEDHOLD_FINAL_ALARM:     { op.add_action(_alarm, nullptr); break; }
+            case FEEDHOLD_FINAL_SHUTDOWN:  { op.add_action(_shutdown, nullptr); break; }
+            case FEEDHOLD_FINAL_INTERLOCK: { op.add_action(_interlock, nullptr); break; }
+            default: { }
         }
-        cm1.hold_state = FEEDHOLD_SYNC;                         // start feedhold state machine in aline exec
+        cm1.hold_state = FEEDHOLD_SYNC;     // start feedhold state machine in aline exec
         return;
     } 
     
     // P2 feedholds only allow feedhold sync types
     if ((cm2.hold_state == FEEDHOLD_REQUESTED) && (cm2.motion_state == MOTION_RUN)) {
-        op.add_action(_action_feedhold_with_sync, nullptr);
+        op.add_action(_feedhold_with_sync, nullptr);
         cm2.hold_state = FEEDHOLD_SYNC;
     }
 }
 
-static void _action_feedhold_sync_to_planner(float* vect, bool* flag)
+static void _feedhold_sync_to_planner(float* vect, bool* flag)
 {
     cm1.hold_state = FEEDHOLD_HOLD_DONE;        // penultimate state before transitioning to FEEDHOLD_HOLD
     sr_request_status_report(SR_REQUEST_IMMEDIATE);
 }
 
-static stat_t _action_feedhold_with_no_actions(float *param)
+static stat_t _feedhold_with_no_actions(float *param)
 {
     return (STAT_OK);
 }
 
-static stat_t _action_feedhold_with_sync(float *param)
+static stat_t _feedhold_with_sync(float *param)
 {
     return (STAT_OK);
 }
 
-static stat_t _action_program_stop(float *param)
+static stat_t _program_stop(float *param)
 {
     return (STAT_OK);
 }
 
-static stat_t _action_program_end(float *param)
+static stat_t _program_end(float *param)
 {
     return (STAT_OK);
 }
 
-static stat_t _action_alarm(float *param)
+static stat_t _alarm(float *param)
 {
     return (STAT_OK);
 }
 
-static stat_t _action_shutdown(float *param)
+static stat_t _shutdown(float *param)
 {
     return (STAT_OK);
 }
 
-static stat_t _action_interlock(float *param)
+static stat_t _interlock(float *param)
 {
     return (STAT_OK);
 }
 
 
-static stat_t _action_feedhold_with_actions(float *param)   // Execute Case (5)
+static stat_t _feedhold_with_actions(float *param)   // Execute Case (5)
 {
     // Check to run first-time code
     if (cm1.hold_state == FEEDHOLD_HOLD_ACTION_START) {
@@ -435,7 +437,7 @@ static stat_t _action_feedhold_with_actions(float *param)   // Execute Case (5)
         }
         spindle_control_sync(SPINDLE_PAUSE);                    // optional spindle pause
         coolant_control_sync(COOLANT_PAUSE, COOLANT_BOTH);      // optional coolant pause
-        mp_queue_command(_action_feedhold_sync_to_planner, nullptr, nullptr);
+        mp_queue_command(_feedhold_sync_to_planner, nullptr, nullptr);
         return (STAT_EAGAIN);
     }
 
@@ -454,7 +456,7 @@ static stat_t _action_feedhold_with_actions(float *param)   // Execute Case (5)
 
 /****************************************************************************************
  *  _feedhold_exit_sync()                - planner callback to reach sync point
- *  _action_feedhold_exit_with_actions() - perform hold exit actions
+ *  _feedhold_exit_with_actions() - perform hold exit actions
  */
 
 static void _feedhold_exit_sync_to_planner(float* vect, bool* flag)
@@ -463,12 +465,12 @@ static void _feedhold_exit_sync_to_planner(float* vect, bool* flag)
     sr_request_status_report(SR_REQUEST_IMMEDIATE);
 }
 
-static stat_t _action_feedhold_exit_with_no_actions(float *param)
+static stat_t _feedhold_exit_with_no_actions(float *param)
 {
     return (STAT_OK);
 }
 
-static stat_t _action_feedhold_exit_with_actions(float *param)   // Execute Cases (6) and (7)
+static stat_t _feedhold_exit_with_actions(float *param)   // Execute Cases (6) and (7)
 {
     // Check to run first-time code
     if (cm1.hold_state == FEEDHOLD_HOLD) {
@@ -503,22 +505,32 @@ static stat_t _action_feedhold_exit_with_actions(float *param)   // Execute Case
             cm_reset_position_to_absolute_position(cm);
             cm1.flush_state = FLUSH_OFF;
         }
-
+/*
         // resume motion from primary planner or end cycle if no moves in planner
         if (mp_has_runnable_buffer(&mp1)) {
-//            cm_set_motion_state(MOTION_RUN);
             cm_cycle_start();
             st_request_exec_move();
         } else {
-//            cm_set_motion_state(MOTION_STOP);
             cm_cycle_end();
         }
         cm1.hold_state = FEEDHOLD_OFF;
+*/
         return (STAT_OK);
     }
     return (STAT_EAGAIN);
 }
 
+static stat_t _cycle_exit(float *param)
+{
+    if (mp_has_runnable_buffer(&mp1)) {
+        cm_cycle_start();
+        st_request_exec_move();
+    } else {
+        cm_cycle_end();
+    }
+    cm1.hold_state = FEEDHOLD_OFF;
+    return (STAT_OK);
+}
 
 /****************************************************************************************
  * Queue Flush operations
@@ -604,18 +616,18 @@ void cm_queue_flush(cmMachine_t *_cm)
 //static void _feedhold_p2_exit(void);
 //static void _feedhold_abort(void);
 
-//static stat_t _action_halt(float *param);
-//static stat_t _action_p2_entry(float* param);
-//static stat_t _action_parking_move(float *param);
-//static stat_t _action_return_move(float *param);
-//static stat_t _action_spindle_control(float *param);
-//static stat_t _action_coolant_control(float *param);
-//static stat_t _action_heater_control(float *param);
-//static stat_t _action_output_control(float *param);
-//static stat_t _action_queue_flush(float *param);
-//static stat_t _action_input_function(float *param);
-//static stat_t _action_finalize_program(float *param);
-//static stat_t _action_trigger_alarm(float *param);
+//static stat_t _halt(float *param);
+//static stat_t _p2_entry(float* param);
+//static stat_t _parking_move(float *param);
+//static stat_t _return_move(float *param);
+//static stat_t _spindle_control(float *param);
+//static stat_t _coolant_control(float *param);
+//static stat_t _heater_control(float *param);
+//static stat_t _output_control(float *param);
+//static stat_t _queue_flush(float *param);
+//static stat_t _input_function(float *param);
+//static stat_t _finalize_program(float *param);
+//static stat_t _trigger_alarm(float *param);
 /*
 typedef enum {                  // Operation Actions
     // Initiation actions
@@ -760,13 +772,13 @@ stat_t cm_request_operation(cmOperationType operation, float *param)
     switch (operation) {
 
 //        case OPERATION_CYCLE_START: {
-//            op.add_action(_action_cycle_start, nullptr);
+//            op.add_action(_cycle_start, nullptr);
 //            return(op.run_operation());
 //        }
 
         // Generate hold request if not already in a hold and machine is in motion
         case OPERATION_HOLD: {
-            op.add_action(_action_hold_with_actions, param);
+            op.add_action(_hold_with_actions, param);
             break;
         }
         
@@ -778,7 +790,7 @@ stat_t cm_request_operation(cmOperationType operation, float *param)
 }
 */
 /*
-static stat_t _action_cycle_start(float *param)
+static stat_t _cycle_start(float *param)
 {
     if (cm->cycle_type == CYCLE_NONE) {     // don't (re)start homing, probe or other canned cycles
         cm->cycle_type = CYCLE_MACHINING;
@@ -790,12 +802,12 @@ static stat_t _action_cycle_start(float *param)
 */
 
 /*
- * _action_hold_with_actions() - initiate a feedhold in the active planner - p1 or p2
+ * _hold_with_actions() - initiate a feedhold in the active planner - p1 or p2
  *  
  * Return STAT_OK once hold has been reached
  */
 /*
-static stat_t _action_hold_with_actions(float *param)
+static stat_t _hold_with_actions(float *param)
 {
     // Not in feedhold
     if ((cm1.hold_state == FEEDHOLD_OFF) && (cm1.motion_state != MOTION_STOP)) {
@@ -814,18 +826,18 @@ static stat_t _action_hold_with_actions(float *param)
 }
 */
 
-//static stat_t _action_halt(float *param) { return (STAT_OK); }
-//static stat_t _action_p2_entry(float *param) { return (STAT_OK); }    // p2 entry actions, bundled
-//static stat_t _action_parking_move(float *param) { return (STAT_OK); }
-//static stat_t _action_return_move(float *param) { return (STAT_OK); }
-//static stat_t _action_spindle_control(float *param) { return (STAT_OK); }
-//static stat_t _action_coolant_control(float *param) { return (STAT_OK); }
-//static stat_t _action_heater_control(float *param) { return (STAT_OK); }
-//static stat_t _action_output_control(float *param) { return (STAT_OK); }
-//static stat_t _action_queue_flush(float *param) { return (STAT_OK); }
-//static stat_t _action_input_function(float *param) { return (STAT_OK); }
-//static stat_t _action_finalize_program(float *param) { return (STAT_OK); }
-//static stat_t _action_trigger_alarm(float *param) { return (STAT_OK); }
+//static stat_t _halt(float *param) { return (STAT_OK); }
+//static stat_t _p2_entry(float *param) { return (STAT_OK); }    // p2 entry actions, bundled
+//static stat_t _parking_move(float *param) { return (STAT_OK); }
+//static stat_t _return_move(float *param) { return (STAT_OK); }
+//static stat_t _spindle_control(float *param) { return (STAT_OK); }
+//static stat_t _coolant_control(float *param) { return (STAT_OK); }
+//static stat_t _heater_control(float *param) { return (STAT_OK); }
+//static stat_t _output_control(float *param) { return (STAT_OK); }
+//static stat_t _queue_flush(float *param) { return (STAT_OK); }
+//static stat_t _input_function(float *param) { return (STAT_OK); }
+//static stat_t _finalize_program(float *param) { return (STAT_OK); }
+//static stat_t _trigger_alarm(float *param) { return (STAT_OK); }
 
 /****************************************************************************************
  **** Feedholds *************************************************************************

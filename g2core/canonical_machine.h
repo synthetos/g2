@@ -123,11 +123,11 @@ typedef enum {                  // feedhold type parameter
 } cmFeedholdType;
 
 typedef enum {                  // feedhold final operation 
-    FEEDHOLD_FINAL_NONE = 0,    // normal final state - HOLD or STOP, depending on type
+    FEEDHOLD_FINAL_CYCLE = 0,   // normal final state - HOLD or STOP, depending on type
     FEEDHOLD_FINAL_STOP,        // perform program stop
     FEEDHOLD_FINAL_END,         // perform program end
     FEEDHOLD_FINAL_ALARM,       // perform alarm
-    FEEDHOLD_FINAL_SHUTDOWN,     // perform shutdown
+    FEEDHOLD_FINAL_SHUTDOWN,    // perform shutdown
     FEEDHOLD_FINAL_INTERLOCK    // report as interlock
 } cmFeedholdFinal;
 
@@ -501,7 +501,7 @@ stat_t cm_feedhold_sequencing_callback(void);                   // process feedh
 stat_t cm_feedhold_command_blocker(void);
 
 bool cm_has_hold(void);                                         // has hold in primary planner
-void cm_start_hold(void);                                       // starts hold in primary planner
+//void cm_start_hold(void);                                       // starts hold in primary planner
 void cm_queue_flush(cmMachine_t *_cm);                          // queue flush in either planner
 
 // Homing cycles (cycle_homing.cpp)

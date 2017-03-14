@@ -238,7 +238,7 @@ static void _dispatch_kernel(const devflags_t flags)
     }
 
     // trap single character commands
-    if      (*cs.bufp == '!') { cm_request_feedhold(FEEDHOLD_TYPE_ACTIONS, FEEDHOLD_FINAL_NONE); }
+    if      (*cs.bufp == '!') { cm_request_feedhold(FEEDHOLD_TYPE_ACTIONS, FEEDHOLD_FINAL_CYCLE); }
     else if (*cs.bufp == '%') { cm_request_queue_flush(); xio_flush_to_command(); }
 //    else if (*cs.bufp == '~') { cm_request_exit_hold(); } +++++
     else if (*cs.bufp == '~') { cm_request_cycle_start(); }

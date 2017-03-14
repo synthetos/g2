@@ -1581,7 +1581,6 @@ static void _exec_program_finalize(float *value, bool *flag)
 
 void cm_cycle_start()
 {
-//    cm_request_operation(OPERATION_CYCLE_START, nullptr);
     if (cm->cycle_type == CYCLE_NONE) {                     // don't (re)start homing, probe or other canned cycles
         cm->cycle_type = CYCLE_MACHINING;
         cm->machine_state = MACHINE_CYCLE;
