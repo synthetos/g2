@@ -238,9 +238,8 @@ static void _dispatch_kernel(const devflags_t flags)
     }
 
     // trap single character commands
-    if      (*cs.bufp == '!') { cm_request_feedhold(FEEDHOLD_TYPE_ACTIONS, FEEDHOLD_FINAL_CYCLE); }
+    if      (*cs.bufp == '!') { cm_request_feedhold(FEEDHOLD_TYPE_ACTIONS, FEEDHOLD_EXIT_CYCLE); }
     else if (*cs.bufp == '%') { cm_request_queue_flush(); xio_flush_to_command(); }
-//    else if (*cs.bufp == '~') { cm_request_exit_hold(); } +++++
     else if (*cs.bufp == '~') { cm_request_cycle_start(); }
     else if (*cs.bufp == EOT) { cm_job_kill(); }
     else if (*cs.bufp == ENQ) { controller_request_enquiry(); }
@@ -435,7 +434,7 @@ static stat_t _interlock_handler(void)
         if (cm->safety_interlock_disengaged != 0) {
             cm->safety_interlock_disengaged = 0;
             cm->safety_interlock_state = SAFETY_INTERLOCK_DISENGAGED;
-            cm_request_feedhold(FEEDHOLD_TYPE_ACTIONS, FEEDHOLD_FINAL_INTERLOCK);  // may have already requested STOP as INPUT_ACTION
+            cm_request_feedhold(FEEDHOLD_TYPE_ACTIONS, FEEDHOLD_EXIT_INTERLOCK);  // may have already requested STOP as INPUT_ACTION
             // feedhold was initiated by input action in gpio
             // pause spindle
             // pause coolant

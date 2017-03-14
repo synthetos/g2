@@ -63,131 +63,124 @@
 
 // ### LAYER 8 CRITICAL REGION ###
 // ### DO NOT CHANGE THESE ENUMERATIONS WITHOUT COMMUNITY INPUT ###
-typedef enum {                  // check alignment with messages in config.c / msg_stat strings
-    COMBINED_INITIALIZING = 0,  // [0] machine is initializing
-    COMBINED_READY,             // [1] machine is ready for use
-    COMBINED_ALARM,             // [2] machine in alarm state
-    COMBINED_PROGRAM_STOP,      // [3] program stop/no more blocks
-    COMBINED_PROGRAM_END,       // [4] program end
-    COMBINED_RUN,               // [5] machine is running
-    COMBINED_HOLD,              // [6] machine is holding
-    COMBINED_PROBE,             // [7] probe cycle activ
-    COMBINED_CYCLE,             // [8] reserved for canned cycles
-    COMBINED_HOMING,            // [9] homing cycle active
-    COMBINED_JOG,               // [10] jogging cycle active
-    COMBINED_INTERLOCK,         // [11] machine in safety interlock hold
-    COMBINED_SHUTDOWN,          // [12] machine in shutdown state
-    COMBINED_PANIC              // [13] machine in panic state
+typedef enum {                      // check alignment with messages in config.c / msg_stat strings
+    COMBINED_INITIALIZING = 0,      // [0] machine is initializing
+    COMBINED_READY,                 // [1] machine is ready for use
+    COMBINED_ALARM,                 // [2] machine in alarm state
+    COMBINED_PROGRAM_STOP,          // [3] program stop/no more blocks
+    COMBINED_PROGRAM_END,           // [4] program end
+    COMBINED_RUN,                   // [5] machine is running
+    COMBINED_HOLD,                  // [6] machine is holding
+    COMBINED_PROBE,                 // [7] probe cycle activ
+    COMBINED_CYCLE,                 // [8] reserved for canned cycles
+    COMBINED_HOMING,                // [9] homing cycle active
+    COMBINED_JOG,                   // [10] jogging cycle active
+    COMBINED_INTERLOCK,             // [11] machine in safety interlock hold
+    COMBINED_SHUTDOWN,              // [12] machine in shutdown state
+    COMBINED_PANIC                  // [13] machine in panic state
 } cmCombinedState;
 //### END CRITICAL REGION ###
 
-typedef enum {                  // Note: MachineState signals if the machine is in cycle (5) or some other non-cycle state
-    MACHINE_INITIALIZING = 0,   // machine is initializing
-    MACHINE_READY,              // machine is ready for use but idle
-    MACHINE_ALARM,              // machine is in alarm state
-    MACHINE_PROGRAM_STOP,       // no blocks to run; like PROGRAM_END but without the M2 to reset gcode state
-    MACHINE_PROGRAM_END,        // program end (same as MACHINE_READY, really...)
-    MACHINE_CYCLE,              // machine is in cycle, running; blocks still to run, or steppers are busy
-    MACHINE_INTERLOCK,          // machine is in interlock state
-    MACHINE_SHUTDOWN,           // machine is in shutdown state
-    MACHINE_PANIC               // machine is in panic state
+typedef enum {                      // Note: MachineState signals if the machine is in cycle (5) or some other non-cycle state
+    MACHINE_INITIALIZING = 0,       // machine is initializing
+    MACHINE_READY,                  // machine is ready for use but idle
+    MACHINE_ALARM,                  // machine is in alarm state
+    MACHINE_PROGRAM_STOP,           // no blocks to run; like PROGRAM_END but without the M2 to reset gcode state
+    MACHINE_PROGRAM_END,            // program end (same as MACHINE_READY, really...)
+    MACHINE_CYCLE,                  // machine is in cycle, running; blocks still to run, or steppers are busy
+    MACHINE_INTERLOCK,              // machine is in interlock state
+    MACHINE_SHUTDOWN,               // machine is in shutdown state
+    MACHINE_PANIC                   // machine is in panic state
 } cmMachineState;
 
 typedef enum {
-    MOTION_STOP = 0,            // motion has stopped: set when the steppers reach the end of the planner queue
-    MOTION_RUN                  // machine is in motion: set when the steppers execute an ALINE segment
+    MOTION_STOP = 0,                // motion has stopped: set when the steppers reach the end of the planner queue
+    MOTION_RUN                      // machine is in motion: set when the steppers execute an ALINE segment
 } cmMotionState;
 
-typedef enum {                  // state machine for cycle start 
-    CYCLE_START_NONE = 0,       // not in a cycle
+typedef enum {                      // state machine for cycle start 
+    CYCLE_START_OFF = 0,            // not requested
     CYCLE_START_REQUESTED,
     CYCLE_START_COMPLETE
 } cmCycleState;
 
 typedef enum {
-    CYCLE_NONE = 0,             // not in a cycle
-    CYCLE_MACHINING,            // in normal machining cycle
-    CYCLE_HOMING,               // in homing cycle
-    CYCLE_PROBE,                // in probe cycle
-    CYCLE_JOG                   // in jogging cycle
-//  CYCLE_G81                   // illustration of canned cycles
+    CYCLE_NONE = 0,                 // not in a cycle
+    CYCLE_MACHINING,                // in normal machining cycle
+    CYCLE_HOMING,                   // in homing cycle
+    CYCLE_PROBE,                    // in probe cycle
+    CYCLE_JOG                       // in jogging cycle
+//  CYCLE_G81                       // illustration of canned cycles
 //  ...
 } cmCycleType;
 
-typedef enum {                  // feedhold type parameter
-    FEEDHOLD_TYPE_ACTIONS = 0,  // feedhold at max jerk with actions
-    FEEDHOLD_TYPE_NO_ACTIONS,   // feedhold at max jerk with no actions
-    FEEDHOLD_TYPE_SYNC,         // feedhold at max jerk with queue flush and sync command
-    FEEDHOLD_TYPE_FAST,         // feedhold at high jerk with no actions. Can resume
-    FEEDHOLD_TYPE_SCRAM         // feedhold at high jerk and stop all active devices
+typedef enum {                      // feedhold type parameter
+    FEEDHOLD_TYPE_ACTIONS = 0,      // feedhold at max jerk with actions
+    FEEDHOLD_TYPE_NO_ACTIONS,       // feedhold at max jerk with no actions
+    FEEDHOLD_TYPE_SYNC,             // feedhold at max jerk with queue flush and sync command
+    FEEDHOLD_TYPE_FAST,             // feedhold at high jerk with no actions. Can resume
+    FEEDHOLD_TYPE_SCRAM             // feedhold at high jerk and stop all active devices
 } cmFeedholdType;
 
-typedef enum {                  // feedhold final operation 
-    FEEDHOLD_FINAL_CYCLE = 0,   // normal final state - HOLD or STOP, depending on type
-    FEEDHOLD_FINAL_STOP,        // perform program stop
-    FEEDHOLD_FINAL_END,         // perform program end
-    FEEDHOLD_FINAL_ALARM,       // perform alarm
-    FEEDHOLD_FINAL_SHUTDOWN,    // perform shutdown
-    FEEDHOLD_FINAL_INTERLOCK    // report as interlock
+typedef enum {                      // feedhold final operation 
+    FEEDHOLD_EXIT_CYCLE = 0,        // exit feedhold with cycle restart - HOLD or STOP, depending on type
+    FEEDHOLD_EXIT_FLUSH,            // exit feedhold with flush
+    FEEDHOLD_EXIT_STOP,             // perform program stop
+    FEEDHOLD_EXIT_END,              // perform program end
+    FEEDHOLD_EXIT_ALARM,            // perform alarm
+    FEEDHOLD_EXIT_SHUTDOWN,         // perform shutdown
+    FEEDHOLD_EXIT_INTERLOCK         // report as interlock
 } cmFeedholdFinal;
 
-typedef enum {                  // feedhold state machine
-//    FEEDHOLD_P1_EXIT = -1,      // set when p1 feedhold is due to exit
-    FEEDHOLD_OFF = 0,           // no feedhold in effect
-    FEEDHOLD_REQUESTED,         // feedhold has been requested but not started yet
-    FEEDHOLD_SYNC,              // start hold - sync to latest aline segment
-    FEEDHOLD_DECEL_CONTINUE,    // in deceleration that will not end at zero
-    FEEDHOLD_DECEL_TO_ZERO,     // in deceleration that will go to zero
-    FEEDHOLD_DECEL_COMPLETE,    // feedhold deceleration has completed, but motors may not have stopped yet
-    FEEDHOLD_MOTION_STOPPING,   // waiting for motors to have stopped at hold point (motion stop)
-    FEEDHOLD_MOTION_STOPPED,    // motion has stopped at hold point
-//    FEEDHOLD_P2_START,          // enter secondary planner and perform feedhold actions (once)
-//    FEEDHOLD_P2_WAIT,           // wait for feedhold actions to complete
-    
-    FEEDHOLD_HOLD_ACTION_START,
-    FEEDHOLD_HOLD_PENDING,      // wait for feedhold actions to complete
-    FEEDHOLD_HOLD_DONE,         // 
-    
-    FEEDHOLD_HOLD,              // holding (steady state) Must be last state
-
-    FEEDHOLD_HOLD_EXIT_PENDING, // performing exit actions
-    FEEDHOLD_HOLD_EXIT_DONE,    // completed exit actions
-
-//    FEEDHOLD_P2_EXIT            // set when p2 feedhold is finishing
+typedef enum {                      // feedhold state machine
+    FEEDHOLD_OFF = 0,               // no feedhold in effect
+    FEEDHOLD_REQUESTED,             // feedhold has been requested but not started yet
+    FEEDHOLD_SYNC,                  // start hold - sync to latest aline segment
+    FEEDHOLD_DECEL_CONTINUE,        // in deceleration that will not end at zero
+    FEEDHOLD_DECEL_TO_ZERO,         // in deceleration that will go to zero
+    FEEDHOLD_DECEL_COMPLETE,        // feedhold deceleration has completed, but motors may not have stopped yet
+    FEEDHOLD_MOTION_STOPPING,       // waiting for motors to have stopped at hold point (motion stop)
+    FEEDHOLD_MOTION_STOPPED,        // motion has stopped at hold point
+    FEEDHOLD_HOLD_ACTIONS_START,
+    FEEDHOLD_HOLD_ACTIONS_PENDING,  // wait for feedhold actions to complete
+    FEEDHOLD_HOLD_ACTIONS_COMPLETE, // 
+    FEEDHOLD_HOLD,                  // HOLDING (steady state)
+    FEEDHOLD_EXIT_ACTIONS_PENDING,  // performing exit actions
+    FEEDHOLD_EXIT_ACTIONS_COMPLETE  // completed exit actions
 } cmFeedholdState;
 
-typedef enum {                  // applies to cm->homing_state
-    HOMING_NOT_HOMED = 0,       // machine is not homed (0=false)
-    HOMING_HOMED = 1,           // machine is homed (1=true)
-    HOMING_WAITING              // machine waiting to be homed
+typedef enum {                      // applies to cm->homing_state
+    HOMING_NOT_HOMED = 0,           // machine is not homed (0=false)
+    HOMING_HOMED = 1,               // machine is homed (1=true)
+    HOMING_WAITING                  // machine waiting to be homed
 } cmHomingState;
 
-typedef enum {                  // applies to cm->probe_state
-    PROBE_FAILED = 0,           // probe reached endpoint without triggering
-    PROBE_SUCCEEDED = 1,        // probe was triggered, cm.probe_results has position
-    PROBE_WAITING = 2           // probe is waiting to be started or is running
+typedef enum {                      // applies to cm->probe_state
+    PROBE_FAILED = 0,               // probe reached endpoint without triggering
+    PROBE_SUCCEEDED = 1,            // probe was triggered, cm.probe_results has position
+    PROBE_WAITING = 2               // probe is waiting to be started or is running
 } cmProbeState;
 
 typedef enum {
-    SAFETY_INTERLOCK_ENGAGED = 0, // meaning the interlock input is CLOSED (low)
+    SAFETY_INTERLOCK_ENGAGED = 0,   // meaning the interlock input is CLOSED (low)
     SAFETY_INTERLOCK_DISENGAGED
 } cmSafetyState;
 
-typedef enum {                  // feed override state machine
+typedef enum {                      // feed override state machine
     MFO_OFF = 0,
     MFO_REQUESTED,
     MFO_SYNC
 } cmOverrideState;
 
-typedef enum {                  // queue flush state machine
-    FLUSH_OFF = 0,              // no queue flush in effect
-    FLUSH_REQUESTED,            // flush has been requested but not started yet
-    FLUSH_WAS_RUN               // transient state to note that a queue flush has been run 
+typedef enum {                      // queue flush state machine
+    FLUSH_OFF = 0,                  // no queue flush in effect
+    FLUSH_REQUESTED,                // flush has been requested but not started yet
+    FLUSH_WAS_RUN                   // transient state to note that a queue flush has been run 
 } cmFlushState;
 
-typedef enum {                  // Motion profiles
-    PROFILE_NORMAL = 0,         // Normal jerk in effect
-    PROFILE_FAST                // High speed jerk in effect
+typedef enum {                      // Motion profiles
+    PROFILE_NORMAL = 0,             // Normal jerk in effect
+    PROFILE_FAST                    // High speed jerk in effect
 } cmMotion_profile;
 
 /*****************************************************************************
