@@ -494,8 +494,6 @@ stat_t cm_feedhold_sequencing_callback(void);                   // process feedh
 stat_t cm_feedhold_command_blocker(void);
 
 bool cm_has_hold(void);                                         // has hold in primary planner
-//void cm_start_hold(void);                                       // starts hold in primary planner
-void cm_queue_flush(cmMachine_t *_cm);                          // queue flush in either planner
 
 // Homing cycles (cycle_homing.cpp)
 stat_t cm_homing_cycle_start(const float axes[], const bool flags[]);        // G28.2

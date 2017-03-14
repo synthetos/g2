@@ -1579,6 +1579,7 @@ static void _exec_program_finalize(float *value, bool *flag)
     sr_request_status_report(SR_REQUEST_IMMEDIATE);         // request a final and full status report (not filtered)
 }
 
+// Will start a cycle regardless of whether the planner has moves or not
 void cm_cycle_start()
 {
     if (cm->cycle_type == CYCLE_NONE) {                     // don't (re)start homing, probe or other canned cycles
