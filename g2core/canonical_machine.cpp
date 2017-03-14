@@ -292,10 +292,10 @@ cmCombinedState cm_get_combined_state(cmMachine_t *_cm)
         case MACHINE_READY:
         case MACHINE_ALARM:
         case MACHINE_PROGRAM_STOP:
-        case MACHINE_PROGRAM_END:   { return ((cmCombinedState)_cm->machine_state); }
-        case MACHINE_INTERLOCK:     { return (COMBINED_INTERLOCK); }
-        case MACHINE_SHUTDOWN:      { return (COMBINED_SHUTDOWN); }
-        case MACHINE_PANIC:         { return (COMBINED_PANIC); }
+        case MACHINE_PROGRAM_END:     { return ((cmCombinedState)_cm->machine_state); }
+        case MACHINE_INTERLOCK:       { return (COMBINED_INTERLOCK); }
+        case MACHINE_SHUTDOWN:        { return (COMBINED_SHUTDOWN); }
+        case MACHINE_PANIC:           { return (COMBINED_PANIC); }
         case MACHINE_CYCLE: {
             switch(_cm->cycle_type)   {
                 case CYCLE_NONE:      { break; } // CYCLE_NONE cannot ever get here

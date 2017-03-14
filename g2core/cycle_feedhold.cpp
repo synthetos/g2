@@ -38,7 +38,7 @@
 #include "util.h"
 //#include "xio.h"        // DIAGNOSTIC
 
-static void _initiate_feedhold(void);
+static void _initiate_p1_feedhold(void);
 static void _initiate_cycle_restart(void);
 static void _initiate_queue_flush(void);
 
@@ -175,7 +175,7 @@ void cm_operation_init()
 stat_t cm_operation_sequencing_callback()
 {
     if (cm1.hold_state == FEEDHOLD_REQUESTED) {
-        _initiate_feedhold();
+        _initiate_p1_feedhold();
     }
     if (cm1.flush_state == FLUSH_REQUESTED) {
         _initiate_queue_flush();
@@ -214,9 +214,13 @@ stat_t cm_feedhold_command_blocker()
 
 void cm_request_cycle_start()
 {
-    if (cm1.hold_state != FEEDHOLD_OFF) {       // restart from a feedhold
-        cm1.cycle_state = CYCLE_START_REQUESTED; 
-    } else {                                    // execute cycle start directly
+    if (cm1.hold_state != FEEDHOLD_OFF) {           // restart from a feedhold
+        if (cm1.flush_state == FLUSH_REQUESTED) {   // possible race condition. Flush wins
+            cm1.cycle_state = CYCLE_START_OFF;
+        } else {
+            cm1.cycle_state = CYCLE_START_REQUESTED; 
+        }
+    } else {                                        // execute cycle start directly
         if (mp_has_runnable_buffer(&mp1)) {
             cm_cycle_start();
             st_request_exec_move();
@@ -283,10 +287,10 @@ static void _initiate_cycle_restart()
 void cm_request_queue_flush()
 {
     // Can only initiate a queue flush if in a feedhold
-    if (cm->hold_state != FEEDHOLD_OFF) {
-        cm->flush_state = FLUSH_REQUESTED;
+    if (cm1.hold_state != FEEDHOLD_OFF) {
+        cm1.flush_state = FLUSH_REQUESTED;
     } else {
-        cm->flush_state = FLUSH_OFF;        
+        cm1.flush_state = FLUSH_OFF;        
     }
 }
 
@@ -357,18 +361,28 @@ static stat_t _run_interlock()
 
 void cm_request_feedhold(cmFeedholdType type, cmFeedholdFinal final)
 {    
-    // Can only initiate a feedhold if you are in a machining cycle not already in a feedhold
-    if ((cm->hold_state == FEEDHOLD_OFF) && (cm->machine_state == MACHINE_CYCLE)) {
-        cm->hold_type = type;
-        cm->hold_final = final;
-        cm->hold_state = FEEDHOLD_REQUESTED;
-        _initiate_feedhold();                   // attempt to run it immediately
-    } else {
-        cm->hold_state = FEEDHOLD_OFF;          // reset 
+    // look for p2 feedhold (feedhold in a feedhold)
+    if ((cm1.hold_state == FEEDHOLD_HOLD) && 
+        (cm2.hold_state == FEEDHOLD_OFF) &&
+        (cm2.machine_state == MACHINE_CYCLE)) {
+        op.add_action(_feedhold_with_sync);
+        op.add_action(_run_program_stop);
+        cm2.hold_state = FEEDHOLD_SYNC;
+        return;
     }
+    
+    // Can only initiate a feedhold if you are in a machining cycle not already in a feedhold
+    if ((cm1.hold_state == FEEDHOLD_OFF) && (cm1.machine_state == MACHINE_CYCLE)) {
+        cm1.hold_type = type;
+        cm1.hold_final = final;
+        cm1.hold_state = FEEDHOLD_REQUESTED;
+        _initiate_p1_feedhold();                // attempt to run it immediately
+        return;
+    }    
+    cm->hold_state = FEEDHOLD_OFF;              // cannot honor the feedhold request. reset it
 }
 
-static void _initiate_feedhold()
+static void _initiate_p1_feedhold()
 {
     // This function is "safe" and will not initiate a feedhold unless it's OK to.
 
@@ -496,6 +510,10 @@ static stat_t _feedhold_restart_with_no_actions()
 
 static stat_t _feedhold_restart_with_actions()   // Execute Cases (6) and (7)
 {
+    if (cm1.hold_state == FEEDHOLD_OFF) {
+        return (STAT_OK);                       // was called erroneously. Can happen for !%~
+    }
+
     // Check to run first-time code
     if (cm1.hold_state == FEEDHOLD_HOLD) {
         // perform end-hold actions --- while still in secondary machine
@@ -523,7 +541,7 @@ static stat_t _feedhold_restart_with_actions()   // Execute Cases (6) and (7)
         return (STAT_OK);
     }
     
-    return (STAT_EAGAIN);                   // keep the compiler happy. Never executed.
+    return (STAT_EAGAIN);                   // still waiting
 }
 
 static stat_t _run_restart_cycle(void)
