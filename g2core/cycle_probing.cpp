@@ -73,6 +73,50 @@ static stat_t _probing_exception_exit(stat_t status);
 static stat_t _probe_move(const float target[], const bool flags[]);
 static void _send_probe_report(void);
 
+void _prepare_for_probe();
+void _store_probe_position();
+
+/**** JSON INTERFACE *******************************************************************
+ * cm_set_probe() - a command to tell it to store the current point as a probe point
+ */
+
+stat_t cm_set_probe(nvObj_t *nv)
+{
+    if (!fp_ZERO(nv->value)) {
+        nv->valuetype = TYPE_BOOL;
+        nv->value = true;
+
+        _prepare_for_probe();
+        cm.probe_state[0] = PROBE_SUCCEEDED;
+        _store_probe_position();
+    }
+    return (STAT_OK);
+}
+
+
+/**** HELPERS ***************************************************************************
+ * _prepare_for_probe() - rotate the stored probes in preperation for storing a new probe
+ * _store_probe_position() - store the position as a finalized probe
+ */
+
+void _prepare_for_probe() {
+    // if the previous probe succeeded, roll probes to the next position
+    if (cm.probe_state[0] == PROBE_SUCCEEDED) {
+        for (uint8_t n = PROBES_STORED - 1; n > 0; n--) {
+            cm.probe_state[n] = cm.probe_state[n - 1];
+            for (uint8_t axis = 0; axis < AXES; axis++) {
+                cm.probe_results[n][axis] = cm.probe_results[n - 1][axis];
+            }
+        }
+    }
+}
+
+void _store_probe_position() {
+    for (uint8_t axis = 0; axis < AXES; axis++) {
+        cm.probe_results[0][axis] = cm_get_absolute_position(ACTIVE_MODEL, axis);
+    }
+}
+
 // helper
 static void _motion_end_callback(float* vect, bool* flag)
 {
@@ -159,15 +203,8 @@ uint8_t cm_straight_probe(float target[], bool flags[], bool trip_sense, bool al
     copy_vector(pb.target, cm.gm.target);   // cm_set_model_target() sets target in gm, move it to pb
     copy_vector(pb.flags, flags);           // set axes involved in the move
 
-    // if the previous probe succeeded, roll probes to the next position
-    if (cm.probe_state[0] == PROBE_SUCCEEDED) {
-        for (uint8_t n = PROBES_STORED - 1; n > 0; n--) {
-            cm.probe_state[n] = cm.probe_state[n - 1];
-            for (uint8_t axis = 0; axis < AXES; axis++) { 
-                cm.probe_results[n][axis] = cm.probe_results[n - 1][axis]; 
-            }
-        }
-    }
+     _prepare_for_probe();
+
     // clear the old probe results
     clear_vector(cm.probe_results[0]);      // NOTE: relying on cm.probe_results will not detect a probe to 0,0,0.
 
@@ -321,11 +358,8 @@ static stat_t _probing_finish()
 {
     _probe_restore_settings();          // cleanup first
 
-    // set absolute position in probe results vector
-    for (uint8_t axis = 0; axis < AXES; axis++) {
-        cm.probe_results[0][axis] = cm_get_absolute_position(ACTIVE_MODEL, axis);
-    }
-   
+    _store_probe_position();
+
     // handle failed probes - successful probes already set the flag
     if (cm.probe_state[0] == PROBE_FAILED) {
         if (pb.alarm_flag) {
