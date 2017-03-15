@@ -2,8 +2,8 @@
  * config_app.cpp - application-specific part of configuration data
  * This file is part of the g2core project
  *
- * Copyright (c) 2013 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2016 Robert Giseburt
+ * Copyright (c) 2013 - 2017 Alden S. Hart, Jr.
+ * Copyright (c) 2016 - 2017 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -113,9 +113,7 @@ const cfgItem_t cfgArray[] = {
 
     // dynamic model attributes for reporting purposes (up front for speed)
     { "",   "stat",_f0, 0, cm_print_stat, cm_get_stat, set_ro, (float *)&cs.null, 0 },      // combined machine state
-//    { "",   "n",   _fi, 0, cm_print_line, cm_get_mline,set_ro, (float *)&cm.gm.linenum,0 }, // Model line number
-//    { "",   "line",_fi, 0, cm_print_line, cm_get_line, set_ro, (float *)&cm.gm.linenum,0 }, // Active line number - model or runtime line number
-    { "",   "n",   _fi, 0, cm_print_line, cm_get_mline,set_ro, (float *)&cs.null, 0 },      // Model line number
+    { "",   "n",   _fi, 0, cm_print_line, cm_get_mline,set_noop,(float *)&cs.null, 0 },     // Model line number
     { "",   "line",_fi, 0, cm_print_line, cm_get_line, set_ro, (float *)&cs.null, 0 },      // Active line number - model or runtime line number
     { "",   "vel", _f0, 2, cm_print_vel,  cm_get_vel,  set_ro, (float *)&cs.null, 0 },      // current velocity
     { "",   "feed",_f0, 2, cm_print_feed, cm_get_feed, set_ro, (float *)&cs.null, 0 },      // feed rate
@@ -167,14 +165,15 @@ const cfgItem_t cfgArray[] = {
     { "hom","homb",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_B], false },  // B homed
     { "hom","homc",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_C], false },  // C homed
 
-    { "prb","prbe",_f0, 0, tx_print_nul, get_ui8, set_ro, (float *)&cm.probe_state[0], 0 },    // probing state
+    { "prb","prbe",_f0, 0, tx_print_nul, get_ui8, set_ro, (float *)&cm.probe_state[0], 0 },     // probing state
     { "prb","prbx",_f0, 3, tx_print_nul, get_flt, set_ro, (float *)&cm.probe_results[0][AXIS_X], 0 },
     { "prb","prby",_f0, 3, tx_print_nul, get_flt, set_ro, (float *)&cm.probe_results[0][AXIS_Y], 0 },
     { "prb","prbz",_f0, 3, tx_print_nul, get_flt, set_ro, (float *)&cm.probe_results[0][AXIS_Z], 0 },
     { "prb","prba",_f0, 3, tx_print_nul, get_flt, set_ro, (float *)&cm.probe_results[0][AXIS_A], 0 },
     { "prb","prbb",_f0, 3, tx_print_nul, get_flt, set_ro, (float *)&cm.probe_results[0][AXIS_B], 0 },
     { "prb","prbc",_f0, 3, tx_print_nul, get_flt, set_ro, (float *)&cm.probe_results[0][AXIS_C], 0 },
-    { "prb","prbs",_f0, 0, tx_print_nul, get_nul, cm_set_probe, (float *)&cs.null, 0 },    // store probe
+    { "prb","prbs",_f0, 0, tx_print_nul, get_nul, cm_set_probe, (float *)&cs.null,               0 },    // store probe
+    { "prb","prbr",_f0, 0, tx_print_nul, cm_get_prbr, cm_get_prbr, nullptr,                      0 },    // enable probe report. Init in cm_init
 
     { "jog","jogx",_f0, 0, tx_print_nul, get_nul, cm_run_jogx, (float *)&cm.jogging_dest, 0},
     { "jog","jogy",_f0, 0, tx_print_nul, get_nul, cm_run_jogy, (float *)&cm.jogging_dest, 0},
@@ -203,7 +202,7 @@ const cfgItem_t cfgArray[] = {
     { "1","1sa",_fip, 3, st_print_sa, get_flt, st_set_sa,  (float *)&st_cfg.mot[MOTOR_1].step_angle,     M1_STEP_ANGLE },
     { "1","1tr",_fipc,4, st_print_tr, get_flt, st_set_tr,  (float *)&st_cfg.mot[MOTOR_1].travel_rev,     M1_TRAVEL_PER_REV },
     { "1","1mi",_fip, 0, st_print_mi, get_ui8, st_set_mi,  (float *)&st_cfg.mot[MOTOR_1].microsteps,     M1_MICROSTEPS },
-    { "1","1su",_fipi,5, st_print_su, st_get_su,st_set_su, (float *)&st_cfg.mot[MOTOR_1].steps_per_unit,	M1_STEPS_PER_UNIT },
+    { "1","1su",_fipi,5, st_print_su, st_get_su,st_set_su, (float *)&st_cfg.mot[MOTOR_1].steps_per_unit, M1_STEPS_PER_UNIT },
     { "1","1po",_fip, 0, st_print_po, get_ui8, set_01,     (float *)&st_cfg.mot[MOTOR_1].polarity,       M1_POLARITY },
     { "1","1pm",_fip, 0, st_print_pm, st_get_pm,st_set_pm, (float *)&cs.null,                            M1_POWER_MODE },
     { "1","1pl",_fip, 3, st_print_pl, get_flt, st_set_pl,  (float *)&st_cfg.mot[MOTOR_1].power_level,    M1_POWER_LEVEL },
@@ -214,7 +213,7 @@ const cfgItem_t cfgArray[] = {
     { "2","2sa",_fip, 3, st_print_sa, get_flt, st_set_sa,  (float *)&st_cfg.mot[MOTOR_2].step_angle,     M2_STEP_ANGLE },
     { "2","2tr",_fipc,4, st_print_tr, get_flt, st_set_tr,  (float *)&st_cfg.mot[MOTOR_2].travel_rev,     M2_TRAVEL_PER_REV },
     { "2","2mi",_fip, 0, st_print_mi, get_ui8, st_set_mi,  (float *)&st_cfg.mot[MOTOR_2].microsteps,     M2_MICROSTEPS },
-    { "2","2su",_fipi,5, st_print_su, st_get_su,st_set_su, (float *)&st_cfg.mot[MOTOR_2].steps_per_unit,	M2_STEPS_PER_UNIT },
+    { "2","2su",_fipi,5, st_print_su, st_get_su,st_set_su, (float *)&st_cfg.mot[MOTOR_2].steps_per_unit, M2_STEPS_PER_UNIT },
     { "2","2po",_fip, 0, st_print_po, get_ui8, set_01,     (float *)&st_cfg.mot[MOTOR_2].polarity,       M2_POLARITY },
     { "2","2pm",_fip, 0, st_print_pm, st_get_pm,st_set_pm, (float *)&cs.null,                            M2_POWER_MODE },
     { "2","2pl",_fip, 3, st_print_pl, get_flt, st_set_pl,  (float *)&st_cfg.mot[MOTOR_2].power_level,    M2_POWER_LEVEL},
@@ -226,7 +225,7 @@ const cfgItem_t cfgArray[] = {
     { "3","3sa",_fip, 3, st_print_sa, get_flt, st_set_sa,  (float *)&st_cfg.mot[MOTOR_3].step_angle,     M3_STEP_ANGLE },
     { "3","3tr",_fipc,4, st_print_tr, get_flt, st_set_tr,  (float *)&st_cfg.mot[MOTOR_3].travel_rev,     M3_TRAVEL_PER_REV },
     { "3","3mi",_fip, 0, st_print_mi, get_ui8, st_set_mi,  (float *)&st_cfg.mot[MOTOR_3].microsteps,     M3_MICROSTEPS },
-    { "3","3su",_fipi,5, st_print_su, st_get_su,st_set_su, (float *)&st_cfg.mot[MOTOR_3].steps_per_unit,	M3_STEPS_PER_UNIT },
+    { "3","3su",_fipi,5, st_print_su, st_get_su,st_set_su, (float *)&st_cfg.mot[MOTOR_3].steps_per_unit, M3_STEPS_PER_UNIT },
     { "3","3po",_fip, 0, st_print_po, get_ui8, set_01,     (float *)&st_cfg.mot[MOTOR_3].polarity,       M3_POLARITY },
     { "3","3pm",_fip, 0, st_print_pm, st_get_pm,st_set_pm, (float *)&cs.null,                            M3_POWER_MODE },
     { "3","3pl",_fip, 3, st_print_pl, get_flt, st_set_pl,  (float *)&st_cfg.mot[MOTOR_3].power_level,    M3_POWER_LEVEL },
@@ -238,7 +237,7 @@ const cfgItem_t cfgArray[] = {
     { "4","4sa",_fip, 3, st_print_sa, get_flt, st_set_sa,  (float *)&st_cfg.mot[MOTOR_4].step_angle,     M4_STEP_ANGLE },
     { "4","4tr",_fipc,4, st_print_tr, get_flt, st_set_tr,  (float *)&st_cfg.mot[MOTOR_4].travel_rev,     M4_TRAVEL_PER_REV },
     { "4","4mi",_fip, 0, st_print_mi, get_ui8, st_set_mi,  (float *)&st_cfg.mot[MOTOR_4].microsteps,     M4_MICROSTEPS },
-    { "4","4su",_fipi,5, st_print_su, st_get_su,st_set_su, (float *)&st_cfg.mot[MOTOR_4].steps_per_unit,	M4_STEPS_PER_UNIT },
+    { "4","4su",_fipi,5, st_print_su, st_get_su,st_set_su, (float *)&st_cfg.mot[MOTOR_4].steps_per_unit, M4_STEPS_PER_UNIT },
     { "4","4po",_fip, 0, st_print_po, get_ui8, set_01,     (float *)&st_cfg.mot[MOTOR_4].polarity,       M4_POLARITY },
     { "4","4pm",_fip, 0, st_print_pm, st_get_pm,st_set_pm, (float *)&cs.null,                            M4_POWER_MODE },
     { "4","4pl",_fip, 3, st_print_pl, get_flt, st_set_pl,  (float *)&st_cfg.mot[MOTOR_4].power_level,    M4_POWER_LEVEL },
@@ -250,7 +249,7 @@ const cfgItem_t cfgArray[] = {
     { "5","5sa",_fip, 3, st_print_sa, get_flt, st_set_sa,  (float *)&st_cfg.mot[MOTOR_5].step_angle,     M5_STEP_ANGLE },
     { "5","5tr",_fipc,4, st_print_tr, get_flt, st_set_tr,  (float *)&st_cfg.mot[MOTOR_5].travel_rev,     M5_TRAVEL_PER_REV },
     { "5","5mi",_fip, 0, st_print_mi, get_ui8, st_set_mi,  (float *)&st_cfg.mot[MOTOR_5].microsteps,     M5_MICROSTEPS },
-    { "5","5su",_fipi,5, st_print_su, st_get_su,st_set_su, (float *)&st_cfg.mot[MOTOR_5].steps_per_unit,	M5_STEPS_PER_UNIT },
+    { "5","5su",_fipi,5, st_print_su, st_get_su,st_set_su, (float *)&st_cfg.mot[MOTOR_5].steps_per_unit, M5_STEPS_PER_UNIT },
     { "5","5po",_fip, 0, st_print_po, get_ui8, set_01,     (float *)&st_cfg.mot[MOTOR_5].polarity,       M5_POLARITY },
     { "5","5pm",_fip, 0, st_print_pm, st_get_pm,st_set_pm, (float *)&cs.null,                            M5_POWER_MODE },
     { "5","5pl",_fip, 3, st_print_pl, get_flt, st_set_pl,  (float *)&st_cfg.mot[MOTOR_5].power_level,    M5_POWER_LEVEL },
@@ -262,7 +261,7 @@ const cfgItem_t cfgArray[] = {
     { "6","6sa",_fip, 3, st_print_sa, get_flt, st_set_sa,  (float *)&st_cfg.mot[MOTOR_6].step_angle,     M6_STEP_ANGLE },
     { "6","6tr",_fipc,4, st_print_tr, get_flt, st_set_tr,  (float *)&st_cfg.mot[MOTOR_6].travel_rev,     M6_TRAVEL_PER_REV },
     { "6","6mi",_fip, 0, st_print_mi, get_ui8, st_set_mi,  (float *)&st_cfg.mot[MOTOR_6].microsteps,     M6_MICROSTEPS },
-    { "6","6su",_fipi,5, st_print_su, st_get_su,st_set_su, (float *)&st_cfg.mot[MOTOR_6].steps_per_unit,	M6_STEPS_PER_UNIT },
+    { "6","6su",_fipi,5, st_print_su, st_get_su,st_set_su, (float *)&st_cfg.mot[MOTOR_6].steps_per_unit, M6_STEPS_PER_UNIT },
     { "6","6po",_fip, 0, st_print_po, get_ui8, set_01,     (float *)&st_cfg.mot[MOTOR_6].polarity,       M6_POLARITY },
     { "6","6pm",_fip, 0, st_print_pm, st_get_pm,st_set_pm, (float *)&cs.null,                            M6_POWER_MODE },
     { "6","6pl",_fip, 3, st_print_pl, get_flt, st_set_pl,  (float *)&st_cfg.mot[MOTOR_6].power_level,    M6_POWER_LEVEL },
@@ -603,20 +602,13 @@ const cfgItem_t cfgArray[] = {
     { "g30","g30c",_fi,  3, cm_print_cpos, get_flt, set_ro, (float *)&cm.gmx.g30_position[AXIS_C], 0 },
 
     // Default values for current tool length offsets (not configurable, set to zero)
-    { "tl","tlx",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tl_offset[AXIS_X], 0 },
-    { "tl","tly",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tl_offset[AXIS_Y], 0 },
-    { "tl","tlz",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tl_offset[AXIS_Z], 0 },
-    { "tl","tla",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tl_offset[AXIS_A], 0 },
-    { "tl","tlb",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tl_offset[AXIS_B], 0 },
-    { "tl","tlc",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tl_offset[AXIS_C], 0 },
-/*
-    { "tl","tlx",_fipc, 3, cm_print_cofs, cm_get_tof, set_flu,(float *)&cm.tl_offset[AXIS_X], 0 },
-    { "tl","tly",_fipc, 3, cm_print_cofs, cm_get_tof, set_flu,(float *)&cm.tl_offset[AXIS_Y], 0 },
-    { "tl","tlz",_fipc, 3, cm_print_cofs, cm_get_tof, set_flu,(float *)&cm.tl_offset[AXIS_Z], 0 },
-    { "tl","tla",_fip,  3, cm_print_cofs, cm_get_tof, set_flt,(float *)&cm.tl_offset[AXIS_A], 0 },
-    { "tl","tlb",_fip,  3, cm_print_cofs, cm_get_tof, set_flt,(float *)&cm.tl_offset[AXIS_B], 0 },
-    { "tl","tlc",_fip,  3, cm_print_cofs, cm_get_tof, set_flt,(float *)&cm.tl_offset[AXIS_C], 0 },
-*/
+    { "tof","tofx",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tl_offset[AXIS_X], 0 },
+    { "tof","tofy",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tl_offset[AXIS_Y], 0 },
+    { "tof","tofz",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tl_offset[AXIS_Z], 0 },
+    { "tof","tofa",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tl_offset[AXIS_A], 0 },
+    { "tof","tofb",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tl_offset[AXIS_B], 0 },
+    { "tof","tofc",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tl_offset[AXIS_C], 0 },
+
     // Tool table offsets
     { "tt1","tt1x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[1][AXIS_X], TT1_X_OFFSET },
     { "tt1","tt1y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[1][AXIS_Y], TT1_Y_OFFSET },
@@ -887,9 +879,10 @@ const cfgItem_t cfgArray[] = {
 #endif
     { "sys","ej", _fipn, 0, js_print_ej,  get_ui8, json_set_ej,(float *)&cs.comm_mode,              COMM_MODE },
     { "sys","jv", _fipn, 0, js_print_jv,  get_ui8, json_set_jv,(float *)&js.json_verbosity,         JSON_VERBOSITY },
-    { "sys","qv", _fipn, 0, qr_print_qv,  get_ui8, set_012,    (float *)&qr.queue_report_verbosity, QUEUE_REPORT_VERBOSITY },
-    { "sys","sv", _fipn, 0, sr_print_sv,  get_ui8, set_012,    (float *)&sr.status_report_verbosity,STATUS_REPORT_VERBOSITY },
+    { "sys","qv", _fipn, 0, qr_print_qv,  get_ui8, set_012,    (float *)&qr.queue_report_verbosity,  QR_OFF}, // default to OFF, set to QUEUE_REPORT_VERBOSITY after connected
+    { "sys","sv", _fipn, 0, sr_print_sv,  get_ui8, set_012,    (float *)&sr.status_report_verbosity, SR_OFF}, // default to OFF, set to STATUS_REPORT_VERBOSITY after connectied
     { "sys","si", _fipn, 0, sr_print_si,  get_int, sr_set_si,  (float *)&sr.status_report_interval, STATUS_REPORT_INTERVAL_MS },
+    { "", "nxln", _f0,   0, cm_print_nxln,cm_get_nxln,cm_set_nxln,(float *)&cs.null,                0 },
 
     // Gcode defaults
     // NOTE: The ordering within the gcode defaults is important for token resolution. gc must follow gco
@@ -1126,7 +1119,7 @@ const cfgItem_t cfgArray[] = {
     { "","g28",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // g28 home position
     { "","g30",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // g30 home position
     // +9 = 45
-    { "","tl",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },     // tl offsets
+    { "","tof",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tool offsets
     { "","tt1",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
     { "","tt2",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
     { "","tt3",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
@@ -1136,13 +1129,13 @@ const cfgItem_t cfgArray[] = {
     { "","tt7",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
     { "","tt8",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
     { "","tt9",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
-    { "","tt10",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
-    { "","tt11",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
-    { "","tt12",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
-    { "","tt13",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
-    { "","tt14",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
-    { "","tt15",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
-    { "","tt16",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
+    { "","tt10",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // tt offsets
+    { "","tt11",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // tt offsets
+    { "","tt12",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // tt offsets
+    { "","tt13",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // tt offsets
+    { "","tt14",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // tt offsets
+    { "","tt15",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // tt offsets
+    { "","tt16",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // tt offsets
     // +17 = 62
     { "","mpo",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // machine position group
     { "","pos",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // work position group
@@ -1364,7 +1357,7 @@ static stat_t _do_group_list(nvObj_t *nv, char list[][TOKEN_LEN+1]) // helper to
         }
         _do_group(nv, list[i]);
     }
-    return (STAT_COMPLETE);
+    return (STAT_COMPLETE);         // STAT_COMPLETE suppresses the normal response line
 }
 
 static stat_t _do_motors(nvObj_t *nv)  // print parameters for all motor groups
@@ -1374,7 +1367,7 @@ static stat_t _do_motors(nvObj_t *nv)  // print parameters for all motor groups
         sprintf(group, "%d", i);
         _do_group(nv, group);
     }
-    return (STAT_COMPLETE);
+    return (STAT_COMPLETE);         // STAT_COMPLETE suppresses the normal response line
 }
 
 static stat_t _do_axes(nvObj_t *nv)  // print parameters for all axis groups
@@ -1396,7 +1389,7 @@ static stat_t _do_inputs(nvObj_t *nv)  // print parameters for all input groups
         sprintf(group, "di%d", i);
         _do_group(nv, group);
     }
-    return (STAT_COMPLETE);
+    return (STAT_COMPLETE);         // STAT_COMPLETE suppresses the normal response line
 }
 
 static stat_t _do_outputs(nvObj_t *nv)  // print parameters for all output groups
@@ -1406,7 +1399,7 @@ static stat_t _do_outputs(nvObj_t *nv)  // print parameters for all output group
         sprintf(group, "do%d", i);
         _do_group(nv, group);
     }
-    return (STAT_COMPLETE);
+    return (STAT_COMPLETE);         // STAT_COMPLETE suppresses the normal response line
 }
 
 static stat_t _do_heaters(nvObj_t *nv)  // print parameters for all heater groups
@@ -1416,7 +1409,7 @@ static stat_t _do_heaters(nvObj_t *nv)  // print parameters for all heater group
         sprintf(group, "he%d", i);
         _do_group(nv, group);
     }
-    return (STAT_COMPLETE);
+    return (STAT_COMPLETE);         // STAT_COMPLETE suppresses the normal response line
 }
 
 static stat_t _do_all(nvObj_t *nv)  // print all parameters

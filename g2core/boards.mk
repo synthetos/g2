@@ -39,7 +39,8 @@ ifeq ("$(CONFIG)","Othermill")
     ifeq ("$(BOARD)","NONE")
         BOARD=g2v9k
     endif
-    SETTINGS_FILE="settings_othermill.h"
+#    SETTINGS_FILE="settings_othermill.h"
+    SETTINGS_FILE="settings_othermill_test.h"
 endif
 
 ifeq ("$(CONFIG)","ProbotixV90")

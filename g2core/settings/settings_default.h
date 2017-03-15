@@ -2,7 +2,7 @@
  * settings_default.h - default machine profile - Set for Shapeoko2
  * This file is part of the g2core project
  *
- * Copyright (c) 2012 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2012 - 2017 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -114,6 +114,10 @@
 #define COOLANT_PAUSE_ON_HOLD       true    // {coph:
 #endif
 
+#ifndef PROBE_REPORT_ENABLE 
+#define PROBE_REPORT_ENABLE         true    // {prbr: 
+#endif
+
 /* 
  * The following is to fix an issue where feedrate override was being defined in some users
  * settings files but not others. This would otherwise cause an undefined compile error.
@@ -169,6 +173,11 @@
 #define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","admo","frmo","momo","stat"
 // Alternate SRs that report in drawable units
 //#define STATUS_REPORT_DEFAULTS "line","vel","mpox","mpoy","mpoz","mpoa","coor","ofsa","ofsx","ofsy","ofsz","dist","unit","stat","homz","homy","homx","momo"
+#endif
+
+
+#ifndef MARLIN_COMPAT_ENABLED
+#define MARLIN_COMPAT_ENABLED       false                   // boolean, either true or false
 #endif
 
 // *** Gcode Startup Defaults *** //
@@ -683,7 +692,7 @@
 
 // Xmin on v9 board
 #ifndef DI1_MODE
-#define DI1_MODE                    NORMALLY_OPEN
+#define DI1_MODE                    IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI1_ACTION
 #define DI1_ACTION                  INPUT_ACTION_NONE
@@ -694,7 +703,7 @@
 
 // Xmax
 #ifndef DI2_MODE
-#define DI2_MODE                    NORMALLY_OPEN
+#define DI2_MODE                    IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI2_ACTION
 #define DI2_ACTION                  INPUT_ACTION_NONE
@@ -705,7 +714,7 @@
 
 // Ymin
 #ifndef DI3_MODE
-#define DI3_MODE                    NORMALLY_OPEN
+#define DI3_MODE                    IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI3_ACTION
 #define DI3_ACTION                  INPUT_ACTION_NONE
@@ -716,7 +725,7 @@
 
 // Ymax
 #ifndef DI4_MODE
-#define DI4_MODE                    NORMALLY_OPEN
+#define DI4_MODE                    IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI4_ACTION
 #define DI4_ACTION                  INPUT_ACTION_NONE
@@ -727,18 +736,18 @@
 
 // Zmin
 #ifndef DI5_MODE
-#define DI5_MODE                    NORMALLY_OPEN
+#define DI5_MODE                    IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI5_ACTION
 #define DI5_ACTION                  INPUT_ACTION_NONE
 #endif
 #ifndef DI5_FUNCTION
-#define DI5_FUNCTION                INPUT_FUNCTION_NONE
+#define DI5_FUNCTION                INPUT_FUNCTION_PROBE
 #endif
 
 // Zmax
 #ifndef DI6_MODE
-#define DI6_MODE                    NORMALLY_OPEN
+#define DI6_MODE                    IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI6_ACTION
 #define DI6_ACTION                  INPUT_ACTION_NONE
@@ -749,7 +758,7 @@
 
 // Amin
 #ifndef DI7_MODE
-#define DI7_MODE                    NORMALLY_OPEN
+#define DI7_MODE                    IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI7_ACTION
 #define DI7_ACTION                  INPUT_ACTION_NONE
@@ -760,7 +769,7 @@
 
 // Amax
 #ifndef DI8_MODE
-#define DI8_MODE                    NORMALLY_OPEN
+#define DI8_MODE                    IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI8_ACTION
 #define DI8_ACTION                  INPUT_ACTION_NONE
@@ -771,7 +780,7 @@
 
 // Safety line
 #ifndef DI9_MODE
-#define DI9_MODE                    NORMALLY_CLOSED     // Normally closed
+#define DI9_MODE                    IO_ACTIVE_HIGH     // Normally closed
 #endif
 #ifndef DI9_ACTION
 #define DI9_ACTION                  INPUT_ACTION_NONE

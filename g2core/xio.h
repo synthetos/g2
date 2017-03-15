@@ -49,7 +49,9 @@
 #define XIO_H_ONCE
 
 //#include "g2core.h"                // not required if used in g2core project
-#include "config.h"                 // required for nvObj typedef
+#include "config.h"             // required for nvObj typedef
+#include "canonical_machine.h"  // needed for cm_has_hold()
+#include "settings.h"           // needed for MARLIN_COMPAT_ENABLED
 
 /**** Defines, Macros, and  Assorted Parameters ****/
 
@@ -58,8 +60,6 @@
 
 #undef  _FDEV_EOF
 #define _FDEV_EOF -2
-
-#define USB_LINE_BUFFER_SIZE    255         // text buffer size
 
 //*** Device flags ***
 typedef uint16_t devflags_t;                // might need to bump to 32 be 16 or 32
@@ -97,6 +97,7 @@ enum xioDeviceEnum {                        // reconfigure this enum as you add 
     DEV_USB1,                               // must be 1
     DEV_UART1,                              // must be 2
 //  DEV_SPI0,                               // We can't have it here until we actually define it
+    DEV_FLASH_FILE,                         // must be 0
     DEV_MAX
 };
 
@@ -106,9 +107,9 @@ enum xioSPIMode {
 };
 
 
-/**** readline stuff -- TODO *****/
+/**** readline stuff *****/
 
-#define RX_BUFFER_MIN_SIZE       256        // minimum requested buffer size (they are usually larger)
+#define RX_BUFFER_SIZE       512            // maximum length of recieved lines from xio_readline
 
 /**** function prototypes ****/
 
@@ -119,6 +120,10 @@ size_t xio_write(const char *buffer, size_t size, bool only_to_muted = false);
 char *xio_readline(devflags_t &flags, uint16_t &size);
 int16_t xio_writeline(const char *buffer, bool only_to_muted = false);
 bool xio_connected();
+void xio_flush_to_command();
+#if MARLIN_COMPAT_ENABLED == true
+void xio_exit_fake_bootloader();
+#endif
 
 stat_t xio_set_spi(nvObj_t *nv);
 
@@ -159,6 +164,71 @@ extern "C" {
 #define CHAR_CYCLE_START (char)'~'
 #define CHAR_QUEUE_FLUSH (char)'%'
 //#define CHAR_BOOTLOADER ESC
+
+
+/**** xio_flash_file - object to hold in-flash (compiled-in) "files" to run ****/
+
+struct xio_flash_file {
+    const char * const _data;
+    const int32_t _length;
+
+    int32_t _read_offset = 0;
+
+    xio_flash_file(const char * const data, int32_t length) : _data{data}, _length{length} {};
+
+    void reset() {
+        _read_offset = 0;
+    };
+
+    const char *readline(bool control_only, uint16_t &line_size) {
+        line_size = 0;
+        if (_read_offset == _length) { return nullptr; }
+
+        if (control_only) {
+            char c = _data[_read_offset];
+            if (!
+                ((c == '!')         ||
+                 (c == '~')         ||
+                 (c == ENQ)         ||        // request ENQ/ack
+                 (c == CHAR_RESET)  ||        // ^X - reset (aka cancel, terminate)
+                 (c == CHAR_ALARM)  ||        // ^D - request job kill (end of transmission)
+                 (c == '%' && cm_has_hold())  // flush (only in feedhold or part of control header)
+                ))
+            {
+                return nullptr;
+            }
+        }
+
+        const char *line_start = _data + _read_offset;
+
+        while (_read_offset < _length) {
+            char c = _data[_read_offset++];
+
+            if (c == '\n') {
+                break;
+            }
+
+            line_size++;
+        }
+
+        return line_start;
+    };
+
+    bool isDone() {
+        return _read_offset == _length;
+    }
+};
+
+/**** convenience function to construct a xio_flash_file ****/
+
+template <int32_t length>
+constexpr xio_flash_file make_xio_flash_file(const char (&data)[length]) {
+    return {data, length};
+}
+
+/**** function prototype for file-sending ****/
+
+bool xio_send_file(xio_flash_file &file);
 
 #ifdef __TEXT_MODE
 

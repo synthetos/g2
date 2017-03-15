@@ -28,9 +28,10 @@
 #ifndef CONTROLLER_H_ONCE
 #define CONTROLLER_H_ONCE
 
+#include "xio.h"
+
 // see also: g2core.h MESSAGE_LEN and config.h NV_ lengths
-#define SAVED_BUFFER_LEN 80             // saved buffer size (for reporting only)
-#define MAXED_BUFFER_LEN 255            // same as streaming RX buffer size as a worst case
+#define SAVED_BUFFER_LEN RX_BUFFER_SIZE // saved buffer size (for reporting only)
 #define OUTPUT_BUFFER_LEN 512           // text buffer size
 
 #define LED_NORMAL_BLINK_RATE 3000      // blink rate for normal operation (in ms)
@@ -63,10 +64,12 @@ typedef struct controllerSingleton {    // main TG controller struct
     uint32_t led_blink_rate;            // used to flash indicator LED
 
     // communications state variables
-    // cs.comm_mode is the setting for the communications more
+    // cs.comm_mode is the setting for the communications mode
     // js.json_mode is the actual current mode (see also js.json_now)
     commMode comm_mode;                 // ej: 0=text mode sticky, 1=JSON mode sticky, 2=auto mode
     commMode comm_request_mode;         // mode of request (may be different thatn the setting)
+
+    bool responses_suppressed;          // if true, responses are to be suppressed (for internal-file delivery)
     
     // controller serial buffers
     char *bufp;                         // pointer to primary or secondary in buffer

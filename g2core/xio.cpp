@@ -33,7 +33,6 @@
 #include "g2core.h"
 #include "config.h"
 #include "hardware.h"
-#include "canonical_machine.h"  // needs cm_has_hold()
 #include "xio.h"
 #include "report.h"
 #include "controller.h"
@@ -51,6 +50,8 @@ using Motate::TXBuffer;
 #ifdef __TEXT_MODE
 #include "text_parser.h"
 #endif
+
+// defines for assertions
 
 /**** HIGH LEVEL EXPLANATION OF XIO ****
  *
@@ -104,14 +105,6 @@ struct xioDeviceWrapperBase {                // C++ base class for device primit
     uint8_t caps;                            // bitfield for capabilities flags (these are persistent)
     devflags_t flags;                        // bitfield for device state flags (these are not)
     devflags_t next_flags;                   // bitfield for next-state transitions
-
-    // line reader functions
-//    uint16_t read_index;                    // index into line being read
-//    const uint16_t read_buf_size;           // static variable set at init time
-//    char read_buf[USB_LINE_BUFFER_SIZE];    // buffer for reading lines
-
-    // Internal use only:
-//    bool _ready_to_send;
 
     // Checks against class flags variable:
 //  bool canRead() { return caps & DEV_CAN_READ; }
@@ -172,9 +165,14 @@ struct xioDeviceWrapperBase {                // C++ base class for device primit
     virtual int16_t readchar() { return -1; };
     virtual void flush() {};
     virtual void flushRead() {};       // This should call _flushLine() before flushing the device.
+    virtual bool flushToCommand() { return false; };
     virtual int16_t write(const char *buffer, int16_t len) { return -1; };
 
     virtual char *readline(devflags_t limit_flags, uint16_t &size) { return nullptr; };
+
+#if MARLIN_COMPAT_ENABLED == true
+    virtual void exitFakeBootloaderMode() {};
+#endif
 };
 
 // Here we create the xio_t class, which has convenience methods to handle cross-device actions as a whole.
@@ -200,7 +198,7 @@ struct xio_t {
         return false;
     };
 
-    bool others_connected(xioDeviceWrapperBase* except) {
+    bool othersConnected(xioDeviceWrapperBase* except) {
         for (int8_t i = 0; i < _dev_count; ++i) {
             if((DeviceWrappers[i] != except) && (!DeviceWrappers[i]->isAlwaysDataAndCtrl()) && DeviceWrappers[i]->isConnected()) {
                 return true;
@@ -209,7 +207,7 @@ struct xio_t {
         return false;
     };
 
-    void remove_data_from_primary() {
+    void removeDataFromPrimary() {
         // Why is this first pass here? -RG
         for (int8_t i = 0; i < _dev_count; ++i) {
             if (DeviceWrappers[i]->isDataAndActive()) {
@@ -224,7 +222,7 @@ struct xio_t {
         }
     };
 
-    bool check_muted_secondary_channels() {
+    bool checkMutedSecondaryChannels() {
         bool muted_something = false;
         for (int8_t i = 0; i < _dev_count; ++i) {
             if (DeviceWrappers[i]->isMuteAsSecondary()) {
@@ -235,7 +233,7 @@ struct xio_t {
         return muted_something;
     }
 
-    bool deactivate_and_unmute_channels() {
+    bool deactivateAndUnmuteChannels() {
         bool unmuted_something = false;
         for(int8_t i = 0; i < _dev_count; ++i) {
             if (DeviceWrappers[i]->isMuted()) {
@@ -317,6 +315,19 @@ struct xio_t {
     }
 
     /*
+     * flushToCommand() - flush all readable devices' read buffers up to the last returned command
+     *
+     * Note that only one device will flush.
+     *
+     */
+    void flushToCommand()
+    {
+        for (int8_t i = 0; i < _dev_count; ++i) {
+            DeviceWrappers[i]->flushToCommand();
+        }
+    }
+
+    /*
      * readline() - read a complete line from a device
      *
      *    Reads a line of text from the next active device that has one ready. With some exceptions.
@@ -346,18 +357,18 @@ struct xio_t {
 
         // Always check control-capable devices FIRST
         for (uint8_t dev=0; dev < _dev_count; dev++) {
-            if (!DeviceWrappers[dev]->isActive())
+            if (!DeviceWrappers[dev]->isActive()) {
                 continue;
-
+            }
+                        
             // If this channel is a DATA only, skip it this pass
-            if (!DeviceWrappers[dev]->isCtrl())
+            if (!DeviceWrappers[dev]->isCtrl()) {
                 continue;
-
+            }            
             ret_buffer = DeviceWrappers[dev]->readline(DEV_IS_CTRL, size);
 
             if (size > 0) {
                 flags = DeviceWrappers[dev]->flags;
-
                 return ret_buffer;
             }
         }
@@ -372,17 +383,23 @@ struct xio_t {
 
                 if (size > 0) {
                     flags = DeviceWrappers[dev]->flags;
-
                     return ret_buffer;
                 }
             }
         }
-
         size = 0;
         flags = 0;
 
         return (NULL);
     };
+
+#if MARLIN_COMPAT_ENABLED == true
+    void exitFakeBootloaderMode() {
+        for (int8_t i = 0; i < _dev_count; ++i) {
+            DeviceWrappers[i]->exitFakeBootloaderMode();
+        }
+    };
+#endif
 
     uint16_t magic_end;
 };
@@ -399,7 +416,7 @@ extern xio_t xio;
 
 // LineRXBuffer takes the Motate RXBuffer (which handles "transfers", usually DMA), and adds G2 line-reading
 // semantics to it.
-template <uint16_t _size, typename owner_type, uint8_t _header_count = 8, uint16_t _line_buffer_size = 255>
+template <uint16_t _size, typename owner_type, uint8_t _header_count = 8, uint16_t _line_buffer_size = RX_BUFFER_SIZE>
 struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
     typedef RXBuffer<_size, owner_type, char> parent_type;
 
@@ -417,7 +434,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
     // START OF LineRXBuffer PROPER
     static_assert(((_header_count-1)&_header_count)==0, "_header_count must be 2^N");
 
-    char _line_buffer[_line_buffer_size]; // hold exactly one line to return
+    char _line_buffer[_line_buffer_size+1]; // hold exactly one line to return
     uint32_t _line_end_guard = 0xBEEF;
 
     // General term usage:
@@ -425,12 +442,42 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
     // * "offset" means it's a character in the _data array
 
     uint16_t _scan_offset;          // offset into data of the last character scanned
-    uint16_t _line_start_offset;    // offset into first character of the line
+    uint16_t _line_start_offset;    // offset into first character of the line, or the first char to ignore (too-long lines)
+    uint16_t _last_line_length;     // used for ensuring lines aren't too long
+    bool     _ignore_until_next_line; // if we get a too-long-line, we ignore the rest by setting this flag
     bool     _at_start_of_line;     // true if the last character scanned was the end of a line
 
     uint16_t _lines_found;          // count of complete non-control lines that were found during scanning.
 
     volatile uint16_t _last_scan_offset;  // DEBUGGING
+
+    bool _last_returned_a_control = false;
+
+#if MARLIN_COMPAT_ENABLED == true
+    enum class STK500V2_State {
+        Done,      // not in the faked stk500v2 bootloader
+        Timeout,   // timeout period, waiting for a start character
+        Start,     // waiting for 0x1B
+        Sequence,  // waiting for sequence byte
+        Length_0,  // waiting for MSB of length
+        Length_1,  // waiting for LSB of length
+        Header_End,// waiting for 0x0E
+        Data,      // waiting for more data
+        Checksum   // waiting for checksum byte
+    };
+    STK500V2_State _stk_parser_state;
+    uint16_t _stk_packet_data_length;
+    Motate::Timeout _stk_timeout;
+
+    void startFakeBootloaderMode() {
+        _stk_parser_state = STK500V2_State::Timeout;
+        _stk_timeout.set(2000); // two seconds
+    }
+
+    void exitFakeBootloaderMode() {
+        _stk_parser_state = STK500V2_State::Done;
+    }
+#endif
 
     LineRXBuffer(owner_type owner) : parent_type{owner} {};
 
@@ -452,15 +499,15 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
         uint8_t read_section_idx; // index of the first skip section to skip
         uint8_t write_section_idx; // index of the next skip section to populate
 
-        bool is_full() {
+        bool isFull() {
             return ((write_section_idx+1)&(_section_count-1)) == read_section_idx;
         };
-        bool is_empty() {
+        bool isEmpty() {
             return (write_section_idx == read_section_idx);
         };
 
-        void add_skip(uint16_t start_offset, uint16_t end_offset) {
-            if (!is_empty()) {
+        void addSkip(uint16_t start_offset, uint16_t end_offset) {
+            if (!isEmpty()) {
                 uint8_t last_write_section_idx = write_section_idx;
                 if (write_section_idx == 0) {
                     last_write_section_idx = _section_count-1;
@@ -478,7 +525,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             write_section_idx = ((write_section_idx+1)&(_section_count-1));
         };
 
-        void pop_skip() {
+        void popSkip() {
             _sections[read_section_idx].start_offset = 0;
             _sections[read_section_idx].end_offset = 0;
 
@@ -486,13 +533,13 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
         };
 
         bool skip(volatile uint16_t &from) {
-            if (!is_empty()) {
+            if (!isEmpty()) {
                 SkipSection &next_skip = _sections[read_section_idx];
 
                 if (next_skip.start_offset == from) {
                     from = next_skip.end_offset;
 
-                    pop_skip();
+                    popSkip();
                     return true;
                 }
             }
@@ -506,21 +553,21 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 
     SkipSections _skip_sections;
 
-    uint16_t _get_next_scan_offset() {
+    uint16_t _getNextScanOffset() {
         return ((_scan_offset + 1) & (_size-1));
     }
 
-    bool _is_more_to_scan() {
+    bool _isMoreToScan() {
         return _canBeRead(_scan_offset);
     };
 
     /*
-     * _scan_buffer()
+     * _scanBuffer()
      *
      * Make a pass through the RX DMA buffer to locate any control lines, and count lines.
      * Single character controls, like !, ~, %, and ^x are also considered control "lines"
      *
-     * _scan_buffer() is called at the beginning of readline, and is effectively the first
+     * _scanBuffer() is called at the beginning of readline, and is effectively the first
      * "phase" of readline.
      *
      * This function is designed to be able to exit from almost any point, and
@@ -528,35 +575,35 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
      * end of the buffer then exit. When the function is called next it picks up
      * where it left off - i.e. avoiding rescanning the entire buffer multiple times.
      *
-     * _scan_buffer() returns true if it finds a control line.
+     * _scanBuffer() returns true if it finds a control line.
      * The control line starts at the character at _line_start_offset and includes 
      * the characters up to _scan_offset-1. If there are multiple line-ending chars 
      * ("\r\n" for example) _scan_offset will point to the *first* one.
      *
      * With ASCII art (where "." means "invalid data" or "don't care"):
      *
-     * Example 1 of _scan_buffer() == true:
+     * Example 1 of _scanBuffer() == true:
      *   _data = "G0X10\n{jvm:5}\n{xvm:1200}\nG0Y10\nG1Z......"
      *                   ^        ^
      *                   |        |
      *   _line_start_offset       |
      *                         _scan_offset
      *
-     * Example 2 of _scan_buffer() == true:
+     * Example 2 of _scanBuffer() == true:
      *   _data = "G0X10\n.........{xvm:1200}\nG0Y10\nG1Z......"
      *                            ^           ^
      *                            |           |
      *            _line_start_offset          |
      *                                  _scan_offset
      *
-     * Example 2 of _scan_buffer() == true:
+     * Example 2 of _scanBuffer() == true:
      *   _data = "G0X10\n!......"
      *                   ^^
      *                   ||
      *  _line_start_offset|
      *                    _scan_offset
      *
-     * For _scan_buffer() == false, IGNORE _line_start_offset and _scan_offset!!!
+     * For _scanBuffer() == false, IGNORE _line_start_offset and _scan_offset!!!
      * Only use _read_offset, and use _lines_found>0 to determine if _data contains a line to return.
      * Also note that _read_offset needs to be moved once the data is copied to _line_buffer!
      */
@@ -581,36 +628,120 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
      * true, then the first non \r or \n char will set it to false, and *then* start the next line.
      */
 
-    bool _scan_buffer() {
+    bool _scanBuffer() {
         _last_scan_offset = _scan_offset;
-        while (_is_more_to_scan()) {
+        while (_isMoreToScan()) {
             bool ends_line  = false;
             bool is_control = false;
-
             char c = _data[_scan_offset];
+
+#if MARLIN_COMPAT_ENABLED == true
+            // it's possible something will try to talk stk500v2 to us.
+            // See https://github.com/synthetos/g2/wiki/Marlin-Compatibility#stk500v2
+
+            if ((_stk_parser_state == STK500V2_State::Done) && (c == 0)) {
+                _debug_trap("scan ran into NULL (Marlin-mode)");
+                flush(); // consider the connection and all data trashed
+                return false;
+            }
+
+            if (_stk_parser_state >= STK500V2_State::Timeout) {
+                if (_stk_parser_state == STK500V2_State::Timeout) {
+                    if (_stk_timeout.isPast()) {
+                        _stk_parser_state = STK500V2_State::Done;
+                        // start over, outside of stk500v2 mode
+                        continue;
+                    }
+                    // if we got something before the timeout, then we're in stk500v2 mode
+                    // we'll look at what we got and maybe exit anyway
+                    _stk_parser_state = STK500V2_State::Start;
+                }
+                if (_stk_parser_state == STK500V2_State::Start) {
+                    if (c == 0x1B) {
+                        _stk_parser_state = STK500V2_State::Sequence;
+
+                        // this is the start of this "line" and we can "read" (skip) everything up to here.
+                        _read_offset = _scan_offset;
+                        _line_start_offset = _scan_offset;
+                    }
+                    else if ((c == '{') || (c == 'N') || (c == '\n') || (c == '\r') || (c == 'G') || (c == 'M')) {
+                        _stk_parser_state = STK500V2_State::Done;           // jump out of bootloader mode
+                        _read_offset = _scan_offset;
+                        continue;
+                    }
+                } else if (_stk_parser_state == STK500V2_State::Sequence) {
+                    _stk_parser_state = STK500V2_State::Length_0;            // we ignore the sequence
+                } else if (_stk_parser_state == STK500V2_State::Length_0) {
+                    _stk_packet_data_length = c << 8;
+                    _stk_parser_state = STK500V2_State::Length_1;
+                } else if (_stk_parser_state == STK500V2_State::Length_1) {
+                    _stk_packet_data_length |= c;
+                    _stk_parser_state = STK500V2_State::Header_End;
+                } else if (_stk_parser_state == STK500V2_State::Header_End) {
+                    if (c == 0x0E) {
+                        _stk_parser_state = STK500V2_State::Data;
+                    } else {   // end-of-header marker was corrupt, start over
+                        _stk_packet_data_length = 0;
+                        _read_offset = _scan_offset;
+                        _stk_parser_state = STK500V2_State::Start;
+                    }
+                } else if (_stk_parser_state == STK500V2_State::Data) {
+                    if (--_stk_packet_data_length == 0) {                   // we don't read the data here, just return it
+                        _stk_parser_state = STK500V2_State::Checksum;
+                    }
+                } else if (_stk_parser_state == STK500V2_State::Checksum) {
+                    // We do NOT check the checksum, since if it's corrupt, we'd need to reply, and we can't reply here.
+                    // At this point, we at least have a complete packet we will use the "control" return mechanism to
+                    // handle this since controls don't have to be \r\n-terminated
+                    is_control = true;
+                    ends_line = true;
+                    _stk_parser_state = STK500V2_State::Start;              // this line is complete, reset the state engine
+                }
+            }
+            else
+#else   // not MARLIN_COMPAT_ENABLED
 
             if (c == 0) {
                 _debug_trap("scan ran into NULL");
                 flush(); // consider the connection and all data trashed
                 return false;
             }
+#endif  // MARLIN_COMPAT_ENABLED
 
             // Look for line endings
             if (c == '\r' || c == '\n') {
-                if (!_at_start_of_line) {   // We only mark ends_line for the first end-line char, and if
+                if (_ignore_until_next_line) {
+                    // we finally ended the line we were ignoring
+                    // add a skip section to jump over the overage
+                    _skip_sections.addSkip(_line_start_offset, _scan_offset);
+                    // move the start of the next skip section to after this skip
+                    _line_start_offset = _scan_offset;
+
+                    // we DON'T want to end it normally (by counting a line)
+                    _at_start_of_line = true;
+                    _ignore_until_next_line = false;
+
+                    _last_line_length = 0;
+                }
+                else if (!_at_start_of_line) {   // We only mark ends_line for the first end-line char, and if
                     ends_line  = true;      // _at_start_of_line is already true, this is not the first.
                 }
             }
+            // prevent going furnther if we are ignoring
+            else if (_ignore_until_next_line)
+            {
+                // don't do anything
+            }
             // Classify the line if it's a single character 
-            else
-            if (_at_start_of_line &&
+            else if (_at_start_of_line &&
                 ((c == '!')         ||
                  (c == '~')         ||
                  (c == ENQ)         ||        // request ENQ/ack
                  (c == CHAR_RESET)  ||        // ^X - reset (aka cancel, terminate)
                  (c == CHAR_ALARM)  ||        // ^D - request job kill (end of transmission)
                  (c == '%' && cm_has_hold())  // flush (only in feedhold or part of control header)
-                )) {
+                ))
+            {
 
                 _line_start_offset = _scan_offset;
 
@@ -622,12 +753,14 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                 if (_at_start_of_line) {
                     // This is the first character at the beginning of the line.
                     _line_start_offset = _scan_offset;
+                    _last_line_length = 0;
                 }
                 _at_start_of_line = false;
             }
 
             // bump the _scan_offset
-            _scan_offset = _get_next_scan_offset();
+            _scan_offset = _getNextScanOffset();
+            _last_line_length++;
 
             if (ends_line) {
                 // _scan_offset is now one past the end of the line,
@@ -635,7 +768,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                 _at_start_of_line = true;
 
                 // Here we classify the line.
-                // If we are is_control is already true, it's an already classified
+                // If is_control is already true, it's an already classified
                 // single-character command.
                 if (!is_control) {
                     // TODO --- Call a function to do this
@@ -643,25 +776,40 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                     if (_data[_line_start_offset] == '{') {
                         is_control = true;
                     }
-
                     // TODO ---
                 }
 
                 if (is_control) {       // we found a control
                     // Quick check for single-character with a \n after it
-                    while (_is_more_to_scan() &&
+                    while (_isMoreToScan() &&
                            ((_data[_scan_offset] == '\n') ||
                             (_data[_scan_offset] == '\r'))
                            )
                     {
-                        _scan_offset = _get_next_scan_offset();
+                        _scan_offset = _getNextScanOffset();
                     }
                     return true;
                 } else {                // we did find one more line, though.
                     _lines_found++;
                 }
             } // if ends_line
-        } //while (_is_more_to_scan())
+            else if (_last_line_length == (_line_buffer_size - 1)) {
+                // force an end-of-line, splitting this line into two lines
+                _ignore_until_next_line = true;
+                _line_start_offset = _scan_offset;
+                _lines_found++;
+            }
+        } //while (_isMoreToScan())
+
+        // special edge case: we ran out of items to scan (buffer full?), but we're ignoring because a line was too long
+        // example: we get a line that it multiple-times the length of the buffer
+        // so we'll dump skip sections to the readline will move the read pointer forward
+        if (_ignore_until_next_line && (_line_start_offset != _scan_offset)) {
+            // add a skip section to jump over the overage
+            _skip_sections.addSkip(_line_start_offset, _scan_offset);
+            // move the start of the next skip section to after this skip
+            _line_start_offset = _scan_offset;
+        }
         return false; // no control was found
     };
 
@@ -676,9 +824,11 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
     char *readline(bool control_only, uint16_t &line_size) {
         // This is tricky: if we don't have room for more skip_sections, then we
         // can't scan any more for controls. So we don't scan, amd hope some lines are read.
-        bool found_control = _skip_sections.is_full() ? false : _scan_buffer();
+        bool found_control = _skip_sections.isFull() ? false : _scanBuffer();
 
         _restartTransfer();
+
+        _last_returned_a_control = found_control;
 
         char *dst_ptr = _line_buffer;
         line_size = 0;
@@ -688,7 +838,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             // and update the _read_offset when we update _line_start_offset
             bool ctrl_is_at_beginning_of_data = (_line_start_offset == _read_offset);
             if (!ctrl_is_at_beginning_of_data) {
-                _skip_sections.add_skip(_line_start_offset, _scan_offset);
+                _skip_sections.addSkip(_line_start_offset, _scan_offset);
             }
 
             // When we get here, _line_start_offset points to either:
@@ -708,11 +858,8 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                 }
             }
 
-            while ((_scan_offset != _line_start_offset) &&
-                   (line_size < (_line_buffer_size - 2))) {
-//                if (!_canBeRead(read_offset)) { // This test should NEVER fail.
-//                    _debug_trap("readline hit unreadable and shouldn't have!");
-//                }
+            // note that if it's marked as a control, it's guaranteed to fit in the line buffer
+            while (_scan_offset != _line_start_offset) {
 
                 // copy the charater to _line_buffer
                 char c = _data[_line_start_offset];
@@ -731,38 +878,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 
             if (ctrl_is_at_beginning_of_data) {
                 _read_offset = _scan_offset;
-            } else {
-                // special case: if the return value is '%'
-                // then we actually consider everything before it to be read
-
-                if ('%' == _line_buffer[0]) {
-                    // Things that must be managed here:
-                    // * _read_offset -- we're skipping data
-                    // * _lines_found -- we shouldn't have any lines "left"
-                    // * _skip_sections -- there's nothing to skip, we just did
-
-                    // Things that won't be changed (further):
-                    // * _scan_offset -- we're not changing past where it's scanned
-                    // * _line_start_offset -- we've already adjusted it
-                    // * _at_start_of_line -- should always be true when we're here
-
-                    // move the read buffer up to where we're scanning
-                    _read_offset = _scan_offset;
-
-                    // record that we have 0 lines (of data) in the buffer
-                    _lines_found = 0;
-
-                    // and clear out any skip sections we have
-                    while (!_skip_sections.is_empty()) {
-                        _skip_sections.pop_skip();
-                    }
-                }
             }
-
-//            if (ctrl_is_at_beginning_of_data) {
-//                // attempt to request more data
-//                _restartTransfer();
-//            }
 
             return _line_buffer;
         } // end if (found_control)
@@ -772,12 +888,15 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             return nullptr;
         }
 
+        // skip sections will always start at the beginning of a line
+        // handle this, even with no line, in case we're ignoring a huge too-long line
+        _skip_sections.skip(_read_offset);
+
         if (_lines_found == 0) {
             // nothing to return
             line_size = 0;
             return nullptr;
         }
-
 
         // By the time we get here, we know we have at least one line in _data.
 
@@ -785,9 +904,6 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
         if (_data[_read_offset] == 0) {
             _debug_trap("read ran into NULL");
         }
-
-        // skip sections will always start at the beginning of a line
-        _skip_sections.skip(_read_offset);
 
         // scan past any leftover CR or LF from the previous line
         char c = _data[_read_offset];
@@ -801,11 +917,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             c = _data[_read_offset];
         }
 
-        while (line_size < (_line_buffer_size - 2)) {
-//            if (!_canBeRead(read_offset)) { // This test should NEVER fail.
-//                _debug_trap("readline hit unreadable and shouldn't have!");
-//            }
-
+        while (line_size < (_line_buffer_size - 1)) {
             _read_offset = (_read_offset+1)&(_size-1);
 
             if ( c == '\r' ||
@@ -823,6 +935,10 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 
             c = _data[_read_offset];
         }
+        if (line_size == (_line_buffer_size - 1)) {
+            // add a line-ending
+            *dst_ptr++ = '\n';
+        }
 
         --_lines_found;
 
@@ -832,6 +948,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
         *dst_ptr = 0;
         return _line_buffer;
     }; // readline
+
 
     // this is called from flushRead()
     void flush() {
@@ -846,12 +963,61 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
         _lines_found = 0;
 
         // and clear out any skip sections we have
-        while (!_skip_sections.is_empty()) {
-            _skip_sections.pop_skip();
+        while (!_skip_sections.isEmpty()) {
+            _skip_sections.popSkip();
         }
     }; // flush
 
+    bool flushToCommand() {
+        if (!_last_returned_a_control) {
+            return false;
+        }
+
+        // Things that must be managed here:
+        // * _read_offset -- we're skipping data
+        // * _lines_found -- we shouldn't have any lines "left"
+        // * _skip_sections -- there's nothing to skip, we just did
+
+        // Things that won't be changed (further):
+        // * _scan_offset -- we're not changing past where it's scanned
+        // * _line_start_offset -- we've already adjusted it
+        // * _at_start_of_line -- should always be true when we're here
+
+        // Note that we DO NOT call parent::flush() here. That will toss data
+        // we haven't scanned yet, beyond where we got the command we want to
+        // flush to.
+
+        // move the read buffer up to where we ended scanning
+        _read_offset = _scan_offset;
+
+        // record that we have 0 lines (of data) in the buffer
+        _lines_found = 0;
+
+        // and clear out any skip sections we have
+        while (!_skip_sections.isEmpty()) {
+            _skip_sections.popSkip();
+        }
+
+        _last_returned_a_control = false;
+
+        return true;
+    }; // flush
+
 }; // LineRXBuffer
+
+/* xioDeviceWrapper<typename Device>
+ * Implements a xioDeviceWrapperBase around a Device. The Device must implement:
+ *   For RXBuffer:
+ *     const base_type* getRXTransferPosition()
+ *     void setRXTransferDoneCallback(std::function<void()> &&callback)
+ *     bool startRXTransfer(char *&buffer, uint16_t length)
+ *   For TXBuffer:
+ *     const base_type* getTXTransferPosition()
+ *     void setTXTransferDoneCallback(std::function<void()> &&callback)
+ *     bool startTXTransfer(char *&buffer, uint16_t length)
+ *   For xioDeviceWrapper:
+ *     void setConnectionCallback(std::function<void(bool)> &&callback)
+ */
 
 template<typename Device>
 struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for reading and writing
@@ -877,24 +1043,24 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
         _tx_buffer.init();
     };
 
-    virtual int16_t readchar() final {
-        if (!isConnected()) {
-            return -1;
-        }
-        return _rx_buffer.read();
-//        return _dev->readByte();                    // readByte calls the USB endpoint's read function
-    };
-
     void flush() final {
         _tx_buffer.flush();
         return _dev->flush();
     }
 
-    virtual void flushRead() final {
+    void flushRead() final {
         // Flush out any partially or wholly read lines being stored:
         _rx_buffer.flush();
         _flushLine();
         return _dev->flushRead();
+    }
+
+    void _flushLine() {
+        // TODO: Call to flush the RX buffer line structures
+    };
+
+    bool flushToCommand() final {
+        return _rx_buffer.flushToCommand();
     }
 
     virtual int16_t write(const char *buffer, int16_t len) final {
@@ -913,117 +1079,201 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
         return NULL;
     };
 
-    void _flushLine() {
-        // TODO: Call to flush the RX buffer line structures
+    void connectedStateChanged(bool connected) {
+        if (connected) {
+            if (isNotConnected()) {
+                // USB0 or UART has just connected
+                // If one of the devices isAlwaysDataAndCtrl():
+                //    We treat *it* as if it's the only device connected.
+                //    We treat *the other devices* as if it's NOT connected.
+                // Case 1: This is the first channel to connect -
+                //   set it as CTRL+DATA+PRIMARY channel
+                //     mark all isMutedAsSecondary() as MUTED, and call controller_set_muted(true) if needed
+                // Case 2: This is the second (or later) channel to connect -
+                // Case 2a: This device is !isMuteAsSecondary()
+                //     set it as DATA channel, remove DATA flag from PRIMARY channel
+                //     mark all isMutedAsSecondary() as MUTED, and call controller_set_muted(true) if needed
+                //     ... inactive channels are counted as closed
+                // Case 2b: This devices isMuteAsSecondary(), and needs to be "muted."
+                //     set it as a MUTED channel, call controller_set_connected(true)
+                //       then controller_set_muted(true)
+
+                flush(); // toss anything that has been written so far.
+
+                setAsConnectedAndReady();
+
+                if (isAlwaysDataAndCtrl()) {    // Case 1 (ignoring others)
+                    setActive();
+                    controller_set_connected(true);
+
+                    // Case 2b (not ignoring others)
+                    if (isMuteAsSecondary() && xio.othersConnected(this)) {
+                        controller_set_muted(true); // something was muted
+                    }
+                    return;
+                }
+
+                if (!xio.othersConnected(this)) {
+                    // Case 1
+                    setAsPrimaryActiveDualRole();
+                    // report that there is now have a connection (only for the first one)
+                    controller_set_connected(true);
+                    // make sure secondary channels (that don't show up in isConnected) are muted
+                    if (xio.checkMutedSecondaryChannels()) {
+                        controller_set_muted(true); // something was muted
+                    }
+#if MARLIN_COMPAT_ENABLED == true
+                    // start the "fake bootloader" to signal the Host that Marlin (mode) is operating
+                    _rx_buffer.startFakeBootloaderMode();
+#endif
+                }
+                else if (isMuteAsSecondary()) {     // Case 2b
+                    setAsMuted();
+                    controller_set_connected(true); // it DID just just get connected
+                    controller_set_muted(true);     // but it muted it too
+                }
+                else {                              // Case 2a
+                    xio.removeDataFromPrimary();
+                    if (xio.checkMutedSecondaryChannels()) {
+                        controller_set_muted(true); // something was muted
+                    }
+                    setAsActiveData();
+                }
+            } // flags & DEV_IS_DISCONNECTED
+
+        } else { // disconnected
+            if (isConnected()) {
+
+                //USB0 has just disconnected
+                //Case 1: This channel disconnected while it was a ctrl+data channel (and no other channels are open) -
+                //  finalize this channel, unmute muted channels
+                //Case 2: This channel disconnected while it was a primary ctrl channel (and other channels are open) -
+                //  finalize this channel, unmute muted channels, deactivate other channels
+                //Case 3: This channel disconnected while it was a non-primary ctrl channel (and other channels are open) -
+                //  finalize this channel, leave other channels alone
+                //Case 4: This channel disconnected while it was a data channel (and other channels are open, including a primary)
+                //  finalize this channel, set primary channel as a CTRL+DATA channel if this was the last data channel
+                //Case 5a: This channel disconnected while it was inactive
+                //Case 5b: This channel disconnected when it's always present
+                //  don't need to do anything!
+                //... inactive channels are counted as closed
+
+                devflags_t oldflags = flags;
+                clearFlags();
+                flush();
+                flushRead();
+
+                if (checkForNotActive(oldflags) || isAlwaysDataAndCtrl()) {
+                    // Case 5a, 5b
+                } else if (checkForCtrlAndData(oldflags) || !xio.othersConnected(this)) {
+                    // Case 1
+                    if (xio.deactivateAndUnmuteChannels()) {
+                        controller_set_muted(false);  // something was unmuted
+                    } else {
+                        controller_set_connected(false);
+                    }
+                } else if (checkForCtrlAndPrimary(oldflags)) {
+                    // Case 2
+                    if (xio.deactivateAndUnmuteChannels()) {
+                        controller_set_muted(false);  // something was unmuted
+                    }
+                } else if (checkForCtrl(oldflags)) {
+                    // Case 3
+                } else if (checkForData(oldflags)) {
+                    // Case 4
+                    xio.removeDataFromPrimary();
+                }
+            } // flags & DEV_IS_CONNECTED
+        }
     };
 
-    void connectedStateChanged(bool connected) {
-            if (connected) {
-                if (isNotConnected()) {
-                    // USB0 or UART has just connected
-                    // If one of the devices isAlwaysDataAndCtrl():
-                    //    We treat *it* as if it's the only device connected.
-                    //    We treat *the other devices* as if it's NOT connected.
-                    // Case 1: This is the first channel to connect -
-                    //   set it as CTRL+DATA+PRIMARY channel
-                    //     mark all isMutedAsSecondary() as MUTED, and call controller_set_muted(true) if needed
-                    // Case 2: This is the second (or later) channel to connect -
-                    // Case 2a: This device is !isMuteAsSecondary()
-                    //     set it as DATA channel, remove DATA flag from PRIMARY channel
-                    //     mark all isMutedAsSecondary() as MUTED, and call controller_set_muted(true) if needed
-                    //     ... inactive channels are counted as closed
-                    // Case 2b: This devices isMuteAsSecondary(), and needs to be "muted."
-                    //     set it as a MUTED channel, call controller_set_connected(true)
-                    //       then controller_set_muted(true)
+#if MARLIN_COMPAT_ENABLED == true
+    void exitFakeBootloaderMode() override {
+        _rx_buffer.exitFakeBootloaderMode();
+    };
+#endif
+
+};
 
 
-                    setAsConnectedAndReady();
+// Specialization for xio_flash_file -- we don't need most of the structure around a Device for xio_flash_file
+template<uint16_t _line_buffer_size = 512>
+struct xioFlashFileDeviceWrapper : xioDeviceWrapperBase {    // describes a device for reading and writing
+    xio_flash_file *_current_file = nullptr;
 
-                    if (isAlwaysDataAndCtrl()) {
-                        // Case 1 (ignoring others)
-                        setActive();
-                        controller_set_connected(true);
+    char _line_buffer[_line_buffer_size]; // hold exactly one line to return -- flash files are read-only, so we copy it
 
-                        // Case 2b (not ignoring others)
-                        if (isMuteAsSecondary() && xio.others_connected(this)) {
-                            controller_set_muted(true); // something was muted
-                        }
+    xioFlashFileDeviceWrapper() : xioDeviceWrapperBase(DEV_CAN_READ | DEV_IS_ALWAYS_BOTH)
+    {
+    };
 
-                        return;
-                    }
+    bool sendFile(xio_flash_file &new_file) {
+        if (nullptr != _current_file) {
+            return false; // we're still sending a file
+        }
 
-                    if(!xio.others_connected(this)) {
-                        // Case 1
-                        setAsPrimaryActiveDualRole();
-                        // report that there is now have a connection (only for the first one)
-                        controller_set_connected(true);
-                        // make sure secondary channels (that don't show up in isConnected) are muted
-                        if (xio.check_muted_secondary_channels()) {
-                            controller_set_muted(true); // something was muted
-                        }
-                    }
-                    else if (isMuteAsSecondary()) {
-                        // Case 2b
-                        setAsMuted();
-                        controller_set_connected(true); // it DID just just get connected
-                        controller_set_muted(true);     // but it muted it too
-                    }
-                    else {
-                        // Case 2a
-                        xio.remove_data_from_primary();
-                        if (xio.check_muted_secondary_channels()) {
-                            controller_set_muted(true); // something was muted
-                        }
-                        setAsActiveData();
-                    }
-                } // flags & DEV_IS_DISCONNECTED
+        _current_file = &new_file;
+        _current_file->reset();
+        setActive();
+        return true;
+    }
 
-            } else { // disconnected
-                if (isConnected()) {
+    void init() {
+    };
 
-                    //USB0 has just disconnected
-                    //Case 1: This channel disconnected while it was a ctrl+data channel (and no other channels are open) -
-                    //  finalize this channel, unmute muted channels
-                    //Case 2: This channel disconnected while it was a primary ctrl channel (and other channels are open) -
-                    //  finalize this channel, unmute muted channels, deactivate other channels
-                    //Case 3: This channel disconnected while it was a non-primary ctrl channel (and other channels are open) -
-                    //  finalize this channel, leave other channels alone
-                    //Case 4: This channel disconnected while it was a data channel (and other channels are open, including a primary)
-                    //  finalize this channel, set primary channel as a CTRL+DATA channel if this was the last data channel
-                    //Case 5a: This channel disconnected while it was inactive
-                    //Case 5b: This channel disconnected when it's always present
-                    //  don't need to do anything!
-                    //... inactive channels are counted as closed
+    void flush() final {
+        // nothing to do
+    }
 
-                    devflags_t oldflags = flags;
-                    clearFlags();
-                    flush();
-                    flushRead();
+    void flushRead() final {
+        // to flush the file, just forget about it
+        // next time it's used it'll get reset
+        _current_file = nullptr;
+        cs.responses_suppressed = false;
+    }
 
-                    if (checkForNotActive(oldflags) || isAlwaysDataAndCtrl()) {
-                        // Case 5a, 5b
-                    } else if (checkForCtrlAndData(oldflags) || !xio.others_connected(this)) {
-                        // Case 1
-                        if (xio.deactivate_and_unmute_channels()) {
-                            controller_set_muted(false);  // something was unmuted
-                        } else {
-                            controller_set_connected(false);
-                        }
-                    } else if (checkForCtrlAndPrimary(oldflags)) {
-                        // Case 2
-                        if (xio.deactivate_and_unmute_channels()) {
-                            controller_set_muted(false);  // something was unmuted
-                        }
-                    } else if (checkForCtrl(oldflags)) {
-                        // Case 3
-                    } else if (checkForData(oldflags)) {
-                        // Case 4
-                        xio.remove_data_from_primary();
-                    }
-                } // flags & DEV_IS_CONNECTED
-            }
+    bool flushToCommand() final {
+        // the end of the file is the next "command"
+        _current_file = nullptr;
+        cs.responses_suppressed = false;
+        return false;
+    }
+
+    int16_t write(const char *buffer, int16_t len) final {
+        return -1;
+    }
+
+    char *readline(devflags_t limit_flags, uint16_t &line_size) final {
+        if (nullptr == _current_file) {
+            line_size = 0;
+            return nullptr;
+        }
+
+        const char *from = _current_file->readline(!(limit_flags & DEV_IS_DATA), line_size);
+        if ((nullptr == from) && (_current_file->isDone())) {
+            // all done sending this file, "close" it
+            _current_file = nullptr;
+            cs.responses_suppressed = false;
+            clearActive();
+            return nullptr;
+        }
+        char *dst_ptr = _line_buffer;
+
+        uint16_t count = std::min(line_size, uint16_t(_line_buffer_size - 2));
+
+        while (count--) {
+            *dst_ptr++ = *from++;
+        }
+
+        // null-terminate the string
+        *dst_ptr = 0;
+
+        cs.responses_suppressed = true;
+        return _line_buffer;
     };
 };
+
+xioFlashFileDeviceWrapper<> flashFileWrapper {};
 
 // ALLOCATIONS
 // Declare a device wrapper class for SerialUSB and SerialUSB1
@@ -1054,6 +1304,7 @@ xioDeviceWrapper<decltype(&Serial)> serial0Wrapper HOT_DATA {
 // Define the xio singleton (and initialize it to hold our two deviceWrappers)
 //xio_t xio = { &serialUSB0Wrapper, &serialUSB1Wrapper };
 xio_t xio = {
+    &flashFileWrapper,
 #if XIO_HAS_USB == 1
     &serialUSB0Wrapper,
 #if USB_SERIAL_PORTS_EXPOSED == 2
@@ -1073,7 +1324,7 @@ xio_t xio = {
  *  A lambda function closure is provided for trapping connection state changes from USB devices.
  *  The function is installed as a callback from the lower USB layers. It is called only on edges
  *  (connect/disconnect transitions). 'Connected' is true if the USB channel has just connected,
- *  false if it has just disconnected. It is only called on an edge � when it changes - so you
+ *  false if it has just disconnected. It is only called on an edge when it changes - so you
  *  shouldn't see two back-to-back connected=true calls with the same callback.
  *
  *  See here for some good info on lambda functions in C++
@@ -1129,11 +1380,40 @@ int16_t xio_writeline(const char *buffer, bool only_to_muted /*= false*/)
     return xio.writeline(buffer, only_to_muted);
 }
 
+/*
+ * write() - return true of the device is currently "connected" (there's a fair bit of interpretation)
+ */
+
 bool xio_connected()
 {
     return xio.connected();
 }
 
+/*
+ * xio_send_file() - send the contents of a xio_flash_file - returns false if there's already one sending
+ */
+
+bool xio_send_file(xio_flash_file &file) {
+    return flashFileWrapper.sendFile(file);
+}
+
+/*
+ * xio_flush_to_command() - clear the last read channel up until the command that was read
+ */
+
+void xio_flush_to_command() {
+    return xio.flushToCommand();
+}
+
+#if MARLIN_COMPAT_ENABLED == true
+/*
+ * xio_end_fake_bootloader() - end the fake bootloader mode
+ */
+
+void xio_exit_fake_bootloader() {
+    return xio.exitFakeBootloaderMode();
+}
+#endif
 
 /***********************************************************************************
  * newlib-nano support functions

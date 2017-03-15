@@ -2,8 +2,8 @@
  * gpio.h - Digital IO  handling functions
  * This file is part of the g2core project
  *
- * Copyright (c) 2015 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2015 - 2016 Robert Giseburt
+ * Copyright (c) 2015 - 2017 Alden S. Hart, Jr.
+ * Copyright (c) 2015 - 2017 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -68,9 +68,10 @@ typedef enum {                          // actions are initiated from within the
 
 typedef enum {                          // functions are requested from the ISR, run from the main loop
     INPUT_FUNCTION_NONE = 0,
-    INPUT_FUNCTION_LIMIT,               // limit switch processing
-    INPUT_FUNCTION_INTERLOCK,           // interlock processing
-    INPUT_FUNCTION_SHUTDOWN,            // shutdown in support of external emergency stop
+    INPUT_FUNCTION_LIMIT = 1,           // limit switch processing
+    INPUT_FUNCTION_INTERLOCK = 2,       // interlock processing
+    INPUT_FUNCTION_SHUTDOWN = 3,        // shutdown in support of external emergency stop
+    INPUT_FUNCTION_PROBE = 4,           // assign input as probe input
     INPUT_FUNCTION_MAX                  // unused. Just for range checking
 } inputFunc;
 
@@ -130,6 +131,7 @@ void output_reset(void);
 bool gpio_read_input(const uint8_t input_num);
 void gpio_set_homing_mode(const uint8_t input_num, const bool is_homing);
 void gpio_set_probing_mode(const uint8_t input_num, const bool is_probing);
+int8_t gpio_get_probing_input(void);
 
 stat_t io_set_mo(nvObj_t *nv);
 stat_t io_set_ac(nvObj_t *nv);
@@ -155,6 +157,7 @@ stat_t io_set_output(nvObj_t *nv);
     #define io_print_fn tx_print_stub
     #define io_print_in tx_print_stub
     #define io_print_st tx_print_stub
+    #define io_print_domode tx_print_stub
     #define io_print_out tx_print_stub
 #endif // __TEXT_MODE
 

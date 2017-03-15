@@ -72,7 +72,7 @@ mpMotionRuntimeSingleton_t mr;      // context for block runtime
 #define JSON_COMMAND_BUFFER_SIZE 3
 
 struct json_command_buffer_t {
-    char buf[RX_BUFFER_MIN_SIZE];
+    char buf[RX_BUFFER_SIZE];
     json_command_buffer_t *pv;
     json_command_buffer_t *nx;
 };
@@ -311,7 +311,7 @@ stat_t mp_runtime_command(mpBuf_t *bf)
 
 /*************************************************************************
  * mp_json_command()    - queue a json command
- * _exec_json_command() - execute json string
+ * _exec_json_command() - execute json string (from exec system)
  */
 
 stat_t mp_json_command(char *json_string)
@@ -334,6 +334,14 @@ static void _exec_json_command(float *value, bool *flag)
     jc.free_buffer();
 }
 
+/*************************************************************************
+ * mp_json_command_immediate()    - execute a json command with response suppressed
+ */
+
+stat_t mp_json_command_immediate(char *json_string)
+{
+    return json_parser(json_string);
+}
 
 /*************************************************************************
  * mp_json_wait()    - queue a json wait command
@@ -595,6 +603,16 @@ void mp_start_feed_override(const float ramp_time, const float override_factor)
 void mp_end_feed_override(const float ramp_time)
 {
     mp_start_feed_override (FEED_OVERRIDE_RAMP_TIME, 1.00);
+}
+
+void mp_start_traverse_override(const float ramp_time, const float override_factor)
+{
+    return;
+}
+
+void mp_end_traverse_override(const float ramp_time)
+{
+    return;
 }
 
 /*

@@ -49,7 +49,6 @@
 /******************** System Globals *************************/
 
 stat_t status_code;						    // allocate a variable for the ritorno macro
-char global_string_buf[GLOBAL_STRING_LEN];	// allocate a string for global message use
 
 /************* System Globals For Diagnostics ****************/
 

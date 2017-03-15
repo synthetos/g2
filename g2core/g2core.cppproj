@@ -1845,6 +1845,12 @@
     <Compile Include="g2core_info.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="marlin_compatibility.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="marlin_compatibility.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="settings\settings_makeblock.h">
       <SubType>compile</SubType>
     </Compile>

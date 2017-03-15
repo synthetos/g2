@@ -2,8 +2,8 @@
  * cycle_homing.cpp - homing cycle extension to canonical_machine
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2016 Robert Giseburt
+ * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2017 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -48,6 +48,8 @@ struct hmHomingSingleton {          // persistent homing runtime variables
     int8_t homing_input;            // homing input for current axis
     bool   set_coordinates;         // G28.4 flag. true = set coords to zero at the end of homing cycle
     stat_t (*func)(int8_t axis);    // binding for callback function state machine
+
+    bool axis_flags[AXES];          // local storage for axis flags
 
     // per-axis parameters
     float direction;                // set to 1 for positive (max), -1 for negative (to min);
@@ -152,13 +154,15 @@ static stat_t _set_homing_func(stat_t (*func)(int8_t axis)) {
  *  to cm_get_runtime_busy() is about.
  */
 
-stat_t cm_homing_cycle_start(void) {
+stat_t cm_homing_cycle_start(const float axes[], const bool flags[]) {
     // save relevant non-axis parameters from Gcode model
     hm.saved_units_mode     = (cmUnitsMode)cm_get_units_mode(ACTIVE_MODEL);
     hm.saved_coord_system   = (cmCoordSystem)cm_get_coord_system(ACTIVE_MODEL);
     hm.saved_distance_mode  = (cmDistanceMode)cm_get_distance_mode(ACTIVE_MODEL);
     hm.saved_feed_rate_mode = (cmFeedRateMode)cm_get_feed_rate_mode(ACTIVE_MODEL);
     hm.saved_feed_rate      = cm_get_feed_rate(ACTIVE_MODEL);
+
+    copy_vector(hm.axis_flags, flags);
 
     // set working values
     cm_set_units_mode(MILLIMETERS);
@@ -178,8 +182,8 @@ stat_t cm_homing_cycle_start(void) {
     return (STAT_OK);
 }
 
-stat_t cm_homing_cycle_start_no_set(void) {
-    cm_homing_cycle_start();
+stat_t cm_homing_cycle_start_no_set(const float axes[], const bool flags[]) {
+    cm_homing_cycle_start(axes, flags);
     hm.set_coordinates = false;  // set flag to not update position variables at the end of the cycle
     return (STAT_OK);
 }
@@ -407,38 +411,38 @@ static stat_t _homing_finalize_exit(int8_t axis)  // third part of return to hom
 static int8_t _get_next_axis(int8_t axis) {
 #if (HOMING_AXES <= 4)
     if (axis == -1) {  // inelegant brute force solution
-        if (cm.gf.target[AXIS_Z]) {
+        if (hm.axis_flags[AXIS_Z]) {
             return (AXIS_Z);
         }
-        if (cm.gf.target[AXIS_X]) {
+        if (hm.axis_flags[AXIS_X]) {
             return (AXIS_X);
         }
-        if (cm.gf.target[AXIS_Y]) {
+        if (hm.axis_flags[AXIS_Y]) {
             return (AXIS_Y);
         }
-        if (cm.gf.target[AXIS_A]) {
+        if (hm.axis_flags[AXIS_A]) {
             return (AXIS_A);
         }
         return (-2);  // error
     } else if (axis == AXIS_Z) {
-        if (cm.gf.target[AXIS_X]) {
+        if (hm.axis_flags[AXIS_X]) {
             return (AXIS_X);
         }
-        if (cm.gf.target[AXIS_Y]) {
+        if (hm.axis_flags[AXIS_Y]) {
             return (AXIS_Y);
         }
-        if (cm.gf.target[AXIS_A]) {
+        if (hm.axis_flags[AXIS_A]) {
             return (AXIS_A);
         }
     } else if (axis == AXIS_X) {
-        if (cm.gf.target[AXIS_Y]) {
+        if (hm.axis_flags[AXIS_Y]) {
             return (AXIS_Y);
         }
-        if (cm.gf.target[AXIS_A]) {
+        if (hm.axis_flags[AXIS_A]) {
             return (AXIS_A);
         }
     } else if (axis == AXIS_Y) {
-        if (cm.gf.target[AXIS_A]) {
+        if (hm.axis_flags[AXIS_A]) {
             return (AXIS_A);
         }
     }
@@ -446,73 +450,73 @@ static int8_t _get_next_axis(int8_t axis) {
 
 #else
     if (axis == -1) {
-        if (cm.gf.target[AXIS_Z]) {
+        if (hm.axis_flags[AXIS_Z]) {
             return (AXIS_Z);
         }
-        if (cm.gf.target[AXIS_X]) {
+        if (hm.axis_flags[AXIS_X]) {
             return (AXIS_X);
         }
-        if (cm.gf.target[AXIS_Y]) {
+        if (hm.axis_flags[AXIS_Y]) {
             return (AXIS_Y);
         }
-        if (cm.gf.target[AXIS_A]) {
+        if (hm.axis_flags[AXIS_A]) {
             return (AXIS_A);
         }
-        if (cm.gf.target[AXIS_B]) {
+        if (hm.axis_flags[AXIS_B]) {
             return (AXIS_B);
         }
-        if (cm.gf.target[AXIS_C]) {
+        if (hm.axis_flags[AXIS_C]) {
             return (AXIS_C);
         }
         return (-2);  // error
     } else if (axis == AXIS_Z) {
-        if (cm.gf.target[AXIS_X]) {
+        if (hm.axis_flags[AXIS_X]) {
             return (AXIS_X);
         }
-        if (cm.gf.target[AXIS_Y]) {
+        if (hm.axis_flags[AXIS_Y]) {
             return (AXIS_Y);
         }
-        if (cm.gf.target[AXIS_A]) {
+        if (hm.axis_flags[AXIS_A]) {
             return (AXIS_A);
         }
-        if (cm.gf.target[AXIS_B]) {
+        if (hm.axis_flags[AXIS_B]) {
             return (AXIS_B);
         }
-        if (cm.gf.target[AXIS_C]) {
+        if (hm.axis_flags[AXIS_C]) {
             return (AXIS_C);
         }
     } else if (axis == AXIS_X) {
-        if (cm.gf.target[AXIS_Y]) {
+        if (hm.axis_flags[AXIS_Y]) {
             return (AXIS_Y);
         }
-        if (cm.gf.target[AXIS_A]) {
+        if (hm.axis_flags[AXIS_A]) {
             return (AXIS_A);
         }
-        if (cm.gf.target[AXIS_B]) {
+        if (hm.axis_flags[AXIS_B]) {
             return (AXIS_B);
         }
-        if (cm.gf.target[AXIS_C]) {
+        if (hm.axis_flags[AXIS_C]) {
             return (AXIS_C);
         }
     } else if (axis == AXIS_Y) {
-        if (cm.gf.target[AXIS_A]) {
+        if (hm.axis_flags[AXIS_A]) {
             return (AXIS_A);
         }
-        if (cm.gf.target[AXIS_B]) {
+        if (hm.axis_flags[AXIS_B]) {
             return (AXIS_B);
         }
-        if (cm.gf.target[AXIS_C]) {
+        if (hm.axis_flags[AXIS_C]) {
             return (AXIS_C);
         }
     } else if (axis == AXIS_A) {
-        if (cm.gf.target[AXIS_B]) {
+        if (hm.axis_flags[AXIS_B]) {
             return (AXIS_B);
         }
-        if (cm.gf.target[AXIS_C]) {
+        if (hm.axis_flags[AXIS_C]) {
             return (AXIS_C);
         }
     } else if (axis == AXIS_B) {
-        if (cm.gf.target[AXIS_C]) {
+        if (hm.axis_flags[AXIS_C]) {
             return (AXIS_C);
         }
     }

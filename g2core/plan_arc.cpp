@@ -2,7 +2,7 @@
  * plan_arc.c - arc planning and motion execution
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -133,6 +133,15 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
     // Some things you might think are errors but are not:
     //  - offset specified for linear axis (i.e. not one of the plane axes). Ignored
     //  - rotary axes are present. Ignored
+    //  - no parameters are specified. This can happen when G2 or G3 motion mode persists but
+    //    a non-arc, non-motion command is entered afterwards, such as M3 or T. Trapped here:
+
+    // Trap if no parameters were specified while in CW or CCW arc motion mode. This is OK
+    if (!(target_f[AXIS_X] | target_f[AXIS_Y] | target_f[AXIS_Z] |
+          offset_f[AXIS_X] | offset_f[AXIS_Y] | offset_f[AXIS_Z] |
+          radius_f | P_word_f)) {
+        return(STAT_OK);
+    }
 
     // trap missing feed rate
     if (fp_ZERO(cm.gm.feed_rate)) {
@@ -173,7 +182,7 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
         if (fabs(arc.radius) < MIN_ARC_RADIUS) {        // radius value must be > minimum radius
             return (STAT_ARC_RADIUS_OUT_OF_TOLERANCE);
         }
-    } 
+    }
     else {  // test that center format absolute distance mode arcs have both offsets specified
         if (cm.gm.arc_distance_mode == ABSOLUTE_DISTANCE_MODE) {
             if (!(offset_f[arc.plane_axis_0] && offset_f[arc.plane_axis_1])) {  // if one or both offsets are missing
@@ -217,21 +226,23 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
     memcpy(&arc.gm, &cm.gm, sizeof(GCodeState_t));      // copy GCode context to arc singleton - some will be overwritten to run segments
     copy_vector(arc.position, cm.gmx.position);         // set initial arc position from gcode model
 
-    // setup offsets
-    arc.offset[OFS_I] = _to_millimeters(offset[OFS_I]); // copy offsets with conversion to canonical form (mm)
-    arc.offset[OFS_J] = _to_millimeters(offset[OFS_J]);
-    arc.offset[OFS_K] = _to_millimeters(offset[OFS_K]);
+    // setup offsets if in center format mode
+    if (!radius_f) {
+        arc.offset[OFS_I] = _to_millimeters(offset[OFS_I]); // copy offsets with conversion to canonical form (mm)
+        arc.offset[OFS_J] = _to_millimeters(offset[OFS_J]);
+        arc.offset[OFS_K] = _to_millimeters(offset[OFS_K]);
 
-    if (arc.gm.arc_distance_mode == ABSOLUTE_DISTANCE_MODE) {   // adjust offsets if in absolute mode
-         arc.offset[OFS_I] -= arc.position[AXIS_X];
-         arc.offset[OFS_J] -= arc.position[AXIS_Y];
-         arc.offset[OFS_K] -= arc.position[AXIS_Z];
-    }
+        if (arc.gm.arc_distance_mode == ABSOLUTE_DISTANCE_MODE) {   // adjust offsets if in absolute mode
+             arc.offset[OFS_I] -= arc.position[AXIS_X];
+             arc.offset[OFS_J] -= arc.position[AXIS_Y];
+             arc.offset[OFS_K] -= arc.position[AXIS_Z];
+        }
 
-    if ((fp_ZERO(arc.offset[OFS_I])) &&                 // it's an error if no offsets are provided
-        (fp_ZERO(arc.offset[OFS_J])) &&
-        (fp_ZERO(arc.offset[OFS_K]))) {
-        return (cm_alarm(STAT_ARC_OFFSETS_MISSING_FOR_SELECTED_PLANE, "arc offsets missing or zero"));
+        if ((fp_ZERO(arc.offset[OFS_I])) &&                 // error if no offsets provided in center format mode
+            (fp_ZERO(arc.offset[OFS_J])) &&
+            (fp_ZERO(arc.offset[OFS_K]))) {
+            return (cm_alarm(STAT_ARC_OFFSETS_MISSING_FOR_SELECTED_PLANE, "arc offsets missing or zero"));
+        }
     }
 
     // compute arc runtime values

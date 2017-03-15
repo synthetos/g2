@@ -2,7 +2,7 @@
  * config.cpp - application independent configuration handling
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -178,8 +178,7 @@ stat_t config_test_assertions()
         (BAD_MAGIC(nvl.magic_start)) ||
         (BAD_MAGIC(nvl.magic_end)) ||
         (BAD_MAGIC(nvStr.magic_start)) ||
-        (BAD_MAGIC(nvStr.magic_end)) ||
-        (global_string_buf[GLOBAL_STRING_LEN-1] != NUL)) {
+        (BAD_MAGIC(nvStr.magic_end))) {
         return(cm_panic(STAT_CONFIG_ASSERTION_FAILURE, "config_test_assertions()"));
     }
     return (STAT_OK);
@@ -239,6 +238,7 @@ stat_t get_flt(nvObj_t *nv)
 }
 
 /* Generic sets()
+ *  set_noop() - set nothing and return OK
  *  set_nul()  - set nothing, return OK
  *  set_ro()   - set nothing, return read-only error
  *  set_ui8()  - set value as 8 bit uint8_t value
@@ -251,8 +251,15 @@ stat_t get_flt(nvObj_t *nv)
  *  set_flt()  - set value as float
  */
 
+stat_t set_noop(nvObj_t *nv) {
+    nv->valuetype = TYPE_NULL;
+    return (STAT_OK);                       // hack until JSON is refactored
+}
+
 stat_t set_nul(nvObj_t *nv) { 
-    return (STAT_OK); 
+//    nv->valuetype = TYPE_NULL;
+//    return (STAT_PARAMETER_IS_READ_ONLY);   // this is what it should be
+    return (STAT_OK);                       // hack until JSON is refactored
 }
 
 stat_t set_ro(nvObj_t *nv) {
@@ -725,7 +732,7 @@ nvObj_t *nv_add_conditional_message(const char *string)    // conditionally add 
 
 void nv_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags)
 {
-    if (js.json_mode == JSON_MODE) {
+    if ((js.json_mode == JSON_MODE) || (js.json_mode == MARLIN_COMM_MODE)) {
         json_print_list(status, json_flags);
     } else {
         text_print_list(status, text_flags);

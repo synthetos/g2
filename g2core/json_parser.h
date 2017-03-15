@@ -2,8 +2,8 @@
  * json_parser.h - JSON parser and JSON support
  * This file is part of the g2core project
  *
- * Copyright (c) 2011 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2016 Rob Giseburt
+ * Copyright (c) 2011 - 2017 Alden S. Hart, Jr.
+ * Copyright (c) 2016 - 2017 Rob Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -82,7 +82,7 @@ extern jsSingleton_t js;
 
 /**** Function Prototypes ****/
 
-void json_parser(char *str);
+stat_t json_parser(char *str, bool suppress_response = false);
 void json_parse_for_exec(char *str, bool execute);
 uint16_t json_serialize(nvObj_t *nv, char *out_buf, uint16_t size);
 void json_print_object(nvObj_t *nv);
