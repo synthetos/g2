@@ -64,6 +64,7 @@ stat_t cm_get_heater_output(nvObj_t* nv);
 stat_t cm_get_heater_adc(nvObj_t* nv);
 stat_t cm_get_temperature(nvObj_t* nv);
 stat_t cm_get_thermistor_resistance(nvObj_t* nv);
+stat_t cm_get_thermistor_voltage(nvObj_t* nv);
 
 
 /*--- text_mode support functions ---*/

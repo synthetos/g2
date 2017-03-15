@@ -42,6 +42,15 @@
 
 /**** Local safety/limit settings ****/
 
+#ifndef HAS_TEMPERATURE_SENSOR_1
+#define HAS_TEMPERATURE_SENSOR_1  false
+#endif
+#ifndef HAS_TEMPERATURE_SENSOR_2
+#define HAS_TEMPERATURE_SENSOR_2  false
+#endif
+#ifndef HAS_TEMPERATURE_SENSOR_3
+#define HAS_TEMPERATURE_SENSOR_3  false
+#endif
 
 // These could be moved to settings
 // If the temperature stays at set_point +- TEMP_SETPOINT_HYSTERESIS for more
@@ -103,23 +112,40 @@ using namespace Motate;
 // Luckily, we only use boards that are 3.3V logic at the moment.
 const float kSystemVoltage = 3.3;
 
+// This may be used as a base class in the future, but for now it's just a dummy sensor
+struct TemperatureSensor {
+    TemperatureSensor() {}
 
-template<pin_number adc_pin_num, uint16_t min_temp = 0, uint16_t max_temp = 300, uint32_t table_size=64>
+    float temperature_exact() {
+        return -1; // invalid temperature
+    };
+
+    float get_resistance() {
+        return -1; // invalid temperature from a thermistor
+    };
+
+    float get_voltage() {
+        return -1;
+    }
+};
+
+template<pin_number adc_pin_num, uint16_t min_temp = 0, uint16_t max_temp = 300>
 struct Thermistor {
-    float c1, c2, c3, pullup_resistance, inline_resistance;
+    float c1, c2, c3, pullup_resistance;
     // We'll pull adc top value from the adc_pin.getTop()
 
     ADCPin<adc_pin_num> adc_pin {kNormal, [&]{this->adc_has_new_value();} };
     uint16_t raw_adc_value = 0;
+    float raw_adc_voltage = 0.0;
 
-    typedef Thermistor<adc_pin_num, min_temp, max_temp, table_size> type;
+    typedef Thermistor<adc_pin_num, min_temp, max_temp> type;
 
     // References for thermistor formulas:
     //  http://assets.newport.com/webDocuments-EN/images/AN04_Thermistor_Calibration_IX.PDF
     //  http://hydraraptor.blogspot.com/2012/11/more-accurate-thermistor-tables.html
 
-    Thermistor(const float temp_low, const float temp_med, const float temp_high, const float res_low, const float res_med, const float res_high, const float pullup_resistance_, const float inline_resistance_ = 0)
-    : pullup_resistance{ pullup_resistance_ }, inline_resistance { inline_resistance_ } {
+    Thermistor(const float temp_low, const float temp_med, const float temp_high, const float res_low, const float res_med, const float res_high, const float pullup_resistance_)
+    : pullup_resistance{ pullup_resistance_ } {
         setup(temp_low, temp_med, temp_high, res_low, res_med, res_high);
         adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
     }
@@ -146,22 +172,7 @@ struct Thermistor {
         c3 = (x-z*w/y)/(v-z*u/y);
         c2 = (x-c3*v)/z;
         c1 = 1/temp_low_fixed-c3*pow(a1,3)-c2*a1;
-
-        //        int16_t temp = min_temp;
-        //        for (int i=0; temp < max_temp && i < table_size; i++) {
-        //            lookup_table[i][0] = adc_value(temp);
-        //            lookup_table[i][0] = temp;
-        //
-        //            temp += (min_temp-max_temp)/(table_size-1);
-        //        }
     };
-
-//    uint16_t adc_value_(int16_t temp) {
-//        float y = (c1 - (1/(temp+273.15))) / (2*c3);
-//        float x = sqrt(pow(c2 / (3*c3),3) + pow(y,2));
-//        float r = exp((x-y) - (x+y)); // resistance of thermistor
-//        return (r / (pullup_resistance + r)) * (adc_pin.getTop());
-//    };
 
     float temperature_exact() {
         // Sanity check:
@@ -169,8 +180,8 @@ struct Thermistor {
             return -1; // invalid temperature from a thermistor
         }
 
-        float v = (float)raw_adc_value * kSystemVoltage / (adc_pin.getTop()); // convert the 10 bit ADC value to a voltage
-        float r = ((pullup_resistance * v) / (kSystemVoltage - v)) - inline_resistance;   // resistance of thermistor
+        float v = raw_adc_voltage; // convert the ADC value to a voltage
+        float r = ((pullup_resistance * v) / (kSystemVoltage - v));   // resistance of thermistor
 
         if ((r < 0) || (r > TEMP_MIN_DISCONNECTED_RESISTANCE)) {
             return -1;
@@ -186,61 +197,98 @@ struct Thermistor {
             return -1; // invalid temperature from a thermistor
         }
 
-        float v = (float)raw_adc_value * kSystemVoltage / (adc_pin.getTop()); // convert the 10 bit ADC value to a voltage
-        return ((pullup_resistance * v) / (kSystemVoltage - v)) - inline_resistance;   // resistance of thermistor
+        float v = raw_adc_voltage; // convert the ADC value to a voltage
+        return ((pullup_resistance * v) / (kSystemVoltage - v));   // resistance of thermistor
+    };
+
+    float get_voltage() {
+        return raw_adc_voltage;
     }
 
     // Call back function from the ADC to tell it that the ADC has a new sample...
     void adc_has_new_value() {
+        raw_adc_voltage = (raw_adc_voltage * 2.0 + adc_pin.getVoltage())/3.0;
         raw_adc_value = (adc_pin.getRaw() + (9 * raw_adc_value))/10;
+    };
+};
+
+
+template<pin_number adc_pin_num, uint16_t min_temp = 0, uint16_t max_temp = 400>
+struct PT100 {
+    float pullup_resistance;
+    float inline_resistance;
+
+    ADCPin<adc_pin_num> adc_pin {kNormal, [&]{this->adc_has_new_value();} };
+    float raw_adc_voltage = 0.0;
+    int32_t raw_adc_value = 0;
+
+    typedef PT100<adc_pin_num, min_temp, max_temp> type;
+
+    PT100(const float pullup_resistance_, const float inline_resistance_)
+    : pullup_resistance{ pullup_resistance_ }, inline_resistance{ inline_resistance_ } {
+        adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
+        adc_pin.setVoltageRange(kSystemVoltage, 0.0687, 0.165, 6400.0);
+    }
+
+    float temperature_exact() {
+        // Sanity check:
+        if (raw_adc_voltage < 0.06) {
+            return -1; // invalid temperature from a thermistor
+        }
+
+        float v = raw_adc_voltage;
+        float r = ((pullup_resistance * v) / (kSystemVoltage - v)) - inline_resistance;   // resistance of thermistor
+
+        // from https://www.maximintegrated.com/en/app-notes/index.mvp/id/3450
+        // run through wolfram as:
+        // solve R = 100(1 + A*T + B*T^2); A = 3.9083*10^-3; B = -5.775*10^-7 for T
+        return 3383.81 - (0.287154*sqrt(159861899.0 - 210000.0*r));
+    };
+
+    float get_resistance() {
+        if (raw_adc_voltage < 0.001) {
+            return -1; // invalid temperature from a thermistor
+        }
+
+        float v = raw_adc_voltage;
+        return ((pullup_resistance * v) / (kSystemVoltage - v)) - inline_resistance;   // resistance of thermistor
+    };
+
+    float get_voltage() {
+        return raw_adc_voltage;
+    }
+
+    // Call back function from the ADC to tell it that the ADC has a new sample...
+    void adc_has_new_value() {
+        raw_adc_voltage = (raw_adc_voltage * 2.0 + adc_pin.getVoltage())/3.0;
+        raw_adc_value = adc_pin.getRaw();
     };
 };
 
 // Temperature debug string: {sr:{"he1t":t,"he1st":t,"he1at":t, "he1tr":t, "he1op":t}}
 // PID debug string: {sr:{"he1t":t,"he1st":t,"pid1p":t, "pid1i":t, "pid1d":t, "he1op":t, "line":t, "stat":t}}
 
+#if HAS_TEMPERATURE_SENSOR_1
 // Extruder 1
-Thermistor<kADC1_PinNumber> thermistor1 {
-    /*T1:*/     20.0, /*T2:*/  195.0, /*T3:*/ 255.0,
-    /*R1:*/ 140000.0, /*R2:*/  593.0, /*R3:*/ 189.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
-    };
-
-//#if ADC1_AVAILABLE == 1
-//namespace Motate {
-//template<>
-//void ADCPin<kADC1_PinNumber>::interrupt() {
-//    thermistor1.adc_has_new_value();
-//};
-//}
-//#endif
+TEMPERATURE_SENSOR_1_TYPE temperature_sensor_1 TEMPERATURE_SENSOR_1_INIT;
+#else
+TemperatureSensor temperature_sensor_1;
+#endif
 
 // Extruder 2
-Thermistor<kADC2_PinNumber> thermistor2 {
-    /*T1:*/     20.0, /*T2:*/  190.0, /*T3:*/ 255.0,
-    /*R1:*/ 140000.0, /*R2:*/  490.0, /*R3:*/ 109.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
-    };
-//#if ADC2_AVAILABLE == 1
-//namespace Motate {
-//template<>
-//void ADCPin<kADC2_PinNumber>::interrupt() {
-//    thermistor2.adc_has_new_value();
-//};
-//}
-//#endif
+#if HAS_TEMPERATURE_SENSOR_2
+// Extruder 2
+TEMPERATURE_SENSOR_2_TYPE temperature_sensor_2 TEMPERATURE_SENSOR_2_INIT;
+#else
+TemperatureSensor temperature_sensor_2;
+#endif
 
+#if HAS_TEMPERATURE_SENSOR_3
 // Heated bed
-Thermistor<kADC0_PinNumber> thermistor3 {
-    /*T1:*/     20.0, /*T2:*/  190.0, /*T3:*/ 255.0,
-    /*R1:*/ 140000.0, /*R2:*/  490.0, /*R3:*/ 109.0, /*pullup_resistance:*/ 4700, /*inline_resistance:*/ 4700
-    };
-//#if ADC0_AVAILABLE == 1
-//namespace Motate {
-//template<>
-//void ADCPin<kADC0_PinNumber>::interrupt() {
-//    thermistor3.adc_has_new_value();
-//};
-//}
-//#endif
+TEMPERATURE_SENSOR_3_TYPE temperature_sensor_3 TEMPERATURE_SENSOR_3_INIT;
+#else
+TemperatureSensor temperature_sensor_3;
+#endif
 
 float last_reported_temp1 = 0; // keep track of what we've reported for SR generation
 float last_reported_temp2 = 0;
@@ -251,7 +299,7 @@ float last_reported_temp3 = 0;
 // DO_1: Extruder1_PWM
 const int16_t fet_pin1_freq = 100;
 #if TEMPERATURE_OUTPUT_ON == 1
-PWMOutputPin<kOutput1_PinNumber> fet_pin1;// {kPWMPinInverted};
+PWMOutputPin<kOutput2_PinNumber> fet_pin1;// {kPWMPinInverted};
 #else
 PWMOutputPin<-1> fet_pin1;// {kPWMPinInverted};
 #endif
@@ -259,7 +307,7 @@ PWMOutputPin<-1> fet_pin1;// {kPWMPinInverted};
 // DO_2: Extruder2_PWM
 const int16_t fet_pin2_freq = 100;
 #if TEMPERATURE_OUTPUT_ON == 1
-PWMOutputPin<kOutput2_PinNumber> fet_pin2;// {kPWMPinInverted};
+PWMOutputPin<kOutput1_PinNumber> fet_pin2;// {kPWMPinInverted};
 #else
 PWMOutputPin<-1> fet_pin2;// {kPWMPinInverted};
 #endif
@@ -304,9 +352,9 @@ const int16_t temperature_sample_freq = 10; // every fet_pin1_sample_freq interr
 int16_t temperature_sample_counter = temperature_sample_freq;
 SysTickEvent adc_tick_event {[&] {
     if (!--temperature_sample_counter) {
-        thermistor1.adc_pin.startSampling();
-        thermistor2.adc_pin.startSampling();
-        thermistor3.adc_pin.startSampling();
+        temperature_sensor_1.adc_pin.startSampling();
+        temperature_sensor_2.adc_pin.startSampling();
+        temperature_sensor_3.adc_pin.startSampling();
         temperature_sample_counter = temperature_sample_freq;
     }
 }, nullptr};
@@ -546,7 +594,7 @@ stat_t temperature_callback()
         bool sr_requested = false;
 
         if (pid1._enable) {
-            temp = thermistor1.temperature_exact();
+            temp = temperature_sensor_1.temperature_exact();
             fet_pin1 = pid1.getNewOutput(temp);
 
             if (fabs(temp - last_reported_temp1) > kTempDiffSRTrigger) {
@@ -558,7 +606,7 @@ stat_t temperature_callback()
         heater_fan1.newTemp(temp);
 
         if (pid2._enable) {
-            temp = thermistor2.temperature_exact();
+            temp = temperature_sensor_2.temperature_exact();
             fet_pin2 = pid2.getNewOutput(temp);
 
             if (fabs(temp - last_reported_temp2) > kTempDiffSRTrigger) {
@@ -568,7 +616,7 @@ stat_t temperature_callback()
         }
 
         if (pid3._enable) {
-            temp = thermistor3.temperature_exact();
+            temp = temperature_sensor_3.temperature_exact();
             fet_pin3 = pid3.getNewOutput(temp);
 
             if (fabs(temp - last_reported_temp3) > kTempDiffSRTrigger) {
@@ -948,9 +996,9 @@ stat_t cm_get_heater_output(nvObj_t *nv)
 stat_t cm_get_heater_adc(nvObj_t *nv)
 {
     switch(_get_heater_number(nv)) {
-        case '1': { nv->value = (float)thermistor1.raw_adc_value; break; }
-        case '2': { nv->value = (float)thermistor2.raw_adc_value; break; }
-        case '3': { nv->value = (float)thermistor3.raw_adc_value; break; }
+        case '1': { nv->value = (float)temperature_sensor_1.raw_adc_value; break; }
+        case '2': { nv->value = (float)temperature_sensor_2.raw_adc_value; break; }
+        case '3': { nv->value = (float)temperature_sensor_3.raw_adc_value; break; }
 
             // Failsafe. We can only get here if we set it up in config_app, but not here.
         default: { nv->value = 0.0; break; }
@@ -967,9 +1015,9 @@ stat_t cm_get_heater_adc(nvObj_t *nv)
 stat_t cm_get_temperature(nvObj_t *nv)
 {
     switch(_get_heater_number(nv)) {
-        case '1': { nv->value = last_reported_temp1 = thermistor1.temperature_exact(); break; }
-        case '2': { nv->value = last_reported_temp2 = thermistor2.temperature_exact(); break; }
-        case '3': { nv->value = last_reported_temp3 = thermistor3.temperature_exact(); break; }
+        case '1': { nv->value = last_reported_temp1 = temperature_sensor_1.temperature_exact(); break; }
+        case '2': { nv->value = last_reported_temp2 = temperature_sensor_2.temperature_exact(); break; }
+        case '3': { nv->value = last_reported_temp3 = temperature_sensor_3.temperature_exact(); break; }
 
             // Failsafe. We can only get here if we set it up in config_app, but not here.
         default: { nv->value = 0.0; break; }
@@ -987,9 +1035,28 @@ stat_t cm_get_temperature(nvObj_t *nv)
 stat_t cm_get_thermistor_resistance(nvObj_t *nv)
 {
     switch(_get_heater_number(nv)) {
-        case '1': { nv->value = thermistor1.get_resistance(); break; }
-        case '2': { nv->value = thermistor2.get_resistance(); break; }
-        case '3': { nv->value = thermistor3.get_resistance(); break; }
+        case '1': { nv->value = temperature_sensor_1.get_resistance(); break; }
+        case '2': { nv->value = temperature_sensor_2.get_resistance(); break; }
+        case '3': { nv->value = temperature_sensor_3.get_resistance(); break; }
+
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { nv->value = 0.0; break; }
+    }
+    nv->precision = GET_TABLE_WORD(precision);
+    nv->valuetype = TYPE_FLOAT;
+
+    return (STAT_OK);
+}
+
+/*
+ * cm_get_thermistor_resistance() - get the current temperature
+ */
+stat_t cm_get_thermistor_voltage(nvObj_t* nv)
+{
+    switch(_get_heater_number(nv)) {
+        case '1': { nv->value = temperature_sensor_1.get_voltage(); break; }
+        case '2': { nv->value = temperature_sensor_2.get_voltage(); break; }
+        case '3': { nv->value = temperature_sensor_3.get_voltage(); break; }
 
             // Failsafe. We can only get here if we set it up in config_app, but not here.
         default: { nv->value = 0.0; break; }

@@ -245,6 +245,50 @@
 #define A_JERK_HIGH_SPEED A_JERK_MAX
 
 //*** Input / output settings ***
+
+//** Temperature Sensors **
+
+#define HAS_TEMPERATURE_SENSOR_1  true
+#if HAS_TEMPERATURE_SENSOR_1
+// Must choose Thermistor or PT100
+
+#define TEMPERATURE_SENSOR_1_TYPE  Thermistor<kADC1_PinNumber>
+#define TEMPERATURE_SENSOR_1_INIT { \
+/*T1:*/     20.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
+/*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 4700 \
+}
+
+//#define TEMPERATURE_SENSOR_1_TYPE  PT100<kADC1_PinNumber>
+//#define TEMPERATURE_SENSOR_1_INIT {/*pullup_resistance:*/ 2325, /*inline_resistance*/0.75}
+#endif
+
+#define HAS_TEMPERATURE_SENSOR_2  true
+#if HAS_TEMPERATURE_SENSOR_2
+#define TEMPERATURE_SENSOR_2_TYPE  Thermistor<kADC2_PinNumber>
+#define TEMPERATURE_SENSOR_2_INIT { \
+/*T1:*/     20.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
+/*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 4700 \
+}
+
+//#define TEMPERATURE_SENSOR_2_TYPE  PT100<kADC2_PinNumber>
+//#define TEMPERATURE_SENSOR_2_INIT {/*pullup_resistance:*/ 2325, /*inline_resistance*/0.75}
+#endif
+
+#define HAS_TEMPERATURE_SENSOR_3  true
+#if HAS_TEMPERATURE_SENSOR_3
+#define TEMPERATURE_SENSOR_3_TYPE  Thermistor<kADC0_PinNumber>
+#define TEMPERATURE_SENSOR_3_INIT { \
+/*T1:*/     20.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
+/*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 4700 \
+}
+
+//#define TEMPERATURE_SENSOR_3_TYPE  PT100<kADC0_PinNumber>
+//#define TEMPERATURE_SENSOR_3_INIT {/*pullup_resistance:*/ 2325, /*inline_resistance*/0.75}
+#endif
+
+
+//** Digital Inputs **
+
 /*
     IO_MODE_DISABLED
     IO_ACTIVE_LOW    aka NORMALLY_OPEN
