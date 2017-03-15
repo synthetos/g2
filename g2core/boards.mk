@@ -130,11 +130,11 @@ endif
 ##########
 # Ultimaker configs:
 
-ifeq ("$(CONFIG)","Ultimakerv9k")
+ifeq ("$(CONFIG)","Ultimaker2Plus")
     ifeq ("$(BOARD)","NONE")
-        BOARD=g2v9k
+        BOARD=gquintic-b
     endif
-    SETTINGS_FILE="settings_ultimaker.h"
+    SETTINGS_FILE="settings_Ultimaker_2_Plus.h"
 endif
 
 ##########
