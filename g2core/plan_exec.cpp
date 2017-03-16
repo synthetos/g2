@@ -485,7 +485,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     // Feedhold Processing - We need to handle the following cases (listed in rough sequence order):
     if (cm->hold_state != FEEDHOLD_OFF) {
         // if running actions, or in HOLD state, or exiting with actions
-        if (cm->hold_state >= FEEDHOLD_HOLD_ACTIONS_START) { // handles _exec_aline_feedhold_processing case (7)
+        if (cm->hold_state >= FEEDHOLD_HOLD_POINT_REACHED) { // handles _exec_aline_feedhold_processing case (7)
             return (STAT_NOOP);                    // VERY IMPORTANT to exit as a NOOP. Do not load another move
         }
         // STAT_OK terminates aline execution for this move
@@ -1059,7 +1059,7 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
                 
                 // Set state to enable transition to p2 and perform entry actions in the p2 planner
                 if (cm->hold_type == FEEDHOLD_TYPE_ACTIONS) {
-                    cm->hold_state = FEEDHOLD_HOLD_ACTIONS_START; // signal to start entry actions
+                    cm->hold_state = FEEDHOLD_HOLD_POINT_REACHED; // signal to start entry actions
                 } else {
                     cm->hold_state = FEEDHOLD_HOLD;         // achieved hold state
                 }                

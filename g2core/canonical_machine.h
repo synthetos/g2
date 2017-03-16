@@ -130,7 +130,7 @@ typedef enum {                      // feedhold final operation
     FEEDHOLD_EXIT_ALARM,            // perform alarm
     FEEDHOLD_EXIT_SHUTDOWN,         // perform shutdown
     FEEDHOLD_EXIT_INTERLOCK         // report as interlock
-} cmFeedholdFinal;
+} cmFeedholdExit;
 
 typedef enum {                      // feedhold state machine
     FEEDHOLD_OFF = 0,               // no feedhold in effect
@@ -141,7 +141,7 @@ typedef enum {                      // feedhold state machine
     FEEDHOLD_DECEL_COMPLETE,        // feedhold deceleration has completed, but motors may not have stopped yet
     FEEDHOLD_MOTION_STOPPING,       // waiting for motors to have stopped at hold point (motion stop)
     FEEDHOLD_MOTION_STOPPED,        // motion has stopped at hold point
-    FEEDHOLD_HOLD_ACTIONS_START,
+    FEEDHOLD_HOLD_POINT_REACHED,    // hold point reached and logic run - prepare for next steps
     FEEDHOLD_HOLD_ACTIONS_PENDING,  // wait for feedhold actions to complete
     FEEDHOLD_HOLD_ACTIONS_COMPLETE, // 
     FEEDHOLD_HOLD,                  // HOLDING (steady state)
@@ -180,7 +180,7 @@ typedef enum {                      // queue flush state machine
 typedef enum {                      // Motion profiles
     PROFILE_NORMAL = 0,             // Normal jerk in effect
     PROFILE_FAST                    // High speed jerk in effect
-} cmMotion_profile;
+} cmMotionProfile;
 
 /*****************************************************************************
  * CANONICAL MACHINE STRUCTURES
@@ -279,9 +279,15 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     cmCycleType     cycle_type;             // cycs
     cmMotionState   motion_state;           // mots
     
+//    cmFeedholdType  hold_type;              // hold: type of feedhold requested
+//    cmFeedholdFinal hold_final;             // hold: final state of hold
+//    cmFeedholdState hold_state;             // hold: feedhold state machine
+
     cmFeedholdType  hold_type;              // hold: type of feedhold requested
-    cmFeedholdFinal hold_final;             // hold: final state of hold
+    cmFeedholdExit  hold_exit;              // hold: final state of hold on exit
+    cmMotionProfile hold_profile;           // hold: motion profile to use for deceleration
     cmFeedholdState hold_state;             // hold: feedhold state machine
+
     cmFlushState    flush_state;            // hold: queue flush state machine
     cmCycleState    cycle_state;            // used to manage cycle start
 
@@ -487,7 +493,7 @@ stat_t cm_operation_sequencing_callback(void);                  // operation act
 void cm_request_alarm(void);
 void cm_request_fasthold(void);
 void cm_request_cycle_start(void);
-void cm_request_feedhold(cmFeedholdType type, cmFeedholdFinal final);
+void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit);
 void cm_request_queue_flush(void);
 stat_t cm_feedhold_sequencing_callback(void);                   // process feedhold, cycle start and queue flush requests
 stat_t cm_feedhold_command_blocker(void);
