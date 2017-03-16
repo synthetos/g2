@@ -175,7 +175,7 @@
 #define Z_VELOCITY_MAX              2000
 #define Z_FEEDRATE_MAX              Z_VELOCITY_MAX
 #define Z_TRAVEL_MIN                0
-#define Z_TRAVEL_MAX                230
+#define Z_TRAVEL_MAX                215
 #define Z_JERK_MAX                  1500
 #define Z_JERK_HIGH_SPEED           3000
 #define Z_HOMING_INPUT              6
@@ -267,12 +267,12 @@
     }
 #else
     #define TEMPERATURE_SENSOR_1_TYPE  PT100<kADC1_PinNumber>
-    #define TEMPERATURE_SENSOR_1_INIT {/*pullup_resistance:*/ 2325, /*inline_resistance*/0.75}
+    #define TEMPERATURE_SENSOR_1_INIT {/*pullup_resistance:*/ 2325, /*inline_resistance*/0}
 #endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_1
 
 #define EXTRUDER_1_OUTPUT_PIN kOutput2_PinNumber
-#define EXTRUDER_1_FAN_PIN    kOutput3_PinNumber
+#define EXTRUDER_1_FAN_PIN    kOutput8_PinNumber
 
 #define HAS_TEMPERATURE_SENSOR_2  true
 #if HAS_TEMPERATURE_SENSOR_2
@@ -284,7 +284,7 @@
     }
 #else
     #define TEMPERATURE_SENSOR_2_TYPE  PT100<kADC3_PinNumber>
-    #define TEMPERATURE_SENSOR_2_INIT {/*pullup_resistance:*/ 4700, /*inline_resistance*/0.75}
+    #define TEMPERATURE_SENSOR_2_INIT {/*pullup_resistance:*/ 4700, /*inline_resistance*/0}
 #endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_2
 
@@ -300,7 +300,7 @@
     }
 #else
     #define TEMPERATURE_SENSOR_3_TYPE  PT100<kADC2_PinNumber>
-    #define TEMPERATURE_SENSOR_3_INIT {/*pullup_resistance:*/ 2325, /*inline_resistance*/0.75}
+    #define TEMPERATURE_SENSOR_3_INIT {/*pullup_resistance:*/ 2325, /*inline_resistance*/0}
 #endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_3
 
