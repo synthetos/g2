@@ -1028,6 +1028,7 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
         if (mp_runtime_is_idle()) {                         // wait for steppers to actually finish
             mp_zero_segment_velocity();                     // finalize velocity for reporting purposes
             cm->hold_state = FEEDHOLD_MOTION_STOPPED;
+            cm_set_motion_state(MOTION_STOP);               // we just stopped it +++++ test this
 
             // If in a p2 hold, exit the p2 hold immediately set up a flush of the p2 planner queue            
             if (cm == &cm2) {

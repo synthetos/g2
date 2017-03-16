@@ -252,25 +252,27 @@ void cm_operation_init()
  *  (in-cycle) !%~  Same as above
  *  (in-cycle) !~%  Same as above (this one's an anomaly, but the intent would be to Q flush)
  *
+ *  The requests are arranged in priority order, highest priority first.
  *  Note that feedholds from p1 are initiated immediately from cm_request_feedhld(), 
  *  and are not triggered here. Only queued p2 feedholds (feedhold in feedhold) are 
  *  handled in the sequencer.
  */
+
 stat_t cm_operation_sequencing_callback()
 {
-    if (cm1.job_kill_state == JOB_KILL_REQUESTED) { // job kill must wait for any active hold to complete
+    if (cm1.job_kill_state == JOB_KILL_REQUESTED) {         // job kill must wait for any active hold to complete
         _start_job_kill();
     }
     if (cm1.hold_state == FEEDHOLD_REQUESTED) {
         _start_p1_feedhold();
     }
-//    if (cm2.hold_state == FEEDHOLD_REQUESTED) {     // look for a queued p2 feedhold
+//    if (cm2.hold_state == FEEDHOLD_REQUESTED) {             // look for a queued p2 feedhold
 //        _start_p2_feedhold();
 //    }
-    if (cm1.queue_flush_state == QUEUE_FLUSH_REQUESTED) {       // look for a queued flush request
+    if (cm1.queue_flush_state == QUEUE_FLUSH_REQUESTED) {   // look for a queued flush request
         _start_queue_flush();
     }
-    if (cm1.cycle_start_state == CYCLE_START_REQUESTED) { // look for a queued cycle start ot restart
+    if (cm1.cycle_start_state == CYCLE_START_REQUESTED) {   // look for a queued cycle start ot restart
         _start_cycle_restart();
     }
 
@@ -298,6 +300,37 @@ stat_t cm_feedhold_command_blocker()
     return (STAT_OK);
 }
 
+/*
+ * end state functions and helpers
+ */
+
+static stat_t _run_program_stop()
+{
+    cm_cycle_end();                         // end cycle and run program stop
+//    cm_program_stop();
+    return (STAT_OK);
+}
+
+static stat_t _run_program_end()
+{
+    cm_program_end();
+    return (STAT_OK);
+}
+
+static stat_t _run_alarm()
+{
+    return (STAT_OK);
+}
+
+static stat_t _run_shutdown()
+{
+    return (STAT_OK);
+}
+
+static stat_t _run_interlock()
+{
+    return (STAT_OK);
+}
 /****************************************************************************************
  * cm_request_cycle_start() - set request enum only
  * _start_cycle_start()  - run the cycle start
@@ -407,8 +440,17 @@ static stat_t _run_queue_flush()            // typically runs from cm1 planner
 
 /****************************************************************************************
  * cm_request_job_kill() - Control-D handler - set request flag only by ^d
- * _start_job_kill()     - invoke the job kill functions
- * _run_job_kill()       - perform the job kill. queue flush, enter alarm with no movement
+ * _run_job_kill_final() - perform the job kill. queue flush, enter alarm with no movement
+ * _start_job_kill()     - invoke the job kill function, which may start from various states
+ *
+ *  Job kill cases:
+ *  Job kill from machining cycle   (1) hold, flush and enter ALARM state
+ *  Job kill from PROBE             (2) flush and enter ALARM state
+ *  Job kill from HOMING            (3) flush and enter ALARM state
+ *  Job kill from JOGGING           (4) flush and enter ALARM state
+ *  Job kill from feedhold          (5) flush and enter ALARM state
+ *  Job kill from interlock         (6) flush and enter ALARM state
+ *  job kill has no action if from: (7) READY, STOP, END, ALARM, SHUTDOWN, PANIC states
  */
 
 void cm_request_job_kill()
@@ -418,50 +460,41 @@ void cm_request_job_kill()
 
 static stat_t _run_job_kill_final()
 {
-    cm_alarm(STAT_KILL_JOB, "Job killed by ^d");
+
+    // switch to p1 (may already be in it)
+    cm = &cm1;                              // return to primary planner (p1)
+    mp = (mpPlanner_t *)cm->mp;             // cm->mp is a void pointer
+    mr = mp->mr;
+
+    coolant_control_immediate(COOLANT_OFF, COOLANT_BOTH); // stop coolant
+    spindle_control_immediate(SPINDLE_OFF);               // stop spindle
+
+    cm->machine_state = MACHINE_ALARM;
+    rpt_exception(STAT_KILL_JOB, "Job killed by ^d");
+    sr_request_status_report(SR_REQUEST_IMMEDIATE);    
     return (STAT_OK);
 }
 
 static void _start_job_kill()
 {
+    // Cases (1 - 4)
+    if (cm1.machine_state == MACHINE_CYCLE) {
+        if (cm1.hold_state != FEEDHOLD_OFF) {
+            op.add_action(_feedhold_no_actions);
+            op.add_action(_run_queue_flush);
+        }        
+        op.add_action(_run_job_kill_final); // Case (5)
+        op.run_operation();
+    }
+/*
     if ((cm1.hold_state == FEEDHOLD_OFF) || (cm1.hold_state == FEEDHOLD_HOLD)) {
         cm1.job_kill_state = JOB_KILL_RUNNING;
-//        op.add_action(_feedhold_restart_no_actions);
         op.add_action(_run_queue_flush);
         op.add_action(_run_job_kill_final);
+        op.run_operation();
     }
-}
-
-/*
- * end state functions
- */
-
-static stat_t _run_program_stop()
-{
-    cm_cycle_end();                         // end cycle and run program stop
-//    cm_program_stop();
-    return (STAT_OK);
-}
-
-static stat_t _run_program_end()
-{
-    cm_program_end();
-    return (STAT_OK);
-}
-
-static stat_t _run_alarm()
-{
-    return (STAT_OK);
-}
-
-static stat_t _run_shutdown()
-{
-    return (STAT_OK);
-}
-
-static stat_t _run_interlock()
-{
-    return (STAT_OK);
+*/
+    cm1.job_kill_state = JOB_KILL_OFF;      // nothing to do. turn off the request
 }
 
 /****************************************************************************************
