@@ -89,12 +89,6 @@
 #define INPUT12_AVAILABLE 0
 #define INPUT13_AVAILABLE 0
 
-// BE AWARE: All ADCs set to 1 MUST have a corresponding kADC statement
-#define ADC0_AVAILABLE 1
-#define ADC1_AVAILABLE 1
-#define ADC2_AVAILABLE 0
-#define ADC3_AVAILABLE 0
-
 #define XIO_HAS_USB 1
 #define XIO_HAS_UART 1
 #define XIO_HAS_SPI 0
@@ -126,7 +120,7 @@ _MAKE_MOTATE_PIN(kUnassigned1, 'A', 0);                    // nc
 _MAKE_MOTATE_PIN(kUnassigned2, 'A', 1);                    // nc
 _MAKE_MOTATE_PIN(kSocket4_VrefPinNumber, 'A', 2);          // M4_Vref
 _MAKE_MOTATE_PIN(kUnassigned3, 'A', 3);                    // nc
-_MAKE_MOTATE_PIN(kADC0_PinNumber, 'A', 4);                 // BED_ADC
+_MAKE_MOTATE_PIN(kADC3_PinNumber, 'A', 4);                 // BED_ADC
 _MAKE_MOTATE_PIN(kOutput1_PinNumber, 'A', 5);              // DO_1 (Extruder1_PWM)
 _MAKE_MOTATE_PIN(kOutput3_PinNumber, 'A', 6);              // DO_3 (Fan1B_PWM)
 _MAKE_MOTATE_PIN(kOutputSAFE_PinNumber, 'A', 7);           // DO_9 (SAFE_PULSES - output from MCU)

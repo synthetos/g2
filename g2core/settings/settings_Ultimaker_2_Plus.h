@@ -271,34 +271,40 @@
 #endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_1
 
+#define EXTRUDER_1_OUTPUT_PIN kOutput2_PinNumber
+#define EXTRUDER_1_FAN_PIN    kOutput3_PinNumber
+
 #define HAS_TEMPERATURE_SENSOR_2  true
 #if HAS_TEMPERATURE_SENSOR_2
 #if 0 // 1 if a Thermistor, 0 if a PT100
-    #define TEMPERATURE_SENSOR_2_TYPE  Thermistor<kADC2_PinNumber>
+    #define TEMPERATURE_SENSOR_2_TYPE  Thermistor<kADC3_PinNumber>
     #define TEMPERATURE_SENSOR_2_INIT { \
     /*T1:*/     20.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
     /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 4700 \
     }
 #else
-    #define TEMPERATURE_SENSOR_2_TYPE  PT100<kADC2_PinNumber>
-    #define TEMPERATURE_SENSOR_2_INIT {/*pullup_resistance:*/ 2325, /*inline_resistance*/0.75}
+    #define TEMPERATURE_SENSOR_2_TYPE  PT100<kADC3_PinNumber>
+    #define TEMPERATURE_SENSOR_2_INIT {/*pullup_resistance:*/ 4700, /*inline_resistance*/0.75}
 #endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_2
+
+#define EXTRUDER_2_OUTPUT_PIN kOutput1_PinNumber
 
 #define HAS_TEMPERATURE_SENSOR_3  true
 #if HAS_TEMPERATURE_SENSOR_3
 #if 0 // 1 if a Thermistor, 0 if a PT100
-    #define TEMPERATURE_SENSOR_3_TYPE  Thermistor<kADC0_PinNumber>
+    #define TEMPERATURE_SENSOR_3_TYPE  Thermistor<kADC2_PinNumber>
     #define TEMPERATURE_SENSOR_3_INIT { \
     /*T1:*/     20.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
     /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 4700 \
     }
 #else
-    #define TEMPERATURE_SENSOR_3_TYPE  PT100<kADC0_PinNumber>
+    #define TEMPERATURE_SENSOR_3_TYPE  PT100<kADC2_PinNumber>
     #define TEMPERATURE_SENSOR_3_INIT {/*pullup_resistance:*/ 2325, /*inline_resistance*/0.75}
 #endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_3
 
+#define BED_OUTPUT_PIN kOutput11_PinNumber
 
 //** Digital Inputs **
 /*
@@ -379,7 +385,7 @@
 #define DO5_MODE                    IO_ACTIVE_HIGH
 #define DO6_MODE                    IO_ACTIVE_HIGH
 #define DO7_MODE                    IO_ACTIVE_HIGH
-#define DO8_MODE                    IO_ACTIVE_HIGH
+#define DO8_MODE                    IO_ACTIVE_LOW  // 5V Fan
 
 //SAFEin (Output) signal
 #define DO9_MODE                    IO_ACTIVE_HIGH
@@ -387,7 +393,7 @@
 #define DO10_MODE                   IO_ACTIVE_HIGH
 
 //Header Bed FET
-#define DO11_MODE                   IO_ACTIVE_HIGH
+#define DO11_MODE                   IO_ACTIVE_LOW
 
 //Indicator_LED
 #define DO12_MODE                   IO_ACTIVE_HIGH
@@ -412,7 +418,7 @@
 #define H2_DEFAULT_I                0.05
 #define H2_DEFAULT_D                150.0
 
-#define H3_DEFAULT_ENABLE           false
+#define H3_DEFAULT_ENABLE           true
 #define H3_DEFAULT_P                9.0
 #define H3_DEFAULT_I                0.12
 #define H3_DEFAULT_D                400.0

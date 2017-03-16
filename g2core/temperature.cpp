@@ -51,6 +51,22 @@
 #ifndef HAS_TEMPERATURE_SENSOR_3
 #define HAS_TEMPERATURE_SENSOR_3  false
 #endif
+#ifndef EXTRUDER_1_OUTPUT_PIN
+#define EXTRUDER_1_OUTPUT_PIN kOutput1_PinNumber
+#endif
+#ifndef EXTRUDER_1_FAN_PIN
+#define EXTRUDER_1_FAN_PIN    kOutput3_PinNumber
+#endif
+#ifndef EXTRUDER_2_OUTPUT_PIN
+#define EXTRUDER_2_OUTPUT_PIN kOutput2_PinNumber
+#endif
+#ifndef BED_OUTPUT_PIN
+#define BED_OUTPUT_PIN kOutput11_PinNumber
+#endif
+#ifndef BED_OUTPUT_INIT
+#define BED_OUTPUT_INIT
+//#define BED_OUTPUT_INIT  {kPWMPinInverted, fet_pin3_freq}
+#endif
 
 // These could be moved to settings
 // If the temperature stays at set_point +- TEMP_SETPOINT_HYSTERESIS for more
@@ -124,9 +140,16 @@ struct TemperatureSensor {
         return -1; // invalid temperature from a thermistor
     };
 
+    uint16_t get_raw_value() {
+        return 0;
+    };
+
     float get_voltage() {
         return -1;
-    }
+    };
+
+    void start_sampling() {
+    };
 };
 
 template<pin_number adc_pin_num, uint16_t min_temp = 0, uint16_t max_temp = 300>
@@ -201,9 +224,17 @@ struct Thermistor {
         return ((pullup_resistance * v) / (kSystemVoltage - v));   // resistance of thermistor
     };
 
+    uint16_t get_raw_value() {
+        return raw_adc_value;
+    };
+
     float get_voltage() {
         return raw_adc_voltage;
-    }
+    };
+
+    void start_sampling() {
+        adc_pin.startSampling();
+    };
 
     // Call back function from the ADC to tell it that the ADC has a new sample...
     void adc_has_new_value() {
@@ -252,11 +283,19 @@ struct PT100 {
 
         float v = raw_adc_voltage;
         return ((pullup_resistance * v) / (kSystemVoltage - v)) - inline_resistance;   // resistance of thermistor
-};
+    };
+
+    uint16_t get_raw_value() {
+        return raw_adc_value;
+    };
 
     float get_voltage() {
         return raw_adc_voltage;
-}
+    };
+
+    void start_sampling() {
+        adc_pin.startSampling();
+    };
 
     // Call back function from the ADC to tell it that the ADC has a new sample...
     void adc_has_new_value() {
@@ -299,7 +338,7 @@ float last_reported_temp3 = 0;
 // DO_1: Extruder1_PWM
 const int16_t fet_pin1_freq = 100;
 #if TEMPERATURE_OUTPUT_ON == 1
-PWMOutputPin<kOutput2_PinNumber> fet_pin1;// {kPWMPinInverted};
+PWMOutputPin<EXTRUDER_1_OUTPUT_PIN> fet_pin1;// {kPWMPinInverted};
 #else
 PWMOutputPin<-1> fet_pin1;// {kPWMPinInverted};
 #endif
@@ -307,7 +346,7 @@ PWMOutputPin<-1> fet_pin1;// {kPWMPinInverted};
 // DO_2: Extruder2_PWM
 const int16_t fet_pin2_freq = 100;
 #if TEMPERATURE_OUTPUT_ON == 1
-PWMOutputPin<kOutput1_PinNumber> fet_pin2;// {kPWMPinInverted};
+PWMOutputPin<EXTRUDER_2_OUTPUT_PIN> fet_pin2;// {kPWMPinInverted};
 #else
 PWMOutputPin<-1> fet_pin2;// {kPWMPinInverted};
 #endif
@@ -316,7 +355,7 @@ PWMOutputPin<-1> fet_pin2;// {kPWMPinInverted};
 // Warning, HeatBED is likely NOT a PWM pin, so it'll be binary output (duty cucle >= 50%).
 const int16_t fet_pin3_freq = 100;
 #if TEMPERATURE_OUTPUT_ON == 1
-PWMOutputPin<kOutput11_PinNumber> fet_pin3;// {kPWMPinInverted};
+PWMOutputPin<BED_OUTPUT_PIN> fet_pin3 BED_OUTPUT_INIT;
 #else
 PWMOutputPin<-1> fet_pin3;// {kPWMPinInverted};
 #endif
@@ -352,9 +391,9 @@ const int16_t temperature_sample_freq = 10; // every fet_pin1_sample_freq interr
 int16_t temperature_sample_counter = temperature_sample_freq;
 SysTickEvent adc_tick_event {[&] {
     if (!--temperature_sample_counter) {
-        temperature_sensor_1.adc_pin.startSampling();
-        temperature_sensor_2.adc_pin.startSampling();
-        temperature_sensor_3.adc_pin.startSampling();
+        temperature_sensor_1.start_sampling();
+        temperature_sensor_2.start_sampling();
+        temperature_sensor_3.start_sampling();
         temperature_sample_counter = temperature_sample_freq;
     }
 }, nullptr};
@@ -523,7 +562,7 @@ struct HeaterFan {
     }
 };
 
-HeaterFan<kOutput3_PinNumber> heater_fan1;
+HeaterFan<EXTRUDER_1_FAN_PIN> heater_fan1;
 
 /**** Static functions ****/
 
@@ -536,8 +575,6 @@ void temperature_init()
 {
     // setup heater PWM
     fet_pin1.setFrequency(fet_pin1_freq);
-    fet_pin1.setInterrupts(kInterruptOnOverflow|kInterruptPriorityLowest);
-
     fet_pin2.setFrequency(fet_pin2_freq);
     fet_pin3.setFrequency(fet_pin3_freq);
 
@@ -594,6 +631,7 @@ stat_t temperature_callback()
         pid_timeout.set(100);
 
         float temp = 0.0;
+        float fan_temp = 0.0;
         bool sr_requested = false;
 
         if (pid1._enable) {
@@ -605,8 +643,7 @@ stat_t temperature_callback()
                 sr_requested = true;
             }
         }
-
-        heater_fan1.newTemp(temp);
+        fan_temp = temp;
 
         if (pid2._enable) {
             temp = temperature_sensor_2.temperature_exact();
@@ -617,6 +654,9 @@ stat_t temperature_callback()
                 sr_requested = true;
             }
         }
+        fan_temp = max(fan_temp, temp);
+
+        heater_fan1.newTemp(fan_temp);
 
         if (pid3._enable) {
             temp = temperature_sensor_3.temperature_exact();
@@ -1010,9 +1050,9 @@ stat_t cm_get_heater_output(nvObj_t *nv)
 stat_t cm_get_heater_adc(nvObj_t *nv)
 {
     switch(_get_heater_number(nv)) {
-        case '1': { nv->value = (float)temperature_sensor_1.raw_adc_value; break; }
-        case '2': { nv->value = (float)temperature_sensor_2.raw_adc_value; break; }
-        case '3': { nv->value = (float)temperature_sensor_3.raw_adc_value; break; }
+        case '1': { nv->value = (float)temperature_sensor_1.get_raw_value(); break; }
+        case '2': { nv->value = (float)temperature_sensor_2.get_raw_value(); break; }
+        case '3': { nv->value = (float)temperature_sensor_3.get_raw_value(); break; }
 
         default: { nv->value = 0.0; break; }
     }

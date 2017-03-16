@@ -190,21 +190,21 @@ pin_number kOutput14_PinNumber = -1;   // 143;
 pin_number kOutput15_PinNumber = -1;   // 144;
 pin_number kOutput16_PinNumber = -1;   // 145;
 
-pin_number kADC0_PinNumber  = 150;  // Heated bed thermistor ADC
-pin_number kADC1_PinNumber  = 151;  // Extruder1_ADC
-pin_number kADC2_PinNumber  = 152;  // Extruder2_ADC
-pin_number kADC3_PinNumber  = -1;   // 153;
-pin_number kADC4_PinNumber  = -1;   // 154;
-pin_number kADC5_PinNumber  = -1;   // 155;
-pin_number kADC6_PinNumber  = -1;   // 156;
-pin_number kADC7_PinNumber  = -1;   // 157;
-pin_number kADC8_PinNumber  = -1;   // 158;
-pin_number kADC9_PinNumber  = -1;   // 159;
-pin_number kADC10_PinNumber = -1;   // 160;
-pin_number kADC11_PinNumber = -1;   // 161;
-pin_number kADC12_PinNumber = -1;   // 162;
-pin_number kADC13_PinNumber = 163;  // Not physially pinned out
-pin_number kADC14_PinNumber = 164;  // Not physially pinned out
+pin_number kADC1_PinNumber  = 150;  // Heated bed thermistor ADC
+pin_number kADC2_PinNumber  = 151;  // Extruder1_ADC
+pin_number kADC3_PinNumber  = 152;  // Extruder2_ADC
+pin_number kADC4_PinNumber  = -1;   // 153;
+pin_number kADC5_PinNumber  = -1;   // 154;
+pin_number kADC6_PinNumber  = -1;   // 155;
+pin_number kADC7_PinNumber  = -1;   // 156;
+pin_number kADC8_PinNumber  = -1;   // 157;
+pin_number kADC9_PinNumber  = -1;   // 158;
+pin_number kADC10_PinNumber = -1;   // 159;
+pin_number kADC11_PinNumber = -1;   // 160;
+pin_number kADC12_PinNumber = -1;   // 161;
+pin_number kADC13_PinNumber = -1;   // 162;
+pin_number kADC14_PinNumber = 163;  // Not physially pinned out
+pin_number kADC15_PinNumber = 164;  // Not physially pinned out
 
 // start next sequence at 170
 

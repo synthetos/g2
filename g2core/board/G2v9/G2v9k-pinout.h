@@ -81,11 +81,6 @@
 #define INPUT12_AVAILABLE 0
 #define INPUT13_AVAILABLE 0
 
-#define ADC0_AVAILABLE 1
-#define ADC1_AVAILABLE 1
-#define ADC2_AVAILABLE 0
-#define ADC3_AVAILABLE 0
-
 #define XIO_HAS_USB 1
 #define XIO_HAS_UART 0
 #define XIO_HAS_SPI 0
@@ -165,8 +160,8 @@ _MAKE_MOTATE_PIN(kSocket1_Microstep_2PinNumber, 'B', 16);     // Socket1_Microst
 _MAKE_MOTATE_PIN(kSocket1_VrefPinNumber, 'B', 17);            // Socket1_VrefPinNumber
 _MAKE_MOTATE_PIN(kSocket2_VrefPinNumber, 'B', 18);            // Socket2_VrefPinNumber
 _MAKE_MOTATE_PIN(kSocket3_VrefPinNumber, 'B', 19);            // Socket3_VrefPinNumber
-_MAKE_MOTATE_PIN(kADC0_PinNumber, 'B', 20);                   // Socket2_SPISlaveSelectPinNumber
-_MAKE_MOTATE_PIN(kADC1_PinNumber, 'B', 21);                   // Socket3_SPISlaveSelectPinNumber
+_MAKE_MOTATE_PIN(kADC1_PinNumber, 'B', 20);                   // Socket2_SPISlaveSelectPinNumber
+_MAKE_MOTATE_PIN(kADC2_PinNumber, 'B', 21);                   // Socket3_SPISlaveSelectPinNumber
 _MAKE_MOTATE_PIN(kSocket4_EnablePinNumber, 'B', 22);          // Socket4_EnablePinNumber
 _MAKE_MOTATE_PIN(kSocket4_SPISlaveSelectPinNumber, 'B', 23);  // Socket4_SPISlaveSelectPinNumber
 _MAKE_MOTATE_PIN(kSocket4_DirPinNumber, 'B', 24);             // Socket4_DirPinNumber

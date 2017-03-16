@@ -176,7 +176,7 @@ pin_number kGRBL_FeedHoldPinNumber     = -1;
 pin_number kGRBL_CycleStartPinNumber   = -1;
 pin_number kGRBL_CommonEnablePinNumber = -1;
 
-    
+
 // g2ref extensions
 // These first 5 may replace the Spindle and Coolant pins, above
 pin_number kOutput1_PinNumber = 130;  // DO_1: Extruder1_PWM
@@ -198,21 +198,21 @@ pin_number kOutput14_PinNumber = -1;   // 143;
 pin_number kOutput15_PinNumber = -1;   // 144;
 pin_number kOutput16_PinNumber = -1;   // 145;
 
-pin_number kADC0_PinNumber  = 150;  // Heated bed thermistor ADC
-pin_number kADC1_PinNumber  = 151;  // Extruder1_ADC
-pin_number kADC2_PinNumber  = 152;  // Extruder2_ADC
-pin_number kADC3_PinNumber  = 153;  // Aux ADC
-pin_number kADC4_PinNumber  = 154;  // Not physically pinned out
-pin_number kADC5_PinNumber  = 155;  // Not physically pinned out
-pin_number kADC6_PinNumber  = 156;  // Not physically pinned out
-pin_number kADC7_PinNumber  = 157;  // Not physically pinned out
-pin_number kADC8_PinNumber  = 158;  // Not physically pinned out
-pin_number kADC9_PinNumber  = 159;  // Not physically pinned out
-pin_number kADC10_PinNumber = 160;  // Not physically pinned out
-pin_number kADC11_PinNumber = 161;  // Not physically pinned out
-pin_number kADC12_PinNumber = 162;  // Not physically pinned out
-pin_number kADC13_PinNumber = 163;  // Not physically pinned out
-pin_number kADC14_PinNumber = 164;  // Not physically pinned out
+pin_number kADC1_PinNumber  = 150;  // Heated bed thermistor ADC
+pin_number kADC2_PinNumber  = 151;  // Extruder1_ADC
+pin_number kADC3_PinNumber  = 152;  // Extruder2_ADC
+pin_number kADC4_PinNumber  = 153;  // Aux ADC
+pin_number kADC5_PinNumber  = 154;  // Not physically pinned out
+pin_number kADC6_PinNumber  = 155;  // Not physically pinned out
+pin_number kADC7_PinNumber  = 156;  // Not physically pinned out
+pin_number kADC8_PinNumber  = 157;  // Not physically pinned out
+pin_number kADC9_PinNumber  = 158;  // Not physically pinned out
+pin_number kADC10_PinNumber = 159;  // Not physically pinned out
+pin_number kADC11_PinNumber = 160;  // Not physically pinned out
+pin_number kADC12_PinNumber = 161;  // Not physically pinned out
+pin_number kADC13_PinNumber = 162;  // Not physically pinned out
+pin_number kADC14_PinNumber = 163;  // Not physically pinned out
+pin_number kADC15_PinNumber = 164;  // Not physically pinned out
 
 pin_number kExternalClock1_PinNumber = 170;  // External pins for exporting a clock signal (for Trinamics)
 

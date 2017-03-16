@@ -83,12 +83,6 @@
 #define INPUT12_AVAILABLE 1
 #define INPUT13_AVAILABLE 0
 
-
-#define ADC0_AVAILABLE 1
-#define ADC1_AVAILABLE 1
-#define ADC2_AVAILABLE 1
-#define ADC3_AVAILABLE 0
-
 #define XIO_HAS_USB 1
 #define XIO_HAS_UART 1
 #define XIO_HAS_SPI 0
@@ -141,10 +135,10 @@ _MAKE_MOTATE_PIN(kOutput8_PinNumber, 'A', 13);               //
 _MAKE_MOTATE_PIN(kSocket1_StepPinNumber, 'A', 14);                //
 _MAKE_MOTATE_PIN(kOutput3_PinNumber, 'A', 15);                //
 _MAKE_MOTATE_PIN(kOutput4_PinNumber, 'A', 16);                //
-_MAKE_MOTATE_PIN(kADC3_PinNumber, 'A', 17);                   //
-_MAKE_MOTATE_PIN(kADC2_PinNumber, 'A', 18);                   //
-_MAKE_MOTATE_PIN(kADC1_PinNumber, 'A', 19);                   //
-_MAKE_MOTATE_PIN(kADC0_PinNumber, 'A', 20);                   //
+_MAKE_MOTATE_PIN(kADC4_PinNumber, 'A', 17);                   //
+_MAKE_MOTATE_PIN(kADC3_PinNumber, 'A', 18);                   //
+_MAKE_MOTATE_PIN(kADC2_PinNumber, 'A', 19);                   //
+_MAKE_MOTATE_PIN(kADC1_PinNumber, 'A', 20);                   //
 _MAKE_MOTATE_PIN(kSerial_CTSPinNumber, 'A', 21);                      //
 _MAKE_MOTATE_PIN(kSocket1_EnablePinNumber, 'A', 22);  //
 _MAKE_MOTATE_PIN(kOutput10_PinNumber, 'A', 23);                //

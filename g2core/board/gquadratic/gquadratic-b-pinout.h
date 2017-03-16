@@ -83,12 +83,6 @@
 #define INPUT12_AVAILABLE 0
 #define INPUT13_AVAILABLE 0
 
-
-#define ADC0_AVAILABLE 0
-#define ADC1_AVAILABLE 0
-#define ADC2_AVAILABLE 0
-#define ADC3_AVAILABLE 0
-
 #define XIO_HAS_USB 1
 #define XIO_HAS_UART 1
 #define XIO_HAS_SPI 0
