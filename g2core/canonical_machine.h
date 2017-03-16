@@ -98,12 +98,6 @@ typedef enum {
     MOTION_RUN                      // machine is in motion: set when the steppers execute an ALINE segment
 } cmMotionState;
 
-typedef enum {                      // state machine for cycle start 
-    CYCLE_START_OFF = 0,            // not requested
-    CYCLE_START_REQUESTED,
-    CYCLE_START_COMPLETE
-} cmCycleState;
-
 typedef enum {
     CYCLE_NONE = 0,                 // not in a cycle
     CYCLE_MACHINING,                // in normal machining cycle
@@ -149,6 +143,22 @@ typedef enum {                      // feedhold state machine
     FEEDHOLD_EXIT_ACTIONS_COMPLETE  // completed exit actions
 } cmFeedholdState;
 
+typedef enum {                      // Motion profiles
+    PROFILE_NORMAL = 0,             // Normal jerk in effect
+    PROFILE_FAST                    // High speed jerk in effect
+} cmMotionProfile;
+
+typedef enum {                      // state machine for cycle start
+    CYCLE_START_OFF = 0,            // not requested
+    CYCLE_START_REQUESTED,
+    CYCLE_START_COMPLETE
+} cmCycleState;
+
+typedef enum {                      // queue flush state machine
+    QUEUE_FLUSH_OFF = 0,            // no queue flush in effect
+    QUEUE_FLUSH_REQUESTED           // flush has been requested but not started yet
+} cmFlushState;
+
 typedef enum {                      // applies to cm->homing_state
     HOMING_NOT_HOMED = 0,           // machine is not homed (0=false)
     HOMING_HOMED = 1,               // machine is homed (1=true)
@@ -172,15 +182,11 @@ typedef enum {                      // feed override state machine
     MFO_SYNC
 } cmOverrideState;
 
-typedef enum {                      // queue flush state machine
-    FLUSH_OFF = 0,                  // no queue flush in effect
-    FLUSH_REQUESTED                 // flush has been requested but not started yet
-} cmFlushState;
-
-typedef enum {                      // Motion profiles
-    PROFILE_NORMAL = 0,             // Normal jerk in effect
-    PROFILE_FAST                    // High speed jerk in effect
-} cmMotionProfile;
+typedef enum {                      // job kill state machine
+    JOB_KILL_OFF = 0,
+    JOB_KILL_REQUESTED,
+    JOB_KILL_RUNNING    
+} cmJobKillState;
 
 /*****************************************************************************
  * CANONICAL MACHINE STRUCTURES
@@ -278,22 +284,18 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     cmMachineState  machine_state;          // macs: machine/cycle/motion is the actual machine state
     cmCycleType     cycle_type;             // cycs
     cmMotionState   motion_state;           // mots
-    
-//    cmFeedholdType  hold_type;              // hold: type of feedhold requested
-//    cmFeedholdFinal hold_final;             // hold: final state of hold
-//    cmFeedholdState hold_state;             // hold: feedhold state machine
 
     cmFeedholdType  hold_type;              // hold: type of feedhold requested
     cmFeedholdExit  hold_exit;              // hold: final state of hold on exit
     cmMotionProfile hold_profile;           // hold: motion profile to use for deceleration
     cmFeedholdState hold_state;             // hold: feedhold state machine
 
-    cmFlushState    flush_state;            // hold: queue flush state machine
-    cmCycleState    cycle_state;            // used to manage cycle start
-
+    cmFlushState    queue_flush_state;      // queue flush state machine
+    cmCycleState    cycle_start_state;      // used to manage cycle starts and restarts
+    cmJobKillState  job_kill_state;         // used to manage job kill transitions
+    
     bool request_interlock;                 // enter interlock
     bool request_interlock_exit;            // exit interlock
-    bool request_job_kill;                  // ^d - end hold, flush and alarm
 
     cmOverrideState mfo_state;              // feed override state machine
 
@@ -530,7 +532,7 @@ void cm_halt_motion(void);                                      // halt motion (
 stat_t cm_alarm(const stat_t status, const char *msg);          // enter alarm state - preserve Gcode state
 stat_t cm_shutdown(const stat_t status, const char *msg);       // enter shutdown state - dump all state
 stat_t cm_panic(const stat_t status, const char *msg);          // enter panic state - needs RESET
-void cm_job_kill(void);                                         // control-D handler
+void cm_request_job_kill(void);                                 // control-D handler
 
 /**** cfgArray interface functions ****/
 

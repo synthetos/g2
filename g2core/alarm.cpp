@@ -242,12 +242,3 @@ stat_t cm_panic(const stat_t status, const char *msg)
     rpt_exception(status, msg);                 // send panic report
     return (status);
 }
-
-/****************************************************************************************
- * cm_job_kill() - Control-D handler
- */
-
-void cm_job_kill()
-{
-    cm1.request_job_kill = true;
-}

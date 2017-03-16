@@ -191,15 +191,15 @@ void canonical_machine_reset(cmMachine_t *_cm)
     _cm->homing_state = HOMING_NOT_HOMED;
 
     // reset request flags
-    _cm->flush_state = FLUSH_OFF;
+    _cm->queue_flush_state = QUEUE_FLUSH_OFF;
+    _cm->cycle_start_state = CYCLE_START_OFF;
+    _cm->job_kill_state = JOB_KILL_OFF;
     _cm->limit_requested = 0;                       // resets switch closures that occurred during initialization
     _cm->safety_interlock_disengaged = 0;           // ditto
     _cm->safety_interlock_reengaged = 0;            // ditto
     _cm->shutdown_requested = 0;                    // ditto
-
     _cm->request_interlock = false;
     _cm->request_interlock_exit = false;
-    _cm->request_job_kill = false;
 
     // set initial state and signal that the machine is ready for action
     _cm->cycle_type = CYCLE_NONE;

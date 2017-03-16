@@ -41,6 +41,7 @@
 static void _start_p1_feedhold(void);
 static void _start_cycle_restart(void);
 static void _start_queue_flush(void);
+static void _start_job_kill(void);
 
 // Feedhold actions
 static stat_t _feedhold_with_actions(void);
@@ -257,15 +258,22 @@ void cm_operation_init()
  */
 stat_t cm_operation_sequencing_callback()
 {
+    if (cm1.job_kill_state == JOB_KILL_REQUESTED) { // job kill must wait for any active hold to complete
+        _start_job_kill();
+    }
     if (cm1.hold_state == FEEDHOLD_REQUESTED) {
         _start_p1_feedhold();
     }
-    if (cm1.flush_state == FLUSH_REQUESTED) {
+//    if (cm2.hold_state == FEEDHOLD_REQUESTED) {     // look for a queued p2 feedhold
+//        _start_p2_feedhold();
+//    }
+    if (cm1.queue_flush_state == QUEUE_FLUSH_REQUESTED) {       // look for a queued flush request
         _start_queue_flush();
     }
-    if (cm1.cycle_state == CYCLE_START_REQUESTED) {
+    if (cm1.cycle_start_state == CYCLE_START_REQUESTED) { // look for a queued cycle start ot restart
         _start_cycle_restart();
     }
+
     return (op.run_operation());
 }
 
@@ -298,17 +306,17 @@ stat_t cm_feedhold_command_blocker()
 void cm_request_cycle_start()
 {
     if (cm1.hold_state != FEEDHOLD_OFF) {           // restart from a feedhold
-        if (cm1.flush_state == FLUSH_REQUESTED) {   // possible race condition. Flush wins
-            cm1.cycle_state = CYCLE_START_OFF;
+        if (cm1.queue_flush_state == QUEUE_FLUSH_REQUESTED) {   // possible race condition. Flush wins
+            cm1.cycle_start_state = CYCLE_START_OFF;
         } else {
-            cm1.cycle_state = CYCLE_START_REQUESTED; 
+            cm1.cycle_start_state = CYCLE_START_REQUESTED; 
         }
     } else {                                        // execute cycle start directly
         if (mp_has_runnable_buffer(&mp1)) {
             cm_cycle_start();
             st_request_exec_move();
         }
-        cm1.cycle_state = CYCLE_START_OFF;        
+        cm1.cycle_start_state = CYCLE_START_OFF;        
     }    
 }
 
@@ -316,7 +324,7 @@ static void _start_cycle_restart()
 {
     // Feedhold cycle starts run an operation to complete multiple actions
     if (cm1.hold_state == FEEDHOLD_HOLD) {
-        cm1.cycle_state = CYCLE_START_OFF;
+        cm1.cycle_start_state = CYCLE_START_OFF;
         switch (cm1.hold_type) {
             case FEEDHOLD_TYPE_ACTIONS:    { op.add_action(_feedhold_restart_with_actions); break; }
             case FEEDHOLD_TYPE_NO_ACTIONS: { op.add_action(_feedhold_restart_no_actions); break; }
@@ -367,16 +375,16 @@ void cm_request_queue_flush()
 {
     // Can only initiate a queue flush if in a feedhold
     if (cm1.hold_state != FEEDHOLD_OFF) {
-        cm1.flush_state = FLUSH_REQUESTED;
+        cm1.queue_flush_state = QUEUE_FLUSH_REQUESTED;
     } else {
-        cm1.flush_state = FLUSH_OFF;        
+        cm1.queue_flush_state = QUEUE_FLUSH_OFF;        
     }
 }
 
 static void _start_queue_flush()
 {
     // Don't initiate the queue until in HOLD state (this also means that runtime is idle)
-    if ((cm1.flush_state == FLUSH_REQUESTED) && (cm1.hold_state == FEEDHOLD_HOLD)) {
+    if ((cm1.queue_flush_state == QUEUE_FLUSH_REQUESTED) && (cm1.hold_state == FEEDHOLD_HOLD)) {
         if (cm1.hold_type == FEEDHOLD_TYPE_ACTIONS) {
             op.add_action(_feedhold_restart_with_actions);
         } else {
@@ -392,9 +400,36 @@ static stat_t _run_queue_flush()            // typically runs from cm1 planner
     cm_abort_arc(cm);                       // kill arcs so they don't just create more alines
     planner_reset((mpPlanner_t *)cm->mp);   // reset primary planner. also resets the mr under the planner
     cm_reset_position_to_absolute_position(cm);
-    cm1.flush_state = FLUSH_OFF;
+    cm1.queue_flush_state = QUEUE_FLUSH_OFF;
     qr_request_queue_report(0);             // request a queue report, since we've changed the number of buffers available
     return (STAT_OK);
+}
+
+/****************************************************************************************
+ * cm_request_job_kill() - Control-D handler - set request flag only by ^d
+ * _start_job_kill()     - invoke the job kill functions
+ * _run_job_kill()       - perform the job kill. queue flush, enter alarm with no movement
+ */
+
+void cm_request_job_kill()
+{
+    cm1.job_kill_state = JOB_KILL_REQUESTED;
+}
+
+static stat_t _run_job_kill_final()
+{
+    cm_alarm(STAT_KILL_JOB, "Job killed by ^d");
+    return (STAT_OK);
+}
+
+static void _start_job_kill()
+{
+    if ((cm1.hold_state == FEEDHOLD_OFF) || (cm1.hold_state == FEEDHOLD_HOLD)) {
+        cm1.job_kill_state = JOB_KILL_RUNNING;
+//        op.add_action(_feedhold_restart_no_actions);
+        op.add_action(_run_queue_flush);
+        op.add_action(_run_job_kill_final);
+    }
 }
 
 /*
@@ -528,7 +563,7 @@ static stat_t _feedhold_with_actions()   // Execute Case (5)
         cm2.hold_state = FEEDHOLD_OFF;
         cm2.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;
         cm2.gm.absolute_override = ABSOLUTE_OVERRIDE_OFF;
-        cm2.flush_state = FLUSH_OFF;
+        cm2.queue_flush_state = QUEUE_FLUSH_OFF;
         cm2.gm.feed_rate = 0;
 
         // clear the target and set the positions to the current hold position
