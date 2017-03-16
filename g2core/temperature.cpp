@@ -65,7 +65,6 @@
 #endif
 #ifndef BED_OUTPUT_INIT
 #define BED_OUTPUT_INIT
-//#define BED_OUTPUT_INIT  {kPWMPinInverted, fet_pin3_freq}
 #endif
 
 // These could be moved to settings
@@ -109,8 +108,11 @@
 #ifndef TEMP_MIN_RISE_DEGREES_OVER_TIME
 #define TEMP_MIN_RISE_DEGREES_OVER_TIME (float)10.0
 #endif
+#ifndef TEMP_MIN_BED_RISE_DEGREES_OVER_TIME
+#define TEMP_MIN_BED_RISE_DEGREES_OVER_TIME (float)3.0
+#endif
 #ifndef TEMP_MIN_RISE_TIME
-#define TEMP_MIN_RISE_TIME (float)(60.0 * 1000.0) // 20 seconds
+#define TEMP_MIN_RISE_TIME (float)(60.0 * 1000.0) // one minute
 #endif
 #ifndef TEMP_MIN_RISE_DEGREES_FROM_TARGET
 #define TEMP_MIN_RISE_DEGREES_FROM_TARGET (float)10.0
@@ -420,11 +422,12 @@ struct PID {
     bool _at_set_point;
 
     Timeout _rise_time_timeout;     // used to keep track of if we are increasing temperature fast enough
+    float _min_rise_over_time;      // the amount of degrees that it must rise in the given time
     float _rise_time_checkpoint;    // when we start the timer, we set _rise_time_checkpoint to the minimum goal
 
     bool _enable;                   // set true to enable this heater
 
-    PID(float P, float I, float D, float startSetPoint = 0.0) : _p_factor{P/100.0f}, _i_factor{I/100.0f}, _d_factor{D/100.0f}, _set_point{startSetPoint}, _at_set_point{false} {};
+    PID(float P, float I, float D, float min_rise_over_time, float startSetPoint = 0.0) : _p_factor{P/100.0f}, _i_factor{I/100.0f}, _d_factor{D/100.0f}, _set_point{startSetPoint}, _at_set_point{false}, _min_rise_over_time(min_rise_over_time) {};
 
     float getNewOutput(float input) {
         // If the input is < 0, the sensor failed
@@ -469,7 +472,7 @@ struct PID {
 
             if (!_rise_time_timeout.isSet() && (_set_point > (input + TEMP_MIN_RISE_DEGREES_FROM_TARGET))) {
                 _rise_time_timeout.set(TEMP_MIN_RISE_TIME);
-                _rise_time_checkpoint = min(input + TEMP_MIN_RISE_DEGREES_OVER_TIME, _set_point + TEMP_SETPOINT_HYSTERESIS);
+                _rise_time_checkpoint = min(input + _min_rise_over_time, _set_point + TEMP_SETPOINT_HYSTERESIS);
             }
         }
 
@@ -526,9 +529,9 @@ struct PID {
 // NOTICE, the JSON alters incoming values for these!
 // {he1p:9} == 9.0/100.0 here
 
-PID pid1 { 9.0, 0.11, 400.0 }; // default values
-PID pid2 { 7.5, 0.12, 400.0 }; // default values
-PID pid3 { 7.5, 0.12, 400.0 }; // default values
+PID pid1 { 9.0, 0.11, 400.0, TEMP_MIN_RISE_DEGREES_OVER_TIME }; // default values
+PID pid2 { 7.5, 0.12, 400.0, TEMP_MIN_RISE_DEGREES_OVER_TIME }; // default values
+PID pid3 { 7.5, 0.12, 400.0, TEMP_MIN_BED_RISE_DEGREES_OVER_TIME }; // default values
 Timeout pid_timeout;
 
 
