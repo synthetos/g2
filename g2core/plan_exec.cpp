@@ -307,7 +307,7 @@ stat_t mp_exec_move()
         }
 
         // Perform motion state transition. Also sets active model to RUNTIME
-        if (cm->motion_state != MOTION_RUN) { cm_set_motion_state(MOTION_RUN); }
+//        if (cm->motion_state != MOTION_RUN) { cm_set_motion_state(MOTION_RUN); }
     }
     if (bf->bf_func == NULL) {
         return(cm_panic(STAT_INTERNAL_ERROR, "mp_exec_move()")); // never supposed to get here
@@ -527,8 +527,12 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         if ((status == STAT_OK) || (status == STAT_NOOP)) {
             cm->hold_state = FEEDHOLD_DECEL_COMPLETE;
             bf->block_state = BLOCK_INITIAL_ACTION;     // reset bf so it can restart the rest of the move
+            cm_set_motion_state(MOTION_STOP);
         }
     }
+    
+    // Perform motion state transition. Also sets active model to RUNTIME
+    if (cm->motion_state != MOTION_RUN) { cm_set_motion_state(MOTION_RUN); }
 
     // There are 4 things that can happen here depending on return conditions:
     //  status        bf->block_state       Description
@@ -1027,8 +1031,8 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
     if (cm->hold_state == FEEDHOLD_MOTION_STOPPING) {
         if (mp_runtime_is_idle()) {                         // wait for steppers to actually finish
             mp_zero_segment_velocity();                     // finalize velocity for reporting purposes
+//            cm_set_motion_state(MOTION_STOP);               // we just stopped it +++++ test this
             cm->hold_state = FEEDHOLD_MOTION_STOPPED;
-            cm_set_motion_state(MOTION_STOP);               // we just stopped it +++++ test this
 
             // If in a p2 hold, exit the p2 hold immediately set up a flush of the p2 planner queue            
             if (cm == &cm2) {

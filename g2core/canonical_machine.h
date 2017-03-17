@@ -261,7 +261,6 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     float feedhold_z_lift;                  // mm to move Z axis on feedhold, or 0 to disable
     bool soft_limit_enable;                 // true to enable soft limit testing on Gcode inputs
     bool limit_enable;                      // true to enable limit switches (disabled is same as override)
-    bool safety_interlock_enable;           // true to enable safety interlock system
 
     // Coordinate systems and offsets
     float coord_offset[COORDS+1][AXES];     // persistent coordinate offsets: absolute (G53) + G54,G55,G56,G57,G58,G59
@@ -293,22 +292,21 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     cmFlushState    queue_flush_state;      // queue flush state machine
     cmCycleState    cycle_start_state;      // used to manage cycle starts and restarts
     cmJobKillState  job_kill_state;         // used to manage job kill transitions
-    
-    bool request_interlock;                 // enter interlock
-    bool request_interlock_exit;            // exit interlock
-
     cmOverrideState mfo_state;              // feed override state machine
 
-    uint8_t safety_interlock_disengaged;    // set non-zero to start interlock processing (value is input number)
-    uint8_t safety_interlock_reengaged;     // set non-zero to end interlock processing (value is input number)
-    cmSafetyState safety_interlock_state;   // safety interlock state
-    uint32_t esc_boot_timer;                // timer for Electronic Speed Control (Spindle electronics) to boot
+    bool return_flags[AXES];                // flags for recording which axes moved - used in feedhold exit move
 
     uint8_t limit_requested;                // set non-zero to request limit switch processing (value is input number)
     uint8_t shutdown_requested;             // set non-zero to request shutdown in support of external estop (value is input number)
     bool deferred_write_flag;               // G10 data has changed (e.g. offsets) - flag to persist them
-
-    bool return_flags[AXES];                // flags for recording which axes moved - used in feedhold exit move
+    
+    bool safety_interlock_enable;           // true to enable safety interlock system
+    bool request_interlock;                 // enter interlock
+    bool request_interlock_exit;            // exit interlock
+    uint8_t safety_interlock_disengaged;    // set non-zero to start interlock processing (value is input number)
+    uint8_t safety_interlock_reengaged;     // set non-zero to end interlock processing (value is input number)
+    cmSafetyState safety_interlock_state;   // safety interlock state
+    uint32_t esc_boot_timer;                // timer for Electronic Speed Control (Spindle electronics) to boot
 
     cmHomingState homing_state;             // home: homing cycle sub-state machine
     uint8_t homed[AXES];                    // individual axis homing flags
