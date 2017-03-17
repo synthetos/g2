@@ -179,19 +179,19 @@ typedef enum {              // axis modes (ordered: see _cm_get_feed_time())
 /****************************************************************************************
  * GCODE MODEL - The following GCodeModel/GCodeInput structs are used:
  *
- * - gm is the core Gcode model state. It keeps the internal gcode state model in
- *   normalized, canonical form. All values are unit converted (to mm) and in the
- *   machine coordinate system (absolute coordinate system). Gm is owned by the
+ * - gm is the core Gcode model state. It keeps the internal gcode state model in 
+ *   normalized canonical form. All values are unit converted (to mm) and in the 
+ *   machine coordinate system (absolute coordinate system). Gm is owned by the 
  *   canonical machine layer and should be accessed only through cm_ routines.
  *
- *   The gm core struct is copied and passed as context to the runtime where it is
- *   used for planning, move execution, feedholds, and reporting.
+ *   The gm core struct is copied and passed as context to the runtime where it is used 
+ *   for planning, move execution, feedholds, and reporting.
  *
  * - gmx is the extended gcode model variables that are only used by the canonical
- *   machine and do not need to be passed further down. It keeps "global" gcode
- *   state that does not change when you go down through the planner to the runtime.
- *   Other Gcode model state is kept in the singletons for various sub-systems, such
- *   as arcs, spindle, coolant, and others (i.e. not ALL gcode global state is in gmx)
+ *   machine and do not need to be passed further down. It keeps "global" gcode state
+ *   that does not change when you go down through the planner to the runtime. Other
+ *   Gcode model state is kept in the singletons for various sub-systems, such as arcs
+ *   spindle, coolant, and others (i.e. not ALL gcode global state is in gmx)
  *
  * - gn is used by the gcode interpreter and is re-initialized for each gcode block.
  *   It accepts data in the new gcode block in the formats present in the block 
@@ -199,21 +199,21 @@ typedef enum {              // axis modes (ordered: see _cm_get_feed_time())
  *    restored from gm.
  *
  * - gf is used by the gcode parser interpreter to hold flags for any data that has 
- *   changed in gn during the parse. gf.target[] values are also used by the 
- *   canonical machine during set_target().
+ *   changed in gn during the parse. gf.target[] values are also used by the canonical 
+ *   machine during set_target().
  *
- * - cfg (config struct in config.h) is also used heavily and contains some values 
- *   that might be considered to be Gcode model values. The distinction is that all 
- *   values in the config are persisted and restored, whereas the gm structs are 
- *   transient. So cfg has the G54 - G59 offsets, but gm has the G92 offsets. 
- *   cfg has the power-on / reset gcode default values, but gm has the operating 
- *   state for the values (which may have changed).
+ * - cfg (config struct in config.h) is also used heavily and contains some values that
+ *   might be considered to be Gcode model values. The distinction is that all values 
+ *   in the config are persisted and restored, whereas the gm structs are transient. 
+ *   So cfg has the G54 - G59 offsets, but gm has the G92 offsets. cfg has the power-on / 
+ *   reset gcode default values, but gm has the operating state for the values 
+ *   (which may have changed).
  */
 
 typedef struct GCodeState {             // Gcode model state - used by model, planning and runtime
     uint32_t linenum;                   // Gcode block line number
-    cmMotionMode motion_mode;           // Group1: G0, G1, G2, G3, G38.2, G80, G81,
-                                        // G82, G83 G84, G85, G86, G87, G88, G89
+    cmMotionMode motion_mode;           // Group1: G0, G1, G2, G3, G38.2, G80, G81, G82
+                                        //         G83, G84, G85, G86, G87, G88, G89
 
     float target[AXES];                 // XYZABC target where the move should go
     float target_comp[AXES];            // summation compensation (Kahan) overflow value

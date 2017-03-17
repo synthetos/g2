@@ -133,9 +133,8 @@ const cfgItem_t cfgArray[] = {
     { "", "frmo",_f0, 0, cm_print_frmo, cm_get_frmo, set_ro, (float *)&cs.null, 0 },    // feed rate mode
     { "", "tool",_f0, 0, cm_print_tool, cm_get_toolv,set_ro, (float *)&cs.null, 0 },    // active tool
     { "", "g92e",_f0, 0, cm_print_g92e, get_ui8,     set_ro, (float *)&cm->gmx.origin_offset_enable, 0 }, // G92 enabled
-
 #ifdef TEMPORARY_HAS_LEDS
-    { "",   "_leds",_f0, 0, tx_print_nul, _get_leds,_set_leds,(float *)&cs.null, 0 },   // TEMPORARY - change LEDs
+    { "", "_leds",_f0, 0, tx_print_nul, _get_leds,_set_leds, (float *)&cs.null, 0 },    // TEMPORARY - change LEDs
 #endif
 
     { "mpo","mpox",_f0, 5, cm_print_mpo, cm_get_mpo, set_ro, (float *)&cs.null, 0 },    // X machine position

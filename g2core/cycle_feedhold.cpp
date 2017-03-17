@@ -470,6 +470,9 @@ static stat_t _run_job_kill_final()
 
     cm->hold_state = FEEDHOLD_OFF;
     cm->machine_state = MACHINE_ALARM;
+    cm->cycle_type = CYCLE_NONE;
+    cm_set_motion_state(MOTION_STOP);       // set to stop and set the active model
+
     rpt_exception(STAT_KILL_JOB, "Job killed by ^d");
     sr_request_status_report(SR_REQUEST_IMMEDIATE);    
     return (STAT_OK);
