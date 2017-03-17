@@ -57,6 +57,7 @@
 
 // Communications and reporting settings
 
+#define MARLIN_COMPAT_ENABLED       true                    // enable marlin compatibility mode
 #define COMM_MODE                   JSON_MODE               // one of: TEXT_MODE, JSON_MODE
 #define XIO_ENABLE_FLOW_CONTROL FLOW_CONTROL_RTS            // FLOW_CONTROL_OFF, FLOW_CONTROL_RTS
 #define XIO_UART_MUTES_WHEN_USB_CONNECTED 1                 // Mute the UART when USB connects
@@ -103,7 +104,7 @@
 #define M1_MICROSTEPS               32                      // 1mi        1,2,4,8,16,32
 #define M1_POLARITY                 0                       // 1po        0=normal, 1=reversed
 #define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm        standard
-#define M1_POWER_LEVEL              0.9                     // 1mp
+#define M1_POWER_LEVEL              0.7                     // 1mp
 
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
 #define M2_MOTOR_MAP                AXIS_Y
@@ -111,9 +112,9 @@
 // Marlin says 80 steps/unit, and 16 microsteps, with a 200-step/rev motor
 #define M2_TRAVEL_PER_REV           40
 #define M2_MICROSTEPS               32
-#define M2_POLARITY                 0
+#define M2_POLARITY                 1
 #define M2_POWER_MODE               MOTOR_POWER_MODE
-#define M2_POWER_LEVEL              0.9
+#define M2_POWER_LEVEL              0.7
 
 #define M3_MOTOR_MAP                AXIS_Z
 #define M3_STEP_ANGLE               1.8
@@ -122,15 +123,15 @@
 #define M3_MICROSTEPS               32
 #define M3_POLARITY                 0
 #define M3_POWER_MODE               MOTOR_POWER_MODE
-#define M3_POWER_LEVEL              0.9
+#define M3_POWER_LEVEL              0.7
 
 #define M4_MOTOR_MAP                AXIS_A
 #define M4_STEP_ANGLE               1.8
 #define M4_TRAVEL_PER_REV           360            // degrees moved per motor rev
 #define M4_MICROSTEPS               32
-#define M4_POLARITY                 1
+#define M4_POLARITY                 0
 #define M4_POWER_MODE               MOTOR_POWER_MODE
-#define M4_POWER_LEVEL              0.9
+#define M4_POWER_LEVEL              0.7
 
 // 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
 #define M5_MOTOR_MAP                AXIS_B
@@ -165,7 +166,7 @@
 #define Y_JERK_MAX                  6000
 #define Y_JERK_HIGH_SPEED           6000
 #define Y_HOMING_INPUT              3
-#define Y_HOMING_DIRECTION          0
+#define Y_HOMING_DIRECTION          1
 #define Y_SEARCH_VELOCITY           3000
 #define Y_LATCH_VELOCITY            200
 #define Y_LATCH_BACKOFF             5
@@ -184,6 +185,8 @@
 #define Z_LATCH_VELOCITY            100
 #define Z_LATCH_BACKOFF             2
 #define Z_ZERO_BACKOFF              0
+
+#define G55_Z_OFFSET                0.5
 
 // Rotary values are chosen to make the motor react the same as X for testing
 /***************************************************************************************
