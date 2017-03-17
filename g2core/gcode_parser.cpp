@@ -1140,7 +1140,7 @@ static stat_t _execute_gcode_block_marlin()
             if (gf.S_word) { temp = gv.S_word; }
             if (gf.P_word) { temp = gv.P_word; }            // we treat them the same, for now
 
-            uint8_t tool = (gv.next_action == NEXT_ACTION_MARLIN_SET_EXTRUDER_TEMP) ? cm.gm.tool_select : 2; // heat bed is 2 here, normally 3
+            uint8_t tool = (gv.next_action == NEXT_ACTION_MARLIN_SET_EXTRUDER_TEMP) ? cm.gm.tool_select : 3;
             ritorno(marlin_set_temperature(tool, temp, gf.marlin_wait_for_temp));
 
             gf.P_word = false;

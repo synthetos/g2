@@ -330,7 +330,7 @@ stat_t marlin_set_temperature(uint8_t tool, float temperature, bool wait) {
     if (MarlinSetTempState::Idle != set_temp_state) {
         return (STAT_BUFFER_FULL_FATAL); // we shouldn't be here
     }
-    if ((tool < 1) || (tool > 2)) {
+    if ((tool < 1) || (tool > 3)) {
         return STAT_INPUT_VALUE_RANGE_ERROR;
     }
 
