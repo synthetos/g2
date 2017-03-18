@@ -134,7 +134,6 @@ typedef enum {                      // feedhold state machine
     FEEDHOLD_DECEL_COMPLETE,        // feedhold deceleration has completed, but motors may not have stopped yet
     FEEDHOLD_MOTION_STOPPING,       // waiting for motors to have stopped at hold point (motion stop)
     FEEDHOLD_MOTION_STOPPED,        // motion has stopped at hold point
-    FEEDHOLD_HOLD_POINT_REACHED,    // hold point reached and logic run - prepare for next steps
     FEEDHOLD_HOLD_ACTIONS_PENDING,  // wait for feedhold actions to complete
     FEEDHOLD_HOLD_ACTIONS_COMPLETE, // 
     FEEDHOLD_HOLD,                  // HOLDING (steady state)

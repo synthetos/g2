@@ -559,7 +559,7 @@ static stat_t _feedhold_skip()
     if (cm1.hold_state == FEEDHOLD_OFF) {   // if entered while OFF start a feedhold
         cm1.hold_state = FEEDHOLD_SYNC;
     }
-    if (cm1.hold_state < FEEDHOLD_HOLD_POINT_REACHED) {
+    if (cm1.hold_state < FEEDHOLD_MOTION_STOPPED) {
         return (STAT_EAGAIN);
     }
     cm1.hold_state = FEEDHOLD_OFF;          // cannot be in HOLD or command won't plan (see mp_plan_block_list())
@@ -573,9 +573,11 @@ static stat_t _feedhold_no_actions()
     if (cm1.hold_state == FEEDHOLD_OFF) {   // start a feedhold
         cm1.hold_state = FEEDHOLD_SYNC;
     }
-    if (cm1.hold_state < FEEDHOLD_HOLD_POINT_REACHED) { // wait until it reaches the hold point
+    if (cm1.hold_state < FEEDHOLD_MOTION_STOPPED) { // wait until it reaches the hold point
         return (STAT_EAGAIN);
     }
+    mp_replan_queue(mp_get_r());            // unplan current forward plan (bf head block), and reset all blocks
+    st_request_forward_plan();              // replan from the new bf buffer
     cm1.hold_state = FEEDHOLD_HOLD;
     return (STAT_OK);
 }
@@ -590,7 +592,7 @@ static void _feedhold_actions_done_callback(float* vect, bool* flag)
 static stat_t _feedhold_with_actions()   // Execute Case (5)
 {
     // Check to run first-time code
-    if (cm1.hold_state == FEEDHOLD_HOLD_POINT_REACHED) {
+    if (cm1.hold_state == FEEDHOLD_MOTION_STOPPED) {
         cm->hold_state = FEEDHOLD_HOLD_ACTIONS_PENDING;  // next state
 
         // copy the primary canonical machine to the secondary,

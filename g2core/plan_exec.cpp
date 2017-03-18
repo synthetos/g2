@@ -485,7 +485,7 @@ stat_t mp_exec_aline(mpBuf_t *bf)
     // Feedhold Processing - We need to handle the following cases (listed in rough sequence order):
     if (cm->hold_state != FEEDHOLD_OFF) {
         // if running actions, or in HOLD state, or exiting with actions
-        if (cm->hold_state >= FEEDHOLD_HOLD_POINT_REACHED) { // handles _exec_aline_feedhold_processing case (7)
+        if (cm->hold_state >= FEEDHOLD_MOTION_STOPPED) { // handles _exec_aline_feedhold_processing case (7)
             return (STAT_NOOP);                    // VERY IMPORTANT to exit as a NOOP. Do not load another move
         }
         // STAT_OK terminates aline execution for this move
@@ -1030,27 +1030,20 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
     // Case (4) - Completing the feedhold - Wait for the steppers to stop
     if (cm->hold_state == FEEDHOLD_MOTION_STOPPING) {
         if (mp_runtime_is_idle()) {                         // wait for steppers to actually finish
-            // Motion has stopped, so we can rely on positions and other values to be stable
-
-            mp_zero_segment_velocity();                     // finalize velocity for reporting purposes
-//            cm->hold_state = FEEDHOLD_MOTION_STOPPED;
-            cm_set_motion_state(MOTION_STOP);
  
+            // Motion has stopped, so we can rely on positions and other values to be stable
             // If SKIP type, discard the remainder of the block and position to the next block
             if (cm->hold_type == FEEDHOLD_TYPE_SKIP) {
                 copy_vector(mp->position, mr->position);    // update planner position to the final runtime position
                 mp_free_run_buffer();                       // advance to next block, discarding the rest of the move
-                mr->reset();                                // disable the rest of the runtime movement
-            }
-            else {   // Reset the state of the planner regardless of how hold will ultimately be exited.
+            } else { // Otherwise setup the block to complete motion (regardless of how hold will ultimately be exited)
                 bf->length = get_axis_vector_length(mr->position, mr->target); // update bf w/remaining length in move
                 bf->block_state = BLOCK_INITIAL_ACTION;     // tell _exec to re-use the bf buffer
-                mr->block_state = BLOCK_INACTIVE;           // invalidate mr buffer to reset the new move
-                bf->plannable = true;                       // needed so block can be adjusted
-                mp_replan_queue(mp_get_r());                // unplan current forward plan (bf head block), and reset all blocks
-                st_request_forward_plan();                  // replan the current bf buffer
+                bf->plannable = true;                       // needed so block can be replanned
             }
-            cm->hold_state = FEEDHOLD_HOLD_POINT_REACHED;
+            mr->reset();                                    // reset MR for next use and for forward planning
+            cm_set_motion_state(MOTION_STOP);
+            cm->hold_state = FEEDHOLD_MOTION_STOPPED;
             sr_request_status_report(SR_REQUEST_IMMEDIATE);
             cs.controller_state = CONTROLLER_READY;         // remove controller readline() PAUSE
         }
@@ -1058,8 +1051,7 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
     }
 
     // Case (3') - Decelerated to zero. See also Feedhold Case (3) in mp_exec_aline()
-    // Update the run buffer then force a replan of the whole planner queue. Replans from zero velocity
-    // This state might not appear necessary, but it is to handle closely packed !~ and other cases
+    // This state is needed to return an OK to complete the aline exec before transitioning to case (4).
     if (cm->hold_state == FEEDHOLD_DECEL_COMPLETE) {
         cm->hold_state = FEEDHOLD_MOTION_STOPPING;          // wait for motion to come to a complete stop
         return (STAT_OK);                                   // exit from mp_exec_aline()
