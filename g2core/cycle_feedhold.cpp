@@ -493,10 +493,9 @@ static void _start_job_kill()
 
 /****************************************************************************************
  *  cm_request_feedhold()    - request a feedhold - do not run it yet
- *  _start_p1_feedhold()     - start feedhold of correct type and finalization
- *  _feedhold_with_sync()    - perform feedhold that will end in a sync callback
- *  _feedhold_no_actions()   - perform feedhold with no entry actions
- *  _feedhold_with_actions() - perform hold entry actions
+ *  _feedhold_skip()         - run feedhold that will skip remaining unused buffer length
+ *  _feedhold_no_actions()   - run feedhold with no entry actions
+ *  _feedhold_with_actions() - run feedhold entry actions
  *  _feedhold_actions_done_callback() - planner callback to reach sync point
  *
  *  Input arguments
@@ -588,7 +587,6 @@ static void _feedhold_actions_done_callback(float* vect, bool* flag)
     sr_request_status_report(SR_REQUEST_IMMEDIATE);
 }
 
-
 static stat_t _feedhold_with_actions()   // Execute Case (5)
 {
     // Check to run first-time code
@@ -648,7 +646,6 @@ static stat_t _feedhold_with_actions()   // Execute Case (5)
         cm1.hold_state = FEEDHOLD_HOLD;
         return (STAT_OK);
     }
-
     return (STAT_EAGAIN);                   // keep the compiler happy. Never executed.
 }
 

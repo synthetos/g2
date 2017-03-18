@@ -527,12 +527,13 @@ stat_t mp_exec_aline(mpBuf_t *bf)
         if ((status == STAT_OK) || (status == STAT_NOOP)) {
             cm->hold_state = FEEDHOLD_DECEL_COMPLETE;
             bf->block_state = BLOCK_INITIAL_ACTION;     // reset bf so it can restart the rest of the move
-            cm_set_motion_state(MOTION_STOP);
         }
     }
     
     // Perform motion state transition. Also sets active model to RUNTIME
-    if (cm->motion_state != MOTION_RUN) { cm_set_motion_state(MOTION_RUN); }
+    if (cm->motion_state != MOTION_RUN) { 
+        cm_set_motion_state(MOTION_RUN); 
+    }
 
     // There are 4 things that can happen here depending on return conditions:
     //  status        bf->block_state       Description
@@ -766,8 +767,9 @@ static stat_t _exec_aline_head(mpBuf_t *bf)
             debug_trap("mr->segment_time < MIN_SEGMENT_TIME (head)");
             return (STAT_OK);                               // exit without advancing position, say we're done
         }
+        // If this trap ever fires put this statement back in: mr->section = SECTION_HEAD;
         debug_trap_if_true(mr->section != SECTION_HEAD, "exec_aline() Not section head");
-//        mr->section = SECTION_HEAD;                         // +++++ Redundant???
+
         mr->section_state = SECTION_RUNNING;
     } else {
         mr->segment_velocity += mr->forward_diff_5;
@@ -811,8 +813,9 @@ static stat_t _exec_aline_body(mpBuf_t *bf)
             debug_trap("mr->segment_time < MIN_SEGMENT_TIME (body)");
             return (STAT_OK);                               // exit without advancing position, say we're done
         }
+        // If this trap ever fires put this statement back in: mr->section = SECTION_BODY;
         debug_trap_if_true(mr->section != SECTION_BODY, "exec_aline() Not section body");
-//        mr->section = SECTION_BODY;                         // +++++ Redundant???
+
         mr->section_state = SECTION_RUNNING;                // uses PERIOD_2 so last segment detection works
     }
     if (_exec_aline_segment() == STAT_OK) {                 // OK means this section is done
@@ -852,8 +855,9 @@ static stat_t _exec_aline_tail(mpBuf_t *bf)
             debug_trap("mr->segment_time < MIN_SEGMENT_TIME (tail)");
             return (STAT_OK);                               // exit without advancing position, say we're done
         }
+        // If this trap ever fires put this statement back in: mr->section = SECTION_TAIL;
         debug_trap_if_true(mr->section != SECTION_TAIL, "exec_aline() Not section tail");
-//        mr->section = SECTION_TAIL;                         // +++++ Redundant???
+
         mr->section_state = SECTION_RUNNING;
     } else {
         mr->segment_velocity += mr->forward_diff_5;
@@ -979,7 +983,7 @@ static void _exec_aline_normalize_block(mpBlockRuntimeBuf_t *b)
 
         // We'll add the time to either the head or the tail or split it
         if (b->tail_length > 0) {
-            if (b->head_length > 0) {       // Split the body to the head and tail
+            if (b->head_length > 0) {           // Split the body to the head and tail
                 b->head_length += b->body_length * 0.5;
                 b->tail_length += b->body_length * 0.5; // let the compiler optimize out one of these *
                 b->head_time = (2.0 * b->head_length) / (mr->entry_velocity + b->cruise_velocity);
@@ -993,7 +997,7 @@ static void _exec_aline_normalize_block(mpBlockRuntimeBuf_t *b)
                 b->body_time = 0;
             }
         }
-        else if (b->head_length > 0) {       // Put it all in the head
+        else if (b->head_length > 0) {          // Put it all in the head
             b->head_length += b->body_length;
             b->head_time = (2.0 * b->head_length) / (mr->entry_velocity + b->cruise_velocity);
             b->body_length = 0;
@@ -1045,7 +1049,7 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
             cm_set_motion_state(MOTION_STOP);
             cm->hold_state = FEEDHOLD_MOTION_STOPPED;
             sr_request_status_report(SR_REQUEST_IMMEDIATE);
-            cs.controller_state = CONTROLLER_READY;         // remove controller readline() PAUSE
+//          cs.controller_state = CONTROLLER_READY; // Can this be removed? +++++ // remove controller readline() PAUSE
         }
         return (STAT_NOOP);                                 // hold here. leave with a NOOP so it does not attempt another load and exec.
     }
