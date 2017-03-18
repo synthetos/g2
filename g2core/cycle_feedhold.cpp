@@ -355,7 +355,7 @@ void cm_request_cycle_start()
 
 static void _start_cycle_restart()
 {
-    // Feedhold cycle starts run an operation to complete multiple actions
+    // Feedhold cycle restart builds an operation to complete multiple actions
     if (cm1.hold_state == FEEDHOLD_HOLD) {
         cm1.cycle_start_state = CYCLE_START_OFF;
         switch (cm1.hold_type) {
@@ -506,50 +506,48 @@ static void _start_job_kill()
  */
 
 void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit)
-{    
-    // look for p2 feedhold (feedhold in a feedhold)
-    if ((cm1.hold_state == FEEDHOLD_HOLD) && (cm2.hold_state == FEEDHOLD_OFF) &&
-        (cm2.machine_state == MACHINE_CYCLE)) {
-        op.add_action(_feedhold_with_command);
-        op.add_action(_run_program_stop);
-        cm2.hold_state = FEEDHOLD_SYNC;
-        return;
-    }
-    
+{
     // Can only initiate a feedhold if you are in a machining cycle not already in a feedhold
     if ((cm1.hold_state == FEEDHOLD_OFF) && (cm1.machine_state == MACHINE_CYCLE)) {
         cm1.hold_type = type;
         cm1.hold_exit = exit;
-        cm1.hold_state = FEEDHOLD_REQUESTED;
-        _start_p1_feedhold();                // attempt to run it immediately
-        return;
-    }    
-    cm->hold_state = FEEDHOLD_OFF;              // cannot honor the feedhold request. reset it
-}
+        cm1.hold_profile = ((type == FEEDHOLD_TYPE_ACTIONS) || (type == FEEDHOLD_TYPE_NO_ACTIONS)) ?
+        PROFILE_NORMAL : PROFILE_FAST;
 
-static void _start_p1_feedhold()
-{
-    // This function is "safe" and will not initiate a feedhold unless it's OK to.
-
-    if ((cm1.hold_state == FEEDHOLD_REQUESTED) && (cm1.motion_state == MOTION_RUN)) {
         switch (cm1.hold_type) {
             case FEEDHOLD_TYPE_ACTIONS:    { op.add_action(_feedhold_with_actions); break; }
             case FEEDHOLD_TYPE_NO_ACTIONS: { op.add_action(_feedhold_no_actions); break; }
             case FEEDHOLD_TYPE_COMMAND:    { op.add_action(_feedhold_with_command); break; }
-            default: { }
+            default: {}
         }
         switch (cm1.hold_exit) {
-            case FEEDHOLD_EXIT_STOP:      { op.add_action(_run_program_stop); break; }
-            case FEEDHOLD_EXIT_END:       { op.add_action(_run_program_end); break; }
-            case FEEDHOLD_EXIT_ALARM:     { op.add_action(_run_alarm); break; }
-            case FEEDHOLD_EXIT_SHUTDOWN:  { op.add_action(_run_shutdown); break; }
-            case FEEDHOLD_EXIT_INTERLOCK: { op.add_action(_run_interlock); break; }
-            default: { }
+            case FEEDHOLD_EXIT_STOP:       { op.add_action(_run_program_stop); break; }
+            case FEEDHOLD_EXIT_END:        { op.add_action(_run_program_end); break; }
+            case FEEDHOLD_EXIT_ALARM:      { op.add_action(_run_alarm); break; }
+            case FEEDHOLD_EXIT_SHUTDOWN:   { op.add_action(_run_shutdown); break; }
+            case FEEDHOLD_EXIT_INTERLOCK:  { op.add_action(_run_interlock); break; }
+            default: {}
         }
         cm1.hold_state = FEEDHOLD_SYNC;     // start feedhold state machine in aline exec
         return;
-    } 
+    }
+
+    // Look for p2 feedhold (feedhold in a feedhold)
+    if ((cm1.hold_state == FEEDHOLD_HOLD) &&
+    (cm2.hold_state == FEEDHOLD_OFF) && (cm2.machine_state == MACHINE_CYCLE)) {
+        cm2.hold_state = FEEDHOLD_REQUESTED;
+        return;
+    }
     
+    // Reset the request if it's invalid
+    if ((cm1.machine_state != MACHINE_CYCLE) || (cm1.motion_state == MOTION_STOP)) {
+        cm->hold_state = FEEDHOLD_OFF;      // cannot honor the feedhold request. reset it
+    }
+
+}
+
+static void _start_p1_feedhold()
+{
     // P2 feedholds only allow feedhold sync types
     if ((cm2.hold_state == FEEDHOLD_REQUESTED) && (cm2.motion_state == MOTION_RUN)) {
         op.add_action(_feedhold_with_command);
