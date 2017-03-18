@@ -55,7 +55,7 @@ struct pbProbingSingleton {             // persistent probing runtime variables
     int8_t probe_input;                 // digital input to read
     bool trip_sense;                    // true if contact CLOSURE trips probe  (true for G38.2 and G38.3)
     bool alarm_flag;                    // true if failure triggers alarm       (true for G38.2 and G38.4)
-    bool wait_for_motion_end;           // flag to know when the motion has ended
+    bool waiting_for_motion_complete;   // true if waiting for a motion to complete
     stat_t (*func)();                   // binding for callback function state machine
 
     // saved gcode model state
@@ -170,7 +170,7 @@ uint8_t cm_straight_probe(float target[], bool flags[], bool trip_sense, bool al
 
     // queue a function to let us know when we can start probing
     cm->probe_state[0] = PROBE_WAITING;      // wait until planner queue empties before starting movement
-    pb.wait_for_motion_end = true;
+    pb.waiting_for_motion_complete = true;
     mp_queue_command(_motion_end_callback, nullptr, nullptr);  // note: these args are ignored
     return (STAT_OK);
 } 
@@ -186,12 +186,12 @@ uint8_t cm_straight_probe(float target[], bool flags[], bool trip_sense, bool al
 uint8_t cm_probing_cycle_callback(void) 
 {
     if ((cm->cycle_type != CYCLE_PROBE) && (cm->probe_state[0] != PROBE_WAITING)) { 
-        return (STAT_NOOP);         // exit if not in a probing cycle
+        return (STAT_NOOP);                 // exit if not in a probing cycle
     }
-    if (pb.wait_for_motion_end) {   // sync to planner move ends (using callback)
+    if (pb.waiting_for_motion_complete) {   // sync to planner move ends (using callback)
         return (STAT_EAGAIN);
     }
-    return (pb.func());             // execute the current probing move
+    return (pb.func());                     // execute the current probing move
 }
 
 /***********************************************************************************
@@ -204,16 +204,16 @@ uint8_t cm_probing_cycle_callback(void)
 
 static void _motion_end_callback(float* vect, bool* flag)
 {
-    pb.wait_for_motion_end = false;
+    pb.waiting_for_motion_complete = false;
 }
 
 static stat_t _probe_move(const float target[], const bool flags[])
 {
     cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_ON);  
-    pb.wait_for_motion_end = true;                  // set this BEFORE the motion starts
+    pb.waiting_for_motion_complete = true;          // set this BEFORE the motion starts
     cm_straight_feed(target, flags, PROFILE_FAST);  // NB: feed rate was set earlier, so it's OK
     mp_queue_command(_motion_end_callback, nullptr, nullptr); // the last two arguments are ignored anyway
-    st_request_forward_plan();                      //+++++
+//    st_request_forward_plan();                      //+++++
     return (STAT_EAGAIN);
 }
 

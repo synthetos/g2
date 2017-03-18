@@ -488,7 +488,7 @@ stat_t cm_json_wait(char *json_string);                         // M102
 
 // Feedhold and related functions (cycle_feedhold.cpp)
 void cm_operation_init(void);
-stat_t cm_operation_sequencing_callback(void);                  // operation action runner
+stat_t cm_operation_runner_callback(void);                      // operation action runner
 
 void cm_request_alarm(void);
 void cm_request_fasthold(void);

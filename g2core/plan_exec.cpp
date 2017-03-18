@@ -184,10 +184,22 @@ static stat_t _plan_aline(mpBuf_t *bf, float entry_velocity)
     return (STAT_OK);                               // report that we planned something...
 }
 
+#pragma GCC push_options        // DIAGNOSTIC +++++
+#pragma GCC optimize ("O0")     // DIAGNOSTIC +++++
+
 stat_t mp_forward_plan()
 {
     mpBuf_t *bf = mp_get_run_buffer();
     float entry_velocity;
+    
+    if (bf->buffer_number == 15) {
+        if (bf->buffer_state == MP_BUFFER_BACK_PLANNED) {
+            bf->hint = ZERO_VELOCITY;
+        }
+    }
+    if (bf->buffer_number == 17) {
+        bf->hint = ZERO_VELOCITY;
+    }
     
     // Case 0: Examine current running buffer for early exit conditions
     if (bf == NULL) {                               // case 0a: NULL means nothing is running - this is OK
@@ -233,6 +245,9 @@ stat_t mp_forward_plan()
     }
     return (planned_something ? STAT_OK : STAT_NOOP);
 }
+
+// insert function here
+#pragma GCC reset_options
 
 /*************************************************************************
  * mp_exec_move() - execute runtime functions to prep move for steppers
@@ -1032,31 +1047,34 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
         if (mp_runtime_is_idle()) {                         // wait for steppers to actually finish
             mp_zero_segment_velocity();                     // finalize velocity for reporting purposes
             cm->hold_state = FEEDHOLD_MOTION_STOPPED;
+            cm_set_motion_state(MOTION_STOP);
+            // Motion has stopped, so we can rely on positions and other values to be stable
 
             // If in a p2 hold, exit the p2 hold immediately set up a flush of the p2 planner queue            
-            if (cm == &cm2) {
-                cm->hold_state = FEEDHOLD_HOLD;
-                return (STAT_OK);                           // will end this exec_aline() with no more movement
-            }
-            // At this point we know we are in a p1 hold
+//            if (cm == &cm2) {
+//                cm->hold_state = FEEDHOLD_HOLD;
+//                return (STAT_OK);                           // will end this exec_aline() with no more movement
+//            }
+//            // At this point we know we are in a p1 hold
 
             // If probing or homing, exit the move and advance to the _motion_end_callback()'s.
             // Stop the runtime, clear the run buffer and do not transition to p2 planner.
 //            else if ((cm->cycle_type == CYCLE_HOMING) || (cm->cycle_type == CYCLE_PROBE)) {
-            else if (cm->hold_type == FEEDHOLD_TYPE_COMMAND) {
-                mr->block_state = BLOCK_INACTIVE;           // disable the rest of the runtime movement
-                mp_free_run_buffer();                       // free buffer and enable finalization move to get loaded
-                copy_vector(mp->position, mr->position);
+//            else 
+            // In COMMAND type, discard the remainder of the block and position to the next block
+            if (cm->hold_type == FEEDHOLD_TYPE_COMMAND) {
+                float next_entry_velocity = bf->exit_velocity;
+                mp_free_run_buffer();                       // advance to next block, discarding the rest of the move
+                if (next_entry_velocity > 0) {              // only need to replan if new block dis not plan from zero
+                    mp_replan_queue(mp_get_r());            // unplan current forward plan (bf head block), and reset all blocks
+                    st_request_forward_plan();              // replan from the new bf buffer
+                }
+                copy_vector(mp->position, mr->position);    // update planner position to the final runtime position
+//                mr->block_state = BLOCK_INACTIVE;           // disable the rest of the runtime movement
+                mr->reset();                                // disable the rest of the runtime movement
                 cm->hold_state = FEEDHOLD_HOLD_POINT_REACHED;
-                
-//                mp_replan_queue(mp_get_r());                // unplan current forward plan (bf head block), and reset all blocks
-//                st_request_forward_plan();                  // replan the current bf buffer
             }
-
-            // In a regular p1 hold. Motion has stopped, so we can rely on positions and other values to be stable
-            else {
-  
-                // Reset the state of the p1 planner regardless of how hold will ultimately be exited.
+            else {   // Reset the state of the planner regardless of how hold will ultimately be exited.
                 bf->length = get_axis_vector_length(mr->position, mr->target); // update bf w/remaining length in move
                 bf->block_state = BLOCK_INITIAL_ACTION;     // tell _exec to re-use the bf buffer
                 mr->block_state = BLOCK_INACTIVE;           // invalidate mr buffer to reset the new move

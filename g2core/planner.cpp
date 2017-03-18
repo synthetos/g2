@@ -77,9 +77,6 @@ mpPlannerRuntime_t mr2;                     // secondary planner runtime context
 mpBuf_t mp1_queue[PLANNER_QUEUE_SIZE];      // storage allocation for primary planner queue buffers
 mpBuf_t mp2_queue[SECONDARY_QUEUE_SIZE];    // storage allocation for secondary planner queue buffers
 
-// Local Scope Data and Functions
-#define value_vector gm.target              // alias for vector of values
-
 // Execution routines (NB: These are called from the LO interrupt)
 static stat_t _exec_dwell(mpBuf_t *bf);
 static stat_t _exec_command(mpBuf_t *bf);
@@ -313,7 +310,7 @@ void mp_queue_command(void(*cm_exec)(float *, bool *), float *value, bool *flag)
     bf->cm_func = cm_exec;            // callback to canonical machine exec function
 
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-        bf->value_vector[axis] = value[axis];
+        bf->unit[axis] = value[axis];               // use the unit vector to store command values
         bf->axis_flags[axis] = flag[axis];
     }
     mp_commit_write_buffer(BLOCK_TYPE_COMMAND);     // must be final operation before exit
@@ -327,7 +324,7 @@ static stat_t _exec_command(mpBuf_t *bf)
 
 stat_t mp_runtime_command(mpBuf_t *bf)
 {
-    bf->cm_func(bf->value_vector, bf->axis_flags);  // 2 vectors used by callbacks
+    bf->cm_func(bf->unit, bf->axis_flags);          // 2 vectors used by callbacks
     if (mp_free_run_buffer()) {
         cm_cycle_end();                             // free buffer & perform cycle_end if planner is empty
     }

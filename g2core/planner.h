@@ -491,6 +491,8 @@ typedef struct mpPlannerRuntime {       // persistent runtime variables
         block_state = BLOCK_INACTIVE;
         section = SECTION_HEAD;
         section_state = SECTION_OFF;
+        entry_velocity = 0;             // needed to ensure next block in forward planning starts from 0 velocity
+        r->exit_velocity = 0;           // ditto
     }
         
 } mpPlannerRuntime_t;

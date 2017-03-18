@@ -1094,7 +1094,6 @@ stat_t cm_resume_origin_offsets()
  * cm_straight_traverse() - G0 linear rapid
  */
 
-//stat_t cm_straight_traverse(const float target[], const bool flags[])
 stat_t cm_straight_traverse(const float *target, const bool *flags, const uint8_t motion_profile)
 {
     cm->gm.motion_mode = MOTION_MODE_STRAIGHT_TRAVERSE;
@@ -1247,8 +1246,7 @@ stat_t cm_dwell(const float seconds)
 /****************************************************************************************
  * cm_straight_feed() - G1
  */
-//stat_t cm_straight_feed(const float target[], const bool flags[])
-//stat_t cm_straight_feed(const float *target, const bool *flags)
+
 stat_t cm_straight_feed(const float *target, const bool *flags, const uint8_t motion_profile)
 {
     // trap zero feed rate condition

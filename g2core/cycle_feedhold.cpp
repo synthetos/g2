@@ -234,7 +234,7 @@ void cm_operation_init()
  */
 
 /****************************************************************************************
- * cm_operation_sequencing_callback() - run feedhold operations and sequence queued requests
+ * cm_operation_runner_callback() - run feedhold operations and sequence queued requests
  *
  *  Operations are requested by calling their repective request function, e.g. cm_request_feedhold().
  *  The operation callback runs the current operation, and sequences requests that must be queued.
@@ -258,7 +258,7 @@ void cm_operation_init()
  *  handled in the sequencer.
  */
 
-stat_t cm_operation_sequencing_callback()
+stat_t cm_operation_runner_callback()
 {
     if (cm1.job_kill_state == JOB_KILL_REQUESTED) {         // job kill must wait for any active hold to complete
         _start_job_kill();
@@ -563,8 +563,11 @@ static stat_t _feedhold_with_command()
     if (cm1.hold_state < FEEDHOLD_HOLD_POINT_REACHED) {
         return (STAT_EAGAIN);
     }
-    cm1.hold_state = FEEDHOLD_HOLD;
-    st_request_exec_move();
+//    cm1.hold_state = FEEDHOLD_OFF;  // cannot be in HOLD or command won't run (see mp_plan_block_list())
+    cm1.hold_state = FEEDHOLD_OFF;     // cannot be in HOLD or command won't run (see mp_plan_block_list())
+    mp_replan_queue(mp_get_r());        // unplan current forward plan (bf head block), and reset all blocks
+    st_request_forward_plan();          // replan from the new bf buffer
+//    st_request_exec_move();
     return (STAT_OK);
 }
 
