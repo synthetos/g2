@@ -143,7 +143,7 @@ struct ioDigitalInputExt {
         if (in->homing_mode) {
             if (in->edge == INPUT_EDGE_LEADING) {   // we only want the leading edge to fire
                 en_take_encoder_snapshot();
-                cm_request_feedhold(FEEDHOLD_TYPE_SYNC, FEEDHOLD_EXIT_STOP);
+                cm_request_feedhold(FEEDHOLD_TYPE_COMMAND, FEEDHOLD_EXIT_STOP);
             }
             return;
         }
@@ -153,8 +153,10 @@ struct ioDigitalInputExt {
             // We want to capture either way.
             // Probing tests the start condition for the correct direction ahead of time.
             // If we see any edge, it's the right one.
-            en_take_encoder_snapshot();
-            cm_request_feedhold(FEEDHOLD_TYPE_SYNC, FEEDHOLD_EXIT_STOP);
+            if ((in->edge == INPUT_EDGE_LEADING) || (in->edge == INPUT_EDGE_TRAILING)) {
+                en_take_encoder_snapshot();
+                cm_request_feedhold(FEEDHOLD_TYPE_COMMAND, FEEDHOLD_EXIT_STOP);
+            }
             return;
         }
 
@@ -163,10 +165,10 @@ struct ioDigitalInputExt {
         // trigger the action on leading edges
         if (in->edge == INPUT_EDGE_LEADING) {
             if (in->action == INPUT_ACTION_STOP) {
-                cm_request_feedhold(FEEDHOLD_TYPE_SYNC, FEEDHOLD_EXIT_STOP);
+                cm_request_feedhold(FEEDHOLD_TYPE_COMMAND, FEEDHOLD_EXIT_STOP);
             }
             if (in->action == INPUT_ACTION_FAST_STOP) {
-                cm_request_feedhold(FEEDHOLD_TYPE_SYNC, FEEDHOLD_EXIT_STOP);
+                cm_request_feedhold(FEEDHOLD_TYPE_COMMAND, FEEDHOLD_EXIT_STOP);
             }
             if (in->action == INPUT_ACTION_HALT) {
                 cm_halt();                              // hard stop, including spindle, coolant and heaters

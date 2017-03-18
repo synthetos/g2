@@ -262,7 +262,6 @@ void mp_plan_block_list()
             mp->p = mp->p->nx;
             return;
         }
-
         bf = _plan_block(bf);       // returns next block to plan
         planned_something = true;
         mp->p = bf;                 // DIAGNOSTIC - this is not needed but is set here for debugging purposes

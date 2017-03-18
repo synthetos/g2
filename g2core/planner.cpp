@@ -66,16 +66,32 @@
 
 // Allocate planner structures
 
-mpPlanner_t *mp;            // currently active planner (global variable)
-mpPlanner_t mp1;            // primary planning context
-mpPlanner_t mp2;            // secondary planning context
+mpPlanner_t *mp;                            // currently active planner (global variable)
+mpPlanner_t mp1;                            // primary planning context
+mpPlanner_t mp2;                            // secondary planning context
 
-mpPlannerRuntime_t *mr;     // context for planner block runtime
-mpPlannerRuntime_t mr1;     // primary planner runtime context
-mpPlannerRuntime_t mr2;     // secondary planner runtime context
+mpPlannerRuntime_t *mr;                     // context for planner block runtime
+mpPlannerRuntime_t mr1;                     // primary planner runtime context
+mpPlannerRuntime_t mr2;                     // secondary planner runtime context
 
-mpBuf_t mp1_queue[PLANNER_QUEUE_SIZE];     // storage allocation for primary planner queue buffers
-mpBuf_t mp2_queue[SECONDARY_QUEUE_SIZE];   // storage allocation for secondary planner queue buffers
+mpBuf_t mp1_queue[PLANNER_QUEUE_SIZE];      // storage allocation for primary planner queue buffers
+mpBuf_t mp2_queue[SECONDARY_QUEUE_SIZE];    // storage allocation for secondary planner queue buffers
+
+// Local Scope Data and Functions
+#define value_vector gm.target              // alias for vector of values
+
+// Execution routines (NB: These are called from the LO interrupt)
+static stat_t _exec_dwell(mpBuf_t *bf);
+static stat_t _exec_command(mpBuf_t *bf);
+static stat_t _exec_json_wait(mpBuf_t *bf);
+
+// DIAGNOSTICS
+//static void _planner_time_accounting();
+static void _audit_buffers();
+
+/****************************************************************************************
+ * JSON planner objects
+ */
 
 #define JSON_COMMAND_BUFFER_SIZE 3
 
@@ -124,23 +140,9 @@ struct _json_commands_t {
         available++;
     }
 };
-
 _json_commands_t jc;
 
-// Local Scope Data and Functions
-#define spindle_speed block_time    // local alias for spindle_speed to the time variable
-#define value_vector gm.target      // alias for vector of values
-
-//static void _planner_time_accounting();
-static void _audit_buffers();
-
-// Execution routines (NB: These are called from the LO interrupt)
-static void _exec_json_command(float *value, bool *flag);
-static stat_t _exec_dwell(mpBuf_t *bf);
-static stat_t _exec_command(mpBuf_t *bf);
-static stat_t _exec_json_wait(mpBuf_t *bf);
-
-/*
+/****************************************************************************************
  * planner_init() - initialize MP, MR and planner queue buffers
  * planner_reset() - selective reset MP and MR structures
  * planner_assert() - test planner assertions, PANIC if violation exists
@@ -222,7 +224,7 @@ stat_t planner_assert(const mpPlanner_t *_mp)
     return (STAT_OK);
 }
 
-/*
+/****************************************************************************************
  * mp_halt_runtime() - stop runtime movement immediately
  */
 void mp_halt_runtime()
@@ -231,18 +233,18 @@ void mp_halt_runtime()
     planner_reset(mp);              // reset the active planner
 }
 
-/*
+/****************************************************************************************
  * mp_set_planner_position() - set planner position for a single axis
  * mp_set_runtime_position() - set runtime position for a single axis
  * mp_set_steps_to_runtime_position() - set encoder counts to the runtime position
  *
  *  Since steps are in motor space you have to run the position vector through inverse
- *  kinematics to get the right numbers. This means that in a non-Cartesian robot changing
- *  any position can result in changes to multiple step values. So this operation is provided
- *  as a single function and always uses the new position vector as an input.
+ *  kinematics to get the right numbers. This means that in a non-Cartesian robot 
+ *  changing any position can result in changes to multiple step values. So this operation 
+ *  is provided as a single function and always uses the new position vector as an input.
  *
- *  Keeping track of position is complicated by the fact that moves exist in several reference
- *  frames. The scheme to keep this straight is:
+ *  Keeping track of position is complicated by the fact that moves exist in several 
+ *  reference frames. The scheme to keep this straight is:
  *
  *     - mp->position - start and end position for planning
  *     - mr->position - current position of runtime segment
@@ -251,9 +253,9 @@ void mp_halt_runtime()
  *  The runtime keeps a lot more data, such as waypoints, step vectors, etc.
  *  See struct mpMoveRuntimeSingleton for details.
  *
- *  Note that position is set immediately when called and may not be not an accurate representation
- *  of the tool position. The motors are still processing the action and the real tool position is
- *  still close to the starting point.
+ *  Note that position is set immediately when called and may not be not an accurate 
+ *  representation of the tool position. The motors are still processing the action 
+ *  and the real tool position is still close to the starting point.
  */
 
 void mp_set_planner_position(uint8_t axis, const float position) { mp->position[axis] = position; }
@@ -276,7 +278,7 @@ void mp_set_steps_to_runtime_position()
     }
 }
 
-/***********************************************************************************
+/****************************************************************************************
  * mp_queue_command() - queue a synchronous Mcode, program control, or other command
  * _exec_command()    - callback to execute command
  *
@@ -332,10 +334,17 @@ stat_t mp_runtime_command(mpBuf_t *bf)
     return (STAT_OK);
 }
 
-/***********************************************************************************
+/****************************************************************************************
  * mp_json_command()    - queue a json command
  * _exec_json_command() - execute json string
  */
+
+static void _exec_json_command(float *value, bool *flag)
+{
+    char *json_string = jc.read_buffer();
+    json_parse_for_exec(json_string, true); // process it
+    jc.free_buffer();
+}
 
 stat_t mp_json_command(char *json_string)
 {
@@ -345,15 +354,7 @@ stat_t mp_json_command(char *json_string)
     return (STAT_OK);
 }
 
-static void _exec_json_command(float *value, bool *flag)
-{
-    char *json_string = jc.read_buffer();
-    json_parse_for_exec(json_string, true); // process it
-    jc.free_buffer();
-}
-
-
-/***********************************************************************************
+/****************************************************************************************
  * mp_json_wait()    - queue a json wait command
  * _exec_json_wait() - execute json wait string
  */
@@ -406,8 +407,7 @@ static stat_t _exec_json_wait(mpBuf_t *bf)
     return (STAT_OK);
 }
 
-
-/***********************************************************************************
+/****************************************************************************************
  * mp_dwell()    - queue a dwell
  * _exec_dwell() - dwell execution
  *
@@ -439,7 +439,7 @@ static stat_t _exec_dwell(mpBuf_t *bf)
     return (STAT_OK);
 }
 
-/***********************************************************************************
+/****************************************************************************************
  * mp_request_out_of_band_dwell() - request a dwell outside of the planner queue
  *
  *  This command is used to request that a dwell be run outside of the planner. 
@@ -457,7 +457,7 @@ void mp_request_out_of_band_dwell(float seconds)
     }
 }
 
-/***********************************************************************************
+/****************************************************************************************
  * Planner helpers
  *
  * mp_get_planner_buffers()  - return # of available planner buffers
@@ -490,7 +490,7 @@ bool mp_is_phat_city_time()
     return ((mp->plannable_time <= 0.0) || (PHAT_CITY_TIME < mp->plannable_time));
 }
 
-/***********************************************************************************
+/****************************************************************************************
  * mp_planner_callback()
  *
  *  mp_planner_callback()'s job is to invoke backward planning intelligently.

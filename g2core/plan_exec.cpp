@@ -247,7 +247,7 @@ stat_t mp_exec_move()
 
     // It is possible to try to try to exec from a priming planner if coming off a hold
     // This occurs if new p1 commands (and were held back) arrived while in a hold
-//    if (mp->planner_state <= PLANNER_PRIMING) {
+//    if (mp->planner_state <= MP_BUFFER_BACK_PLANNED) {
 //        st_prep_null();
 //        return (STAT_NOOP);
 //    }
@@ -266,7 +266,7 @@ stat_t mp_exec_move()
     }
 
     if (bf->block_type == BLOCK_TYPE_ALINE) {             // cycle auto-start for lines only
-
+//    if ((bf->block_type == BLOCK_TYPE_ALINE) || (bf->block_type == BLOCK_TYPE_COMMAND)) {
         // first-time operations
         if (bf->buffer_state != MP_BUFFER_RUNNING) {
             if ((bf->buffer_state < MP_BUFFER_BACK_PLANNED) && (cm->motion_state == MOTION_RUN)) {
@@ -1042,11 +1042,15 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
 
             // If probing or homing, exit the move and advance to the _motion_end_callback()'s.
             // Stop the runtime, clear the run buffer and do not transition to p2 planner.
-            else if ((cm->cycle_type == CYCLE_HOMING) || (cm->cycle_type == CYCLE_PROBE)) {
-//            else if (cm->hold_type == FEEDHOLD_TYPE_SYNC) {
+//            else if ((cm->cycle_type == CYCLE_HOMING) || (cm->cycle_type == CYCLE_PROBE)) {
+            else if (cm->hold_type == FEEDHOLD_TYPE_COMMAND) {
                 mr->block_state = BLOCK_INACTIVE;           // disable the rest of the runtime movement
                 mp_free_run_buffer();                       // free buffer and enable finalization move to get loaded
-                cm->hold_state = FEEDHOLD_OFF;
+                copy_vector(mp->position, mr->position);
+                cm->hold_state = FEEDHOLD_HOLD_POINT_REACHED;
+                
+//                mp_replan_queue(mp_get_r());                // unplan current forward plan (bf head block), and reset all blocks
+//                st_request_forward_plan();                  // replan the current bf buffer
             }
 
             // In a regular p1 hold. Motion has stopped, so we can rely on positions and other values to be stable

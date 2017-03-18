@@ -44,9 +44,9 @@ static void _start_queue_flush(void);
 static void _start_job_kill(void);
 
 // Feedhold actions
-static stat_t _feedhold_with_actions(void);
+static stat_t _feedhold_with_command(void);
 static stat_t _feedhold_no_actions(void);
-static stat_t _feedhold_with_sync(void);
+static stat_t _feedhold_with_actions(void);
 static stat_t _feedhold_restart_with_actions(void);
 static stat_t _feedhold_restart_no_actions(void);
 
@@ -508,10 +508,9 @@ static void _start_job_kill()
 void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit)
 {    
     // look for p2 feedhold (feedhold in a feedhold)
-    if ((cm1.hold_state == FEEDHOLD_HOLD) && 
-        (cm2.hold_state == FEEDHOLD_OFF) &&
+    if ((cm1.hold_state == FEEDHOLD_HOLD) && (cm2.hold_state == FEEDHOLD_OFF) &&
         (cm2.machine_state == MACHINE_CYCLE)) {
-        op.add_action(_feedhold_with_sync);
+        op.add_action(_feedhold_with_command);
         op.add_action(_run_program_stop);
         cm2.hold_state = FEEDHOLD_SYNC;
         return;
@@ -536,7 +535,7 @@ static void _start_p1_feedhold()
         switch (cm1.hold_type) {
             case FEEDHOLD_TYPE_ACTIONS:    { op.add_action(_feedhold_with_actions); break; }
             case FEEDHOLD_TYPE_NO_ACTIONS: { op.add_action(_feedhold_no_actions); break; }
-            case FEEDHOLD_TYPE_SYNC:       { op.add_action(_feedhold_with_sync); break; }
+            case FEEDHOLD_TYPE_COMMAND:    { op.add_action(_feedhold_with_command); break; }
             default: { }
         }
         switch (cm1.hold_exit) {
@@ -553,12 +552,12 @@ static void _start_p1_feedhold()
     
     // P2 feedholds only allow feedhold sync types
     if ((cm2.hold_state == FEEDHOLD_REQUESTED) && (cm2.motion_state == MOTION_RUN)) {
-        op.add_action(_feedhold_with_sync);
+        op.add_action(_feedhold_with_command);
         cm2.hold_state = FEEDHOLD_SYNC;
     }
 }
 
-static stat_t _feedhold_with_sync()
+static stat_t _feedhold_with_command()
 {
     if (cm1.hold_state == FEEDHOLD_OFF) {               // start a feedhold
         cm1.hold_state = FEEDHOLD_SYNC;
@@ -567,6 +566,7 @@ static stat_t _feedhold_with_sync()
         return (STAT_EAGAIN);
     }
     cm1.hold_state = FEEDHOLD_HOLD;
+    st_request_exec_move();
     return (STAT_OK);
 }
 
