@@ -38,13 +38,13 @@
 #include "util.h"
 //#include "xio.h"        // DIAGNOSTIC
 
-static void _start_p1_feedhold(void);
+static void _start_feedhold(void);
 static void _start_cycle_restart(void);
 static void _start_queue_flush(void);
 static void _start_job_kill(void);
 
 // Feedhold actions
-static stat_t _feedhold_with_command(void);
+static stat_t _feedhold_skip(void);
 static stat_t _feedhold_no_actions(void);
 static stat_t _feedhold_with_actions(void);
 static stat_t _feedhold_restart_with_actions(void);
@@ -263,12 +263,9 @@ stat_t cm_operation_runner_callback()
     if (cm1.job_kill_state == JOB_KILL_REQUESTED) {         // job kill must wait for any active hold to complete
         _start_job_kill();
     }
-    if (cm1.hold_state == FEEDHOLD_REQUESTED) {
-        _start_p1_feedhold();
+    if (cm1.hold_state == FEEDHOLD_REQUESTED) {             // look for a queued p2 feedhold
+        _start_feedhold();
     }
-//    if (cm2.hold_state == FEEDHOLD_REQUESTED) {             // look for a queued p2 feedhold
-//        _start_p2_feedhold();
-//    }
     if (cm1.queue_flush_state == QUEUE_FLUSH_REQUESTED) {   // look for a queued flush request
         _start_queue_flush();
     }
@@ -276,6 +273,7 @@ stat_t cm_operation_runner_callback()
         _start_cycle_restart();
     }
 
+    // run the operation or operation continuation
     return (op.run_operation());
 }
 
@@ -331,6 +329,7 @@ static stat_t _run_interlock()
 {
     return (STAT_OK);
 }
+
 /****************************************************************************************
  * cm_request_cycle_start() - set request enum only
  * _start_cycle_start()  - run the cycle start
@@ -359,8 +358,8 @@ static void _start_cycle_restart()
     if (cm1.hold_state == FEEDHOLD_HOLD) {
         cm1.cycle_start_state = CYCLE_START_OFF;
         switch (cm1.hold_type) {
-            case FEEDHOLD_TYPE_ACTIONS:    { op.add_action(_feedhold_restart_with_actions); break; }
-            case FEEDHOLD_TYPE_NO_ACTIONS: { op.add_action(_feedhold_restart_no_actions); break; }
+            case FEEDHOLD_TYPE_HOLD:    { op.add_action(_feedhold_restart_no_actions); break; }
+            case FEEDHOLD_TYPE_ACTIONS: { op.add_action(_feedhold_restart_with_actions); break; }
             default: {}
         }
         switch (cm1.hold_exit) {
@@ -511,21 +510,21 @@ void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit)
     if ((cm1.hold_state == FEEDHOLD_OFF) && (cm1.machine_state == MACHINE_CYCLE)) {
         cm1.hold_type = type;
         cm1.hold_exit = exit;
-        cm1.hold_profile = ((type == FEEDHOLD_TYPE_ACTIONS) || (type == FEEDHOLD_TYPE_NO_ACTIONS)) ?
+        cm1.hold_profile = ((type == FEEDHOLD_TYPE_ACTIONS) || (type == FEEDHOLD_TYPE_HOLD)) ?
         PROFILE_NORMAL : PROFILE_FAST;
 
         switch (cm1.hold_type) {
-            case FEEDHOLD_TYPE_ACTIONS:    { op.add_action(_feedhold_with_actions); break; }
-            case FEEDHOLD_TYPE_NO_ACTIONS: { op.add_action(_feedhold_no_actions); break; }
-            case FEEDHOLD_TYPE_COMMAND:    { op.add_action(_feedhold_with_command); break; }
+            case FEEDHOLD_TYPE_HOLD:     { op.add_action(_feedhold_no_actions); break; }
+            case FEEDHOLD_TYPE_ACTIONS:  { op.add_action(_feedhold_with_actions); break; }
+            case FEEDHOLD_TYPE_SKIP:     { op.add_action(_feedhold_skip); break; }
             default: {}
         }
         switch (cm1.hold_exit) {
-            case FEEDHOLD_EXIT_STOP:       { op.add_action(_run_program_stop); break; }
-            case FEEDHOLD_EXIT_END:        { op.add_action(_run_program_end); break; }
-            case FEEDHOLD_EXIT_ALARM:      { op.add_action(_run_alarm); break; }
-            case FEEDHOLD_EXIT_SHUTDOWN:   { op.add_action(_run_shutdown); break; }
-            case FEEDHOLD_EXIT_INTERLOCK:  { op.add_action(_run_interlock); break; }
+            case FEEDHOLD_EXIT_STOP:      { op.add_action(_run_program_stop); break; }
+            case FEEDHOLD_EXIT_END:       { op.add_action(_run_program_end); break; }
+            case FEEDHOLD_EXIT_ALARM:     { op.add_action(_run_alarm); break; }
+            case FEEDHOLD_EXIT_SHUTDOWN:  { op.add_action(_run_shutdown); break; }
+            case FEEDHOLD_EXIT_INTERLOCK: { op.add_action(_run_interlock); break; }
             default: {}
         }
         cm1.hold_state = FEEDHOLD_SYNC;     // start feedhold state machine in aline exec
@@ -546,34 +545,32 @@ void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit)
 
 }
 
-static void _start_p1_feedhold()
+static void _start_feedhold()
 {
-    // P2 feedholds only allow feedhold sync types
+    // P2 feedholds only allow skip types
     if ((cm2.hold_state == FEEDHOLD_REQUESTED) && (cm2.motion_state == MOTION_RUN)) {
-        op.add_action(_feedhold_with_command);
+        op.add_action(_feedhold_skip);
         cm2.hold_state = FEEDHOLD_SYNC;
     }
 }
 
-static stat_t _feedhold_with_command()
+static stat_t _feedhold_skip()
 {
-    if (cm1.hold_state == FEEDHOLD_OFF) {               // start a feedhold
+    if (cm1.hold_state == FEEDHOLD_OFF) {   // if entered while OFF start a feedhold
         cm1.hold_state = FEEDHOLD_SYNC;
     }
     if (cm1.hold_state < FEEDHOLD_HOLD_POINT_REACHED) {
         return (STAT_EAGAIN);
     }
-//    cm1.hold_state = FEEDHOLD_OFF;  // cannot be in HOLD or command won't run (see mp_plan_block_list())
-    cm1.hold_state = FEEDHOLD_OFF;     // cannot be in HOLD or command won't run (see mp_plan_block_list())
-    mp_replan_queue(mp_get_r());        // unplan current forward plan (bf head block), and reset all blocks
-    st_request_forward_plan();          // replan from the new bf buffer
-//    st_request_exec_move();
+    cm1.hold_state = FEEDHOLD_OFF;          // cannot be in HOLD or command won't plan (see mp_plan_block_list())
+    mp_replan_queue(mp_get_r());            // unplan current forward plan (bf head block), and reset all blocks
+    st_request_forward_plan();              // replan from the new bf buffer
     return (STAT_OK);
 }
 
 static stat_t _feedhold_no_actions()
 {
-    if (cm1.hold_state == FEEDHOLD_OFF) {               // start a feedhold
+    if (cm1.hold_state == FEEDHOLD_OFF) {   // start a feedhold
         cm1.hold_state = FEEDHOLD_SYNC;
     }
     if (cm1.hold_state < FEEDHOLD_HOLD_POINT_REACHED) { // wait until it reaches the hold point

@@ -109,10 +109,9 @@ typedef enum {
 } cmCycleType;
 
 typedef enum {                      // feedhold type parameter
-    FEEDHOLD_TYPE_ACTIONS = 0,      // feedhold at max jerk with actions
-    FEEDHOLD_TYPE_NO_ACTIONS,       // feedhold at max jerk with no actions
-    FEEDHOLD_TYPE_COMMAND,          // feedhold at max jerk with queue flush and sync command
-    FEEDHOLD_TYPE_FAST,             // feedhold at high jerk with no actions. Can resume
+    FEEDHOLD_TYPE_HOLD,             // simple feedhold at max jerk with no actions
+    FEEDHOLD_TYPE_ACTIONS,          // feedhold at max jerk with hold entry actions
+    FEEDHOLD_TYPE_SKIP,             // feedhold at max jerk with queue flush and sync command
     FEEDHOLD_TYPE_SCRAM             // feedhold at high jerk and stop all active devices
 } cmFeedholdType;
 
