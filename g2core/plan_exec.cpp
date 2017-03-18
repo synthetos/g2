@@ -1030,17 +1030,17 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
     // Case (4) - Completing the feedhold - Wait for the steppers to stop
     if (cm->hold_state == FEEDHOLD_MOTION_STOPPING) {
         if (mp_runtime_is_idle()) {                         // wait for steppers to actually finish
-            mp_zero_segment_velocity();                     // finalize velocity for reporting purposes
-            cm->hold_state = FEEDHOLD_MOTION_STOPPED;
-            cm_set_motion_state(MOTION_STOP);
             // Motion has stopped, so we can rely on positions and other values to be stable
 
+            mp_zero_segment_velocity();                     // finalize velocity for reporting purposes
+//            cm->hold_state = FEEDHOLD_MOTION_STOPPED;
+            cm_set_motion_state(MOTION_STOP);
+ 
             // If SKIP type, discard the remainder of the block and position to the next block
             if (cm->hold_type == FEEDHOLD_TYPE_SKIP) {
                 copy_vector(mp->position, mr->position);    // update planner position to the final runtime position
                 mp_free_run_buffer();                       // advance to next block, discarding the rest of the move
                 mr->reset();                                // disable the rest of the runtime movement
-                cm->hold_state = FEEDHOLD_HOLD_POINT_REACHED;
             }
             else {   // Reset the state of the planner regardless of how hold will ultimately be exited.
                 bf->length = get_axis_vector_length(mr->position, mr->target); // update bf w/remaining length in move
@@ -1049,15 +1049,8 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
                 bf->plannable = true;                       // needed so block can be adjusted
                 mp_replan_queue(mp_get_r());                // unplan current forward plan (bf head block), and reset all blocks
                 st_request_forward_plan();                  // replan the current bf buffer
-                
-                // Set state to enable transition to p2 and perform entry actions in the p2 planner
-                if (cm->hold_type == FEEDHOLD_TYPE_ACTIONS) {
-                    cm->hold_state = FEEDHOLD_HOLD_POINT_REACHED; // signal to start entry actions
-                } else {
-                    cm->hold_state = FEEDHOLD_HOLD;         // achieved hold state
-                }                
             }
-            
+            cm->hold_state = FEEDHOLD_HOLD_POINT_REACHED;
             sr_request_status_report(SR_REQUEST_IMMEDIATE);
             cs.controller_state = CONTROLLER_READY;         // remove controller readline() PAUSE
         }

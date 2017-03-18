@@ -38,7 +38,7 @@
 #include "util.h"
 //#include "xio.h"        // DIAGNOSTIC
 
-static void _start_feedhold(void);
+//static void _start_feedhold(void);
 static void _start_cycle_restart(void);
 static void _start_queue_flush(void);
 static void _start_job_kill(void);
@@ -263,9 +263,9 @@ stat_t cm_operation_runner_callback()
     if (cm1.job_kill_state == JOB_KILL_REQUESTED) {         // job kill must wait for any active hold to complete
         _start_job_kill();
     }
-    if (cm1.hold_state == FEEDHOLD_REQUESTED) {             // look for a queued p2 feedhold
-        _start_feedhold();
-    }
+//    if (cm1.hold_state == FEEDHOLD_REQUESTED) {             // look for a queued p2 feedhold
+//        _start_feedhold();
+//    }
     if (cm1.queue_flush_state == QUEUE_FLUSH_REQUESTED) {   // look for a queued flush request
         _start_queue_flush();
     }
@@ -533,7 +533,7 @@ void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit)
 
     // Look for p2 feedhold (feedhold in a feedhold)
     if ((cm1.hold_state == FEEDHOLD_HOLD) &&
-    (cm2.hold_state == FEEDHOLD_OFF) && (cm2.machine_state == MACHINE_CYCLE)) {
+        (cm2.hold_state == FEEDHOLD_OFF) && (cm2.machine_state == MACHINE_CYCLE)) {
         cm2.hold_state = FEEDHOLD_REQUESTED;
         return;
     }
@@ -544,7 +544,7 @@ void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit)
     }
 
 }
-
+/*
 static void _start_feedhold()
 {
     // P2 feedholds only allow skip types
@@ -553,7 +553,7 @@ static void _start_feedhold()
         cm2.hold_state = FEEDHOLD_SYNC;
     }
 }
-
+*/
 static stat_t _feedhold_skip()
 {
     if (cm1.hold_state == FEEDHOLD_OFF) {   // if entered while OFF start a feedhold
