@@ -139,6 +139,7 @@ inline T avg(const T a,const T b) {return (a+b)/2; }
 // Constants
 #define MAX_LONG (2147483647)
 #define MAX_ULONG (4294967295)
+#define MAX_FP_INTEGER (8388608)  // maximum integer 32 bit FP will represent exactly (23 bits)
 #define MM_PER_INCH (25.4)
 #define INCHES_PER_MM (1/25.4)
 #define MICROSECONDS_PER_MINUTE ((float)60000000)
