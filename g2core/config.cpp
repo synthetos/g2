@@ -131,7 +131,11 @@ static void _set_defa(nvObj_t *nv, bool print)
             if (cfgArray[nv->index].flags & F_ZERO) {
                 nv->value = 0;
             } else {
-                nv->value = cfgArray[nv->index].def_value;
+                if (cfgArray[nv->index].flags & F_INT32) {
+                    nv->value_int = cfgArray[nv->index].def_value;
+                } else {
+                    nv->value = cfgArray[nv->index].def_value;
+                }
             }
             strncpy(nv->token, cfgArray[nv->index].token, TOKEN_LEN);
             cfgArray[nv->index].set(nv);    // run the set method, nv_set(nv);
@@ -222,7 +226,8 @@ stat_t get_int8(nvObj_t *nv)
 
 stat_t get_int32(nvObj_t *nv)
 {
-    nv->value = *((uint32_t *)GET_TABLE_WORD(target));
+//+++++    nv->value = *((uint32_t *)GET_TABLE_WORD(target));
+    nv->value_int = *((uint32_t *)GET_TABLE_WORD(target));
     nv->valuetype = TYPE_INT;
     return (STAT_OK);
 }
@@ -331,7 +336,8 @@ stat_t set_0123(nvObj_t *nv)
 
 stat_t set_int32(nvObj_t *nv)
 {
-    *((uint32_t *)GET_TABLE_WORD(target)) = (uint32_t)nv->value;
+//    *((uint32_t *)GET_TABLE_WORD(target)) = (uint32_t)nv->value;  +++++
+    *((uint32_t *)GET_TABLE_WORD(target)) = nv->value_int;
     nv->valuetype = TYPE_INT;
     return(STAT_OK);
 }

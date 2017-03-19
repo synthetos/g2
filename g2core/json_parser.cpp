@@ -45,7 +45,7 @@ jsSingleton_t js;
 static stat_t _json_parser_kernal(nvObj_t *nv, char *str);
 static stat_t _json_parser_execute(nvObj_t *nv);
 static stat_t _normalize_json_string(char *str, uint16_t size);
-static stat_t _get_nv_pair(nvObj_t *nv, char **pstr, int8_t *depth);
+static stat_t _get_nv_pair(nvObj_t *nv, char **pstr, int8_t *depth, uint32_t *value_int);
 
 /****************************************************************************
  * json_parser() - exposed part of JSON parser
@@ -97,7 +97,6 @@ void json_parser(char *str)
         return;
     }
     nv_print_list(status, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT);
-//    nv_print_list(status, TEXT_NO_PRINT, JSON_RESPONSE_FORMAT);
     sr_request_status_report(SR_REQUEST_TIMED);     // generate incremental status report to show any changes
 }
 
@@ -135,10 +134,22 @@ static stat_t _json_parser_execute(nvObj_t *nv) {
     return (STAT_OK);                               // only successful commands exit through this point
 }
 
+// Return valueType defined for this variable.
+// Currently just (f)loat and (int)
+
+static valueType _value_type_defined(index_t i)
+{
+    if (cfgArray[i].flags & F_INT32) {
+        return (TYPE_INT32);
+    }
+    return (TYPE_FLOAT);
+}
+
 static stat_t _json_parser_kernal(nvObj_t *nv, char *str)
 {
     stat_t status;
     int8_t depth;
+    uint32_t value_int = 0;
     char group[GROUP_LEN+1] = {""};                 // group identifier - starts as NUL
     int8_t i = NV_BODY_LEN;
 
@@ -155,7 +166,7 @@ static stat_t _json_parser_kernal(nvObj_t *nv, char *str)
         }
         // Use relaxed parser. Will read either strict or relaxed mode. To use strict-only parser refer
         // to build earlier than 407.03. Substitute _get_nv_pair_strict() for _get_nv_pair()
-        if ((status = _get_nv_pair(nv, &str, &depth)) > STAT_EAGAIN) { // erred out
+        if ((status = _get_nv_pair(nv, &str, &depth, &value_int)) > STAT_EAGAIN) { // erred out
             nv->valuetype = TYPE_NULL;
             return (status);
         }
@@ -170,6 +181,10 @@ static stat_t _json_parser_kernal(nvObj_t *nv, char *str)
         }
         if ((nv_index_is_group(nv->index)) && (nv_group_is_prefixed(nv->token))) {
             strncpy(group, nv->token, GROUP_LEN);   // record the group ID
+        }
+        if (_value_type_defined(nv->index) == TYPE_INT32) { // change out the float for an int32
+            nv->value_int = value_int;
+            nv->valuetype = TYPE_INT32;
         }
         if ((nv = nv->nx) == NULL) {
             return (STAT_JSON_TOO_MANY_PAIRS);      // Not supposed to encounter a NULL
@@ -236,7 +251,7 @@ static stat_t _normalize_json_string(char *str, uint16_t size)
  *  See build 406.xx or earlier for strict JSON parser - deleted in 407.03
  */
 
-static stat_t _get_nv_pair(nvObj_t *nv, char **pstr, int8_t *depth)
+static stat_t _get_nv_pair(nvObj_t *nv, char **pstr, int8_t *depth, uint32_t *value_int)
 {
     uint8_t i;
     char *tmp;
@@ -290,6 +305,7 @@ static stat_t _get_nv_pair(nvObj_t *nv, char **pstr, int8_t *depth)
 
     // numbers
     } else if (isdigit(**pstr) || (**pstr == '-')) {    // value is a number
+        *value_int = atol(*pstr);                       // get number as an integer first (non destructive)
         nv->value = (float)strtod(*pstr, &tmp);         // tmp is the end pointer
 
         if ((tmp == *pstr) ||                           // if start pointer equals end the conversion failed
@@ -428,6 +444,9 @@ uint16_t json_serialize(nvObj_t *nv, char *out_buf, uint16_t size)
                                         str += sprintf(str, "%d", (int)nv->value);
                                         break;
                                     }
+                case (TYPE_INT32):  {   str += sprintf(str, "%d", (int)nv->value_int);
+                                        break;
+                }
                 case (TYPE_STRING): {   *str++ = '"';
                                         strcpy(str, *nv->stringp);
                                         str += strlen(*nv->stringp);

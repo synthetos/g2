@@ -61,7 +61,7 @@ typedef struct srSingleton {
 
     /*** config values (PUBLIC) ***/
     srVerbosity status_report_verbosity;
-    uint32_t status_report_interval;                    // in milliseconds
+    int32_t status_report_interval;                     // in milliseconds
 
     /*** runtime values (PRIVATE) ***/
     srVerbosity status_report_request;                  // flag that SR has been requested, and what type

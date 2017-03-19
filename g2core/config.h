@@ -208,7 +208,8 @@ typedef enum {                          // value typing for config and JSON
     TYPE_NULL = 0,                      // value is 'null' (meaning the JSON null value)
     TYPE_PARENT,                        // object is a parent to a sub-object
     TYPE_FLOAT,                         // value is a floating point number
-    TYPE_INT,                           // value is a signed or unsigned integer or any size
+    TYPE_INT,                           // value is a signed or unsigned integer < 32 bits
+    TYPE_INT32,                         // value is a 32 bit signed integer
     TYPE_STRING,                        // value is in string field
     TYPE_BOOL,                          // value is "true" (1) or "false"(0)
     TYPE_DATA,                          // value is blind cast to uint32_t
@@ -223,6 +224,7 @@ typedef enum {                          // value typing for config and JSON
 #define F_CONVERT       0x08            // set if unit conversion is required
 #define F_ICONVERT      0x10            // set if unit conversion is required AND value is an inverse quantity
 #define F_ZERO          0x20            // initialize to zero (requires F_INITIALIZE set as well)
+#define F_INT32         0x40            // treat as int32
 
 #define _f0             0x00
 #define _fi             (F_INITIALIZE)
@@ -237,6 +239,20 @@ typedef enum {                          // value typing for config and JSON
 #define _fipn           (F_INITIALIZE | F_PERSIST | F_NOSTRIP)
 #define _fipi           (F_INITIALIZE | F_PERSIST | F_ICONVERT)
 #define _fipnc          (F_INITIALIZE | F_PERSIST | F_NOSTRIP | F_CONVERT)
+
+#define _i0             (F_INT32)
+#define _ii             (F_INT32) | (F_INITIALIZE)
+#define _ip             (F_INT32) | (F_PERSIST)
+#define _in             (F_INT32) | (F_NOSTRIP)
+#define _ic             (F_INT32) | (F_CONVERT)
+#define _iic            (F_INT32) | (F_INITIALIZE | F_CONVERT)
+#define _iip            (F_INT32) | (F_INITIALIZE | F_PERSIST)
+#define _iiz            (F_INT32) | (F_INITIALIZE | F_ZERO)
+#define _iizc           (F_INT32) | (F_INITIALIZE | F_ZERO | F_CONVERT)
+#define _iipc           (F_INT32) | (F_INITIALIZE | F_PERSIST | F_CONVERT)
+#define _iipn           (F_INT32) | (F_INITIALIZE | F_PERSIST | F_NOSTRIP)
+#define _iipi           (F_INT32) | (F_INITIALIZE | F_PERSIST | F_ICONVERT)
+#define _iipnc          (F_INT32) | (F_INITIALIZE | F_PERSIST | F_NOSTRIP | F_CONVERT)
 
 /**** Structures ****/
 
@@ -258,10 +274,9 @@ typedef struct nvObject {               // depending on use, not all elements ma
     int8_t depth;                       // depth of object in the tree. 0 is root (-1 is invalid)
     valueType valuetype;                // see valueType enum
     int8_t precision;                   // decimal precision for reporting (JSON)
-//    float value;                        // numeric value
     union {
         float value;                    // float values
-        uint32_t value_int;             // uint32 values
+        int32_t value_int;              // int32 values
     };
     char group[GROUP_LEN+1];            // group prefix or NUL if not in a group
     char token[TOKEN_LEN+1];            // full mnemonic token for lookup
@@ -331,7 +346,7 @@ stat_t set_int8(nvObj_t *nv);           // set signed 8 bit integer
 stat_t set_01(nvObj_t *nv);             // set a 0 or 1 value with validation
 stat_t set_012(nvObj_t *nv);            // set a 0, 1 or 2 value with validation
 stat_t set_0123(nvObj_t *nv);           // set a 0, 1, 2 or 3 value with validation
-stat_t set_int32(nvObj_t *nv);          // set uint32_t integer value
+stat_t set_int32(nvObj_t *nv);          // set int32_t integer value
 stat_t set_data(nvObj_t *nv);           // set uint32_t integer value blind cast
 stat_t set_flt(nvObj_t *nv);            // set floating point value
 
@@ -339,7 +354,7 @@ stat_t get_nul(nvObj_t *nv);            // get null value type
 stat_t get_bool(nvObj_t *nv);           // get boolean value
 stat_t get_ui8(nvObj_t *nv);            // get uint8_t value
 stat_t get_int8(nvObj_t *nv);           // get signed 8 bit integer
-stat_t get_int32(nvObj_t *nv);          // get uint32_t integer value
+stat_t get_int32(nvObj_t *nv);          // get int32_t integer value
 stat_t get_data(nvObj_t *nv);           // get uint32_t integer value blind cast
 stat_t get_flt(nvObj_t *nv);            // get floating point value
 
@@ -372,8 +387,8 @@ stat_t set_float_range(nvObj_t *nv, float &value, float low, float high);
 
 stat_t get_int(nvObj_t *nv, const uint8_t value);   // boilerplate for retrieving 8 bit integer value
 stat_t set_int(nvObj_t *nv, uint8_t &value, uint8_t low, uint8_t high);
-stat_t get_int32(nvObj_t *nv, const uint32_t value);    // boilerplate for retrieving 32 bit integer value
-stat_t set_int32(nvObj_t *nv, uint32_t &value, uint32_t low, uint32_t high);
+stat_t get_int32(nvObj_t *nv, const int32_t value);    // boilerplate for retrieving 32 bit integer value
+stat_t set_int32(nvObj_t *nv, int32_t &value, int32_t low, int32_t high);
 
 stat_t get_string(nvObj_t *nv, const char *str);
 

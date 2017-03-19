@@ -211,7 +211,7 @@ typedef enum {              // axis modes (ordered: see _cm_get_feed_time())
  */
 
 typedef struct GCodeState {             // Gcode model state - used by model, planning and runtime
-    uint32_t linenum;                   // Gcode block line number
+    int32_t linenum;                    // Gcode block line number
     cmMotionMode motion_mode;           // Group1: G0, G1, G2, G3, G38.2, G80, G81, G82
                                         //         G83, G84, G85, G86, G87, G88, G89
 

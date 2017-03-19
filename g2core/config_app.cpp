@@ -648,7 +648,7 @@ const cfgItem_t cfgArray[] = {
     { "sys","jv", _fipn, 0, js_print_jv,  js_get_jv, js_set_jv, (float *)&cs.null, JSON_VERBOSITY },
     { "sys","qv", _fipn, 0, qr_print_qv,  qr_get_qv, qr_set_qv, (float *)&cs.null, QUEUE_REPORT_VERBOSITY },
     { "sys","sv", _fipn, 0, sr_print_sv,  sr_get_sv, sr_set_sv, (float *)&cs.null, STATUS_REPORT_VERBOSITY },
-    { "sys","si", _fipn, 0, sr_print_si,  sr_get_si, sr_set_si, (float *)&cs.null, STATUS_REPORT_INTERVAL_MS },
+    { "sys","si", _iipn, 0, sr_print_si,  sr_get_si, sr_set_si, (float *)&cs.null, STATUS_REPORT_INTERVAL_MS },
 
     // Gcode defaults
     // NOTE: The ordering within the gcode defaults is important for token resolution. gc must follow gco
@@ -1397,30 +1397,34 @@ stat_t set_int(nvObj_t *nv, uint8_t &value, uint8_t low, uint8_t high) {
     return (STAT_OK);
 }
 
-stat_t get_int32(nvObj_t *nv, const uint32_t value) {
-    nv->value = value;
+stat_t get_int32(nvObj_t *nv, const int32_t value) {
+//+++++    nv->value = value;
+    nv->value_int = value;
     nv->valuetype = TYPE_INT;
     return STAT_OK;
 }
 
-stat_t set_int32(nvObj_t *nv, uint32_t &value, uint32_t low, uint32_t high) {
+stat_t set_int32(nvObj_t *nv, int32_t &value, int32_t low, int32_t high) {
 
     char msg[64];
 
-    if (nv->value < low) {
+//+++++    if (nv->value < low) {
+    if (nv->value_int < low) {
         sprintf(msg, "Input is less than minimum value %lu", low);
         nv_add_conditional_message(msg);
         nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_LESS_THAN_MIN_VALUE);
     }
-    if (nv->value > high) {
+//+++++    if (nv->value > high) {
+    if (nv->value_int > high) {
         sprintf(msg, "Input is more than maximum value %lu", high);
         nv_add_conditional_message(msg);
         nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
-    value = nv->value;  // note: valuetype = TYPE_INT already set
-    nv->valuetype = TYPE_INT;
+//    value = nv->value;  // note: valuetype = TYPE_INT already set
+    value = nv->value_int;  // note: valuetype = TYPE_INT already set
+    nv->valuetype = TYPE_INT32;
     return (STAT_OK);
 }
 
