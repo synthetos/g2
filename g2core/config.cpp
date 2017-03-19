@@ -710,7 +710,7 @@ nvObj_t *nv_add_string(const char *token, const char *string) // add a string ob
 }
 
 /*
- * cm_conditional_message() - queue a RAM string as a message in the response (conditionally)
+ * nv_add__conditional_message() - queue a RAM string as a message in the response (conditionally)
  */
 
 nvObj_t *nv_add_conditional_message(const char *string)    // conditionally add a message object to the body

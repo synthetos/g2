@@ -45,11 +45,12 @@
 #define _to_millimeters(a)  ((cm->gm.units_mode == INCHES) ? ((float)a * (float)MM_PER_INCH) : (float)a)
 #define _to_inches(a)       ((cm->gm.units_mode == INCHES) ? ((float)a * (float)(1/MM_PER_INCH)) : (float)a)
 
-#define DISABLE_SOFT_LIMIT (999999)
-#define JERK_INPUT_MIN (0.01)               // minimum allowable jerk setting in millions mm/min^3
-#define JERK_INPUT_MAX (1000000)            // maximum allowable jerk setting in millions mm/min^3
-#define PROBES_STORED 3                     // we store three probes for coordinate rotation computation
-#define RADIUS_MIN (0.0001)                 // minimum value for ABC radius settings
+#define DISABLE_SOFT_LIMIT  (999999)
+#define JERK_INPUT_MIN      (0.01)          // minimum allowable jerk setting in millions mm/min^3
+#define JERK_INPUT_MAX      (1000000)       // maximum allowable jerk setting in millions mm/min^3
+#define PROBES_STORED       3               // we store three probes for coordinate rotation computation
+#define RADIUS_MIN          (0.0001)        // minimum value for ABC radius settings
+#define MAX_LINENUM         (50000000)      // 50m is about where float craps out
 
 /*****************************************************************************
  * MACHINE STATE MODEL
@@ -375,7 +376,7 @@ float cm_get_feed_rate(const GCodeState_t *gcode_state);
 void cm_set_motion_mode(GCodeState_t *gcode_state, const uint8_t motion_mode);
 void cm_set_tool_number(GCodeState_t *gcode_state, const uint8_t tool);
 void cm_set_absolute_override(GCodeState_t *gcode_state, const uint8_t absolute_override);
-void cm_set_model_linenum(const uint32_t linenum);
+void cm_set_model_linenum(uint32_t linenum);
 
 // Coordinate systems and offsets
 float cm_get_combined_offset(const uint8_t axis);

@@ -732,8 +732,10 @@ static stat_t _execute_gcode_block(char *active_comment)
 {
     stat_t status = STAT_OK;
 
-    cm_set_model_linenum(gv.linenum);
-
+    if (gf.linenum) {
+        cm_set_model_linenum(gv.linenum);
+    }
+        
     EXEC_FUNC(cm_m48_enable, m48_enable);
     
     if (gf.fro_control) {                                   // feedrate override

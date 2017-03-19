@@ -348,8 +348,16 @@ void cm_set_absolute_override(GCodeState_t *gcode_state, const uint8_t absolute_
     cm_set_display_offsets(MODEL);      // must reset offsets if you change absolute override
 }
 
-void cm_set_model_linenum(const uint32_t linenum)
+void cm_set_model_linenum(uint32_t linenum)
 {
+    if (linenum < 0) {
+        linenum = 0;
+        rpt_exception(STAT_INPUT_LESS_THAN_MIN_VALUE, "line number is negative");
+    } else
+    if (linenum > MAX_LINENUM) {     // about 100m
+        linenum = 0;
+        rpt_exception(STAT_INPUT_EXCEEDS_MAX_VALUE, "line number exceeds 100,000,000");
+    }
     cm->gm.linenum = linenum;           // you must first set the model line number,
     nv_add_object((const char *)"n");   // then add the line number to the nv list
 }
@@ -1975,8 +1983,8 @@ stat_t cm_get_admo(nvObj_t *nv) { return(_get_msg_helper(nv, msg_admo, cm_get_ar
 stat_t cm_get_frmo(nvObj_t *nv) { return(_get_msg_helper(nv, msg_frmo, cm_get_feed_rate_mode(ACTIVE_MODEL)));}
 
 stat_t cm_get_toolv(nvObj_t *nv) { return(get_int(nv, cm_get_tool(ACTIVE_MODEL))); }
-stat_t cm_get_mline(nvObj_t *nv) { return(get_int(nv, cm_get_linenum(MODEL))); }
-stat_t cm_get_line(nvObj_t *nv)  { return(get_int(nv, cm_get_linenum(ACTIVE_MODEL))); }
+stat_t cm_get_mline(nvObj_t *nv) { return(get_int32(nv, cm_get_linenum(MODEL))); }
+stat_t cm_get_line(nvObj_t *nv)  { return(get_int32(nv, cm_get_linenum(ACTIVE_MODEL))); }
 
 stat_t cm_get_vel(nvObj_t *nv)
 {
