@@ -258,7 +258,11 @@ typedef struct nvObject {               // depending on use, not all elements ma
     int8_t depth;                       // depth of object in the tree. 0 is root (-1 is invalid)
     valueType valuetype;                // see valueType enum
     int8_t precision;                   // decimal precision for reporting (JSON)
-    float value;                        // numeric value
+//    float value;                        // numeric value
+    union {
+        float value;                    // float values
+        uint32_t value_int;             // uint32 values
+    };
     char group[GROUP_LEN+1];            // group prefix or NUL if not in a group
     char token[TOKEN_LEN+1];            // full mnemonic token for lookup
     char (*stringp)[];                  // pointer to array of characters from shared character array
