@@ -352,10 +352,11 @@ void cm_set_model_linenum(uint32_t linenum)
 {
     if (linenum < 0) {
         linenum = 0;
-        rpt_exception(STAT_INPUT_LESS_THAN_MIN_VALUE, "line number is negative; set of zero");
+        rpt_exception(STAT_INPUT_LESS_THAN_MIN_VALUE, "line number is negative; set to zero");
     } else
-    if (linenum > MAX_FP_INTEGER) {      // see util.h
-        rpt_exception(STAT_INPUT_EXCEEDS_MAX_VALUE, "line number > 8,388,608; may be inexact");
+    if (linenum >= MAX_LONG) {           // see util.h
+        linenum = 0;
+        rpt_exception(STAT_INPUT_EXCEEDS_MAX_VALUE, "line number > 2.1 billion; set to zero");
     }
     cm->gm.linenum = linenum;           // you must first set the model line number,
     nv_add_object((const char *)"n");   // then add the line number to the nv list

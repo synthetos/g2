@@ -106,9 +106,8 @@ void json_parse_for_exec(char *str, bool execute)
     nvObj_t *nv = nv_reset_exec_nv_list();          // get a fresh nvObj list
     stat_t status = _json_parser_kernal(nv, str);
     if ((status == STAT_OK) && (execute)) {
-        // execute the command
         nv = nv_exec;
-        status = _json_parser_execute(nv);
+        status = _json_parser_execute(nv);          // execute the command
     }
 }
 

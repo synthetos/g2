@@ -34,7 +34,7 @@ typedef struct GCodeInputValue {    // Gcode inputs - meaning depends on context
     uint8_t next_action;            // handles G modal group 1 moves & non-modals
     cmMotionMode motion_mode;       // Group1: G0, G1, G2, G3, G38.2, G80, G81, G82, G83, G84, G85, G86, G87, G88, G89
     uint8_t program_flow;           // used only by the gcode_parser
-    uint32_t linenum;               // N word
+    int32_t linenum;                // N word
 
     float target[AXES];             // XYZABC where the move should go
     float arc_offset[3];            // IJK - used by arc commands
@@ -119,7 +119,7 @@ GCodeFlag_t gf;     // gcode input flags
 
 // local helper functions and macros
 static void _normalize_gcode_block(char *str, char **active_comment, uint8_t *block_delete_flag);
-static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value);
+static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value, int32_t *value_int);
 static stat_t _point(float value);
 static stat_t _validate_gcode_block(char *active_comment);
 static stat_t _parse_gcode_block(char *line, char *active_comment); // Parse the block into the GN/GF structs
@@ -435,7 +435,7 @@ static void _normalize_gcode_block(char *str, char **active_comment, uint8_t *bl
  *  G0X... is not interpreted as hexadecimal. This is trapped.
  */
 
-static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value)
+static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value, int32_t *value_int)
 {
     if (**pstr == NUL) { return (STAT_COMPLETE); }    // no more words
 
@@ -450,17 +450,18 @@ static stat_t _get_next_gcode_word(char **pstr, char *letter, float *value)
     if ((**pstr == '0') && (*(*pstr+1) == 'X')) {
         *value = 0;
         (*pstr)++;
-        return (STAT_OK);        // pointer points to X
+        return (STAT_OK);                           // pointer points to X
     }
 
     // get-value general case
     char *end;
+    *value_int = atol(*pstr);                       // needed to get an accurate line number for N > 8,388,608
     *value = strtof(*pstr, &end);
     if(end == *pstr) {
             return(STAT_BAD_NUMBER_FORMAT);
     }    // more robust test then checking for value=0;
     *pstr = end;
-    return (STAT_OK);            // pointer points to next character after the word
+    return (STAT_OK);                               // pointer points to next character after the word
 }
 
 /*
@@ -510,6 +511,7 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
     char *pstr = (char *)buf;                   // persistent pointer into gcode block for parsing words
     char letter;                                // parsed letter, eg.g. G or X or Y
     float value = 0;                            // value parsed from letter (e.g. 2 for G2)
+    int32_t value_int = 0;                      // integer value parsed from letter - needed for line numbers
     stat_t status = STAT_OK;
 
     // set initial state for new move
@@ -526,7 +528,7 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
     }
 
     // extract commands and parameters
-    while((status = _get_next_gcode_word(&pstr, &letter, &value)) == STAT_OK) {
+    while((status = _get_next_gcode_word(&pstr, &letter, &value, &value_int)) == STAT_OK) {
         switch(letter) {
             case 'G':
             switch((uint8_t)value) {
@@ -678,7 +680,7 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
             case 'K': SET_NON_MODAL (arc_offset[2], value);
             case 'L': SET_NON_MODAL (L_word, value);
             case 'R': SET_NON_MODAL (arc_radius, value);
-            case 'N': SET_NON_MODAL (linenum,(uint32_t)value);      // line number
+            case 'N': SET_NON_MODAL (linenum, value_int);           // line number handled as special case to preserve integer value
             default: status = STAT_GCODE_COMMAND_UNSUPPORTED;
         }
         if(status != STAT_OK) break;
