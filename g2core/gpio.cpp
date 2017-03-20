@@ -712,7 +712,7 @@ stat_t io_set_output(nvObj_t *nv)
 
     void io_print_domode(nvObj_t *nv) {_print_di(nv, fmt_gpio_domode);}
     void io_print_out(nvObj_t *nv) {
-        sprintf(cs.out_buf, fmt_gpio_out, nv->token, nv->value_int);
+        sprintf(cs.out_buf, fmt_gpio_out, nv->token, (int)nv->value_int);
         xio_writeline(cs.out_buf);
     }
 #endif

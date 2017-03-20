@@ -2495,7 +2495,7 @@ static void _print_hom(nvObj_t *nv, const char *format)
 
 void cm_print_am(nvObj_t *nv)    // print axis mode with enumeration string
 {
-    sprintf(cs.out_buf, fmt_Xam, nv->group, nv->token, nv->group, nv->value_int,
+    sprintf(cs.out_buf, fmt_Xam, nv->group, nv->token, nv->group, (int)nv->value_int,
         GET_TEXT_ITEM(msg_am, nv->value_int));
     xio_writeline(cs.out_buf);
 }

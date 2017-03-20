@@ -279,38 +279,6 @@ typedef enum {                      // value typing for config and JSON
 #define _fipi   (TYPE_FLOAT | F_INITIALIZE | F_PERSIST | F_ICONVERT)
 #define _fipnc  (TYPE_FLOAT | F_INITIALIZE | F_PERSIST | F_NOSTRIP | F_CONVERT)
 
-#define _t0	    (TYPE_TXTCON)
-
-/*
-#define _f0             0x00
-#define _fi             (F_INITIALIZE)
-#define _fp             (F_PERSIST)
-#define _fn             (F_NOSTRIP)
-#define _fc             (F_CONVERT)
-#define _fic            (F_INITIALIZE | F_CONVERT)
-#define _fip            (F_INITIALIZE | F_PERSIST)
-//#define _fiz            (F_INITIALIZE | F_ZERO)
-//#define _fizc           (F_INITIALIZE | F_ZERO | F_CONVERT)
-#define _fipc           (F_INITIALIZE | F_PERSIST | F_CONVERT)
-#define _fipn           (F_INITIALIZE | F_PERSIST | F_NOSTRIP)
-#define _fipi           (F_INITIALIZE | F_PERSIST | F_ICONVERT)
-#define _fipnc          (F_INITIALIZE | F_PERSIST | F_NOSTRIP | F_CONVERT)
-
-#define _i0             (F_TYPE_INTEGER)
-#define _ii             (F_TYPE_INTEGER) | (F_INITIALIZE)
-#define _ip             (F_TYPE_INTEGER) | (F_PERSIST)
-#define _in             (F_TYPE_INTEGER) | (F_NOSTRIP)
-#define _ic             (F_TYPE_INTEGER) | (F_CONVERT)
-#define _iic            (F_TYPE_INTEGER) | (F_INITIALIZE | F_CONVERT)
-#define _iip            (F_TYPE_INTEGER) | (F_INITIALIZE | F_PERSIST)
-#define _iiz            (F_TYPE_INTEGER) | (F_INITIALIZE | F_ZERO)
-#define _iizc           (F_TYPE_INTEGER) | (F_INITIALIZE | F_ZERO | F_CONVERT)
-#define _iipc           (F_TYPE_INTEGER) | (F_INITIALIZE | F_PERSIST | F_CONVERT)
-#define _iipn           (F_TYPE_INTEGER) | (F_INITIALIZE | F_PERSIST | F_NOSTRIP)
-#define _iipi           (F_TYPE_INTEGER) | (F_INITIALIZE | F_PERSIST | F_ICONVERT)
-#define _iipnc          (F_TYPE_INTEGER) | (F_INITIALIZE | F_PERSIST | F_NOSTRIP | F_CONVERT)
-*/
-
 /**** Structures ****/
 
 typedef struct nvString {               // shared string object
@@ -443,7 +411,7 @@ stat_t set_float_range(nvObj_t *nv, float &value, float low, float high);
 
 stat_t get_int(nvObj_t *nv, const uint8_t value);   // boilerplate for retrieving 8 bit integer value
 stat_t set_int(nvObj_t *nv, uint8_t &value, uint8_t low, uint8_t high);
-stat_t get_int32(nvObj_t *nv, const int32_t value);    // boilerplate for retrieving 32 bit integer value
+stat_t get_int32(nvObj_t *nv, const int32_t value); // boilerplate for retrieving 32 bit integer value
 stat_t set_int32(nvObj_t *nv, int32_t &value, int32_t low, int32_t high);
 
 stat_t get_string(nvObj_t *nv, const char *str);

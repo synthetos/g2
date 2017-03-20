@@ -183,13 +183,15 @@ void sr_init_status_report()
     sr.status_report_request = SR_OFF;
     char sr_defaults[NV_STATUS_REPORT_LEN][TOKEN_LEN+1] = { STATUS_REPORT_DEFAULTS };
     nv->index = nv_get_index((const char *)"", (char *)"se00");    // set first SR persistence index
+
+    // record the index of the "stat" variable so we can use it during reporting
     sr.stat_index = nv_get_index((const char *)"", (const char *)"stat");
 
+    // setup the status report array 
     for (uint8_t i=0; i < NV_STATUS_REPORT_LEN ; i++) {
         if (sr_defaults[i][0] == NUL) break;                    // quit on first blank array entry
         sr.status_report_value[i] = -1234567;                   // pre-load values with an unlikely number
         nv->value_int = nv_get_index((const char *)"", sr_defaults[i]);// load the index for the SR element
-//        if (fp_EQ(nv->value, NO_MATCH)) {
         if (nv->value_int == NO_MATCH) {
             rpt_exception(STAT_BAD_STATUS_REPORT_SETTING, "sr_init_status_report() encountered bad SR setting"); // trap mis-configured profile settings
             return;
@@ -198,12 +200,10 @@ void sr_init_status_report()
         nv_persist(nv);                                         // conditionally persist - automatic by nv_persist()
         nv->index++;                                            // increment SR NVM index
     }
-    // record the index of the "stat" variable so we can use it during reporting
-    sr.index_of_stat_variable = nv_get_index((const char *)"", (const char *)"stat");
 }
 
 /*
- * sr_set_status_report() - interpret an SR setup string and return current report
+ * sr_set_status_report() - read a list of NV pairs to set up SRs and return a report
  *
  *  Note: By the time this function is called any unrecognized tokens have been detected and
  *  rejected by the JSON or text parser. In other words, it should never get to here if
@@ -221,7 +221,8 @@ stat_t sr_set_status_report(nvObj_t *nv)
         if (((nv = nv->nx) == NULL) || (nv->valuetype == TYPE_EMPTY)) {
             break;
         }
-        if ((nv->valuetype == TYPE_BOOLEAN) && nv->value_int) {
+        // Note: valuetype may have been coerced from boolean to something else, so just treat value_int as a bool
+        if (nv->value_int) {
             status_report_list[i] = nv->index;
             nv->value_int = nv->index;                      // persist the index as the value
             nv->index = sr_start + i;                       // index of the SR persistence location
