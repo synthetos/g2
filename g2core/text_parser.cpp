@@ -133,8 +133,8 @@ static stat_t _text_parser_kernal(char *str, nvObj_t *nv)
         return (STAT_UNRECOGNIZED_NAME);
     }
     strcpy(nv->group, cfgArray[nv->index].group); // capture the group string if there is one
-    nv_coerce_types(nv);                          // adjust types based on type fields in configApp table
-
+    nv_coerce_types(nv);                        // adjust types based on type fields in configApp table
+        
     // see if you need to strip the token - but only if in text mode
     if ((cs.comm_request_mode == TEXT_MODE) && (nv_group_is_prefixed(nv->group))) {
         wr = nv->token;

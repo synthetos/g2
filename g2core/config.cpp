@@ -214,7 +214,6 @@ stat_t get_nul(nvObj_t *nv)
 
 stat_t get_ui8(nvObj_t *nv)
 {
-//    nv->value = (float)*((uint8_t *)GET_TABLE_WORD(target));
     nv->value_int = *((uint8_t *)GET_TABLE_WORD(target));
     nv->valuetype = TYPE_INTEGER;
     return (STAT_OK);
@@ -222,7 +221,6 @@ stat_t get_ui8(nvObj_t *nv)
 
 stat_t get_int8(nvObj_t *nv)
 {
-//    nv->value = (float)*((int8_t *)GET_TABLE_WORD(target));
     nv->value_int = *((int8_t *)GET_TABLE_WORD(target));
     nv->valuetype = TYPE_INTEGER;
     return (STAT_OK);
@@ -230,7 +228,6 @@ stat_t get_int8(nvObj_t *nv)
 
 stat_t get_int32(nvObj_t *nv)
 {
-//    nv->value = *((uint32_t *)GET_TABLE_WORD(target));
     nv->value_int = *((uint32_t *)GET_TABLE_WORD(target));
     nv->valuetype = TYPE_INTEGER;
     return (STAT_OK);
@@ -340,7 +337,6 @@ stat_t set_0123(nvObj_t *nv)
 
 stat_t set_int32(nvObj_t *nv)
 {
-//    *((uint32_t *)GET_TABLE_WORD(target)) = (uint32_t)nv->value;  +++++
     *((uint32_t *)GET_TABLE_WORD(target)) = nv->value_int;
     nv->valuetype = TYPE_INTEGER;
     return(STAT_OK);
@@ -508,6 +504,9 @@ uint8_t nv_get_type(nvObj_t *nv)
  */
 void nv_coerce_types(nvObj_t *nv)
 {
+    if (nv->valuetype == TYPE_NULL) {               // don't change type if it's a GET query
+        return;
+    }
     valueType type = (valueType)(cfgArray[nv->index].flags & F_TYPE_MASK);
     if (type == TYPE_INTEGER) {
         nv->valuetype = TYPE_INTEGER;               // will pay attention to the int value, not the float

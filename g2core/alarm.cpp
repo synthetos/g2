@@ -235,7 +235,6 @@ stat_t cm_panic(const stat_t status, const char *msg)
     spindle_reset();                            // stop spindle immediately and set speed to 0 RPM
     coolant_reset();                            // stop coolant immediately
     temperature_reset();                        // turn off heaters and fans
-//+++++    cm_queue_flush(&cm1);                       // flush all queues and reset positions
 
     cm1.machine_state = MACHINE_PANIC;          // don't reset anything. Panics are not recoverable
     cm2.machine_state = MACHINE_PANIC;          // don't reset anything. Panics are not recoverable

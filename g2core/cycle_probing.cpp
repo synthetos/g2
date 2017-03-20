@@ -213,7 +213,6 @@ static stat_t _probe_move(const float target[], const bool flags[])
     pb.waiting_for_motion_complete = true;          // set this BEFORE the motion starts
     cm_straight_feed(target, flags, PROFILE_FAST);  // NB: feed rate was set earlier, so it's OK
     mp_queue_command(_motion_end_callback, nullptr, nullptr); // the last two arguments are ignored anyway
-//    st_request_forward_plan();                      //+++++
     return (STAT_EAGAIN);
 }
 

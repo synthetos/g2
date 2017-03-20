@@ -540,104 +540,93 @@ stat_t cm_deferred_write_callback()
 
 stat_t cm_set_tram(nvObj_t *nv)
 {
-    // Ah yes. If you call {tram:true} or any non-zero it will tram. Anything falsey will clear the tram.
-    if ((nv->valuetype == TYPE_BOOLEAN) || (nv->valuetype == TYPE_INTEGER) || (nv->valuetype == TYPE_FLOAT)) {
-        
-        bool do_set = !!(nv->value_int);
-
-        // if passed false/0, we will clear the rotation matrix
-        if (!do_set) {
-            canonical_machine_reset_rotation(cm);
-            return (STAT_OK);
-        }
-
-        // check to make sure we have three valid probes in a row
-        if ((cm->probe_state[0] == PROBE_SUCCEEDED) &&
-            (cm->probe_state[1] == PROBE_SUCCEEDED) &&
-            (cm->probe_state[2] == PROBE_SUCCEEDED))
-        {
-
-            // Step 1: Get the normal of the plane formed by the three probes. Naming:
-            //    d0_{xyz} is the delta between point 0 and point 1
-            //    d2_{xyz} is the delta between point 2 and point 1
-            //    n_{xyz} is the unit normal
-
-            // Step 1a: get the deltas
-            float d0_x = cm->probe_results[0][0] - cm->probe_results[1][0];
-            float d0_y = cm->probe_results[0][1] - cm->probe_results[1][1];
-            float d0_z = cm->probe_results[0][2] - cm->probe_results[1][2];
-            float d2_x = cm->probe_results[2][0] - cm->probe_results[1][0];
-            float d2_y = cm->probe_results[2][1] - cm->probe_results[1][1];
-            float d2_z = cm->probe_results[2][2] - cm->probe_results[1][2];
-
-            // Step 1b: compute the combined magnitude
-            // since sqrt(a)*sqrt(b) = sqrt(a*b), we can save a sqrt in making the unit normal
-            float combined_magnitude_inv = 1.0/sqrt((d0_x*d0_x + d0_y*d0_y + d0_z*d0_z) *
-                                                    (d2_x*d2_x + d2_y*d2_y + d2_z*d2_z));
-
-            // Step 1c: compute the cross product and normalize
-            float n_x = (d0_z*d2_y - d0_y*d2_z)*combined_magnitude_inv;
-            float n_y = (d0_x*d2_z - d0_z*d2_x)*combined_magnitude_inv;
-            float n_z = (d0_y*d2_x - d0_x*d2_y)*combined_magnitude_inv;
-
-            // Step 1d: flip the normal if it's negative
-            if (n_z < 0.0) {
-                n_x = -n_x;
-                n_y = -n_y;
-                n_z = -n_z;
-            }
-
-            // Step 2: make the quaternion for the rotation to {0,0,1}
-            float p = sqrt(n_x*n_x + n_y*n_y + n_z*n_z);
-            float m = sqrt(2.0)*sqrt(p*(p+n_z));
-            float q_w = (n_z + p) / m;
-            float q_x = -n_y / m;
-            float q_y = n_x / m;
-            //float q_z = 0; // already optimized out
-
-            // Step 3: compute the rotation matrix
-            float q_wx_2 = q_w * q_x * 2.0;
-            float q_wy_2 = q_w * q_y * 2.0;
-            float q_xx_2 = q_x * q_x * 2.0;
-            float q_xy_2 = q_x * q_y * 2.0;
-            float q_yy_2 = q_y * q_y * 2.0;
-
-            /*
-             matrix = {
-                {1 - q_yy_2, q_xy_2,      q_wy_2,             0},
-                {q_xy_2,     1 - q_xx_2, -q_wx_2,             0},
-                {-q_wy_2,    q_wx_2,     1 - q_xx_2 - q_yy_2, i},
-                {0,          0,          0,                   1}
-             }
-            */
-            cm->rotation_matrix[0][0] = 1 - q_yy_2;
-            cm->rotation_matrix[0][1] = q_xy_2;
-            cm->rotation_matrix[0][2] = q_wy_2;
-
-            cm->rotation_matrix[1][0] = q_xy_2;
-            cm->rotation_matrix[1][1] = 1 - q_xx_2;
-            cm->rotation_matrix[1][2] = -q_wx_2;
-
-            cm->rotation_matrix[2][0] = -q_wy_2;
-            cm->rotation_matrix[2][1] = q_wx_2;
-            cm->rotation_matrix[2][2] = 1 - q_xx_2 - q_yy_2;
-
-            // Step 4: compute the z-offset
-            cm->rotation_z_offset = (n_x*cm->probe_results[1][0] + 
-                                     n_y*cm->probe_results[1][1]) / 
-                                     n_z + cm->probe_results[1][2];
-        } else {
-            return (STAT_COMMAND_NOT_ACCEPTED);
-        }
-    } else {
-        return (STAT_INPUT_VALUE_RANGE_ERROR);
+    if (!nv->value_int) {                       // if false, reset the matrix and return
+        canonical_machine_reset_rotation(cm);
+        return (STAT_OK);
     }
+ 
+    // check to make sure we have three valid probes in a row
+    if (!((cm->probe_state[0] == PROBE_SUCCEEDED) &&
+          (cm->probe_state[1] == PROBE_SUCCEEDED) &&
+          (cm->probe_state[2] == PROBE_SUCCEEDED))) {
+            return (STAT_COMMAND_NOT_ACCEPTED);     // do not have 3 valid probes
+    }
+
+    // Step 1: Get the normal of the plane formed by the three probes. Naming:
+    //    d0_{xyz} is the delta between point 0 and point 1
+    //    d2_{xyz} is the delta between point 2 and point 1
+    //    n_{xyz} is the unit normal
+
+    // Step 1a: get the deltas
+    float d0_x = cm->probe_results[0][0] - cm->probe_results[1][0];
+    float d0_y = cm->probe_results[0][1] - cm->probe_results[1][1];
+    float d0_z = cm->probe_results[0][2] - cm->probe_results[1][2];
+    float d2_x = cm->probe_results[2][0] - cm->probe_results[1][0];
+    float d2_y = cm->probe_results[2][1] - cm->probe_results[1][1];
+    float d2_z = cm->probe_results[2][2] - cm->probe_results[1][2];
+
+    // Step 1b: compute the combined magnitude
+    // since sqrt(a)*sqrt(b) = sqrt(a*b), we can save a sqrt in making the unit normal
+    float combined_magnitude_inv = 1.0/sqrt((d0_x*d0_x + d0_y*d0_y + d0_z*d0_z) *
+                                            (d2_x*d2_x + d2_y*d2_y + d2_z*d2_z));
+
+    // Step 1c: compute the cross product and normalize
+    float n_x = (d0_z*d2_y - d0_y*d2_z)*combined_magnitude_inv;
+    float n_y = (d0_x*d2_z - d0_z*d2_x)*combined_magnitude_inv;
+    float n_z = (d0_y*d2_x - d0_x*d2_y)*combined_magnitude_inv;
+
+    // Step 1d: flip the normal if it's negative
+    if (n_z < 0.0) {
+        n_x = -n_x;
+        n_y = -n_y;
+        n_z = -n_z;
+    }
+
+    // Step 2: make the quaternion for the rotation to {0,0,1}
+    float p = sqrt(n_x*n_x + n_y*n_y + n_z*n_z);
+    float m = sqrt(2.0)*sqrt(p*(p+n_z));
+    float q_w = (n_z + p) / m;
+    float q_x = -n_y / m;
+    float q_y = n_x / m;
+    //float q_z = 0; // already optimized out
+
+    // Step 3: compute the rotation matrix
+    float q_wx_2 = q_w * q_x * 2.0;
+    float q_wy_2 = q_w * q_y * 2.0;
+    float q_xx_2 = q_x * q_x * 2.0;
+    float q_xy_2 = q_x * q_y * 2.0;
+    float q_yy_2 = q_y * q_y * 2.0;
+
+    /*
+        matrix = {
+                 {1 - q_yy_2, q_xy_2,      q_wy_2,             0},
+                 {q_xy_2,     1 - q_xx_2, -q_wx_2,             0},
+                 {-q_wy_2,    q_wx_2,     1 - q_xx_2 - q_yy_2, i},
+                 {0,          0,          0,                   1}
+                 }
+    */
+    cm->rotation_matrix[0][0] = 1 - q_yy_2;
+    cm->rotation_matrix[0][1] = q_xy_2;
+    cm->rotation_matrix[0][2] = q_wy_2;
+
+    cm->rotation_matrix[1][0] = q_xy_2;
+    cm->rotation_matrix[1][1] = 1 - q_xx_2;
+    cm->rotation_matrix[1][2] = -q_wx_2;
+
+    cm->rotation_matrix[2][0] = -q_wy_2;
+    cm->rotation_matrix[2][1] = q_wx_2;
+    cm->rotation_matrix[2][2] = 1 - q_xx_2 - q_yy_2;
+
+    // Step 4: compute the z-offset
+    cm->rotation_z_offset = (n_x*cm->probe_results[1][0] + 
+                             n_y*cm->probe_results[1][1]) / 
+                             n_z + cm->probe_results[1][2];
     return (STAT_OK);
 }
 
 stat_t cm_get_tram(nvObj_t *nv)
 {
-    nv->value_int = true;
+    nv->value_int = true;   // believe it or not, the compiler likes this form best - most efficient code
 
     if (fp_NOT_ZERO(cm->rotation_z_offset) ||
         fp_NOT_ZERO(cm->rotation_matrix[0][1]) ||

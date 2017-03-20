@@ -169,7 +169,7 @@ static stat_t _json_parser_kernal(nvObj_t *nv, char *str)
         if ((nv_index_is_group(nv->index)) && (nv_group_is_prefixed(nv->token))) {
             strncpy(group, nv->token, GROUP_LEN);   // record the group ID
         }
-        nv_coerce_types(nv);                        // set final types following _get_nv_pair
+        nv_coerce_types(nv);                        // adjust types based on type fields in configApp table
         if ((nv = nv->nx) == NULL) {
             return (STAT_JSON_TOO_MANY_PAIRS);      // Not supposed to encounter a NULL
         }
