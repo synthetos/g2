@@ -348,15 +348,11 @@ void cm_set_absolute_override(GCodeState_t *gcode_state, const uint8_t absolute_
     cm_set_display_offsets(MODEL);      // must reset offsets if you change absolute override
 }
 
-void cm_set_model_linenum(uint32_t linenum)
+void cm_set_model_linenum(int32_t linenum)
 {
-    if (linenum < 0) {
+    if ((linenum < 0) || (linenum > MAX_LINENUM)) {
         linenum = 0;
-        rpt_exception(STAT_INPUT_LESS_THAN_MIN_VALUE, "line number is negative; set to zero");
-    } else
-    if (linenum >= MAX_LONG) {           // see util.h
-        linenum = 0;
-        rpt_exception(STAT_INPUT_EXCEEDS_MAX_VALUE, "line number > 2.1 billion; set to zero");
+        rpt_exception(STAT_INPUT_VALUE_RANGE_ERROR, "line number > 2B or negative; set to zero");
     }
     cm->gm.linenum = linenum;           // you must first set the model line number,
     nv_add_object((const char *)"n");   // then add the line number to the nv list
