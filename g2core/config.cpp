@@ -125,20 +125,16 @@ void config_init()
 
 static void _set_defa(nvObj_t *nv, bool print)
 {
-    cm_set_units_mode(MILLIMETERS);         // must do inits in MM mode
+    cm_set_units_mode(MILLIMETERS);             // must do inits in MM mode
     for (nv->index=0; nv_index_is_single(nv->index); nv->index++) {
         if (cfgArray[nv->index].flags & F_INITIALIZE) {
-//            if (cfgArray[nv->index].flags & F_ZERO) {
-//                nv->value = 0;
-//            } else {
             if ((cfgArray[nv->index].flags & F_TYPE_MASK) == TYPE_INTEGER) {
                 nv->value_int = cfgArray[nv->index].def_value;
             } else {
                 nv->value_flt = cfgArray[nv->index].def_value;
             }
-//            }
             strncpy(nv->token, cfgArray[nv->index].token, TOKEN_LEN);
-            cfgArray[nv->index].set(nv);    // run the set method, nv_set(nv);
+            cfgArray[nv->index].set(nv);        // run the set method, nv_set(nv);
             if (cfgArray[nv->index].flags & F_PERSIST) {
                 nv_persist(nv);
             }            
@@ -162,7 +158,7 @@ stat_t set_defaults(nvObj_t *nv)
     // Mark the nv as $defa so it displays nicely in the response
     nv_reset_nv_list();
     strncpy(nv->token, "defa", TOKEN_LEN);
-//    nv->index = nv_get_index("", nv->token);    // correct, but not required
+//  nv->index = nv_get_index("", nv->token);    // correct, but not required
     nv->valuetype = TYPE_INTEGER;               // ++++ probably should be TYPE_BOOLEAN
     nv->value_int = true;
     return (STAT_OK);
@@ -200,8 +196,6 @@ stat_t config_test_assertions()
 
 /* Generic gets()
  *  get_nul()  - get nothing (returns STAT_NOOP)
- *  get_ui8()  - get value as 8 bit uint8_t (use uint8 for booleans)
- *  get_int8() - get value as 8 bit int8_t
  *  get_int32()  - get value as 32 bit integer
  *  get_data() - get value as 32 bit integer blind cast
  *  get_flt()  - get value as float
@@ -212,32 +206,10 @@ stat_t get_nul(nvObj_t *nv)
     return (STAT_NOOP);
 }
 
-stat_t get_ui8(nvObj_t *nv)
-{
-    nv->value_int = *((uint8_t *)GET_TABLE_WORD(target));
-    nv->valuetype = TYPE_INTEGER;
-    return (STAT_OK);
-}
-
-stat_t get_int8(nvObj_t *nv)
-{
-    nv->value_int = *((int8_t *)GET_TABLE_WORD(target));
-    nv->valuetype = TYPE_INTEGER;
-    return (STAT_OK);
-}
-
 stat_t get_int32(nvObj_t *nv)
 {
-    nv->value_int = *((uint32_t *)GET_TABLE_WORD(target));
+    nv->value_int = *((int32_t *)GET_TABLE_WORD(target));
     nv->valuetype = TYPE_INTEGER;
-    return (STAT_OK);
-}
-
-stat_t get_data(nvObj_t *nv)
-{
-    uint32_t *v = (uint32_t*)&nv->value_flt;
-    *v = *((uint32_t *)GET_TABLE_WORD(target));
-    nv->valuetype = TYPE_DATA;
     return (STAT_OK);
 }
 
@@ -249,18 +221,21 @@ stat_t get_flt(nvObj_t *nv)
     return (STAT_OK);
 }
 
+stat_t get_data(nvObj_t *nv)
+{
+    uint32_t *v = (uint32_t*)&nv->value_flt;
+    *v = *((uint32_t *)GET_TABLE_WORD(target));
+    nv->valuetype = TYPE_DATA;
+    return (STAT_OK);
+}
+
 /* Generic sets()
- *  set_noop() - set nothing and return OK
- *  set_nul()  - set nothing and return READ_ONLY error
- *  set_ro()   - set nothing, return read-only error
- *  set_ui8()  - set value as 8 bit uint8_t value
- *  set_int8() - set value as an 8 bit int8_t value
- *  set_01()   - set a 0 or 1 uint8_t value with validation
- *  set_012()  - set a 0, 1 or 2 uint8_t value with validation
- *  set_0123() - set a 0, 1, 2 or 3 uint8_t value with validation
- *  set_uint() - set value as 32 bit unsigned integer
- *  set_data() - set value as 32 bit integer blind cast
- *  set_flt()  - set value as float
+ *  set_noop()  - set nothing and return OK
+ *  set_nul()   - set nothing and return READ_ONLY error
+ *  set_ro()    - set nothing, return read-only error
+ *  set_int32() - set value as 32 bit unsigned integer
+ *  set_flt()   - set value as float
+ *  set_data()  - set value as 32 bit integer blind cast
  */
 
 stat_t set_noop(nvObj_t *nv) {
@@ -271,7 +246,6 @@ stat_t set_noop(nvObj_t *nv) {
 stat_t set_nul(nvObj_t *nv) {
     nv->valuetype = TYPE_NULL;
     return (STAT_PARAMETER_IS_READ_ONLY);   // this is what it should be
-//    return (STAT_OK);                       // hack until JSON is refactored
 }
 
 stat_t set_ro(nvObj_t *nv) {
@@ -282,71 +256,10 @@ stat_t set_ro(nvObj_t *nv) {
     return (STAT_PARAMETER_IS_READ_ONLY); 
 }
 
-stat_t set_ui8(nvObj_t *nv)
-{
-    *((uint8_t *)GET_TABLE_WORD(target)) = nv->value_int;
-    nv->valuetype = TYPE_INTEGER;
-    return(STAT_OK);
-}
-
-stat_t set_int8(nvObj_t *nv)
-{
-    *((int8_t *)GET_TABLE_WORD(target)) = (int8_t)nv->value_int;
-    nv->valuetype = TYPE_INTEGER;
-    return(STAT_OK);
-}
-
-stat_t set_01(nvObj_t *nv)
-{
-    if (nv->value_int < 0) {
-        nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
-    }
-    if (nv->value_int > 1) {
-        nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
-    }
-    return (set_ui8(nv));
-}
-
-stat_t set_012(nvObj_t *nv)
-{
-    if (nv->value_int < 0) {
-        nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
-    }
-    if (nv->value_int > 2) {
-        nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
-    }
-    return (set_ui8(nv));
-}
-
-stat_t set_0123(nvObj_t *nv)
-{
-    if (nv->value_int < 0) {
-        nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
-    }
-    if (nv->value_int > 3) {
-        nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
-    }
-    return (set_ui8(nv));
-}
-
 stat_t set_int32(nvObj_t *nv)
 {
-    *((uint32_t *)GET_TABLE_WORD(target)) = nv->value_int;
+    *((int32_t *)GET_TABLE_WORD(target)) = nv->value_int;
     nv->valuetype = TYPE_INTEGER;
-    return(STAT_OK);
-}
-
-stat_t set_data(nvObj_t *nv)
-{
-    uint32_t *v = (uint32_t*)&nv->value_flt;
-    *((uint32_t *)GET_TABLE_WORD(target)) = *v;
-    nv->valuetype = TYPE_DATA;
     return(STAT_OK);
 }
 
@@ -355,6 +268,14 @@ stat_t set_flt(nvObj_t *nv)
     *((float *)GET_TABLE_WORD(target)) = nv->value_flt;
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
+    return(STAT_OK);
+}
+
+stat_t set_data(nvObj_t *nv)
+{
+    uint32_t *v = (uint32_t*)&nv->value_flt;
+    *((uint32_t *)GET_TABLE_WORD(target)) = *v;
+    nv->valuetype = TYPE_DATA;
     return(STAT_OK);
 }
 

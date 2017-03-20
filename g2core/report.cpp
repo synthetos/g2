@@ -61,7 +61,7 @@ stat_t rpt_exception(stat_t status, const char *msg)
         if (cs.controller_state >= CONTROLLER_READY) {
             char buffer[128];
             sprintf(buffer, "{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s - %s\"}}\n",
-                                        G2CORE_FIRMWARE_BUILD, status, get_status_message(status), msg);
+                             G2CORE_FIRMWARE_BUILD, status, get_status_message(status), msg);
             xio_writeline(buffer);
         }
     }

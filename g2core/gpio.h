@@ -47,9 +47,9 @@
 typedef enum {
     IO_ACTIVE_LOW = 0,                  // input is active low (aka normally open)
     IO_ACTIVE_HIGH = 1,                 // input is active high (aka normally closed)
-    IO_MODE_DISABLED = 2,               // input is disabled
-    IO_MODE_MAX                         // unused. Just for range checking
+    IO_MODE_DISABLED = 2                // input is disabled
 } ioMode;
+#define IO_MODE_MAX     IO_MODE_DISABLED
 #define NORMALLY_OPEN   IO_ACTIVE_LOW   // equivalent
 #define NORMALLY_CLOSED IO_ACTIVE_HIGH  // equivalent
 
@@ -80,18 +80,18 @@ typedef enum {                          // actions are initiated from within the
     INPUT_ACTION_ALARM,                 // initiate an alarm. stops everything immediately - preserves position
     INPUT_ACTION_SHUTDOWN,              // initiate a shutdown. stops everything immediately - does not preserve position
     INPUT_ACTION_PANIC,                 // initiate a panic. stops everything immediately - does not preserve position
-    INPUT_ACTION_RESET,                 // reset system
-    INPUT_ACTION_MAX                    // unused. Just for range checking
+    INPUT_ACTION_RESET                  // reset system
 } inputAction;
+#define INPUT_ACTION_MAX    INPUT_ACTION_RESET 
 
 typedef enum {                          // functions are requested from the ISR, run from the main loop
     INPUT_FUNCTION_NONE = 0,
     INPUT_FUNCTION_LIMIT = 1,           // limit switch processing
     INPUT_FUNCTION_INTERLOCK = 2,       // interlock processing
     INPUT_FUNCTION_SHUTDOWN = 3,        // shutdown in support of external emergency stop
-    INPUT_FUNCTION_PROBE = 4,           // assign input as probe input
-    INPUT_FUNCTION_MAX                  // unused. Just for range checking
+    INPUT_FUNCTION_PROBE = 4            // assign input as probe input
 } inputFunc;
+#define INPUT_FUNCTION_MAX  INPUT_FUNCTION_PROBE
 
 typedef enum {
     INPUT_INACTIVE = 0,                 // aka switch open, also read as 'false'
@@ -151,13 +151,16 @@ void gpio_set_homing_mode(const uint8_t input_num, const bool is_homing);
 void gpio_set_probing_mode(const uint8_t input_num, const bool is_probing);
 int8_t gpio_get_probing_input(void);
 
+stat_t io_get_mo(nvObj_t *nv);
 stat_t io_set_mo(nvObj_t *nv);
+stat_t io_get_ac(nvObj_t *nv);
 stat_t io_set_ac(nvObj_t *nv);
+stat_t io_get_fn(nvObj_t *nv);
 stat_t io_set_fn(nvObj_t *nv);
 
 stat_t io_get_input(nvObj_t *nv);
 
-
+stat_t io_get_domode(nvObj_t *nv);			// output sense
 stat_t io_set_domode(nvObj_t *nv);			// output sense
 stat_t io_get_output(nvObj_t *nv);
 stat_t io_set_output(nvObj_t *nv);

@@ -3,8 +3,8 @@
  * For: /board/g2v9
  * This file is part of the g2core project
  *
- * Copyright (c) 2013 - 2016 Robert Giseburt
- * Copyright (c) 2013 - 2016 Alden S. Hart Jr.
+ * Copyright (c) 2013 - 2017 Robert Giseburt
+ * Copyright (c) 2013 - 2017 Alden S. Hart Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -95,7 +95,7 @@
 #define TEMPERATURE_OUTPUT_ON 0
 
 // Some pins, if the PWM capability is turned on, it will cause timer conflicts.
-// So we have to explicity enable them as PWM pins.
+// So we have to explicitly enable them as PWM pins.
 // Generated with:
 // perl -e 'for($i=1;$i<14;$i++) { print "#define OUTPUT${i}_PWM 0\n";}'
 #define OUTPUT1_PWM 0

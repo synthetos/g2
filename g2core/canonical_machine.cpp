@@ -1992,6 +1992,7 @@ stat_t cm_get_prb(nvObj_t *nv)  { return (get_float(nv, cm->probe_results[0][_ax
 stat_t cm_get_coord(nvObj_t *nv) { return (get_float(nv, cm->coord_offset[_coord(nv)][_axis(nv)])); }
 stat_t cm_set_coord(nvObj_t *nv) { return (set_float(nv, cm->coord_offset[_coord(nv)][_axis(nv)])); }
 
+stat_t cm_get_g92e(nvObj_t *nv)  { return (get_int(nv, cm->gmx.origin_offset_enable)); }
 stat_t cm_get_g92(nvObj_t *nv)   { return (get_float(nv, cm->gmx.origin_offset[_axis(nv)])); }
 stat_t cm_get_g28(nvObj_t *nv)   { return (get_float(nv, cm->gmx.g28_position[_axis(nv)])); }
 stat_t cm_get_g30(nvObj_t *nv)   { return (get_float(nv, cm->gmx.g30_position[_axis(nv)])); }

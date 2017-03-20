@@ -132,7 +132,8 @@ const cfgItem_t cfgArray[] = {
     { "", "admo",_i0, 0, cm_print_admo, cm_get_admo, set_ro, (float *)&cs.null, 0 },    // arc distance mode
     { "", "frmo",_i0, 0, cm_print_frmo, cm_get_frmo, set_ro, (float *)&cs.null, 0 },    // feed rate mode
     { "", "tool",_i0, 0, cm_print_tool, cm_get_toolv,set_ro, (float *)&cs.null, 0 },    // active tool
-    { "", "g92e",_i0, 0, cm_print_g92e, get_ui8,     set_ro, (float *)&cm->gmx.origin_offset_enable, 0 }, // G92 enabled
+    { "", "g92e",_i0, 0, cm_print_g92e, cm_get_g92e, set_ro, nullptr, 0 },              // G92 enable state
+//    { "", "g92e",_i0, 0, cm_print_g92e, get_ui8,     set_ro, (float *)&cm->gmx.origin_offset_enable, 0 }, // G92 enabled
 #ifdef TEMPORARY_HAS_LEDS
     { "", "_leds",_i0, 0, tx_print_nul, _get_leds,_set_leds, (float *)&cs.null, 0 },    // TEMPORARY - change LEDs
 #endif
@@ -357,56 +358,56 @@ const cfgItem_t cfgArray[] = {
     { "c","czb",_fipc, 5, cm_print_zb, cm_get_zb, cm_set_zb, (float *)&cs.null, C_ZERO_BACKOFF },
 
     // Digital input configs
-    { "di1","di1mo",_iip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[0].mode,     DI1_MODE },
-    { "di1","di1ac",_iip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[0].action,   DI1_ACTION },
-    { "di1","di1fn",_iip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[0].function, DI1_FUNCTION },
+    { "di1","di1mo",_iip, 0, io_print_mo, io_get_mo, io_set_mo, nullptr, DI1_MODE },
+    { "di1","di1ac",_iip, 0, io_print_ac, io_get_ac, io_set_ac, nullptr, DI1_ACTION },
+    { "di1","di1fn",_iip, 0, io_print_fn, io_get_fn, io_set_fn, nullptr, DI1_FUNCTION },
 
-    { "di2","di2mo",_iip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[1].mode,     DI2_MODE },
-    { "di2","di2ac",_iip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[1].action,   DI2_ACTION },
-    { "di2","di2fn",_iip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[1].function, DI2_FUNCTION },
+    { "di2","di2mo",_iip, 0, io_print_mo, io_get_mo, io_set_mo, nullptr, DI2_MODE },
+    { "di2","di2ac",_iip, 0, io_print_ac, io_get_ac, io_set_ac, nullptr, DI2_ACTION },
+    { "di2","di2fn",_iip, 0, io_print_fn, io_get_fn, io_set_fn, nullptr, DI2_FUNCTION },
 
-    { "di3","di3mo",_iip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[2].mode,     DI3_MODE },
-    { "di3","di3ac",_iip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[2].action,   DI3_ACTION },
-    { "di3","di3fn",_iip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[2].function, DI3_FUNCTION },
+    { "di3","di3mo",_iip, 0, io_print_mo, io_get_mo, io_set_mo, nullptr, DI3_MODE },
+    { "di3","di3ac",_iip, 0, io_print_ac, io_get_ac, io_set_ac, nullptr, DI3_ACTION },
+    { "di3","di3fn",_iip, 0, io_print_fn, io_get_fn, io_set_fn, nullptr, DI3_FUNCTION },
 
-    { "di4","di4mo",_iip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[3].mode,     DI4_MODE },
-    { "di4","di4ac",_iip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[3].action,   DI4_ACTION },
-    { "di4","di4fn",_iip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[3].function, DI4_FUNCTION },
+    { "di4","di4mo",_iip, 0, io_print_mo, io_get_mo, io_set_mo, nullptr, DI4_MODE },
+    { "di4","di4ac",_iip, 0, io_print_ac, io_get_ac, io_set_ac, nullptr, DI4_ACTION },
+    { "di4","di4fn",_iip, 0, io_print_fn, io_get_fn, io_set_fn, nullptr, DI4_FUNCTION },
 
-    { "di5","di5mo",_iip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[4].mode,     DI5_MODE },
-    { "di5","di5ac",_iip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[4].action,   DI5_ACTION },
-    { "di5","di5fn",_iip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[4].function, DI5_FUNCTION },
+    { "di5","di5mo",_iip, 0, io_print_mo, io_get_mo, io_set_mo, nullptr, DI5_MODE },
+    { "di5","di5ac",_iip, 0, io_print_ac, io_get_ac, io_set_ac, nullptr, DI5_ACTION },
+    { "di5","di5fn",_iip, 0, io_print_fn, io_get_fn, io_set_fn, nullptr, DI5_FUNCTION },
 
-    { "di6","di6mo",_iip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[5].mode,     DI6_MODE },
-    { "di6","di6ac",_iip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[5].action,   DI6_ACTION },
-    { "di6","di6fn",_iip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[5].function, DI6_FUNCTION },
+    { "di6","di6mo",_iip, 0, io_print_mo, io_get_mo, io_set_mo, nullptr, DI6_MODE },
+    { "di6","di6ac",_iip, 0, io_print_ac, io_get_ac, io_set_ac, nullptr, DI6_ACTION },
+    { "di6","di6fn",_iip, 0, io_print_fn, io_get_fn, io_set_fn, nullptr, DI6_FUNCTION },
 
-    { "di7","di7mo",_iip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[6].mode,     DI7_MODE },
-    { "di7","di7ac",_iip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[6].action,   DI7_ACTION },
-    { "di7","di7fn",_iip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[6].function, DI7_FUNCTION },
+    { "di7","di7mo",_iip, 0, io_print_mo, io_get_mo, io_set_mo, nullptr, DI7_MODE },
+    { "di7","di7ac",_iip, 0, io_print_ac, io_get_ac, io_set_ac, nullptr, DI7_ACTION },
+    { "di7","di7fn",_iip, 0, io_print_fn, io_get_fn, io_set_fn, nullptr, DI7_FUNCTION },
 
-    { "di8","di8mo",_iip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[7].mode,     DI8_MODE },
-    { "di8","di8ac",_iip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[7].action,   DI8_ACTION },
-    { "di8","di8fn",_iip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[7].function, DI8_FUNCTION },
+    { "di8","di8mo",_iip, 0, io_print_mo, io_get_mo, io_set_mo, nullptr, DI8_MODE },
+    { "di8","di8ac",_iip, 0, io_print_ac, io_get_ac, io_set_ac, nullptr, DI8_ACTION },
+    { "di8","di8fn",_iip, 0, io_print_fn, io_get_fn, io_set_fn, nullptr, DI8_FUNCTION },
 #if (D_IN_CHANNELS >= 9)
-    { "di9","di9mo",_iip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[8].mode,     DI9_MODE },
-    { "di9","di9ac",_iip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[8].action,   DI9_ACTION },
-    { "di9","di9fn",_iip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[8].function, DI9_FUNCTION },
+    { "di9","di9mo",_iip, 0, io_print_mo, io_get_mo, io_set_mo, nullptr, DI9_MODE },
+    { "di9","di9ac",_iip, 0, io_print_ac, io_get_ac, io_set_ac, nullptr, DI9_ACTION },
+    { "di9","di9fn",_iip, 0, io_print_fn, io_get_fn, io_set_fn, nullptr, DI9_FUNCTION },
 #endif
 #if (D_IN_CHANNELS >= 10)
-    { "di10","di10mo",_iip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[9].mode,     DI10_MODE },
-    { "di10","di10ac",_iip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[9].action,   DI10_ACTION },
-    { "di10","di10fn",_iip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[9].function, DI10_FUNCTION },
+    { "di10","di10mo",_iip, 0, io_print_mo, io_get_mo, io_set_mo, nullptr, DI10_MODE },
+    { "di10","di10ac",_iip, 0, io_print_ac, io_get_ac, io_set_ac, nullptr, DI10_ACTION },
+    { "di10","di10fn",_iip, 0, io_print_fn, io_get_fn, io_set_fn, nullptr, DI10_FUNCTION },
 #endif
 #if (D_IN_CHANNELS >= 11)
-    { "di11","di11mo",_iip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[10].mode,     DI11_MODE },
-    { "di11","di11ac",_iip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[10].action,   DI11_ACTION },
-    { "di11","di11fn",_iip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[10].function, DI11_FUNCTION },
+    { "di11","di11mo",_iip, 0, io_print_mo, io_get_mo, io_set_mo, nullptr, DI1_MODE },
+    { "di11","di11ac",_iip, 0, io_print_ac, io_get_ac, io_set_ac, nullptr, DI11_ACTION },
+    { "di11","di11fn",_iip, 0, io_print_fn, io_get_fn, io_set_fn, nullptr, DI11_FUNCTION },
 #endif
 #if (D_IN_CHANNELS >= 12)
-    { "di12","di12mo",_iip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[11].mode,     DI12_MODE },
-    { "di12","di12ac",_iip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[11].action,   DI12_ACTION },
-    { "di12","di12fn",_iip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[11].function, DI12_FUNCTION },
+    { "di12","di12mo",_iip, 0, io_print_mo, io_get_mo, io_set_mo, nullptr, DI12_MODE },
+    { "di12","di12ac",_iip, 0, io_print_ac, io_get_ac, io_set_ac, nullptr, DI12_ACTION },
+    { "di12","di12fn",_iip, 0, io_print_fn, io_get_fn, io_set_fn, nullptr, DI12_FUNCTION },
 #endif
 
     // Digital input state readers
@@ -432,19 +433,19 @@ const cfgItem_t cfgArray[] = {
 #endif
 
     // digital output configs
-    { "do1", "do1mo", _iip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[0].mode,  DO1_MODE },
-    { "do2", "do2mo", _iip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[1].mode,  DO2_MODE },
-    { "do3", "do3mo", _iip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[2].mode,  DO3_MODE },
-    { "do4", "do4mo", _iip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[3].mode,  DO4_MODE },
-    { "do5", "do5mo", _iip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[4].mode,  DO5_MODE },
-    { "do6", "do6mo", _iip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[5].mode,  DO6_MODE },
-    { "do7", "do7mo", _iip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[6].mode,  DO7_MODE },
-    { "do8", "do8mo", _iip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[7].mode,  DO8_MODE },
-    { "do9", "do9mo", _iip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[8].mode,  DO9_MODE },
-    { "do10","do10mo",_iip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[9].mode,  DO10_MODE },
-    { "do11","do11mo",_iip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[10].mode, DO11_MODE },
-    { "do12","do12mo",_iip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[11].mode, DO12_MODE },
-    { "do13","do13mo",_iip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[12].mode, DO13_MODE },
+    { "do1", "do1mo", _iip, 0, io_print_domode, io_get_domode, io_set_domode, nullptr, DO1_MODE },
+    { "do2", "do2mo", _iip, 0, io_print_domode, io_get_domode, io_set_domode, nullptr, DO2_MODE },
+    { "do3", "do3mo", _iip, 0, io_print_domode, io_get_domode, io_set_domode, nullptr, DO3_MODE },
+    { "do4", "do4mo", _iip, 0, io_print_domode, io_get_domode, io_set_domode, nullptr, DO4_MODE },
+    { "do5", "do5mo", _iip, 0, io_print_domode, io_get_domode, io_set_domode, nullptr, DO5_MODE },
+    { "do6", "do6mo", _iip, 0, io_print_domode, io_get_domode, io_set_domode, nullptr, DO6_MODE },
+    { "do7", "do7mo", _iip, 0, io_print_domode, io_get_domode, io_set_domode, nullptr, DO7_MODE },
+    { "do8", "do8mo", _iip, 0, io_print_domode, io_get_domode, io_set_domode, nullptr, DO8_MODE },
+    { "do9", "do9mo", _iip, 0, io_print_domode, io_get_domode, io_set_domode, nullptr, DO9_MODE },
+    { "do10","do10mo",_iip, 0, io_print_domode, io_get_domode, io_set_domode, nullptr, DO10_MODE },
+    { "do11","do11mo",_iip, 0, io_print_domode, io_get_domode, io_set_domode, nullptr, DO11_MODE },
+    { "do12","do12mo",_iip, 0, io_print_domode, io_get_domode, io_set_domode, nullptr, DO12_MODE },
+    { "do13","do13mo",_iip, 0, io_print_domode, io_get_domode, io_set_domode, nullptr, DO13_MODE },
 
     // Digital output state readers (default to non-active)
     { "out","out1",  _i0, 2, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
@@ -631,11 +632,11 @@ const cfgItem_t cfgArray[] = {
     { "sys","sl",  _bipn, 0, cm_print_sl,  cm_get_sl,  cm_set_sl,  (float *)&cs.null, SOFT_LIMIT_ENABLE },
     { "sys","lim", _bipn, 0, cm_print_lim, cm_get_lim, cm_set_lim, (float *)&cs.null, HARD_LIMIT_ENABLE },
     { "sys","saf", _bipn, 0, cm_print_saf, cm_get_saf, cm_set_saf, (float *)&cs.null, SAFETY_INTERLOCK_ENABLE },
-    { "sys","m48", _bin, 0, cm_print_m48, cm_get_m48, cm_get_m48, (float *)&cs.null, 1 },   // M48/M49 feedrate & spindle override enable
-    { "sys","froe",_bin, 0, cm_print_froe,cm_get_froe,cm_get_froe,(float *)&cs.null, FEED_OVERRIDE_ENABLE},
-    { "sys","fro", _fin, 3, cm_print_fro, cm_get_fro, cm_set_fro, (float *)&cs.null, FEED_OVERRIDE_FACTOR},
-    { "sys","troe",_bin, 0, cm_print_troe,cm_get_troe,cm_get_troe,(float *)&cs.null, TRAVERSE_OVERRIDE_ENABLE},
-    { "sys","tro", _fin, 3, cm_print_tro, cm_get_tro, cm_set_tro, (float *)&cs.null, TRAVERSE_OVERRIDE_FACTOR},
+    { "sys","m48", _bin, 0, cm_print_m48,  cm_get_m48, cm_get_m48, (float *)&cs.null, 1 },   // M48/M49 feedrate & spindle override enable
+    { "sys","froe",_bin, 0, cm_print_froe, cm_get_froe,cm_get_froe,(float *)&cs.null, FEED_OVERRIDE_ENABLE},
+    { "sys","fro", _fin, 3, cm_print_fro,  cm_get_fro, cm_set_fro, (float *)&cs.null, FEED_OVERRIDE_FACTOR},
+    { "sys","troe",_bin, 0, cm_print_troe, cm_get_troe,cm_get_troe,(float *)&cs.null, TRAVERSE_OVERRIDE_ENABLE},
+    { "sys","tro", _fin, 3, cm_print_tro,  cm_get_tro, cm_set_tro, (float *)&cs.null, TRAVERSE_OVERRIDE_FACTOR},
     { "sys","mt",  _fipn, 2, st_print_mt,  st_get_mt,  st_set_mt,  (float *)&cs.null, MOTOR_POWER_TIMEOUT}, // N is seconds of timeout
     { "",   "me",  _f0,   0, st_print_me,  get_nul,    st_set_me,  (float *)&cs.null, 0 },    // SET to enable motors
     { "",   "md",  _f0,   0, st_print_md,  get_nul,    st_set_md,  (float *)&cs.null, 0 },    // SET to disable motors

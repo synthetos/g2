@@ -362,25 +362,17 @@ bool nv_index_lt_groups(index_t index); // (see config_app.c)
 bool nv_group_is_prefixed(char *group);
 
 // generic internal functions and accessors
+stat_t get_nul(nvObj_t *nv);            // get null value type
+stat_t get_int32(nvObj_t *nv);          // get int32_t integer value
+stat_t get_flt(nvObj_t *nv);            // get floating point value
+stat_t get_data(nvObj_t *nv);           // get uint32_t integer value blind cast
+
 stat_t set_noop(nvObj_t *nv);           // set nothing and return OK
 stat_t set_nul(nvObj_t *nv);            // set nothing and return READ_ONLY error
 stat_t set_ro(nvObj_t *nv);             // set nothing, return read-only error
-stat_t set_ui8(nvObj_t *nv);            // set uint8_t value
-stat_t set_int8(nvObj_t *nv);           // set signed 8 bit integer
-stat_t set_01(nvObj_t *nv);             // set a 0 or 1 value with validation
-stat_t set_012(nvObj_t *nv);            // set a 0, 1 or 2 value with validation
-stat_t set_0123(nvObj_t *nv);           // set a 0, 1, 2 or 3 value with validation
 stat_t set_int32(nvObj_t *nv);          // set int32_t integer value
-stat_t set_data(nvObj_t *nv);           // set uint32_t integer value blind cast
 stat_t set_flt(nvObj_t *nv);            // set floating point value
-
-stat_t get_nul(nvObj_t *nv);            // get null value type
-stat_t get_bool(nvObj_t *nv);           // get boolean value
-stat_t get_ui8(nvObj_t *nv);            // get uint8_t value
-stat_t get_int8(nvObj_t *nv);           // get signed 8 bit integer
-stat_t get_int32(nvObj_t *nv);          // get int32_t integer value
-stat_t get_data(nvObj_t *nv);           // get uint32_t integer value blind cast
-stat_t get_flt(nvObj_t *nv);            // get floating point value
+stat_t set_data(nvObj_t *nv);           // set uint32_t integer value blind cast
 
 stat_t set_grp(nvObj_t *nv);            // set data for a group
 stat_t get_grp(nvObj_t *nv);            // get data for a group
