@@ -481,7 +481,7 @@ bool gpio_read_input(const uint8_t input_num_ext)
 
 static stat_t _input_set_helper(nvObj_t *nv, const int8_t lower_bound, const int8_t upper_bound)
 {
-    if ((nv->value < lower_bound) || (nv->value >= upper_bound)) {
+    if ((nv->value_int < lower_bound) || (nv->value_int >= upper_bound)) {
         return (STAT_INPUT_VALUE_RANGE_ERROR);
     }
     set_ui8(nv);        // will this work if -1 is a valid value?
@@ -493,7 +493,7 @@ static stat_t _input_set_helper(nvObj_t *nv, const int8_t lower_bound, const int
 
 static stat_t _output_set_helper(nvObj_t *nv, const int8_t lower_bound, const int8_t upper_bound)
 {
-    if ((nv->value < lower_bound) || (nv->value >= upper_bound)) {
+    if ((nv->value_int < lower_bound) || (nv->value_int >= upper_bound)) {
         return (STAT_INPUT_VALUE_RANGE_ERROR);
     }
     set_ui8(nv);        // will this work in -1 is a valid value?
@@ -529,12 +529,12 @@ stat_t io_get_input(nvObj_t *nv)
         // skip over "in"
         num_start+=2;
     }
-    nv->value = d_in[strtol(num_start, NULL, 10)-1].state;
+    nv->value_int = d_in[strtol(num_start, NULL, 10)-1].state;
 
-    if (nv->value > 1.1) {
+    if (nv->value_int > 1.1) {
         nv->valuetype = TYPE_NULL;
     } else {
-        nv->valuetype = TYPE_BOOL;
+        nv->valuetype = TYPE_BOOLEAN;
     }
     return (STAT_OK);
 }
@@ -557,19 +557,19 @@ stat_t io_set_domode(nvObj_t *nv)            // output function
 
     // Force pins that aren't available to be "disabled"
     switch (output_num) {
-        case 1:  if (output_1_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
-        case 2:  if (output_2_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
-        case 3:  if (output_3_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
-        case 4:  if (output_4_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
-        case 5:  if (output_5_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
-        case 6:  if (output_6_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
-        case 7:  if (output_7_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
-        case 8:  if (output_8_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
-        case 9:  if (output_9_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
-        case 10: if (output_10_pin.isNull()) { nv->value = IO_MODE_DISABLED; } break;
-        case 11: if (output_11_pin.isNull()) { nv->value = IO_MODE_DISABLED; } break;
-        case 12: if (output_12_pin.isNull()) { nv->value = IO_MODE_DISABLED; } break;
-        case 13: if (output_13_pin.isNull()) { nv->value = IO_MODE_DISABLED; } break;
+        case 1:  if (output_1_pin.isNull())  { nv->value_int = IO_MODE_DISABLED; } break;
+        case 2:  if (output_2_pin.isNull())  { nv->value_int = IO_MODE_DISABLED; } break;
+        case 3:  if (output_3_pin.isNull())  { nv->value_int = IO_MODE_DISABLED; } break;
+        case 4:  if (output_4_pin.isNull())  { nv->value_int = IO_MODE_DISABLED; } break;
+        case 5:  if (output_5_pin.isNull())  { nv->value_int = IO_MODE_DISABLED; } break;
+        case 6:  if (output_6_pin.isNull())  { nv->value_int = IO_MODE_DISABLED; } break;
+        case 7:  if (output_7_pin.isNull())  { nv->value_int = IO_MODE_DISABLED; } break;
+        case 8:  if (output_8_pin.isNull())  { nv->value_int = IO_MODE_DISABLED; } break;
+        case 9:  if (output_9_pin.isNull())  { nv->value_int = IO_MODE_DISABLED; } break;
+        case 10: if (output_10_pin.isNull()) { nv->value_int = IO_MODE_DISABLED; } break;
+        case 11: if (output_11_pin.isNull()) { nv->value_int = IO_MODE_DISABLED; } break;
+        case 12: if (output_12_pin.isNull()) { nv->value_int = IO_MODE_DISABLED; } break;
+        case 13: if (output_13_pin.isNull()) { nv->value_int = IO_MODE_DISABLED; } break;
 
         default:
             break;
@@ -599,7 +599,7 @@ stat_t io_get_output(nvObj_t *nv)
 
     ioMode outMode = d_out[output_num-1].mode;
     if (outMode == IO_MODE_DISABLED) {
-//        nv->value = 0;
+//        nv->value_int = 0;
         nv->valuetype = TYPE_NULL;   // reports back as NULL
     } else {
         nv->valuetype = TYPE_FLOAT;
@@ -607,19 +607,19 @@ stat_t io_get_output(nvObj_t *nv)
         bool invert = (outMode == 0);
         // Note: !! forces a value to boolean 0 or 1
         switch (output_num) {
-            case 1:  { nv->value = (float)output_1_pin; } break;
-            case 2:  { nv->value = (float)output_2_pin; } break;
-            case 3:  { nv->value = (float)output_3_pin; } break;
-            case 4:  { nv->value = (float)output_4_pin; } break;
-            case 5:  { nv->value = (float)output_5_pin; } break;
-            case 6:  { nv->value = (float)output_6_pin; } break;
-            case 7:  { nv->value = (float)output_7_pin; } break;
-            case 8:  { nv->value = (float)output_8_pin; } break;
-            case 9:  { nv->value = (float)output_9_pin; } break;
-            case 10: { nv->value = (float)output_10_pin; } break;
-            case 11: { nv->value = (float)output_11_pin; } break;
-            case 12: { nv->value = (float)output_12_pin; } break;
-            case 13: { nv->value = (float)output_13_pin; } break;
+            case 1:  { nv->value_flt = (float)output_1_pin; } break;
+            case 2:  { nv->value_flt = (float)output_2_pin; } break;
+            case 3:  { nv->value_flt = (float)output_3_pin; } break;
+            case 4:  { nv->value_flt = (float)output_4_pin; } break;
+            case 5:  { nv->value_flt = (float)output_5_pin; } break;
+            case 6:  { nv->value_flt = (float)output_6_pin; } break;
+            case 7:  { nv->value_flt = (float)output_7_pin; } break;
+            case 8:  { nv->value_flt = (float)output_8_pin; } break;
+            case 9:  { nv->value_flt = (float)output_9_pin; } break;
+            case 10: { nv->value_flt = (float)output_10_pin; } break;
+            case 11: { nv->value_flt = (float)output_11_pin; } break;
+            case 12: { nv->value_flt = (float)output_12_pin; } break;
+            case 13: { nv->value_flt = (float)output_13_pin; } break;
 
             default:
                 {
@@ -628,7 +628,7 @@ stat_t io_get_output(nvObj_t *nv)
                 }
         }
         if (invert) {
-            nv->value = 1.0 - nv->value;
+            nv->value_flt = 1.0 - nv->value_flt;
         }
     }
     return (STAT_OK);
@@ -637,6 +637,7 @@ stat_t io_get_output(nvObj_t *nv)
 /*
  *  io_set_output() - return output state given an nv object
  */
+
 stat_t io_set_output(nvObj_t *nv)
 {
     char *num_start = nv->token;
@@ -650,10 +651,10 @@ stat_t io_set_output(nvObj_t *nv)
 
     ioMode outMode = d_out[output_num-1].mode;
     if (outMode == IO_MODE_DISABLED) {
-        nv->value = 0; // Inactive?
+        nv->value_flt = 0; // Inactive?
     } else {
         bool invert = (outMode == 0);
-        float value = nv->value;
+        float value = nv->value_flt;
         if (invert) {
             value = 1.0 - value;
         }
@@ -675,7 +676,7 @@ stat_t io_set_output(nvObj_t *nv)
             case 12:  { output_12_pin = value; } break;
             case 13:  { output_13_pin = value; } break;
             // END generated
-            default: { nv->value = 0; } // inactive
+            default: { nv->value_flt = 0; } // inactive
         }
     }
     return (STAT_OK);
@@ -698,20 +699,20 @@ stat_t io_set_output(nvObj_t *nv)
 
     static void _print_di(nvObj_t *nv, const char *format)
     {
-        sprintf(cs.out_buf, format, nv->group, (int)nv->value);
+        sprintf(cs.out_buf, format, nv->group, nv->value_int);
         xio_writeline(cs.out_buf);
     }
     void io_print_mo(nvObj_t *nv) {_print_di(nv, fmt_gpio_mo);}
     void io_print_ac(nvObj_t *nv) {_print_di(nv, fmt_gpio_ac);}
     void io_print_fn(nvObj_t *nv) {_print_di(nv, fmt_gpio_fn);}
     void io_print_in(nvObj_t *nv) {
-        sprintf(cs.out_buf, fmt_gpio_in, nv->token, (int)nv->value);
+        sprintf(cs.out_buf, fmt_gpio_in, nv->token, (int)nv->value_int);
         xio_writeline(cs.out_buf);
     }
 
     void io_print_domode(nvObj_t *nv) {_print_di(nv, fmt_gpio_domode);}
     void io_print_out(nvObj_t *nv) {
-        sprintf(cs.out_buf, fmt_gpio_out, nv->token, (int)nv->value);
+        sprintf(cs.out_buf, fmt_gpio_out, nv->token, nv->value_int);
         xio_writeline(cs.out_buf);
     }
 #endif

@@ -128,15 +128,15 @@ static void _set_defa(nvObj_t *nv, bool print)
     cm_set_units_mode(MILLIMETERS);         // must do inits in MM mode
     for (nv->index=0; nv_index_is_single(nv->index); nv->index++) {
         if (cfgArray[nv->index].flags & F_INITIALIZE) {
-            if (cfgArray[nv->index].flags & F_ZERO) {
-                nv->value = 0;
+//            if (cfgArray[nv->index].flags & F_ZERO) {
+//                nv->value = 0;
+//            } else {
+            if ((cfgArray[nv->index].flags & F_TYPE_MASK) == TYPE_INTEGER) {
+                nv->value_int = cfgArray[nv->index].def_value;
             } else {
-                if (cfgArray[nv->index].flags & F_INT32) {
-                    nv->value_int = cfgArray[nv->index].def_value;
-                } else {
-                    nv->value = cfgArray[nv->index].def_value;
-                }
+                nv->value_flt = cfgArray[nv->index].def_value;
             }
+//            }
             strncpy(nv->token, cfgArray[nv->index].token, TOKEN_LEN);
             cfgArray[nv->index].set(nv);    // run the set method, nv_set(nv);
             if (cfgArray[nv->index].flags & F_PERSIST) {
@@ -152,8 +152,10 @@ static void _set_defa(nvObj_t *nv, bool print)
 
 stat_t set_defaults(nvObj_t *nv)
 {
-    // failsafe. nv->value must be true or no action occurs
-    if (fp_FALSE(nv->value)) return(help_defa(nv));
+    // failsafe. nv->value_int must be true or no action occurs
+    if (!nv->value_int) { 
+        return(help_defa(nv));
+    }
     _set_defa(nv, true);
 
     // The nvlist was used for the initialize message so the values are all garbage
@@ -161,8 +163,8 @@ stat_t set_defaults(nvObj_t *nv)
     nv_reset_nv_list();
     strncpy(nv->token, "defa", TOKEN_LEN);
 //    nv->index = nv_get_index("", nv->token);    // correct, but not required
-    nv->valuetype = TYPE_INT;
-    nv->value = 1;
+    nv->valuetype = TYPE_INTEGER;               // ++++ probably should be TYPE_BOOLEAN
+    nv->value_int = true;
     return (STAT_OK);
 }
 
@@ -212,29 +214,31 @@ stat_t get_nul(nvObj_t *nv)
 
 stat_t get_ui8(nvObj_t *nv)
 {
-    nv->value = (float)*((uint8_t *)GET_TABLE_WORD(target));
-    nv->valuetype = TYPE_INT;
+//    nv->value = (float)*((uint8_t *)GET_TABLE_WORD(target));
+    nv->value_int = *((uint8_t *)GET_TABLE_WORD(target));
+    nv->valuetype = TYPE_INTEGER;
     return (STAT_OK);
 }
 
 stat_t get_int8(nvObj_t *nv)
 {
-    nv->value = (float)*((int8_t *)GET_TABLE_WORD(target));
-    nv->valuetype = TYPE_INT;
+//    nv->value = (float)*((int8_t *)GET_TABLE_WORD(target));
+    nv->value_int = *((int8_t *)GET_TABLE_WORD(target));
+    nv->valuetype = TYPE_INTEGER;
     return (STAT_OK);
 }
 
 stat_t get_int32(nvObj_t *nv)
 {
-//+++++    nv->value = *((uint32_t *)GET_TABLE_WORD(target));
+//    nv->value = *((uint32_t *)GET_TABLE_WORD(target));
     nv->value_int = *((uint32_t *)GET_TABLE_WORD(target));
-    nv->valuetype = TYPE_INT;
+    nv->valuetype = TYPE_INTEGER;
     return (STAT_OK);
 }
 
 stat_t get_data(nvObj_t *nv)
 {
-    uint32_t *v = (uint32_t*)&nv->value;
+    uint32_t *v = (uint32_t*)&nv->value_flt;
     *v = *((uint32_t *)GET_TABLE_WORD(target));
     nv->valuetype = TYPE_DATA;
     return (STAT_OK);
@@ -242,7 +246,7 @@ stat_t get_data(nvObj_t *nv)
 
 stat_t get_flt(nvObj_t *nv)
 {
-    nv->value = *((float *)GET_TABLE_WORD(target));
+    nv->value_flt= *((float *)GET_TABLE_WORD(target));
     nv->precision = (int8_t)GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
     return (STAT_OK);
@@ -283,25 +287,25 @@ stat_t set_ro(nvObj_t *nv) {
 
 stat_t set_ui8(nvObj_t *nv)
 {
-    *((uint8_t *)GET_TABLE_WORD(target)) = nv->value;
-    nv->valuetype = TYPE_INT;
+    *((uint8_t *)GET_TABLE_WORD(target)) = nv->value_int;
+    nv->valuetype = TYPE_INTEGER;
     return(STAT_OK);
 }
 
 stat_t set_int8(nvObj_t *nv)
 {
-    *((int8_t *)GET_TABLE_WORD(target)) = (int8_t)nv->value;
-    nv->valuetype = TYPE_INT;
+    *((int8_t *)GET_TABLE_WORD(target)) = (int8_t)nv->value_int;
+    nv->valuetype = TYPE_INTEGER;
     return(STAT_OK);
 }
 
 stat_t set_01(nvObj_t *nv)
 {
-    if (nv->value < 0) {
+    if (nv->value_int < 0) {
         nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_LESS_THAN_MIN_VALUE);
     }
-    if (nv->value > 1) {
+    if (nv->value_int > 1) {
         nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
@@ -310,11 +314,11 @@ stat_t set_01(nvObj_t *nv)
 
 stat_t set_012(nvObj_t *nv)
 {
-    if (nv->value < 0) {
+    if (nv->value_int < 0) {
         nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_LESS_THAN_MIN_VALUE);
     }
-    if (nv->value > 2) {
+    if (nv->value_int > 2) {
         nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
@@ -323,11 +327,11 @@ stat_t set_012(nvObj_t *nv)
 
 stat_t set_0123(nvObj_t *nv)
 {
-    if (nv->value < 0) {
+    if (nv->value_int < 0) {
         nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_LESS_THAN_MIN_VALUE);
     }
-    if (nv->value > 3) {
+    if (nv->value_int > 3) {
         nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
@@ -338,13 +342,13 @@ stat_t set_int32(nvObj_t *nv)
 {
 //    *((uint32_t *)GET_TABLE_WORD(target)) = (uint32_t)nv->value;  +++++
     *((uint32_t *)GET_TABLE_WORD(target)) = nv->value_int;
-    nv->valuetype = TYPE_INT;
+    nv->valuetype = TYPE_INTEGER;
     return(STAT_OK);
 }
 
 stat_t set_data(nvObj_t *nv)
 {
-    uint32_t *v = (uint32_t*)&nv->value;
+    uint32_t *v = (uint32_t*)&nv->value_flt;
     *((uint32_t *)GET_TABLE_WORD(target)) = *v;
     nv->valuetype = TYPE_DATA;
     return(STAT_OK);
@@ -352,7 +356,7 @@ stat_t set_data(nvObj_t *nv)
 
 stat_t set_flt(nvObj_t *nv)
 {
-    *((float *)GET_TABLE_WORD(target)) = nv->value;
+    *((float *)GET_TABLE_WORD(target)) = nv->value_flt;
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
     return(STAT_OK);
@@ -499,6 +503,25 @@ uint8_t nv_get_type(nvObj_t *nv)
     return (NV_TYPE_CONFIG);
 }
 
+/*
+ * nv_coerce_types() - change types based on type field in configApp table
+ */
+void nv_coerce_types(nvObj_t *nv)
+{
+    valueType type = (valueType)(cfgArray[nv->index].flags & F_TYPE_MASK);
+    if (type == TYPE_INTEGER) {
+        nv->valuetype = TYPE_INTEGER;               // will pay attention to the int value, not the float
+    } else if (type == TYPE_BOOLEAN) {              // it may have been marked as a boolean, but if it's not...
+        nv->valuetype = TYPE_BOOLEAN;
+        if (nv->valuetype == TYPE_INTEGER) {
+            nv->value_int = nv->value_int ? true : false;
+    } else
+        if (nv->valuetype == TYPE_FLOAT) {
+            nv->value_int = (fp_ZERO(nv->value_flt)) ? true : false;
+        }
+    }
+}
+
 /******************************************************************************
  * nvObj low-level object and list operations
  * nv_get_nvObj()       - setup a nv object by providing the index
@@ -550,7 +573,8 @@ nvObj_t *nv_reset_nv(nvObj_t *nv)               // clear a single nvObj structur
 {
     nv->valuetype = TYPE_EMPTY;                 // selective clear is much faster than calling memset
     nv->index = 0;
-    nv->value = 0;
+    nv->value_int = 0;
+    nv->value_flt = 0;
     nv->precision = 0;
     nv->token[0] = NUL;
     nv->group[0] = NUL;
@@ -639,7 +663,7 @@ nvObj_t *nv_add_object(const char *token)       // add an object to the body usi
     return (NULL);
 }
 
-nvObj_t *nv_add_integer(const char *token, const uint32_t value)// add an integer object to the body
+nvObj_t *nv_add_integer(const char *token, const int32_t value) // add an integer object to the body
 {
     nvObj_t *nv = nv_body;
     for (uint8_t i=0; i<NV_BODY_LEN; i++) {
@@ -650,8 +674,8 @@ nvObj_t *nv_add_integer(const char *token, const uint32_t value)// add an intege
             continue;
         }
         strncpy(nv->token, token, TOKEN_LEN);
-        nv->value = (float) value;
-        nv->valuetype = TYPE_INT;
+        nv->value_int = value;
+        nv->valuetype = TYPE_INTEGER;
         return (nv);
     }
     return (NULL);
@@ -669,7 +693,7 @@ nvObj_t *nv_add_data(const char *token, const uint32_t value)// add an integer o
         }
         strcpy(nv->token, token);
         float *v = (float*)&value;
-        nv->value = *v;
+        nv->value_flt = *v;
         nv->valuetype = TYPE_DATA;
         return (nv);
     }
@@ -687,7 +711,7 @@ nvObj_t *nv_add_float(const char *token, const float value)    // add a float ob
             continue;
         }
         strncpy(nv->token, token, TOKEN_LEN);
-        nv->value = value;
+        nv->value_flt = value;
         nv->valuetype = TYPE_FLOAT;
         return (nv);
     }
@@ -761,7 +785,7 @@ void nv_dump_nv(nvObj_t *nv)
             nv->depth,
             nv->valuetype,
             nv->precision,
-            (double)nv->value,
+            (double)nv->value_flt,      // would need to add in value_int to be complete
             nv->group,
             nv->token,
             (char *)nv->stringp);

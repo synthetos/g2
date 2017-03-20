@@ -513,8 +513,8 @@ void cm_update_model_position()
 /****************************************************************************************
  * cm_deferred_write_callback() - write any changed G10 values back to persistence
  *
- *  Only runs if there is G10 data to write, there is no movement, and the serial queues are quiescent
- *  This could be made tighter by issuing an XOFF or ~CTS beforehand and releasing it afterwards.
+ *  Only runs if there is G10 data to write, there is no movement, and the serial queues 
+ *  are quiescent.
  */
 
 stat_t cm_deferred_write_callback()
@@ -526,8 +526,8 @@ stat_t cm_deferred_write_callback()
             for (uint8_t j=0; j<AXES; j++) {
                 sprintf((char *)nv.token, "g%2d%c", 53+i, ("xyzabc")[j]);
                 nv.index = nv_get_index((const char *)"", nv.token);
-                nv.value = cm->coord_offset[i][j];
-                nv_persist(&nv);                // Note: only writes values that have changed
+                nv.value_flt = cm->coord_offset[i][j];
+                nv_persist(&nv);    // Note: nv_persist() only writes values that have changed
             }
         }
     }
@@ -543,11 +543,10 @@ stat_t cm_deferred_write_callback()
 
 stat_t cm_set_tram(nvObj_t *nv)
 {
-    if ((nv->valuetype == TYPE_BOOL) ||
-        (nv->valuetype == TYPE_INT) ||
-        (nv->valuetype == TYPE_FLOAT))
-    {
-        bool do_set = !!((uint32_t)nv->value);
+    // Ah yes. If you call {tram:true} or any non-zero it will tram. Anything falsey will clear the tram.
+    if ((nv->valuetype == TYPE_BOOLEAN) || (nv->valuetype == TYPE_INTEGER) || (nv->valuetype == TYPE_FLOAT)) {
+        
+        bool do_set = !!(nv->value_int);
 
         // if passed false/0, we will clear the rotation matrix
         if (!do_set) {
@@ -641,7 +640,7 @@ stat_t cm_set_tram(nvObj_t *nv)
 
 stat_t cm_get_tram(nvObj_t *nv)
 {
-    nv->value = true;
+    nv->value_int = true;
 
     if (fp_NOT_ZERO(cm->rotation_z_offset) ||
         fp_NOT_ZERO(cm->rotation_matrix[0][1]) ||
@@ -654,9 +653,9 @@ stat_t cm_get_tram(nvObj_t *nv)
         fp_NE(1.0,  cm->rotation_matrix[1][1]) ||
         fp_NE(1.0,  cm->rotation_matrix[2][2]))
     {
-        nv->value = false;
+        nv->value_int = false;
     }
-    nv->valuetype = TYPE_BOOL;
+    nv->valuetype = TYPE_BOOLEAN;
     return (STAT_OK);
 }
 
@@ -1736,20 +1735,12 @@ char cm_get_axis_char(const int8_t axis)
 /***********************************************************************************
  * Run Commands
  *
- * cm_run_qf() - flush planner queue
  * cm_run_home() - run homing sequence
  */
-/*
-stat_t cm_run_qf(nvObj_t *nv)
-{
-    cm_request_queue_flush();
-    return (STAT_OK);
-}
-*/
 
 stat_t cm_run_home(nvObj_t *nv)
 {
-    if (fp_TRUE(nv->value)) {
+    if (nv->value_int) {    // if true
         float axes[] = { 1,1,1,1,1,1 };
         bool flags[] = { 1,1,1,1,1,1 };
         cm_homing_cycle_start(axes, flags);
@@ -1958,10 +1949,10 @@ static const char *const msg_frmo[] = { msg_g93, msg_g94, msg_g95 };
 #endif // __TEXT_MODE
 
 // Add the string for the enum to the nv, but leave it as a TYPE_INT
-stat_t _get_msg_helper(nvObj_t *nv, const char *const msg_array[], uint8_t value)
+stat_t _get_msg_helper(nvObj_t *nv, const char *const msg_array[], int32_t value)
 {
-    nv->value = (float)value;
-    nv->valuetype = TYPE_INT;
+    nv->value_int = value;
+    nv->valuetype = TYPE_INTEGER;
     return(nv_copy_string(nv, (const char *)GET_TEXT_ITEM(msg_array, value)));
 }
 
@@ -1988,11 +1979,11 @@ stat_t cm_get_line(nvObj_t *nv)  { return(get_int32(nv, cm_get_linenum(ACTIVE_MO
 stat_t cm_get_vel(nvObj_t *nv)
 {
     if (cm_get_motion_state() == MOTION_STOP) {
-        nv->value = 0;
+        nv->value_flt = 0;
     } else {
-        nv->value = mp_get_runtime_velocity();
+        nv->value_flt = mp_get_runtime_velocity();
         if (cm_get_units_mode(RUNTIME) == INCHES) {
-            nv->value *= INCHES_PER_MM;
+            nv->value_flt *= INCHES_PER_MM;
         }
     }
     nv->precision = GET_TABLE_WORD(precision);
@@ -2070,25 +2061,25 @@ stat_t cm_set_tt(nvObj_t *nv)
 stat_t cm_get_am(nvObj_t *nv)
 {
     int8_t axis = _axis(nv);
-    nv->value = (float)cm->a[axis].axis_mode;
-    return(_get_msg_helper(nv, msg_am, nv->value));
+    nv->value_int = cm->a[axis].axis_mode;
+    return(_get_msg_helper(nv, msg_am, nv->value_int));
 }
 
 stat_t cm_set_am(nvObj_t *nv)        // axis mode
 {
     if (cm_get_axis_type(nv) == AXIS_TYPE_LINEAR) {
-        if (nv->value > AXIS_MODE_LINEAR_MAX) { 
+        if (nv->value_int > AXIS_MODE_LINEAR_MAX) { 
             nv->valuetype = TYPE_NULL;
             return (STAT_INPUT_EXCEEDS_MAX_VALUE);
         }
     } else {
-        if (nv->value > AXIS_MODE_ROTARY_MAX) { 
+        if (nv->value_int > AXIS_MODE_ROTARY_MAX) { 
             nv->valuetype = TYPE_NULL;
             return (STAT_INPUT_EXCEEDS_MAX_VALUE);
         }
     }
-    nv->valuetype = TYPE_INT;
-    cm->a[_axis(nv)].axis_mode = (cmAxisMode)nv->value;
+    nv->valuetype = TYPE_INTEGER;
+    cm->a[_axis(nv)].axis_mode = (cmAxisMode)nv->value_int;
     return(STAT_OK);    
 }
 
@@ -2155,7 +2146,7 @@ stat_t cm_set_vm(nvObj_t *nv)
 { 
     uint8_t axis = _axis(nv);
     ritorno(set_float_range(nv, cm->a[axis].velocity_max, 0, MAX_LONG)); 
-    cm->a[axis].recip_velocity_max = 1/nv->value;
+    cm->a[axis].recip_velocity_max = 1/nv->value_flt;
     return(STAT_OK);
 }
 
@@ -2164,7 +2155,7 @@ stat_t cm_set_fr(nvObj_t *nv)
 {
     uint8_t axis = _axis(nv);
     ritorno(set_float_range(nv, cm->a[axis].feedrate_max, 0, MAX_LONG));
-    cm->a[axis].recip_feedrate_max = 1/nv->value;
+    cm->a[axis].recip_feedrate_max = 1/nv->value_flt;
     return(STAT_OK);
 }
 
@@ -2173,17 +2164,16 @@ stat_t cm_set_jm(nvObj_t *nv)
 {
     uint8_t axis = _axis(nv);
     ritorno(set_float_range(nv, cm->a[axis].jerk_max, JERK_INPUT_MIN, JERK_INPUT_MAX));
-    cm_set_axis_max_jerk(axis, nv->value);
+    cm_set_axis_max_jerk(axis, nv->value_flt);
     return(STAT_OK);
 }
 
 stat_t cm_get_jh(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv)].jerk_high)); }
-stat_t cm_set_jh(nvObj_t *nv)  
-//   { return (set_float_range(nv, cm->a[_axis(nv)].jerk_high, JERK_INPUT_MIN, JERK_INPUT_MAX)); }
+stat_t cm_set_jh(nvObj_t *nv)
 {
     uint8_t axis = _axis(nv);
     ritorno(set_float_range(nv, cm->a[axis].jerk_high, JERK_INPUT_MIN, JERK_INPUT_MAX));
-    cm_set_axis_high_jerk(axis, nv->value);
+    cm_set_axis_high_jerk(axis, nv->value_flt);
     return(STAT_OK);
 }
 
@@ -2458,7 +2448,7 @@ static const char fmt_hom[] = "%c axis homing state:%2.0f\n";
 
 static void _print_axis_ui8(nvObj_t *nv, const char *format)
 {
-    sprintf(cs.out_buf, format, nv->group, nv->token, nv->group, (uint8_t)nv->value);
+    sprintf(cs.out_buf, format, nv->group, nv->token, nv->group, nv->value_int);
     xio_writeline(cs.out_buf);
 }
 
@@ -2470,7 +2460,7 @@ static void _print_axis_flt(nvObj_t *nv, const char *format)
     } else {
         units = (char *)GET_TEXT_ITEM(msg_units, DEGREE_INDEX);
     }
-    sprintf(cs.out_buf, format, nv->group, nv->token, nv->group, nv->value, units);
+    sprintf(cs.out_buf, format, nv->group, nv->token, nv->group, nv->value_flt, units);
     xio_writeline(cs.out_buf);
 }
 
@@ -2482,7 +2472,7 @@ static void _print_axis_coord_flt(nvObj_t *nv, const char *format)
     } else {
         units = (char *)GET_TEXT_ITEM(msg_units, DEGREE_INDEX);
     }
-    sprintf(cs.out_buf, format, nv->group, nv->token, nv->group, nv->token, nv->value, units);
+    sprintf(cs.out_buf, format, nv->group, nv->token, nv->group, nv->token, nv->value_flt, units);
     xio_writeline(cs.out_buf);
 }
 
@@ -2491,7 +2481,7 @@ static void _print_pos(nvObj_t *nv, const char *format, uint8_t units)
     char axes[] = {"XYZABC"};
     uint8_t axis = _axis(nv);
     if (axis >= AXIS_A) { units = DEGREES;}
-    sprintf(cs.out_buf, format, axes[axis], nv->value, GET_TEXT_ITEM(msg_units, units));
+    sprintf(cs.out_buf, format, axes[axis], nv->value_flt, GET_TEXT_ITEM(msg_units, units));
     xio_writeline(cs.out_buf);
 }
 
@@ -2499,14 +2489,14 @@ static void _print_hom(nvObj_t *nv, const char *format)
 {
     char axes[] = {"XYZABC"};
     uint8_t axis = _axis(nv);
-    sprintf(cs.out_buf, format, axes[axis], nv->value);
+    sprintf(cs.out_buf, format, axes[axis], nv->value_int);
     xio_writeline(cs.out_buf);
 }
 
 void cm_print_am(nvObj_t *nv)    // print axis mode with enumeration string
 {
-    sprintf(cs.out_buf, fmt_Xam, nv->group, nv->token, nv->group, (uint8_t)nv->value,
-        GET_TEXT_ITEM(msg_am, (uint8_t)nv->value));
+    sprintf(cs.out_buf, fmt_Xam, nv->group, nv->token, nv->group, nv->value_int,
+        GET_TEXT_ITEM(msg_am, nv->value_int));
     xio_writeline(cs.out_buf);
 }
 

@@ -379,13 +379,13 @@ static void _send_probe_report() {
 
 stat_t cm_get_prbr(nvObj_t *nv)
 {
-    nv->value = (float)cm->probe_report_enable;
-    nv->valuetype = TYPE_INT;
+    nv->value_int = cm->probe_report_enable;
+    nv->valuetype = TYPE_INTEGER;               // ++++ should probably be type boolean
     return (STAT_OK);
 }
 
 stat_t cm_set_prbr(nvObj_t *nv)
 {
-    cm->probe_report_enable = fp_NOT_ZERO(nv->value);
+    cm->probe_report_enable = nv->value_int;
     return (STAT_OK);
 }

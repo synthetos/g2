@@ -414,9 +414,9 @@ stat_t sp_set_spo(nvObj_t *nv) { return(set_float_range(nv, spindle.override_fac
 
 // These are provided as a way to view and control spindles without using M commands
 stat_t sp_get_spc(nvObj_t *nv) { return(get_int(nv, spindle.state)); }
-stat_t sp_set_spc(nvObj_t *nv) { return(spindle_control_immediate((spControl)nv->value)); }
+stat_t sp_set_spc(nvObj_t *nv) { return(spindle_control_immediate((spControl)nv->value_int)); }
 stat_t sp_get_sps(nvObj_t *nv) { return(get_float(nv, spindle.speed)); }
-stat_t sp_set_sps(nvObj_t *nv) { return(spindle_speed_immediate(nv->value)); }
+stat_t sp_set_sps(nvObj_t *nv) { return(spindle_speed_immediate(nv->value_flt)); }
 
 /***********************************************************************************
  * TEXT MODE SUPPORT

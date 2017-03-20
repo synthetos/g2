@@ -154,9 +154,9 @@ static void _exec_coolant_control(float* value, bool* flag) {
  ***********************************************************************************/
 
 stat_t co_get_com(nvObj_t *nv) { return(get_int(nv, coolant.mist.state)); }
-stat_t co_set_com(nvObj_t *nv) { return(coolant_control_immediate((coControl)nv->value, COOLANT_MIST)); }
+stat_t co_set_com(nvObj_t *nv) { return(coolant_control_immediate((coControl)nv->value_int, COOLANT_MIST)); }
 stat_t co_get_cof(nvObj_t *nv) { return(get_int(nv, coolant.flood.state)); }
-stat_t co_set_cof(nvObj_t *nv) { return(coolant_control_immediate((coControl)nv->value, COOLANT_FLOOD)); }
+stat_t co_set_cof(nvObj_t *nv) { return(coolant_control_immediate((coControl)nv->value_int, COOLANT_FLOOD)); }
 
 stat_t co_get_coph(nvObj_t *nv) { return(get_int(nv, coolant.mist.pause_enable)); }
 stat_t co_set_coph(nvObj_t *nv) { 

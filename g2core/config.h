@@ -203,29 +203,85 @@ typedef enum {
     FLOW_CONTROL_RTS                    // flow control uses RTS/CTS
 } flowControl;
 
-typedef enum {                          // value typing for config and JSON
-    TYPE_EMPTY = -1,                    // value struct is empty (which is not the same as "NULL")
-    TYPE_NULL = 0,                      // value is 'null' (meaning the JSON null value)
-    TYPE_PARENT,                        // object is a parent to a sub-object
-    TYPE_FLOAT,                         // value is a floating point number
-    TYPE_INT,                           // value is a signed or unsigned integer < 32 bits
-    TYPE_INT32,                         // value is a 32 bit signed integer
-    TYPE_STRING,                        // value is in string field
-    TYPE_BOOL,                          // value is "true" (1) or "false"(0)
-    TYPE_DATA,                          // value is blind cast to uint32_t
-    TYPE_ARRAY                          // value is array element count, values are CSV ASCII in string field
+typedef enum {                      // value typing for config and JSON
+    // exception types
+    TYPE_SKIP = -2,                 // do not serialize this object (used for filtering)
+    TYPE_EMPTY = -1,                // value struct is empty (which is not the same as "NULL")
+
+    // fundamental JSON types       // must be 0-3. Do not change. Used by F_'s and JSON decoding
+    TYPE_NULL = 0,                  // value is 'null' (meaning the JSON null value)
+    TYPE_BOOLEAN = 1,               // value is "true" (1) or "false"(0)
+    TYPE_INTEGER = 2,               // value is an 8 or 32 bit signed integer
+    TYPE_STRING = 3,                // value is in string field
+
+    // derived data types           // must be 4-7. Do not change.
+    TYPE_FLOAT = 4,                 // value is a floating point number
+    TYPE_UINT32 = 5,                // unsigned 32 bit integer (unused)
+    TYPE_ARRAY = 6,                 // value is array element count, values are CSV ASCII in string field
+    TYPE_DATA = 7,                  // value is blind cast to uint32_t (willbe removed)
+
+    // transient types and types used during JSON processing
+    TYPE_PARENT                     // object is a parent to a sub-object
+//    TYPE_NEW_LEVEL,                 // 'value' is actually child key at new nesting level
+//    TYPE_NULL_STRING,               // empty string - treated as null
+//    TYPE_TYPE_ERROR                 // none of the above
 } valueType;
 
 /**** operations flags and shorthand ****/
 
-#define F_INITIALIZE    0x01            // initialize this item (run set during initialization)
-#define F_PERSIST       0x02            // persist this item when set is run
-#define F_NOSTRIP       0x04            // do not strip the group prefix from the token
-#define F_CONVERT       0x08            // set if unit conversion is required
-#define F_ICONVERT      0x10            // set if unit conversion is required AND value is an inverse quantity
-#define F_ZERO          0x20            // initialize to zero (requires F_INITIALIZE set as well)
-#define F_INT32         0x40            // treat as int32
+#define F_TYPE_MASK     0x00000007  // 3 LSB's used for data type
 
+#define F_INITIALIZE    0x08        // initialize this item (run set during initialization)
+#define F_PERSIST       0x10        // persist this item when set is run
+#define F_NOSTRIP       0x20        // do not strip the group prefix from the token
+#define F_CONVERT       0x40        // set if unit conversion is required
+#define F_ICONVERT      0x80        // set if unit conversion is required AND value is an inverse quantity
+
+// Shorthand
+// _n(ull) (used by commands or other case where there is no target data)
+// _b(oolean)
+// _s(tring)
+// _i(nteger)
+// _f(loat)
+// _t(ext container)
+// _d(ata)
+
+#define _n0	    (TYPE_NULL)
+#define _nn     (TYPE_NULL | F_NOSTRIP)
+
+#define _s0     (TYPE_STRING)
+#define _sn     (TYPE_STRING | F_NOSTRIP)
+
+#define _d0	    (TYPE_DATA)
+#define _dip    (TYPE_DATA | F_INITIALIZE | F_PERSIST)
+
+#define _b0     (TYPE_BOOLEAN)      // boolean data types (only listing the ones we use)
+#define _bip    (TYPE_BOOLEAN | F_INITIALIZE | F_PERSIST)
+#define _bin    (TYPE_BOOLEAN | F_INITIALIZE | F_NOSTRIP)
+#define _bipn   (TYPE_BOOLEAN | F_INITIALIZE | F_PERSIST | F_NOSTRIP)
+
+#define _i0     (TYPE_INTEGER)      // integer data types (only listing the ones we use)
+#define _ii     (TYPE_INTEGER | F_INITIALIZE)
+#define _ip     (TYPE_INTEGER | F_PERSIST)
+#define _in     (TYPE_INTEGER | F_NOSTRIP)
+#define _iip    (TYPE_INTEGER | F_INITIALIZE | F_PERSIST)
+#define _iipn   (TYPE_INTEGER | F_INITIALIZE | F_PERSIST | F_NOSTRIP)
+
+#define _f0	    (TYPE_FLOAT)    // floating point data types (only listing the ones we use)
+#define _fi     (TYPE_FLOAT | F_INITIALIZE)
+#define _fp     (TYPE_FLOAT | F_PERSIST)
+#define _fn     (TYPE_FLOAT | F_NOSTRIP)
+#define _fip    (TYPE_FLOAT | F_INITIALIZE | F_PERSIST)
+#define _fic    (TYPE_FLOAT | F_INITIALIZE | F_CONVERT)
+#define _fin    (TYPE_FLOAT | F_INITIALIZE | F_NOSTRIP)
+#define _fipc   (TYPE_FLOAT | F_INITIALIZE | F_PERSIST | F_CONVERT)
+#define _fipn   (TYPE_FLOAT | F_INITIALIZE | F_PERSIST | F_NOSTRIP)
+#define _fipi   (TYPE_FLOAT | F_INITIALIZE | F_PERSIST | F_ICONVERT)
+#define _fipnc  (TYPE_FLOAT | F_INITIALIZE | F_PERSIST | F_NOSTRIP | F_CONVERT)
+
+#define _t0	    (TYPE_TXTCON)
+
+/*
 #define _f0             0x00
 #define _fi             (F_INITIALIZE)
 #define _fp             (F_PERSIST)
@@ -233,26 +289,27 @@ typedef enum {                          // value typing for config and JSON
 #define _fc             (F_CONVERT)
 #define _fic            (F_INITIALIZE | F_CONVERT)
 #define _fip            (F_INITIALIZE | F_PERSIST)
-#define _fiz            (F_INITIALIZE | F_ZERO)
-#define _fizc           (F_INITIALIZE | F_ZERO | F_CONVERT)
+//#define _fiz            (F_INITIALIZE | F_ZERO)
+//#define _fizc           (F_INITIALIZE | F_ZERO | F_CONVERT)
 #define _fipc           (F_INITIALIZE | F_PERSIST | F_CONVERT)
 #define _fipn           (F_INITIALIZE | F_PERSIST | F_NOSTRIP)
 #define _fipi           (F_INITIALIZE | F_PERSIST | F_ICONVERT)
 #define _fipnc          (F_INITIALIZE | F_PERSIST | F_NOSTRIP | F_CONVERT)
 
-#define _i0             (F_INT32)
-#define _ii             (F_INT32) | (F_INITIALIZE)
-#define _ip             (F_INT32) | (F_PERSIST)
-#define _in             (F_INT32) | (F_NOSTRIP)
-#define _ic             (F_INT32) | (F_CONVERT)
-#define _iic            (F_INT32) | (F_INITIALIZE | F_CONVERT)
-#define _iip            (F_INT32) | (F_INITIALIZE | F_PERSIST)
-#define _iiz            (F_INT32) | (F_INITIALIZE | F_ZERO)
-#define _iizc           (F_INT32) | (F_INITIALIZE | F_ZERO | F_CONVERT)
-#define _iipc           (F_INT32) | (F_INITIALIZE | F_PERSIST | F_CONVERT)
-#define _iipn           (F_INT32) | (F_INITIALIZE | F_PERSIST | F_NOSTRIP)
-#define _iipi           (F_INT32) | (F_INITIALIZE | F_PERSIST | F_ICONVERT)
-#define _iipnc          (F_INT32) | (F_INITIALIZE | F_PERSIST | F_NOSTRIP | F_CONVERT)
+#define _i0             (F_TYPE_INTEGER)
+#define _ii             (F_TYPE_INTEGER) | (F_INITIALIZE)
+#define _ip             (F_TYPE_INTEGER) | (F_PERSIST)
+#define _in             (F_TYPE_INTEGER) | (F_NOSTRIP)
+#define _ic             (F_TYPE_INTEGER) | (F_CONVERT)
+#define _iic            (F_TYPE_INTEGER) | (F_INITIALIZE | F_CONVERT)
+#define _iip            (F_TYPE_INTEGER) | (F_INITIALIZE | F_PERSIST)
+#define _iiz            (F_TYPE_INTEGER) | (F_INITIALIZE | F_ZERO)
+#define _iizc           (F_TYPE_INTEGER) | (F_INITIALIZE | F_ZERO | F_CONVERT)
+#define _iipc           (F_TYPE_INTEGER) | (F_INITIALIZE | F_PERSIST | F_CONVERT)
+#define _iipn           (F_TYPE_INTEGER) | (F_INITIALIZE | F_PERSIST | F_NOSTRIP)
+#define _iipi           (F_TYPE_INTEGER) | (F_INITIALIZE | F_PERSIST | F_ICONVERT)
+#define _iipnc          (F_TYPE_INTEGER) | (F_INITIALIZE | F_PERSIST | F_NOSTRIP | F_CONVERT)
+*/
 
 /**** Structures ****/
 
@@ -270,17 +327,15 @@ typedef struct nvString {               // shared string object
 typedef struct nvObject {               // depending on use, not all elements may be populated
     struct nvObject *pv;                // pointer to previous object or NULL if first object
     struct nvObject *nx;                // pointer to next object or NULL if last object
-    index_t index;                      // index of tokenized name, or -1 if no token (optional)
     int8_t depth;                       // depth of object in the tree. 0 is root (-1 is invalid)
-    valueType valuetype;                // see valueType enum
-    int8_t precision;                   // decimal precision for reporting (JSON)
-    union {
-        float value;                    // float values
-        int32_t value_int;              // int32 values
-    };
     char group[GROUP_LEN+1];            // group prefix or NUL if not in a group
     char token[TOKEN_LEN+1];            // full mnemonic token for lookup
-    char (*stringp)[];                  // pointer to array of characters from shared character array
+    index_t index;                      // index of tokenized name, or -1 if no token (optional)
+    valueType valuetype;                // type of value that follows: see valueType enum
+    int8_t precision;                   // decimal precision for reporting floating point numbers (JSON only)
+    float value_flt;                    // floating point values
+    int32_t value_int;                  // signed integer values and booleans
+    char (*stringp)[];                  // string value: pointer to array of characters from shared character array
 } nvObj_t;                              // OK, so it's not REALLY an object
 
 typedef uint8_t (*fptrCmd)(nvObj_t *nv);// required for cfg table access
@@ -330,6 +385,7 @@ stat_t nv_persist(nvObj_t *nv);         // main entry point for persistence
 
 // helpers
 uint8_t nv_get_type(nvObj_t *nv);
+void nv_coerce_types(nvObj_t *nv);
 index_t nv_get_index(const char *group, const char *token);
 index_t nv_index_max(void);             // (see config_app.c)
 bool nv_index_is_single(index_t index); // (see config_app.c)

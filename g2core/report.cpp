@@ -163,10 +163,10 @@ static uint8_t _populate_filtered_status_report(void);
 
 uint8_t _is_stat(nvObj_t *nv)
 {
-    char tok[TOKEN_LEN+1];
+    char token[TOKEN_LEN+1];
 
-    GET_TOKEN_STRING(nv->value, tok);
-    if (strcmp(tok, "stat") == 0) { return (true);}
+    GET_TOKEN_STRING(nv->value_int, token);   // pass in index, get back token
+    if (strcmp(token, "stat") == 0) { return (true);}
     return (false);
 }
 
@@ -188,8 +188,9 @@ void sr_init_status_report()
     for (uint8_t i=0; i < NV_STATUS_REPORT_LEN ; i++) {
         if (sr_defaults[i][0] == NUL) break;                    // quit on first blank array entry
         sr.status_report_value[i] = -1234567;                   // pre-load values with an unlikely number
-        nv->value = nv_get_index((const char *)"", sr_defaults[i]);// load the index for the SR element
-        if (fp_EQ(nv->value, NO_MATCH)) {
+        nv->value_int = nv_get_index((const char *)"", sr_defaults[i]);// load the index for the SR element
+//        if (fp_EQ(nv->value, NO_MATCH)) {
+        if (nv->value_int == NO_MATCH) {
             rpt_exception(STAT_BAD_STATUS_REPORT_SETTING, "sr_init_status_report() encountered bad SR setting"); // trap mis-configured profile settings
             return;
         }
@@ -220,9 +221,9 @@ stat_t sr_set_status_report(nvObj_t *nv)
         if (((nv = nv->nx) == NULL) || (nv->valuetype == TYPE_EMPTY)) {
             break;
         }
-        if ((nv->valuetype == TYPE_BOOL) && (fp_TRUE(nv->value))) {
+        if ((nv->valuetype == TYPE_BOOLEAN) && nv->value_int) {
             status_report_list[i] = nv->index;
-            nv->value = nv->index;                          // persist the index as the value
+            nv->value_int = nv->index;                      // persist the index as the value
             nv->index = sr_start + i;                       // index of the SR persistence location
             nv_persist(nv);
             elements++;
@@ -386,14 +387,14 @@ static uint8_t _populate_filtered_status_report()
         nv_get_nvObj(nv);
 
         // report values that have changed by more than 0.0001, but always stops and ends
-        if ((fabs(nv->value - sr.status_report_value[i]) > precision[cfgArray[nv->index].precision]) ||
-            ((nv->index == sr.stat_index) && fp_EQ(nv->value, COMBINED_PROGRAM_STOP)) ||
-            ((nv->index == sr.stat_index) && fp_EQ(nv->value, COMBINED_PROGRAM_END))) {
+        if ((fabs(nv->value_int - sr.status_report_value[i]) > precision[cfgArray[nv->index].precision]) ||
+            ((nv->index == sr.stat_index) && fp_EQ(nv->value_int, COMBINED_PROGRAM_STOP)) ||
+            ((nv->index == sr.stat_index) && fp_EQ(nv->value_int, COMBINED_PROGRAM_END))) {
 
             strcpy(tmp, nv->group);            // flatten out groups - WARNING - you cannot use strncpy here...
             strcat(tmp, nv->token);
             strcpy(nv->token, tmp);            //...or here.
-            sr.status_report_value[i] = nv->value;
+            sr.status_report_value[i] = nv->value_int;
             if ((nv = nv->nx) == NULL) return (false);    // should never be NULL unless SR length exceeds available buffer array
             has_data = true;
 
@@ -572,23 +573,23 @@ stat_t qr_queue_report_callback()         // called by controller dispatcher
  */
 stat_t qr_get(nvObj_t *nv)
 {
-    nv->value = (float)mp_get_planner_buffers(mp);  // ensure that manually requested QR count is always up to date
-    nv->valuetype = TYPE_INT;
+    nv->value_int = mp_get_planner_buffers(mp);  // ensure that manually requested QR count is always up to date
+    nv->valuetype = TYPE_INTEGER;
     return (STAT_OK);
 }
 
 stat_t qi_get(nvObj_t *nv)
 {
-    nv->value = (float)qr.buffers_added;
-    nv->valuetype = TYPE_INT;
+    nv->value_int = qr.buffers_added;
+    nv->valuetype = TYPE_INTEGER;
     qr.buffers_added = 0;                // reset it
     return (STAT_OK);
 }
 
 stat_t qo_get(nvObj_t *nv)
 {
-    nv->value = (float)qr.buffers_removed;
-    nv->valuetype = TYPE_INT;
+    nv->value_int = qr.buffers_removed;
+    nv->valuetype = TYPE_INTEGER;
     qr.buffers_removed = 0;                // reset it
     return (STAT_OK);
 }
@@ -640,8 +641,8 @@ stat_t job_set_job_report(nvObj_t *nv)
 
     for (uint8_t i=0; i<4; i++) {
         if (((nv = nv->nx) == NULL) || (nv->valuetype == TYPE_EMPTY)) { break;}
-        if (nv->valuetype == TYPE_INT) {
-            cfg.job_id[i] = nv->value;
+        if (nv->valuetype == TYPE_INTEGER) {
+            cfg.job_id[i] = nv->value_int;
             nv->index = job_start + i;        // index of the SR persistence location
             nv_persist(nv);
         } else {

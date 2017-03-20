@@ -58,7 +58,7 @@ void persistence_init()
 
 stat_t read_persistent_value(nvObj_t *nv)
 {
-    nv->value = 0;
+    nv->value_flt = 0;
     return (STAT_OK);
 }
 
