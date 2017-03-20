@@ -1958,9 +1958,9 @@ stat_t cm_get_dist(nvObj_t *nv) { return(_get_msg_helper(nv, msg_dist, cm_get_di
 stat_t cm_get_admo(nvObj_t *nv) { return(_get_msg_helper(nv, msg_admo, cm_get_arc_distance_mode(ACTIVE_MODEL)));}
 stat_t cm_get_frmo(nvObj_t *nv) { return(_get_msg_helper(nv, msg_frmo, cm_get_feed_rate_mode(ACTIVE_MODEL)));}
 
-stat_t cm_get_toolv(nvObj_t *nv) { return(get_int(nv, cm_get_tool(ACTIVE_MODEL))); }
-stat_t cm_get_mline(nvObj_t *nv) { return(get_int32(nv, cm_get_linenum(MODEL))); }
-stat_t cm_get_line(nvObj_t *nv)  { return(get_int32(nv, cm_get_linenum(ACTIVE_MODEL))); }
+stat_t cm_get_toolv(nvObj_t *nv) { return(get_integer(nv, cm_get_tool(ACTIVE_MODEL))); }
+stat_t cm_get_mline(nvObj_t *nv) { return(get_integer(nv, cm_get_linenum(MODEL))); }
+stat_t cm_get_line(nvObj_t *nv)  { return(get_integer(nv, cm_get_linenum(ACTIVE_MODEL))); }
 
 stat_t cm_get_vel(nvObj_t *nv)
 {
@@ -1983,8 +1983,8 @@ stat_t cm_get_mpo(nvObj_t *nv)  { return (get_float(nv, cm_get_absolute_position
 stat_t cm_get_ofs(nvObj_t *nv)  { return (get_float(nv, cm_get_display_offset(ACTIVE_MODEL, _axis(nv)))); }
 
 stat_t cm_get_home(nvObj_t *nv) { return(_get_msg_helper(nv, msg_home, cm_get_homing_state())); }
-stat_t cm_set_home(nvObj_t *nv) { return (set_int(nv, ((uint8_t &)(cm->homing_state)), false, true)); }
-stat_t cm_get_hom(nvObj_t *nv)  { return (get_int(nv, cm->homed[_axis(nv)])); }
+stat_t cm_set_home(nvObj_t *nv) { return (set_integer(nv, ((uint8_t &)(cm->homing_state)), false, true)); }
+stat_t cm_get_hom(nvObj_t *nv)  { return (get_integer(nv, cm->homed[_axis(nv)])); }
 
 stat_t cm_get_prob(nvObj_t *nv) { return(_get_msg_helper(nv, msg_probe, cm_get_probe_state())); }
 stat_t cm_get_prb(nvObj_t *nv)  { return (get_float(nv, cm->probe_results[0][_axis(nv)])); }
@@ -1992,7 +1992,7 @@ stat_t cm_get_prb(nvObj_t *nv)  { return (get_float(nv, cm->probe_results[0][_ax
 stat_t cm_get_coord(nvObj_t *nv) { return (get_float(nv, cm->coord_offset[_coord(nv)][_axis(nv)])); }
 stat_t cm_set_coord(nvObj_t *nv) { return (set_float(nv, cm->coord_offset[_coord(nv)][_axis(nv)])); }
 
-stat_t cm_get_g92e(nvObj_t *nv)  { return (get_int(nv, cm->gmx.origin_offset_enable)); }
+stat_t cm_get_g92e(nvObj_t *nv)  { return (get_integer(nv, cm->gmx.origin_offset_enable)); }
 stat_t cm_get_g92(nvObj_t *nv)   { return (get_float(nv, cm->gmx.origin_offset[_axis(nv)])); }
 stat_t cm_get_g28(nvObj_t *nv)   { return (get_float(nv, cm->gmx.g28_position[_axis(nv)])); }
 stat_t cm_get_g30(nvObj_t *nv)   { return (get_float(nv, cm->gmx.g30_position[_axis(nv)])); }
@@ -2179,10 +2179,10 @@ stat_t cm_set_jh(nvObj_t *nv)
  * cm_set_zb() - set homing zero backoff
  */
 
-stat_t cm_get_hi(nvObj_t *nv) { return (get_int(nv, cm->a[_axis(nv)].homing_input)); }
-stat_t cm_set_hi(nvObj_t *nv) { return (set_int(nv, cm->a[_axis(nv)].homing_input, 0, D_IN_CHANNELS)); }
-stat_t cm_get_hd(nvObj_t *nv) { return (get_int(nv, cm->a[_axis(nv)].homing_dir)); }
-stat_t cm_set_hd(nvObj_t *nv) { return (set_int(nv, cm->a[_axis(nv)].homing_dir, 0, 1)); }
+stat_t cm_get_hi(nvObj_t *nv) { return (get_integer(nv, cm->a[_axis(nv)].homing_input)); }
+stat_t cm_set_hi(nvObj_t *nv) { return (set_integer(nv, cm->a[_axis(nv)].homing_input, 0, D_IN_CHANNELS)); }
+stat_t cm_get_hd(nvObj_t *nv) { return (get_integer(nv, cm->a[_axis(nv)].homing_dir)); }
+stat_t cm_set_hd(nvObj_t *nv) { return (set_integer(nv, cm->a[_axis(nv)].homing_dir, 0, 1)); }
 stat_t cm_get_sv(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv)].search_velocity)); }
 stat_t cm_set_sv(nvObj_t *nv) { return (set_float_range(nv, cm->a[_axis(nv)].search_velocity, 0, MAX_LONG)); }
 stat_t cm_get_lv(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv)].latch_velocity)); }
@@ -2225,42 +2225,42 @@ stat_t cm_set_ct(nvObj_t *nv) { return(set_float_range(nv, cm->chordal_tolerance
 stat_t cm_get_zl(nvObj_t *nv) { return(get_float(nv, cm->feedhold_z_lift)); }
 stat_t cm_set_zl(nvObj_t *nv) { return(set_float(nv, cm->feedhold_z_lift)); }
 
-stat_t cm_get_sl(nvObj_t *nv) { return(get_int(nv, cm->soft_limit_enable)); }
-stat_t cm_set_sl(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->soft_limit_enable, 0, 1)); }
+stat_t cm_get_sl(nvObj_t *nv) { return(get_integer(nv, cm->soft_limit_enable)); }
+stat_t cm_set_sl(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)cm->soft_limit_enable, 0, 1)); }
 
-stat_t cm_get_lim(nvObj_t *nv) { return(get_int(nv, cm->limit_enable)); }
-stat_t cm_set_lim(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->limit_enable, 0, 1)); }
+stat_t cm_get_lim(nvObj_t *nv) { return(get_integer(nv, cm->limit_enable)); }
+stat_t cm_set_lim(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)cm->limit_enable, 0, 1)); }
 
-stat_t cm_get_saf(nvObj_t *nv) { return(get_int(nv, cm->safety_interlock_enable)); }
-stat_t cm_set_saf(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->safety_interlock_enable, 0, 1)); }
+stat_t cm_get_saf(nvObj_t *nv) { return(get_integer(nv, cm->safety_interlock_enable)); }
+stat_t cm_set_saf(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)cm->safety_interlock_enable, 0, 1)); }
 
-stat_t cm_get_m48(nvObj_t *nv) { return(get_int(nv, cm->gmx.m48_enable)); }
-stat_t cm_set_m48(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->gmx.m48_enable, 0, 1)); }
+stat_t cm_get_m48(nvObj_t *nv) { return(get_integer(nv, cm->gmx.m48_enable)); }
+stat_t cm_set_m48(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)cm->gmx.m48_enable, 0, 1)); }
 
-stat_t cm_get_froe(nvObj_t *nv) { return(get_int(nv, cm->gmx.mfo_enable)); }
-stat_t cm_set_froe(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->gmx.mfo_enable, 0, 1)); }
+stat_t cm_get_froe(nvObj_t *nv) { return(get_integer(nv, cm->gmx.mfo_enable)); }
+stat_t cm_set_froe(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)cm->gmx.mfo_enable, 0, 1)); }
 stat_t cm_get_fro(nvObj_t *nv)  { return(get_float(nv, cm->gmx.mfo_factor)); }
 stat_t cm_set_fro(nvObj_t *nv)  { return(set_float_range(nv, cm->gmx.mfo_factor, FEED_OVERRIDE_MIN, FEED_OVERRIDE_MAX)); }
 
-stat_t cm_get_troe(nvObj_t *nv) { return(get_int(nv, cm->gmx.mto_enable)); }
-stat_t cm_set_troe(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->gmx.mto_enable, 0, 1)); }
+stat_t cm_get_troe(nvObj_t *nv) { return(get_integer(nv, cm->gmx.mto_enable)); }
+stat_t cm_set_troe(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)cm->gmx.mto_enable, 0, 1)); }
 stat_t cm_get_tro(nvObj_t *nv)  { return(get_float(nv, cm->gmx.mto_factor)); }
 stat_t cm_set_tro(nvObj_t *nv)  { return(set_float_range(nv, cm->gmx.mto_factor, TRAVERSE_OVERRIDE_MIN, TRAVERSE_OVERRIDE_MAX)); }
 
-stat_t cm_get_gpl(nvObj_t *nv) { return(get_int(nv, cm->default_select_plane)); }
-stat_t cm_set_gpl(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->default_select_plane, CANON_PLANE_XY, CANON_PLANE_YZ)); }
+stat_t cm_get_gpl(nvObj_t *nv) { return(get_integer(nv, cm->default_select_plane)); }
+stat_t cm_set_gpl(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)cm->default_select_plane, CANON_PLANE_XY, CANON_PLANE_YZ)); }
 
-stat_t cm_get_gun(nvObj_t *nv) { return(get_int(nv, cm->default_units_mode)); }
-stat_t cm_set_gun(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->default_units_mode, INCHES, MILLIMETERS)); }
+stat_t cm_get_gun(nvObj_t *nv) { return(get_integer(nv, cm->default_units_mode)); }
+stat_t cm_set_gun(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)cm->default_units_mode, INCHES, MILLIMETERS)); }
 
-stat_t cm_get_gco(nvObj_t *nv) { return(get_int(nv, cm->default_coord_system)); }
-stat_t cm_set_gco(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->default_coord_system, G54, G59)); }
+stat_t cm_get_gco(nvObj_t *nv) { return(get_integer(nv, cm->default_coord_system)); }
+stat_t cm_set_gco(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)cm->default_coord_system, G54, G59)); }
 
-stat_t cm_get_gpa(nvObj_t *nv) { return(get_int(nv, cm->default_path_control)); }
-stat_t cm_set_gpa(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->default_path_control, PATH_EXACT_PATH, PATH_CONTINUOUS)); }
+stat_t cm_get_gpa(nvObj_t *nv) { return(get_integer(nv, cm->default_path_control)); }
+stat_t cm_set_gpa(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)cm->default_path_control, PATH_EXACT_PATH, PATH_CONTINUOUS)); }
 
-stat_t cm_get_gdi(nvObj_t *nv) { return(get_int(nv, cm->default_distance_mode)); }
-stat_t cm_set_gdi(nvObj_t *nv) { return(set_int(nv, (uint8_t &)cm->default_distance_mode, ABSOLUTE_DISTANCE_MODE, INCREMENTAL_DISTANCE_MODE)); }
+stat_t cm_get_gdi(nvObj_t *nv) { return(get_integer(nv, cm->default_distance_mode)); }
+stat_t cm_set_gdi(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)cm->default_distance_mode, ABSOLUTE_DISTANCE_MODE, INCREMENTAL_DISTANCE_MODE)); }
 
 /***********************************************************************************
  * Debugging Commands

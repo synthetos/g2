@@ -504,30 +504,30 @@ static uint8_t _io(const index_t index)
  * io_get_fn() - get input function
  * io_set_fn() - set input function
  */
-stat_t io_get_mo(nvObj_t *nv) { return(get_int(nv, d_in[_io(nv->index)].mode)); }
+stat_t io_get_mo(nvObj_t *nv) { return(get_integer(nv, d_in[_io(nv->index)].mode)); }
 stat_t io_set_mo(nvObj_t *nv) 
 {
-    ritorno(set_int(nv, (uint8_t &)d_in[_io(nv->index)].mode, 0, IO_MODE_MAX));
+    ritorno(set_integer(nv, (uint8_t &)d_in[_io(nv->index)].mode, 0, IO_MODE_MAX));
     if (cm_get_machine_state() != MACHINE_INITIALIZING) {
         inputs_reset();
     }
     return (STAT_OK);
 }
 
-stat_t io_get_ac(nvObj_t *nv) { return(get_int(nv, d_in[_io(nv->index)].action)); }
+stat_t io_get_ac(nvObj_t *nv) { return(get_integer(nv, d_in[_io(nv->index)].action)); }
 stat_t io_set_ac(nvObj_t *nv) 
 {
-    ritorno(set_int(nv, (uint8_t &)d_in[_io(nv->index)].action, 0, INPUT_ACTION_MAX));
+    ritorno(set_integer(nv, (uint8_t &)d_in[_io(nv->index)].action, 0, INPUT_ACTION_MAX));
     if (cm_get_machine_state() != MACHINE_INITIALIZING) {
         inputs_reset();
     }
     return (STAT_OK);
 }
 
-stat_t io_get_fn(nvObj_t *nv) { return(get_int(nv, d_in[_io(nv->index)].function)); }
+stat_t io_get_fn(nvObj_t *nv) { return(get_integer(nv, d_in[_io(nv->index)].function)); }
 stat_t io_set_fn(nvObj_t *nv) 
 {
-    ritorno(set_int(nv, (uint8_t &)d_in[_io(nv->index)].function, 0, INPUT_FUNCTION_MAX));
+    ritorno(set_integer(nv, (uint8_t &)d_in[_io(nv->index)].function, 0, INPUT_FUNCTION_MAX));
     if (cm_get_machine_state() != MACHINE_INITIALIZING) {
         inputs_reset();
     }
@@ -548,7 +548,7 @@ stat_t io_get_input(nvObj_t *nv)
  * io_get_domode() - get digital output mode
  * io_set_domode() - set digital output mode
  */
-stat_t io_get_domode(nvObj_t *nv) { return(get_int(nv, d_out[_io(nv->index)].mode)); }
+stat_t io_get_domode(nvObj_t *nv) { return(get_integer(nv, d_out[_io(nv->index)].mode)); }
 stat_t io_set_domode(nvObj_t *nv)           // output function
 {
     uint8_t output_num = _io(nv->index);    // returns 1 based output number (arrays)
@@ -571,7 +571,7 @@ stat_t io_set_domode(nvObj_t *nv)           // output function
         default: {}
     }
 
-    ritorno(set_int(nv, (uint8_t &)d_out[output_num].mode, 0, IO_MODE_MAX));
+    ritorno(set_integer(nv, (uint8_t &)d_out[output_num].mode, 0, IO_MODE_MAX));
     if (cm_get_machine_state() != MACHINE_INITIALIZING) {
         outputs_reset();
     }

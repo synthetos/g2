@@ -392,8 +392,6 @@ void nv_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags);
 
 // application specific helpers and functions (config_app.c)
 
-stat_t set_flu(nvObj_t *nv);                        // set floating point number with G20/G21 units conversion
-
 void convert_incoming_float(nvObj_t *nv);           // pre-process outgoing float values for units and illegal values
 void convert_outgoing_float(nvObj_t *nv);           // pre-process incoming float values for canonical units
 
@@ -401,9 +399,8 @@ stat_t get_float(nvObj_t *nv, const float value);   // boilerplate for retrievin
 stat_t set_float(nvObj_t *nv, float &value);        // boilerplate for setting a floating point value w/conversion
 stat_t set_float_range(nvObj_t *nv, float &value, float low, float high);
 
-stat_t get_int(nvObj_t *nv, const uint8_t value);   // boilerplate for retrieving 8 bit integer value
-stat_t set_int(nvObj_t *nv, uint8_t &value, uint8_t low, uint8_t high);
-stat_t get_int32(nvObj_t *nv, const int32_t value); // boilerplate for retrieving 32 bit integer value
+stat_t get_integer(nvObj_t *nv, const int32_t value);   // boilerplate for retrieving 8 bit integer value
+stat_t set_integer(nvObj_t *nv, uint8_t &value, uint8_t low, uint8_t high);
 stat_t set_int32(nvObj_t *nv, int32_t &value, int32_t low, int32_t high);
 
 stat_t get_string(nvObj_t *nv, const char *str);

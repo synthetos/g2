@@ -816,8 +816,8 @@ static float _set_motor_steps_per_unit(nvObj_t *nv)
  */
 
 // motor axis mapping
-stat_t st_get_ma(nvObj_t *nv) { return(get_int(nv, st_cfg.mot[_motor(nv->index)].motor_map)); }
-stat_t st_set_ma(nvObj_t *nv) { return(set_int(nv, st_cfg.mot[_motor(nv->index)].motor_map, 0, AXES)); }
+stat_t st_get_ma(nvObj_t *nv) { return(get_integer(nv, st_cfg.mot[_motor(nv->index)].motor_map)); }
+stat_t st_set_ma(nvObj_t *nv) { return(set_integer(nv, st_cfg.mot[_motor(nv->index)].motor_map, 0, AXES)); }
 
 // step angle
 stat_t st_get_sa(nvObj_t *nv) { return(get_float(nv, st_cfg.mot[_motor(nv->index)].step_angle)); }
@@ -838,7 +838,7 @@ stat_t st_set_tr(nvObj_t *nv)
 }
 
 // microsteps
-stat_t st_get_mi(nvObj_t *nv) { return(get_int(nv, st_cfg.mot[_motor(nv->index)].microsteps)); }
+stat_t st_get_mi(nvObj_t *nv) { return(get_integer(nv, st_cfg.mot[_motor(nv->index)].microsteps)); }
 stat_t st_set_mi(nvObj_t *nv)
 {
     if (nv->value_int <= 0) {
@@ -851,7 +851,7 @@ stat_t st_set_mi(nvObj_t *nv)
         nv_add_conditional_message((const char *)"*** WARNING *** Setting non-standard microstep value");
     }
     // set it anyway, even if it's unsupported
-    ritorno(set_int(nv, st_cfg.mot[_motor(nv->index)].microsteps, 1, 255));
+    ritorno(set_integer(nv, st_cfg.mot[_motor(nv->index)].microsteps, 1, 255));
     _set_motor_steps_per_unit(nv);
     _set_hw_microsteps(_motor(nv->index), nv->value_int);
     return (STAT_OK);
@@ -890,8 +890,8 @@ stat_t st_set_su(nvObj_t *nv)
 }
 
 // polarity
-stat_t st_get_po(nvObj_t *nv) { return(get_int(nv, st_cfg.mot[_motor(nv->index)].polarity)); }
-stat_t st_set_po(nvObj_t *nv) { return(set_int(nv, st_cfg.mot[_motor(nv->index)].polarity, 0, 1)); }
+stat_t st_get_po(nvObj_t *nv) { return(get_integer(nv, st_cfg.mot[_motor(nv->index)].polarity)); }
+stat_t st_set_po(nvObj_t *nv) { return(set_integer(nv, st_cfg.mot[_motor(nv->index)].polarity, 0, 1)); }
 
 // power management mode
 stat_t st_get_pm(nvObj_t *nv)
@@ -905,7 +905,7 @@ stat_t st_set_pm(nvObj_t *nv)
 {
     // Test the value without setting it, then setPowerMode() now
     // to both set and take effect immediately.
-    ritorno(set_int(nv, (uint8_t &)cs.null, 0, MOTOR_POWER_MODE_MAX_VALUE ));
+    ritorno(set_integer(nv, (uint8_t &)cs.null, 0, MOTOR_POWER_MODE_MAX_VALUE ));
     Motors[_motor(nv->index)]->setPowerMode((stPowerMode)nv->value_int);
     return (STAT_OK);
 }

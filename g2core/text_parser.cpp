@@ -296,7 +296,7 @@ void tx_print_tv(nvObj_t *nv) { text_print(nv, fmt_tv);}    // TYPE_INT
  * txt_set_tv() - set text verbosity
  */
 
-stat_t txt_get_tv(nvObj_t *nv) { return (get_int(nv, txt.text_verbosity)); }
-stat_t txt_set_tv(nvObj_t *nv) { return (set_int(nv, txt.text_verbosity, TV_SILENT, TV_VERBOSE)); }
+stat_t txt_get_tv(nvObj_t *nv) { return (get_integer(nv, txt.text_verbosity)); }
+stat_t txt_set_tv(nvObj_t *nv) { return (set_integer(nv, txt.text_verbosity, TV_SILENT, TV_VERBOSE)); }
 
 #endif // __TEXT_MODE

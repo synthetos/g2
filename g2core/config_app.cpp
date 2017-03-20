@@ -1245,29 +1245,6 @@ bool nv_index_is_group(index_t index) { return (((index >= NV_INDEX_START_GROUPS
 bool nv_index_lt_groups(index_t index) { return ((index <= NV_INDEX_START_GROUPS) ? true : false);}
 
 /***** APPLICATION SPECIFIC CONFIGS AND EXTENSIONS TO GENERIC FUNCTIONS *****/
-
-/*
- * set_flu()  - set floating point number with G20/G21 units conversion
- *
- * The number 'setted' will have been delivered in external units (inches or mm).
- * It is written to the target memory location in internal canonical units (mm).
- * The original nv->value is also changed so persistence works correctly.
- * Displays should convert back from internal canonical form to external form.
- *
- *  !!!! WARNING !!!! set_flu() doesn't care about axes, so make sure you aren't passing it ABC axes
- */
-
-stat_t set_flu(nvObj_t *nv)
-{
-    if (cm_get_units_mode(MODEL) == INCHES) {       // if in inches...
-        nv->value_flt *= MM_PER_INCH;               // convert to canonical millimeter units
-    }
-    *((float *)GET_TABLE_WORD(target)) = nv->value_flt; // write value as millimeters or degrees
-    nv->precision = GET_TABLE_WORD(precision);
-    nv->valuetype = TYPE_FLOAT;
-    return(STAT_OK);
-}
-
 /*
  * convert_incoming_float() - pre-process an incoming floating point number for canonical units
  * convert_outgoing_float() - pre-process an outgoing floating point number for units display
@@ -1362,61 +1339,48 @@ stat_t set_float_range(nvObj_t *nv, float &value, float low, float high) {
 }
 
 /*
- * get_int()   - boilerplate for retrieving 8 bit integer value
- * set_int()   - boilerplate for setting 8 bit integer value with range checking
- * get_int32() - boilerplate for retrieving 32 bit integer value
- * set_int32() - boilerplate for setting 32 bit integer value with range checking
+ * get_integer() - boilerplate for retrieving 8 and 32 bit integer values
+ * set_integer() - boilerplate for setting 8 bit integer value with range checking
+ * set_int32()   - boilerplate for setting 32 bit integer value with range checking
  */
 
-stat_t get_int(nvObj_t *nv, const uint8_t value) {
-    nv->value_int = value;
-    nv->valuetype = TYPE_INTEGER;
-    return STAT_OK;
-}
-
-stat_t set_int(nvObj_t *nv, uint8_t &value, uint8_t low, uint8_t high) {
-
+static stat_t _set_int_tests(nvObj_t *nv, int32_t low, int32_t high)
+{    
     char msg[64];
 
     if (nv->value_int < low) {
-        sprintf(msg, "Input is less than minimum value %d", low);
+        sprintf(msg, "Input less than minimum value %d", (int)low);
         nv_add_conditional_message(msg);
         nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_LESS_THAN_MIN_VALUE);
     }
     if (nv->value_int > high) {
-        sprintf(msg, "Input is more than maximum value %d", high);
+        sprintf(msg, "Input more than maximum value %d", (int)high);
         nv_add_conditional_message(msg);
         nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
+    return (STAT_OK);
+}
+
+stat_t get_integer(nvObj_t *nv, const int32_t value) 
+{
+    nv->value_int = value;
+    nv->valuetype = TYPE_INTEGER;
+    return STAT_OK;
+}
+
+stat_t set_integer(nvObj_t *nv, uint8_t &value, uint8_t low, uint8_t high) 
+{
+    ritorno(_set_int_tests(nv, low, high))
     value = nv->value_int;
     nv->valuetype = TYPE_INTEGER;
     return (STAT_OK);
 }
 
-stat_t get_int32(nvObj_t *nv, const int32_t value) {
-    nv->value_int = value;
-    nv->valuetype = TYPE_INTEGER;
-    return STAT_OK;
-}
-
-stat_t set_int32(nvObj_t *nv, int32_t &value, int32_t low, int32_t high) {
-
-    char msg[64];
-
-    if (nv->value_int < low) {
-        sprintf(msg, "Input is less than minimum value %lu", low);
-        nv_add_conditional_message(msg);
-        nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
-    }
-    if (nv->value_int > high) {
-        sprintf(msg, "Input is more than maximum value %lu", high);
-        nv_add_conditional_message(msg);
-        nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
-    }
+stat_t set_int32(nvObj_t *nv, int32_t &value, int32_t low, int32_t high) 
+{
+    ritorno(_set_int_tests(nv, low, high))
     value = nv->value_int;  // note: valuetype = TYPE_INT already set
     nv->valuetype = TYPE_INTEGER;
     return (STAT_OK);

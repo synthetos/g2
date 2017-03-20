@@ -380,25 +380,25 @@ void spindle_end_override(const float ramp_time)
  **** Spindle Settings *************************************************************
  ***********************************************************************************/
 
-stat_t sp_get_spmo(nvObj_t *nv) { return(get_int(nv, spindle.mode)); }
-stat_t sp_set_spmo(nvObj_t *nv) { return(set_int(nv, (uint8_t &)spindle.mode, SPINDLE_DISABLED, SPINDLE_MODE_MAX)); }
+stat_t sp_get_spmo(nvObj_t *nv) { return(get_integer(nv, spindle.mode)); }
+stat_t sp_set_spmo(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)spindle.mode, SPINDLE_DISABLED, SPINDLE_MODE_MAX)); }
 
-stat_t sp_get_spep(nvObj_t *nv) { return(get_int(nv, spindle.enable_polarity)); }
+stat_t sp_get_spep(nvObj_t *nv) { return(get_integer(nv, spindle.enable_polarity)); }
 stat_t sp_set_spep(nvObj_t *nv) { 
-    stat_t status = set_int(nv, (uint8_t &)spindle.enable_polarity, 0, 1); 
+    stat_t status = set_integer(nv, (uint8_t &)spindle.enable_polarity, 0, 1); 
     spindle_control_immediate(SPINDLE_OFF); // stop spindle and apply new settings
     return (status);
 }
 
-stat_t sp_get_spdp(nvObj_t *nv) { return(get_int(nv, spindle.dir_polarity)); }
+stat_t sp_get_spdp(nvObj_t *nv) { return(get_integer(nv, spindle.dir_polarity)); }
 stat_t sp_set_spdp(nvObj_t *nv) { 
-    stat_t status = set_int(nv, (uint8_t &)spindle.dir_polarity, 0, 1); 
+    stat_t status = set_integer(nv, (uint8_t &)spindle.dir_polarity, 0, 1); 
     spindle_control_immediate(SPINDLE_OFF); // stop spindle and apply new settings
     return (status);
 }
 
-stat_t sp_get_spph(nvObj_t *nv) { return(get_int(nv, spindle.pause_enable)); }
-stat_t sp_set_spph(nvObj_t *nv) { return(set_int(nv, (uint8_t &)spindle.pause_enable, 0, 1)); }
+stat_t sp_get_spph(nvObj_t *nv) { return(get_integer(nv, spindle.pause_enable)); }
+stat_t sp_set_spph(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)spindle.pause_enable, 0, 1)); }
 stat_t sp_get_spde(nvObj_t *nv) { return(get_float(nv, spindle.spinup_delay)); }
 stat_t sp_set_spde(nvObj_t *nv) { return(set_float_range(nv, spindle.spinup_delay, 0, SPINDLE_DWELL_MAX)); }
 
@@ -407,13 +407,13 @@ stat_t sp_set_spsn(nvObj_t *nv) { return(set_float_range(nv, spindle.speed_min, 
 stat_t sp_get_spsm(nvObj_t *nv) { return(get_float(nv, spindle.speed_max)); }
 stat_t sp_set_spsm(nvObj_t *nv) { return(set_float_range(nv, spindle.speed_max, SPINDLE_SPEED_MIN, SPINDLE_SPEED_MAX)); }
 
-stat_t sp_get_spoe(nvObj_t *nv) { return(get_int(nv, spindle.override_enable)); }
-stat_t sp_set_spoe(nvObj_t *nv) { return(set_int(nv, (uint8_t &)spindle.override_enable, 0, 1)); }
+stat_t sp_get_spoe(nvObj_t *nv) { return(get_integer(nv, spindle.override_enable)); }
+stat_t sp_set_spoe(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)spindle.override_enable, 0, 1)); }
 stat_t sp_get_spo(nvObj_t *nv) { return(get_float(nv, spindle.override_factor)); }
 stat_t sp_set_spo(nvObj_t *nv) { return(set_float_range(nv, spindle.override_factor, SPINDLE_OVERRIDE_MIN, SPINDLE_OVERRIDE_MAX)); }
 
 // These are provided as a way to view and control spindles without using M commands
-stat_t sp_get_spc(nvObj_t *nv) { return(get_int(nv, spindle.state)); }
+stat_t sp_get_spc(nvObj_t *nv) { return(get_integer(nv, spindle.state)); }
 stat_t sp_set_spc(nvObj_t *nv) { return(spindle_control_immediate((spControl)nv->value_int)); }
 stat_t sp_get_sps(nvObj_t *nv) { return(get_float(nv, spindle.speed)); }
 stat_t sp_set_sps(nvObj_t *nv) { return(spindle_speed_immediate(nv->value_flt)); }

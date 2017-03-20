@@ -430,9 +430,9 @@ static uint8_t _populate_filtered_status_report()
 stat_t sr_get(nvObj_t *nv) { return (_populate_unfiltered_status_report()); }
 stat_t sr_set(nvObj_t *nv) { return (sr_set_status_report(nv)); }
 
-stat_t sr_get_sv(nvObj_t *nv) { return(get_int(nv, (uint8_t &)sr.status_report_verbosity)); }
-stat_t sr_set_sv(nvObj_t *nv) { return(set_int(nv, (uint8_t &)sr.status_report_verbosity, SR_OFF, SR_VERBOSE)); }
-stat_t sr_get_si(nvObj_t *nv) { return(get_int32(nv, sr.status_report_interval)); }
+stat_t sr_get_sv(nvObj_t *nv) { return(get_integer(nv, (uint8_t &)sr.status_report_verbosity)); }
+stat_t sr_set_sv(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)sr.status_report_verbosity, SR_OFF, SR_VERBOSE)); }
+stat_t sr_get_si(nvObj_t *nv) { return(get_integer(nv, sr.status_report_interval)); }
 stat_t sr_set_si(nvObj_t *nv) { return(set_int32(nv, sr.status_report_interval, STATUS_REPORT_MIN_MS, STATUS_REPORT_MAX_MS)); }
 
 /*********************
@@ -595,8 +595,8 @@ stat_t qo_get(nvObj_t *nv)
     return (STAT_OK);
 }
 
-stat_t qr_get_qv(nvObj_t *nv) { return(get_int(nv, (uint8_t &)qr.queue_report_verbosity)); }
-stat_t qr_set_qv(nvObj_t *nv) { return(set_int(nv, (uint8_t &)qr.queue_report_verbosity, QR_OFF, QR_TRIPLE)); }
+stat_t qr_get_qv(nvObj_t *nv) { return(get_integer(nv, (uint8_t &)qr.queue_report_verbosity)); }
+stat_t qr_set_qv(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)qr.queue_report_verbosity, QR_OFF, QR_TRIPLE)); }
 
 /*****************************************************************************
  * JOB ID REPORTS

@@ -628,10 +628,10 @@ void json_print_response(uint8_t status, const bool only_to_muted /*= false*/)
  *  If comm_mode is set to AUTO_MORE (0) then json_mode should not be changed
  */
 
-stat_t js_get_ej(nvObj_t *nv) { return(get_int(nv, cs.comm_mode)); }
+stat_t js_get_ej(nvObj_t *nv) { return(get_integer(nv, cs.comm_mode)); }
 stat_t js_set_ej(nvObj_t *nv)
 {
-    ritorno (set_int(nv, (uint8_t &)cs.comm_mode, TEXT_MODE, AUTO_MODE));
+    ritorno (set_integer(nv, (uint8_t &)cs.comm_mode, TEXT_MODE, AUTO_MODE));
     if (commMode(nv->value_int) < AUTO_MODE) {    // set json_mode to 0 or 1, but don't change it if comm_mode == 2
         js.json_mode = commMode(nv->value_int);
     }
@@ -643,10 +643,10 @@ stat_t js_set_ej(nvObj_t *nv)
  * js_set_jv() - set JSON verbosity and related flags
  */
 
-stat_t js_get_jv(nvObj_t *nv) { return(get_int(nv, js.json_verbosity)); }
+stat_t js_get_jv(nvObj_t *nv) { return(get_integer(nv, js.json_verbosity)); }
 stat_t js_set_jv(nvObj_t *nv)
 {
-    ritorno (set_int(nv, (uint8_t &)js.json_verbosity, JV_SILENT, JV_MAX_VALUE));  
+    ritorno (set_integer(nv, (uint8_t &)js.json_verbosity, JV_SILENT, JV_MAX_VALUE));  
 
     js.echo_json_footer = false;
     js.echo_json_messages = false;
