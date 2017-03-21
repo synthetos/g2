@@ -209,7 +209,7 @@ static void _motion_end_callback(float* vect, bool* flag)
 
 static stat_t _probe_move(const float target[], const bool flags[])
 {
-    cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_ON);  
+    cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_ON_DISPLAY_WITH_OFFSETS);  
     pb.waiting_for_motion_complete = true;          // set this BEFORE the motion starts
     cm_straight_feed(target, flags, PROFILE_FAST);  // NB: feed rate was set earlier, so it's OK
     mp_queue_command(_motion_end_callback, nullptr, nullptr); // the last two arguments are ignored anyway

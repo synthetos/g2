@@ -47,10 +47,10 @@ typedef enum {                          // these are in order to optimized CASE 
     NEXT_ACTION_SET_TL_OFFSET,          // G43
     NEXT_ACTION_SET_ADDITIONAL_TL_OFFSET,// G43.2
     NEXT_ACTION_CANCEL_TL_OFFSET,       // G49
-    NEXT_ACTION_SET_ORIGIN_OFFSETS,     // G92
-    NEXT_ACTION_RESET_ORIGIN_OFFSETS,   // G92.1
-    NEXT_ACTION_SUSPEND_ORIGIN_OFFSETS, // G92.2
-    NEXT_ACTION_RESUME_ORIGIN_OFFSETS,  // G92.3
+    NEXT_ACTION_SET_G92_OFFSETS,        // G92
+    NEXT_ACTION_RESET_G92_OFFSETS,      // G92.1
+    NEXT_ACTION_SUSPEND_G92_OFFSETS,    // G92.2
+    NEXT_ACTION_RESUME_G92_OFFSETS,     // G92.3
     NEXT_ACTION_JSON_COMMAND_SYNC,      // M100
     NEXT_ACTION_JSON_WAIT               // M101
 } cmNextAction;
@@ -120,8 +120,8 @@ typedef enum {
 
 typedef enum {
     ABSOLUTE_OVERRIDE_OFF = 0,          // G53 disabled
-    ABSOLUTE_OVERRIDE_ON,               // G53 enabled for movement
-    ABSOLUTE_OVERRIDE_ON_AND_DISPLAY    // G53 enabled for movement and display
+    ABSOLUTE_OVERRIDE_ON_DISPLAY_WITH_OFFSETS,   // G53 enabled for movement, displays use current offsets
+    ABSOLUTE_OVERRIDE_ON_DISPLAY_WITH_NO_OFFSETS // G53 enabled for movement, displays use no offset
 } cmAbsoluteOverride;
 
 typedef enum {              // G Modal Group 13
@@ -265,7 +265,7 @@ typedef struct GCodeStateExtended {     // Gcode dynamic state extensions - used
     uint8_t program_flow;               // used only by the gcode_parser
 
     float position[AXES];               // XYZABC model position (Note: not used in gn or gf)
-    float origin_offset[AXES];          // XYZABC G92 offsets (Note: not used in gn or gf)
+    float g92_offset[AXES];             // XYZABC G92 offsets (aka origin offsets) (Note: not used in gn or gf)
     float g28_position[AXES];           // XYZABC stored machine position for G28
     float g30_position[AXES];           // XYZABC stored machine position for G30
     float p1_position[AXES];            // XYZABC stored machine position for return to p1 planner
@@ -276,7 +276,7 @@ typedef struct GCodeStateExtended {     // Gcode dynamic state extensions - used
     bool mto_enable;                    // traverse override enable
     float mto_factor;                   // valid from 0.05 to 1.00
 
-    bool origin_offset_enable;          // G92 offsets enabled/disabled.  0=disabled, 1=enabled
+    bool g92_offset_enable;             // G92 offsets enabled/disabled.  0=disabled, 1=enabled
     bool block_delete_switch;           // set true to enable block deletes (true is default)
 
     uint16_t magic_end;

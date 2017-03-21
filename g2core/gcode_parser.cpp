@@ -30,7 +30,7 @@
 // Structures used by Gcode parser
 
 typedef struct GCodeInputValue {    // Gcode inputs - meaning depends on context
-    
+
     uint8_t next_action;            // handles G modal group 1 moves & non-modals
     cmMotionMode motion_mode;       // Group1: G0, G1, G2, G3, G38.2, G80, G81, G82, G83, G84, G85, G86, G87, G88, G89
     uint8_t program_flow;           // used only by the gcode_parser
@@ -582,7 +582,7 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
                     break;
                 }
 				case 49: SET_NON_MODAL (next_action, NEXT_ACTION_CANCEL_TL_OFFSET);
-                case 53: SET_NON_MODAL (absolute_override, ABSOLUTE_OVERRIDE_ON_AND_DISPLAY);
+                case 53: SET_NON_MODAL (absolute_override, ABSOLUTE_OVERRIDE_ON_DISPLAY_WITH_NO_OFFSETS);
                 case 54: SET_MODAL (MODAL_GROUP_G12, coord_system, G54);
                 case 55: SET_MODAL (MODAL_GROUP_G12, coord_system, G55);
                 case 56: SET_MODAL (MODAL_GROUP_G12, coord_system, G56);
@@ -617,10 +617,10 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
                 }
                 case 92: {
                     switch (_point(value)) {
-                        case 0: SET_MODAL (MODAL_GROUP_G0, next_action, NEXT_ACTION_SET_ORIGIN_OFFSETS);
-                        case 1: SET_NON_MODAL (next_action, NEXT_ACTION_RESET_ORIGIN_OFFSETS);
-                        case 2: SET_NON_MODAL (next_action, NEXT_ACTION_SUSPEND_ORIGIN_OFFSETS);
-                        case 3: SET_NON_MODAL (next_action, NEXT_ACTION_RESUME_ORIGIN_OFFSETS);
+                        case 0: SET_MODAL (MODAL_GROUP_G0, next_action, NEXT_ACTION_SET_G92_OFFSETS);
+                        case 1: SET_NON_MODAL (next_action, NEXT_ACTION_RESET_G92_OFFSETS);
+                        case 2: SET_NON_MODAL (next_action, NEXT_ACTION_SUSPEND_G92_OFFSETS);
+                        case 3: SET_NON_MODAL (next_action, NEXT_ACTION_RESUME_G92_OFFSETS);
                         default: status = STAT_GCODE_COMMAND_UNSUPPORTED;
                     }
                     break;
@@ -734,6 +734,8 @@ static stat_t _execute_gcode_block(char *active_comment)
 {
     stat_t status = STAT_OK;
 
+    cm_cycle_start();   // any G, M or other word will autostart cycle if not already started
+
     if (gf.linenum) {
         cm_set_model_linenum(gv.linenum);
     }
@@ -753,7 +755,6 @@ static stat_t _execute_gcode_block(char *active_comment)
     EXEC_FUNC(cm_set_feed_rate_mode, feed_rate_mode);       // G93, G94
     EXEC_FUNC(cm_set_feed_rate, F_word);                    // F
     EXEC_FUNC(spindle_speed_sync, S_word);                  // S
-
     EXEC_FUNC(cm_select_tool, tool_select);                 // T - tool_select is where it's written
     EXEC_FUNC(cm_change_tool, tool_change);                 // M6 - is where it's effected
 
@@ -820,10 +821,10 @@ static stat_t _execute_gcode_block(char *active_comment)
                                                                             gv.L_word, gf.L_word,
                                                                             gv.target, gf.target); break;}
 
-        case NEXT_ACTION_SET_ORIGIN_OFFSETS:     { status = cm_set_origin_offsets(gv.target, gf.target); break;}// G92
-        case NEXT_ACTION_RESET_ORIGIN_OFFSETS:   { status = cm_reset_origin_offsets(); break;}                  // G92.1
-        case NEXT_ACTION_SUSPEND_ORIGIN_OFFSETS: { status = cm_suspend_origin_offsets(); break;}                // G92.2
-        case NEXT_ACTION_RESUME_ORIGIN_OFFSETS:  { status = cm_resume_origin_offsets(); break;}                 // G92.3
+        case NEXT_ACTION_SET_G92_OFFSETS:     { status = cm_set_g92_offsets(gv.target, gf.target); break;}  // G92
+        case NEXT_ACTION_RESET_G92_OFFSETS:   { status = cm_reset_g92_offsets(); break;}                    // G92.1
+        case NEXT_ACTION_SUSPEND_G92_OFFSETS: { status = cm_suspend_g92_offsets(); break;}                  // G92.2
+        case NEXT_ACTION_RESUME_G92_OFFSETS:  { status = cm_resume_g92_offsets(); break;}                   // G92.3
 
         case NEXT_ACTION_JSON_COMMAND_SYNC:      { status = cm_json_command(active_comment); break;}            // M100
         case NEXT_ACTION_JSON_WAIT:              { status = cm_json_wait(active_comment); break;}               // M101

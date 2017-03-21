@@ -422,10 +422,10 @@ stat_t cm_set_absolute_origin(const float origin[], bool flag[]);           // G
 void cm_set_axis_origin(uint8_t axis, const float position);                // G28.3 planner callback
 
 stat_t cm_set_coord_system(const uint8_t coord_system);                     // G54 - G59
-stat_t cm_set_origin_offsets(const float offset[], const bool flag[]);      // G92
-stat_t cm_reset_origin_offsets(void);                                       // G92.1
-stat_t cm_suspend_origin_offsets(void);                                     // G92.2
-stat_t cm_resume_origin_offsets(void);                                      // G92.3
+stat_t cm_set_g92_offsets(const float offset[], const bool flag[]);      // G92
+stat_t cm_reset_g92_offsets(void);                                       // G92.1
+stat_t cm_suspend_g92_offsets(void);                                     // G92.2
+stat_t cm_resume_g92_offsets(void);                                      // G92.3
 
 // Free Space Motion (4.3.4)
 //stat_t cm_straight_traverse(const float target[], const bool flags[]);      // G0
