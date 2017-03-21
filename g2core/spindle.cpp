@@ -50,7 +50,7 @@ static float _get_spindle_pwm (spSpindle_t &_spindle, pwmControl_t &_pwm);
          spindle.direction = SPINDLE_CW; \
     }
 
-/***********************************************************************************
+/****************************************************************************************
  * spindle_init()
  * spindle_reset() - stop spindle, set speed to zero, and reset values
  */
@@ -71,10 +71,10 @@ void spindle_reset()
     spindle_control_immediate(SPINDLE_OFF);
 }
 
-/***********************************************************************************
+/****************************************************************************************
+ * _exec_spindle_control()     - actually execute the spindle command
  * spindle_control_immediate() - execute spindle control immediately
  * spindle_control_sync()      - queue a spindle control to the planner buffer
- * _exec_spindle_control()     - actually execute the spindle command
  *
  *  Basic operation: Spindle function is executed by _exec_spindle_control().
  *  Spindle_control_immediate() performs the control as soon as it's received. 
@@ -87,29 +87,32 @@ void spindle_reset()
  *      The spindle.direction value is not affected (although this doesn't really matter).
  *
  *    - SPINDLE_CW or SPINDLE_CCW turns sets direction accordingly and spindle on.
- *      In spindle_control_sync() a non-zero spinup delay runs a dwell immediately following
- *      the spindle change, but only if the planner had planned the spindle operation to zero.
- *      (I.e. if the spindle controls / S words do not plan to zero the delay is not run).
- *      Spindle_control_immediate() has no spinup delay or dwell behavior.
+ *      In spindle_control_sync() a non-zero spinup delay runs a dwell immediately 
+ *      following the spindle change, but only if the planner had planned the spindle 
+ *      operation to zero. (I.e. if the spindle controls / S words do not plan to zero 
+ *      the delay is not run). Spindle_control_immediate() has no spinup delay or 
+ *      dwell behavior.
  *
  *    - SPINDLE_PAUSE is only applicable to CW and CCW states. It forces the spindle OFF and 
  *      sets spindle.state to PAUSE. A PAUSE received when not in CW or CCW state is ignored.
  *
  *    - SPINDLE_RESUME, if in a PAUSE state, reverts to previous SPINDLE_CW or SPINDLE_CCW.
- *      The SPEED is not changed, and if it were changed in the interim the "new" speed is used.
- *      If RESUME is received from spindle_control_sync() the usual spinup delay behavior occurs.
- *      If RESUME is received when not in a PAUSED state it is ignored. This recognizes that the main
- *      reason an immediate command would be issued - either manually by the user or by an alarm or
- *      some other program function - is to stop a spindle. So the Resume should be ignored for safety.
+ *      The SPEED is not changed, and if it were changed in the interim the "new" speed 
+ *      is used. If RESUME is received from spindle_control_sync() the usual spinup delay 
+ *      behavior occurs. If RESUME is received when not in a PAUSED state it is ignored. 
+ *      This recognizes that the main reason an immediate command would be issued - either 
+ *      manually by the user or by an alarm or some other program function - is to stop 
+ *      a spindle. So the Resume should be ignored for safety.
  */
 /*  Notes:
- *    - Since it's possible to queue a sync'd control, and then set any spindle state  with an 
- *      immediate() before the queued command is reached, _exec_spindle_control() must gracefully
- *      handle any arbitrary state transition (not just the "legal" ones).
+ *    - Since it's possible to queue a sync'd control, and then set any spindle state 
+ *      with an immediate() before the queued command is reached, _exec_spindle_control()
+ *      must gracefully handle any arbitrary state transition (not just the "legal" ones).
  *
- *    - The spinup and spindown rows are present, but are not implemented unless we findwe need them.
- *      It's easy enough to set these flags using the bit vector passed from sync(), but unsetting 
- *      them once the delay is complete would take some more work.
+ *    - The spinup and spindown rows are present, but are not implemented unless we 
+ *      find we need them. It's easy enough to set these flags using the bit vector 
+ *      passed from sync(),but unsetting them once the delay is complete would take 
+ *      some more work.
  *  
  *    Q: Do we need a spin-down for direction reversal?
  *    Q: Should the JSON be able to pause and resume? For test purposes only?
@@ -242,10 +245,10 @@ stat_t spindle_control_sync(spControl control)  // uses spControl arg: OFF, CW, 
     return(STAT_OK);
 }
 
-/***********************************************************************************
+/****************************************************************************************
+ * _exec_spindle_speed()     - actually execute the spindle speed command
  * spindle_speed_immediate() - execute spindle speed change immediately
  * spindle_speed_sync()      - queue a spindle speed change to the planner buffer
- * _exec_spindle_speed()     - actually execute the spindle speed command
  *
  *  Setting S0 is considered as turning spindle off. Setting S to non-zero from S0
  *  will enable a spinup delay if spinups are npn-zero.
@@ -286,7 +289,7 @@ stat_t spindle_speed_sync(float speed)
     return (STAT_OK);
 }
 
-/***********************************************************************************
+/****************************************************************************************
  * _get_spindle_pwm() - return PWM phase (duty cycle) for dir and speed
  */
 
@@ -321,7 +324,7 @@ static float _get_spindle_pwm (spSpindle_t &_spindle, pwmControl_t &_pwm)
     }
 }
 
-/***********************************************************************************
+/****************************************************************************************
  * spindle_override_control()
  * spindle_start_override()
  * spindle_end_override()
@@ -371,14 +374,14 @@ void spindle_end_override(const float ramp_time)
  * END OF SPINDLE FUNCTIONS *
  ****************************/
 
-/***********************************************************************************
+/****************************************************************************************
  * CONFIGURATION AND INTERFACE FUNCTIONS
  * Functions to get and set variables from the cfgArray table
- ***********************************************************************************/
+ ****************************************************************************************/
 
-/***********************************************************************************
- **** Spindle Settings *************************************************************
- ***********************************************************************************/
+/****************************************************************************************
+ **** Spindle Settings ******************************************************************
+ ****************************************************************************************/
 
 stat_t sp_get_spmo(nvObj_t *nv) { return(get_integer(nv, spindle.mode)); }
 stat_t sp_set_spmo(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)spindle.mode, SPINDLE_DISABLED, SPINDLE_MODE_MAX)); }
@@ -418,10 +421,10 @@ stat_t sp_set_spc(nvObj_t *nv) { return(spindle_control_immediate((spControl)nv-
 stat_t sp_get_sps(nvObj_t *nv) { return(get_float(nv, spindle.speed)); }
 stat_t sp_set_sps(nvObj_t *nv) { return(spindle_speed_immediate(nv->value_flt)); }
 
-/***********************************************************************************
+/****************************************************************************************
  * TEXT MODE SUPPORT
  * Functions to print variables from the cfgArray table
- ***********************************************************************************/
+ ****************************************************************************************/
 
 #ifdef __TEXT_MODE
 

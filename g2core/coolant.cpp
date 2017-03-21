@@ -43,7 +43,7 @@ coCoolant_t coolant;
 
 static void _exec_coolant_control(float* value, bool* flag);
 
-/*
+/****************************************************************************************
  * coolant_init()
  * coolant_reset()
  */
@@ -57,7 +57,7 @@ void coolant_reset() {
     coolant_control_immediate(COOLANT_OFF, COOLANT_BOTH);
 }
 
-/*
+/****************************************************************************************
  * coolant_control_immediate() - execute coolant control immediately
  * coolant_control_sync()      - queue a coolant control to the planner buffer
  * _exec_coolant_control()     - actually execute the coolant command
@@ -149,9 +149,9 @@ static void _exec_coolant_control(float* value, bool* flag) {
     }
 }
 
-/***********************************************************************************
- **** Coolant Settings *************************************************************
- ***********************************************************************************/
+/****************************************************************************************
+ **** Coolant Settings ******************************************************************
+ ****************************************************************************************/
 
 stat_t co_get_com(nvObj_t *nv) { return(get_integer(nv, coolant.mist.state)); }
 stat_t co_set_com(nvObj_t *nv) { return(coolant_control_immediate((coControl)nv->value_int, COOLANT_MIST)); }
@@ -159,7 +159,8 @@ stat_t co_get_cof(nvObj_t *nv) { return(get_integer(nv, coolant.flood.state)); }
 stat_t co_set_cof(nvObj_t *nv) { return(coolant_control_immediate((coControl)nv->value_int, COOLANT_FLOOD)); }
 
 stat_t co_get_coph(nvObj_t *nv) { return(get_integer(nv, coolant.mist.pause_enable)); }
-stat_t co_set_coph(nvObj_t *nv) { 
+stat_t co_set_coph(nvObj_t *nv) 
+{ 
     ritorno(set_integer(nv, (uint8_t &)coolant.mist.pause_enable, 0, 1));
     return (set_integer(nv, (uint8_t &)coolant.flood.pause_enable, 0, 1));
 }
@@ -169,9 +170,9 @@ stat_t co_set_comp(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)coolant.mist
 stat_t co_get_cofp(nvObj_t *nv) { return(get_integer(nv, coolant.flood.polarity)); }
 stat_t co_set_cofp(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)coolant.flood.polarity, 0, 1)); }
 
-/***********************************************************************************
+/****************************************************************************************
  * TEXT MODE SUPPORT
- * Functions to print variables from the cfgArray table
+ * Functions to print variables from the cfgArray table*****
  ***********************************************************************************/
 
 #ifdef __TEXT_MODE
