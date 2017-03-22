@@ -246,31 +246,44 @@ struct Thermistor {
 };
 
 
-template<pin_number adc_pin_num, uint16_t min_temp = 0, uint16_t max_temp = 400>
+template<typename ADC_t, uint16_t min_temp = 0, uint16_t max_temp = 400>
 struct PT100 {
     float pullup_resistance;
     float inline_resistance;
+    bool wheatstone;
 
-    ADCPin<adc_pin_num> adc_pin {kNormal, [&]{this->adc_has_new_value();} };
+    ADC_t adc_pin {kNormal, [&]{this->adc_has_new_value();} };
     float raw_adc_voltage = 0.0;
     int32_t raw_adc_value = 0;
 
-    typedef PT100<adc_pin_num, min_temp, max_temp> type;
+    typedef PT100<ADC_t, min_temp, max_temp> type;
 
-    PT100(const float pullup_resistance_, const float inline_resistance_)
-    : pullup_resistance{ pullup_resistance_ }, inline_resistance{ inline_resistance_ } {
+    PT100(const float pullup_resistance_, const float inline_resistance_, const bool wheatstone_ = false)
+    : pullup_resistance{ pullup_resistance_ },
+      inline_resistance{ inline_resistance_ },
+      wheatstone{wheatstone_}
+    {
         adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
-        adc_pin.setVoltageRange(kSystemVoltage, 0.0687, 0.165, 6400.0);
-    }
+        adc_pin.setVoltageRange(kSystemVoltage,
+                                get_voltage_of_temp(min_temp),
+                                get_voltage_of_temp(max_temp),
+                                wheatstone, // if wheatstone, then differential
+                                6400.0);
+    };
+
+    float get_voltage_of_temp(float t) {
+        // R = 100(1 + A*T + B*T^2); A = 3.9083*10^-3; B = -5.775*10^-7
+        float r = 100 * (1 + 0.0039083*t + -0.0000005775*t*t) + inline_resistance;
+
+        if (wheatstone) {
+            return (r - pullup_resistance)/(2.0*(pullup_resistance + r));
+        }
+        return r/(r+pullup_resistance)*kSystemVoltage;
+    };
 
     float temperature_exact() {
-        // Sanity check:
-        if (raw_adc_voltage < 0.06) {
-            return -1; // invalid temperature from a thermistor
-        }
-
-        float v = raw_adc_voltage;
-        float r = ((pullup_resistance * v) / (kSystemVoltage - v)) - inline_resistance;   // resistance of thermistor
+        float r = get_resistance();
+        if (r < 100) { return -1; }
 
         // from https://www.maximintegrated.com/en/app-notes/index.mvp/id/3450
         // run through wolfram as:
@@ -279,12 +292,15 @@ struct PT100 {
     };
 
     float get_resistance() {
-        if (raw_adc_voltage < 0.001) {
-            return -1; // invalid temperature from a thermistor
+        float r;
+        if (wheatstone) {
+            float v = raw_adc_voltage / kSystemVoltage;
+            r = pullup_resistance*(1-2.0*v)/(2.0*v+1.0) - inline_resistance;
+        } else {
+            float v = raw_adc_voltage;
+            r = ((pullup_resistance * v) / (kSystemVoltage - v)) - inline_resistance;
         }
-
-        float v = raw_adc_voltage;
-        return ((pullup_resistance * v) / (kSystemVoltage - v)) - inline_resistance;   // resistance of thermistor
+        return r;
     };
 
     uint16_t get_raw_value() {
@@ -301,7 +317,7 @@ struct PT100 {
 
     // Call back function from the ADC to tell it that the ADC has a new sample...
     void adc_has_new_value() {
-        raw_adc_voltage = (raw_adc_voltage * 2.0 + adc_pin.getVoltage())/3.0;
+        raw_adc_voltage = (raw_adc_voltage * 10.0 + adc_pin.getVoltage())/11.0;
         raw_adc_value = adc_pin.getRaw();
     };
 };
