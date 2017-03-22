@@ -269,8 +269,8 @@
         /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 4700 \
     }
 #else
-    #define TEMPERATURE_SENSOR_1_TYPE  PT100<kADC1_PinNumber>
-    #define TEMPERATURE_SENSOR_1_INIT {/*pullup_resistance:*/ 2325, /*inline_resistance*/0}
+    #define TEMPERATURE_SENSOR_1_TYPE  PT100<ADCPin<kADC1_PinNumber>>
+    #define TEMPERATURE_SENSOR_1_INIT {/*pullup_resistance:*/ 100, /*inline_resistance*/0, /*wheatstone*/ true}
 #endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_1
 
@@ -286,8 +286,8 @@
     /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 4700 \
     }
 #else
-    #define TEMPERATURE_SENSOR_2_TYPE  PT100<kADC3_PinNumber>
-    #define TEMPERATURE_SENSOR_2_INIT {/*pullup_resistance:*/ 4700, /*inline_resistance*/0}
+    #define TEMPERATURE_SENSOR_2_TYPE  PT100<ADCPin<kADC3_PinNumber>>
+    #define TEMPERATURE_SENSOR_2_INIT {/*pullup_resistance:*/ 100, /*inline_resistance*/0}
 #endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_2
 
@@ -302,8 +302,8 @@
     /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 4700 \
     }
 #else
-    #define TEMPERATURE_SENSOR_3_TYPE  PT100<kADC2_PinNumber>
-    #define TEMPERATURE_SENSOR_3_INIT {/*pullup_resistance:*/ 2325, /*inline_resistance*/0}
+    #define TEMPERATURE_SENSOR_3_TYPE  PT100<ADCPin<kADC2_PinNumber>>
+    #define TEMPERATURE_SENSOR_3_INIT {/*pullup_resistance:*/ 100, /*inline_resistance*/0, /*wheatstone*/ true}
 #endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_3
 
