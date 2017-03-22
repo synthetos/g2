@@ -311,7 +311,7 @@ struct mpBuffer_to_clear {
     float block_time_ms;
     float plannable_time_ms;        // time in planner
     float plannable_length;         // length in planner
-    uint8_t meet_iterations;        // iterations needed in _get_meet_velocity
+    int8_t meet_iterations;         // iterations needed in _get_meet_velocity
     //+++++ to here
 
     bufferState buffer_state;       // used to manage queuing/dequeuing
@@ -537,6 +537,7 @@ stat_t mp_runtime_command(mpBuf_t *bf);
 
 stat_t mp_json_command(char *json_string);
 stat_t mp_json_wait(char *json_string);
+stat_t mp_json_command_immediate(char *json_string);
 
 stat_t mp_dwell(const float seconds);
 void mp_end_dwell(void);
@@ -553,6 +554,8 @@ stat_t mp_planner_callback();
 void mp_replan_queue(mpBuf_t *bf);
 void mp_start_feed_override(const float ramp_time, const float override);
 void mp_end_feed_override(const float ramp_time);
+void mp_start_traverse_override(const float ramp_time, const float override);
+void mp_end_traverse_override(const float ramp_time);
 void mp_planner_time_accounting(void);
 
 // planner buffer primitives

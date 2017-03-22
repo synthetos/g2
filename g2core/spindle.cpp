@@ -2,7 +2,7 @@
  * spindle.cpp - canonical machine spindle driver
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -222,28 +222,50 @@ static float _get_spindle_pwm (cmSpindleEnable enable, cmSpindleDir direction)
 
 
 /*
- * cm_spindle_override_enable()
- * cm_spindle_override_factor()
+ * cm_spindle_override_control()
+ * cm_start_spindle_override()
+ * cm_end_spindle_override()
  */
-/*
-stat_t cm_spindle_override_enable(uint8_t flag)        // M51.1
+
+stat_t cm_sso_control(const float P_word, const bool P_flag) // M51
 {
-    if (fp_TRUE(cm.gf.parameter) && fp_ZERO(cm.gn.parameter)) {
-        spindle.override_enable = false;
-    } else {
-        spindle.override_enable = true;
+    bool new_enable = true;
+    bool new_override = false;
+    if (P_flag) {                           // if parameter is present in Gcode block
+        if (fp_ZERO(P_word)) {
+            new_enable = false;             // P0 disables override
+        } else {
+            if (P_word < SPINDLE_OVERRIDE_MIN) {
+                return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+            }
+            if (P_word > SPINDLE_OVERRIDE_MAX) {
+                return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+            }
+            spindle.sso_factor = P_word;    // P word is valid, store it.
+            new_override = true;
+        }
     }
+    if (cm.gmx.m48_enable) {               // if master enable is ON
+        if (new_enable && (new_override || !spindle.sso_enable)) {   // 3 cases to start a ramp
+            cm_start_spindle_override(SPINDLE_OVERRIDE_RAMP_TIME, spindle.sso_factor);
+        } else if (spindle.sso_enable && !new_enable) {              // case to turn off the ramp
+            cm_end_spindle_override(SPINDLE_OVERRIDE_RAMP_TIME);
+        }
+    }
+    spindle.sso_enable = new_enable;        // always update the enable state
     return (STAT_OK);
 }
 
-stat_t cm_spindle_override_factor(uint8_t flag)        // M50.1
+void cm_start_spindle_override(const float ramp_time, const float override_factor)
 {
-    spindle.override_enable = flag;
-    spindle.override_factor = cm.gn.parameter;
-//    change spindle speed
-    return (STAT_OK);
+    return;
 }
-*/
+
+void cm_end_spindle_override(const float ramp_time)
+{
+    return;
+}
+
 /****************************
  * END OF SPINDLE FUNCTIONS *
  ****************************/

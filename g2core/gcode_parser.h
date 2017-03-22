@@ -2,7 +2,7 @@
  * gcode_parser.h - rs274/ngc Gcode parser
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -17,8 +17,8 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef GCODE_PARSER_H_ONCE
-#define GCODE_PARSER_H_ONCE
+#ifndef GCODE_H_ONCE
+#define GCODE_H_ONCE
 
 /*
  * Global Scope Functions
@@ -27,4 +27,4 @@ stat_t gcode_parser(char* block);
 stat_t gc_get_gc(nvObj_t* nv);
 stat_t gc_run_gc(nvObj_t* nv);
 
-#endif  // End of include guard: GCODE_PARSER_H_ONCE
+#endif  // End of include guard: GCODE_H_ONCE

@@ -165,13 +165,14 @@ const cfgItem_t cfgArray[] = {
     { "hom","homb",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_B], false },  // B homed
     { "hom","homc",_f0, 0, cm_print_hom, get_ui8, set_01, (float *)&cm.homed[AXIS_C], false },  // C homed
 
-    { "prb","prbe",_f0, 0, tx_print_nul, get_ui8, set_ro, (float *)&cm.probe_state[0], 0 },    // probing state
+    { "prb","prbe",_f0, 0, tx_print_nul, get_ui8, set_ro, (float *)&cm.probe_state[0], 0 },     // probing state
     { "prb","prbx",_f0, 3, tx_print_nul, get_flt, set_ro, (float *)&cm.probe_results[0][AXIS_X], 0 },
     { "prb","prby",_f0, 3, tx_print_nul, get_flt, set_ro, (float *)&cm.probe_results[0][AXIS_Y], 0 },
     { "prb","prbz",_f0, 3, tx_print_nul, get_flt, set_ro, (float *)&cm.probe_results[0][AXIS_Z], 0 },
     { "prb","prba",_f0, 3, tx_print_nul, get_flt, set_ro, (float *)&cm.probe_results[0][AXIS_A], 0 },
     { "prb","prbb",_f0, 3, tx_print_nul, get_flt, set_ro, (float *)&cm.probe_results[0][AXIS_B], 0 },
     { "prb","prbc",_f0, 3, tx_print_nul, get_flt, set_ro, (float *)&cm.probe_results[0][AXIS_C], 0 },
+    { "prb","prbr",_f0, 0, tx_print_nul, cm_get_prbr, cm_get_prbr, nullptr, 0 },    // enable probe report. Init in cm_init
 
     { "jog","jogx",_f0, 0, tx_print_nul, get_nul, cm_run_jogx, (float *)&cm.jogging_dest, 0},
     { "jog","jogy",_f0, 0, tx_print_nul, get_nul, cm_run_jogy, (float *)&cm.jogging_dest, 0},
@@ -603,14 +604,7 @@ const cfgItem_t cfgArray[] = {
     { "tof","tofa",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tl_offset[AXIS_A], 0 },
     { "tof","tofb",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tl_offset[AXIS_B], 0 },
     { "tof","tofc",_fip,  3, cm_print_cofs, get_flt, set_flt,(float *)&cm.tl_offset[AXIS_C], 0 },
-/*
-    { "tl","tlx",_fipc, 3, cm_print_cofs, cm_get_tof, set_flu,(float *)&cm.tl_offset[AXIS_X], 0 },
-    { "tl","tly",_fipc, 3, cm_print_cofs, cm_get_tof, set_flu,(float *)&cm.tl_offset[AXIS_Y], 0 },
-    { "tl","tlz",_fipc, 3, cm_print_cofs, cm_get_tof, set_flu,(float *)&cm.tl_offset[AXIS_Z], 0 },
-    { "tl","tla",_fip,  3, cm_print_cofs, cm_get_tof, set_flt,(float *)&cm.tl_offset[AXIS_A], 0 },
-    { "tl","tlb",_fip,  3, cm_print_cofs, cm_get_tof, set_flt,(float *)&cm.tl_offset[AXIS_B], 0 },
-    { "tl","tlc",_fip,  3, cm_print_cofs, cm_get_tof, set_flt,(float *)&cm.tl_offset[AXIS_C], 0 },
-*/
+
     // Tool table offsets
     { "tt1","tt1x",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[1][AXIS_X], TT1_X_OFFSET },
     { "tt1","tt1y",_fipc, 3, cm_print_cofs, get_flt, set_flu,(float *)&cm.tt_offset[1][AXIS_Y], TT1_Y_OFFSET },
@@ -881,9 +875,10 @@ const cfgItem_t cfgArray[] = {
 #endif
     { "sys","ej", _fipn, 0, js_print_ej,  get_ui8, json_set_ej,(float *)&cs.comm_mode,              COMM_MODE },
     { "sys","jv", _fipn, 0, js_print_jv,  get_ui8, json_set_jv,(float *)&js.json_verbosity,         JSON_VERBOSITY },
-    { "sys","qv", _fipn, 0, qr_print_qv,  get_ui8, set_012,    (float *)&qr.queue_report_verbosity, QUEUE_REPORT_VERBOSITY },
-    { "sys","sv", _fipn, 0, sr_print_sv,  get_ui8, set_012,    (float *)&sr.status_report_verbosity,STATUS_REPORT_VERBOSITY },
+    { "sys","qv", _fipn, 0, qr_print_qv,  get_ui8, set_012,    (float *)&qr.queue_report_verbosity,  QR_OFF}, // default to OFF, set to QUEUE_REPORT_VERBOSITY after connected
+    { "sys","sv", _fipn, 0, sr_print_sv,  get_ui8, set_012,    (float *)&sr.status_report_verbosity, SR_OFF}, // default to OFF, set to STATUS_REPORT_VERBOSITY after connectied
     { "sys","si", _fipn, 0, sr_print_si,  get_int, sr_set_si,  (float *)&sr.status_report_interval, STATUS_REPORT_INTERVAL_MS },
+    { "", "nxln", _f0,   0, cm_print_nxln,cm_get_nxln,cm_set_nxln,(float *)&cs.null,                0 },
 
     // Gcode defaults
     // NOTE: The ordering within the gcode defaults is important for token resolution. gc must follow gco
@@ -1120,7 +1115,7 @@ const cfgItem_t cfgArray[] = {
     { "","g28",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // g28 home position
     { "","g30",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // g30 home position
     // +9 = 45
-    { "","tof",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },     // tof offsets
+    { "","tof",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tool offsets
     { "","tt1",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
     { "","tt2",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
     { "","tt3",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
@@ -1130,13 +1125,13 @@ const cfgItem_t cfgArray[] = {
     { "","tt7",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
     { "","tt8",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
     { "","tt9",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
-    { "","tt10",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
-    { "","tt11",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
-    { "","tt12",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
-    { "","tt13",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
-    { "","tt14",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
-    { "","tt15",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
-    { "","tt16",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
+    { "","tt10",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // tt offsets
+    { "","tt11",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // tt offsets
+    { "","tt12",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // tt offsets
+    { "","tt13",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // tt offsets
+    { "","tt14",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // tt offsets
+    { "","tt15",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // tt offsets
+    { "","tt16",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // tt offsets
     // +17 = 62
     { "","mpo",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // machine position group
     { "","pos",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // work position group
@@ -1358,7 +1353,7 @@ static stat_t _do_group_list(nvObj_t *nv, char list[][TOKEN_LEN+1]) // helper to
         }
         _do_group(nv, list[i]);
     }
-    return (STAT_COMPLETE);
+    return (STAT_COMPLETE);         // STAT_COMPLETE suppresses the normal response line
 }
 
 static stat_t _do_motors(nvObj_t *nv)  // print parameters for all motor groups
@@ -1368,7 +1363,7 @@ static stat_t _do_motors(nvObj_t *nv)  // print parameters for all motor groups
         sprintf(group, "%d", i);
         _do_group(nv, group);
     }
-    return (STAT_COMPLETE);
+    return (STAT_COMPLETE);         // STAT_COMPLETE suppresses the normal response line
 }
 
 static stat_t _do_axes(nvObj_t *nv)  // print parameters for all axis groups
@@ -1390,7 +1385,7 @@ static stat_t _do_inputs(nvObj_t *nv)  // print parameters for all input groups
         sprintf(group, "di%d", i);
         _do_group(nv, group);
     }
-    return (STAT_COMPLETE);
+    return (STAT_COMPLETE);         // STAT_COMPLETE suppresses the normal response line
 }
 
 static stat_t _do_outputs(nvObj_t *nv)  // print parameters for all output groups
@@ -1400,7 +1395,7 @@ static stat_t _do_outputs(nvObj_t *nv)  // print parameters for all output group
         sprintf(group, "do%d", i);
         _do_group(nv, group);
     }
-    return (STAT_COMPLETE);
+    return (STAT_COMPLETE);         // STAT_COMPLETE suppresses the normal response line
 }
 
 static stat_t _do_heaters(nvObj_t *nv)  // print parameters for all heater groups
@@ -1410,7 +1405,7 @@ static stat_t _do_heaters(nvObj_t *nv)  // print parameters for all heater group
         sprintf(group, "he%d", i);
         _do_group(nv, group);
     }
-    return (STAT_COMPLETE);
+    return (STAT_COMPLETE);         // STAT_COMPLETE suppresses the normal response line
 }
 
 static stat_t _do_all(nvObj_t *nv)  // print all parameters

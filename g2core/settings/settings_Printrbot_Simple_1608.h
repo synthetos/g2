@@ -57,6 +57,7 @@
 
 // Communications and reporting settings
 
+#define MARLIN_COMPAT_ENABLED       true                    // enable marlin compatibility mode
 #define COMM_MODE                   JSON_MODE               // one of: TEXT_MODE, JSON_MODE
 #define XIO_ENABLE_FLOW_CONTROL FLOW_CONTROL_RTS            // FLOW_CONTROL_OFF, FLOW_CONTROL_RTS
 #define XIO_UART_MUTES_WHEN_USB_CONNECTED 1                 // Mute the UART when USB connects
@@ -86,6 +87,23 @@
 #define GCODE_DEFAULT_PATH_CONTROL  PATH_CONTINUOUS
 #define GCODE_DEFAULT_DISTANCE_MODE ABSOLUTE_DISTANCE_MODE
 
+#define MARLIN_G29_SCRIPT \
+    "(MSG Tramming started)\n" \
+    "M100 ({\"_leds\":3})\n" \
+    "G1 X0 Y145 Z6 F20000\n" \
+    "G38.2 Z-10 F200\n" \
+    "G1 Z5 F20000\n" \
+    "M100 ({\"_leds\":5})\n" \
+    "G1 X210 Y65 F20000\n" \
+    "G38.2 Z-10 F200\n" \
+    "G1 Z5 F20000\n" \
+    "M100 ({\"_leds\":6})\n" \
+    "G1 X0 Y10 F20000\n" \
+    "G38.2 Z-10 F200\n" \
+    "G1 Z5 F20000\n" \
+    "M100 ({\"_leds\":3})\n" \
+    "M100 ({\"tram\":1})" \
+    "(MSG Tramming completed)\n"
 
 // *** motor settings ************************************************************************************
 
@@ -282,7 +300,7 @@
 // Zmin
 #define DI5_MODE                    IO_ACTIVE_LOW   // Z probe
 #define DI5_ACTION                  INPUT_ACTION_NONE
-#define DI5_FUNCTION                INPUT_FUNCTION_NONE
+#define DI5_FUNCTION                INPUT_FUNCTION_PROBE
 
 // Zmax
 #define DI6_MODE                    IO_MODE_DISABLED

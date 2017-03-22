@@ -195,7 +195,8 @@ typedef uint16_t index_t;               // use this if there are > 255 indexed o
 typedef enum {
     TEXT_MODE = 0,                      // sticky text mode
     JSON_MODE,                          // sticky JSON mode
-    AUTO_MODE                           // auto-configure communications mode
+    AUTO_MODE,                          // auto-configure communications mode
+    MARLIN_COMM_MODE,                   // sticky marlin-compatibility mode (if compiled in)
 } commMode;
 
 typedef enum {

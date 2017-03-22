@@ -93,6 +93,7 @@
 #include "controller.h"
 #include "json_parser.h"
 #include "text_parser.h"
+#include "settings.h"
 
 #include "plan_arc.h"
 #include "planner.h"
@@ -257,6 +258,15 @@ void cm_set_model_linenum(const uint32_t linenum)
 {
     cm.gm.linenum = linenum;            // you must first set the model line number,
     nv_add_object((const char *)"n");   // then add the line number to the nv list
+}
+
+stat_t cm_check_linenum() {
+    if (cm.gmx.last_line_number != cm.gm.linenum) {
+        _debug_trap("line number out of sequence");
+        return STAT_LINE_NUMBER_OUT_OF_SEQUENCE;
+    }
+    cm.gmx.last_line_number = cm.gm.linenum;
+    return STAT_OK;
 }
 
 /***********************************************************************************
@@ -566,6 +576,31 @@ stat_t cm_get_tram(nvObj_t *nv)
 
 
 /*
+ * cm_set_nxt_line() - JSON command to set the next line number
+ * cm_get_nxt_line() - JSON query to get the next expected line number
+ *
+ * There MUST be three valid probes stored.
+ */
+
+stat_t cm_set_nxln(nvObj_t *nv)
+{
+    if (nv->valuetype == TYPE_INT || nv->valuetype == TYPE_FLOAT)
+    {
+        cm.gmx.last_line_number = ((int32_t)nv->value) - 1;
+        return (STAT_OK);
+    }
+    return (STAT_INPUT_VALUE_RANGE_ERROR);
+}
+
+stat_t cm_get_nxln(nvObj_t *nv)
+{
+    nv->value = cm.gmx.last_line_number+1;
+    nv->valuetype = TYPE_INT;
+    return (STAT_OK);
+}
+
+
+/*
  * cm_set_model_target() - set target vector in GM model
  *
  * This is a core routine. It handles:
@@ -594,7 +629,10 @@ static float _calc_ABC(const uint8_t axis, const float target[])
     if ((cm.a[axis].axis_mode == AXIS_STANDARD) || (cm.a[axis].axis_mode == AXIS_INHIBITED)) {
         return(target[axis]);    // no mm conversion - it's in degrees
     }
-    return(_to_millimeters(target[axis]) * 360 / (2 * M_PI * cm.a[axis].radius));
+
+    // radius mode
+
+    return (_to_millimeters(target[axis]) * 360.0 / (2.0 * M_PI * cm.a[axis].radius));
 }
 
 void cm_set_model_target(const float target[], const bool flags[])
@@ -624,15 +662,35 @@ void cm_set_model_target(const float target[], const bool flags[])
         } else {
             tmp = _calc_ABC(axis, target);
         }
+#if MARLIN_COMPAT_ENABLED == true
+        // If we are in absolute mode (generally), but the extruder is relative,
+        // then we adjust the extruder to a relative position
+        if (mst.marlin_flavor && (cm.a[axis].axis_mode == AXIS_RADIUS)) {
+            if ((cm.gm.distance_mode == INCREMENTAL_DISTANCE_MODE) || (mst.extruder_mode == EXTRUDER_MOVES_RELATIVE)) {
+                cm.gm.target[axis] += tmp;
+            }
+            else { // if (cm.gmx.extruder_mode == EXTRUDER_MOVES_NORMAL)
+                cm.gm.target[axis] = tmp + cm_get_active_coord_offset(axis);
+            }
+            // TODO
+//            else {
+//                cm.gm.target[axis] += tmp * cm.gmx.volume_to_filament_length[axis-3];
+//            }
+        }
+        else
+#endif // MARLIN_COMPAT_ENABLED
         if (cm.gm.distance_mode == ABSOLUTE_DISTANCE_MODE) {
             cm.gm.target[axis] = tmp + cm_get_active_coord_offset(axis); // sacidu93's fix to Issue #22
-        } else {
+        }
+        else {
             cm.gm.target[axis] += tmp;
         }
     }
 }
 
 /*
+ * cm_get_soft_limits()
+ * cm_set_soft_limits()
  * cm_test_soft_limits() - return error code if soft limit is exceeded
  *
  *  The target[] arg must be in absolute machine coordinates. Best done after cm_set_model_target().
@@ -642,6 +700,9 @@ void cm_set_model_target(const float target[], const bool flags[])
  *  a min or a max if the value is more than +/- 1000000 (plus or minus 1 million ).
  *  This allows a single end to be tested w/the other disabled, should that requirement ever arise.
  */
+
+bool cm_get_soft_limits() { return (cm.soft_limit_enable); }
+void cm_set_soft_limits(bool enable) { cm.soft_limit_enable = enable; }
 
 static stat_t _finalize_soft_limits(const stat_t status)
 {
@@ -693,9 +754,7 @@ void canonical_machine_init()
 // If you can assume all memory has been zeroed by a hard reset you don't need this code:
 //    memset(&cm, 0, sizeof(cm));                 // do not reset canonicalMachineSingleton once it's been initialized
     memset(&cm, 0, sizeof(cmSingleton_t));      // do not reset canonicalMachineSingleton once it's been initialized
-    memset(&cm.gm, 0, sizeof(GCodeState_t));    // clear all values, pointers and status
-    memset(&cm.gn, 0, sizeof(GCodeInput_t));
-    memset(&cm.gf, 0, sizeof(GCodeFlags_t));
+    cm.gm.reset();                              // clear all values, pointers and status -- not ALL to zero, however
 
     canonical_machine_init_assertions();        // establish assertions
     ACTIVE_MODEL = MODEL;                       // setup initial Gcode model pointer
@@ -719,19 +778,20 @@ void canonical_machine_reset()
     cm_select_plane(cm.default_select_plane);
     cm_set_path_control(MODEL, cm.default_path_control);
     cm_set_distance_mode(cm.default_distance_mode);
-    cm_set_arc_distance_mode(INCREMENTAL_DISTANCE_MODE); // always the default
-    cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);   // always the default
-    cm_reset_overrides();                           // set overrides to initial conditions
+    cm_set_arc_distance_mode(INCREMENTAL_DISTANCE_MODE);// always the default
+    cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);       // always the default
+    cm_reset_overrides();                               // set overrides to initial conditions
 
     // NOTE: Should unhome axes here
 
-    // reset request flags
+    // reset requests and flags 
     cm.queue_flush_state = FLUSH_OFF;
     cm.end_hold_requested = false;
     cm.limit_requested = 0;                     // resets switch closures that occurred during initialization
     cm.safety_interlock_disengaged = 0;         // ditto
     cm.safety_interlock_reengaged = 0;          // ditto
     cm.shutdown_requested = 0;                  // ditto
+    cm.probe_report_enable = PROBE_REPORT_ENABLE;
 
     // set initial state and signal that the machine is ready for action
     cm.cycle_state = CYCLE_OFF;
@@ -1038,10 +1098,11 @@ stat_t cm_set_arc_distance_mode(const uint8_t mode)
  *  cm_set_work_offsets() immediately afterwards.
  */
 
-stat_t cm_set_g10_data(const uint8_t P_word, const uint8_t L_word,
+stat_t cm_set_g10_data(const uint8_t P_word, const bool P_flag,
+                       const uint8_t L_word, const bool L_flag,
                        const float offset[], const bool flag[])
 {
-    if (!cm.gf.L_word) {
+    if (!L_flag) {
         return (STAT_L_WORD_IS_MISSING);
     }
 
@@ -1057,8 +1118,9 @@ stat_t cm_set_g10_data(const uint8_t P_word, const uint8_t L_word,
                     cm.offset[P_word][axis] = _to_millimeters(offset[axis]);
                 } else {
                     // Should L20 take into account G92 offsets?
-                    cm.offset[P_word][axis] = cm.gmx.position[axis] - 
-                        _to_millimeters(offset[axis]) - 
+                    cm.offset[P_word][axis] = 
+                        cm.gmx.position[axis] -
+                        _to_millimeters(offset[axis]) -
                         cm.tl_offset[axis];
                 }
                 // persist offsets once machining cycle is over
@@ -1078,8 +1140,8 @@ stat_t cm_set_g10_data(const uint8_t P_word, const uint8_t L_word,
                 } else {
                     // L10 should also take into account G92 offset
                     cm.tt_offset[P_word][axis] =
-                        cm.gmx.position[axis] - _to_millimeters(offset[axis]) - 
-                        cm.offset[cm.gm.coord_system][axis] - 
+                        cm.gmx.position[axis] - _to_millimeters(offset[axis]) -
+                        cm.offset[cm.gm.coord_system][axis] -
                         (cm.gmx.origin_offset[axis] * cm.gmx.origin_offset_enable);
                 }
                 // persist offsets once machining cycle is over
@@ -1102,27 +1164,27 @@ stat_t cm_set_g10_data(const uint8_t P_word, const uint8_t L_word,
  * cm_set_coord_system() - G54-G59
  * _exec_offset() - callback from planner
  */
-stat_t cm_set_tl_offset(const uint8_t H_word, bool apply_additional)
+
+stat_t cm_set_tl_offset(const uint8_t H_word, const bool H_flag, const bool apply_additional)
 {
     uint8_t tool;
-    if (cm.gf.H_word)
-    {
-        if (cm.gn.H_word > TOOLS) {
+    if (H_flag) {
+        if (H_word > TOOLS) {
             return (STAT_H_WORD_IS_INVALID);
         }
-        if (cm.gn.H_word == 0) {    // interpret H0 as "current tool", just like no H at all.
+        if (H_word == 0) {    // interpret H0 as "current tool", just like no H at all.
             tool = cm.gm.tool;
         } else {
-            tool = cm.gn.H_word;
+            tool = H_word;
         }
-    } else {
+        } else {
         tool = cm.gm.tool;
     }
     if (apply_additional) {
         for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
             cm.tl_offset[axis] += cm.tt_offset[tool][axis];
         }
-    } else {
+        } else {
         for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
             cm.tl_offset[axis] = cm.tt_offset[tool][axis];
         }
@@ -1174,7 +1236,7 @@ static void _exec_offset(float *value, bool *flag)
  *    This is useful for setting origins for homing, probing, and other operations.
  *
  *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *    !!!!! DO NOT CALL THIS FUNCTION WHILE IN A MACHINING CYCLE !!!!!
+ *  !!!!! DO NOT CALL THIS FUNCTION WHILE IN A MACHINING CYCLE !!!!!
  *  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  *
  *    More specifically, do not call this function if there are any moves in the planner or
@@ -1309,9 +1371,8 @@ stat_t cm_straight_traverse(const float target[], const bool flags[])
     cm.gm.motion_mode = MOTION_MODE_STRAIGHT_TRAVERSE;
 
     // it's legal for a G0 to have no axis words but we don't want to process it
-    if (!(flags[AXIS_X] || flags[AXIS_Y] || flags[AXIS_Z] ||
-          flags[AXIS_A] || flags[AXIS_B] || flags[AXIS_C])) {
-          return(STAT_OK);
+    if (!(flags[AXIS_X] | flags[AXIS_Y] | flags[AXIS_Z] | flags[AXIS_A] | flags[AXIS_B] | flags[AXIS_C])) {
+        return(STAT_OK);
     }
 
     cm_set_model_target(target, flags);
@@ -1467,10 +1528,8 @@ stat_t cm_straight_feed(const float target[], const bool flags[])
     }
     cm.gm.motion_mode = MOTION_MODE_STRAIGHT_FEED;
 
-    // it's legal for a G1 to have no axis words but we don't want to process it
-    if (!(flags[AXIS_X] || flags[AXIS_Y] || flags[AXIS_Z] ||
-          flags[AXIS_A] || flags[AXIS_B] || flags[AXIS_C])) {
-          return(STAT_OK);
+    if (!(flags[AXIS_X] | flags[AXIS_Y] | flags[AXIS_Z] | flags[AXIS_A] | flags[AXIS_B] | flags[AXIS_C])) {
+        return(STAT_OK);
     }
 
     cm_set_model_target(target, flags);
@@ -1601,7 +1660,7 @@ stat_t cm_m48_enable(uint8_t enable)        // M48, M49
 }
 
 /*
- * cm_feed_rate_override_enable() - M50
+ * cm_mfo_control() - M50 manual feed rate override comtrol
  *
  *  M50 enables manual feedrate override and the optional P override parameter.
  *  P is expressed as M% to N% of programmed feedrate, typically a value from 0.05 to 2.000.
@@ -1640,38 +1699,64 @@ stat_t cm_m48_enable(uint8_t enable)        // M48, M49
  *  ENABLE      ENABLE      M50 Pn    ENABLE        start ramp w/new P value; store P value
  *                                                  (Note: new ramp will supercede any existing ramp)
  */
-stat_t cm_mfo_enable(uint8_t enable)            // M50
+
+stat_t cm_mfo_control(const float P_word, const bool P_flag) // M50
 {
     bool new_enable = true;
     bool new_override = false;
-    if (cm.gf.parameter) {                      // if parameter is present in Gcode block
-        if (fp_ZERO(cm.gn.parameter)) {
-            new_enable = false;                 // P0 disables override
+    if (P_flag) {                           // if parameter is present in Gcode block
+        if (fp_ZERO(P_word)) {
+            new_enable = false;             // P0 disables override
         } else {
-            if (cm.gn.parameter < FEED_OVERRIDE_MIN) {
+            if (P_word < FEED_OVERRIDE_MIN) {
                 return (STAT_INPUT_LESS_THAN_MIN_VALUE);
             }
-            if (cm.gn.parameter > FEED_OVERRIDE_MAX) {
+            if (P_word > FEED_OVERRIDE_MAX) {
                 return (STAT_INPUT_EXCEEDS_MAX_VALUE);
             }
-            cm.gmx.mfo_factor = cm.gn.parameter; // it validates - store it.
+            cm.gmx.mfo_factor = P_word;    // P word is valid, store it.
             new_override = true;
         }
     }
-    if (cm.gmx.m48_enable) {                    // if master enable is ON
+    if (cm.gmx.m48_enable) {               // if master enable is ON
         if (new_enable && (new_override || !cm.gmx.mfo_enable)) {   // 3 cases to start a ramp
             mp_start_feed_override(FEED_OVERRIDE_RAMP_TIME, cm.gmx.mfo_factor);
         } else if (cm.gmx.mfo_enable && !new_enable) {              // case to turn off the ramp
             mp_end_feed_override(FEED_OVERRIDE_RAMP_TIME);
         }
     }
-    cm.gmx.mfo_enable = new_enable;             // always update the enable state
+    cm.gmx.mfo_enable = new_enable;        // always update the enable state
     return (STAT_OK);
 }
 
-//    if ((new_enable && new_override) || (new_enable && !cm.gmx.mfo_enable)) {
-//        if (!(cm.gmx.mfo_enable && new_override)) {
-
+stat_t cm_mto_control(const float P_word, const bool P_flag) // M50.1
+{
+    bool new_enable = true;
+    bool new_override = false;
+    if (P_flag) {                           // if parameter is present in Gcode block
+        if (fp_ZERO(P_word)) {
+            new_enable = false;             // P0 disables override
+        } else {
+            if (P_word < TRAVERSE_OVERRIDE_MIN) {
+                return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+            }
+            if (P_word > TRAVERSE_OVERRIDE_MAX) {
+                return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+            }
+            cm.gmx.mto_factor = P_word;    // P word is valid, store it.
+            new_override = true;
+        }
+    }
+    if (cm.gmx.m48_enable) {               // if master enable is ON
+        if (new_enable && (new_override || !cm.gmx.mfo_enable)) {   // 3 cases to start a ramp
+            mp_start_traverse_override(FEED_OVERRIDE_RAMP_TIME, cm.gmx.mto_factor);
+        } else if (cm.gmx.mto_enable && !new_enable) {              // case to turn off the ramp
+            mp_end_traverse_override(FEED_OVERRIDE_RAMP_TIME);
+        }
+    }
+    cm.gmx.mto_enable = new_enable;        // always update the enable state
+    return (STAT_OK);
+}
 
 /************************************************
  * Feedhold and Related Functions (no NIST ref) *
@@ -2001,6 +2086,14 @@ void cm_program_end()
 stat_t cm_json_command(char *json_string)
 {
     return mp_json_command(json_string);
+}
+
+/*
+ * cm_json_command_immediate() - M100.1
+ */
+stat_t cm_json_command_immediate(char *json_string)
+{
+    return mp_json_command_immediate(json_string);
 }
 
 /*
@@ -2588,7 +2681,9 @@ stat_t cm_run_qf(nvObj_t *nv)
 stat_t cm_run_home(nvObj_t *nv)
 {
     if (fp_TRUE(nv->value)) {
-        cm_homing_cycle_start();
+        float axes[] = { 1,1,1,1,1,1 };
+        bool flags[] = { 1,1,1,1,1,1 };
+        cm_homing_cycle_start(axes, flags);
     }
     return (STAT_OK);
 }
@@ -2740,7 +2835,8 @@ static const char fmt_mfoe[] = "[mfoe] manual feed override enab%3d [0=disable,1
 static const char fmt_mfo[]  = "[mfo]  manual feedrate override%8.3f [0.05 < mfo < 2.00]\n";
 static const char fmt_mtoe[] = "[mtoe] manual traverse over enab%3d [0=disable,1=enable]\n";
 static const char fmt_mto[]  = "[mto]  manual traverse override%8.3f [0.05 < mto < 1.00]\n";
-static const char fmt_tram[] = "[tram]  is coordinate space rotated to be tram %s\n";
+static const char fmt_tram[] = "[tram] is coordinate space rotated to be tram %s\n";
+static const char fmt_nxln[] = "[nxln] the next line number expected is %10d\n";
 
 void cm_print_m48e(nvObj_t *nv) { text_print(nv, fmt_m48e);}    // TYPE_INT
 void cm_print_mfoe(nvObj_t *nv) { text_print(nv, fmt_mfoe);}    // TYPE INT
@@ -2748,6 +2844,7 @@ void cm_print_mfo(nvObj_t *nv)  { text_print(nv, fmt_mfo);}     // TYPE FLOAT
 void cm_print_mtoe(nvObj_t *nv) { text_print(nv, fmt_mtoe);}    // TYPE INT
 void cm_print_mto(nvObj_t *nv)  { text_print(nv, fmt_mto);}     // TYPE FLOAT
 void cm_print_tram(nvObj_t *nv) { text_print(nv, fmt_tram);};   // TYPE BOOL
+void cm_print_nxln(nvObj_t *nv) { text_print(nv, fmt_nxln);};   // TYPE INT
 
 /*
  * axis print functions

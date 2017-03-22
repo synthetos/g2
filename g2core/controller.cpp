@@ -48,6 +48,10 @@
 
 #include "MotatePower.h"
 
+#if MARLIN_COMPAT_ENABLED == true
+#include "marlin_compatibility.h"
+#endif
+
 /***********************************************************************************
  **** STRUCTURE ALLOCATIONS *********************************************************
  ***********************************************************************************/
@@ -167,6 +171,10 @@ static void _controller_HSM()
     DISPATCH(cm_jogging_cycle_callback());      // jog cycle operation
     DISPATCH(cm_deferred_write_callback());     // persist G10 changes when not in machining cycle
 
+#if MARLIN_COMPAT_ENABLED == true
+    DISPATCH(marlin_callback());                // handle Marlin stuff - may return EAGAIN, must be after planner_callback!
+#endif
+
 //----- command readers and parsers --------------------------------------------------//
 
     DISPATCH(_sync_to_planner());               // ensure there is at least one free buffer in planning queue
@@ -221,7 +229,17 @@ static void _dispatch_kernel(const devflags_t flags)
         // It's possible to let some stuff through, but that's not happening yet.
         return;
     }
-    
+
+#if MARLIN_COMPAT_ENABLED == true
+    // marlin_handle_fake_stk500 returns true if it responded to a stk500v2 message
+    if (marlin_handle_fake_stk500(cs.bufp)) {
+        js.json_mode = MARLIN_COMM_MODE;
+        sr.status_report_verbosity = SR_OFF;
+        qr.queue_report_verbosity = QR_OFF;
+        return;
+    }
+#endif
+
     while ((*cs.bufp == SPC) || (*cs.bufp == TAB)) {        // position past any leading whitespace
         cs.bufp++;
     }
@@ -263,6 +281,13 @@ static void _dispatch_kernel(const devflags_t flags)
         text_response(gcode_parser(cs.bufp), cs.saved_buf);
     }
 #endif
+
+#if MARLIN_COMPAT_ENABLED == true
+    else if (js.json_mode == MARLIN_COMM_MODE) {                   // handle marlin-specific protocol gcode
+        cs.comm_request_mode = MARLIN_COMM_MODE;                   // mode of this command
+        marlin_response(gcode_parser(cs.bufp), cs.saved_buf);
+    }
+#endif
     else {  // anything else is interpreted as Gcode
         cs.comm_request_mode = JSON_MODE;                   // mode of this command
 
@@ -272,12 +297,37 @@ static void _dispatch_kernel(const devflags_t flags)
         nv_copy_string(nv, cs.bufp);                        // copy the Gcode line
         nv->valuetype = TYPE_STRING;
         status = gcode_parser(cs.bufp);
+        
+#if MARLIN_COMPAT_ENABLED == true
+        if (js.json_mode == MARLIN_COMM_MODE) {             // in case a marlin-specific M-code was found
+            cs.comm_request_mode = MARLIN_COMM_MODE;        // mode of this command
+            // We are switching to marlin_comm_mode, kill status reports and queue reports
+            sr.status_report_verbosity = SR_OFF;
+            qr.queue_report_verbosity = QR_OFF;
+            marlin_response(status, cs.saved_buf);
+            return;
+        }
+#endif
+
         nv_print_list(status, TEXT_NO_PRINT, JSON_RESPONSE_FORMAT);
         sr_request_status_report(SR_REQUEST_TIMED);         // generate incremental status report to show any changes
     }
 }
 
 /**** Local Functions ********************************************************/
+
+
+/*
+ * _reset_comms_mode() - reset the communications mode (and other effected settings) after connection or disconnection
+ */
+void _reset_comms_mode() {
+    // reset the communications mode
+    cs.comm_mode = COMM_MODE;
+    js.json_mode = (COMM_MODE < AUTO_MODE) ? COMM_MODE : JSON_MODE;
+    sr.status_report_verbosity = STATUS_REPORT_VERBOSITY;
+    qr.queue_report_verbosity = QUEUE_REPORT_VERBOSITY;
+}
+
 /* CONTROLLER STATE MANAGEMENT
  * _controller_state() - manage controller connection, startup, and other state changes
  */
@@ -287,9 +337,24 @@ static stat_t _controller_state()
 {
     if (cs.controller_state == CONTROLLER_CONNECTED) {        // first time through after reset
         cs.controller_state = CONTROLLER_STARTUP;
+        
         // This is here just to put a small delay in before the startup message.
+#if MARLIN_COMPAT_ENABLED == true
+        // For Marlin compatibility, we need this to be long enough for the UI to say something and reveal
+        // if it's a Marlin-compatible UI.
+        if (xio_connected()) {
+            // xio_connected will only return true for USB and other non-permanent connections
+            _connection_timeout.set(2000);
+        } else {
+            _connection_timeout.set(1);
+        }
+#else
         _connection_timeout.set(10);
+#endif
     } else if ((cs.controller_state == CONTROLLER_STARTUP) && (_connection_timeout.isPast())) {        // first time through after reset
+        if (MARLIN_COMM_MODE != js.json_mode) { // MARLIN_COMM_MODE is always defined, just not always used
+            _reset_comms_mode();
+        }
         cs.controller_state = CONTROLLER_READY;
         rpt_print_system_ready_message();
     }
@@ -302,9 +367,14 @@ static stat_t _controller_state()
  */
 
 void controller_set_connected(bool is_connected) {
+    // turn off reports while no-one's listening or we determine what dialect they speak
+    sr.status_report_verbosity = SR_OFF;
+    qr.queue_report_verbosity = QR_OFF;
+
     if (is_connected) {
         cs.controller_state = CONTROLLER_CONNECTED; // we JUST connected
     } else {  // we just disconnected from the last device, we'll expect a banner again
+        _reset_comms_mode();
         cs.controller_state = CONTROLLER_NOT_CONNECTED;
     }
 }
@@ -321,7 +391,10 @@ void controller_set_muted(bool is_muted) {
         const bool only_to_muted = true;
         xio_writeline("{\"muted\":true}\n", only_to_muted);
     } else {
-        // one channel just got unmuted, announce it (except to the muted)
+        // we're assuming anything that can be muted speaks g2core-dialect JSON
+        _reset_comms_mode();
+
+        // something was just unmuted (usually because USB disconnected), tell it
         xio_writeline("{\"muted\":false}\n");
     }
 }

@@ -60,8 +60,9 @@ typedef enum {
 
 #define SPINDLE_OVERRIDE_ENABLE false
 #define SPINDLE_OVERRIDE_FACTOR 1.00
-#define SPINDLE_OVERRIDE_MIN 0.05  // 5%
-#define SPINDLE_OVERRIDE_MAX 2.00  // 200%
+#define SPINDLE_OVERRIDE_MIN 0.05       // 5%
+#define SPINDLE_OVERRIDE_MAX 2.00       // 200%
+#define SPINDLE_OVERRIDE_RAMP_TIME 1    // change speed in seconds
 
 /*
  * Spindle control structure
@@ -99,8 +100,9 @@ void cm_spindle_off_immediate(void);
 void cm_spindle_optional_pause(bool option);    // stop spindle based on system options selected
 void cm_spindle_resume(float dwell_seconds);    // restart spindle after pause based on previous state
 
-// stat_t cm_spindle_override_enable(uint8_t flag);    // M51
-// stat_t cm_spindle_override_factor(uint8_t flag);    // M51.1
+stat_t cm_sso_control(const float P_word, const bool P_flag); // M51
+void cm_start_spindle_override(const float ramp_time, const float override_factor);
+void cm_end_spindle_override(const float ramp_time);
 
 stat_t cm_set_dir(nvObj_t* nv);
 stat_t cm_set_sso(nvObj_t* nv);

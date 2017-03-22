@@ -112,7 +112,13 @@ void rpt_print_loading_configs_message(void)
 
 void rpt_print_system_ready_message(void)
 {
+#if MARLIN_COMPAT_ENABLED == true
+    if (MARLIN_COMM_MODE != js.json_mode) {
+        _startup_helper(STAT_OK, "SYSTEM READY");
+    }
+#else
     _startup_helper(STAT_OK, "SYSTEM READY");
+#endif
     if (cs.comm_mode == TEXT_MODE) { text_response(STAT_OK, (char *)"");}// prompt
 }
 

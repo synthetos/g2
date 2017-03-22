@@ -33,7 +33,6 @@
 #include "g2core.h"
 #include "config.h"
 #include "hardware.h"
-#include "canonical_machine.h"  // needs cm_has_hold()
 #include "xio.h"
 #include "report.h"
 #include "controller.h"
@@ -168,6 +167,10 @@ struct xioDeviceWrapperBase {                // C++ base class for device primit
     virtual int16_t write(const char *buffer, int16_t len) { return -1; };
 
     virtual char *readline(devflags_t limit_flags, uint16_t &size) { return nullptr; };
+
+#if MARLIN_COMPAT_ENABLED == true
+    virtual void exitFakeBootloaderMode() {};
+#endif
 };
 
 // Here we create the xio_t class, which has convenience methods to handle cross-device actions as a whole.
@@ -352,18 +355,18 @@ struct xio_t {
 
         // Always check control-capable devices FIRST
         for (uint8_t dev=0; dev < _dev_count; dev++) {
-            if (!DeviceWrappers[dev]->isActive())
+            if (!DeviceWrappers[dev]->isActive()) {
                 continue;
-
+            }
+                        
             // If this channel is a DATA only, skip it this pass
-            if (!DeviceWrappers[dev]->isCtrl())
+            if (!DeviceWrappers[dev]->isCtrl()) {
                 continue;
-
+            }            
             ret_buffer = DeviceWrappers[dev]->readline(DEV_IS_CTRL, size);
 
             if (size > 0) {
                 flags = DeviceWrappers[dev]->flags;
-
                 return ret_buffer;
             }
         }
@@ -378,17 +381,23 @@ struct xio_t {
 
                 if (size > 0) {
                     flags = DeviceWrappers[dev]->flags;
-
                     return ret_buffer;
                 }
             }
         }
-
         size = 0;
         flags = 0;
 
         return (NULL);
     };
+
+#if MARLIN_COMPAT_ENABLED == true
+    void exitFakeBootloaderMode() {
+        for (int8_t i = 0; i < _dev_count; ++i) {
+            DeviceWrappers[i]->exitFakeBootloaderMode();
+        }
+    };
+#endif
 
     uint16_t magic_end;
 };
@@ -441,6 +450,32 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
     volatile uint16_t _last_scan_offset;  // DEBUGGING
 
     bool _last_returned_a_control = false;
+
+#if MARLIN_COMPAT_ENABLED == true
+    enum class STK500V2_State {
+        Done,      // not in the faked stk500v2 bootloader
+        Timeout,   // timeout period, waiting for a start character
+        Start,     // waiting for 0x1B
+        Sequence,  // waiting for sequence byte
+        Length_0,  // waiting for MSB of length
+        Length_1,  // waiting for LSB of length
+        Header_End,// waiting for 0x0E
+        Data,      // waiting for more data
+        Checksum   // waiting for checksum byte
+    };
+    STK500V2_State _stk_parser_state;
+    uint16_t _stk_packet_data_length;
+    Motate::Timeout _stk_timeout;
+
+    void startFakeBootloaderMode() {
+        _stk_parser_state = STK500V2_State::Timeout;
+        _stk_timeout.set(2000); // two seconds
+    }
+
+    void exitFakeBootloaderMode() {
+        _stk_parser_state = STK500V2_State::Done;
+    }
+#endif
 
     LineRXBuffer(owner_type owner) : parent_type{owner} {};
 
@@ -596,14 +631,80 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
         while (_isMoreToScan()) {
             bool ends_line  = false;
             bool is_control = false;
-
             char c = _data[_scan_offset];
+
+#if MARLIN_COMPAT_ENABLED == true
+            // it's possible something will try to talk stk500v2 to us.
+            // See https://github.com/synthetos/g2/wiki/Marlin-Compatibility#stk500v2
+
+            if ((_stk_parser_state == STK500V2_State::Done) && (c == 0)) {
+                _debug_trap("scan ran into NULL (Marlin-mode)");
+                flush(); // consider the connection and all data trashed
+                return false;
+            }
+
+            if (_stk_parser_state >= STK500V2_State::Timeout) {
+                if (_stk_parser_state == STK500V2_State::Timeout) {
+                    if (_stk_timeout.isPast()) {
+                        _stk_parser_state = STK500V2_State::Done;
+                        // start over, outside of stk500v2 mode
+                        continue;
+                    }
+                    // if we got something before the timeout, then we're in stk500v2 mode
+                    // we'll look at what we got and maybe exit anyway
+                    _stk_parser_state = STK500V2_State::Start;
+                }
+                if (_stk_parser_state == STK500V2_State::Start) {
+                    if (c == 0x1B) {
+                        _stk_parser_state = STK500V2_State::Sequence;
+
+                        // this is the start of this "line" and we can "read" (skip) everything up to here.
+                        _read_offset = _scan_offset;
+                        _line_start_offset = _scan_offset;
+                    }
+                    else if ((c == '{') || (c == 'N') || (c == '\n') || (c == '\r') || (c == 'G') || (c == 'M')) {
+                        _stk_parser_state = STK500V2_State::Done;           // jump out of bootloader mode
+                        _read_offset = _scan_offset;
+                        continue;
+                    }
+                } else if (_stk_parser_state == STK500V2_State::Sequence) {
+                    _stk_parser_state = STK500V2_State::Length_0;            // we ignore the sequence
+                } else if (_stk_parser_state == STK500V2_State::Length_0) {
+                    _stk_packet_data_length = c << 8;
+                    _stk_parser_state = STK500V2_State::Length_1;
+                } else if (_stk_parser_state == STK500V2_State::Length_1) {
+                    _stk_packet_data_length |= c;
+                    _stk_parser_state = STK500V2_State::Header_End;
+                } else if (_stk_parser_state == STK500V2_State::Header_End) {
+                    if (c == 0x0E) {
+                        _stk_parser_state = STK500V2_State::Data;
+                    } else {   // end-of-header marker was corrupt, start over
+                        _stk_packet_data_length = 0;
+                        _read_offset = _scan_offset;
+                        _stk_parser_state = STK500V2_State::Start;
+                    }
+                } else if (_stk_parser_state == STK500V2_State::Data) {
+                    if (--_stk_packet_data_length == 0) {                   // we don't read the data here, just return it
+                        _stk_parser_state = STK500V2_State::Checksum;
+                    }
+                } else if (_stk_parser_state == STK500V2_State::Checksum) {
+                    // We do NOT check the checksum, since if it's corrupt, we'd need to reply, and we can't reply here.
+                    // At this point, we at least have a complete packet we will use the "control" return mechanism to
+                    // handle this since controls don't have to be \r\n-terminated
+                    is_control = true;
+                    ends_line = true;
+                    _stk_parser_state = STK500V2_State::Start;              // this line is complete, reset the state engine
+                }
+            }
+            else
+#else   // not MARLIN_COMPAT_ENABLED
 
             if (c == 0) {
                 _debug_trap("scan ran into NULL");
                 flush(); // consider the connection and all data trashed
                 return false;
             }
+#endif  // MARLIN_COMPAT_ENABLED
 
             // Look for line endings
             if (c == '\r' || c == '\n') {
@@ -673,7 +774,6 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                     if (_data[_line_start_offset] == '{') {
                         is_control = true;
                     }
-
                     // TODO ---
                 }
 
@@ -708,8 +808,6 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             // move the start of the next skip section to after this skip
             _line_start_offset = _scan_offset;
         }
-
-
         return false; // no control was found
     };
 
@@ -998,11 +1096,11 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
                 //     set it as a MUTED channel, call controller_set_connected(true)
                 //       then controller_set_muted(true)
 
+                flush(); // toss anything that has been written so far.
 
                 setAsConnectedAndReady();
 
-                if (isAlwaysDataAndCtrl()) {
-                    // Case 1 (ignoring others)
+                if (isAlwaysDataAndCtrl()) {    // Case 1 (ignoring others)
                     setActive();
                     controller_set_connected(true);
 
@@ -1010,11 +1108,10 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
                     if (isMuteAsSecondary() && xio.othersConnected(this)) {
                         controller_set_muted(true); // something was muted
                     }
-
                     return;
                 }
 
-                if(!xio.othersConnected(this)) {
+                if (!xio.othersConnected(this)) {
                     // Case 1
                     setAsPrimaryActiveDualRole();
                     // report that there is now have a connection (only for the first one)
@@ -1023,15 +1120,17 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
                     if (xio.checkMutedSecondaryChannels()) {
                         controller_set_muted(true); // something was muted
                     }
+#if MARLIN_COMPAT_ENABLED == true
+                    // start the "fake bootloader" to signal the Host that Marlin (mode) is operating
+                    _rx_buffer.startFakeBootloaderMode();
+#endif
                 }
-                else if (isMuteAsSecondary()) {
-                    // Case 2b
+                else if (isMuteAsSecondary()) {     // Case 2b
                     setAsMuted();
                     controller_set_connected(true); // it DID just just get connected
                     controller_set_muted(true);     // but it muted it too
                 }
-                else {
-                    // Case 2a
+                else {                              // Case 2a
                     xio.removeDataFromPrimary();
                     if (xio.checkMutedSecondaryChannels()) {
                         controller_set_muted(true); // something was muted
@@ -1085,6 +1184,13 @@ struct xioDeviceWrapper : xioDeviceWrapperBase {    // describes a device for re
             } // flags & DEV_IS_CONNECTED
         }
     };
+
+#if MARLIN_COMPAT_ENABLED == true
+    void exitFakeBootloaderMode() override {
+        _rx_buffer.exitFakeBootloaderMode();
+    };
+#endif
+
 };
 
 
@@ -1121,6 +1227,14 @@ struct xioFlashFileDeviceWrapper : xioDeviceWrapperBase {    // describes a devi
         // to flush the file, just forget about it
         // next time it's used it'll get reset
         _current_file = nullptr;
+        cs.responses_suppressed = false;
+    }
+
+    bool flushToCommand() final {
+        // the end of the file is the next "command"
+        _current_file = nullptr;
+        cs.responses_suppressed = false;
+        return false;
     }
 
     int16_t write(const char *buffer, int16_t len) final {
@@ -1137,6 +1251,7 @@ struct xioFlashFileDeviceWrapper : xioDeviceWrapperBase {    // describes a devi
         if ((nullptr == from) && (_current_file->isDone())) {
             // all done sending this file, "close" it
             _current_file = nullptr;
+            cs.responses_suppressed = false;
             clearActive();
             return nullptr;
         }
@@ -1151,6 +1266,7 @@ struct xioFlashFileDeviceWrapper : xioDeviceWrapperBase {    // describes a devi
         // null-terminate the string
         *dst_ptr = 0;
 
+        cs.responses_suppressed = true;
         return _line_buffer;
     };
 };
@@ -1287,7 +1403,15 @@ void xio_flush_to_command() {
     return xio.flushToCommand();
 }
 
+#if MARLIN_COMPAT_ENABLED == true
+/*
+ * xio_end_fake_bootloader() - end the fake bootloader mode
+ */
 
+void xio_exit_fake_bootloader() {
+    return xio.exitFakeBootloaderMode();
+}
+#endif
 
 /***********************************************************************************
  * newlib-nano support functions

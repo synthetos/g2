@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		D44E72C11D663B0300ECD5DD /* coolant.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D44E72C01D663B0300ECD5DD /* coolant.cpp */; };
 		D457117C17053EFA00EA19A8 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D457117B17053EFA00EA19A8 /* Makefile */; };
+		D4694F9E1E295B5E00F813BA /* marlin_compatibility.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4694F9C1E295B5E00F813BA /* marlin_compatibility.cpp */; };
 		D48F5A56172CB1FA00D0E055 /* canonical_machine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A40172CB1F900D0E055 /* canonical_machine.cpp */; };
 		D48F5A57172CB1FA00D0E055 /* config_app.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A41172CB1F900D0E055 /* config_app.cpp */; };
 		D48F5A58172CB1FA00D0E055 /* config.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A42172CB1F900D0E055 /* config.cpp */; };
@@ -59,6 +60,8 @@
 		D44E72C21D663B0F00ECD5DD /* coolant.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = coolant.h; sourceTree = "<group>"; };
 		D4522DC91C45F41D0086AAE6 /* g2core_info.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = g2core_info.h; sourceTree = "<group>"; };
 		D457117B17053EFA00EA19A8 /* Makefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makefile; sourceTree = "<group>"; usesTabs = 1; xcLanguageSpecificationIdentifier = xcode.lang.sh; };
+		D4694F9C1E295B5E00F813BA /* marlin_compatibility.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = marlin_compatibility.cpp; sourceTree = "<group>"; };
+		D4694F9D1E295B5E00F813BA /* marlin_compatibility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = marlin_compatibility.h; sourceTree = "<group>"; };
 		D47B744C1D4925B4004FAB53 /* device */ = {isa = PBXFileReference; lastKnownFileType = folder; path = device; sourceTree = "<group>"; };
 		D48F5A40172CB1F900D0E055 /* canonical_machine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = canonical_machine.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D48F5A41172CB1F900D0E055 /* config_app.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = config_app.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
@@ -160,6 +163,8 @@
 				D48F5A74172CB21100D0E055 /* json_parser.h */,
 				D48F5A4A172CB1FA00D0E055 /* kinematics.cpp */,
 				D48F5A75172CB21100D0E055 /* kinematics.h */,
+				D4694F9C1E295B5E00F813BA /* marlin_compatibility.cpp */,
+				D4694F9D1E295B5E00F813BA /* marlin_compatibility.h */,
 				D48F5A4C172CB1FA00D0E055 /* persistence.cpp */,
 				D48F5A76172CB21100D0E055 /* persistence.h */,
 				D48F5A4D172CB1FA00D0E055 /* plan_arc.cpp */,
@@ -201,7 +206,7 @@
 /* Begin PBXLegacyTarget section */
 		D4037C091CDA42F300BC72AD /* G2 printrboardG2v3 PrintrbotPlus */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=PrintrbotPlus BOARD=printrboardG2v3 DEBUG=2";
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=PrintrbotPlus BOARD=printrboardG2v3 DEBUG=1";
 			buildConfigurationList = D4037C0A1CDA42F300BC72AD /* Build configuration list for PBXLegacyTarget "G2 printrboardG2v3 PrintrbotPlus" */;
 			buildPhases = (
 			);
@@ -420,6 +425,7 @@
 				D457117C17053EFA00EA19A8 /* Makefile in Sources */,
 				D4B657A718B5C23C00F8616C /* pwm.cpp in Sources */,
 				D44E72C11D663B0300ECD5DD /* coolant.cpp in Sources */,
+				D4694F9E1E295B5E00F813BA /* marlin_compatibility.cpp in Sources */,
 				D4B657A318B5C21600F8616C /* cycle_probing.cpp in Sources */,
 				D4D6453919BCAE3F0053705B /* plan_zoid.cpp in Sources */,
 				D4B657A218B5C21600F8616C /* cycle_jogging.cpp in Sources */,
