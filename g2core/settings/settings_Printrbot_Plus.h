@@ -57,8 +57,10 @@
 
 // Communications and reporting settings
 
+#define MARLIN_COMPAT_ENABLED true              // enable marlin compatibility mode
 #define COMM_MODE JSON_MODE                     // one of: TEXT_MODE, JSON_MODE
 #define XIO_ENABLE_FLOW_CONTROL FLOW_CONTROL_RTS // FLOW_CONTROL_OFF, FLOW_CONTROL_RTS
+#define XIO_UART_MUTES_WHEN_USB_CONNECTED 1                 // Mute the UART when USB connects
 
 #define TEXT_VERBOSITY TV_VERBOSE               // one of: TV_SILENT, TV_VERBOSE
 #define JSON_VERBOSITY JV_MESSAGES              // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE

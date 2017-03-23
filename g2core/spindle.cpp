@@ -369,7 +369,6 @@ void spindle_end_override(const float ramp_time)
     return;
 }
 
-
 /****************************
  * END OF SPINDLE FUNCTIONS *
  ****************************/

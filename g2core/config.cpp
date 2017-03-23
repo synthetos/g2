@@ -687,7 +687,7 @@ nvObj_t *nv_add_conditional_message(const char *string)    // conditionally add 
 
 void nv_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags)
 {
-    if (js.json_mode == JSON_MODE) {
+    if ((js.json_mode == JSON_MODE) || (js.json_mode == MARLIN_COMM_MODE)) {
         json_print_list(status, json_flags);
     } else {
         text_print_list(status, text_flags);

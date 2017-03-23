@@ -48,9 +48,10 @@
 #ifndef XIO_H_ONCE
 #define XIO_H_ONCE
 
-//#include "g2core.h"                // not required if used in g2core project
+//#include "g2core.h"           // not required if used in g2core project
 #include "config.h"             // required for nvObj typedef
 #include "canonical_machine.h"  // needed for cm_has_hold()
+#include "settings.h"           // needed for MARLIN_COMPAT_ENABLED
 
 /**** Defines, Macros, and  Assorted Parameters ****/
 
@@ -120,6 +121,9 @@ char *xio_readline(devflags_t &flags, uint16_t &size);
 int16_t xio_writeline(const char *buffer, bool only_to_muted = false);
 bool xio_connected();
 void xio_flush_to_command();
+#if MARLIN_COMPAT_ENABLED == true
+void xio_exit_fake_bootloader();
+#endif
 
 stat_t xio_set_spi(nvObj_t *nv);
 

@@ -49,6 +49,9 @@ struct hmHomingSingleton {          // persistent homing runtime variables
     bool   set_coordinates;         // G28.4 flag. true = set coords to zero at the end of homing cycle
     stat_t (*func)(int8_t axis);    // binding for callback function state machine
 
+//    float axes[AXES];             // local storage for axis words and associated flags
+    bool axis_flags[AXES];          // local storage for axis flags
+
     // per-axis parameters
     float direction;                // set to 1 for positive (max), -1 for negative (to min);
     float search_travel;            // signed distance to travel in search
@@ -58,9 +61,6 @@ struct hmHomingSingleton {          // persistent homing runtime variables
     float zero_backoff;             // distance to back off switch before setting zero
     float max_clear_backoff;        // maximum distance of switch clearing backoffs before erring out
     float setpoint;                 // ultimate setpoint, usually zero, but not always
-
-//    float axes[AXES];               // local storage for axis words and associated flags
-    bool axis_flags[AXES];
 
     // state saved from gcode model
     cmUnitsMode    saved_units_mode;      // G20,G21 global setting

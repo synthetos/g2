@@ -586,6 +586,7 @@ void mp_queue_command(void(*cm_exec)(float *, bool *), float *value, bool *flag)
 stat_t mp_runtime_command(mpBuf_t *bf);
 
 stat_t mp_json_command(char *json_string);
+stat_t mp_json_command_immediate(char *json_string);
 stat_t mp_json_wait(char *json_string);
 
 stat_t mp_dwell(const float seconds);

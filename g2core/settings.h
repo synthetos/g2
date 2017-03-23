@@ -35,7 +35,11 @@
 #ifndef SETTINGS_H_ONCE
 #define SETTINGS_H_ONCE
 
-#include "canonical_machine.h"
+//#include "canonical_machine.h"
+
+// Defines that need to be here instead of a more logical place
+
+#define RADIUS_MIN          (0.0001)            // minimum value for ABC radius settings
 
 /**** MACHINE PROFILES ******************************************************
  *
@@ -61,7 +65,7 @@
 #define stringify2(a) #a
 #define stringify(a) stringify2(a)
 
-//static_assert ( bool_constexpr , message ) // bool_constexpr must be true or assertion will fail
+//static_assert ( bool_constexpr , message )    // bool_constexpr must be true or assertion will fail
 static_assert ( (A_RADIUS > RADIUS_MIN), "A axis radius must be more than " stringify(RADIUS_MIN) ", but is " stringify(A_RADIUS) );
 static_assert ( (B_RADIUS > RADIUS_MIN), "B axis radius must be more than " stringify(RADIUS_MIN) ", but is " stringify(B_RADIUS) );
 static_assert ( (C_RADIUS > RADIUS_MIN), "C axis radius must be more than " stringify(RADIUS_MIN) ", but is " stringify(C_RADIUS) );

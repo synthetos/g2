@@ -116,11 +116,11 @@ void stepper_init()
     dda_timer.setInterrupts(kInterruptOnOverflow | kInterruptPriorityHighest);
 
     // setup software interrupt exec timer & initial condition
-    exec_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityMedium);
+    exec_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityHigh);
     st_pre.buffer_state = PREP_BUFFER_OWNED_BY_EXEC;
 
     // setup software interrupt forward plan timer & initial condition
-    fwd_plan_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityLow);
+    fwd_plan_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityMedium);
 
     // setup motor power levels and apply power level to stepper drivers
     for (uint8_t motor=0; motor<MOTORS; motor++) {
@@ -203,6 +203,7 @@ stat_t st_clc(nvObj_t *nv)    // clear diagnostic counters, reset stepper prep
  *
  *  Handles motor power-down timing, low-power idle, and adaptive motor power
  */
+
 stat_t st_motor_power_callback()     // called by controller
 {
     if (!mp_is_phat_city_time()) {   // don't process this if you are time constrained in the planner
@@ -210,7 +211,10 @@ stat_t st_motor_power_callback()     // called by controller
     }
 
     bool have_actually_stopped = false;
-    if ((!st_runtime_isbusy()) && (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_LOADER)) {    // if there are no moves to load...
+    if ((!st_runtime_isbusy()) &&
+        (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_LOADER) &&
+//        (cm_get_cycle_state() == CYCLE_OFF)
+        (cm_get_machine_state() != MACHINE_CYCLE)) {    // if there are no moves to load...
         have_actually_stopped = true;
     }
 

@@ -85,7 +85,7 @@ static stat_t _get_nv_pair(nvObj_t *nv, char **pstr, int8_t *depth);
  *    _json_parser_execute() executes sets and gets in an application agnostic way. It should work for other apps than g2core
  */
 
-void json_parser(char *str)
+stat_t json_parser(char *str, bool suppress_response) // suppress_response defaults to false, see decalaration in .h
 {
     nvObj_t *nv = nv_reset_nv_list();               // get a fresh nvObj list
     stat_t status = _json_parser_kernal(nv, str);
@@ -93,11 +93,12 @@ void json_parser(char *str)
         nv = nv_body;
         status = _json_parser_execute(nv);
     }
-    if (status == STAT_COMPLETE) {                  // skip the print if returning from something that already did it.
-        return;
+    if (suppress_response || (status == STAT_COMPLETE)) {  // skip the print if returning from something that already did it.
+        return status;
     }
     nv_print_list(status, TEXT_MULTILINE_FORMATTED, JSON_RESPONSE_FORMAT);
     sr_request_status_report(SR_REQUEST_TIMED);     // generate incremental status report to show any changes
+    return STAT_OK;
 }
 
 // This is almost the same as json_parser, except it doesn't *always* execute the parsed out list, and it never returns a reponse
@@ -529,7 +530,7 @@ void json_print_list(stat_t status, uint8_t flags)
 
 void json_print_response(uint8_t status, const bool only_to_muted /*= false*/)
 {
-    if (js.json_verbosity == JV_SILENT) {                   // silent means no responses
+    if ((js.json_verbosity == JV_SILENT) || (cs.responses_suppressed)) {                   // silent means no responses
         return;
     }
     if (js.json_verbosity == JV_EXCEPTIONS)    {            // cutout for JV_EXCEPTIONS mode

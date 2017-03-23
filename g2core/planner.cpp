@@ -80,7 +80,6 @@ mpBuf_t mp2_queue[SECONDARY_QUEUE_SIZE];    // storage allocation for secondary 
 // Execution routines (NB: These are called from the LO interrupt)
 static stat_t _exec_dwell(mpBuf_t *bf);
 static stat_t _exec_command(mpBuf_t *bf);
-static stat_t _exec_json_wait(mpBuf_t *bf);
 
 // DIAGNOSTICS
 //static void _planner_time_accounting();
@@ -332,8 +331,9 @@ stat_t mp_runtime_command(mpBuf_t *bf)
 }
 
 /****************************************************************************************
+ * _exec_json_command() - execute json string (from exec system)
  * mp_json_command()    - queue a json command
- * _exec_json_command() - execute json string
+ * mp_json_command_immediate() - execute a json command with response suppressed
  */
 
 static void _exec_json_command(float *value, bool *flag)
@@ -351,28 +351,15 @@ stat_t mp_json_command(char *json_string)
     return (STAT_OK);
 }
 
-/****************************************************************************************
- * mp_json_wait()    - queue a json wait command
- * _exec_json_wait() - execute json wait string
- */
-
-stat_t mp_json_wait(char *json_string)
+stat_t mp_json_command_immediate(char *json_string)
 {
-    // Never supposed to fail, since we stopped parsing when we were full
-    jc.write_buffer(json_string);
-
-    mpBuf_t *bf;
-
-    // Never supposed to fail as buffer availability was checked upstream in the controller
-    if ((bf = mp_get_write_buffer()) == NULL) {
-        cm_panic(STAT_FAILED_GET_PLANNER_BUFFER, "mp_json_wait()");
-        return STAT_ERROR;
-    }
-    bf->block_type = BLOCK_TYPE_COMMAND;
-    bf->bf_func = _exec_json_wait;      // callback to planner queue exec function
-    mp_commit_write_buffer(BLOCK_TYPE_COMMAND);            // must be final operation before exit
-    return (STAT_OK);
+    return json_parser(json_string);
 }
+
+/****************************************************************************************
+ * _exec_json_wait() - execute json wait string
+ * mp_json_wait()    - queue a json wait command
+ */
 
 static stat_t _exec_json_wait(mpBuf_t *bf)
 {
@@ -405,6 +392,25 @@ static stat_t _exec_json_wait(mpBuf_t *bf)
     }
     return (STAT_OK);
 }
+
+stat_t mp_json_wait(char *json_string)
+{
+    // Never supposed to fail, since we stopped parsing when we were full
+    jc.write_buffer(json_string);
+
+    mpBuf_t *bf;
+
+    // Never supposed to fail as buffer availability was checked upstream in the controller
+    if ((bf = mp_get_write_buffer()) == NULL) {
+        cm_panic(STAT_FAILED_GET_PLANNER_BUFFER, "mp_json_wait()");
+        return STAT_ERROR;
+    }
+    bf->block_type = BLOCK_TYPE_COMMAND;
+    bf->bf_func = _exec_json_wait;      // callback to planner queue exec function
+    mp_commit_write_buffer(BLOCK_TYPE_COMMAND);            // must be final operation before exit
+    return (STAT_OK);
+}
+
 
 /****************************************************************************************
  * mp_dwell()    - queue a dwell

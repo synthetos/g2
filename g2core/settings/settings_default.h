@@ -189,6 +189,10 @@
 //#define STATUS_REPORT_DEFAULTS "line","vel","mpox","mpoy","mpoz","mpoa","coor","ofsa","ofsx","ofsy","ofsz","dist","unit","stat","homz","homy","homx","momo"
 #endif
 
+#ifndef MARLIN_COMPAT_ENABLED
+#define MARLIN_COMPAT_ENABLED       false                   // boolean, either true or false
+#endif
+
 // *** Gcode Startup Defaults *** //
 
 #ifndef GCODE_DEFAULT_UNITS

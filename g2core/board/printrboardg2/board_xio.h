@@ -31,6 +31,7 @@
 #define board_xio_h
 
 #include "settings.h"
+#include "xio.h"
 
 //******** USB ********
 #if XIO_HAS_USB

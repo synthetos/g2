@@ -1,9 +1,8 @@
 /*
- * g2core_info.h - g2core build information
+ * gcode_parser.h - rs274/ngc Gcode parser
  * This file is part of the g2core project
  *
  * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
- * Copyright (c) 2010 - 2017 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -18,16 +17,14 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef G2CORE_INFO_H_ONCE
-#define G2CORE_INFO_H_ONCE
+#ifndef GCODE_H_ONCE
+#define GCODE_H_ONCE
 
-#define G2CORE_FIRMWARE_BUILD			100.23  // Merged dev-227-marlin-compat - see #227 and #244
-#define G2CORE_FIRMWARE_VERSION         0.99
+/*
+ * Global Scope Functions
+ */
+stat_t gcode_parser(char* block);
+stat_t gc_get_gc(nvObj_t* nv);
+stat_t gc_run_gc(nvObj_t* nv);
 
-#ifdef GIT_VERSION
-#define G2CORE_FIRMWARE_BUILD_STRING	GIT_VERSION
-#else
-#define G2CORE_FIRMWARE_BUILD_STRING	"unknown"
-#endif
-
-#endif // G2CORE_INFO_H_ONCE
+#endif  // End of include guard: GCODE_H_ONCE
