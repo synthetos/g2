@@ -427,14 +427,12 @@ stat_t cm_set_absolute_origin(const float origin[], bool flag[]);           // G
 void cm_set_axis_origin(uint8_t axis, const float position);                // G28.3 planner callback
 
 stat_t cm_set_coord_system(const uint8_t coord_system);                     // G54 - G59
-stat_t cm_set_g92_offsets(const float offset[], const bool flag[]);      // G92
-stat_t cm_reset_g92_offsets(void);                                       // G92.1
-stat_t cm_suspend_g92_offsets(void);                                     // G92.2
-stat_t cm_resume_g92_offsets(void);                                      // G92.3
+stat_t cm_set_g92_offsets(const float offset[], const bool flag[]);         // G92
+stat_t cm_reset_g92_offsets(void);                                          // G92.1
+stat_t cm_suspend_g92_offsets(void);                                        // G92.2
+stat_t cm_resume_g92_offsets(void);                                         // G92.3
 
 // Free Space Motion (4.3.4)
-//stat_t cm_straight_traverse(const float target[], const bool flags[]);      // G0
-//stat_t cm_straight_traverse(const float *target, const bool *flags);      // G0
 stat_t cm_straight_traverse(const float *target, const bool *flags, const uint8_t motion_profile); // G0
 stat_t cm_set_g28_position(void);                                           // G28.1
 stat_t cm_goto_g28_position(const float target[], const bool flags[]);      // G28
@@ -447,8 +445,6 @@ stat_t cm_set_feed_rate_mode(const uint8_t mode);                           // G
 stat_t cm_set_path_control(GCodeState_t *gcode_state, const uint8_t mode);  // G61, G61.1, G64
 
 // Machining Functions (4.3.6)
-//stat_t cm_straight_feed(const float target[], const bool flags[]);          // G1
-//stat_t cm_straight_feed(const float *target, const bool *flags);          // G1
 stat_t cm_straight_feed(const float *target, const bool *flags, const uint8_t motion_profile); //G1
 stat_t cm_dwell(const float seconds);                                       // G4, P parameter
 
@@ -673,73 +669,6 @@ stat_t cm_set_gdi(nvObj_t *nv);         // set gcode default distance mode
 
 #ifdef __TEXT_MODE
 
-/* <<<<<< HEAD
-  void cm_print_vel(nvObj_t *nv);       // model state reporting
-  void cm_print_feed(nvObj_t *nv);
-  void cm_print_line(nvObj_t *nv);
-  void cm_print_stat(nvObj_t *nv);
-  void cm_print_macs(nvObj_t *nv);
-  void cm_print_cycs(nvObj_t *nv);
-  void cm_print_mots(nvObj_t *nv);
-  void cm_print_hold(nvObj_t *nv);
-  void cm_print_home(nvObj_t *nv);
-  void cm_print_hom(nvObj_t *nv);
-  void cm_print_unit(nvObj_t *nv);
-  void cm_print_coor(nvObj_t *nv);
-  void cm_print_momo(nvObj_t *nv);
-  void cm_print_plan(nvObj_t *nv);
-  void cm_print_path(nvObj_t *nv);
-  void cm_print_dist(nvObj_t *nv);
-  void cm_print_admo(nvObj_t *nv);
-  void cm_print_frmo(nvObj_t *nv);
-  void cm_print_tool(nvObj_t *nv);
-  void cm_print_g92e(nvObj_t *nv);
-
-  void cm_print_gpl(nvObj_t *nv);    // Gcode defaults
-  void cm_print_gun(nvObj_t *nv);
-  void cm_print_gco(nvObj_t *nv);
-  void cm_print_gpa(nvObj_t *nv);
-  void cm_print_gdi(nvObj_t *nv);
-
-  void cm_print_lin(nvObj_t *nv);    // generic print for linear values
-  void cm_print_pos(nvObj_t *nv);    // print runtime work position in prevailing units
-  void cm_print_mpo(nvObj_t *nv);    // print runtime work position always in MM uints
-  void cm_print_ofs(nvObj_t *nv);    // print runtime work offset always in MM uints
-
-  void cm_print_jt(nvObj_t *nv);    // global CM settings
-  void cm_print_ct(nvObj_t *nv);
-  void cm_print_zl(nvObj_t *nv);
-  void cm_print_sl(nvObj_t *nv);
-  void cm_print_lim(nvObj_t *nv);
-  void cm_print_saf(nvObj_t *nv);
-
-  void cm_print_m48(nvObj_t *nv);
-  void cm_print_froe(nvObj_t *nv);
-  void cm_print_fro(nvObj_t *nv);
-  void cm_print_troe(nvObj_t *nv);
-  void cm_print_tro(nvObj_t *nv);
-
-    void cm_print_tram(nvObj_t *nv);    // print if the axis has been rotated
-
-  void cm_print_am(nvObj_t *nv);    // axis print functions
-  void cm_print_fr(nvObj_t *nv);
-  void cm_print_vm(nvObj_t *nv);
-  void cm_print_tm(nvObj_t *nv);
-  void cm_print_tn(nvObj_t *nv);
-  void cm_print_jm(nvObj_t *nv);
-  void cm_print_jh(nvObj_t *nv);
-  void cm_print_ra(nvObj_t *nv);
-
-  void cm_print_hi(nvObj_t *nv);
-  void cm_print_hd(nvObj_t *nv);
-  void cm_print_sv(nvObj_t *nv);
-  void cm_print_lv(nvObj_t *nv);
-  void cm_print_lb(nvObj_t *nv);
-  void cm_print_zb(nvObj_t *nv);
-  void cm_print_cofs(nvObj_t *nv);
-  void cm_print_cpos(nvObj_t *nv);
-  
-=======*/
     void cm_print_vel(nvObj_t *nv);       // model state reporting
     void cm_print_feed(nvObj_t *nv);
     void cm_print_line(nvObj_t *nv);
@@ -786,12 +715,6 @@ stat_t cm_set_gdi(nvObj_t *nv);         // set gcode default distance mode
     void cm_print_troe(nvObj_t *nv);
     void cm_print_tro(nvObj_t *nv);
 
-//    void cm_print_m48e(nvObj_t *nv);
-//    void cm_print_mfoe(nvObj_t *nv);
-//    void cm_print_mfo(nvObj_t *nv);
-//    void cm_print_mtoe(nvObj_t *nv);
-//    void cm_print_mto(nvObj_t *nv);
-
     void cm_print_tram(nvObj_t *nv);        // print if the axis has been rotated
     void cm_print_nxln(nvObj_t *nv);    // print the value of the next line number expected
 
@@ -812,8 +735,6 @@ stat_t cm_set_gdi(nvObj_t *nv);         // set gcode default distance mode
     void cm_print_zb(nvObj_t *nv);
     void cm_print_cofs(nvObj_t *nv);
     void cm_print_cpos(nvObj_t *nv);
-
-//>>>>>>> refs/heads/edge
 
 #else // __TEXT_MODE
 

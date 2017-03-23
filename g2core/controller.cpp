@@ -288,8 +288,8 @@ static void _dispatch_kernel(const devflags_t flags)
 #endif
 
 #if MARLIN_COMPAT_ENABLED == true
-    else if (js.json_mode == MARLIN_COMM_MODE) {                   // handle marlin-specific protocol gcode
-        cs.comm_request_mode = MARLIN_COMM_MODE;                   // mode of this command
+    else if (js.json_mode == MARLIN_COMM_MODE) {            // handle marlin-specific protocol gcode
+        cs.comm_request_mode = MARLIN_COMM_MODE;            // mode of this command
         marlin_response(gcode_parser(cs.bufp), cs.saved_buf);
     }
 #endif

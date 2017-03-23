@@ -35,11 +35,9 @@
 #ifndef SETTINGS_H_ONCE
 #define SETTINGS_H_ONCE
 
-//#include "canonical_machine.h"
+// Defines that need to be here instead of a more logical place like canonical_machine.h
 
-// Defines that need to be here instead of a more logical place
-
-#define RADIUS_MIN          (0.0001)            // minimum value for ABC radius settings
+#define RADIUS_MIN     (0.0001)   // minimum value for ABC radius settings
 
 /**** MACHINE PROFILES ******************************************************
  *

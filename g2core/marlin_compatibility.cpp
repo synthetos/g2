@@ -17,6 +17,15 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+/*
+ * This file contains most of the code needed to support marlin compatibility mode.
+ * Other files that are affected include:
+ *  - gcode_parser.cpp/.h           heavily affected
+ *  - canonical_machine.cpp/.h      setting targets
+ *  - controller.cpp                main-loop callback, fake_stk500, specialized dispatching
+ *  - report.cpp                    system ready message tuned for marlin
+ *  - xio.cpp/.h                    protocol support
+ */
 #include "g2core.h"  // #1
 #include "config.h"  // #2
 #include "settings.h"
@@ -25,7 +34,6 @@
 
 #include "controller.h"
 #include "gcode_parser.h"
-//#include "gcode.h"
 #include "canonical_machine.h"
 #include "util.h"
 #include "xio.h"                // for char definitions

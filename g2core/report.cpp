@@ -112,6 +112,7 @@ void rpt_print_loading_configs_message(void)
 
 void rpt_print_system_ready_message(void)
 {
+    // If in Marlin mode and connected as Marlin do not send a startup message
 #if MARLIN_COMPAT_ENABLED == true
     if (MARLIN_COMM_MODE != js.json_mode) {
         _startup_helper(STAT_OK, "SYSTEM READY");

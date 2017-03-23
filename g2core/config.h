@@ -223,7 +223,6 @@ typedef enum {                      // value typing for config and JSON
 
     // transient types and types used during JSON processing
     TYPE_PARENT                     // object is a parent to a sub-object
-//    TYPE_NEW_LEVEL,                 // 'value' is actually child key at new nesting level
 //    TYPE_NULL_STRING,               // empty string - treated as null
 //    TYPE_TYPE_ERROR                 // none of the above
 } valueType;
