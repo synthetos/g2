@@ -363,35 +363,13 @@ static void _start_cycle_restart()
             default: {}
         }
         switch (cm1.hold_exit) {
-            case FEEDHOLD_EXIT_CYCLE: { 
-                op.add_action(_run_restart_cycle); 
-                break; 
-            }
-            case FEEDHOLD_EXIT_FLUSH: {
-                op.add_action(_run_queue_flush);
-                op.add_action(_run_program_stop);
-                break; 
-            }
-            case FEEDHOLD_EXIT_STOP: { 
-                op.add_action(_run_program_stop); 
-                break;
-            }
-            case FEEDHOLD_EXIT_END: { 
-                op.add_action(_run_program_end); 
-                break; 
-            }
-            case FEEDHOLD_EXIT_ALARM: { 
-                op.add_action(_run_alarm); 
-                break; 
-            }
-            case FEEDHOLD_EXIT_SHUTDOWN: { 
-                op.add_action(_run_shutdown); 
-                break; 
-            }
-            case FEEDHOLD_EXIT_INTERLOCK: { 
-                op.add_action(_run_interlock); 
-                break; 
-            }
+            case FEEDHOLD_EXIT_CYCLE:     { op.add_action(_run_restart_cycle); break; }
+            case FEEDHOLD_EXIT_FLUSH:     { op.add_action(_run_queue_flush); } // no break
+            case FEEDHOLD_EXIT_STOP:      { op.add_action(_run_program_stop); break; }
+            case FEEDHOLD_EXIT_END:       { op.add_action(_run_program_end); break; }
+            case FEEDHOLD_EXIT_ALARM:     { op.add_action(_run_alarm); break; }
+            case FEEDHOLD_EXIT_SHUTDOWN:  { op.add_action(_run_shutdown); break; }
+            case FEEDHOLD_EXIT_INTERLOCK: { op.add_action(_run_interlock); break; }
             default: {}
         }
     } 
@@ -442,14 +420,15 @@ static stat_t _run_queue_flush()            // typically runs from cm1 planner
  * _run_job_kill_final() - perform the job kill. queue flush, enter alarm with no movement
  * _start_job_kill()     - invoke the job kill function, which may start from various states
  *
- *  Job kill cases:
- *  Job kill from machining cycle   (1) hold, flush and enter ALARM state
- *  Job kill from PROBE             (2) flush and enter ALARM state
- *  Job kill from HOMING            (3) flush and enter ALARM state
- *  Job kill from JOGGING           (4) flush and enter ALARM state
- *  Job kill from feedhold          (5) flush and enter ALARM state
- *  Job kill from interlock         (6) flush and enter ALARM state
- *  job kill has no action if from: (7) READY, STOP, END, ALARM, SHUTDOWN, PANIC states
+ *  Job kill cases:                     Actions:
+ *  (0)  job kill has no action if from READY, STOP, END, ALARM, SHUTDOWN, PANIC states
+ *  (1)  Job kill from machining cycle   hold, flush and enter ALARM state
+ *  (2)  Job kill from PROBE             flush and enter ALARM state
+ *  (3)  Job kill from HOMING            flush and enter ALARM state
+ *  (4)  Job kill from JOGGING           flush and enter ALARM state
+ *  (5a) Job kill from finished hold     flush and enter ALARM state
+ *  (5b) Job kill from pending jold      flush and enter ALARM state
+ *  (6)  Job kill from interlock         flush and enter ALARM state
  */
 
 void cm_request_job_kill()
@@ -457,37 +436,50 @@ void cm_request_job_kill()
     cm1.job_kill_state = JOB_KILL_REQUESTED;
 }
 
-static stat_t _run_job_kill_final()
+// _run_job_kill() is completely synchronous so it can be called directly 
+// and does not need to be part of an opertion().
+
+static stat_t _run_job_kill()
 {
     // switch to p1 (may already be in it)
-    cm = &cm1;                              // return to primary planner (p1)
-    mp = (mpPlanner_t *)cm->mp;             // cm->mp is a void pointer
+    cm = &cm1;                                  // return to primary planner (p1)
+    mp = (mpPlanner_t *)cm->mp;                 // cm->mp is a void pointer
     mr = mp->mr;
+
+    _run_queue_flush();
 
     coolant_control_immediate(COOLANT_OFF, COOLANT_BOTH); // stop coolant
     spindle_control_immediate(SPINDLE_OFF);               // stop spindle
 
-    cm_set_motion_state(MOTION_STOP);       // set to stop and set the active model
+    cm_set_motion_state(MOTION_STOP);           // set to stop and set the active model
     cm->hold_state = FEEDHOLD_OFF;
     cm_program_end();
 
     rpt_exception(STAT_KILL_JOB, "Job killed by ^d");
     sr_request_status_report(SR_REQUEST_IMMEDIATE);    
+    cm->job_kill_state = JOB_KILL_OFF;
     return (STAT_OK);
 }
 
+// _start_job_kill() will be entered multiple times until the REQUEST is reset to OFF
+
 static void _start_job_kill()
 {
-    // Cases (1 - 4)
     if (cm1.machine_state == MACHINE_CYCLE) {
-        if (cm1.hold_state == FEEDHOLD_OFF) {
+        if (cm1.hold_state == FEEDHOLD_OFF) {   // Cases 1-4 - in cycle and not in a hold
             op.add_action(_feedhold_no_actions);
-        }        
-        op.add_action(_run_queue_flush);
-        op.add_action(_run_job_kill_final); // Case (5)
-        op.run_operation();
+//            op.add_action(_run_job_kill);
+//            cm1.job_kill_state = JOB_KILL_OFF;
+//            return;
+        }
+        if (cm1.hold_state == FEEDHOLD_HOLD) {  // Case 5a - in a finished hold
+            _run_job_kill();
+//            cm1.job_kill_state = JOB_KILL_OFF;
+//            return;
+        }
+        return;                                 // Case 5b - hold is in progress. Wait for hold to reach HOLD
     }
-    cm1.job_kill_state = JOB_KILL_OFF;      // nothing to do. turn off the request
+    cm1.job_kill_state = JOB_KILL_OFF;          // Case 0 - nothing to do. turn off the request
 }
 
 /****************************************************************************************

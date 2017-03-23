@@ -377,6 +377,7 @@ static uint8_t _populate_filtered_status_report()
     const char sr_str[] = "sr";
     bool has_data = false;
     char tmp[TOKEN_LEN+1];
+    float current_value;
     nvObj_t *nv = nv_reset_nv_list();           // sets nv to the start of the body
     
     // Set thresholds to detect value changes based on precision for the value. 
@@ -394,20 +395,28 @@ static uint8_t _populate_filtered_status_report()
         }
         nv_get_nvObj(nv);
 
-        // report values that have changed by more than 0.0001, but always stops and ends
-        if ((fabs(nv->value_int - sr.status_report_value[i]) > precision[cfgArray[nv->index].precision]) ||
+        // extract the value and cast into a float, regardless of value type 
+        if ((valueType)(cfgArray[nv->index].flags & F_TYPE_MASK) == TYPE_FLOAT) {
+            current_value = nv->value_flt;
+        } else {
+            current_value = (float)nv->value_int;
+        }
+
+        // report values that have changed by more than the indicated precision, but always stops and ends
+        if ((fabs(current_value - sr.status_report_value[i]) > precision[cfgArray[nv->index].precision]) ||
             ((nv->index == sr.stat_index) && fp_EQ(nv->value_int, COMBINED_PROGRAM_STOP)) ||
             ((nv->index == sr.stat_index) && fp_EQ(nv->value_int, COMBINED_PROGRAM_END))) {
 
             strcpy(tmp, nv->group);            // flatten out groups - WARNING - you cannot use strncpy here...
             strcat(tmp, nv->token);
             strcpy(nv->token, tmp);            //...or here.
-            sr.status_report_value[i] = nv->value_int;
-            if ((nv = nv->nx) == NULL) return (false);    // should never be NULL unless SR length exceeds available buffer array
+            sr.status_report_value[i] = current_value;
+            if ((nv = nv->nx) == NULL) {        // should never be NULL unless SR length exceeds available buffer array
+                return (false); 
+            }
             has_data = true;
-
         } else {
-            nv->valuetype = TYPE_EMPTY;     // filter this value out of the report
+            nv->valuetype = TYPE_EMPTY;         // filter this value out of the report
         }
     }
     return (has_data);
