@@ -423,6 +423,7 @@ uint8_t nv_get_type(nvObj_t *nv)
 /*
  * nv_coerce_types() - change types based on type field in configApp table
  */
+
 void nv_coerce_types(nvObj_t *nv)
 {
     if (nv->valuetype == TYPE_NULL) {               // don't change type if it's a GET query
