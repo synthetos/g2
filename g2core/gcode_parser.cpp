@@ -315,38 +315,47 @@ static stat_t _verify_checksum(char *str)
     return STAT_OK;
 }
 
-/*
+/****************************************************************************************
  * _normalize_gcode_block() - normalize a block (line) of gcode in place
  *
- *  Normalization functions:
- *   - Isolate "active comments"
- *   - Many of the following are performed in active comments as well
- *   - Strings are handled special (TODO)
- *   - Active comments are moved to the end of the string, and multiple active comments are merged into one
- *   - convert all letters to upper case
- *   - remove white space, control and other invalid characters
- *   - remove (erroneous) leading zeros that might be taken to mean Octal
- *   - identify and return start of comments and messages
- *   - signal if a block-delete character (/) was encountered in the first space
+ *  Baseline normalization functions:
+ *   - Isolate comments. See below.
+ *   The rest of this applies just to the GCODE string itself (not the comments):
+ *   - Remove white space, control and other invalid characters
+ *   - Convert all letters to upper case
+ *   - Remove (erroneous) leading zeros that might be taken to mean Octal
+ *   - Signal if a block-delete character (/) was encountered in the first space
  *   - NOTE: Assumes no leading whitespace as this was removed at the controller dispatch level
  *
  *  So this: "g1 x100 Y100 f400" becomes this: "G1X100Y100F400"
  *
- *  Comment and message handling:
+ *  Comment, active comment and message handling:
+ *   - Comment fields start with a '(' char or alternately a semicolon ';' or percent '%'
+ *   - Semicolon ';' or percent '%' end the line. All characters past are discarded
+ *   - Multiple embedded comments are acceptable if '(' form
  *   - Active comments start with exactly "({" and end with "})" (no relaxing, invalid is invalid)
- *   - Comments field start with a '(' char or alternately a semicolon ';'
- *   - Active comments are moved to the end of the string and merged.
- *   - Messages are converted to ({msg:"blah"}) active comments.
+ *   - Active comments are moved to the end of the string
+ *   - Multiple active comments are merged and moved to the end of the string
+ *   - Gcode message comments (MSG) are converted to ({msg:"blah"}) active comments
  *     - The 'MSG' specifier in comment can have mixed case but cannot cannot have embedded white spaces
- *   - Other "plain" comments will be discarded.
- *   - Multiple embedded comments are acceptable.
- *   - Multiple active comments will be merged.
- *   - Only ONE MSG comment will be accepted.
+ *     - Only ONE MSG comment will be accepted
+ *   - Other "plain" comments are discarded
  *
  *  Returns:
  *   - com points to comment string or to NUL if no comment
  *   - msg points to message string or to NUL if no comment
  *   - block_delete_flag is set true if block delete encountered, false otherwise
+ */
+/* Active comment notes:
+ *
+ *   We will convert as follows:
+ *   FROM: G0 ({blah: t}) x10 (comment)
+ *   TO  : g0x10\0{blah:t}
+ *   NOTES: Active comments moved to the end, stripped of (), everything lowercased, and plain comment removed.
+ *
+ *   FROM: M100 ({a:t}) (comment) ({b:f}) (comment)
+ *   TO  : m100\0{a:t,b:f}
+ *   NOTES: multiple active comments merged, stripped of (), and actual comments ignored.
  */
 
 char _normalize_scratch[RX_BUFFER_SIZE];
@@ -357,27 +366,12 @@ void _normalize_gcode_block(char *str, char **active_comment, uint8_t *block_del
 
     char *gc_rd = str;                  // read pointer
     char *gc_wr = _normalize_scratch;   // write pointer
-
     char *ac_rd = str;                  // Active Comment read pointer
     char *ac_wr = _normalize_scratch;   // Active Comment write pointer
-
     bool last_char_was_digit = false;   // used for octal stripping
-
-    /* Active comment notes:
-
-     We will convert as follows:
-        FROM: G0 ({blah: t}) x10 (comment)
-        TO  : g0x10\0{blah:t}
-        NOTES: Active comments moved to the end, stripped of (), everything lowercased, and plain comment removed.
-
-        FROM: M100 ({a:t}) (comment) ({b:f}) (comment)
-        TO  : m100\0{a:t,b:f}
-        NOTES: multiple active comments merged, stripped of (), and actual comments ignored.
-      */
 
     // Move the ac_wr point forward one for every non-AC character we KEEP (plus one for a NULL in between)
     ac_wr++;                            // account for the in-between NULL
-
 
     // mark block deletes
     if (*gc_rd == '/') {
@@ -388,10 +382,8 @@ void _normalize_gcode_block(char *str, char **active_comment, uint8_t *block_del
     }
 
     while (*gc_rd != 0) {
-        // check for ';' or '%' comments that end the line.
-        if ((*gc_rd == ';') || (*gc_rd == '%')) {
-            // go ahead and snap the string off cleanly here
-            *gc_rd = 0;
+        if ((*gc_rd == ';') || (*gc_rd == '%')) {   // check for ';' or '%' comments that end the line
+            *gc_rd = 0;                             // go ahead and snap the string off cleanly here
             break;
         }
 
@@ -404,7 +396,7 @@ void _normalize_gcode_block(char *str, char **active_comment, uint8_t *block_del
                                     ((*(gc_rd+2) == 'g') || (*(gc_rd+2) == 'G'))
                 )) {
                 if (ac_rd == nullptr) {
-                    ac_rd = gc_rd; // note the start of the first AC
+                    ac_rd = gc_rd;      // note the start of the first AC
                 }
 
                 // skip the comment, handling strings carefully
@@ -416,7 +408,6 @@ void _normalize_gcode_block(char *str, char **active_comment, uint8_t *block_del
                         if ((*gc_rd == '\\') && (*(gc_rd+1) != 0)) {
                             gc_rd++; // Skip it, it's escaped.
                         }
-
                     } else if ((*gc_rd == ')')) {
                         break;
                     }
@@ -426,9 +417,7 @@ void _normalize_gcode_block(char *str, char **active_comment, uint8_t *block_del
                 }
             } else {
                 *(gc_rd-1) = ' ';       // Change the '(' to a space to simplify the comment copy later
-
-                // skip ahead until we find a ')' (or NULL)
-                while ((*gc_rd != 0) && (*gc_rd != ')')) {
+                while ((*gc_rd != 0) && (*gc_rd != ')')) {  // skip ahead until we find a ')' (or NULL)
                     gc_rd++;
                 }
             }
@@ -436,6 +425,7 @@ void _normalize_gcode_block(char *str, char **active_comment, uint8_t *block_del
             bool do_copy = false;
 
             // Perform Octal stripping - remove invalid leading zeros in number strings
+            // Otherwise number conversions can fail, as Gcode does not support octal but C libs do
             // Change 0123.004 to 123.004, or -0234.003 to -234.003
             if (isdigit(*gc_rd) || (*gc_rd == '.')) { // treat '.' as a digit so we don't strip after one
                 if (last_char_was_digit || (*gc_rd != '0') || !isdigit(*(gc_rd+1))) {
@@ -447,7 +437,6 @@ void _normalize_gcode_block(char *str, char **active_comment, uint8_t *block_del
                 last_char_was_digit = false;
                 do_copy = true;
             }
-
             if (do_copy) {
                 *(gc_wr++) = toupper(*gc_rd);
                 ac_wr++; // move the ac start position
@@ -458,10 +447,7 @@ void _normalize_gcode_block(char *str, char **active_comment, uint8_t *block_del
 
     // Enforce null termination
     *gc_wr = 0;
-
-    // note the beginning of the comments
-    char *comment_start = ac_wr;
-
+    char *comment_start = ac_wr;    // note the beginning of the comments
     if (ac_rd != nullptr) {
 
         // Now we'll copy the comments to the scratch
@@ -568,8 +554,7 @@ void _normalize_gcode_block(char *str, char **active_comment, uint8_t *block_del
     *active_comment = str + (comment_start - _normalize_scratch);
 }
 
-
-/*
+/****************************************************************************************
  * _get_next_gcode_word() - get gcode word consisting of a letter and a value
  *
  *  This function requires the Gcode string to be normalized.
@@ -630,7 +615,7 @@ static uint8_t _point(const float value)
     return((uint8_t)(value*10 - trunc(value)*10));    // isolate the decimal point as an int
 }
 
-/*
+/****************************************************************************************
  * _validate_gcode_block() - check for some gross Gcode block semantic violations
  */
 
@@ -655,7 +640,7 @@ static stat_t _validate_gcode_block(char *active_comment)
     return (STAT_OK);
 }
 
-/*
+/****************************************************************************************
  * _parse_gcode_block() - parses one line of NULL terminated G-Code.
  *
  *  All the parser does is load the state values in gn (next model state) and set flags
@@ -679,7 +664,7 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
     // Causes a later exception if
     //  (1) INVERSE_TIME_MODE is active and a feed rate is not provided or
     //  (2) INVERSE_TIME_MODE is changed to UNITS_PER_MINUTE and a new feed rate is missing
-    if (cm->gm.feed_rate_mode == INVERSE_TIME_MODE) {// new feed rate req'd when in INV_TIME_MODE
+    if (cm->gm.feed_rate_mode == INVERSE_TIME_MODE) {// new feed rate required when in INV_TIME_MODE
         gv.F_word = 0;
         gf.F_word = true;
     }
@@ -714,7 +699,6 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
 #if MARLIN_COMPAT_ENABLED == true
                 case 29: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_TRAM_BED);
 #endif
-
                 case 30: {
                     switch (_point(value)) {
                         case 0: SET_MODAL (MODAL_GROUP_G0, next_action, NEXT_ACTION_GOTO_G30_POSITION);
@@ -826,7 +810,7 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
                     break;
                 case 101: SET_NON_MODAL (next_action, NEXT_ACTION_JSON_WAIT);
 
-#if MARLIN_COMPAT_ENABLED == true
+#if MARLIN_COMPAT_ENABLED == true   // Note: case ordering and presence/absence of break;s is very important
                 case 20:marlin_list_sd_response();        status = STAT_COMPLETE; break;    // List SD card
                 case 21:                                                                    // Initialize SD card
                 case 22:                                  status = STAT_COMPLETE; break;    // Release SD card
@@ -842,7 +826,7 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
                 case 105: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_PRINT_TEMPERATURES);// request temperature report
                 case 106: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_SET_FAN_SPEED);    // set fan speed range 0 - 255
                 case 107: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_STOP_FAN);         // stop fan (speed = 0)
-                case 108: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_CANCEL_WAIT_TEMP); // cancel wait for temparature
+                case 108: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_CANCEL_WAIT_TEMP); // cancel wait for temperature
                 case 114: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_PRINT_POSITION);   // request position report
 
                 case 109:                gf.marlin_wait_for_temp = true; // NO break!       // set wait for temp and execute M104
@@ -895,7 +879,7 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
     return (_execute_gcode_block(active_comment));        // if successful execute the block
 }
 
-/*
+/****************************************************************************************
  * _execute_gcode_block() - execute parsed block
  *
  *  Conditionally (based on whether a flag is set in gf) call the canonical machining
