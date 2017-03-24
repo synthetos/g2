@@ -487,15 +487,15 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 
     struct SkipSections {
         struct SkipSection {
-            uint16_t start_offset; // the offset of the first character to skip
-            uint16_t end_offset;   // the offset of the next character to read after skipping
+            uint16_t start_offset;  // the offset of the first character to skip
+            uint16_t end_offset;    // the offset of the next character to read after skipping
         };
 
         static constexpr uint16_t _section_count = 16;
         SkipSection _sections[_section_count];
 
-        uint8_t read_section_idx; // index of the first skip section to skip
-        uint8_t write_section_idx; // index of the next skip section to populate
+        uint8_t read_section_idx;   // index of the first skip section to skip
+        uint8_t write_section_idx;  // index of the next skip section to populate
 
         bool isFull() {
             return ((write_section_idx+1)&(_section_count-1)) == read_section_idx;

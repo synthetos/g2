@@ -57,7 +57,7 @@
 
 // Communications and reporting settings
 
-#define USB_SERIAL_PORTS_EXPOSED    2           // Valid options are 1 or 2, only!
+#define USB_SERIAL_PORTS_EXPOSED    1           // Valid options are 1 or 2, only!
 #define MARLIN_COMPAT_ENABLED       false       // enable marlin compatibility mode
 #define COMM_MODE                   JSON_MODE   // one of: TEXT_MODE, JSON_MODE
 

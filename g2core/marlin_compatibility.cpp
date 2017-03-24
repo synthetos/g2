@@ -20,11 +20,11 @@
 /*
  * This file contains most of the code needed to support marlin compatibility mode.
  * Other files that are affected include:
- *  - gcode_parser.cpp/.h           heavily affected
- *  - canonical_machine.cpp/.h      setting targets
+ *  - gcode_parser.cpp/.h           big additions for handling Marlin gcode and other functions
+ *  - canonical_machine.cpp/.h      setting targets for relative extruder coordinates
  *  - controller.cpp                main-loop callback, fake_stk500, specialized dispatching
- *  - report.cpp                    system ready message tuned for marlin
- *  - xio.cpp/.h                    protocol support
+ *  - report.cpp                    system ready message suppressed for Marlin
+ *  - xio.cpp/.h                    Marlin protocol support
  */
 #include "g2core.h"  // #1
 #include "config.h"  // #2

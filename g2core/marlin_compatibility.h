@@ -47,7 +47,7 @@ stat_t marlin_start_tramming_bed();                             // G29
 
 stat_t marlin_list_sd_response();                               // M20
 stat_t marlin_select_sd_response(const char *file);             // M23
-stat_t marlin_set_extruder_mode(const uint8_t mode);         // M82, M82
+stat_t marlin_set_extruder_mode(const uint8_t mode);            // M82, M82
 stat_t marlin_disable_motors();                                 // M84
 stat_t marlin_set_motor_timeout(float s);                       // M84 Sxxx, M85 Sxxx, M18 Sxxx
 

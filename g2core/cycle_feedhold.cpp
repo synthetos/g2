@@ -436,8 +436,8 @@ void cm_request_job_kill()
     cm1.job_kill_state = JOB_KILL_REQUESTED;
 }
 
-// _run_job_kill() is completely synchronous so it can be called directly 
-// and does not need to be part of an opertion().
+// _run_job_kill() is completely synchronous so it can be called 
+// directly and does not need to be part of an opertion().
 
 static stat_t _run_job_kill()
 {
@@ -468,14 +468,9 @@ static void _start_job_kill()
     if (cm1.machine_state == MACHINE_CYCLE) {
         if (cm1.hold_state == FEEDHOLD_OFF) {   // Cases 1-4 - in cycle and not in a hold
             op.add_action(_feedhold_no_actions);
-//            op.add_action(_run_job_kill);
-//            cm1.job_kill_state = JOB_KILL_OFF;
-//            return;
         }
         if (cm1.hold_state == FEEDHOLD_HOLD) {  // Case 5a - in a finished hold
             _run_job_kill();
-//            cm1.job_kill_state = JOB_KILL_OFF;
-//            return;
         }
         return;                                 // Case 5b - hold is in progress. Wait for hold to reach HOLD
     }

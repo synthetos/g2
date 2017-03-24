@@ -60,8 +60,8 @@ typedef enum {                          // Used for detecting gcode errors. See 
 #define MODAL_GROUP_COUNT (MODAL_GROUP_M9+1)
 // Note 1: Our G0 omits G4,G30,G53,G92.1,G92.2,G92.3 as these have no axis components to error check
 
-/* The difference between NextAction and MotionMode is that NextAction is
- * used by the current block, and may carry non-modal commands, whereas
+/* The difference between NextAction and MotionMode (in canonical machine) is that 
+*  NextAction is used by the current block, and may carry non-modal commands, whereas
  * MotionMode persists across blocks (as G modal group 1)
  */
 
@@ -91,7 +91,7 @@ typedef enum {                                  // these are in order to optimiz
     NEXT_ACTION_JSON_COMMAND_ASYNC,             // M100.1
     NEXT_ACTION_JSON_WAIT,                      // M101
 
-#if MARLIN_COMPAT_ENABLED == true
+#if MARLIN_COMPAT_ENABLED == true               // supported Marlin Gcode and M codes. Also E
     NEXT_ACTION_MARLIN_TRAM_BED,                // G29
     NEXT_ACTION_MARLIN_DISABLE_MOTORS,          // M84
     NEXT_ACTION_MARLIN_SET_MT,                  // M84 (with S), M85
@@ -117,17 +117,16 @@ typedef struct GCodeInputValue {    // Gcode inputs - meaning depends on context
     gpNextAction next_action;       // handles G modal group 1 moves & non-modals
     cmMotionMode motion_mode;       // Group1: G0, G1, G2, G3, G38.2, G80, G81, G82, G83, G84, G85, G86, G87, G88, G89
     uint8_t program_flow;           // used only by the gcode_parser
-    uint32_t linenum;               // N word
+    uint32_t linenum;               // gcode N word
 
     float target[AXES];             // XYZABC where the move should go
     float arc_offset[3];            // IJK - used by arc commands
-    float arc_radius;               // R - radius value in arc radius mode
-
-    float F_word;                   // F - normalized to millimeters/minute
+    float arc_radius;               // R word - radius value in arc radius mode
+    float F_word;                   // F word - feedrate as present in the F word (will be normalized later)
+    float P_word;                   // P word - parameter used for dwell time in seconds, G10 commands
+    float S_word;                   // S word - usually in RPM
     uint8_t H_word;                 // H word - used by G43s
     uint8_t L_word;                 // L word - used by G10s
-    float P_word;                   // P - parameter used for dwell time in seconds, G10 coord select...
-    float S_word;                   // S word - in RPM
 
     uint8_t feed_rate_mode;         // See cmFeedRateMode for settings
     uint8_t select_plane;           // G17,G18,G19 - values to set plane to
@@ -148,9 +147,9 @@ typedef struct GCodeInputValue {    // Gcode inputs - meaning depends on context
     uint8_t spindle_control;        // 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
 
     bool m48_enable;                // M48/M49 input (enables for feed and spindle)
-    bool mfo_control;               // M50 feedrate override control
-    bool mto_control;               // M50.1 traverse override control
-    bool sso_control;               // M51 spindle speed override control
+    bool fro_control;               // M50 feedrate override control
+    bool tro_control;               // M50.1 traverse override control
+    bool spo_control;               // M51 spindle speed override control
 
 #if MARLIN_COMPAT_ENABLED == true
     float E_word;                       // E - "extruder" - may be interpreted any number of ways
@@ -171,10 +170,10 @@ typedef struct GCodeFlags {         // Gcode input flags
     bool arc_radius;
 
     bool F_word;
-    bool H_word;
-    bool L_word;
     bool P_word;
     bool S_word;
+    bool H_word;
+    bool L_word;
 
     bool feed_rate_mode;
     bool select_plane;
@@ -195,9 +194,9 @@ typedef struct GCodeFlags {         // Gcode input flags
     bool spindle_control;
 
     bool m48_enable;
-    bool mfo_control;
-    bool mto_control;
-    bool sso_control;
+    bool fro_control;
+    bool tro_control;
+    bool spo_control;
     
     bool checksum;
 
@@ -810,14 +809,14 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
                 case 9: SET_MODAL (MODAL_GROUP_M8, coolant_off,   COOLANT_OFF);
                 case 48: SET_MODAL (MODAL_GROUP_M9, m48_enable, true);
                 case 49: SET_MODAL (MODAL_GROUP_M9, m48_enable, false);
-                case 50: SET_MODAL (MODAL_GROUP_M9, mfo_control, true);
+                case 50:
                     switch (_point(value)) {
-                        case 0: SET_MODAL (MODAL_GROUP_M9, mfo_control, true);
-                        case 1: SET_MODAL (MODAL_GROUP_M9, mto_control, true);
+                        case 0: SET_MODAL (MODAL_GROUP_M9, fro_control, true);
+                        case 1: SET_MODAL (MODAL_GROUP_M9, tro_control, true);
                         default: status = STAT_GCODE_COMMAND_UNSUPPORTED;
                     }
                     break;
-                case 51: SET_MODAL (MODAL_GROUP_M9, sso_control, true);
+                case 51: SET_MODAL (MODAL_GROUP_M9, spo_control, true);
                 case 100:
                     switch (_point(value)) {
                         case 0: SET_NON_MODAL (next_action, NEXT_ACTION_JSON_COMMAND_SYNC);
@@ -950,7 +949,7 @@ stat_t _execute_gcode_block(char *active_comment)
     }
         
     EXEC_FUNC(cm_m48_enable, m48_enable);
-/*
+
     if (gf.fro_control) {                                   // feedrate override
         ritorno(cm_fro_control(gv.P_word, gf.P_word));
     }
@@ -960,7 +959,7 @@ stat_t _execute_gcode_block(char *active_comment)
     if (gf.spo_control) {                                   // spindle speed override
         ritorno(spindle_override_control(gv.P_word, gf.P_word));
     }
-*/
+
     EXEC_FUNC(cm_set_feed_rate_mode, feed_rate_mode);       // G93, G94
     EXEC_FUNC(cm_set_feed_rate, F_word);                    // F
 
