@@ -847,9 +847,11 @@ const cfgItem_t cfgArray[] = {
     { "sys","mfo", _fipn,3, cm_print_mfo, get_flt,cm_set_mfo,(float *)&cm.gmx.mfo_factor,           FEED_OVERRIDE_FACTOR},
     { "sys","mtoe",_fipn,0, cm_print_mtoe,get_ui8, set_01,   (float *)&cm.gmx.mto_enable,           TRAVERSE_OVERRIDE_ENABLE},
     { "sys","mto", _fipn,3, cm_print_mto, get_flt,cm_set_mto,(float *)&cm.gmx.mto_factor,           TRAVERSE_OVERRIDE_FACTOR},
-    { "sys","mt",  _fipn,2, st_print_mt,  get_flt, st_set_mt,(float *)&st_cfg.motor_power_timeout,  MOTOR_POWER_TIMEOUT},
-    { "",   "me",  _f0,  0, st_print_me,  get_nul, st_set_me,(float *)&cs.null, 0 },    // GET or SET to enable motors
-    { "",   "md",  _f0,  0, st_print_md,  get_nul, st_set_md,(float *)&cs.null, 0 },    // GET or SET to disable motors
+	
+	// Power management 
+    { "sys","mt",  _fipn,2, st_print_mt,  get_flt, st_set_mt,  (float *)&st_cfg.motor_power_timeout,  MOTOR_POWER_TIMEOUT},
+    { "",   "me",  _f0,  0, st_print_me,  st_set_me, st_set_me,(float *)&cs.null, 0 },    // SET to enable  motors (null value sets to maintain compatability)
+    { "",   "md",  _f0,  0, st_print_md,  st_set_md, st_set_md,(float *)&cs.null, 0 },    // SET to disable motors (null value sets to maintain compatability)
 
     // Spindle functions
     { "sys","spep",_fipn,0, cm_print_spep,get_ui8, set_01,   (float *)&spindle.enable_polarity,     SPINDLE_ENABLE_POLARITY },

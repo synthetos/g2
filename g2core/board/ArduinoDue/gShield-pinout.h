@@ -136,7 +136,7 @@ pin_number kSocket1_SPISlaveSelectPinNumber = -1;  // 10;
 pin_number kSocket1_InterruptPinNumber      = -1;
 pin_number kSocket1_StepPinNumber           = 2;
 pin_number kSocket1_DirPinNumber            = 5;
-pin_number kSocket1_EnablePinNumber         = 22;
+pin_number kSocket1_EnablePinNumber         = 8;   // Workaround for kGRBL_CommonEnablePinNumber not working (22 is default value)
 pin_number kSocket1_Microstep_0PinNumber    = 23;
 pin_number kSocket1_Microstep_1PinNumber    = 24;
 pin_number kSocket1_Microstep_2PinNumber    = -1;
@@ -208,7 +208,7 @@ pin_number kInput11_PinNumber = 65;
 pin_number kInput12_PinNumber = 51;
 
 pin_number kSpindle_EnablePinNumber = 12;
-pin_number kSpindle_DirPinNumber    = -1;  // 13;
+pin_number kSpindle_DirPinNumber    = 13;
 pin_number kSpindle_PwmPinNumber    = 11;
 pin_number kSpindle_Pwm2PinNumber   = 9;
 pin_number kCoolant_EnablePinNumber = 57;
@@ -258,12 +258,12 @@ pin_number kADC14_PinNumber = -1;  // Not physially pinned out
 
 
 // GRBL / gShield compatibility pins -- Due board ONLY
-
+// NOTE: These dont appear to work
 pin_number kGRBL_ResetPinNumber      = 54;
 pin_number kGRBL_FeedHoldPinNumber   = 55;
 pin_number kGRBL_CycleStartPinNumber = 56;
 
-pin_number kGRBL_CommonEnablePinNumber = 8;
+pin_number kGRBL_CommonEnablePinNumber = -1;
 
 /** NOTE: When adding pin definitions here, they must be
  *        added to ALL board pin assignment files, even if
