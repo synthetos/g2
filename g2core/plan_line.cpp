@@ -106,7 +106,7 @@ float mp_get_runtime_display_position(uint8_t axis) {
 
 /****************************************************************************************
  * mp_get_runtime_busy() - returns TRUE if motion control busy (i.e. robot is moving)
- * mp_runtime_is_idle()  - returns TRUE is steppers are not actively moving
+ * mp_runtime_is_idle()  - returns TRUE if steppers are not actively moving
  *
  *  Use mp_get_runtime_busy() to sync to the queue. If you wait until it returns
  *  FALSE you know the queue is empty and the motors have stopped.
@@ -600,6 +600,24 @@ static void _calculate_jerk(mpBuf_t* bf)
  *       so that the elapsed time from the start to the end of the motion is T plus
  *       any time required for acceleration or deceleration.
  */
+/*
+ *  Axis Decoupling Notes
+ *
+ *  Use cases:
+ *    - 3D mode   (Machining)   - All XYZABC axes must obey full jerk constraints
+ *    - 2.5d mode (Contouring)  - Treat as 3D mode (at least for now)
+ *    - 2D mode   (Routing)     - Routing moves: XY obey jerk, Z movement does not affect move time
+ *
+ *    - Case 1 - Z tab move w/XY movement - Z movement below 'delta' threshold
+ *               Z is allowed to move at indicated velocity without slowing down XY (decoupled)
+ *
+ *    - Case 2 - Z climb or plunge w/XY movement - Z movement above 'delta' threshold
+ *    - Case 3 - Z climb or plunge w/o X or Y movement - Z must obey velocity/jerk constraints
+ *
+ *  Z side loading factor - what's the maximum lateral force that be applied to the cutter?
+ *      F = ma
+ *      S(z) / V(xy)
+ */
 static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const float axis_square[]) 
 {
     float feed_time = 0;        // one of: XYZ time, ABC time or inverse time. Mutually exclusive
@@ -611,13 +629,13 @@ static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const floa
     // compute feed time for feeds and probe motion
     if (bf->gm.motion_mode != MOTION_MODE_STRAIGHT_TRAVERSE) {
         if (bf->gm.feed_rate_mode == INVERSE_TIME_MODE) {
-            feed_time             = bf->gm.feed_rate;  // NB: feed rate was un-inverted to minutes by cm_set_feed_rate()
+            feed_time = bf->gm.feed_rate;  // NB: feed rate was un-inverted to minutes by cm_set_feed_rate()
             bf->gm.feed_rate_mode = UNITS_PER_MINUTE_MODE;
         } else {
             // compute length of linear move in millimeters. Feed rate is provided as mm/min
             feed_time = sqrt(axis_square[AXIS_X] + axis_square[AXIS_Y] + axis_square[AXIS_Z]) / bf->gm.feed_rate;
-            // if no linear axes, compute length of multi-axis rotary move in degrees. Feed rate is provided as
-            // degrees/min
+            // if no linear axes, compute length of multi-axis rotary move in degrees. 
+            // Feed rate is provided as degrees/min
             if (fp_ZERO(feed_time)) {
                 feed_time = sqrt(axis_square[AXIS_A] + axis_square[AXIS_B] + axis_square[AXIS_C]) / bf->gm.feed_rate;
             }
@@ -628,7 +646,7 @@ static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const floa
         if (bf->axis_flags[axis]) {
             if (bf->gm.motion_mode == MOTION_MODE_STRAIGHT_TRAVERSE) {
                 tmp_time = fabs(axis_length[axis]) / cm->a[axis].velocity_max;
-            } else {  // gm.motion_mode == MOTION_MODE_STRAIGHT_FEED
+            } else {            // gm.motion_mode == MOTION_MODE_STRAIGHT_FEED
                 tmp_time = fabs(axis_length[axis]) / cm->a[axis].feedrate_max;
             }
             max_time = max(max_time, tmp_time);
