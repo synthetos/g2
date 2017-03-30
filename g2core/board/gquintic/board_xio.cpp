@@ -75,7 +75,7 @@ void board_hardware_init(void) // called 1st
 }
 
 
-void board_xio_init(void) // called later than board_hardware_init (there are thing in between)
+void board_xio_init(void) // called later than board_hardware_init (there are things in between)
 {
     // Init SPI
 #if XIO_HAS_SPI

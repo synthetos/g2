@@ -27,11 +27,13 @@
  */
 
 /***********************************************************************/
-/**** TestV9 profile - naked board *************************************/
+/**** AxiDraw v3 Configuration *****************************************/
 /***********************************************************************/
 
+#include "hardware.h"
+
 // ***> NOTE: The init message must be a single line with no CRs or LFs
-#define INIT_MESSAGE "Initializing configs to WaterColorBot v2 settings"
+#define INIT_MESSAGE "Initializing configs to AxiDraw v3 settings"
 
 #define JUNCTION_INTEGRATION_TIME   2.5    // cornering - usually between 0.5 and 2.0 (higher is faster)
 #define CHORDAL_TOLERANCE           0.01    // chordal accuracy for arc drawing (in mm)

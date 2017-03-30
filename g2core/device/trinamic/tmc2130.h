@@ -91,11 +91,11 @@ struct Trinamic2130 final : Stepper {
     template <typename SPIBus_t, typename chipSelect_t>
     Trinamic2130(SPIBus_t &spi_bus, const chipSelect_t &_cs) :
         _device{spi_bus.getDevice(_cs,
-                                  4000000, //1MHz
-                                  SPIDeviceMode::kSPIMode2 | SPIDeviceMode::kSPI8Bit,
+                                  4000000, //4MHz
+                                  SPIDeviceMode::kSPIMode1 | SPIDeviceMode::kSPI8Bit,
                                   0, // min_between_cs_delay_ns
                                   10, // cs_to_sck_delay_ns
-                                  0  // between_word_delay_ns
+                                  1  // between_word_delay_ns
                                   )}
     {};
 

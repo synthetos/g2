@@ -250,7 +250,7 @@ template<typename ADC_t, uint16_t min_temp = 0, uint16_t max_temp = 400>
 struct PT100 {
     float pullup_resistance;
     float inline_resistance;
-    bool wheatstone;
+    bool differential;
 
     ADC_t adc_pin {kNormal, [&]{this->adc_has_new_value();} };
     float raw_adc_voltage = 0.0;
@@ -258,16 +258,31 @@ struct PT100 {
 
     typedef PT100<ADC_t, min_temp, max_temp> type;
 
-    PT100(const float pullup_resistance_, const float inline_resistance_, const bool wheatstone_ = false)
+    PT100(const float pullup_resistance_, const float inline_resistance_, const bool differential_ = false)
     : pullup_resistance{ pullup_resistance_ },
       inline_resistance{ inline_resistance_ },
-      wheatstone{wheatstone_}
+      differential{differential_}
     {
         adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
         adc_pin.setVoltageRange(kSystemVoltage,
                                 get_voltage_of_temp(min_temp),
                                 get_voltage_of_temp(max_temp),
-                                wheatstone, // if wheatstone, then differential
+                                differential,
+                                6400.0);
+    };
+
+    template <typename... Ts>
+    PT100(const float pullup_resistance_, const float inline_resistance_, const bool differential_ = false, Ts&&... additional_values)
+    : pullup_resistance{ pullup_resistance_ },
+      inline_resistance{ inline_resistance_ },
+      differential{differential_},
+      adc_pin {additional_values...}
+    {
+        adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
+        adc_pin.setVoltageRange(kSystemVoltage,
+                                get_voltage_of_temp(min_temp),
+                                get_voltage_of_temp(max_temp),
+                                differential,
                                 6400.0);
     };
 
@@ -275,8 +290,8 @@ struct PT100 {
         // R = 100(1 + A*T + B*T^2); A = 3.9083*10^-3; B = -5.775*10^-7
         float r = 100 * (1 + 0.0039083*t + -0.0000005775*t*t) + inline_resistance;
 
-        if (wheatstone) {
-            return (r - pullup_resistance)/(2.0*(pullup_resistance + r));
+        if (differential) {
+            return (kSystemVoltage * r)/(2.0 * pullup_resistance + r);
         }
         return r/(r+pullup_resistance)*kSystemVoltage;
     };
@@ -293,9 +308,9 @@ struct PT100 {
 
     float get_resistance() {
         float r;
-        if (wheatstone) {
+        if (differential) {
             float v = raw_adc_voltage / kSystemVoltage;
-            r = pullup_resistance*(1-2.0*v)/(2.0*v+1.0) - inline_resistance;
+            r = (v * 2.0 * pullup_resistance)/(1.0 - v) - inline_resistance;
         } else {
             float v = raw_adc_voltage;
             r = ((pullup_resistance * v) / (kSystemVoltage - v)) - inline_resistance;
@@ -317,7 +332,7 @@ struct PT100 {
 
     // Call back function from the ADC to tell it that the ADC has a new sample...
     void adc_has_new_value() {
-        raw_adc_voltage = (raw_adc_voltage * 10.0 + adc_pin.getVoltage())/11.0;
+        raw_adc_voltage = (raw_adc_voltage*10.0 + adc_pin.getVoltage())/11.0;
         raw_adc_value = adc_pin.getRaw();
     };
 };

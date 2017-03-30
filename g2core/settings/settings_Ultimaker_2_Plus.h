@@ -259,6 +259,8 @@
 
 //** Temperature Sensors **
 
+#include "device/max31865/max31865.h"
+
 #define HAS_TEMPERATURE_SENSOR_1  true
 #if HAS_TEMPERATURE_SENSOR_1
 // Must choose Thermistor or PT100
@@ -269,8 +271,10 @@
         /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 4700 \
     }
 #else
-    #define TEMPERATURE_SENSOR_1_TYPE  PT100<ADCPin<kADC1_PinNumber>>
-    #define TEMPERATURE_SENSOR_1_INIT {/*pullup_resistance:*/ 100, /*inline_resistance*/0, /*wheatstone*/ true}
+    //#define TEMPERATURE_SENSOR_1_TYPE  PT100<ADCPin<kADC1_PinNumber>>
+    //#define TEMPERATURE_SENSOR_1_INIT {/*pullup_resistance:*/ 2200, /*inline_resistance*/0.003, /*differential*/ true}
+    #define TEMPERATURE_SENSOR_1_TYPE  PT100<MAX31865<SPIBus_used_t::SPIBusDevice>>
+    #define TEMPERATURE_SENSOR_1_INIT {/*pullup_resistance:*/ 2200, /*inline_resistance*/0.003, /*differential*/ false, spiBus, spiCSPinMux.getCS(6)}
 #endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_1
 
@@ -287,7 +291,7 @@
     }
 #else
     #define TEMPERATURE_SENSOR_2_TYPE  PT100<ADCPin<kADC3_PinNumber>>
-    #define TEMPERATURE_SENSOR_2_INIT {/*pullup_resistance:*/ 100, /*inline_resistance*/0}
+    #define TEMPERATURE_SENSOR_2_INIT {/*pullup_resistance:*/ 2200, /*inline_resistance*/0}
 #endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_2
 
@@ -303,7 +307,7 @@
     }
 #else
     #define TEMPERATURE_SENSOR_3_TYPE  PT100<ADCPin<kADC2_PinNumber>>
-    #define TEMPERATURE_SENSOR_3_INIT {/*pullup_resistance:*/ 100, /*inline_resistance*/0, /*wheatstone*/ true}
+    #define TEMPERATURE_SENSOR_3_INIT {/*pullup_resistance:*/ 2200, /*inline_resistance*/0.003, /*differential*/ true}
 #endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_3
 
