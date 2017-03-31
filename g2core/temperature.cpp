@@ -276,7 +276,7 @@ struct PT100 {
     : pullup_resistance{ pullup_resistance_ },
       inline_resistance{ inline_resistance_ },
       differential{differential_},
-      adc_pin {additional_values...}
+      adc_pin {[&]{this->adc_has_new_value();}, additional_values...}
     {
         adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
         adc_pin.setVoltageRange(kSystemVoltage,

@@ -69,7 +69,12 @@ struct MAX31865 final {
 
     // Constructor - this is the only time we directly use the SBIBus
     template <typename SPIBus_t, typename chipSelect_t>
-    MAX31865(SPIBus_t &spi_bus, const chipSelect_t &_cs, bool is_three_pin = false, bool fifty_hz = true) :
+    MAX31865(SPIBus_t &spi_bus,
+             const chipSelect_t &_cs,
+             bool is_three_pin = false,
+             bool fifty_hz = true
+             )
+    :
         _device{spi_bus.getDevice(_cs,
                                   5000000,
                                   SPIDeviceMode::kSPIMode2 | SPIDeviceMode::kSPI8Bit,
@@ -77,6 +82,26 @@ struct MAX31865 final {
                                   400, // cs_to_sck_delay_ns
                                   80   // between_word_delay_ns
                               )}
+    {
+        init(is_three_pin, fifty_hz);
+    };
+
+    template <typename SPIBus_t, typename chipSelect_t>
+    MAX31865(std::function<void(void)> &&_interrupt,
+             SPIBus_t &spi_bus,
+             const chipSelect_t &_cs,
+             bool is_three_pin = false,
+             bool fifty_hz = true
+             )
+    :
+        _device{spi_bus.getDevice(_cs,
+                              5000000,
+                              SPIDeviceMode::kSPIMode2 | SPIDeviceMode::kSPI8Bit,
+                              400, // min_between_cs_delay_ns
+                              400, // cs_to_sck_delay_ns
+                              80   // between_word_delay_ns
+        )},
+        _interrupt_handler{std::move(_interrupt)}
     {
         init(is_three_pin, fifty_hz);
     };
@@ -95,6 +120,15 @@ struct MAX31865 final {
     // read data from the in_buffer, respectively.
 
     // Also, _init() is last, so it can setup a newly created MAX31865 object.
+
+    enum {
+        INITING,
+        SETUP_WIRES,
+        CLEAR_FAULT,
+        SETUP_BIAS,
+        NEEDS_SAMPLED,
+        WAITING_FOR_SAMPLE
+    } _state;
 
     enum {
         CONFIG_reg            = 0x00,
@@ -126,7 +160,15 @@ struct MAX31865 final {
     } _config;
     bool _config_needs_read = false;
     bool _config_needs_written = false;
-    void _postReadConf() {};
+    void _postReadConf() {
+        if (WAITING_FOR_SAMPLE == _state) {
+            if (!_config.one_shot) {
+                _rtd_value_needs_read = true;
+            } else {
+//                _config_needs_read = true;
+            }
+        }
+    };
 
     struct {
         uint8_t address;
@@ -138,13 +180,14 @@ struct MAX31865 final {
     void _postReadRTD() {
         bool fault_detected = _rtd_value_raw.low & 0x01;
         uint16_t rtd_value_int = (_rtd_value_raw.high << 7) | (_rtd_value_raw.low >> 1);
-        _rtd_value = 32768.0/(float)rtd_value_int;
+        _rtd_value = (float)rtd_value_int / 32768.0;
         if (fault_detected) {
             _fault_status_needs_read = true;
         }
         if (_interrupt_handler) {
             _interrupt_handler();
         }
+        _state = NEEDS_SAMPLED;
     };
 
     struct {
@@ -288,15 +331,6 @@ struct MAX31865 final {
     float _vref = 3.3;
     std::function<void(void)> _interrupt_handler;
 
-    enum {
-        INITING,
-        SETUP_WIRES,
-        CLEAR_FAULT,
-        SETUP_BIAS,
-        NEEDS_SAMPLED,
-        WAITING_FOR_SAMPLE
-    } _state;
-
     void startSampling()
     {
         if (_check_timer.isPast()) {
@@ -305,7 +339,7 @@ struct MAX31865 final {
                 _fault_high_needs_read = true;
                 _fault_low_needs_read = true;
 
-                _check_timer.set(10);
+                _check_timer.set(1);
                 _startNextReadWrite();
                 _state = SETUP_WIRES;
             }
@@ -323,7 +357,7 @@ struct MAX31865 final {
                 _config_needs_written = true;
                 _config_needs_read = true;
 
-                _check_timer.set(10);
+                _check_timer.set(1);
                 _startNextReadWrite();
                 _state = SETUP_BIAS;
             }
@@ -341,16 +375,14 @@ struct MAX31865 final {
                 _config_needs_written = true;
                 _config_needs_read = true;
 
-                _check_timer.set(70);
+                _check_timer.set(1);
                 _startNextReadWrite();
                 _state = WAITING_FOR_SAMPLE;
             }
             else if (WAITING_FOR_SAMPLE == _state) {
-                _rtd_value_needs_read = true;
-
+                _config_needs_read = true;
                 _check_timer.set(1);
                 _startNextReadWrite();
-                _state = SETUP_BIAS;
             }
         }
     };
