@@ -379,6 +379,9 @@ static void _start_cycle_restart()
  * cm_request_queue_flush() - set request enum only
  * _start_queue_flush()  - run a queue flush from a %
  * _restart_flush()         - run a queue flush from an action
+ *
+ * cm_request_queue_flush() should be called concurrently with xio_flush_to_command()
+ * cm_request_queue_flush(); xio_flush_to_command();
  */
 
 void cm_request_queue_flush()
@@ -419,6 +422,9 @@ static stat_t _run_queue_flush()            // typically runs from cm1 planner
  * cm_request_job_kill() - Control-D handler - set request flag only by ^d
  * _run_job_kill_final() - perform the job kill. queue flush, enter alarm with no movement
  * _start_job_kill()     - invoke the job kill function, which may start from various states
+ *
+ * cm_request_job_kill() should be called concurrently with xio_flush_to_command()
+ * cm_request_job_kill(); xio_flush_to_command();
  *
  *  Job kill cases:                     Actions:
  *  (0)  job kill has no action if from READY, STOP, END, ALARM, SHUTDOWN, PANIC states

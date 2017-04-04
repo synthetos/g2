@@ -358,10 +358,10 @@ float mp_get_target_length(const float v_0, const float v_1, const mpBuf_t* bf)
 }
 
 /*
- * mp_get_target_velocity() - find the velocity we would achieve if we *accelerated* from v_0
+ * mp_get_target_velocity() - find the velocity we would achieve if we accelerated from v_0
  *
- * Get "the velocity" that we would end up at if we *accelerated* from v_0
- * over the provided L (length) and J (jerk, provided in the bf structure).
+ * Get the velocity that we would end up at if we accelerated from v_0
+ * over the provided L (length) and J (jerk, provided in the bf structure)
  */
 
 // 14 *, 1 /, 1 sqrt, 1 cbrt
@@ -374,16 +374,16 @@ float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t* bf)
 
     const float j = bf->jerk;
 
-    const float a80 = 7.698003589195;    // 80 * a
-    const float a_2 = 0.00925925925926;  // a^2
+    const float a80 = 7.698003589195;       // 80 * a
+    const float a_2 = 0.00925925925926;     // a^2
 
-    const float v_0_2 = v_0 * v_0;    // v_0^2
-    const float v_0_3 = v_0_2 * v_0;  // v_0^3
+    const float v_0_2 = v_0 * v_0;          // v_0^2
+    const float v_0_3 = v_0_2 * v_0;        // v_0^3
 
-    const float L_2 = L * L;  // L^2
+    const float L_2 = L * L;                // L^2
 
-    const float b_part1 = 9 * j * L_2;  // 9 j L^2
-    const float b_part2 = a80 * v_0_3;  // 80 a v_0^3
+    const float b_part1 = 9 * j * L_2;      // 9 j L^2
+    const float b_part2 = a80 * v_0_3;      // 80 a v_0^3
 
     //              b^3 = a^2 (3 L sqrt(j (2 b_part2  +  b_part1))  +  b_part2  +  b_part1)
     const float b_cubed = a_2 * (3 * L * sqrt(j * (2 * b_part2 + b_part1)) + b_part2 + b_part1);
@@ -405,7 +405,7 @@ float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t* bf)
  *  Get the velocity that we would end up at if we decelerated from v_0,
  *  over the provided L (length) and J (jerk, provided in the bf structure).
  *
- *  We have to use a root finding solution, since there is actually three possible
+ *  We have to use a root finding solution, since there are actually three possible
  *  solutions. We can eliminate one quickly, since it's the acceleration case.
  *
  *  The other two cases are occasionally the same value, but this is rare.
@@ -513,7 +513,7 @@ static float _get_meet_velocity(const float          v_0,
                 if (block->head_length > L) {
                     block->head_length = L;
                     block->body_length = 0;
-                    v_1                = mp_get_target_velocity(v_0, L, bf);
+                    v_1 = mp_get_target_velocity(v_0, L, bf);
                 } else {
                     block->body_length = L - block->head_length;
                 }
@@ -525,7 +525,7 @@ static float _get_meet_velocity(const float          v_0,
                 if (block->tail_length > L) {
                     block->tail_length = L;
                     block->body_length = 0;
-                    v_1                = mp_get_target_velocity(v_2, L, bf);
+                    v_1 = mp_get_target_velocity(v_2, L, bf);
                 } else {
                     block->body_length = L - block->tail_length;
                 }
