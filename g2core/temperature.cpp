@@ -251,6 +251,7 @@ struct PT100 {
     float pullup_resistance;
     float inline_resistance;
     bool differential;
+    bool gives_raw_resistance = false;
 
     ADC_t adc_pin {kNormal, [&]{this->adc_has_new_value();} };
     float raw_adc_voltage = 0.0;
@@ -261,7 +262,8 @@ struct PT100 {
     PT100(const float pullup_resistance_, const float inline_resistance_, const bool differential_ = false)
     : pullup_resistance{ pullup_resistance_ },
       inline_resistance{ inline_resistance_ },
-      differential{differential_}
+      differential{differential_},
+      gives_raw_resistance{false}
     {
         adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
         adc_pin.setVoltageRange(kSystemVoltage,
@@ -272,23 +274,28 @@ struct PT100 {
     };
 
     template <typename... Ts>
-    PT100(const float pullup_resistance_, const float inline_resistance_, const bool differential_ = false, Ts&&... additional_values)
+    PT100(const float pullup_resistance_, const float inline_resistance_, Ts&&... additional_values)
     : pullup_resistance{ pullup_resistance_ },
       inline_resistance{ inline_resistance_ },
-      differential{differential_},
+      differential{false},
+      gives_raw_resistance{true},
       adc_pin {[&]{this->adc_has_new_value();}, additional_values...}
     {
         adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
         adc_pin.setVoltageRange(kSystemVoltage,
-                                get_voltage_of_temp(min_temp),
-                                get_voltage_of_temp(max_temp),
-                                differential,
-                                6400.0);
+                                get_resistance_of_temp(min_temp),
+                                get_resistance_of_temp(max_temp),
+                                false, // ignored
+                                1);    // ignored
+    };
+
+    float get_resistance_of_temp(float t) {
+        // R = 100(1 + A*T + B*T^2); A = 3.9083*10^-3; B = -5.775*10^-7
+        return 100 * (1 + 0.0039083*t + -0.0000005775*t*t) + inline_resistance;
     };
 
     float get_voltage_of_temp(float t) {
-        // R = 100(1 + A*T + B*T^2); A = 3.9083*10^-3; B = -5.775*10^-7
-        float r = 100 * (1 + 0.0039083*t + -0.0000005775*t*t) + inline_resistance;
+        float r = get_resistance_of_temp(t);
 
         if (differential) {
             return (kSystemVoltage * r)/(2.0 * pullup_resistance + r);
@@ -298,7 +305,7 @@ struct PT100 {
 
     float temperature_exact() {
         float r = get_resistance();
-        if (r < 100) { return -1; }
+//        if (r < 100) { return -1; }
 
         // from https://www.maximintegrated.com/en/app-notes/index.mvp/id/3450
         // run through wolfram as:
@@ -308,10 +315,14 @@ struct PT100 {
 
     float get_resistance() {
         float r;
-        if (differential) {
+        if (gives_raw_resistance) {
+            r = raw_adc_voltage;
+        }
+        else if (differential) {
             float v = raw_adc_voltage / kSystemVoltage;
             r = (v * 2.0 * pullup_resistance)/(1.0 - v) - inline_resistance;
-        } else {
+        }
+        else {
             float v = raw_adc_voltage;
             r = ((pullup_resistance * v) / (kSystemVoltage - v)) - inline_resistance;
         }
@@ -332,8 +343,14 @@ struct PT100 {
 
     // Call back function from the ADC to tell it that the ADC has a new sample...
     void adc_has_new_value() {
-        raw_adc_voltage = (raw_adc_voltage*10.0 + adc_pin.getVoltage())/11.0;
-        raw_adc_value = adc_pin.getRaw();
+        if (gives_raw_resistance) {
+            raw_adc_value = adc_pin.getRaw();
+            float v = (raw_adc_value*pullup_resistance)/32768;
+            raw_adc_voltage = (raw_adc_voltage*10.0 + v)/11.0;
+        } else {
+            raw_adc_value = adc_pin.getRaw();
+            raw_adc_voltage = (raw_adc_voltage*10.0 + raw_adc_value)/11.0;
+        }
     };
 };
 

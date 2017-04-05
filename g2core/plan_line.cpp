@@ -537,7 +537,7 @@ static void _calculate_jerk(mpBuf_t* bf)
     const float q        = 2.40281141413;  // (sqrt(10)/(3^(1/4)))
     const float sqrt_j   = sqrt(bf->jerk);
     bf->sqrt_j           = sqrt_j;
-    bf->q_recip_2_sqrt_j = q / (2 * sqrt_j);
+    bf->q_recip_2_sqrt_j = q / (2.0 * sqrt_j);
 }
 
 /*
@@ -712,11 +712,11 @@ static void _calculate_junction_vmax(mpBuf_t* bf)
             if (delta > EPSILON) {
                 // formula (4): (See Note 1, above)
 
-                // velocity = min(velocity, (cm.a[axis].max_junction_accel / delta));
-                if ((cm.a[axis].max_junction_accel / delta) < velocity) {
-                    velocity = (cm.a[axis].max_junction_accel / delta);
-                    // bf->jerk_axis = axis;
-                }
+                velocity = min(velocity, (cm.a[axis].max_junction_accel / delta));
+//                if ((cm.a[axis].max_junction_accel / delta) < velocity) {
+//                    velocity = (cm.a[axis].max_junction_accel / delta);
+//                    // bf->jerk_axis = axis;
+//                }
             }
         }
     }

@@ -135,10 +135,10 @@ _MAKE_MOTATE_PIN(kOutput8_PinNumber, 'A', 13);               // PWM 2
 _MAKE_MOTATE_PIN(kSocket1_StepPinNumber, 'A', 14);           //
 _MAKE_MOTATE_PIN(kOutput3_PinNumber, 'A', 15);               // TC 1,0
 _MAKE_MOTATE_PIN(kOutput4_PinNumber, 'A', 16);               // TC 1,1
-_MAKE_MOTATE_PIN(kADC4_PinNumber, 'A', 17);                  //
-_MAKE_MOTATE_PIN(kADC3_PinNumber, 'A', 18);                  //
-_MAKE_MOTATE_PIN(kADC2_PinNumber, 'A', 19);                  //
-_MAKE_MOTATE_PIN(kADC1_PinNumber, 'A', 20);                  //
+_MAKE_MOTATE_PIN(kADC4_PinNumber, 'A', 17);                  // AFEC0,6
+_MAKE_MOTATE_PIN(kADC3_PinNumber, 'A', 18);                  // AFEC0,7
+_MAKE_MOTATE_PIN(kADC2_PinNumber, 'A', 19);                  // AFEC0,8
+_MAKE_MOTATE_PIN(kADC1_PinNumber, 'A', 20);                  // AFEC0,9
 _MAKE_MOTATE_PIN(kSerial_CTSPinNumber, 'A', 21);             //
 _MAKE_MOTATE_PIN(kSocket1_EnablePinNumber, 'A', 22);         //
 _MAKE_MOTATE_PIN(kOutput10_PinNumber, 'A', 23);              // PWM 8+2

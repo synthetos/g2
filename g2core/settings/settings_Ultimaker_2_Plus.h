@@ -39,7 +39,7 @@
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
-#define JUNCTION_INTEGRATION_TIME   1.15                    // cornering - between 0.10 and 2.00 (higher is faster)
+#define JUNCTION_INTEGRATION_TIME   0.8                    // cornering - between 0.10 and 2.00 (higher is faster)
 #define CHORDAL_TOLERANCE           0.01                    // chordal accuracy for arc drawing (in mm)
 
 #define SOFT_LIMIT_ENABLE           0                       // 0=off, 1=on
@@ -81,8 +81,8 @@
 //#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","he1t","he1st","he1at","he1op","pid1p","pid1i","pid1d","feed","vel","unit","path","stat"
 
 // Defaults for thermistor tuning
-#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","he1t","he1st","he1at","he1tr","he1tv","he1op","he2t","he2st","he2at","he2tr","he2tv","he1op","he3t","he3st","he3at","he3tr","he3tv","he1op","feed","vel","unit","path","stat"
-
+#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","he1t","he1st","he1at","he1tr","he1tv","he1op","he2t","he2st","he2at","he2tr","he2tv","he2op","he3t","he3st","he3at","he3tr","he3tv","he3op","feed","vel","unit","path","stat"
+//{sr:{"line":t,"posx":t,"posy":t,"posz":t,"posa":t,"he1t":t,"he1st":t,"he1at":t,"he1tr":t,"he1tv":t,"he1op":t,"he3t":t,"he3st":t,"he3at":t,"he3tr":t,"he3tv":t,"he3op":t,"feed":t,"vel":t,"unit":t,"path":t,"stat":t}}
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS         MILLIMETERS             // MILLIMETERS or INCHES
 #define GCODE_DEFAULT_PLANE         CANON_PLANE_XY          // CANON_PLANE_XY, CANON_PLANE_XZ, or CANON_PLANE_YZ
@@ -104,7 +104,7 @@
 #define M1_MICROSTEPS               32                      // 1mi        1,2,4,8,16,32
 #define M1_POLARITY                 0                       // 1po        0=normal, 1=reversed
 #define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm        standard
-#define M1_POWER_LEVEL              0.7                     // 1mp
+#define M1_POWER_LEVEL              0.9                     // 1mp
 
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
 #define M2_MOTOR_MAP                AXIS_Y
@@ -114,7 +114,7 @@
 #define M2_MICROSTEPS               32
 #define M2_POLARITY                 1
 #define M2_POWER_MODE               MOTOR_POWER_MODE
-#define M2_POWER_LEVEL              0.7
+#define M2_POWER_LEVEL              0.9
 
 #define M3_MOTOR_MAP                AXIS_Z
 #define M3_STEP_ANGLE               1.8
@@ -122,8 +122,8 @@
 #define M3_TRAVEL_PER_REV           8
 #define M3_MICROSTEPS               32
 #define M3_POLARITY                 0
-#define M3_POWER_MODE               MOTOR_POWER_MODE
-#define M3_POWER_LEVEL              0.7
+#define M3_POWER_MODE               MOTOR_ALWAYS_POWERED
+#define M3_POWER_LEVEL              0.9
 
 #define M4_MOTOR_MAP                AXIS_A
 #define M4_STEP_ANGLE               1.8
@@ -145,7 +145,7 @@
 // *** axis settings **********************************************************************************
 
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX              15000                   // xvm  G0 max velocity in mm/min
+#define X_VELOCITY_MAX              12000                   // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX                230                     // xtm  travel between switches or crashes
@@ -159,7 +159,7 @@
 #define X_ZERO_BACKOFF              0.5                     // xzb  mm
 
 #define Y_AXIS_MODE                 AXIS_STANDARD
-#define Y_VELOCITY_MAX              15000
+#define Y_VELOCITY_MAX              12000
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                224.5
@@ -177,23 +177,22 @@
 #define Z_FEEDRATE_MAX              Z_VELOCITY_MAX
 #define Z_TRAVEL_MIN                0
 #define Z_TRAVEL_MAX                215
-#define Z_JERK_MAX                  1500
-#define Z_JERK_HIGH_SPEED           3000
+#define Z_JERK_MAX                  500
+#define Z_JERK_HIGH_SPEED           1000
 #define Z_HOMING_INPUT              6
 #define Z_HOMING_DIRECTION          1
-#define Z_SEARCH_VELOCITY           300
+#define Z_SEARCH_VELOCITY           1000
 #define Z_LATCH_VELOCITY            100
 #define Z_LATCH_BACKOFF             2
 #define Z_ZERO_BACKOFF              0
 
-#define G55_Z_OFFSET                0.5
+#define G55_Z_OFFSET                0.6
 
 // Rotary values are chosen to make the motor react the same as X for testing
 /***************************************************************************************
  * To calculate the speeds here, in Wolfram Alpha-speak:
  *
- *   c=2*pi*r, r=0.609, d=c/360, s=((S*60)/d), S=40 for s
- *   c=2*pi*r, r=4.28394, d=c/360, s=((S*60)/d), S=40 for s
+ *   c=2*pi*r, r=1.428, d=c/360, s=((S*60)/d), S=40 for s
  *
  * Change r to A_RADIUS, and S to the desired speed, in mm/s or mm/s/s/s.
  *
@@ -207,52 +206,34 @@
  ***************************************************************************************/
 
 #define A_AXIS_MODE             AXIS_RADIUS
-// Marlin says 282 steps/unit, and 8 microsteps, with a 200-step/rev motor = 5.6737588652 mm/rev circumference
-// Which yields a radius of 0.9030067693
-#define A_RADIUS                0.9030067693
-//#define A_VELOCITY_MAX        25920.0 // ~40 mm/s, 2,400 mm/min
-//#define A_FEEDRATE_MAX        25920.0/2.0 // ~20 mm/s, 1,200 mm/min
-#define A_VELOCITY_MAX          77760.0 // G0 rate ~120 mm/s, 2,400 mm/min
-#define A_FEEDRATE_MAX          16050 // ~10 mm/s
-//#define A_FEEDRATE_MAX        9720.0 // 9720.0 = G1 rate ~15 mm/s, 900 mm/min
+#define A_RADIUS                1.428
+#define A_VELOCITY_MAX          144443.0  // G0 rate ~60 mm/s, 3,600 mm/min
+#define A_FEEDRATE_MAX          60184.6 // ~25 mm/s
 #define A_TRAVEL_MIN            0
 #define A_TRAVEL_MAX            10
-//#define A_JERK_MAX              81000 // 250 million mm/min^3 = 324000
-#define A_JERK_MAX            162000 // 250 million mm/min^3 = 324000
-//#define A_JERK_MAX            324000 // 500 million mm/min^3 = 324000
-//#define A_JERK_MAX            648000 // 1,000 million mm/min^3 = 648000
-// * a million IF it's over a million
-// c=2*pi*r, r=5.30516476972984, d=c/360, s=((1000*60)/d)
+#define A_JERK_MAX              144443.2 // ~60 million mm/min^3
 #define A_HOMING_INPUT          0
 #define A_HOMING_DIRECTION      0
 #define A_SEARCH_VELOCITY       2000
 #define A_LATCH_VELOCITY        2000
 #define A_LATCH_BACKOFF         5
 #define A_ZERO_BACKOFF          2
-#define A_JERK_HIGH_SPEED       A_JERK_MAX
+#define A_JERK_HIGH_SPEED       361108.0 // ~150 million mm/min^3
 
-#define B_AXIS_MODE             AXIS_DISABLED
-#define B_RADIUS                0.9030067693
-//#define B_VELOCITY_MAX        25920.0 // ~40 mm/s, 2,400 mm/min
-//#define B_FEEDRATE_MAX        25920.0/2.0 // ~20 mm/s, 1,200 mm/min
-#define B_VELOCITY_MAX          77760.0 // G0 rate ~120 mm/s, 2,400 mm/min
-#define B_FEEDRATE_MAX          16050 // ~10 mm/s
-//#define B_FEEDRATE_MAX        9720.0 // 9720.0 = G1 rate ~15 mm/s, 900 mm/min
+#define B_AXIS_MODE             AXIS_RADIUS
+#define B_RADIUS                1.428
+#define B_VELOCITY_MAX          144443.0  // G0 rate ~60 mm/s, 3,600 mm/min
+#define B_FEEDRATE_MAX          96295.4 // ~40 mm/s
 #define B_TRAVEL_MIN            0
 #define B_TRAVEL_MAX            10
-//#define B_JERK_MAX              81000 // 250 million mm/min^3 = 324000
-#define B_JERK_MAX            162000 // 250 million mm/min^3 = 324000
-//#define B_JERK_MAX            324000 // 500 million mm/min^3 = 324000
-//#define B_JERK_MAX            648000 // 1,000 million mm/min^3 = 648000
-// * a million IF it's over a million
-// c=2*pi*r, r=5.30516476972984, d=c/360, s=((1000*60)/d)
+#define B_JERK_MAX              180554.0 // ~75 million mm/min^3
 #define B_HOMING_INPUT          0
 #define B_HOMING_DIRECTION      0
 #define B_SEARCH_VELOCITY       2000
 #define B_LATCH_VELOCITY        2000
 #define B_LATCH_BACKOFF         5
 #define B_ZERO_BACKOFF          2
-#define B_JERK_HIGH_SPEED       B_JERK_MAX
+#define B_JERK_HIGH_SPEED       361108.0 // ~150 million mm/min^3
 
 
 //*** Input / output settings ***
@@ -271,14 +252,14 @@
         /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 4700 \
     }
 #else
-    //#define TEMPERATURE_SENSOR_1_TYPE  PT100<ADCPin<kADC1_PinNumber>>
-    //#define TEMPERATURE_SENSOR_1_INIT {/*pullup_resistance:*/ 2200, /*inline_resistance*/0.003, /*differential*/ true}
+//    #define TEMPERATURE_SENSOR_1_TYPE  PT100<ADCPin<kADC3_PinNumber>>
+//    #define TEMPERATURE_SENSOR_1_INIT {/*pullup_resistance:*/ 2200, /*inline_resistance*/0.003, /*differential*/ true}
     #define TEMPERATURE_SENSOR_1_TYPE  PT100<MAX31865<SPIBus_used_t::SPIBusDevice>>
-    #define TEMPERATURE_SENSOR_1_INIT {/*pullup_resistance:*/ 2200, /*inline_resistance*/0.003, /*differential*/ false, spiBus, spiCSPinMux.getCS(6)}
+    #define TEMPERATURE_SENSOR_1_INIT {/*pullup_resistance:*/ 430, /*inline_resistance*/0, spiBus, spiCSPinMux.getCS(5)}
 #endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_1
 
-#define EXTRUDER_1_OUTPUT_PIN kOutput2_PinNumber
+#define EXTRUDER_1_OUTPUT_PIN kOutput1_PinNumber
 #define EXTRUDER_1_FAN_PIN    kOutput8_PinNumber
 
 #define HAS_TEMPERATURE_SENSOR_2  true
@@ -290,8 +271,8 @@
     /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 4700 \
     }
 #else
-    #define TEMPERATURE_SENSOR_2_TYPE  PT100<ADCPin<kADC3_PinNumber>>
-    #define TEMPERATURE_SENSOR_2_INIT {/*pullup_resistance:*/ 2200, /*inline_resistance*/0}
+    #define TEMPERATURE_SENSOR_2_TYPE  PT100<ADCPin<kADC4_PinNumber>>
+    #define TEMPERATURE_SENSOR_2_INIT {/*pullup_resistance:*/ 2200, /*inline_resistance*/0.003, /*differential*/ true}
 #endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_2
 
@@ -306,8 +287,11 @@
     /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 4700 \
     }
 #else
-    #define TEMPERATURE_SENSOR_3_TYPE  PT100<ADCPin<kADC2_PinNumber>>
-    #define TEMPERATURE_SENSOR_3_INIT {/*pullup_resistance:*/ 2200, /*inline_resistance*/0.003, /*differential*/ true}
+//    #define TEMPERATURE_SENSOR_3_TYPE  PT100<ADCPin<kADC2_PinNumber>>
+//    #define TEMPERATURE_SENSOR_3_INIT {/*pullup_resistance:*/ 2200, /*inline_resistance*/0.003, /*differential*/ true}
+    #define TEMPERATURE_SENSOR_3_TYPE  PT100<MAX31865<SPIBus_used_t::SPIBusDevice>>
+    #define TEMPERATURE_SENSOR_3_INIT {/*pullup_resistance:*/ 430, /*inline_resistance*/0, spiBus, spiCSPinMux.getCS(6)}
+
 #endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_3
 
@@ -392,7 +376,7 @@
 #define DO5_MODE                    IO_ACTIVE_HIGH
 #define DO6_MODE                    IO_ACTIVE_HIGH
 #define DO7_MODE                    IO_ACTIVE_HIGH
-#define DO8_MODE                    IO_ACTIVE_LOW  // 5V Fan
+#define DO8_MODE                    IO_ACTIVE_HIGH  // 5V Fan
 
 //SAFEin (Output) signal
 #define DO9_MODE                    IO_ACTIVE_HIGH
@@ -410,15 +394,15 @@
 
 /*** Extruders / Heaters ***/
 
-#define MIX_FAN_VALUE               0.4   // (he1fm) at MIN_FAN_TEMP the fan comes on at this spped (0.0-1.0)
-#define MAX_FAN_VALUE               0.75  // (he1fp) at MAX_FAN_TEMP the fan is at this spped (0.0-1.0)
+#define MIN_FAN_VALUE               0.4   // (he1fm) at MIN_FAN_TEMP the fan comes on at this spped (0.0-1.0)
+#define MAX_FAN_VALUE               1.0  // (he1fp) at MAX_FAN_TEMP the fan is at this spped (0.0-1.0)
 #define MIN_FAN_TEMP                50.0  // (he1fl) at this temp the fan starts to ramp up linearly
 #define MAX_FAN_TEMP                100.0 // (he1fh) at this temperature the fan is at "full speed" (MAX_FAN_VALUE)
 
 #define H1_DEFAULT_ENABLE           true
-#define H1_DEFAULT_P                7.0
-#define H1_DEFAULT_I                0.05
-#define H1_DEFAULT_D                150.0
+#define H1_DEFAULT_P                5.0
+#define H1_DEFAULT_I                0.025
+#define H1_DEFAULT_D                800
 
 #define H2_DEFAULT_ENABLE           false
 #define H2_DEFAULT_P                7.0
