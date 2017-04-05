@@ -71,7 +71,7 @@
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
 
 // Defaults for 3DP
-#define STATUS_REPORT_DEFAULTS    "line","posx","posy","posz","posa","vel","he1t","he1st","he1at","feed","unit","path","stat"
+#define STATUS_REPORT_DEFAULTS    "line","posx","posy","posz","posa","vel","he1t","he1st","he1at","he1op","he3t","he3st","he3at","he3op","feed","unit","path","stat"
 // There are no heater two or three, but these would show those: ,"he2t","he2st","he2at","he3t","he3st","he3at"
 
 // Defaults for motion debugging
@@ -355,7 +355,7 @@
 
 /*** Extruders / Heaters ***/
 
-#define MIX_FAN_VALUE               0.4   // (he1fm) at MIN_FAN_TEMP the fan comes on at this spped (0.0-1.0)
+#define MIN_FAN_VALUE               0.4   // (he1fm) at MIN_FAN_TEMP the fan comes on at this spped (0.0-1.0)
 #define MAX_FAN_VALUE               0.75  // (he1fp) at MAX_FAN_TEMP the fan is at this spped (0.0-1.0)
 #define MIN_FAN_TEMP                50.0  // (he1fl) at this temp the fan starts to ramp up linearly
 #define MAX_FAN_TEMP                100.0 // (he1fh) at this temperature the fan is at "full speed" (MAX_FAN_VALUE)
@@ -370,7 +370,7 @@
 #define H2_DEFAULT_I                0.05
 #define H2_DEFAULT_D                150.0
 
-#define H3_DEFAULT_ENABLE           false
+#define H3_DEFAULT_ENABLE           true
 #define H3_DEFAULT_P                9.0
 #define H3_DEFAULT_I                0.12
 #define H3_DEFAULT_D                400.0
