@@ -1907,12 +1907,18 @@ static const char msg_hold0[] = "Off";
 static const char msg_hold1[] = "Requested";
 static const char msg_hold2[] = "Sync";
 static const char msg_hold3[] = "Decel Continue";
-static const char msg_hold4[] = "Decel to Zero";
-static const char msg_hold5[] = "Decel Done";
-static const char msg_hold6[] = "Pending";
-static const char msg_hold7[] = "Hold";
-static const char *const msg_hold[] = { msg_hold0, msg_hold1, msg_hold2, msg_hold3,
-                                        msg_hold4, msg_hold5, msg_hold6, msg_hold7 };
+static const char msg_hold4[] = "Decel To Zero";
+static const char msg_hold5[] = "Decel Complete";
+static const char msg_hold6[] = "Motion Stopping";
+static const char msg_hold7[] = "Motion Stopped";
+static const char msg_hold8[] = "Hold Actions Pending";
+static const char msg_hold9[] = "Hold Actions Complete";
+static const char msg_hold10[] = "Holding";
+static const char msg_hold11[] = "Hold Exit Actions Pending";
+static const char msg_hold12[] = "Hold Exit Actions Complete";
+static const char *const msg_hold[] = { msg_hold0, msg_hold1, msg_hold2, msg_hold3, msg_hold4, 
+                                        msg_hold5, msg_hold6, msg_hold7, msg_hold8, msg_hold9, 
+                                        msg_hold10, msg_hold11, msg_hold12 };
 
 static const char msg_home0[] = "Not Homed";
 static const char msg_home1[] = "Homed";

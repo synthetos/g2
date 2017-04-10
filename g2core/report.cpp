@@ -404,8 +404,10 @@ static uint8_t _populate_filtered_status_report()
 
         // report values that have changed by more than the indicated precision, but always stops and ends
         if ((fabs(current_value - sr.status_report_value[i]) > precision[cfgArray[nv->index].precision]) ||
-            ((nv->index == sr.stat_index) && fp_EQ(nv->value_int, COMBINED_PROGRAM_STOP)) ||
-            ((nv->index == sr.stat_index) && fp_EQ(nv->value_int, COMBINED_PROGRAM_END))) {
+//            ((nv->index == sr.stat_index) && fp_EQ(nv->value_int, COMBINED_PROGRAM_STOP)) ||
+//            ((nv->index == sr.stat_index) && fp_EQ(nv->value_int, COMBINED_PROGRAM_END))) {
+            ((nv->index == sr.stat_index) && (nv->value_int == COMBINED_PROGRAM_STOP)) ||
+            ((nv->index == sr.stat_index) && (nv->value_int == COMBINED_PROGRAM_END))) {
 
             strcpy(tmp, nv->group);            // flatten out groups - WARNING - you cannot use strncpy here...
             strcat(tmp, nv->token);
