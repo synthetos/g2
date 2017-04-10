@@ -474,6 +474,7 @@ static void _start_job_kill()
     if (cm1.machine_state == MACHINE_CYCLE) {
         if (cm1.hold_state == FEEDHOLD_OFF) {   // Cases 1-4 - in cycle and not in a hold
             op.add_action(_feedhold_no_actions);
+//            op.add_action(_run_job_kill);
         }
         if (cm1.hold_state == FEEDHOLD_HOLD) {  // Case 5a - in a finished hold
             _run_job_kill();
