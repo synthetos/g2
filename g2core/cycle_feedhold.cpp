@@ -426,15 +426,16 @@ static stat_t _run_queue_flush()            // typically runs from cm1 planner
  * cm_request_job_kill() should be called concurrently with xio_flush_to_command()
  * cm_request_job_kill(); xio_flush_to_command();
  *
- *  Job kill cases:                     Actions:
- *  (0)  job kill has no action if from READY, STOP, END, ALARM, SHUTDOWN, PANIC states
- *  (1)  Job kill from machining cycle   hold, flush and enter ALARM state
- *  (2)  Job kill from PROBE             flush and enter ALARM state
- *  (3)  Job kill from HOMING            flush and enter ALARM state
- *  (4)  Job kill from JOGGING           flush and enter ALARM state
- *  (5a) Job kill from finished hold     flush and enter ALARM state
- *  (5b) Job kill from pending jold      flush and enter ALARM state
- *  (6)  Job kill from interlock         flush and enter ALARM state
+ *  Job kill cases:                             Actions:
+ *  (0)  job kill from ALARM, SHUTDOWN, PANIC   no action, end request
+ *  (1)  job kill from READY, STOP, END         perform PROGRAM_END
+ *  (2a) Job kill from machining cycle          hold, flush, perform PROGRAM_END
+ *  (2b) Job kill from pending hold             wait for hold to complete 
+ *  (2c) Job kill from finished hold            flush, perform PROGRAM_END
+ *  (3)  Job kill from PROBE                    flush, perform PROGRAM_END
+ *  (4)  Job kill from HOMING                   flush, perform PROGRAM_END
+ *  (5)  Job kill from JOGGING                  flush, perform PROGRAM_END
+ *  (6)  job kill from INTERLOCK                perform PROGRAM_END
  */
 
 void cm_request_job_kill()
@@ -448,8 +449,8 @@ void cm_request_job_kill()
 static stat_t _run_job_kill()
 {
     // switch to p1 (may already be in it)
-    cm = &cm1;                                  // return to primary planner (p1)
-    mp = (mpPlanner_t *)cm->mp;                 // cm->mp is a void pointer
+    cm = &cm1;                                          // return to primary planner (p1)
+    mp = (mpPlanner_t *)cm->mp;                         // cm->mp is a void pointer
     mr = mp->mr;
 
     _run_queue_flush();
@@ -457,7 +458,7 @@ static stat_t _run_job_kill()
     coolant_control_immediate(COOLANT_OFF, COOLANT_BOTH); // stop coolant
     spindle_control_immediate(SPINDLE_OFF);               // stop spindle
 
-    cm_set_motion_state(MOTION_STOP);           // set to stop and set the active model
+    cm_set_motion_state(MOTION_STOP);                   // set to stop and set the active model
     cm->hold_state = FEEDHOLD_OFF;
     cm_program_end();
 
@@ -471,17 +472,25 @@ static stat_t _run_job_kill()
 
 static void _start_job_kill()
 {
-    if (cm1.machine_state == MACHINE_CYCLE) {
-        if (cm1.hold_state == FEEDHOLD_OFF) {   // Cases 1-4 - in cycle and not in a hold
-            op.add_action(_feedhold_no_actions);
-//            op.add_action(_run_job_kill);
+    switch (cm1.machine_state) {
+        case MACHINE_ALARM:                             // Case 0's - nothing to do. turn off the request
+        case MACHINE_SHUTDOWN:
+        case MACHINE_PANIC: {
+            cm1.job_kill_state = JOB_KILL_OFF;
+            return;
         }
-        if (cm1.hold_state == FEEDHOLD_HOLD) {  // Case 5a - in a finished hold
-            _run_job_kill();
+        case MACHINE_CYCLE: {                           // Case 2's 
+            if (cm1.hold_state == FEEDHOLD_OFF) {       // Case 2a - in cycle and not in a hold
+                op.add_action(_feedhold_no_actions);
+//                op.add_action(_run_job_kill);
+            }
+            if (cm1.hold_state == FEEDHOLD_HOLD) {      // Case 2c - in a finished hold
+                _run_job_kill();
+            }
+            return;                                     // Case 2b - hold is in progress. Wait for hold to reach HOLD
         }
-        return;                                 // Case 5b - hold is in progress. Wait for hold to reach HOLD
+        default: { _run_job_kill(); }                   // Cases 1,3,4,5,6 
     }
-    cm1.job_kill_state = JOB_KILL_OFF;          // Case 0 - nothing to do. turn off the request
 }
 
 /****************************************************************************************
