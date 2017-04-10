@@ -344,7 +344,7 @@ stat_t mp_runtime_command(mpBuf_t *bf)
 static void _exec_json_command(float *value, bool *flag)
 {
     char *json_string = jc.read_buffer();
-    json_parse_for_exec(json_string, true); // process it
+    json_parse_for_exec(json_string, true);         // process it
     jc.free_buffer();
 }
 
@@ -377,11 +377,9 @@ static stat_t _exec_json_wait(mpBuf_t *bf)
     while ((nv != NULL) && (nv->valuetype != TYPE_EMPTY)) {
         // For now we ignore non-BOOL
         if (nv->valuetype == TYPE_BOOLEAN) {
-//            bool old_value = !fp_ZERO(nv->value); // force it to bool
             bool old_value = (bool)nv->value_int;         // force it to bool
 
             nv_get_nvObj(nv);
-//            bool new_value = !fp_ZERO(nv->value);
             bool new_value = (bool)nv->value_int;
             if (old_value != new_value) {
                 st_prep_dwell((uint32_t)(0.1 * 1000000.0));// 1ms converted to uSec
@@ -444,7 +442,7 @@ static stat_t _exec_dwell(mpBuf_t *bf)
 {
     st_prep_dwell((uint32_t)(bf->block_time * 1000000.0));// convert seconds to uSec
     if (mp_free_run_buffer()) {
-        cm_cycle_end();                 // free buffer & perform cycle_end if planner is empty
+        cm_cycle_end();                             // free buffer & perform cycle_end if planner is empty
     }
     return (STAT_OK);
 }

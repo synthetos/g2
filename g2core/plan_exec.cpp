@@ -265,8 +265,7 @@ stat_t mp_exec_move()
         return (STAT_NOOP);
     }
 
-    if (bf->block_type == BLOCK_TYPE_ALINE) {             // cycle auto-start for lines only
-//    if ((bf->block_type == BLOCK_TYPE_ALINE) || (bf->block_type == BLOCK_TYPE_COMMAND)) {
+    if (bf->block_type == BLOCK_TYPE_ALINE) {           // cycle auto-start for lines only
         // first-time operations
         if (bf->buffer_state != MP_BUFFER_RUNNING) {
             if ((bf->buffer_state < MP_BUFFER_BACK_PLANNED) && (cm->motion_state == MOTION_RUN)) {

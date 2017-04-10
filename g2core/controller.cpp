@@ -52,15 +52,15 @@
 #include "marlin_compatibility.h"
 #endif
 
-/***********************************************************************************
- **** STRUCTURE ALLOCATIONS *********************************************************
- ***********************************************************************************/
+/****************************************************************************************
+ **** STRUCTURE ALLOCATIONS *************************************************************
+ ****************************************************************************************/
 
 controller_t cs;        // controller state structure
 
-/***********************************************************************************
- **** STATICS AND LOCALS ***********************************************************
- ***********************************************************************************/
+/****************************************************************************************
+ **** STATICS AND LOCALS ****************************************************************
+ ****************************************************************************************/
 
 static void _controller_HSM(void);
 static stat_t _led_indicator(void);             // twiddle the LED indicator
@@ -81,9 +81,9 @@ static stat_t _controller_state(void);          // manage controller state trans
 
 static Motate::OutputPin<Motate::kOutputSAFE_PinNumber> safe_pin;
 
-/***********************************************************************************
- **** CODE *************************************************************************
- ***********************************************************************************/
+/****************************************************************************************
+ **** CODE ******************************************************************************
+ ****************************************************************************************/
 /*
  * controller_init() - controller init
  */
@@ -187,7 +187,7 @@ static void _controller_HSM()
     DISPATCH(_dispatch_command());              // MUST BE LAST - read and execute next command
 }
 
-/*****************************************************************************
+/****************************************************************************************
  * command dispatchers
  * _dispatch_control - entry point for control-only dispatches
  * _dispatch_command - entry point for control and data dispatches
@@ -319,8 +319,7 @@ static void _dispatch_kernel(const devflags_t flags)
     }
 }
 
-/**** Local Functions ********************************************************/
-
+/**** Local Functions ******************************************************************/
 
 /*
  * _reset_comms_mode() - reset the communications mode (and other effected settings) after connection or disconnection
@@ -461,7 +460,8 @@ static stat_t _sync_to_planner()
     return (STAT_OK);
 }
 
-/* ALARM STATE HANDLERS
+/****************************************************************************************
+ * ALARM STATE HANDLERS
  *
  * _shutdown_handler() - put system into shutdown state
  * _limit_switch_handler() - shut down system if limit switch fired
@@ -526,7 +526,7 @@ static stat_t _interlock_handler(void)
     return(STAT_OK);
 }
 
-/*
+/****************************************************************************************
  * _init_assertions() - initialize controller memory integrity assertions
  * _test_assertions() - check controller memory integrity assertions
  * _test_system_assertions() - check assertions for entire system
