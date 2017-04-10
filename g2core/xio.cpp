@@ -2,8 +2,8 @@
  * xio.cpp - extended IO functions
  * This file is part of the g2core project
  *
- * Copyright (c) 2013 - 2016 Alden S. Hart Jr.
- * Copyright (c) 2013 - 2016 Robert Giseburt
+ * Copyright (c) 2013 - 2017 Alden S. Hart Jr.
+ * Copyright (c) 2013 - 2017 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -96,7 +96,6 @@ bool checkForNotActive(devflags_t flags_to_check) { return !(flags_to_check & DE
 
 bool checkForCtrlAndData(devflags_t flags_to_check) { return (flags_to_check & (DEV_IS_CTRL|DEV_IS_DATA)) == (DEV_IS_CTRL|DEV_IS_DATA); }
 bool checkForCtrlAndPrimary(devflags_t flags_to_check) { return (flags_to_check & (DEV_IS_CTRL|DEV_IS_PRIMARY)) == (DEV_IS_CTRL|DEV_IS_PRIMARY); }
-
 
 struct xioDeviceWrapperBase {                // C++ base class for device primitives
     // connection and device management
@@ -721,23 +720,23 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 
                     _last_line_length = 0;
                 }
-                else if (!_at_start_of_line) {   // We only mark ends_line for the first end-line char, and if
-                    ends_line  = true;      // _at_start_of_line is already true, this is not the first.
+                else if (!_at_start_of_line) {  // We only mark ends_line for the first end-line char, and if
+                    ends_line  = true;          // _at_start_of_line is already true, this is not the first.
                 }
             }
-            // prevent going furnther if we are ignoring
+            // prevent going further if we are ignoring
             else if (_ignore_until_next_line)
             {
                 // don't do anything
             }
             // Classify the line if it's a single character 
             else if (_at_start_of_line &&
-                ((c == '!')         ||
-                 (c == '~')         ||
-                 (c == ENQ)         ||        // request ENQ/ack
-                 (c == CHAR_RESET)  ||        // ^X - reset (aka cancel, terminate)
-                 (c == CHAR_ALARM)  ||        // ^D - request job kill (end of transmission)
-                 (c == '%' && cm_has_hold())  // flush (only in feedhold or part of control header)
+                ((c == '!')         ||      // feedhold
+                 (c == '~')         ||      // cycle start
+                 (c == ENQ)         ||      // request ENQ/ack
+                 (c == CHAR_RESET)  ||      // ^X - reset (aka cancel, terminate)
+                 (c == CHAR_ALARM)  ||      // ^D - request job kill (end of transmission)
+                 (c == '%' && cm_has_hold()) // flush (only in feedhold or part of control header)
                 ))
             {
 
