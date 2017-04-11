@@ -244,7 +244,9 @@ typedef enum {
 
 /*** Most of these factors are the result of a lot of tweaking. Change with caution.***/
 
+#ifndef PLANNER_BUFFER_POOL_SIZE
 #define PLANNER_BUFFER_POOL_SIZE    (48)                // Suggest 12 min. Limit is 255
+#endif
 #define PLANNER_BUFFER_HEADROOM     (4)                 // Buffers to reserve in planner before processing new input line
 #define JERK_MULTIPLIER             ((float)1000000)    // DO NOT CHANGE - must always be 1 million
 

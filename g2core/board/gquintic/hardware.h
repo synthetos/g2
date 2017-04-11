@@ -126,6 +126,8 @@ using Motate::OutputPin;
 
 #define MIN_SEGMENT_MS ((float)0.125)       // S70 can handle much much smaller segements
 
+#define PLANNER_BUFFER_POOL_SIZE (96)
+
 /**** Motate Definitions ****/
 
 // Timer definitions. See stepper.h and other headers for setup
