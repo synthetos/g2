@@ -232,13 +232,6 @@ void cm_operation_init()
  *  (6) - Remove the hold state / there is queued motion - see cycle_feedhold.cpp
  *  (7) - Remove the hold state / there is no queued motion - see cycle_feedhold.cpp
  */
-/*
- * List of all possible cases where a feedhold can be received, and what to do about them
- *
- *  (0) - Feedhold received when the system is idle. There is no CYCLE (CYCLE_NONE)
- *  (1)
- */
-
 
 /****************************************************************************************
  * cm_operation_runner_callback() - run feedhold operations and sequence queued requests
