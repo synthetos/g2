@@ -364,6 +364,11 @@ namespace Motate {    // Define timer inside Motate namespace
     }
 } // namespace Motate
 
+/****************************************************************************************
+ * st_request_forward_plan  - performs forward planning on penultimate block
+ * fwd_plan interrupt       - interrupt handler for calling forward planning function
+ */
+
 void st_request_forward_plan()
 {
     fwd_plan_timer.setInterruptPending();

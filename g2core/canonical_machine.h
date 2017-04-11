@@ -121,7 +121,7 @@ typedef enum {                      // feedhold type parameter
 } cmFeedholdType;
 
 typedef enum {                      // feedhold final operation 
-    FEEDHOLD_EXIT_CYCLE = 0,        // exit feedhold with cycle restart - HOLD or STOP, depending on type
+    FEEDHOLD_EXIT_CYCLE = 0,        // exit feedhold with cycle restart
     FEEDHOLD_EXIT_FLUSH,            // exit feedhold with flush
     FEEDHOLD_EXIT_STOP,             // perform program stop
     FEEDHOLD_EXIT_END,              // perform program end

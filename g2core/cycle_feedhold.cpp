@@ -203,7 +203,7 @@ void cm_operation_init()
  * 
  *  Feedhold processing performs the following (in rough sequence order):
  *
- *  (0) - Feedhold is request bu calling cm_feedhold_reqeust() 
+ *  (0) - Feedhold is request by calling cm_feedhold_request() 
  *
  * Control transfers to plan_exec.cpp feedhold functions:
  *
@@ -232,6 +232,13 @@ void cm_operation_init()
  *  (6) - Remove the hold state / there is queued motion - see cycle_feedhold.cpp
  *  (7) - Remove the hold state / there is no queued motion - see cycle_feedhold.cpp
  */
+/*
+ * List of all possible cases where a feedhold can be received, and what to do about them
+ *
+ *  (0) - Feedhold received when the system is idle. There is no CYCLE (CYCLE_NONE)
+ *  (1)
+ */
+
 
 /****************************************************************************************
  * cm_operation_runner_callback() - run feedhold operations and sequence queued requests
@@ -507,8 +514,13 @@ static void _start_job_kill()
 
 void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit)
 {
-    // Can only initiate a feedhold if you are in a machining cycle not already in a feedhold
-    if ((cm1.hold_state == FEEDHOLD_OFF) && (cm1.machine_state == MACHINE_CYCLE)) {
+    // Can only initiate a feedhold if you are in a machining cycle, running, and not already in a feedhold
+
+    if ((cm1.hold_state == FEEDHOLD_OFF) &&
+        (cm1.machine_state == MACHINE_CYCLE) && (cm1.motion_state == MOTION_RUN)) {
+
+//    if ((cm1.hold_state == FEEDHOLD_OFF) && (cm1.machine_state == MACHINE_CYCLE)) {
+
         cm1.hold_type = type;
         cm1.hold_exit = exit;
         cm1.hold_profile = ((type == FEEDHOLD_TYPE_ACTIONS) || (type == FEEDHOLD_TYPE_HOLD)) ?
@@ -528,7 +540,7 @@ void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit)
             case FEEDHOLD_EXIT_INTERLOCK: { op.add_action(_run_interlock); break; }
             default: {}
         }
-        cm1.hold_state = FEEDHOLD_SYNC;     // start feedhold state machine in aline exec
+//        cm1.hold_state = FEEDHOLD_SYNC;         // may be redundant, unless default {} was triggered
         return;
     }
 
@@ -541,7 +553,7 @@ void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit)
     
     // Reset the request if it's invalid
     if ((cm1.machine_state != MACHINE_CYCLE) || (cm1.motion_state == MOTION_STOP)) {
-        cm->hold_state = FEEDHOLD_OFF;      // cannot honor the feedhold request. reset it
+        cm->hold_state = FEEDHOLD_OFF;          // cannot honor the feedhold request. reset it
     }
 
 }
@@ -555,42 +567,93 @@ static void _start_feedhold()
     }
 }
 */
+
+static void _check_motion_stopped()
+{
+    if (mp_runtime_is_idle()) {                         // wait for steppers to actually finish
+            
+        mpBuf_t *bf = mp_get_r();
+            
+        // Motion has stopped, so we can rely on positions and other values to be stable
+        // If SKIP type, discard the remainder of the block and position to the next block
+        if (cm->hold_type == FEEDHOLD_TYPE_SKIP) {
+            copy_vector(mp->position, mr->position);    // update planner position to the final runtime position
+            mp_free_run_buffer();                       // advance to next block, discarding the rest of the move
+        } else { // Otherwise setup the block to complete motion (regardless of how hold will ultimately be exited)
+            bf->length = get_axis_vector_length(mr->position, mr->target); // update bf w/remaining length in move
+            bf->block_state = BLOCK_INITIAL_ACTION;     // tell _exec to re-use the bf buffer
+            bf->buffer_state = MP_BUFFER_BACK_PLANNED;  // so it can be forward planned again
+            bf->plannable = true;                       // needed so block can be re-planned
+        }
+        mr->reset();                                    // reset MR for next use and for forward planning
+        cm_set_motion_state(MOTION_STOP);
+        cm->hold_state = FEEDHOLD_MOTION_STOPPED;
+        sr_request_status_report(SR_REQUEST_IMMEDIATE);
+    }
+}
+
 static stat_t _feedhold_skip()
 {
-    if (cm1.hold_state == FEEDHOLD_OFF) {   // if entered while OFF start a feedhold
-        cm1.hold_state = FEEDHOLD_SYNC;
+    if (cm1.hold_state == FEEDHOLD_OFF) {       // if entered while OFF start a feedhold
+        cm1.hold_type = FEEDHOLD_TYPE_SKIP;
+//        cm1.hold_exit = FEEDHOLD_EXIT_FLUSH;    // default exit for SKIP is FLUSH...
+        cm1.hold_state = FEEDHOLD_SYNC;         // ...FLUSH can be overridden by setting hold_exit after this function
     }
     if (cm1.hold_state < FEEDHOLD_MOTION_STOPPED) {
         return (STAT_EAGAIN);
     }
-    cm1.hold_state = FEEDHOLD_OFF;          // cannot be in HOLD or command won't plan (see mp_plan_block_list())
-    mp_replan_queue(mp_get_r());            // unplan current forward plan (bf head block), and reset all blocks
-    st_request_forward_plan();              // replan from the new bf buffer
+    cm1.hold_state = FEEDHOLD_OFF;              // cannot be in HOLD or command won't plan (see mp_plan_block_list())
+    mp_replan_queue(mp_get_r());                // unplan current forward plan (bf head block), and reset all blocks
+    st_request_forward_plan();                  // replan from the new bf buffer
     return (STAT_OK);
 }
 
 static stat_t _feedhold_no_actions()
 {
-    if (cm1.hold_state == FEEDHOLD_OFF) {   // start a feedhold
-        cm1.hold_state = FEEDHOLD_SYNC;
+    // initiate the feedhold
+    if (cm1.hold_state == FEEDHOLD_OFF) {       // start a feedhold
+        cm1.hold_type = FEEDHOLD_TYPE_HOLD;
+//        cm1.hold_exit = FEEDHOLD_EXIT_STOP;     // default exit for NO_ACTIONS is STOP...
+        cm1.hold_state = FEEDHOLD_SYNC;         // ... STOP can be overridden by setting hold_exit after this function
     }
-    if (cm1.hold_state < FEEDHOLD_MOTION_STOPPED) { // wait until it reaches the hold point
+
+    // if motion has already stopped declare that you are in a feedhold
+//    if (cm1.motion_state == MOTION_STOP) {
+//        _check_motion_stopped();
+//    }
+    
+    // wait until feedhold reaches the hold point
+    if (cm1.hold_state < FEEDHOLD_MOTION_STOPPED) {
         return (STAT_EAGAIN);
     }
-    mp_replan_queue(mp_get_r());            // unplan current forward plan (bf head block), and reset all blocks
-    st_request_forward_plan();              // replan from the new bf buffer
+    // complete the feedhold
+    mp_replan_queue(mp_get_r());                // unplan current forward plan (bf head block), and reset all blocks
+    st_request_forward_plan();                  // replan from the new bf buffer
     cm1.hold_state = FEEDHOLD_HOLD;
     return (STAT_OK);
 }
 
 static void _feedhold_actions_done_callback(float* vect, bool* flag)
 {
-    cm1.hold_state = FEEDHOLD_HOLD_ACTIONS_COMPLETE;    // penultimate state before transitioning to FEEDHOLD_HOLD
+    cm1.hold_state = FEEDHOLD_HOLD_ACTIONS_COMPLETE; // penultimate state before transitioning to FEEDHOLD_HOLD
     sr_request_status_report(SR_REQUEST_IMMEDIATE);
 }
 
-static stat_t _feedhold_with_actions()   // Execute Case (5)
+static stat_t _feedhold_with_actions()          // Execute Case (5)
 {
+    // if entered while OFF start a feedhold
+    if (cm1.hold_state == FEEDHOLD_OFF) {
+        cm1.hold_type = FEEDHOLD_TYPE_ACTIONS;
+//        cm1.hold_exit = FEEDHOLD_EXIT_STOP;     // default exit for ACTIONS is STOP...
+        cm1.hold_state = FEEDHOLD_SYNC;         // ... STOP can be overridden by setting hold_exit after this function
+        return (STAT_EAGAIN);
+    }
+
+    // if motion has already stopped declare that you are in a feedhold
+//    if (cm1.motion_state == MOTION_STOP) {
+//        _check_motion_stopped();
+//    }
+
     // Check to run first-time code
     if (cm1.hold_state == FEEDHOLD_MOTION_STOPPED) {
         cm->hold_state = FEEDHOLD_HOLD_ACTIONS_PENDING;  // next state

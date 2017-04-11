@@ -154,20 +154,20 @@ static void _init_forward_diffs(float v_0, float v_1);
  *
  *       (Note: all COMMAND(s) in 2j. should be in PLANNED state)
  */
-
-// _plan_aline() - mp_forward_plan() helper
-//
-// Calculate ramps for the current planning block and the next PREPPED buffer
-// The PREPPED buffer will be set to PLANNED later...
-//
-// Pass in the bf buffer that will "link" with the planned block
-// The block and the buffer are implicitly linked for exec_aline()
-//
-// Note that that can only be one PLANNED move at a time.
-// This is to help sync mr->p to point to the next planned mr->bf
-// mr->p is only advanced in mp_exec_aline(), after mp.r = mr->p.
-// This code aligns the buffers and the blocks for exec_aline().
-
+/*
+ * _plan_aline() - mp_forward_plan() helper
+ *
+ * Calculate ramps for the current planning block and the next PREPPED buffer
+ * The PREPPED buffer will be set to PLANNED later...
+ *
+ * Pass in the bf buffer that will "link" with the planned block
+ * The block and the buffer are implicitly linked for exec_aline()
+ *
+ * Note that that can only be one PLANNED move at a time.
+ * This is to help sync mr->p to point to the next planned mr->bf
+ * mr->p is only advanced in mp_exec_aline(), after mp.r = mr->p.
+ * This code aligns the buffers and the blocks for exec_aline().
+ */
 static stat_t _plan_aline(mpBuf_t *bf, float entry_velocity)
 {
     mpBlockRuntimeBuf_t* block = mr->p;             // set a local planning block so it doesn't change on you
@@ -1030,7 +1030,7 @@ static void _exec_aline_normalize_block(mpBlockRuntimeBuf_t *b)
 
 static stat_t _exec_aline_feedhold(mpBuf_t *bf) 
 {
-    // Case (4) - Completing the feedhold - Wait for the steppers to stop
+    // Case (4) - Wait for the steppers to stop and complete the feedhold
     if (cm->hold_state == FEEDHOLD_MOTION_STOPPING) {
         if (mp_runtime_is_idle()) {                         // wait for steppers to actually finish
  
@@ -1042,13 +1042,13 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
             } else { // Otherwise setup the block to complete motion (regardless of how hold will ultimately be exited)
                 bf->length = get_axis_vector_length(mr->position, mr->target); // update bf w/remaining length in move
                 bf->block_state = BLOCK_INITIAL_ACTION;     // tell _exec to re-use the bf buffer
-                bf->plannable = true;                       // needed so block can be replanned
+                bf->buffer_state = MP_BUFFER_BACK_PLANNED;  // so it can be forward planned again
+                bf->plannable = true;                       // needed so block can be re-planned
             }
             mr->reset();                                    // reset MR for next use and for forward planning
             cm_set_motion_state(MOTION_STOP);
             cm->hold_state = FEEDHOLD_MOTION_STOPPED;
             sr_request_status_report(SR_REQUEST_IMMEDIATE);
-//          cs.controller_state = CONTROLLER_READY; // Can this be removed? +++++ // remove controller readline() PAUSE
         }
         return (STAT_NOOP);                                 // hold here. leave with a NOOP so it does not attempt another load and exec.
     }
