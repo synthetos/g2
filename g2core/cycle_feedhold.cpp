@@ -480,10 +480,14 @@ static void _start_job_kill()
             return;
         }
         case MACHINE_CYCLE: {                           // Case 2's 
-            if (cm1.hold_state == FEEDHOLD_OFF) {       // Case 2a - in cycle and not in a hold
-                op.add_action(_feedhold_no_actions);
-//                op.add_action(_run_job_kill);
-            }
+//            if (cm1.motion_state == MOTION_RUN) {       // +++++ bandaid
+                if (cm1.hold_state == FEEDHOLD_OFF) {       // Case 2a - in cycle and not in a hold
+                    op.add_action(_feedhold_no_actions);
+    //                op.add_action(_run_job_kill);
+                }
+//            } else {
+//                cm1.hold_state = FEEDHOLD_HOLD;         // +++++ bandaid
+//            }            
             if (cm1.hold_state == FEEDHOLD_HOLD) {      // Case 2c - in a finished hold
                 _run_job_kill();
             }
@@ -607,7 +611,15 @@ static stat_t _feedhold_no_actions()
     if (cm1.hold_state == FEEDHOLD_OFF) {       // start a feedhold
         cm1.hold_type = FEEDHOLD_TYPE_HOLD;
 //        cm1.hold_exit = FEEDHOLD_EXIT_STOP;     // default exit for NO_ACTIONS is STOP...
-        cm1.hold_state = FEEDHOLD_SYNC;         // ... STOP can be overridden by setting hold_exit after this function
+//+++ add these lines
+        if (cm1.motion_state == MOTION_RUN) {
+            cm1.hold_state = FEEDHOLD_SYNC;         // ... STOP can be overridden by setting hold_exit after this function
+        } else {
+            _check_motion_stopped();
+            cm->hold_state = FEEDHOLD_HOLD;
+        }
+//        cm1.hold_state = FEEDHOLD_SYNC;         // ... STOP can be overridden by setting hold_exit after this function
+//++++ to here
     }
 
     // if motion has already stopped declare that you are in a feedhold
