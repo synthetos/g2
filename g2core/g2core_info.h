@@ -21,7 +21,7 @@
 #ifndef G2CORE_INFO_H_ONCE
 #define G2CORE_INFO_H_ONCE
 
-#define G2CORE_FIRMWARE_BUILD			100.24  // Merged dev-261-simple-heat-bed - see #261
+#define G2CORE_FIRMWARE_BUILD			100.25  // Merged fixes for #263 and #265
 #ifdef GIT_VERSION
 #define G2CORE_FIRMWARE_BUILD_STRING	GIT_VERSION
 #else
