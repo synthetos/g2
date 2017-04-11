@@ -55,6 +55,8 @@
 #define COOLANT_FLOOD_POLARITY      1                       // 0=active low, 1=active high
 #define COOLANT_PAUSE_ON_HOLD       false
 
+#define TRAVERSE_AT_HIGH_JERK       true                    // EXPERIMENTAL!!
+
 // Communications and reporting settings
 
 #define MARLIN_COMPAT_ENABLED       true                    // enable marlin compatibility mode
@@ -101,43 +103,43 @@
 #define M1_STEP_ANGLE               1.8                     // 1sa
 // Marlin says 80 steps/unit, and 16 microsteps, with a 200-step/rev motor
 #define M1_TRAVEL_PER_REV           40                      // 1tr
-#define M1_MICROSTEPS               32                      // 1mi        1,2,4,8,16,32
+#define M1_MICROSTEPS               64                     // 1mi        1,2,4,8,16,32
 #define M1_POLARITY                 0                       // 1po        0=normal, 1=reversed
 #define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm        standard
-#define M1_POWER_LEVEL              0.9                     // 1mp
+#define M1_POWER_LEVEL              0.3                     // 1pl
 
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
 #define M2_MOTOR_MAP                AXIS_Y
 #define M2_STEP_ANGLE               1.8
 // Marlin says 80 steps/unit, and 16 microsteps, with a 200-step/rev motor
 #define M2_TRAVEL_PER_REV           40
-#define M2_MICROSTEPS               32
+#define M2_MICROSTEPS               64
 #define M2_POLARITY                 1
 #define M2_POWER_MODE               MOTOR_POWER_MODE
-#define M2_POWER_LEVEL              0.9
+#define M2_POWER_LEVEL              0.3
 
 #define M3_MOTOR_MAP                AXIS_Z
 #define M3_STEP_ANGLE               1.8
 // Marlin says 200 steps/unit, and 8 microsteps, with a 200-step/rev motor
 #define M3_TRAVEL_PER_REV           8
-#define M3_MICROSTEPS               32
+#define M3_MICROSTEPS               64
 #define M3_POLARITY                 0
 #define M3_POWER_MODE               MOTOR_ALWAYS_POWERED
-#define M3_POWER_LEVEL              0.9
+#define M3_POWER_LEVEL              0.3
 
 #define M4_MOTOR_MAP                AXIS_A
 #define M4_STEP_ANGLE               1.8
 #define M4_TRAVEL_PER_REV           360            // degrees moved per motor rev
-#define M4_MICROSTEPS               32
+#define M4_MICROSTEPS               64
 #define M4_POLARITY                 0
 #define M4_POWER_MODE               MOTOR_POWER_MODE
-#define M4_POWER_LEVEL              0.7
+#define M4_POWER_LEVEL              0.3
 
 // 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
 #define M5_MOTOR_MAP                AXIS_B
 #define M5_STEP_ANGLE               1.8
 #define M5_TRAVEL_PER_REV           360            // degrees moved per motor rev
-#define M5_MICROSTEPS               32
+#define M5_MICROSTEPS               128
 #define M5_POLARITY                 0
 #define M5_POWER_MODE               MOTOR_POWER_MODE
 #define M5_POWER_LEVEL              0.3
@@ -145,12 +147,12 @@
 // *** axis settings **********************************************************************************
 
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX              12000                   // xvm  G0 max velocity in mm/min
+#define X_VELOCITY_MAX              18000                   // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX                230                     // xtm  travel between switches or crashes
-#define X_JERK_MAX                  6000                    // xjm  yes, that's "100 billion" mm/(min^3)
-#define X_JERK_HIGH_SPEED           6000                    // xjh
+#define X_JERK_MAX                  10000                    // xjm  yes, that's "100 billion" mm/(min^3)
+#define X_JERK_HIGH_SPEED           10000                    // xjh
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIRECTION          0                       // xhd  0=search moves negative, 1= search moves positive
 #define X_SEARCH_VELOCITY           2500                    // xsv  move in negative direction
@@ -159,12 +161,12 @@
 #define X_ZERO_BACKOFF              0.5                     // xzb  mm
 
 #define Y_AXIS_MODE                 AXIS_STANDARD
-#define Y_VELOCITY_MAX              12000
+#define Y_VELOCITY_MAX              18000
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                224.5
-#define Y_JERK_MAX                  6000
-#define Y_JERK_HIGH_SPEED           6000
+#define Y_JERK_MAX                  10000
+#define Y_JERK_HIGH_SPEED           10000
 #define Y_HOMING_INPUT              3
 #define Y_HOMING_DIRECTION          1
 #define Y_SEARCH_VELOCITY           3000
@@ -177,7 +179,8 @@
 #define Z_FEEDRATE_MAX              Z_VELOCITY_MAX
 #define Z_TRAVEL_MIN                0
 #define Z_TRAVEL_MAX                215
-#define Z_JERK_MAX                  500
+//#define Z_JERK_MAX                  500
+#define Z_JERK_MAX                  800
 #define Z_JERK_HIGH_SPEED           1000
 #define Z_HOMING_INPUT              6
 #define Z_HOMING_DIRECTION          1
@@ -186,7 +189,7 @@
 #define Z_LATCH_BACKOFF             2
 #define Z_ZERO_BACKOFF              0
 
-#define G55_Z_OFFSET                0.6
+#define G55_Z_OFFSET                0.35
 
 // Rotary values are chosen to make the motor react the same as X for testing
 /***************************************************************************************
@@ -207,18 +210,33 @@
 
 #define A_AXIS_MODE             AXIS_RADIUS
 #define A_RADIUS                1.428
-#define A_VELOCITY_MAX          144443.0  // G0 rate ~60 mm/s, 3,600 mm/min
-#define A_FEEDRATE_MAX          60184.6 // ~25 mm/s
+//#define A_VELOCITY_MAX          288886.4
+//#define A_VELOCITY_MAX          144443.0  // G0 rate ~60 mm/s, 3,600 mm/min
+#define A_VELOCITY_MAX          72221.5  // G0 rate ~30 mm/s, 3,600 mm/min
+//define A_VELOCITY_MAX           48147.7 // G0 rate ~20 mm/s
+
+//#define A_FEEDRATE_MAX          48147.7 // ~20 mm/s
+//#define A_FEEDRATE_MAX          36110.8 // ~15 mm/s
+//#define A_FEEDRATE_MAX          24073.9 // ~10 mm/s
+//#define A_FEEDRATE_MAX          12036.95 // ~5 mm/s
+//#define A_FEEDRATE_MAX          6018.475 // ~2.5 mm/s
+//#define A_FEEDRATE_MAX          1000.0 // ~0.415 mm/s
+#define A_FEEDRATE_MAX          800.0
+//#define A_FEEDRATE_MAX          500.0 // ~0.2075 mm/s
 #define A_TRAVEL_MIN            0
 #define A_TRAVEL_MAX            10
-#define A_JERK_MAX              144443.2 // ~60 million mm/min^3
+//#define A_JERK_MAX              288886.4 // ~120 million mm/min^3
+//#define A_JERK_MAX              144443.2 // ~60 million mm/min^3
+#define A_JERK_MAX              48147.7 // ~20 million mm/min^3
 #define A_HOMING_INPUT          0
 #define A_HOMING_DIRECTION      0
 #define A_SEARCH_VELOCITY       2000
 #define A_LATCH_VELOCITY        2000
 #define A_LATCH_BACKOFF         5
 #define A_ZERO_BACKOFF          2
-#define A_JERK_HIGH_SPEED       361108.0 // ~150 million mm/min^3
+//#define A_JERK_HIGH_SPEED       288886.4 // ~120 million mm/min^3
+//#define A_JERK_HIGH_SPEED       240739.0 // ~100 million mm/min^3
+#define A_JERK_HIGH_SPEED       144443.2 // ~60 million mm/min^3
 
 #define B_AXIS_MODE             AXIS_RADIUS
 #define B_RADIUS                1.428
