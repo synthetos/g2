@@ -355,6 +355,8 @@
 
 /*** Extruders / Heaters ***/
 
+#define TEMP_MIN_BED_RISE_DEGREES_OVER_TIME 0.5
+
 #define MIN_FAN_VALUE               0.4   // (he1fm) at MIN_FAN_TEMP the fan comes on at this spped (0.0-1.0)
 #define MAX_FAN_VALUE               0.75  // (he1fp) at MAX_FAN_TEMP the fan is at this spped (0.0-1.0)
 #define MIN_FAN_TEMP                50.0  // (he1fl) at this temp the fan starts to ramp up linearly
