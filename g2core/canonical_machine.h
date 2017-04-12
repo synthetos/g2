@@ -281,7 +281,7 @@ typedef struct cmMachine {                  // struct to manage canonical machin
 
   /**** Runtime variables (PRIVATE) ****/
 
-    uint8_t test;   //+++++
+    uint32_t test;   //+++++
 
     // Global state variables and flags
 
