@@ -1035,15 +1035,26 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
         if (mp_runtime_is_idle()) {                         // wait for steppers to actually finish
  
             // Motion has stopped, so we can rely on positions and other values to be stable
-            // If SKIP type, discard the remainder of the block and position to the next block
+            
+            // If hold was SKIP type, discard the remainder of the block and position to the next block
             if (cm->hold_type == FEEDHOLD_TYPE_SKIP) {
                 copy_vector(mp->position, mr->position);    // update planner position to the final runtime position
                 mp_free_run_buffer();                       // advance to next block, discarding the rest of the move
-            } else { // Otherwise setup the block to complete motion (regardless of how hold will ultimately be exited)
-                bf->length = get_axis_vector_length(mr->position, mr->target); // update bf w/remaining length in move
-                bf->block_state = BLOCK_INITIAL_ACTION;     // tell _exec to re-use the bf buffer
-                bf->buffer_state = MP_BUFFER_BACK_PLANNED;  // revert from RUNNING so it can be forward planned again
-                bf->plannable = true;                       // needed so block can be re-planned
+            }
+            
+            // Otherwise setup the block to complete motion (regardless of how hold will ultimately be exited)      
+            else { 
+                bf->length = get_axis_vector_length(mr->position, mr->target);  // update bf w/remaining length in move
+                
+                // If length ~= 0 it's because the deceleration was exact. Handle this exception to avoid planning errors
+                if (bf->length < EPSILON4) {
+                    copy_vector(mp->position, mr->position);// update planner position to the final runtime position
+                    mp_free_run_buffer();                   // advance to next block, discarding the zero-length move
+                } else {
+                    bf->block_state = BLOCK_INITIAL_ACTION;   // tell _exec to re-use the bf buffer
+                    bf->buffer_state = MP_BUFFER_BACK_PLANNED;// revert from RUNNING so it can be forward planned again
+                    bf->plannable = true;                   // needed so block can be re-planned
+                }
             }
             mr->reset();                                    // reset MR for next use and for forward planning
             cm_set_motion_state(MOTION_STOP);
