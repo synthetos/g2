@@ -59,18 +59,6 @@ static stat_t _run_alarm(void);
 static stat_t _run_shutdown(void);
 static stat_t _run_interlock(void);
 
-/*
-#pragma GCC push_options        // DIAGNOSTIC +++++
-#pragma GCC optimize ("O0")     // DIAGNOSTIC +++++
-static void _hold_everything(uint32_t number)
-{
-    if (++cm1.test == number) {
-        cm->gm.linenum = 42;
-    }
-}
-#pragma GCC reset_options       // DIAGNOSTIC +++++
-*/
-
 /****************************************************************************************
  * OPERATIONS AND ACTIONS
  *

@@ -66,18 +66,6 @@ static void _set_bf_diagnostics(mpBuf_t* bf) {
 static void _set_bf_diagnostics(mpBuf_t* bf) {}
 #endif
 
-/*
-#pragma GCC push_options        // DIAGNOSTIC +++++
-#pragma GCC optimize ("O0")     // DIAGNOSTIC +++++
-static void _hold_everything(uint32_t number)
-{
-    if (cm1.gm.linenum = number) {
-        cm1.test = 1000;
-    }
-}
-#pragma GCC reset_options       // DIAGNOSTIC +++++
-*/
-
 /* Runtime-specific setters and getters
  *
  * mp_zero_segment_velocity()         - correct velocity in last segment for reporting purposes
@@ -237,8 +225,6 @@ stat_t mp_aline(GCodeState_t* _gm)
     _calculate_jerk(bf);                                // compute bf->jerk values
     _calculate_vmaxes(bf, axis_length, axis_square);    // compute cruise_vmax and absolute_vmax
     _set_bf_diagnostics(bf);                            // DIAGNOSTIC
-
-//    _hold_everything(314);
 
     // Note: these next lines must remain in exact order. Position must update before committing the buffer.
     copy_vector(mp->position, bf->gm.target);           // update the planner position for the next move
