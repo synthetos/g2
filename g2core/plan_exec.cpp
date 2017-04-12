@@ -1042,7 +1042,7 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
             } else { // Otherwise setup the block to complete motion (regardless of how hold will ultimately be exited)
                 bf->length = get_axis_vector_length(mr->position, mr->target); // update bf w/remaining length in move
                 bf->block_state = BLOCK_INITIAL_ACTION;     // tell _exec to re-use the bf buffer
-                bf->buffer_state = MP_BUFFER_BACK_PLANNED;  // so it can be forward planned again
+                bf->buffer_state = MP_BUFFER_BACK_PLANNED;  // revert from RUNNING so it can be forward planned again
                 bf->plannable = true;                       // needed so block can be re-planned
             }
             mr->reset();                                    // reset MR for next use and for forward planning
