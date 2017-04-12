@@ -1028,12 +1028,29 @@ static void _exec_aline_normalize_block(mpBlockRuntimeBuf_t *b)
  *                or tail.
  */
 
+#pragma GCC push_options        // DIAGNOSTIC +++++
+#pragma GCC optimize ("O0")     // DIAGNOSTIC +++++
+
+static void _hold_everything()
+{
+    cm1.test += 1;
+    if (cm1.test == 3) {
+        cm->gm.linenum = 42;
+    }
+    
+}
+#pragma GCC reset_options       // DIAGNOSTIC +++++
+
+
+
 static stat_t _exec_aline_feedhold(mpBuf_t *bf) 
 {
     // Case (4) - Wait for the steppers to stop and complete the feedhold
     if (cm->hold_state == FEEDHOLD_MOTION_STOPPING) {
         if (mp_runtime_is_idle()) {                         // wait for steppers to actually finish
  
+            _hold_everything();
+        
             // Motion has stopped, so we can rely on positions and other values to be stable
             
             // If hold was SKIP type, discard the remainder of the block and position to the next block
@@ -1055,7 +1072,7 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
                     while (bf->buffer_state > MP_BUFFER_BACK_PLANNED) {
                         bf->buffer_state = MP_BUFFER_BACK_PLANNED;// revert from RUNNING so it can be forward planned again
                         bf->plannable = true;               // needed so block can be re-planned
-                        bf = mp_get_prev_buffer(bf);
+                        bf = mp_get_next_buffer(bf);
                     }
                 }
             }

@@ -281,6 +281,8 @@ typedef struct cmMachine {                  // struct to manage canonical machin
 
   /**** Runtime variables (PRIVATE) ****/
 
+    uint8_t test;   //+++++
+
     // Global state variables and flags
 
     cmMachineState  machine_state;          // macs: machine/cycle/motion is the actual machine state
