@@ -1052,8 +1052,11 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
                     mp_free_run_buffer();                   // advance to next block, discarding the zero-length move
                 } else {
                     bf->block_state = BLOCK_INITIAL_ACTION;   // tell _exec to re-use the bf buffer
-                    bf->buffer_state = MP_BUFFER_BACK_PLANNED;// revert from RUNNING so it can be forward planned again
-                    bf->plannable = true;                   // needed so block can be re-planned
+                    while (bf->buffer_state > MP_BUFFER_BACK_PLANNED) {
+                        bf->buffer_state = MP_BUFFER_BACK_PLANNED;// revert from RUNNING so it can be forward planned again
+                        bf->plannable = true;               // needed so block can be re-planned
+                        bf = mp_get_prev_buffer(bf);
+                    }
                 }
             }
             mr->reset();                                    // reset MR for next use and for forward planning
