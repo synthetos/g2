@@ -275,11 +275,11 @@ typedef enum {                          // used w/start and stop flags to sequen
 } stPowerState;
 
 typedef enum {
-    MOTOR_DISABLED = 0,                 // motor enable is deactivated
-    MOTOR_ALWAYS_POWERED,               // motor is always powered while machine is ON
-    MOTOR_POWERED_IN_CYCLE,             // motor fully powered during cycles, de-powered out of cycle
-    MOTOR_POWERED_ONLY_WHEN_MOVING,     // motor only powered while moving - idles shortly after it's stopped - even in cycle
-    MOTOR_POWER_MODE_MAX_VALUE          // for input range checking
+    MOTOR_DISABLED = 0,                 // [0] motor enable is deactivated
+    MOTOR_ALWAYS_POWERED,               // [1] motor is always powered while machine is ON
+    MOTOR_POWERED_IN_CYCLE,             // [2] motor fully powered during cycles, de-powered out of cycle
+    MOTOR_POWERED_ONLY_WHEN_MOVING,     // [3] motor only powered while moving - idles shortly after it's stopped - even in cycle
+    MOTOR_POWER_MODE_MAX_VALUE          // [4] for input range checking
 } stPowerMode;
 
 // Min/Max timeouts allowed for motor disable. Allow for inertial stop; must be non-zero
