@@ -1096,6 +1096,14 @@ static stat_t _execute_gcode_block_marlin()
         cm.gm.tool = cm.gm.tool_select;     // Also, in Marlin, tool changes are effective immediately :facepalm:
     }
 
+    if (mst.marlin_flavor &&
+        (gv.next_action == NEXT_ACTION_DWELL) &&
+        gf.P_word
+        )
+    { // G4 - dwell - adjust for Marlin
+        gv.P_word = gv.P_word / 1000.0;     // In marlin, the P word is in microseconds, convert to seconds
+    }
+
     // Deal with E
     if (gf.marlin_relative_extruder_mode) {                 // M82, M83
         marlin_set_extruder_mode(gv.marlin_relative_extruder_mode);
