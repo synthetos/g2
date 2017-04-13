@@ -778,11 +778,11 @@ void st_prep_command(void *bf)
  * st_prep_dwell()      - Add a dwell to the move buffer
  */
 
-void st_prep_dwell(float microseconds)
+void st_prep_dwell(float milliseconds)
 {
     st_pre.block_type = BLOCK_TYPE_DWELL;
     // we need dwell_ticks to be at least 1
-    st_pre.dwell_ticks = std::max((uint32_t)((microseconds/1000000) * FREQUENCY_DWELL), 1UL);
+    st_pre.dwell_ticks = std::max((uint32_t)((milliseconds/1000.0) * FREQUENCY_DWELL), 1UL);
     st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;    // signal that prep buffer is ready
 }
 
@@ -791,9 +791,9 @@ void st_prep_dwell(float microseconds)
  * (only usable while exec isn't running, e.g. in feedhold or stopped states...)
  * add a dwell to the loader without going through the planner buffers
  */
-void st_request_out_of_band_dwell(float microseconds)
+void st_request_out_of_band_dwell(float milliseconds)
 {
-    st_prep_dwell(microseconds);
+    st_prep_dwell(milliseconds);
     st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;    // signal that prep buffer is ready
     st_request_load_move();
 }
