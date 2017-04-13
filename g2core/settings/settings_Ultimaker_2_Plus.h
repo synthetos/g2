@@ -103,20 +103,20 @@
 #define M1_STEP_ANGLE               1.8                     // 1sa
 // Marlin says 80 steps/unit, and 16 microsteps, with a 200-step/rev motor
 #define M1_TRAVEL_PER_REV           40                      // 1tr
-#define M1_MICROSTEPS               64                     // 1mi        1,2,4,8,16,32
+#define M1_MICROSTEPS               128                     // 1mi        1,2,4,8,16,32
 #define M1_POLARITY                 0                       // 1po        0=normal, 1=reversed
-#define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm        standard
-#define M1_POWER_LEVEL              0.3                     // 1pl
+#define M1_POWER_MODE               MOTOR_POWERED_IN_CYCLE        // 1pm        standard
+#define M1_POWER_LEVEL              0.5                     // 1pl
 
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
 #define M2_MOTOR_MAP                AXIS_Y
 #define M2_STEP_ANGLE               1.8
 // Marlin says 80 steps/unit, and 16 microsteps, with a 200-step/rev motor
 #define M2_TRAVEL_PER_REV           40
-#define M2_MICROSTEPS               64
+#define M2_MICROSTEPS               128
 #define M2_POLARITY                 1
-#define M2_POWER_MODE               MOTOR_POWER_MODE
-#define M2_POWER_LEVEL              0.3
+#define M2_POWER_MODE               MOTOR_POWERED_IN_CYCLE
+#define M2_POWER_LEVEL              0.5
 
 #define M3_MOTOR_MAP                AXIS_Z
 #define M3_STEP_ANGLE               1.8
@@ -124,8 +124,8 @@
 #define M3_TRAVEL_PER_REV           8
 #define M3_MICROSTEPS               64
 #define M3_POLARITY                 0
-#define M3_POWER_MODE               MOTOR_ALWAYS_POWERED
-#define M3_POWER_LEVEL              0.3
+#define M3_POWER_MODE               MOTOR_POWERED_IN_CYCLE
+#define M3_POWER_LEVEL              0.5
 
 #define M4_MOTOR_MAP                AXIS_A
 #define M4_STEP_ANGLE               1.8
@@ -133,7 +133,7 @@
 #define M4_MICROSTEPS               64
 #define M4_POLARITY                 0
 #define M4_POWER_MODE               MOTOR_POWER_MODE
-#define M4_POWER_LEVEL              0.3
+#define M4_POWER_LEVEL              0.8
 
 // 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
 #define M5_MOTOR_MAP                AXIS_B
@@ -142,7 +142,7 @@
 #define M5_MICROSTEPS               128
 #define M5_POLARITY                 0
 #define M5_POWER_MODE               MOTOR_POWER_MODE
-#define M5_POWER_LEVEL              0.3
+#define M5_POWER_LEVEL              0.8
 
 // *** axis settings **********************************************************************************
 
@@ -151,13 +151,13 @@
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX                230                     // xtm  travel between switches or crashes
-#define X_JERK_MAX                  10000                    // xjm  yes, that's "100 billion" mm/(min^3)
-#define X_JERK_HIGH_SPEED           10000                    // xjh
+#define X_JERK_MAX                  7000                    // xjm  yes, that's "100 billion" mm/(min^3)
+#define X_JERK_HIGH_SPEED           7000                    // xjh
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIRECTION          0                       // xhd  0=search moves negative, 1= search moves positive
 #define X_SEARCH_VELOCITY           2500                    // xsv  move in negative direction
 #define X_LATCH_VELOCITY            200                     // xlv  mm/min
-#define X_LATCH_BACKOFF             5                       // xlb  mm
+#define X_LATCH_BACKOFF             10                       // xlb  mm
 #define X_ZERO_BACKOFF              0.5                     // xzb  mm
 
 #define Y_AXIS_MODE                 AXIS_STANDARD
@@ -165,17 +165,17 @@
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                224.5
-#define Y_JERK_MAX                  10000
-#define Y_JERK_HIGH_SPEED           10000
+#define Y_JERK_MAX                  7000
+#define Y_JERK_HIGH_SPEED           7000
 #define Y_HOMING_INPUT              3
 #define Y_HOMING_DIRECTION          1
 #define Y_SEARCH_VELOCITY           3000
 #define Y_LATCH_VELOCITY            200
-#define Y_LATCH_BACKOFF             5
+#define Y_LATCH_BACKOFF             10
 #define Y_ZERO_BACKOFF              0.5
 
 #define Z_AXIS_MODE                 AXIS_STANDARD
-#define Z_VELOCITY_MAX              2000
+#define Z_VELOCITY_MAX              1500
 #define Z_FEEDRATE_MAX              Z_VELOCITY_MAX
 #define Z_TRAVEL_MIN                0
 #define Z_TRAVEL_MAX                215
@@ -186,10 +186,10 @@
 #define Z_HOMING_DIRECTION          1
 #define Z_SEARCH_VELOCITY           1000
 #define Z_LATCH_VELOCITY            100
-#define Z_LATCH_BACKOFF             2
+#define Z_LATCH_BACKOFF             5
 #define Z_ZERO_BACKOFF              0
 
-#define G55_Z_OFFSET                0.35
+#define G55_Z_OFFSET                0.3
 
 // Rotary values are chosen to make the motor react the same as X for testing
 /***************************************************************************************
@@ -278,7 +278,7 @@
 #endif // HAS_TEMPERATURE_SENSOR_1
 
 #define EXTRUDER_1_OUTPUT_PIN kOutput1_PinNumber
-#define EXTRUDER_1_FAN_PIN    kOutput8_PinNumber
+#define EXTRUDER_1_FAN_PIN    kOutput5_PinNumber
 
 #define HAS_TEMPERATURE_SENSOR_2  true
 #if HAS_TEMPERATURE_SENSOR_2
