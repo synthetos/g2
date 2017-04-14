@@ -146,10 +146,11 @@ void gpio_reset(void);
 void input_reset(void);
 void output_reset(void);
 
-bool gpio_read_input(const uint8_t input_num);
 void gpio_set_homing_mode(const uint8_t input_num, const bool is_homing);
 void gpio_set_probing_mode(const uint8_t input_num, const bool is_probing);
 int8_t gpio_get_probing_input(void);
+bool gpio_read_input(const uint8_t input_num);
+stat_t gpio_set_output(uint8_t output_num, float value);
 
 stat_t io_get_mo(nvObj_t *nv);
 stat_t io_set_mo(nvObj_t *nv);
