@@ -1025,10 +1025,10 @@ stat_t _execute_gcode_block(char *active_comment)
         case NEXT_ACTION_SUSPEND_G92_OFFSETS: { status = cm_suspend_g92_offsets(); break;}                      // G92.2
         case NEXT_ACTION_RESUME_G92_OFFSETS:  { status = cm_resume_g92_offsets(); break;}                       // G92.3
 
-        case NEXT_ACTION_JSON_COMMAND_SYNC:      { status = cm_json_command(active_comment); break;}            // M100
-        case NEXT_ACTION_JSON_WAIT:              { status = cm_json_wait(active_comment); break;}               // M101
-//      case NEXT_ACTION_JSON_COMMAND_IMMEDIATE: { status = mp_json_command_immediate(active_comment); break;}  // M102
-
+        case NEXT_ACTION_JSON_COMMAND_SYNC:       { status = cm_json_command(active_comment); break;}               // M100.0
+        case NEXT_ACTION_JSON_COMMAND_ASYNC:      { status = cm_json_command_immediate(active_comment); break;}     // M100.1
+        case NEXT_ACTION_JSON_WAIT:               { status = cm_json_wait(active_comment); break;}                  // M101
+        
         case NEXT_ACTION_DEFAULT: {
             cm_set_absolute_override(MODEL, gv.absolute_override); // apply absolute override & display as absolute
             switch (gv.motion_mode) {
