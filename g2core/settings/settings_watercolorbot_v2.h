@@ -116,7 +116,7 @@
 #define M3_MICROSTEPS               32                      // the max step resolution for a hobby servo is 1/32
 #define M3_POLARITY                 1
 #define M3_POWER_MODE               MOTOR_ALWAYS_POWERED
-#define M3_POWER_LEVEL              0.50                    // this is ignored
+#define M3_POWER_LEVEL              0.50                    // 1pl:   0.0=no power, 1.0=max power
 
 #define M4_MOTOR_MAP                AXIS_A
 #define M4_STEP_ANGLE               1.8

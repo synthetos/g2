@@ -114,11 +114,11 @@
 #define COOLANT_PAUSE_ON_HOLD       true    // {coph:
 #endif
 
-#ifndef PROBE_REPORT_ENABLE 
-#define PROBE_REPORT_ENABLE         true    // {prbr: 
+#ifndef PROBE_REPORT_ENABLE
+#define PROBE_REPORT_ENABLE         true    // {prbr:
 #endif
 
-/* 
+/*
  * The following is to fix an issue where feedrate override was being defined in some users
  * settings files but not others. This would otherwise cause an undefined compile error.
  *
@@ -230,7 +230,7 @@
 #define M1_POWER_MODE               MOTOR_DISABLED          // {1pm:  MOTOR_DISABLED, MOTOR_ALWAYS_POWERED, MOTOR_POWERED_IN_CYCLE, MOTOR_POWERED_ONLY_WHEN_MOVING
 #endif
 #ifndef M1_POWER_LEVEL
-#define M1_POWER_LEVEL              0.0                     // {1pl:   0.0=no power, 1.0=max power
+#define M1_POWER_LEVEL              0.0                     // 1pl:   0.0=no power, 1.0=max power
 #endif
 
 // MOTOR 2
@@ -247,7 +247,7 @@
 #define M2_MICROSTEPS               8
 #endif
 #ifndef M2_STEPS_PER_UNIT
-#define M2_STEPS_PER_UNIT           0 
+#define M2_STEPS_PER_UNIT           0
 #endif
 #ifndef M2_POLARITY
 #define M2_POLARITY                 0

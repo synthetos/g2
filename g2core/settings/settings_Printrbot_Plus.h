@@ -116,7 +116,7 @@
 #define M1_MICROSTEPS                     32                      // 1mi		1,2,4,8,16,32
 #define M1_POLARITY                       1                       // 1po		0=normal, 1=reversed
 #define M1_POWER_MODE                     MOTOR_POWER_MODE        // 1pm		standard
-#define M1_POWER_LEVEL                    0.4                     // 1mp
+#define M1_POWER_LEVEL                    0.4                     // 1pl:   0.0=no power, 1.0=max power
 
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
 #define M3_MOTOR_MAP                      AXIS_Y
