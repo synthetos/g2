@@ -105,7 +105,7 @@
 #define M1_TRAVEL_PER_REV           40                      // 1tr
 #define M1_MICROSTEPS               128                     // 1mi        1,2,4,8,16,32
 #define M1_POLARITY                 0                       // 1po        0=normal, 1=reversed
-#define M1_POWER_MODE               MOTOR_POWERED_IN_CYCLE        // 1pm        standard
+#define M1_POWER_MODE               MOTOR_POWERED_IN_CYCLE  // 1pm        standard
 #define M1_POWER_LEVEL              0.5                     // 1pl
 
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
@@ -270,17 +270,17 @@
         /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 4700 \
     }
 #else
-//    #define TEMPERATURE_SENSOR_1_TYPE  PT100<ADCPin<kADC3_PinNumber>>
-//    #define TEMPERATURE_SENSOR_1_INIT {/*pullup_resistance:*/ 2200, /*inline_resistance*/0.003, /*differential*/ true}
-    #define TEMPERATURE_SENSOR_1_TYPE  PT100<MAX31865<SPIBus_used_t::SPIBusDevice>>
-    #define TEMPERATURE_SENSOR_1_INIT {/*pullup_resistance:*/ 430, /*inline_resistance*/0, spiBus, spiCSPinMux.getCS(5)}
+    #define TEMPERATURE_SENSOR_1_TYPE  PT100<ADCDifferentialPair<kADC3_PinNumber, kADC4_PinNumber>>
+    #define TEMPERATURE_SENSOR_1_INIT {/*pullup_resistance:*/ 2200, /*inline_resistance*/0.0, /*differential*/ true}
+//    #define TEMPERATURE_SENSOR_1_TYPE  PT100<MAX31865<SPIBus_used_t::SPIBusDevice>>
+//    #define TEMPERATURE_SENSOR_1_INIT {/*pullup_resistance:*/ 430, /*inline_resistance*/0, spiBus, spiCSPinMux.getCS(5)}
 #endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_1
 
 #define EXTRUDER_1_OUTPUT_PIN kOutput1_PinNumber
 #define EXTRUDER_1_FAN_PIN    kOutput5_PinNumber
 
-#define HAS_TEMPERATURE_SENSOR_2  true
+#define HAS_TEMPERATURE_SENSOR_2  false
 #if HAS_TEMPERATURE_SENSOR_2
 #if 0 // 1 if a Thermistor, 0 if a PT100
     #define TEMPERATURE_SENSOR_2_TYPE  Thermistor<kADC3_PinNumber>
@@ -289,12 +289,14 @@
     /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 4700 \
     }
 #else
-    #define TEMPERATURE_SENSOR_2_TYPE  PT100<ADCPin<kADC4_PinNumber>>
-    #define TEMPERATURE_SENSOR_2_INIT {/*pullup_resistance:*/ 2200, /*inline_resistance*/0.003, /*differential*/ true}
+//    #define TEMPERATURE_SENSOR_2_TYPE  PT100<ADCPin<kADC3_PinNumber>>
+//    #define TEMPERATURE_SENSOR_2_INIT {/*pullup_resistance:*/ 2200, /*inline_resistance*/0.0, /*differential*/ true}
+    #define TEMPERATURE_SENSOR_2_TYPE  PT100<MAX31865<SPIBus_used_t::SPIBusDevice>>
+    #define TEMPERATURE_SENSOR_2_INIT {/*pullup_resistance:*/ 430, /*inline_resistance*/0, spiBus, spiCSPinMux.getCS(5)}
 #endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_2
 
-#define EXTRUDER_2_OUTPUT_PIN kOutput1_PinNumber
+#define EXTRUDER_2_OUTPUT_PIN kOutput2_PinNumber
 
 #define HAS_TEMPERATURE_SENSOR_3  true
 #if HAS_TEMPERATURE_SENSOR_3

@@ -407,7 +407,10 @@ struct MAX31865 final {
         return _vref;
     };
 
-    void setVoltageRange(const float vref, const float min_expected = 0, const float max_expected = -1, const bool differential = false, const float ideal_steps = 1)
+    void setVoltageRange(const float vref,
+                         const float min_expected = 0,
+                         const float max_expected = -1,
+                         const float ideal_steps = 1)
     {
         _vref = vref;
 

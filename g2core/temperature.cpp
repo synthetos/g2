@@ -154,6 +154,70 @@ struct TemperatureSensor {
     };
 };
 
+template<uint16_t sample_count>
+struct ValueHistory {
+
+    float variance_max = 2.0;
+    ValueHistory() {};
+    ValueHistory(float v_max) : variance_max{v_max} {};
+
+    struct sample_t {
+        float value;
+        float value_sq;
+        void set(float v) { value = v; value_sq = v*v; }
+    };
+    sample_t samples[sample_count];
+    uint16_t next_sample = 0;
+    void _bump_index(uint16_t &v) {
+        ++v;
+        if (v == sample_count) {
+            v = 0;
+        }
+    };
+    uint16_t sampled = 0;
+
+    float rolling_sum = 0;
+    float rolling_sum_sq = 0;
+    float rolling_mean = 0;
+    void add_sample(float t) {
+        rolling_sum -= samples[next_sample].value;
+        rolling_sum_sq -= samples[next_sample].value_sq;
+
+        samples[next_sample].set(t);
+
+        rolling_sum += samples[next_sample].value;
+        rolling_sum_sq += samples[next_sample].value_sq;
+
+        _bump_index(next_sample);
+        if (sampled < sample_count) { ++sampled; }
+
+        rolling_mean = rolling_sum/(float)sampled;
+    };
+
+    float get_std_dev() {
+        // Important note: this is a POPULATION standard deviation, not a population standard deviation
+        float variance = (rolling_sum_sq/(float)sampled) - (rolling_mean*rolling_mean);
+        return sqrt(fabs(variance));
+    };
+
+    float value() {
+        // we'll shoot through the samples and ignore the outliers
+        uint16_t samples_kept = 0;
+        float temp = 0;
+        float std_dev = get_std_dev();
+
+        for (uint16_t i=0; i<sample_count; i++) {
+            if (fabs(samples[i].value - rolling_mean) < (variance_max * std_dev)) {
+                temp += samples[i].value;
+                ++samples_kept;
+            }
+        }
+
+        return (temp / (float)samples_kept);
+    };
+};
+
+
 template<pin_number adc_pin_num, uint16_t min_temp = 0, uint16_t max_temp = 300>
 struct Thermistor {
     float c1, c2, c3, pullup_resistance;
@@ -248,14 +312,17 @@ struct Thermistor {
 
 template<typename ADC_t, uint16_t min_temp = 0, uint16_t max_temp = 400>
 struct PT100 {
-    float pullup_resistance;
-    float inline_resistance;
+    const float pullup_resistance;
+    const float inline_resistance;
     bool differential;
     bool gives_raw_resistance = false;
 
-    ADC_t adc_pin {kNormal, [&]{this->adc_has_new_value();} };
+    ADC_t adc_pin;
     float raw_adc_voltage = 0.0;
     int32_t raw_adc_value = 0;
+
+    const float variance_max = 1.1;
+    ValueHistory<20> history {variance_max};
 
     typedef PT100<ADC_t, min_temp, max_temp> type;
 
@@ -263,13 +330,13 @@ struct PT100 {
     : pullup_resistance{ pullup_resistance_ },
       inline_resistance{ inline_resistance_ },
       differential{differential_},
-      gives_raw_resistance{false}
+      gives_raw_resistance{false},
+      adc_pin{kDifferentialPair, [&]{this->adc_has_new_value();} }
     {
         adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
         adc_pin.setVoltageRange(kSystemVoltage,
                                 get_voltage_of_temp(min_temp),
                                 get_voltage_of_temp(max_temp),
-                                differential,
                                 6400.0);
     };
 
@@ -279,22 +346,21 @@ struct PT100 {
       inline_resistance{ inline_resistance_ },
       differential{false},
       gives_raw_resistance{true},
-      adc_pin {[&]{this->adc_has_new_value();}, additional_values...}
+      adc_pin{[&]{this->adc_has_new_value();}, additional_values...}
     {
         adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
         adc_pin.setVoltageRange(kSystemVoltage,
                                 get_resistance_of_temp(min_temp),
                                 get_resistance_of_temp(max_temp),
-                                false, // ignored
                                 1);    // ignored
     };
 
-    float get_resistance_of_temp(float t) {
+    constexpr float get_resistance_of_temp(float t) {
         // R = 100(1 + A*T + B*T^2); A = 3.9083*10^-3; B = -5.775*10^-7
         return 100 * (1 + 0.0039083*t + -0.0000005775*t*t) + inline_resistance;
     };
 
-    float get_voltage_of_temp(float t) {
+    constexpr float get_voltage_of_temp(float t) {
         float r = get_resistance_of_temp(t);
 
         if (differential) {
@@ -305,7 +371,7 @@ struct PT100 {
 
     float temperature_exact() {
         float r = get_resistance();
-//        if (r < 100) { return -1; }
+        if (r < 0.0) { return -1; }
 
         // from https://www.maximintegrated.com/en/app-notes/index.mvp/id/3450
         // run through wolfram as:
@@ -315,6 +381,12 @@ struct PT100 {
 
     float get_resistance() {
         float r;
+        raw_adc_voltage = history.value();
+
+        if (isnan(raw_adc_voltage)) {
+            return -1;
+        }
+
         if (gives_raw_resistance) {
             r = raw_adc_voltage;
         }
@@ -334,6 +406,7 @@ struct PT100 {
     };
 
     float get_voltage() {
+//        return history.value();
         return raw_adc_voltage;
     };
 
@@ -345,11 +418,12 @@ struct PT100 {
     void adc_has_new_value() {
         if (gives_raw_resistance) {
             raw_adc_value = adc_pin.getRaw();
-            float v = (raw_adc_value*pullup_resistance)/32768;
-            raw_adc_voltage = (raw_adc_voltage*10.0 + v)/11.0;
+            raw_adc_voltage = (raw_adc_value*pullup_resistance)/32768;
+            history.add_sample(raw_adc_voltage);
         } else {
             raw_adc_value = adc_pin.getRaw();
-            raw_adc_voltage = (raw_adc_voltage*10.0 + raw_adc_value)/11.0;
+//            raw_adc_voltage = (raw_adc_voltage*10.0 + adc_pin.getVoltage())/11.0;
+            history.add_sample(adc_pin.getVoltage());
         }
     };
 };
