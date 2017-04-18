@@ -73,15 +73,6 @@
     "line","posx","posy","posz","posa","vel","he1t","he1st","he1at","he1op","feed","vel","unit","path","stat", \
     "he2t","he2st","he2at","he2op","he3t","he3st","he3at","he3op"
 
-// Defaults for motion debugging
-//#define STATUS_REPORT_DEFAULTS
-//"line","posx","posy","posz","posa","vel","he1t","he1st","he1at","he2t","he2st","he2at","he3t","he3st","he3at","_fe5","_fe4","feed","vel","unit","path","stat"
-
-// Defaults for PID tuning
-//#define STATUS_REPORT_DEFAULTS                                                                                   \
-//    "line", "posx", "posy", "posz", "posa", "vel", "he1t", "he1st", "he1at", "he1op", "pid1p", "pid1i", "pid1d", \
-//        "feed", "vel", "unit", "path", "stat"
-
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS               MILLIMETERS             // MILLIMETERS or INCHES
 #define GCODE_DEFAULT_PLANE               CANON_PLANE_XY          // CANON_PLANE_XY, CANON_PLANE_XZ, or CANON_PLANE_YZ
