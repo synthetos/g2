@@ -230,7 +230,7 @@
 #define M1_POWER_MODE               MOTOR_DISABLED          // {1pm:  MOTOR_DISABLED, MOTOR_ALWAYS_POWERED, MOTOR_POWERED_IN_CYCLE, MOTOR_POWERED_ONLY_WHEN_MOVING
 #endif
 #ifndef M1_POWER_LEVEL
-#define M1_POWER_LEVEL              0.0                     // 1pl:   0.0=no power, 1.0=max power
+#define M1_POWER_LEVEL              0.0                     // {1pl:   0.0=no power, 1.0=max power
 #endif
 
 // MOTOR 2
