@@ -114,11 +114,11 @@
 #define COOLANT_PAUSE_ON_HOLD       true    // {coph:
 #endif
 
-#ifndef PROBE_REPORT_ENABLE 
-#define PROBE_REPORT_ENABLE         true    // {prbr: 
+#ifndef PROBE_REPORT_ENABLE
+#define PROBE_REPORT_ENABLE         true    // {prbr:
 #endif
 
-/* 
+/*
  * The following is to fix an issue where feedrate override was being defined in some users
  * settings files but not others. This would otherwise cause an undefined compile error.
  *
@@ -247,7 +247,7 @@
 #define M2_MICROSTEPS               8
 #endif
 #ifndef M2_STEPS_PER_UNIT
-#define M2_STEPS_PER_UNIT           0 
+#define M2_STEPS_PER_UNIT           0
 #endif
 #ifndef M2_POLARITY
 #define M2_POLARITY                 0
