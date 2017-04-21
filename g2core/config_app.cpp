@@ -477,14 +477,17 @@ const cfgItem_t cfgArray[] = {
     { "pid1","pid1p",_f0, 3, tx_print_nul, cm_get_pid_p, set_ro, (float *)&cs.null, 0 },
     { "pid1","pid1i",_f0, 5, tx_print_nul, cm_get_pid_i, set_ro, (float *)&cs.null, 0 },
     { "pid1","pid1d",_f0, 5, tx_print_nul, cm_get_pid_d, set_ro, (float *)&cs.null, 0 },
+    { "pid1","pid1f",_f0, 5, tx_print_nul, cm_get_pid_f, set_ro, (float *)&cs.null, 0 },
 
     { "pid2","pid2p",_f0, 3, tx_print_nul, cm_get_pid_p, set_ro, (float *)&cs.null, 0 },
     { "pid2","pid2i",_f0, 5, tx_print_nul, cm_get_pid_i, set_ro, (float *)&cs.null, 0 },
     { "pid2","pid2d",_f0, 5, tx_print_nul, cm_get_pid_d, set_ro, (float *)&cs.null, 0 },
+    { "pid2","pid2f",_f0, 5, tx_print_nul, cm_get_pid_f, set_ro, (float *)&cs.null, 0 },
 
     { "pid3","pid3p",_f0, 3, tx_print_nul, cm_get_pid_p, set_ro, (float *)&cs.null, 0 },
     { "pid3","pid3i",_f0, 5, tx_print_nul, cm_get_pid_i, set_ro, (float *)&cs.null, 0 },
     { "pid3","pid3d",_f0, 5, tx_print_nul, cm_get_pid_d, set_ro, (float *)&cs.null, 0 },
+    { "pid3","pid3f",_f0, 5, tx_print_nul, cm_get_pid_f, set_ro, (float *)&cs.null, 0 },
 
     // temperature configs - heater set values (read-write)
     // NOTICE: If you change these heater group keys, you MUST change the get/set functions too!!
@@ -492,6 +495,7 @@ const cfgItem_t cfgArray[] = {
     { "he1","he1p", _fi,  3, tx_print_nul, cm_get_heater_p,        cm_set_heater_p,        (float *)&cs.null, H1_DEFAULT_P },
     { "he1","he1i", _fi,  5, tx_print_nul, cm_get_heater_i,        cm_set_heater_i,        (float *)&cs.null, H1_DEFAULT_I },
     { "he1","he1d", _fi,  5, tx_print_nul, cm_get_heater_d,        cm_set_heater_d,        (float *)&cs.null, H1_DEFAULT_D },
+    { "he1","he1f", _fi,  5, tx_print_nul, cm_get_heater_f,        cm_set_heater_f,        (float *)&cs.null, H1_DEFAULT_F },
     { "he1","he1st",_f0,  1, tx_print_nul, cm_get_set_temperature, cm_set_set_temperature, (float *)&cs.null, 0 },
     { "he1","he1t", _f0,  1, tx_print_nul, cm_get_temperature,     set_ro,                 (float *)&cs.null, 0 },
     { "he1","he1op",_f0,  3, tx_print_nul, cm_get_heater_output,   set_ro,                 (float *)&cs.null, 0 },
@@ -508,6 +512,7 @@ const cfgItem_t cfgArray[] = {
     { "he2","he2p", _fi,  3, tx_print_nul, cm_get_heater_p,        cm_set_heater_p,        (float *)&cs.null, H2_DEFAULT_P },
     { "he2","he2i", _fi,  5, tx_print_nul, cm_get_heater_i,        cm_set_heater_i,        (float *)&cs.null, H2_DEFAULT_I },
     { "he2","he2d", _fi,  5, tx_print_nul, cm_get_heater_d,        cm_set_heater_d,        (float *)&cs.null, H2_DEFAULT_D },
+    { "he2","he2f", _fi,  5, tx_print_nul, cm_get_heater_f,        cm_set_heater_f,        (float *)&cs.null, H2_DEFAULT_F },
     { "he2","he2st",_f0,  0, tx_print_nul, cm_get_set_temperature, cm_set_set_temperature, (float *)&cs.null, 0 },
     { "he2","he2t", _f0,  1, tx_print_nul, cm_get_temperature,     set_ro,                 (float *)&cs.null, 0 },
     { "he2","he2op",_f0,  3, tx_print_nul, cm_get_heater_output,   set_ro,                 (float *)&cs.null, 0 },
@@ -524,6 +529,7 @@ const cfgItem_t cfgArray[] = {
     { "he3","he3p", _fi,  3, tx_print_nul, cm_get_heater_p,        cm_set_heater_p,        (float *)&cs.null, H3_DEFAULT_P },
     { "he3","he3i", _fi,  5, tx_print_nul, cm_get_heater_i,        cm_set_heater_i,        (float *)&cs.null, H3_DEFAULT_I },
     { "he3","he3d", _fi,  5, tx_print_nul, cm_get_heater_d,        cm_set_heater_d,        (float *)&cs.null, H3_DEFAULT_D },
+    { "he3","he3f", _fi,  5, tx_print_nul, cm_get_heater_f,        cm_set_heater_f,        (float *)&cs.null, H3_DEFAULT_F },
     { "he3","he3st",_f0,  0, tx_print_nul, cm_get_set_temperature, cm_set_set_temperature, (float *)&cs.null, 0 },
     { "he3","he3t", _f0,  1, tx_print_nul, cm_get_temperature,     set_ro,                 (float *)&cs.null, 0 },
     { "he3","he3op",_f0,  3, tx_print_nul, cm_get_heater_output,   set_ro,                 (float *)&cs.null, 0 },
