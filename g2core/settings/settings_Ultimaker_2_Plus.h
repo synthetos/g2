@@ -277,7 +277,7 @@
 #endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_1
 
-#define EXTRUDER_1_OUTPUT_PIN kOutput1_PinNumber
+#define EXTRUDER_1_OUTPUT_PIN kHeaterOutput1_PinNumber
 #define EXTRUDER_1_FAN_PIN    kOutput5_PinNumber
 
 #define HAS_TEMPERATURE_SENSOR_2  false
@@ -296,7 +296,7 @@
 #endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_2
 
-#define EXTRUDER_2_OUTPUT_PIN kOutput2_PinNumber
+#define EXTRUDER_2_OUTPUT_PIN kHeaterOutput2_PinNumber
 
 #define HAS_TEMPERATURE_SENSOR_3  true
 #if HAS_TEMPERATURE_SENSOR_3
@@ -315,7 +315,7 @@
 #endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_3
 
-#define BED_OUTPUT_PIN kOutput11_PinNumber
+#define BED_OUTPUT_PIN kHeaterOutput11_PinNumber
 
 //** Digital Inputs **
 /*
@@ -382,10 +382,10 @@
 #define DI9_FUNCTION                INPUT_FUNCTION_NONE
 
 //Extruder1_PWM
-#define DO1_MODE                    IO_ACTIVE_HIGH
+#define DO1_MODE                    IO_ACTIVE_HIGH // unavailable, is the extruder output
 
 //Extruder2_PWM
-#define DO2_MODE                    IO_ACTIVE_HIGH
+#define DO2_MODE                    IO_ACTIVE_HIGH // unavailable, is the extruder output
 
 //Fan1A_PWM
 #define DO3_MODE                    IO_ACTIVE_HIGH
@@ -404,7 +404,7 @@
 #define DO10_MODE                   IO_ACTIVE_HIGH
 
 //Header Bed FET
-#define DO11_MODE                   IO_ACTIVE_LOW
+#define DO11_MODE                   IO_ACTIVE_LOW // unavailable, is the extruder output
 
 //Indicator_LED
 #define DO12_MODE                   IO_ACTIVE_HIGH
@@ -419,17 +419,30 @@
 #define MIN_FAN_TEMP                50.0  // (he1fl) at this temp the fan starts to ramp up linearly
 #define MAX_FAN_TEMP                100.0 // (he1fh) at this temperature the fan is at "full speed" (MAX_FAN_VALUE)
 
+// PID debug string: {sr:{"he1t":t,"he1st":t,"pid1p":t, "pid1i":t, "pid1d":t, "pid1f":t, "he1op":t, "line":t, "stat":t}}
+
 #define H1_DEFAULT_ENABLE           true
-#define H1_DEFAULT_P                5.0
-#define H1_DEFAULT_I                0.025
-#define H1_DEFAULT_D                800
+#define H1_DEFAULT_P                1
+#define H1_DEFAULT_I                0.005
+#define H1_DEFAULT_D                500
+#define H1_DEFAULT_F                0.0015
+#if 0
+
+{he1p:1}
+{he1i:0.005}
+{he1d:500}
+{he1f:0.0015}
+
+#endif
 
 #define H2_DEFAULT_ENABLE           false
 #define H2_DEFAULT_P                7.0
 #define H2_DEFAULT_I                0.05
 #define H2_DEFAULT_D                150.0
+#define H2_DEFAULT_F                0.0
 
 #define H3_DEFAULT_ENABLE           true
 #define H3_DEFAULT_P                9.0
-#define H3_DEFAULT_I                0.12
-#define H3_DEFAULT_D                400.0
+#define H3_DEFAULT_I                0.012
+#define H3_DEFAULT_D                100
+#define H3_DEFAULT_F                0.0

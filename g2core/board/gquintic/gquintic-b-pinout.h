@@ -94,17 +94,20 @@
 // So we have to explicitly enable them as PWM pins.
 // Generated with:
 // perl -e 'for($i=1;$i<14;$i++) { print "#define OUTPUT${i}_PWM 0\n";}'
-#define OUTPUT1_PWM 1   // TC 0,1 - Fet 1
-#define OUTPUT2_PWM 1   // PWM 1  - Fet 2
+//#define OUTPUT1_PWM 1   // TC 0,1 - Fet 1
+//#define OUTPUT2_PWM 1   // PWM 0,1 - Fet 2
+#define OUTPUT1_PWM 0   // Used by EX1
+#define OUTPUT2_PWM 0   // Used by EX2
 #define OUTPUT3_PWM 1   // TC 1,0 - Fan 1
 #define OUTPUT4_PWM 1   // TC 1,1 - Fan 2
 #define OUTPUT5_PWM 1   // TC 2,0 - Fan 3
-#define OUTPUT6_PWM 1   // PWM 8+0
-#define OUTPUT7_PWM 1   // PWM 3
-#define OUTPUT8_PWM 1   // PWM 2
-#define OUTPUT9_PWM 0   // PWM 2
-#define OUTPUT10_PWM 1  // PWM 8+2
-#define OUTPUT11_PWM 1  // PWM 8+3 - Fet 3
+#define OUTPUT6_PWM 1   // PWM 1,0
+#define OUTPUT7_PWM 1   // PWM 0,3
+#define OUTPUT8_PWM 1   // PWM 0,2
+#define OUTPUT9_PWM 0   // PWM 0,2
+#define OUTPUT10_PWM 1  // PWM 1,2
+#define OUTPUT11_PWM 0  // Used by Heatbed
+//#define OUTPUT11_PWM 1  // PWM 1,3 - Fet 3
 #define OUTPUT12_PWM 0  // Unused
 #define OUTPUT13_PWM 0  // Unused
 
@@ -118,20 +121,20 @@ namespace Motate {
 //
 
 _MAKE_MOTATE_PIN(kLED_RGBWPixelPinNumber, 'A', 0);           //
-_MAKE_MOTATE_PIN(kOutput1_PinNumber, 'A', 1);                // TC  0,1
-_MAKE_MOTATE_PIN(kOutput2_PinNumber, 'A', 2);                // PWM 1
+_MAKE_MOTATE_PIN(kHeaterOutput1_PinNumber, 'A', 1);                // TC  0,1
+_MAKE_MOTATE_PIN(kHeaterOutput2_PinNumber, 'A', 2);                // PWM 0,1
 _MAKE_MOTATE_PIN(kI2C1_SDAPinNumber, 'A', 3);                //
 _MAKE_MOTATE_PIN(kI2C1_SCLPinNumber, 'A', 4);                //
-_MAKE_MOTATE_PIN(kOutput11_PinNumber, 'A', 5);               // PWM 8+3
+_MAKE_MOTATE_PIN(kHeaterOutput11_PinNumber, 'A', 5);               // PWM 1,3
 _MAKE_MOTATE_PIN(kExternalClock1_PinNumber, 'A', 6);         // CPU_CLK
-//_MAKE_MOTATE_PIN(kOutput7_PinNumber, 'A', 7);              // PWM 3
-_MAKE_MOTATE_PIN(kServo1_PinNumber, 'A', 7);                 //
+_MAKE_MOTATE_PIN(kOutput7_PinNumber, 'A', 7);              // PWM 0,3
+//_MAKE_MOTATE_PIN(kServo1_PinNumber, 'A', 7);                 //
 _MAKE_MOTATE_PIN(kSerial_RTSPinNumber, 'A', 8);              //
 _MAKE_MOTATE_PIN(kSerial_RXPinNumber, 'A', 9);               //
 _MAKE_MOTATE_PIN(kSerial_TXPinNumber, 'A', 10);              //
 _MAKE_MOTATE_PIN(kSocket2_EnablePinNumber, 'A', 11);         //
-_MAKE_MOTATE_PIN(kOutput6_PinNumber, 'A', 12);               // PWM 8+0
-_MAKE_MOTATE_PIN(kOutput8_PinNumber, 'A', 13);               // PWM 2
+_MAKE_MOTATE_PIN(kOutput6_PinNumber, 'A', 12);               // PWM 1,0
+_MAKE_MOTATE_PIN(kOutput8_PinNumber, 'A', 13);               // PWM 0,2
 _MAKE_MOTATE_PIN(kSocket1_StepPinNumber, 'A', 14);           //
 _MAKE_MOTATE_PIN(kOutput3_PinNumber, 'A', 15);               // TC 1,0
 _MAKE_MOTATE_PIN(kOutput4_PinNumber, 'A', 16);               // TC 1,1
@@ -141,7 +144,7 @@ _MAKE_MOTATE_PIN(kADC2_PinNumber, 'A', 19);                  // AFEC0,8
 _MAKE_MOTATE_PIN(kADC1_PinNumber, 'A', 20);                  // AFEC0,9
 _MAKE_MOTATE_PIN(kSerial_CTSPinNumber, 'A', 21);             //
 _MAKE_MOTATE_PIN(kSocket1_EnablePinNumber, 'A', 22);         //
-_MAKE_MOTATE_PIN(kOutput10_PinNumber, 'A', 23);              // PWM 8+2
+_MAKE_MOTATE_PIN(kOutput10_PinNumber, 'A', 23);              // PWM 1,2
 //_MAKE_MOTATE_PIN(kServo1_PinNumber, 'A', 23);              //
 _MAKE_MOTATE_PIN(kSocket3_EnablePinNumber, 'A', 24);         //
 _MAKE_MOTATE_PIN(kSocket2_DirPinNumber, 'A', 25);            //
