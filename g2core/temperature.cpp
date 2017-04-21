@@ -52,19 +52,23 @@
 #define HAS_TEMPERATURE_SENSOR_3  false
 #endif
 #ifndef EXTRUDER_1_OUTPUT_PIN
+#warning using default extruder 1 output pin
 #define EXTRUDER_1_OUTPUT_PIN kOutput1_PinNumber
 #endif
 #ifndef EXTRUDER_1_FAN_PIN
 #define EXTRUDER_1_FAN_PIN    kOutput3_PinNumber
 #endif
 #ifndef EXTRUDER_2_OUTPUT_PIN
+#warning using default extruder 2 output pin
 #define EXTRUDER_2_OUTPUT_PIN kOutput2_PinNumber
 #endif
 #ifndef BED_OUTPUT_PIN
 #define BED_OUTPUT_PIN kOutput11_PinNumber
 #endif
 #ifndef BED_OUTPUT_INIT
-#define BED_OUTPUT_INIT
+#define BED_OUTPUT_INIT {kNormal, fet_pin3_freq}
+// OR
+//#define BED_OUTPUT_INIT {kPWMPinInverted, fet_pin3_freq};
 #endif
 
 // These could be moved to settings
@@ -206,11 +210,16 @@ struct ValueHistory {
         float temp = 0;
         float std_dev = get_std_dev();
 
-        for (uint16_t i=0; i<sample_count; i++) {
+        for (uint16_t i=0; i<sampled; i++) {
             if (fabs(samples[i].value - rolling_mean) < (variance_max * std_dev)) {
                 temp += samples[i].value;
                 ++samples_kept;
             }
+        }
+
+        // fallback position
+        if (samples_kept == 0) {
+            return rolling_mean;
         }
 
         return (temp / (float)samples_kept);
@@ -429,7 +438,7 @@ struct PT100 {
 };
 
 // Temperature debug string: {sr:{"he1t":t,"he1st":t,"he1at":t, "he1tr":t, "he1op":t}}
-// PID debug string: {sr:{"he1t":t,"he1st":t,"pid1p":t, "pid1i":t, "pid1d":t, "he1op":t, "line":t, "stat":t}}
+// PID debug string: {sr:{"he1t":t,"he1st":t,"pid1p":t, "pid1i":t, "pid1d":t, "pid1f":t, "he1op":t, "line":t, "stat":t}}
 
 #if HAS_TEMPERATURE_SENSOR_1
 // Extruder 1
@@ -460,28 +469,28 @@ float last_reported_temp3 = 0;
 
 // Output 1 FET info
 // DO_1: Extruder1_PWM
-const int16_t fet_pin1_freq = 100;
+const int32_t fet_pin1_freq = 2000;
 #if TEMPERATURE_OUTPUT_ON == 1
-PWMOutputPin<EXTRUDER_1_OUTPUT_PIN> fet_pin1;// {kPWMPinInverted};
+PWMOutputPin<EXTRUDER_1_OUTPUT_PIN> fet_pin1 {kNormal, fet_pin1_freq};// {kPWMPinInverted, fet_pin1_freq};
 #else
-PWMOutputPin<-1> fet_pin1;// {kPWMPinInverted};
+//PWMOutputPin<-1> fet_pin1;// {kPWMPinInverted};
 #endif
 
 // DO_2: Extruder2_PWM
-const int16_t fet_pin2_freq = 100;
+const int32_t fet_pin2_freq = 2000;
 #if TEMPERATURE_OUTPUT_ON == 1
-PWMOutputPin<EXTRUDER_2_OUTPUT_PIN> fet_pin2;// {kPWMPinInverted};
+PWMOutputPin<EXTRUDER_2_OUTPUT_PIN> fet_pin2 {kNormal, fet_pin2_freq};// {kPWMPinInverted, fet_pin1_freq};
 #else
-PWMOutputPin<-1> fet_pin2;// {kPWMPinInverted};
+//PWMOutputPin<-1> fet_pin2;// {kPWMPinInverted};
 #endif
 
 // DO_11: Heated Bed FET
 // Warning, HeatBED is likely NOT a PWM pin, so it'll be binary output (duty cucle >= 50%).
-const int16_t fet_pin3_freq = 100;
+const int32_t fet_pin3_freq = 100;
 #if TEMPERATURE_OUTPUT_ON == 1
 PWMOutputPin<BED_OUTPUT_PIN> fet_pin3 BED_OUTPUT_INIT;
 #else
-PWMOutputPin<-1> fet_pin3;// {kPWMPinInverted};
+//PWMOutputPin<-1> fet_pin3;// {kPWMPinInverted};
 #endif
 
 
@@ -527,15 +536,17 @@ SysTickEvent adc_tick_event {[&] {
 
 struct PID {
     static constexpr float output_max = 1.0;
-    static constexpr float derivative_contribution = 0.05;
+    static constexpr float derivative_contribution = 1.0/10.0;
 
     float _p_factor;                // the scale for P values
     float _i_factor;                // the scale for I values
     float _d_factor;                // the scale for D values
+    float _f_factor;                // the scale for O values
 
     float _proportional = 0.0;      // _proportional storage
     float _integral = 0.0;          // _integral storage
     float _derivative = 0.0;        // _derivative storage
+    float _feed_forward = 0.0;            // _feed_forward storage
     float _previous_input = 0.0;    // _derivative storage
 
     float _set_point;
@@ -547,9 +558,11 @@ struct PID {
     float _min_rise_over_time;      // the amount of degrees that it must rise in the given time
     float _rise_time_checkpoint;    // when we start the timer, we set _rise_time_checkpoint to the minimum goal
 
+    float _average_output = 0;
+
     bool _enable;                   // set true to enable this heater
 
-    PID(float P, float I, float D, float min_rise_over_time, float startSetPoint = 0.0) : _p_factor{P/100.0f}, _i_factor{I/100.0f}, _d_factor{D/100.0f}, _set_point{startSetPoint}, _at_set_point{false}, _min_rise_over_time(min_rise_over_time) {};
+    PID(float P, float I, float D, float F, float min_rise_over_time, float startSetPoint = 0.0) : _p_factor{P/100.0f}, _i_factor{I/100.0f}, _d_factor{D/100.0f}, _f_factor{F/100.0f}, _set_point{startSetPoint}, _at_set_point{false}, _min_rise_over_time(min_rise_over_time) {};
 
     float getNewOutput(float input) {
         // If the input is < 0, the sensor failed
@@ -598,39 +611,89 @@ struct PID {
             }
         }
 
+        // Now tha we've done all the checks, square the error, maintaining the sign.
+        // The is because the energy required to heat an object is the number of degrees of change needed squared.
+        if (e > 0) {
+            e = e*e;
+        } else {
+            e = -(e*e);
+        }
+
+        // P = Proportional
+
         float p = _p_factor * e;
         // For output's sake, we'll store this, otherwise we don't need it:
         _proportional = p;
 
+
+        // I = Integral
+
+        // Now, to restrict windup, prevent the integral from contributing too much, AND to keep it sane:
+        // 1) Limit the i contribution to the output
+        // 2) Limit the _integral maximum value
+        // 3) Reset _integral to e if output has to be clamped (after output is computed)
         _integral += e;
-
-        if (_integral < 0.0) {
-            _integral = 0.0;
-        }
-
         float i = _integral * _i_factor;
 
-        if (i > output_max) {
-            _integral = output_max / _i_factor;
-            i = output_max;
+        if (i > 0.75) {
+            i = 0.75;
+            _integral = 0.75 / _i_factor;
+        } else if (i < -0.75) {
+            i = -0.75;
+            _integral = -0.75 / _i_factor;
         }
 
+        // D = derivative
 
-        _derivative = (_d_factor * (input - _previous_input))*(derivative_contribution) + (_derivative * (1.0-derivative_contribution));
+        // This needs to be smoothed somewhat, so we use a exponential moving average.
+        // See https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average
+
+
+        _derivative = (input - _previous_input)*(derivative_contribution) + (_derivative * (1.0-derivative_contribution));
+        float d = _derivative * _d_factor;
+
+        _feed_forward = (_set_point-21); // 21 is for a roughly ideal room temperature
+        if (_feed_forward > 0) {
+            _feed_forward = _feed_forward*_feed_forward;
+        } else {
+            _feed_forward = -(_feed_forward*_feed_forward);
+        }
+
+        float f = _f_factor * _feed_forward;
+
         _previous_input = input;
 
         // Now that we've computed all that, we'll decide when to ignore it
 
-        // If the setpoint is "off" or the temperature is higher than MAX, always return OFF
-        if ((_set_point < TEMP_OFF_BELOW) || (input > TEMP_MAX_SETPOINT)) {
-            return 0; // "off"
+        float output = p + i + f - d;
+        if (output < 0.0f) {
+            output = 0;
 
-        // If we are too far from the set point, turn the heater full on
-        } else if (e > TEMP_FULL_ON_DIFFERENCE) {
-            return 1; //"on"
+            // reset the integral to prevent windup
+            _integral = e;
+        } else if (output > output_max) {
+            output = output_max;
+
+            // reset the integral to prevent windup
+            _integral = e;
         }
 
-        return std::min(output_max, p + i - _derivative);
+        // If the setpoint is "off" or the temperature is higher than MAX, always return OFF
+        if ((_set_point < TEMP_OFF_BELOW) || (input > TEMP_MAX_SETPOINT)) {
+            output = 0; // "off"
+            _average_output = 0;
+
+            return 0;
+        // If we are too far from the set point, turn the heater full on
+        }
+//        else if (e > TEMP_FULL_ON_DIFFERENCE) {
+//            output = 1; // "on"
+//        }
+
+        // Keep track of our output with some averaging for output purposes
+        _average_output = (0.5*output) + (0.5*_average_output);
+
+        return _average_output; // return the smoothed value
     };
 
     bool atSetPoint() {
@@ -651,9 +714,9 @@ struct PID {
 // NOTICE, the JSON alters incoming values for these!
 // {he1p:9} == 9.0/100.0 here
 
-PID pid1 { 9.0, 0.11, 400.0, TEMP_MIN_RISE_DEGREES_OVER_TIME }; // default values
-PID pid2 { 7.5, 0.12, 400.0, TEMP_MIN_RISE_DEGREES_OVER_TIME }; // default values
-PID pid3 { 7.5, 0.12, 400.0, TEMP_MIN_BED_RISE_DEGREES_OVER_TIME }; // default values
+PID pid1 { 9.0, 0.11, 400.0, 0, TEMP_MIN_RISE_DEGREES_OVER_TIME }; // default values
+PID pid2 { 7.5, 0.12, 400.0, 0, TEMP_MIN_RISE_DEGREES_OVER_TIME }; // default values
+PID pid3 { 7.5, 0.12, 400.0, 0, TEMP_MIN_BED_RISE_DEGREES_OVER_TIME }; // default values
 Timeout pid_timeout;
 
 
@@ -699,9 +762,9 @@ HeaterFan<EXTRUDER_1_FAN_PIN> heater_fan1;
 void temperature_init()
 {
     // setup heater PWM
-    fet_pin1.setFrequency(fet_pin1_freq);
-    fet_pin2.setFrequency(fet_pin2_freq);
-    fet_pin3.setFrequency(fet_pin3_freq);
+//    fet_pin1.setFrequency(fet_pin1_freq);
+//    fet_pin2.setFrequency(fet_pin2_freq);
+//    fet_pin3.setFrequency(fet_pin3_freq);
 
 //    fan_pin1 = 0;
 //    fan_pin1.setFrequency(200000);
@@ -761,7 +824,8 @@ stat_t temperature_callback()
 
         if (pid1._enable) {
             temp = temperature_sensor_1.temperature_exact();
-            fet_pin1 = pid1.getNewOutput(temp);
+            float out1 = pid1.getNewOutput(temp);
+            fet_pin1.write(out1);
 
             if (fabs(temp - last_reported_temp1) > kTempDiffSRTrigger) {
                 last_reported_temp1 = temp;
@@ -772,7 +836,8 @@ stat_t temperature_callback()
 
         if (pid2._enable) {
             temp = temperature_sensor_2.temperature_exact();
-            fet_pin2 = pid2.getNewOutput(temp);
+            float out2 = pid2.getNewOutput(temp);
+            fet_pin2.write(out2);
 
             if (fabs(temp - last_reported_temp2) > kTempDiffSRTrigger) {
                 last_reported_temp2 = temp;
@@ -785,7 +850,8 @@ stat_t temperature_callback()
 
         if (pid3._enable) {
             temp = temperature_sensor_3.temperature_exact();
-            fet_pin3 = pid3.getNewOutput(temp);
+            float out3 = pid3.getNewOutput(temp);
+            fet_pin3.write(out3);
 
             if (fabs(temp - last_reported_temp3) > kTempDiffSRTrigger) {
                 last_reported_temp3 = temp;
@@ -942,6 +1008,35 @@ stat_t cm_set_heater_d(nvObj_t *nv)
         case '1': { pid1._d_factor = nv->value / 100.0; break; }
         case '2': { pid2._d_factor = nv->value / 100.0; break; }
         case '3': { pid3._d_factor = nv->value / 100.0; break; }
+
+        default: { break; }
+    }
+    return (STAT_OK);
+}
+
+/*
+ * cm_get_heater_f()/cm_set_heater_f() - get/set the F parameter of the PIDF
+ */
+stat_t cm_get_heater_f(nvObj_t *nv)
+{
+    switch(_get_heater_number(nv)) {
+        case '1': { nv->value = pid1._f_factor * 100.0; break; }
+        case '2': { nv->value = pid2._f_factor * 100.0; break; }
+        case '3': { nv->value = pid3._f_factor * 100.0; break; }
+
+        default: { nv->value = 0.0; break; }
+    }
+    nv->precision = GET_TABLE_WORD(precision);
+    nv->valuetype = TYPE_FLOAT;
+
+    return (STAT_OK);
+}
+stat_t cm_set_heater_f(nvObj_t *nv)
+{
+    switch(_get_heater_number(nv)) {
+        case '1': { pid1._f_factor = nv->value / 100.0; break; }
+        case '2': { pid2._f_factor = nv->value / 100.0; break; }
+        case '3': { pid3._f_factor = nv->value / 100.0; break; }
 
         default: { break; }
     }
@@ -1152,9 +1247,9 @@ stat_t cm_get_at_temperature(nvObj_t *nv)
 float cm_get_heater_output(const uint8_t heater)
 {
     switch(heater) {
-        case 1: { return (float)fet_pin1; }
-        case 2: { return (float)fet_pin2; }
-        case 3: { return (float)fet_pin3; }
+        case 1: { return pid1._average_output; }
+        case 2: { return pid2._average_output; }
+        case 3: { return pid3._average_output; }
 
         default: { break; }
     }
@@ -1304,6 +1399,24 @@ stat_t cm_get_pid_d(nvObj_t *nv)
         case '1': { nv->value = pid1._derivative; break; }
         case '2': { nv->value = pid2._derivative; break; }
         case '3': { nv->value = pid3._derivative; break; }
+
+        default: { nv->value = 0.0; break; }
+    }
+    nv->precision = GET_TABLE_WORD(precision);
+    nv->valuetype = TYPE_FLOAT;
+
+    return (STAT_OK);
+}
+
+/*
+ * cm_get_pid_f() - get the active F of the PID (read-only)
+ */
+stat_t cm_get_pid_f(nvObj_t *nv)
+{
+    switch(_get_pid_number(nv)) {
+        case '1': { nv->value = pid1._feed_forward; break; }
+        case '2': { nv->value = pid2._feed_forward; break; }
+        case '3': { nv->value = pid3._feed_forward; break; }
 
         default: { nv->value = 0.0; break; }
     }
