@@ -58,6 +58,16 @@ static stRunSingleton_t st_run;
 
 static void _load_move(void);
 
+#pragma GCC push_options        // DIAGNOSTIC +++++
+#pragma GCC optimize ("O0")     // DIAGNOSTIC +++++
+static void _hold_everything (uint32_t n1)
+{
+    if (n1 > 2000000000) { // 2142329634
+        cm2.gm.linenum = 1111;
+    }
+}
+#pragma GCC reset_options       // DIAGNOSTIC +++++
+
 /**** Setup motate ****/
 
 using namespace Motate;
@@ -213,7 +223,6 @@ stat_t st_motor_power_callback()     // called by controller
     bool have_actually_stopped = false;
     if ((!st_runtime_isbusy()) &&
         (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_LOADER) &&
-//        (cm_get_cycle_state() == CYCLE_OFF)
         (cm_get_machine_state() != MACHINE_CYCLE)) {    // if there are no moves to load...
         have_actually_stopped = true;
     }
@@ -253,10 +262,6 @@ void dda_timer_type::interrupt()
     dda_timer.getInterruptCause();  // clear interrupt condition
 
     // clear all steps from the previous interrupt
-	// for (uint8_t motor=0; motor<MOTORS; motor++) {
-	//	  Motors[motor]->stepEnd();
-	// }
-	// loop unrolled version (it's actually faster)
     motor_1.stepEnd();
     motor_2.stepEnd();
 #if MOTORS > 2
@@ -288,43 +293,43 @@ void dda_timer_type::interrupt()
 //    }
 
     // process DDAs for each motor
-        if  ((st_run.mot[MOTOR_1].substep_accumulator += st_run.mot[MOTOR_1].substep_increment) > 0) {
-            motor_1.stepStart();        // turn step bit on
-            st_run.mot[MOTOR_1].substep_accumulator -= st_run.dda_ticks_X_substeps;
-            INCREMENT_ENCODER(MOTOR_1);
-        }
-        if ((st_run.mot[MOTOR_2].substep_accumulator += st_run.mot[MOTOR_2].substep_increment) > 0) {
-            motor_2.stepStart();        // turn step bit on
-            st_run.mot[MOTOR_2].substep_accumulator -= st_run.dda_ticks_X_substeps;
-            INCREMENT_ENCODER(MOTOR_2);
-        }
+    if  ((st_run.mot[MOTOR_1].substep_accumulator += st_run.mot[MOTOR_1].substep_increment) > 0) {
+        motor_1.stepStart();        // turn step bit on
+        st_run.mot[MOTOR_1].substep_accumulator -= st_run.dda_ticks_X_substeps;
+        INCREMENT_ENCODER(MOTOR_1);
+    }
+    if ((st_run.mot[MOTOR_2].substep_accumulator += st_run.mot[MOTOR_2].substep_increment) > 0) {
+        motor_2.stepStart();        // turn step bit on
+        st_run.mot[MOTOR_2].substep_accumulator -= st_run.dda_ticks_X_substeps;
+        INCREMENT_ENCODER(MOTOR_2);
+    }
 #if MOTORS > 2
-        if ((st_run.mot[MOTOR_3].substep_accumulator += st_run.mot[MOTOR_3].substep_increment) > 0) {
-            motor_3.stepStart();        // turn step bit on
-            st_run.mot[MOTOR_3].substep_accumulator -= st_run.dda_ticks_X_substeps;
-            INCREMENT_ENCODER(MOTOR_3);
-        }
+    if ((st_run.mot[MOTOR_3].substep_accumulator += st_run.mot[MOTOR_3].substep_increment) > 0) {
+        motor_3.stepStart();        // turn step bit on
+        st_run.mot[MOTOR_3].substep_accumulator -= st_run.dda_ticks_X_substeps;
+        INCREMENT_ENCODER(MOTOR_3);
+    }
 #endif
 #if MOTORS > 3
-        if ((st_run.mot[MOTOR_4].substep_accumulator += st_run.mot[MOTOR_4].substep_increment) > 0) {
-            motor_4.stepStart();        // turn step bit on
-            st_run.mot[MOTOR_4].substep_accumulator -= st_run.dda_ticks_X_substeps;
-            INCREMENT_ENCODER(MOTOR_4);
-        }
+    if ((st_run.mot[MOTOR_4].substep_accumulator += st_run.mot[MOTOR_4].substep_increment) > 0) {
+        motor_4.stepStart();        // turn step bit on
+        st_run.mot[MOTOR_4].substep_accumulator -= st_run.dda_ticks_X_substeps;
+        INCREMENT_ENCODER(MOTOR_4);
+    }
 #endif
 #if MOTORS > 4
-        if ((st_run.mot[MOTOR_5].substep_accumulator += st_run.mot[MOTOR_5].substep_increment) > 0) {
-            motor_5.stepStart();        // turn step bit on
-            st_run.mot[MOTOR_5].substep_accumulator -= st_run.dda_ticks_X_substeps;
-            INCREMENT_ENCODER(MOTOR_5);
-        }
+    if ((st_run.mot[MOTOR_5].substep_accumulator += st_run.mot[MOTOR_5].substep_increment) > 0) {
+        motor_5.stepStart();        // turn step bit on
+        st_run.mot[MOTOR_5].substep_accumulator -= st_run.dda_ticks_X_substeps;
+        INCREMENT_ENCODER(MOTOR_5);
+    }
 #endif
 #if MOTORS > 5
-        if ((st_run.mot[MOTOR_6].substep_accumulator += st_run.mot[MOTOR_6].substep_increment) > 0) {
-            motor_6.stepStart();        // turn step bit on
-            st_run.mot[MOTOR_6].substep_accumulator -= st_run.dda_ticks_X_substeps;
-            INCREMENT_ENCODER(MOTOR_6);
-        }
+    if ((st_run.mot[MOTOR_6].substep_accumulator += st_run.mot[MOTOR_6].substep_increment) > 0) {
+        motor_6.stepStart();        // turn step bit on
+        st_run.mot[MOTOR_6].substep_accumulator -= st_run.dda_ticks_X_substeps;
+        INCREMENT_ENCODER(MOTOR_6);
+    }
 #endif
 
     // Process end of segment. 
@@ -429,11 +434,6 @@ static void _load_move()
 
     // If there are no moves to load start motor power timeouts
     if (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_LOADER) {
-    //	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
-    //		Motors[motor]->motionStopped();
-    //  }
-
-        // loop unrolled version
         motor_1.motionStopped();    // ...start motor power timeouts
         motor_2.motionStopped();
 #if (MOTORS > 2)
@@ -451,11 +451,12 @@ static void _load_move()
         return;
     } // if (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_LOADER)
 
-    // handle aline loads first (most common case)  NB: there are no more lines, only alines
+    // handle aline loads first (most common case)
     if (st_pre.block_type == BLOCK_TYPE_ALINE) {
 
         //**** setup the new segment ****
 
+        debug_trap_if_true((st_run.dda_ticks_downcount != 0), "_load_move() downcount is not zero");
         st_run.dda_ticks_downcount = st_pre.dda_ticks;
         st_run.dda_ticks_X_substeps = st_pre.dda_ticks_X_substeps;
 
@@ -711,6 +712,8 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
         // that results in long-term negative drift. (fabs/round order doesn't matter)
 
         st_pre.mot[motor].substep_increment = round(fabs(travel_steps[motor] * DDA_SUBSTEPS));
+
+        _hold_everything(st_pre.mot[motor].substep_increment);
     }
     st_pre.block_type = BLOCK_TYPE_ALINE;
     st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;    // signal that prep buffer is ready

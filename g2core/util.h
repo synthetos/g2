@@ -52,6 +52,12 @@ using Motate::SysTickTimer;
 #pragma GCC push_options        // DIAGNOSTIC +++++
 #pragma GCC optimize ("O0")     // DIAGNOSTIC +++++
 // insert function here
+static void _hold_everything (uint32_t n1, uint32_t n2) // example of function
+{
+    if (n1 == n2) {
+        cm1.gm.linenum +=1;
+    }
+}
 #pragma GCC reset_options       // DIAGNOSTIC +++++
 */
 

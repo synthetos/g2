@@ -58,6 +58,20 @@ static stat_t _run_program_end(void);
 static stat_t _run_alarm(void);
 static stat_t _run_shutdown(void);
 static stat_t _run_interlock(void);
+ 
+#pragma GCC push_options        // DIAGNOSTIC +++++
+#pragma GCC optimize ("O0")     // DIAGNOSTIC +++++
+static void _hold_everything (uint32_t n1, uint32_t n2) // example of function
+{
+    if (cm->gm.linenum > 200) {
+        cm1.gm.linenum += 1;
+    }
+        
+//    if (n1 == n2) {
+//        cm1.gm.linenum = n1;
+//    }
+}
+#pragma GCC reset_options       // DIAGNOSTIC +++++
 
 /****************************************************************************************
  * OPERATIONS AND ACTIONS
@@ -638,11 +652,11 @@ static stat_t _feedhold_with_actions()          // Execute Case (5)
     if (cm1.hold_state == FEEDHOLD_OFF) {
         cm1.hold_type = FEEDHOLD_TYPE_ACTIONS;
 //      cm1.hold_exit = FEEDHOLD_EXIT_STOP;     // default exit for ACTIONS is STOP...
-        if (cm1.motion_state == MOTION_STOP) {   // if motion has already stopped declare that you are in a feedhold
+        if (cm1.motion_state == MOTION_STOP) {  // if motion has already stopped declare that you are in a feedhold
             _check_motion_stopped();
             cm1.hold_state = FEEDHOLD_HOLD;
         } else {
-            cm1.hold_state = FEEDHOLD_SYNC;         // ... STOP can be overridden by setting hold_exit after this function
+            cm1.hold_state = FEEDHOLD_SYNC;     // ... STOP can be overridden by setting hold_exit after this function
             return (STAT_EAGAIN);
         }
     }
@@ -671,6 +685,12 @@ static stat_t _feedhold_with_actions()          // Execute Case (5)
         copy_vector(cm2.gmx.position, mr1.position);
         copy_vector(mp2.position, mr1.position);
         copy_vector(mr2.position, mr1.position);
+        
+        copy_vector(mr2.target_steps, mr1.target_steps);
+        copy_vector(mr2.position_steps, mr1.position_steps);
+        copy_vector(mr2.commanded_steps, mr1.commanded_steps);
+        copy_vector(mr2.encoder_steps, mr1.encoder_steps);
+        copy_vector(mr2.following_error, mr1.following_error);
 
         // reassign the globals to the secondary CM
         cm = &cm2;
@@ -683,6 +703,7 @@ static stat_t _feedhold_with_actions()          // Execute Case (5)
         // execute feedhold actions
         if (fp_NOT_ZERO(cm->feedhold_z_lift)) {                 // optional Z lift
             cm_set_distance_mode(INCREMENTAL_DISTANCE_MODE);
+//            cm->gm.linenum = 6060842;                           // ++++++++ Diagnostic
             bool flags[] = { 0,0,1,0,0,0 };
             float target[] = { 0,0, _to_inches(cm->feedhold_z_lift), 0,0,0 };   // convert to inches if in inches mode
             cm_straight_traverse(target, flags, PROFILE_NORMAL);
@@ -696,6 +717,7 @@ static stat_t _feedhold_with_actions()          // Execute Case (5)
 
     // wait for hold actions to complete
     if (cm1.hold_state == FEEDHOLD_HOLD_ACTIONS_PENDING) {
+        _hold_everything(0,0);  //+++++
         return (STAT_EAGAIN);
     }
     

@@ -48,6 +48,20 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf);
 
 static void _init_forward_diffs(float v_0, float v_1);
 
+#pragma GCC push_options        // DIAGNOSTIC +++++
+#pragma GCC optimize ("O0")     // DIAGNOSTIC +++++
+static void _hold_everything (uint32_t n1, uint32_t n2) // example of function
+{
+    if (cm->gm.linenum > 237) {
+        cm1.gm.linenum += 1;
+    }
+    
+//    if (n1 == n2) {
+//        cm1.gm.linenum = n1;
+//    }
+}
+#pragma GCC reset_options       // DIAGNOSTIC +++++
+
 /****************************************************************************************
  * mp_forward_plan() - plan commands and moves ahead of exec; call ramping for moves
  *
@@ -267,6 +281,9 @@ stat_t mp_exec_move()
 
     if (bf->block_type == BLOCK_TYPE_ALINE) {           // cycle auto-start for lines only
         // first-time operations
+
+//        _hold_everything(0,0);  //+++++
+
         if (bf->buffer_state != MP_BUFFER_RUNNING) {
             if ((bf->buffer_state < MP_BUFFER_BACK_PLANNED) && (cm->motion_state == MOTION_RUN)) {
 //                debug_trap("mp_exec_move() buffer is not prepped. Starvation"); // IMPORTANT: can't rpt_exception from here!
@@ -304,9 +321,6 @@ stat_t mp_exec_move()
         if (bf->nx->buffer_state >= MP_BUFFER_BACK_PLANNED) {
             st_request_forward_plan();
         }
-
-        // Perform motion state transition. Also sets active model to RUNTIME
-//        if (cm->motion_state != MOTION_RUN) { cm_set_motion_state(MOTION_RUN); }
     }
     if (bf->bf_func == NULL) {
         return(cm_panic(STAT_INTERNAL_ERROR, "mp_exec_move()")); // never supposed to get here
@@ -933,6 +947,7 @@ static stat_t _exec_aline_segment()
     }
     kn_inverse_kinematics(mr->gm.target, mr->target_steps); // now determine the target steps...
     for (uint8_t m=0; m<MOTORS; m++) {                      // and compute the distances to be traveled
+//        mr->travel_steps[m] = mr->target_steps[m] - mr->position_steps[m];
         travel_steps[m] = mr->target_steps[m] - mr->position_steps[m];
     }
 
@@ -943,6 +958,7 @@ static stat_t _exec_aline_segment()
     }
 
     // Call the stepper prep function
+//    ritorno(st_prep_line(mr->travel_steps, mr->following_error, mr->segment_time));
     ritorno(st_prep_line(travel_steps, mr->following_error, mr->segment_time));
     copy_vector(mr->position, mr->gm.target);               // update position from target
     if (mr->segment_count == 0) {
