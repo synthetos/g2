@@ -58,16 +58,6 @@ static stRunSingleton_t st_run;
 
 static void _load_move(void);
 
-#pragma GCC push_options        // DIAGNOSTIC +++++
-#pragma GCC optimize ("O0")     // DIAGNOSTIC +++++
-static void _hold_everything (uint32_t n1)
-{
-    if (n1 > 2000000000) { // 2142329634
-        cm2.gm.linenum = 1111;
-    }
-}
-#pragma GCC reset_options       // DIAGNOSTIC +++++
-
 /**** Setup motate ****/
 
 using namespace Motate;
@@ -712,8 +702,6 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
         // that results in long-term negative drift. (fabs/round order doesn't matter)
 
         st_pre.mot[motor].substep_increment = round(fabs(travel_steps[motor] * DDA_SUBSTEPS));
-
-        _hold_everything(st_pre.mot[motor].substep_increment);
     }
     st_pre.block_type = BLOCK_TYPE_ALINE;
     st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;    // signal that prep buffer is ready

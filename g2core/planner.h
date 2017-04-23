@@ -456,7 +456,6 @@ typedef struct mpPlannerRuntime {       // persistent runtime variables
     float position[AXES];               // current move position
     float waypoint[SECTIONS][AXES];     // head/body/tail endpoints for correction
 
-//    float travel_steps[MOTORS];         // +++++
     float target_steps[MOTORS];         // current MR target (absolute target as steps)
     float position_steps[MOTORS];       // current MR position (target from previous segment)
     float commanded_steps[MOTORS];      // will align with next encoder sample (target from 2nd previous segment)

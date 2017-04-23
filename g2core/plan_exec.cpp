@@ -48,20 +48,6 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf);
 
 static void _init_forward_diffs(float v_0, float v_1);
 
-#pragma GCC push_options        // DIAGNOSTIC +++++
-#pragma GCC optimize ("O0")     // DIAGNOSTIC +++++
-static void _hold_everything (uint32_t n1, uint32_t n2) // example of function
-{
-    if (cm->gm.linenum > 237) {
-        cm1.gm.linenum += 1;
-    }
-    
-//    if (n1 == n2) {
-//        cm1.gm.linenum = n1;
-//    }
-}
-#pragma GCC reset_options       // DIAGNOSTIC +++++
-
 /****************************************************************************************
  * mp_forward_plan() - plan commands and moves ahead of exec; call ramping for moves
  *
@@ -281,8 +267,6 @@ stat_t mp_exec_move()
 
     if (bf->block_type == BLOCK_TYPE_ALINE) {           // cycle auto-start for lines only
         // first-time operations
-
-//        _hold_everything(0,0);  //+++++
 
         if (bf->buffer_state != MP_BUFFER_RUNNING) {
             if ((bf->buffer_state < MP_BUFFER_BACK_PLANNED) && (cm->motion_state == MOTION_RUN)) {

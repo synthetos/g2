@@ -196,7 +196,6 @@ stat_t cm_shutdown(const stat_t status, const char *msg)
     }
     cm_request_feedhold(FEEDHOLD_TYPE_SCRAM, FEEDHOLD_EXIT_SHUTDOWN);  // fast stop and shutdown
 
-//+++++    cm_halt_motion();                           // halt motors (may have already been done from GPIO)
 //    spindle_reset();                            // stop spindle immediately and set speed to 0 RPM
 //    coolant_reset();                            // stop coolant immediately
 //    temperature_reset();                        // turn off heaters and fans
