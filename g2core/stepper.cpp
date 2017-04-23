@@ -634,15 +634,12 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
         return (cm_panic(STAT_PREP_LINE_MOVE_TIME_IS_INFINITE, "st_prep_line()"));
     } else if (isnan(segment_time)) {                           // never supposed to happen
         return (cm_panic(STAT_PREP_LINE_MOVE_TIME_IS_NAN, "st_prep_line()"));
-//    } else if (segment_time < EPSILON) {
-//        return (STAT_MINIMUM_TIME_MOVE);
     }
     // setup segment parameters
     // - dda_ticks is the integer number of DDA clock ticks needed to play out the segment
     // - ticks_X_substeps is the maximum depth of the DDA accumulator (as a negative number)
 
-    //st_pre.dda_period = _f_to_period(FREQUENCY_DDA);                // FYI: this is a constant
-    st_pre.dda_ticks = (int32_t)(segment_time * 60 * FREQUENCY_DDA);// NB: converts minutes to seconds
+    st_pre.dda_ticks = (int32_t)(segment_time * 60 * FREQUENCY_DDA);  // NB: converts minutes to seconds
     st_pre.dda_ticks_X_substeps = st_pre.dda_ticks * DDA_SUBSTEPS;
 
     // setup motor parameters
@@ -668,11 +665,11 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
         }
 
         // Detect segment time changes and setup the accumulator correction factor and flag.
-        // Putting this here computes the correct factor even if the motor was dormant for some
-        // number of previous moves. Correction is computed based on the last segment time actually used.
+        // Putting this here computes the correct factor even if the motor was dormant for some number
+        // of previous moves. Correction is computed based on the last segment time actually used.
 
         if (fabs(segment_time - st_pre.mot[motor].prev_segment_time) > 0.0000001) { // highly tuned FP != compare
-            if (fp_NOT_ZERO(st_pre.mot[motor].prev_segment_time)) {                    // special case to skip first move
+            if (fp_NOT_ZERO(st_pre.mot[motor].prev_segment_time)) {                 // special case to skip first move
                 st_pre.mot[motor].accumulator_correction_flag = true;
                 st_pre.mot[motor].accumulator_correction = segment_time / st_pre.mot[motor].prev_segment_time;
             }
@@ -681,6 +678,7 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 
         // 'Nudge' correction strategy. Inject a single, scaled correction value then hold off
         // NOTE: This clause can be commented out to test for numerical accuracy and accumulating errors
+
         if ((--st_pre.mot[motor].correction_holdoff < 0) &&
             (fabs(following_error[motor]) > STEP_CORRECTION_THRESHOLD)) {
 
