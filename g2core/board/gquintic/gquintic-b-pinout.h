@@ -36,7 +36,7 @@
  * USAGE NOTES
  *
  * Read this first:
- * https://github.com/synthetos/g2/wiki/Adding-a-new-G2-board-(or-revision)-to-G2#making-a-new-pin-assignment
+ * https://github.com/synthetos/g2/wiki/Adding-and-Revising-Boards
  *
  *  USAGE:
  *
