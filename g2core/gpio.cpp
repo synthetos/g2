@@ -234,69 +234,69 @@ ioDigitalInputExt<kInput12_PinNumber , 12> _din12;
 // perl -e 'for($i=1;$i<14;$i++) { print "#if OUTPUT${i}_PWM == 1\nstatic PWMOutputPin<kOutput${i}_PinNumber>  output_${i}_pin;\n#else\nstatic PWMLikeOutputPin<kOutput${i}_PinNumber>  output_${i}_pin;\n#endif\n";}'
 // BEGIN generated
 #if OUTPUT1_PWM == 1
-static PWMOutputPin<kOutput1_PinNumber>  output_1_pin {kNormal, 200000};
+static PWMOutputPin<kOutput1_PinNumber>  output_1_pin {(DO1_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
 #else
-static PWMLikeOutputPin<kOutput1_PinNumber>  output_1_pin;
+static PWMLikeOutputPin<kOutput1_PinNumber>  output_1_pin {(DO1_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
 #endif
 #if OUTPUT2_PWM == 1
-static PWMOutputPin<kOutput2_PinNumber>  output_2_pin {kNormal, 200000};
+static PWMOutputPin<kOutput2_PinNumber>  output_2_pin {(DO2_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
 #else
-static PWMLikeOutputPin<kOutput2_PinNumber>  output_2_pin;
+static PWMLikeOutputPin<kOutput2_PinNumber>  output_2_pin {(DO2_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
 #endif
 #if OUTPUT3_PWM == 1
-static PWMOutputPin<kOutput3_PinNumber>  output_3_pin {kNormal, 200000};
+static PWMOutputPin<kOutput3_PinNumber>  output_3_pin {(DO3_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
 #else
-static PWMLikeOutputPin<kOutput3_PinNumber>  output_3_pin;
+static PWMLikeOutputPin<kOutput3_PinNumber>  output_3_pin {(DO3_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
 #endif
 #if OUTPUT4_PWM == 1
-static PWMOutputPin<kOutput4_PinNumber>  output_4_pin {kNormal, 200000};
+static PWMOutputPin<kOutput4_PinNumber>  output_4_pin {(DO4_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
 #else
-static PWMLikeOutputPin<kOutput4_PinNumber>  output_4_pin;
+static PWMLikeOutputPin<kOutput4_PinNumber>  output_4_pin {(DO4_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
 #endif
 #if OUTPUT5_PWM == 1
-static PWMOutputPin<kOutput5_PinNumber>  output_5_pin {kNormal, 200000};
+static PWMOutputPin<kOutput5_PinNumber>  output_5_pin {(DO5_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
 #else
-static PWMLikeOutputPin<kOutput5_PinNumber>  output_5_pin;
+static PWMLikeOutputPin<kOutput5_PinNumber>  output_5_pin {(DO5_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
 #endif
 #if OUTPUT6_PWM == 1
-static PWMOutputPin<kOutput6_PinNumber>  output_6_pin {kNormal, 200000};
+static PWMOutputPin<kOutput6_PinNumber>  output_6_pin {(DO6_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
 #else
-static PWMLikeOutputPin<kOutput6_PinNumber>  output_6_pin;
+static PWMLikeOutputPin<kOutput6_PinNumber>  output_6_pin {(DO6_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
 #endif
 #if OUTPUT7_PWM == 1
-static PWMOutputPin<kOutput7_PinNumber>  output_7_pin {kNormal, 200000};
+static PWMOutputPin<kOutput7_PinNumber>  output_7_pin {(DO7_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
 #else
-static PWMLikeOutputPin<kOutput7_PinNumber>  output_7_pin;
+static PWMLikeOutputPin<kOutput7_PinNumber>  output_7_pin {(DO7_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
 #endif
 #if OUTPUT8_PWM == 1
-static PWMOutputPin<kOutput8_PinNumber>  output_8_pin {kNormal, 200000};
+static PWMOutputPin<kOutput8_PinNumber>  output_8_pin {(DO8_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
 #else
-static PWMLikeOutputPin<kOutput8_PinNumber>  output_8_pin;
+static PWMLikeOutputPin<kOutput8_PinNumber>  output_8_pin {(DO8_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow};
 #endif
 #if OUTPUT9_PWM == 1
-static PWMOutputPin<kOutput9_PinNumber>  output_9_pin {kNormal, 200000};
+static PWMOutputPin<kOutput9_PinNumber>  output_9_pin {(DO9_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
 #else
-static PWMLikeOutputPin<kOutput9_PinNumber>  output_9_pin;
+static PWMLikeOutputPin<kOutput9_PinNumber>  output_9_pin {(DO9_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
 #endif
 #if OUTPUT10_PWM == 1
-static PWMOutputPin<kOutput10_PinNumber>  output_10_pin {kNormal, 200000};
+static PWMOutputPin<kOutput10_PinNumber>  output_10_pin {(DO10_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
 #else
-static PWMLikeOutputPin<kOutput10_PinNumber>  output_10_pin;
+static PWMLikeOutputPin<kOutput10_PinNumber>  output_10_pin {(DO10_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
 #endif
 #if OUTPUT11_PWM == 1
-static PWMOutputPin<kOutput11_PinNumber>  output_11_pin {kNormal, 200000};
+static PWMOutputPin<kOutput11_PinNumber>  output_11_pin {(DO11_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
 #else
-static PWMLikeOutputPin<kOutput11_PinNumber>  output_11_pin;
+static PWMLikeOutputPin<kOutput11_PinNumber>  output_11_pin {(DO11_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
 #endif
 #if OUTPUT12_PWM == 1
-static PWMOutputPin<kOutput12_PinNumber>  output_12_pin {kNormal, 200000};
+static PWMOutputPin<kOutput12_PinNumber>  output_12_pin {(DO12_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
 #else
-static PWMLikeOutputPin<kOutput12_PinNumber>  output_12_pin;
+static PWMLikeOutputPin<kOutput12_PinNumber>  output_12_pin {(DO12_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
 #endif
 #if OUTPUT13_PWM == 1
-static PWMOutputPin<kOutput13_PinNumber>  output_13_pin {kNormal, 200000};
+static PWMOutputPin<kOutput13_PinNumber>  output_13_pin {(DO13_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
 #else
-static PWMLikeOutputPin<kOutput13_PinNumber>  output_13_pin;
+static PWMLikeOutputPin<kOutput13_PinNumber>  output_13_pin {(DO13_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
 #endif
 // END generated
 
@@ -315,19 +315,19 @@ void gpio_init(void)
     // Generated with:
     // perl -e 'for($i=1;$i<14;$i++) { print "output_${i}_pin.setFrequency(200000);\n";}'
     // BEGIN generated
-    output_1_pin.setFrequency(200000);
-    output_2_pin.setFrequency(200000);
-    output_3_pin.setFrequency(200000);
-    output_4_pin.setFrequency(200000);
-    output_5_pin.setFrequency(200000);
-    output_6_pin.setFrequency(200000);
-    output_7_pin.setFrequency(200000);
-    output_8_pin.setFrequency(200000);
-    output_9_pin.setFrequency(200000);
-    output_10_pin.setFrequency(200000);
-    output_11_pin.setFrequency(200000);
-    output_12_pin.setFrequency(200000);
-    output_13_pin.setFrequency(200000);
+//    output_1_pin.setFrequency(200000);
+//    output_2_pin.setFrequency(200000);
+//    output_3_pin.setFrequency(200000);
+//    output_4_pin.setFrequency(200000);
+//    output_5_pin.setFrequency(200000);
+//    output_6_pin.setFrequency(200000);
+//    output_7_pin.setFrequency(200000);
+//    output_8_pin.setFrequency(200000);
+//    output_9_pin.setFrequency(200000);
+//    output_10_pin.setFrequency(200000);
+//    output_11_pin.setFrequency(200000);
+//    output_12_pin.setFrequency(200000);
+//    output_13_pin.setFrequency(200000);
     // END generated
 
     return(gpio_reset());
