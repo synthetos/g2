@@ -3,14 +3,14 @@ import re
 import sys
 
 STATES = {
-    0 : 'EMPTY',
-    1 : 'PLANNING',
-    2 : 'QUEUED',
-    3 : 'PENDING',
-    4 : 'RUNNING'
+    0: 'EMPTY',
+    1: 'PLANNING',
+    2: 'QUEUED',
+    3: 'PENDING',
+    4: 'RUNNING'
 }
 
-TUMBLER = ['r', 'w', 'p', 'c']
+TUMBLER = ['size', 'r', 'w', 'p', 'c']
 
 
 def load_pool(filename):
@@ -25,8 +25,15 @@ def load_pool(filename):
             if buf:
                 current_buffer = int(buf.groups()[0], 16)
                 pool[TUMBLER[tumbler_pos]] = current_buffer
-                print "TUMBLER[tumbler_pos]: %s=%i" % (TUMBLER[tumbler_pos], current_buffer)
-                tumbler_pos += 1
+                print 'TUMBLER[tumbler_pos]: %s=%d' % (
+                    TUMBLER[tumbler_pos], current_buffer
+                )
+            else:
+                buf = re.search(' = ([0-9]+)', line)
+                current_buffer = int(buf.groups()[0], 10)
+                pool[TUMBLER[tumbler_pos]] = current_buffer
+
+            tumbler_pos += 1
         else:
             buf = re.search('\(mpBuf_t\s\*\)\s(0x[0-9a-fA-F]+)', line)
             if buf:
@@ -42,7 +49,9 @@ def load_pool(filename):
                 if current_buffer == pool['c']:
                     pool[current_buffer]['is_c'] = True
             else:
-                match = re.search('([a-zA-Z_]+)\s=\s((?:0x[0-9a-fA-F]+|[0-9.]+(?:e[-+][0-9]+)?|[A-Z_]+)|true|false)', line)
+                match = re.search('([a-zA-Z_]+)\s=\s((?:0x[0-9a-fA-F]+|'
+                                  '[0-9.]+(?:e[-+][0-9]+)?|[A-Z_]+)|true|'
+                                  'false)', line)
                 if match:
                     # print "current_buffer: %s" % current_buffer
                     key, val = match.groups()
@@ -85,6 +94,7 @@ def load_pool(filename):
                         pool[current_buffer]['iterations'] = val
     return pool
 
+
 def check_integrity(pool):
     key = pool.keys()[0]
     buffers = set()
@@ -97,13 +107,15 @@ def check_integrity(pool):
 
         count += 1
 
-    if count != 48:
+    if count != pool['size']:
         raise Exception("Buffer pool integrity is bad.")
+
 
 def check_pool(filename):
     pool = load_pool(filename)
     check_integrity(pool)
     return pool
+
 
 def print_pool(pool):
     for key in sorted(pool.keys()):
@@ -141,27 +153,29 @@ def print_pool(pool):
             else:
                 junction_str = "!"
 
-            print '0x%08x [%02d] : N%04d (%02dx) %-22s %-8s L% 8.2f Ti% 8.2f C% 10.2f %1s[% 10.2f] X% 10.2f %1s[% 10.2f] J%1s% 10.2f %5s %20s (%5.2f)' % (
-                key,
-                float(buffer['buffer_number']),
-                float(buffer['linenum']),
-                int(buffer['iterations']),
-                buffer['buffer_state'].strip(),
-                pointer,
-                float(buffer['length']),
-                float(buffer['move_time']),
-                float(buffer['cruise_velocity']),
-                cruise_str,
-                float(buffer['cruise_vmax']),
-                float(buffer['exit_velocity']),
-                exit_str,
-                float(buffer['exit_vmax']),
-                junction_str,
-                float(buffer['junction_vmax']),
-                buffer['plannable'],
-                buffer['hint'],
-                float(buffer['jerk'])/1000000.0
-                )
+            print '0x%08x [%02d] : N%06d (%02dx) %-22s %-8s L% 8.2f Ti% 8.2f '\
+                  'C% 10.2f %1s[% 10.2f] X% 10.2f %1s[% 10.2f] J%1s% 10.2f ' \
+                  '%5s %20s (%5.2f)' % (
+                    key,
+                    float(buffer['buffer_number']),  # []
+                    float(buffer['linenum']),        # N
+                    int(buffer['iterations']),       # ()
+                    buffer['buffer_state'].strip(),
+                    pointer,                         # (w,p,r)
+                    float(buffer['length']),         # L
+                    float(buffer['move_time']),      # Ti
+                    float(buffer['cruise_velocity']),  # C
+                    cruise_str,
+                    float(buffer['cruise_vmax']),
+                    float(buffer['exit_velocity']),  # X
+                    exit_str,
+                    float(buffer['exit_vmax']),
+                    junction_str,                    # J
+                    float(buffer['junction_vmax']),
+                    buffer['plannable'],
+                    buffer['hint'],
+                    float(buffer['jerk'])/1000000.0
+                    )
 
 if __name__ == "__main__":
     pool = check_pool(sys.argv[1])
