@@ -892,18 +892,6 @@ static stat_t _exec_aline_tail(mpBuf_t *bf)
  *         -100        -90           -10        encoder is 10 steps behind commanded steps
  */
 
-//+++++ DIAGNOSTIC +++++
-#pragma GCC push_options       
-#pragma GCC optimize ("O0")
-// insert function here
-static void _hold_everything (int32_t linenum, uint32_t segments)
-{
-    if ((mr2.gm.linenum == linenum) && (mr2.segment_count == segments)) {
-        cm1.gm.linenum +=1;
-    }
-}
-#pragma GCC reset_options
-
 static stat_t _exec_aline_segment()
 {
     float travel_steps[MOTORS];
@@ -932,6 +920,11 @@ static stat_t _exec_aline_segment()
     // Convert target position to steps
     // Bucket-brigade the old target down the chain before getting the new target from kinematics
     //
+    // Very small travels of less than 0.01 step are truncated to zero. This is to correct a condition
+    // where a rounding error in kinematics could reverse the direction of a move in the extreme head or tail.
+    // Truncating the move contributes to positional error, but this is corrected by encoder feedback should
+    // it ever accumulate to more than one step.
+    //
     // NB: The direct manipulation of steps to compute travel_steps only works for Cartesian kinematics.
     //     Other kinematics may require transforming travel distance as opposed to simply subtracting steps.
 
@@ -943,11 +936,9 @@ static stat_t _exec_aline_segment()
     }
     kn_inverse_kinematics(mr->gm.target, mr->target_steps); // now determine the target steps...
 
-    _hold_everything(159, 2); //+++++
-
     for (uint8_t m=0; m<MOTORS; m++) {                      // and compute the distances to be traveled
         travel_steps[m] = mr->target_steps[m] - mr->position_steps[m];
-        if (fabs(travel_steps[m]) < 0.01) {                 // truncate very small moves to deal with rounding erors
+        if (fabs(travel_steps[m]) < 0.01) {                 // truncate very small moves to deal with rounding errors
             travel_steps[m] = 0;
         }
     }
