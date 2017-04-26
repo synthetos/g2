@@ -260,7 +260,7 @@
 #define M2_MICROSTEPS               8
 #endif
 #ifndef M2_STEPS_PER_UNIT
-#define M2_STEPS_PER_UNIT           0 
+#define M2_STEPS_PER_UNIT           0
 #endif
 #ifndef M2_POLARITY
 #define M2_POLARITY                 0

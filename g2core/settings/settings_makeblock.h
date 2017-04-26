@@ -91,7 +91,7 @@
                                                         // 1=MOTOR_ALWAYS_POWERED, 
                                                         // 2=MOTOR_POWERED_IN_CYCLE, 
                                                         // 3=MOTOR_POWERED_ONLY_WHEN_MOVING
-#define M1_POWER_LEVEL          0.4                     // 0.0 = off, 1.0 = max
+#define M1_POWER_LEVEL          0.4                     // 1pl:   0.0=no power, 1.0=max power
 #define MOTOR_POWER_TIMEOUT     10.00                    // motor power timeout in seconds
 
 #define M1_MOTOR_MAP            AXIS_X                  // 1ma

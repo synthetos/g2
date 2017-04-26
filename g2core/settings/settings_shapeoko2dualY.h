@@ -1,5 +1,5 @@
 /*
- * settings_shapeoko2.h - Shapeoko2 500mm table
+ * settings_shapeoko2dualY.h - Shapeoko2 500mm table
  * This file is part of the g2core project
  *
  * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
@@ -102,13 +102,21 @@
 #define M2_POWER_MODE               MOTOR_POWER_MODE
 #define M2_POWER_LEVEL              0.500
 
-#define M3_MOTOR_MAP                AXIS_Z
+#define M3_MOTOR_MAP                AXIS_Y
 #define M3_STEP_ANGLE               1.8
-#define M3_TRAVEL_PER_REV           1.25
+#define M3_TRAVEL_PER_REV           40.00
 #define M3_MICROSTEPS               8
-#define M3_POLARITY                 0
+#define M3_POLARITY                 1
 #define M3_POWER_MODE               MOTOR_POWER_MODE
-#define M3_POWER_LEVEL              0.750
+#define M3_POWER_LEVEL              0.500
+
+#define M4_MOTOR_MAP                AXIS_Z
+#define M4_STEP_ANGLE               1.8
+#define M4_TRAVEL_PER_REV           1.25
+#define M4_MICROSTEPS               8
+#define M4_POLARITY                 0
+#define M4_POWER_MODE               MOTOR_POWER_MODE
+#define M4_POWER_LEVEL              0.750
 
 // *** axis settings **********************************************************************************
 

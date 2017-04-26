@@ -1002,14 +1002,14 @@ stat_t _execute_gcode_block(char *active_comment)
     //--> set retract mode goes here
 
     switch (gv.next_action) {
-        case NEXT_ACTION_SET_G28_POSITION:  { status = cm_set_g28_position(); break;}                           // G28.1
-        case NEXT_ACTION_GOTO_G28_POSITION: { status = cm_goto_g28_position(gv.target, gf.target); break;}      // G28
-        case NEXT_ACTION_SET_G30_POSITION:  { status = cm_set_g30_position(); break;}                           // G30.1
-        case NEXT_ACTION_GOTO_G30_POSITION: { status = cm_goto_g30_position(gv.target, gf.target); break;}      // G30
+        case NEXT_ACTION_SET_G28_POSITION:  { status = cm_set_g28_position(); break;}                               // G28.1
+        case NEXT_ACTION_GOTO_G28_POSITION: { status = cm_goto_g28_position(gv.target, gf.target); break;}          // G28
+        case NEXT_ACTION_SET_G30_POSITION:  { status = cm_set_g30_position(); break;}                               // G30.1
+        case NEXT_ACTION_GOTO_G30_POSITION: { status = cm_goto_g30_position(gv.target, gf.target); break;}          // G30
 
-        case NEXT_ACTION_SEARCH_HOME:         { status = cm_homing_cycle_start(gv.target, gf.target); break;}   // G28.2
-        case NEXT_ACTION_SET_ABSOLUTE_ORIGIN: { status = cm_set_absolute_origin(gv.target, gf.target); break;}  // G28.3
-        case NEXT_ACTION_HOMING_NO_SET:       { status = cm_homing_cycle_start_no_set(gv.target, gf.target); break;} // G28.4
+        case NEXT_ACTION_SEARCH_HOME:         { status = cm_homing_cycle_start(gv.target, gf.target); break;}       // G28.2
+        case NEXT_ACTION_SET_ABSOLUTE_ORIGIN: { status = cm_set_absolute_origin(gv.target, gf.target); break;}      // G28.3
+        case NEXT_ACTION_HOMING_NO_SET:       { status = cm_homing_cycle_start_no_set(gv.target, gf.target); break;}// G28.4
 
         case NEXT_ACTION_STRAIGHT_PROBE_ERR:     { status = cm_straight_probe(gv.target, gf.target, true, true); break;}  // G38.2
         case NEXT_ACTION_STRAIGHT_PROBE:         { status = cm_straight_probe(gv.target, gf.target, true, false); break;} // G38.3
