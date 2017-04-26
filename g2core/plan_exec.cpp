@@ -892,6 +892,18 @@ static stat_t _exec_aline_tail(mpBuf_t *bf)
  *         -100        -90           -10        encoder is 10 steps behind commanded steps
  */
 
+//+++++ DIAGNOSTIC +++++
+#pragma GCC push_options       
+#pragma GCC optimize ("O0")
+// insert function here
+static void _hold_everything (int32_t linenum, uint32_t segments)
+{
+    if ((mr2.gm.linenum == linenum) && (mr2.segment_count == segments)) {
+        cm1.gm.linenum +=1;
+    }
+}
+#pragma GCC reset_options
+
 static stat_t _exec_aline_segment()
 {
     float travel_steps[MOTORS];
@@ -930,9 +942,14 @@ static stat_t _exec_aline_segment()
         mr->following_error[m] = mr->encoder_steps[m] - mr->commanded_steps[m];
     }
     kn_inverse_kinematics(mr->gm.target, mr->target_steps); // now determine the target steps...
+
+    _hold_everything(159, 2); //+++++
+
     for (uint8_t m=0; m<MOTORS; m++) {                      // and compute the distances to be traveled
-//        mr->travel_steps[m] = mr->target_steps[m] - mr->position_steps[m];
         travel_steps[m] = mr->target_steps[m] - mr->position_steps[m];
+        if (fabs(travel_steps[m]) < 0.01) {                 // truncate very small moves to deal with rounding erors
+            travel_steps[m] = 0;
+        }
     }
 
     // Update the mb->run_time_remaining -- we know it's missing the current segment's time before it's loaded, that's ok.
@@ -942,7 +959,6 @@ static stat_t _exec_aline_segment()
     }
 
     // Call the stepper prep function
-//    ritorno(st_prep_line(mr->travel_steps, mr->following_error, mr->segment_time));
     ritorno(st_prep_line(travel_steps, mr->following_error, mr->segment_time));
     copy_vector(mr->position, mr->gm.target);               // update position from target
     if (mr->segment_count == 0) {

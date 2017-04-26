@@ -78,6 +78,25 @@ Motate::SysTickEvent dwell_systick_event {[&] {
     }
 }, nullptr};
 
+/* Note on the above:
+It's a lambda function creating a closure function. 
+The full implementation that uses it is small and may help: 
+https://github.com/synthetos/Motate/blob/41e5b92a98de4b268d1804bf6eadf3333298fc75/MotateProject/motate/Atmel_sam_common/SamTimers.h#L1147-L1218
+It's just like a function, and is used as a function pointer.
+
+But the closure part means that whatever variables that were in scope where the 
+[&](parameters){code} is will be captured by the compiler as references in the generated 
+function and used wherever the function gets called. In this particular use, there isn't 
+anything that wouldn't be available anywhere in that file, but they're not being called 
+from that file. They're being called by the systick interrupt which is over in SamTmers.cpp
+So this saves a bunch of work exposing bits that the systick would need to call and encapsulates it.
+And there's almost no runtime overhead. Just a check for a valid function pointer and then a call of it.
+I'd like to get rid of that check but it's more work than its worth.
+
+See here for some good info on lambda functions in C++
+http://www.cprogramming.com/c++11/c++11-lambda-closures.html
+http://en.cppreference.com/w/cpp/language/lambda
+*/
 
 /************************************************************************************
  **** CODE **************************************************************************

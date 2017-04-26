@@ -559,6 +559,56 @@ static void _start_p2_feedhold()
 }
 */
 
+/*  
+ * _enter_p2()  - enter p2 planner with proper state transfer from p1
+ * _exit_p2()   - reenter p1 planner with proper state transfer from p2
+ *
+ * Encapsulate entering and exiting p2, as this is tricky and must be done exactly right
+ */
+
+static void _enter_p2()
+{
+    // Copy the primary canonical machine to the secondary. Here it's OK to co a memcpy.
+    // Set parameters in cm, gm and gmx so you can actually use it
+    memcpy(&cm2, &cm1, sizeof(cmMachine_t));
+    cm2.hold_state = FEEDHOLD_OFF;
+    cm2.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;
+    cm2.gm.absolute_override = ABSOLUTE_OVERRIDE_OFF;
+    cm2.queue_flush_state = QUEUE_FLUSH_OFF;
+    cm2.gm.feed_rate = 0;
+
+    // Set mp planner to p2 and reset it
+    cm2.mp = &mp2;
+    planner_reset((mpPlanner_t *)cm2.mp);   // mp is a void pointer
+
+    // Clear the target and set the positions to the current hold position
+    memset(&(cm2.return_flags), 0, sizeof(cm2.return_flags));
+    memset(&(cm2.gm.target), 0, sizeof(cm2.gm.target));
+    memset(&(cm2.gm.target_comp), 0, sizeof(cm2.gm.target_comp)); // zero Kahan compensation
+
+    copy_vector(cm2.gmx.position, mr1.position);
+    copy_vector(mp2.position, mr1.position);
+    copy_vector(mr2.position, mr1.position);
+
+    // Copy MR position and encoder terms - needed for following error correction state
+    copy_vector(mr2.target_steps, mr1.target_steps);
+    copy_vector(mr2.position_steps, mr1.position_steps);
+    copy_vector(mr2.commanded_steps, mr1.commanded_steps);
+    copy_vector(mr2.encoder_steps, mr1.encoder_steps);  // NB: following error is re-computed in p2
+
+    // Reassign the globals to the secondary CM
+    cm = &cm2;
+    mp = (mpPlanner_t *)cm->mp;     // mp is a void pointer
+    mr = mp->mr;
+}
+
+static void _exit_p2()
+{
+    cm = &cm1;                          // return to primary planner (p1)
+    mp = (mpPlanner_t *)cm->mp;         // cm->mp is a void pointer
+    mr = mp->mr;
+}
+
 static void _check_motion_stopped()
 {
     if (mp_runtime_is_idle()) {                         // wait for steppers to actually finish
@@ -606,11 +656,11 @@ static stat_t _feedhold_no_actions()
         cm1.hold_type = FEEDHOLD_TYPE_HOLD;
 //      cm1.hold_exit = FEEDHOLD_EXIT_STOP;     // default exit for NO_ACTIONS is STOP...
 
-        if (cm1.motion_state == MOTION_STOP) {   // if motion has already stopped declare that you are in a feedhold
+        if (cm1.motion_state == MOTION_STOP) {  // if motion has already stopped declare that you are in a feedhold
             _check_motion_stopped();
             cm1.hold_state = FEEDHOLD_HOLD;
         } else {
-            cm1.hold_state = FEEDHOLD_SYNC;         // ... STOP can be overridden by setting hold_exit after this function
+            cm1.hold_state = FEEDHOLD_SYNC;     // ... STOP can be overridden by setting hold_exit after this function
             return (STAT_EAGAIN);
         }
     }
@@ -630,55 +680,6 @@ static void _feedhold_actions_done_callback(float* vect, bool* flag)
 {
     cm1.hold_state = FEEDHOLD_HOLD_ACTIONS_COMPLETE; // penultimate state before transitioning to FEEDHOLD_HOLD
     sr_request_status_report(SR_REQUEST_IMMEDIATE);
-}
-
-/****************************************************************************************
- * _enter_p2()  - enter p2 planner with proper state transfer from p1
- * _exit_p2()   - reenter p1 planner with proper state transfer from p2
- *
- * Encapsulate entering and exiting p2, as this is tricky and must be done exactly right
- */
-
-static void _enter_p2()
-{
-    // Copy the primary canonical machine to the secondary. Here it's OK to co a memcpy.
-    // Set parameters in cm, gm and gmx so you can actually use it
-    memcpy(&cm2, &cm1, sizeof(cmMachine_t));
-    cm2.hold_state = FEEDHOLD_OFF;
-    cm2.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;
-    cm2.gm.absolute_override = ABSOLUTE_OVERRIDE_OFF;
-    cm2.queue_flush_state = QUEUE_FLUSH_OFF;
-    cm2.gm.feed_rate = 0;
-
-    // Set mp planner to p2 and reset it
-    cm2.mp = &mp2;
-    planner_reset((mpPlanner_t *)cm2.mp);   // mp is a void pointer
-
-    // Clear the target and set the positions to the current hold position
-    memset(&(cm2.gm.target), 0, sizeof(cm2.gm.target));
-    memset(&(cm2.return_flags), 0, sizeof(cm2.return_flags));
-    copy_vector(cm2.gm.target_comp, cm1.gm.target_comp); // preserve original Kahan compensation
-    copy_vector(cm2.gmx.position, mr1.position);
-    copy_vector(mp2.position, mr1.position);
-    copy_vector(mr2.position, mr1.position);
-
-    // Copy MR position and encoder terms - needed for following error correction state
-    copy_vector(mr2.target_steps, mr1.target_steps);
-    copy_vector(mr2.position_steps, mr1.position_steps);
-    copy_vector(mr2.commanded_steps, mr1.commanded_steps);
-    copy_vector(mr2.encoder_steps, mr1.encoder_steps);  // NB: following error is re-computed in p2
-
-    // Reassign the globals to the secondary CM
-    cm = &cm2;
-    mp = (mpPlanner_t *)cm->mp;     // mp is a void pointer
-    mr = mp->mr;
-}
-
-static void _exit_p2()
-{
-    cm = &cm1;                          // return to primary planner (p1)
-    mp = (mpPlanner_t *)cm->mp;         // cm->mp is a void pointer
-    mr = mp->mr;
 }
 
 static stat_t _feedhold_with_actions()          // Execute Case (5)

@@ -49,7 +49,8 @@ using Motate::SysTickTimer;
 
 /****** Global Scope Variables and Functions ******/
 /*
-#pragma GCC push_options        // DIAGNOSTIC +++++
+// +++++ DIAGNOSTIC +++++
+#pragma GCC push_options
 #pragma GCC optimize ("O0")
 // insert function here
 static void _hold_everything (uint32_t n1, uint32_t n2) // example of function
