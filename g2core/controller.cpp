@@ -324,6 +324,7 @@ void _reset_comms_mode() {
     // reset the communications mode
     cs.comm_mode = COMM_MODE;
     js.json_mode = (COMM_MODE < AUTO_MODE) ? COMM_MODE : JSON_MODE;
+    mst.marlin_flavor = false;
     sr.status_report_verbosity = STATUS_REPORT_VERBOSITY;
     qr.queue_report_verbosity = QUEUE_REPORT_VERBOSITY;
 }
