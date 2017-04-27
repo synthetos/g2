@@ -77,10 +77,10 @@ float *set_vector_by_axis(float value, uint8_t axis);
 
 //*** math utilities ***
 
-float min3(float x1, float x2, float x3);
-float min4(float x1, float x2, float x3, float x4);
-float max3(float x1, float x2, float x3);
-float max4(float x1, float x2, float x3, float x4);
+//float min3(float x1, float x2, float x3);
+//float min4(float x1, float x2, float x3, float x4);
+//float max3(float x1, float x2, float x3);
+//float max4(float x1, float x2, float x3, float x4);
 //float std_dev(float a[], uint8_t n, float *mean);
 
 //*** string utilities ***
