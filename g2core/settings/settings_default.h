@@ -937,6 +937,9 @@
 #ifndef H1_DEFAULT_D
 #define H1_DEFAULT_D                400.0
 #endif
+#ifndef H1_DEFAULT_F
+#define H1_DEFAULT_F                0.0
+#endif
 
 #ifndef H2_DEFAULT_ENABLE
 #define H2_DEFAULT_ENABLE           false
@@ -950,6 +953,9 @@
 #ifndef H2_DEFAULT_D
 #define H2_DEFAULT_D                400.0
 #endif
+#ifndef H2_DEFAULT_F
+#define H2_DEFAULT_F                0.0
+#endif
 
 #ifndef H3_DEFAULT_ENABLE
 #define H3_DEFAULT_ENABLE           false
@@ -962,6 +968,9 @@
 #endif
 #ifndef H3_DEFAULT_D
 #define H3_DEFAULT_D                400.0
+#endif
+#ifndef H3_DEFAULT_F
+#define H3_DEFAULT_F                0.0
 #endif
 
 // *** DEFAULT COORDINATE SYSTEM OFFSETS ***
