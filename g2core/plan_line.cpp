@@ -56,13 +56,12 @@ static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const floa
 static void _calculate_junction_vmax(mpBuf_t* bf);
 
 //+++++DIAGNOSTICS
-#pragma GCC optimize("O0")  // this pragma is required to force the planner to actually set these unused values
-//#pragma GCC reset_options
+//#pragma GCC optimize("O0")  // this pragma is required to force the planner to actually set these unused values
 static void _set_bf_diagnostics(mpBuf_t* bf) {
     bf->linenum = bf->gm.linenum;
 //  UPDATE_BF_DIAGNOSTICS(bf);   //+++++
 }
-#pragma GCC reset_options
+//#pragma GCC reset_options
 
 /* Runtime-specific setters and getters
  *
@@ -286,15 +285,12 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
             if (bf->pv->gm.path_control == PATH_EXACT_STOP) {
                 bf->pv->exit_vmax = 0;
             } else {
-                bf->pv->exit_vmax = min3(bf->pv->junction_vmax, bf->pv->cruise_vmax, bf->cruise_vmax);
+                bf->pv->exit_vmax = std::min(std::min(bf->pv->junction_vmax, bf->pv->cruise_vmax), bf->cruise_vmax);
             }
         }
         _calculate_override(bf);  // adjust cruise_vmax for feed/traverse override
  //     bf->plannable_time = bf->pv->plannable_time;    // set plannable time - excluding current move
         bf->buffer_state = MP_BUFFER_IN_PROCESS;
-
-        // +++++ Why do we have to do this here?
-        // bf->pv_group = bf->pv;
 
         bf->hint = NO_HINT;     // ensure we've cleared the hints
         // Time: 12us-41us
@@ -314,7 +310,7 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
     if (mp.planner_state == PLANNER_BACK_PLANNING) {
         // NOTE: We stop when the previous block is no longer plannable.
         // We will alter the previous block's exit_velocity.
-        float braking_velocity = 0;  // we use this to stre the previous entry velocity, start at 0
+        float braking_velocity = 0;  // we use this to store the previous entry velocity, start at 0
         bool optimal = false;  // we use the optimal flag (as the opposite of plannable) to carry plan-ability backward.
 
         // We test for (braking_velocity < bf->exit_velocity) in case of an inversion, and plannable is then violated.
@@ -386,8 +382,8 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
                 braking_velocity = mp_get_target_velocity(bf->exit_velocity, bf->length, bf);
 
                 if (bf->pv->exit_vmax > braking_velocity) {  // remember, exit vmax already is min of
-                                                             // pv_group->cruise_vmax, cruise_vmax, and
-                                                             // pv_group->junction_vmax
+                                                             // pv->cruise_vmax, cruise_vmax, and
+                                                             // pv->junction_vmax
                     bf->cruise_velocity = braking_velocity;  // put this here to avoid a race condition with _exec()
                     bf->hint = PERFECT_DECELERATION;         // This is advisory, and may be altered by forward planning
 
@@ -637,8 +633,8 @@ static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const floa
             }
         }
     }
-    block_time        = max3(feed_time, max_time, MIN_BLOCK_TIME);
-    min_time          = max(min_time, MIN_BLOCK_TIME);
+    block_time        = std::max(std::max(feed_time, max_time), MIN_BLOCK_TIME);
+    min_time          = std::max(min_time, MIN_BLOCK_TIME);
     bf->cruise_vset   = bf->length / block_time;  // target velocity requested
     bf->cruise_vmax   = bf->cruise_vset;          // starting value for cruise vmax
     bf->absolute_vmax = bf->length / min_time;    // absolute velocity limit
@@ -697,7 +693,7 @@ static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const floa
 static void _calculate_junction_vmax(mpBuf_t* bf) 
 {
     // ++++ RG If we change cruise_vmax, we'll need to recompute junction_vmax, if we do this:
-    float velocity = min(bf->cruise_vmax, bf->nx->cruise_vmax);  // start with our maximum possible velocity
+    float velocity = std::min(bf->cruise_vmax, bf->nx->cruise_vmax);  // start with our maximum possible velocity
 
     // uint8_t jerk_axis = AXIS_X;
     // cmAxes jerk_axis = AXIS_X;
@@ -712,7 +708,8 @@ static void _calculate_junction_vmax(mpBuf_t* bf)
             if (delta > EPSILON) {
                 // formula (4): (See Note 1, above)
 
-                velocity = min(velocity, (cm.a[axis].max_junction_accel / delta));
+                velocity = std::min(velocity, (cm.a[axis].max_junction_accel / delta));
+
 //                if ((cm.a[axis].max_junction_accel / delta) < velocity) {
 //                    velocity = (cm.a[axis].max_junction_accel / delta);
 //                    // bf->jerk_axis = axis;
