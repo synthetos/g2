@@ -69,6 +69,7 @@ enum hwPlatform {
 ////////////////////////////
 
 #include "MotatePins.h"
+#include "MotateSPI.h"
 #include "MotateTimers.h" // for TimerChanel<> and related...
 #include "MotateServiceCall.h" // for ServiceCall<>
 
@@ -120,10 +121,12 @@ using Motate::OutputPin;
 /**** Stepper DDA and dwell timer settings ****/
 
 //#define FREQUENCY_DDA    200000UL    // Hz step frequency. Interrupts actually fire at 2x (400 KHz)
-#define FREQUENCY_DDA 300000UL  // Hz step frequency. Interrupts actually fire at 2x (300 KHz)
+#define FREQUENCY_DDA 400000UL  // Hz step frequency. Interrupts actually fire at 2x (300 KHz)
 #define FREQUENCY_DWELL 1000UL
 
 #define MIN_SEGMENT_MS ((float)0.125)       // S70 can handle much much smaller segements
+
+#define PLANNER_BUFFER_POOL_SIZE (96)
 
 /**** Motate Definitions ****/
 
@@ -134,19 +137,19 @@ typedef TimerChannel<11, 0> fwd_plan_timer_type;   // request exec timer in step
 
 Motate::service_call_number kSPI_ServiceCallNumber = 3;
 
-// Pin assignments
+/**** SPI Setup ****/
+
+typedef Motate::SPIBus<Motate::kSPI_MISOPinNumber, Motate::kSPI_MOSIPinNumber, Motate::kSPI_SCKPinNumber, kSPI_ServiceCallNumber> SPIBus_used_t;
+extern SPIBus_used_t spiBus;
+
+typedef Motate::SPIChipSelectPinMux<Motate::kSocket1_SPISlaveSelectPinNumber, Motate::kSocket2_SPISlaveSelectPinNumber, Motate::kSocket3_SPISlaveSelectPinNumber, -1> SPI_CS_PinMux_used_t;
+extern SPI_CS_PinMux_used_t spiCSPinMux;
+
+/**** Motate Global Pin Allocations ****/
 
 pin_number indicator_led_pin_num = Motate::kLED_USBRXPinNumber;
 static OutputPin<indicator_led_pin_num> IndicatorLed;
 
-/**** Motate Global Pin Allocations ****/
-
-//static OutputPin<kSocket1_SPISlaveSelectPinNumber> spi_ss1_pin;
-//static OutputPin<kSocket2_SPISlaveSelectPinNumber> spi_ss2_pin;
-//static OutputPin<kSocket3_SPISlaveSelectPinNumber> spi_ss3_pin;
-//static OutputPin<kSocket4_SPISlaveSelectPinNumber> spi_ss4_pin;
-//static OutputPin<kSocket5_SPISlaveSelectPinNumber> spi_ss5_pin;
-//static OutputPin<kSocket6_SPISlaveSelectPinNumber> spi_ss6_pin;
 static OutputPin<Motate::kKinen_SyncPinNumber> kinen_sync_pin;
 
 static OutputPin<Motate::kGRBL_ResetPinNumber> grbl_reset_pin;

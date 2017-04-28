@@ -39,12 +39,16 @@
 //Motate::ClockOutputPin<Motate::kExternalClock1_PinNumber> external_clk_pin {16000000}; // 16MHz optimally
 Motate::OutputPin<Motate::kExternalClock1_PinNumber> external_clk_pin {Motate::kStartLow};
 
+SPI_CS_PinMux_used_t spiCSPinMux;
+SPIBus_used_t spiBus;
+
 /*
  * hardware_init() - lowest level hardware init
  */
 
 void hardware_init()
 {
+    spiBus.init();
     board_hardware_init();
     external_clk_pin = 0; // Force external clock to 0 for now.
 }

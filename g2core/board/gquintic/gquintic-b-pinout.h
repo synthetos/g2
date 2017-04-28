@@ -36,7 +36,7 @@
  * USAGE NOTES
  *
  * Read this first:
- * https://github.com/synthetos/g2/wiki/Adding-a-new-G2-board-(or-revision)-to-G2#making-a-new-pin-assignment
+ * https://github.com/synthetos/g2/wiki/Adding-and-Revising-Boards
  *
  *  USAGE:
  *
@@ -94,17 +94,20 @@
 // So we have to explicitly enable them as PWM pins.
 // Generated with:
 // perl -e 'for($i=1;$i<14;$i++) { print "#define OUTPUT${i}_PWM 0\n";}'
-#define OUTPUT1_PWM 1   // TC 0,1 - Fet 1
-#define OUTPUT2_PWM 1   // PWM 1  - Fet 2
+//#define OUTPUT1_PWM 1   // TC 0,1 - Fet 1
+//#define OUTPUT2_PWM 1   // PWM 0,1 - Fet 2
+#define OUTPUT1_PWM 0   // Used by EX1
+#define OUTPUT2_PWM 0   // Used by EX2
 #define OUTPUT3_PWM 1   // TC 1,0 - Fan 1
 #define OUTPUT4_PWM 1   // TC 1,1 - Fan 2
 #define OUTPUT5_PWM 1   // TC 2,0 - Fan 3
-#define OUTPUT6_PWM 1   // PWM 8+0
-#define OUTPUT7_PWM 1   // PWM 3
-#define OUTPUT8_PWM 1   // PWM 2
-#define OUTPUT9_PWM 0   // PWM 2
-#define OUTPUT10_PWM 1  // PWM 8+2
-#define OUTPUT11_PWM 1  // PWM 8+3 - Fet 3
+#define OUTPUT6_PWM 1   // PWM 1,0
+#define OUTPUT7_PWM 1   // PWM 0,3
+#define OUTPUT8_PWM 1   // PWM 0,2
+#define OUTPUT9_PWM 0   // PWM 0,2
+#define OUTPUT10_PWM 1  // PWM 1,2
+#define OUTPUT11_PWM 0  // Used by Heatbed
+//#define OUTPUT11_PWM 1  // PWM 1,3 - Fet 3
 #define OUTPUT12_PWM 0  // Unused
 #define OUTPUT13_PWM 0  // Unused
 
@@ -119,36 +122,36 @@ namespace Motate {
 
 _MAKE_MOTATE_PIN(kLED_RGBWPixelPinNumber, 'A', 0);           //
 _MAKE_MOTATE_PIN(kOutput1_PinNumber, 'A', 1);                // TC  0,1
-_MAKE_MOTATE_PIN(kOutput2_PinNumber, 'A', 2);                // PWM 1
+_MAKE_MOTATE_PIN(kOutput2_PinNumber, 'A', 2);                // PWM 0,1
 _MAKE_MOTATE_PIN(kI2C1_SDAPinNumber, 'A', 3);                //
 _MAKE_MOTATE_PIN(kI2C1_SCLPinNumber, 'A', 4);                //
-_MAKE_MOTATE_PIN(kOutput11_PinNumber, 'A', 5);               // PWM 8+3
+_MAKE_MOTATE_PIN(kOutput11_PinNumber, 'A', 5);               // PWM 1,3
 _MAKE_MOTATE_PIN(kExternalClock1_PinNumber, 'A', 6);         // CPU_CLK
-//_MAKE_MOTATE_PIN(kOutput7_PinNumber, 'A', 7);              // PWM 3
-_MAKE_MOTATE_PIN(kServo1_PinNumber, 'A', 7);                 //
+_MAKE_MOTATE_PIN(kOutput7_PinNumber, 'A', 7);              // PWM 0,3
+//_MAKE_MOTATE_PIN(kServo1_PinNumber, 'A', 7);                 //
 _MAKE_MOTATE_PIN(kSerial_RTSPinNumber, 'A', 8);              //
 _MAKE_MOTATE_PIN(kSerial_RXPinNumber, 'A', 9);               //
 _MAKE_MOTATE_PIN(kSerial_TXPinNumber, 'A', 10);              //
 _MAKE_MOTATE_PIN(kSocket2_EnablePinNumber, 'A', 11);         //
-_MAKE_MOTATE_PIN(kOutput6_PinNumber, 'A', 12);               // PWM 8+0
-_MAKE_MOTATE_PIN(kOutput8_PinNumber, 'A', 13);               // PWM 2
+_MAKE_MOTATE_PIN(kOutput6_PinNumber, 'A', 12);               // PWM 1,0
+_MAKE_MOTATE_PIN(kOutput8_PinNumber, 'A', 13);               // PWM 0,2
 _MAKE_MOTATE_PIN(kSocket1_StepPinNumber, 'A', 14);           //
 _MAKE_MOTATE_PIN(kOutput3_PinNumber, 'A', 15);               // TC 1,0
 _MAKE_MOTATE_PIN(kOutput4_PinNumber, 'A', 16);               // TC 1,1
-_MAKE_MOTATE_PIN(kADC4_PinNumber, 'A', 17);                  //
-_MAKE_MOTATE_PIN(kADC3_PinNumber, 'A', 18);                  //
-_MAKE_MOTATE_PIN(kADC2_PinNumber, 'A', 19);                  //
-_MAKE_MOTATE_PIN(kADC1_PinNumber, 'A', 20);                  //
+_MAKE_MOTATE_PIN(kADC4_PinNumber, 'A', 17);                  // AFEC0,6
+_MAKE_MOTATE_PIN(kADC3_PinNumber, 'A', 18);                  // AFEC0,7
+_MAKE_MOTATE_PIN(kADC2_PinNumber, 'A', 19);                  // AFEC0,8
+_MAKE_MOTATE_PIN(kADC1_PinNumber, 'A', 20);                  // AFEC0,9
 _MAKE_MOTATE_PIN(kSerial_CTSPinNumber, 'A', 21);             //
 _MAKE_MOTATE_PIN(kSocket1_EnablePinNumber, 'A', 22);         //
-_MAKE_MOTATE_PIN(kOutput10_PinNumber, 'A', 23);              // PWM 8+2
-//_MAKE_MOTATE_PIN(kServo1_PinNumber, 'A', 23);              //
+//_MAKE_MOTATE_PIN(kOutput10_PinNumber, 'A', 23);              // PWM 1,2
+_MAKE_MOTATE_PIN(kServo1_PinNumber, 'A', 23);              //
 _MAKE_MOTATE_PIN(kSocket3_EnablePinNumber, 'A', 24);         //
 _MAKE_MOTATE_PIN(kSocket2_DirPinNumber, 'A', 25);            //
 _MAKE_MOTATE_PIN(kOutput5_PinNumber, 'A', 26);               // TC 2,0
 _MAKE_MOTATE_PIN(kSocket3_DirPinNumber, 'A', 27);            // On Timer 2!
 _MAKE_MOTATE_PIN(kUnassigned1, 'A', 28);                     // DIAG1
-_MAKE_MOTATE_PIN(kUnassigned2, 'A', 29);                     //
+_MAKE_MOTATE_PIN(kUnassigned2, 'A', 29);                     // NO PHYSICAL PIN
 _MAKE_MOTATE_PIN(kInput1_PinNumber, 'A', 30);                //
 _MAKE_MOTATE_PIN(kInput4_PinNumber, 'A', 31);                //
 
@@ -192,13 +195,13 @@ _MAKE_MOTATE_PIN(kUnassigned6, 'D', 19);                     //
 _MAKE_MOTATE_PIN(kSPI0_MISOPinNumber, 'D', 20);              //
 _MAKE_MOTATE_PIN(kSPI0_MOSIPinNumber, 'D', 21);              //
 _MAKE_MOTATE_PIN(kSPI0_SCKPinNumber, 'D', 22);               //
-_MAKE_MOTATE_PIN(kUnassigned7, 'D', 23);                     //
+_MAKE_MOTATE_PIN(kUnassigned7, 'D', 23);                     // NO PHYSICAL PIN
 _MAKE_MOTATE_PIN(kSocket2_StepPinNumber, 'D', 24);           //
 _MAKE_MOTATE_PIN(kSocket2_SPISlaveSelectPinNumber, 'D', 25); //
 _MAKE_MOTATE_PIN(kOutput9_PinNumber, 'D', 26);               // PWM 2
 _MAKE_MOTATE_PIN(kSocket1_DirPinNumber, 'D', 27);            //
 _MAKE_MOTATE_PIN(kSocket4_EnablePinNumber, 'D', 28);         //
-_MAKE_MOTATE_PIN(kUnassigned8, 'D', 29);                     //
+_MAKE_MOTATE_PIN(kUnassigned8, 'D', 29);                     // NO PHYSICAL PIN
 _MAKE_MOTATE_PIN(kUnassigned9, 'D', 30);                     // INTERRUPT_OUT
 _MAKE_MOTATE_PIN(kUnassigned10, 'D', 31);                    //
 

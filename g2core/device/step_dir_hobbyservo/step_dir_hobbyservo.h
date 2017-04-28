@@ -106,12 +106,12 @@ struct StepDirHobbyServo final : Stepper {
 
     void _enableImpl() override {
         _enabled = true;
-        _pwm_pin.setExactDutyCycle(_position_computed, true);
+        _pwm_pin.setExactDutyCycle(_position_computed);
     };
 
     void _disableImpl() override {
         _enabled = false;
-        _pwm_pin.setExactDutyCycle(0, true);
+        _pwm_pin.setExactDutyCycle(0);
     };
 
     void stepStart() override {
@@ -135,7 +135,7 @@ struct StepDirHobbyServo final : Stepper {
         }
 
         _position_computed = _min_value + ((used_position/6400.0) * _value_range);
-        _pwm_pin.setExactDutyCycle(_position_computed, true); // apply the change
+        _pwm_pin.setExactDutyCycle(_position_computed); // apply the change
     };
 
     void stepEnd() override {

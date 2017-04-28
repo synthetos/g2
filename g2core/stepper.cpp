@@ -286,7 +286,7 @@ void dda_timer_type::interrupt()
 
     // process last DDA tick after end of segment
     if (st_run.dda_ticks_downcount == 0) {
-        dda_timer.stop(); // turn it off or it will keep stepping out the last segment
+        // we used to turn off the stepper timer here, but we don't anymore
         return;
     }
 
@@ -488,7 +488,7 @@ static void _load_move()
 
         //**** setup the new segment ****
 
-        st_run.dda_ticks_downcount = st_pre.dda_ticks;
+        // st_run.dda_ticks_downcount is setup right before turning on the interrupt, since we don't turn it off
         st_run.dda_ticks_X_substeps = st_pre.dda_ticks_X_substeps;
 
         // INLINED VERSION: 4.3us
@@ -623,6 +623,7 @@ static void _load_move()
 
         //**** do this last ****
 
+        st_run.dda_ticks_downcount = st_pre.dda_ticks;
         dda_timer.start();                              // start the DDA timer if not already running
 
     // handle dwells and commands
@@ -732,9 +733,9 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
             correction_steps = following_error[motor] * STEP_CORRECTION_FACTOR;
 
             if (correction_steps > 0) {
-                correction_steps = min3(correction_steps, fabs(travel_steps[motor]), STEP_CORRECTION_MAX);
+                correction_steps = std::min(std::min(correction_steps, fabs(travel_steps[motor])), STEP_CORRECTION_MAX);
             } else {
-                correction_steps = max3(correction_steps, -fabs(travel_steps[motor]), -STEP_CORRECTION_MAX);
+                correction_steps = std::max(std::max(correction_steps, -fabs(travel_steps[motor])), -STEP_CORRECTION_MAX);
             }
             st_pre.mot[motor].corrected_steps += correction_steps;
             travel_steps[motor] -= correction_steps;
@@ -778,11 +779,11 @@ void st_prep_command(void *bf)
  * st_prep_dwell()      - Add a dwell to the move buffer
  */
 
-void st_prep_dwell(float microseconds)
+void st_prep_dwell(float milliseconds)
 {
     st_pre.block_type = BLOCK_TYPE_DWELL;
     // we need dwell_ticks to be at least 1
-    st_pre.dwell_ticks = std::max((uint32_t)((microseconds/1000000) * FREQUENCY_DWELL), 1UL);
+    st_pre.dwell_ticks = std::max((uint32_t)((milliseconds/1000.0) * FREQUENCY_DWELL), 1UL);
     st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;    // signal that prep buffer is ready
 }
 
@@ -791,9 +792,9 @@ void st_prep_dwell(float microseconds)
  * (only usable while exec isn't running, e.g. in feedhold or stopped states...)
  * add a dwell to the loader without going through the planner buffers
  */
-void st_request_out_of_band_dwell(float microseconds)
+void st_request_out_of_band_dwell(float milliseconds)
 {
-    st_prep_dwell(microseconds);
+    st_prep_dwell(milliseconds);
     st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;    // signal that prep buffer is ready
     st_request_load_move();
 }

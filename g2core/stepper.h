@@ -275,11 +275,11 @@ typedef enum {                          // used w/start and stop flags to sequen
 } stPowerState;
 
 typedef enum {
-    MOTOR_DISABLED = 0,                 // motor enable is deactivated
-    MOTOR_ALWAYS_POWERED,               // motor is always powered while machine is ON
-    MOTOR_POWERED_IN_CYCLE,             // motor fully powered during cycles, de-powered out of cycle
-    MOTOR_POWERED_ONLY_WHEN_MOVING,     // motor only powered while moving - idles shortly after it's stopped - even in cycle
-    MOTOR_POWER_MODE_MAX_VALUE          // for input range checking
+    MOTOR_DISABLED = 0,                 // [0] motor enable is deactivated
+    MOTOR_ALWAYS_POWERED,               // [1] motor is always powered while machine is ON
+    MOTOR_POWERED_IN_CYCLE,             // [2] motor fully powered during cycles, de-powered out of cycle
+    MOTOR_POWERED_ONLY_WHEN_MOVING,     // [3] motor only powered while moving - idles shortly after it's stopped - even in cycle
+    MOTOR_POWER_MODE_MAX_VALUE          // [4] for input range checking
 } stPowerMode;
 
 // Min/Max timeouts allowed for motor disable. Allow for inertial stop; must be non-zero
@@ -566,7 +566,7 @@ void st_request_exec_move(void) HOT_FUNC;
 void st_request_load_move(void) HOT_FUNC;
 void st_prep_null(void);
 void st_prep_command(void *bf);        // use a void pointer since we don't know about mpBuf_t yet)
-void st_prep_dwell(float microseconds);
+void st_prep_dwell(float milliseconds);
 void st_request_out_of_band_dwell(float microseconds);
 stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time)  HOT_FUNC;
 

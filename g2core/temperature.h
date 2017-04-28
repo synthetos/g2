@@ -46,9 +46,12 @@ stat_t cm_get_heater_i(nvObj_t* nv);
 stat_t cm_set_heater_i(nvObj_t* nv);
 stat_t cm_get_heater_d(nvObj_t* nv);
 stat_t cm_set_heater_d(nvObj_t* nv);
+stat_t cm_get_heater_f(nvObj_t* nv);
+stat_t cm_set_heater_f(nvObj_t* nv);
 stat_t cm_get_pid_p(nvObj_t* nv);
 stat_t cm_get_pid_i(nvObj_t* nv);
 stat_t cm_get_pid_d(nvObj_t* nv);
+stat_t cm_get_pid_f(nvObj_t* nv);
 
 float cm_get_set_temperature(const uint8_t heater);
 stat_t cm_get_set_temperature(nvObj_t* nv);

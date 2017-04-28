@@ -32,8 +32,6 @@
 #include "tmc2130.h"
 #include "step_dir_hobbyservo.h"
 
-typedef Motate::SPIBus<Motate::kSPI_MISOPinNumber, Motate::kSPI_MOSIPinNumber, Motate::kSPI_SCKPinNumber, kSPI_ServiceCallNumber> SPIBus_used_t;
-
 // These are identical to board_stepper.h, except for the word "extern" and the initialization
 extern Trinamic2130<SPIBus_used_t::SPIBusDevice,
                     Motate::kSocket1_StepPinNumber,

@@ -382,7 +382,7 @@ static stat_t _exec_json_wait(mpBuf_t *bf)
             nv_get_nvObj(nv);
             bool new_value = !fp_ZERO(nv->value);
             if (old_value != new_value) {
-                st_prep_dwell((uint32_t)(0.1 * 1000000.0));// 1ms converted to uSec
+                st_prep_dwell(1.0); // 1ms exactly
                 return STAT_OK;
             }
         }
@@ -421,7 +421,7 @@ stat_t mp_dwell(float seconds)
 
 static stat_t _exec_dwell(mpBuf_t *bf)
 {
-    st_prep_dwell((uint32_t)(bf->block_time * 1000000.0));// convert seconds to uSec
+    st_prep_dwell(bf->block_time * 1000.0);// convert seconds to ms
     if (mp_free_run_buffer()) {
         cm_cycle_end();                 // free buffer & perform cycle_end if planner is empty
     }

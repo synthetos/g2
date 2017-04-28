@@ -62,7 +62,7 @@ ifeq ($(DEBUG),3)
 	DEVICE_DEFINES += DEBUG=1 IN_DEBUGGER=1 DEBUG_SEMIHOSTING=1
 endif
 
-TOOLS_VERSION = 6.2
+TOOLS_VERSION = "6.2u1"
 
 # Now invoke the Motate compile system
 include $(MOTATE_PATH)/Motate.mk
