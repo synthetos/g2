@@ -133,7 +133,7 @@
 #define M4_MICROSTEPS               64
 #define M4_POLARITY                 0
 #define M4_POWER_MODE               MOTOR_POWER_MODE
-#define M4_POWER_LEVEL              0.8
+#define M4_POWER_LEVEL              0.6
 
 // 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
 #define M5_MOTOR_MAP                AXIS_B
@@ -151,8 +151,8 @@
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX                230                     // xtm  travel between switches or crashes
-#define X_JERK_MAX                  7000                    // xjm  yes, that's "100 billion" mm/(min^3)
-#define X_JERK_HIGH_SPEED           7000                    // xjh
+#define X_JERK_MAX                  8000                    // xjm  yes, that's "100 billion" mm/(min^3)
+#define X_JERK_HIGH_SPEED           8000                    // xjh
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIRECTION          0                       // xhd  0=search moves negative, 1= search moves positive
 #define X_SEARCH_VELOCITY           2500                    // xsv  move in negative direction
@@ -165,8 +165,8 @@
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                224.5
-#define Y_JERK_MAX                  7000
-#define Y_JERK_HIGH_SPEED           7000
+#define Y_JERK_MAX                  8000
+#define Y_JERK_HIGH_SPEED           8000
 #define Y_HOMING_INPUT              3
 #define Y_HOMING_DIRECTION          1
 #define Y_SEARCH_VELOCITY           3000
@@ -189,7 +189,8 @@
 #define Z_LATCH_BACKOFF             5
 #define Z_ZERO_BACKOFF              0
 
-#define G55_Z_OFFSET                0.3
+#define G55_Z_OFFSET                0.25 // higher number is farther away from the bed
+
 
 // Rotary values are chosen to make the motor react the same as X for testing
 /***************************************************************************************
@@ -219,9 +220,9 @@
 //#define A_FEEDRATE_MAX          36110.8 // ~15 mm/s
 //#define A_FEEDRATE_MAX          24073.9 // ~10 mm/s
 //#define A_FEEDRATE_MAX          12036.95 // ~5 mm/s
-//#define A_FEEDRATE_MAX          6018.475 // ~2.5 mm/s
+//#define A_FEEDRATE_MAX          6018.475 // ~2.5 mm/s Testing: {afr:6018.475}
 //#define A_FEEDRATE_MAX          1000.0 // ~0.415 mm/s
-#define A_FEEDRATE_MAX          800.0
+#define A_FEEDRATE_MAX          800.0  // WORKS WELL
 //#define A_FEEDRATE_MAX          500.0 // ~0.2075 mm/s
 #define A_TRAVEL_MIN            0
 #define A_TRAVEL_MAX            10
@@ -388,7 +389,7 @@
 #define DO2_MODE                    IO_ACTIVE_HIGH // unavailable, is the extruder output
 
 //Fan1A_PWM
-#define DO3_MODE                    IO_ACTIVE_HIGH
+#define DO3_MODE                    IO_ACTIVE_LOW
 
 //Fan1B_PWM
 #define DO4_MODE                    IO_ACTIVE_HIGH
