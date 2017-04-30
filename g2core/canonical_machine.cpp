@@ -1183,7 +1183,7 @@ stat_t _goto_stored_position(const float stored_position[],     // always in mm
     copy_vector(target, stored_position);
 
     if (cm->gm.units_mode == INCHES) {
-        for (uint8_t i=0; i<AXES; i++) {
+        for (uint8_t i=0; i<AXIS_A; i++) {                  // Only convert linears (not rotaries)
             target[i] *= INCHES_PER_MM;
         }
     }

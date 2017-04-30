@@ -576,6 +576,7 @@ static void _enter_p2()
     cm2.gm.absolute_override = ABSOLUTE_OVERRIDE_OFF;
     cm2.queue_flush_state = QUEUE_FLUSH_OFF;
     cm2.gm.feed_rate = 0;
+    cm2.arc.run_state = BLOCK_INACTIVE;     // Stop a running p1 arc from continuing to execute in p2
 
     // Set mp planner to p2 and reset it
     cm2.mp = &mp2;
@@ -598,15 +599,15 @@ static void _enter_p2()
 
     // Reassign the globals to the secondary CM
     cm = &cm2;
-    mp = (mpPlanner_t *)cm->mp;     // mp is a void pointer
-    mr = mp->mr;
+    mp = (mpPlanner_t *)cm2.mp;     // mp is a void pointer
+    mr = mp2.mr;
 }
 
 static void _exit_p2()
 {
     cm = &cm1;                          // return to primary planner (p1)
-    mp = (mpPlanner_t *)cm->mp;         // cm->mp is a void pointer
-    mr = mp->mr;
+    mp = (mpPlanner_t *)cm1.mp;         // cm->mp is a void pointer
+    mr = mp1.mr;
 }
 
 static void _check_motion_stopped()
