@@ -121,11 +121,11 @@ namespace Motate {
 //
 
 _MAKE_MOTATE_PIN(kLED_RGBWPixelPinNumber, 'A', 0);           //
-_MAKE_MOTATE_PIN(kOutput1_PinNumber, 'A', 1);                // TC  0,1
-_MAKE_MOTATE_PIN(kOutput2_PinNumber, 'A', 2);                // PWM 0,1
+_MAKE_MOTATE_PIN(kHeaterOutput1_PinNumber, 'A', 1);                // TC  0,1
+_MAKE_MOTATE_PIN(kHeaterOutput2_PinNumber, 'A', 2);                // PWM 0,1
 _MAKE_MOTATE_PIN(kI2C1_SDAPinNumber, 'A', 3);                //
 _MAKE_MOTATE_PIN(kI2C1_SCLPinNumber, 'A', 4);                //
-_MAKE_MOTATE_PIN(kOutput11_PinNumber, 'A', 5);               // PWM 1,3
+_MAKE_MOTATE_PIN(kHeaterOutput11_PinNumber, 'A', 5);               // PWM 1,3
 _MAKE_MOTATE_PIN(kExternalClock1_PinNumber, 'A', 6);         // CPU_CLK
 _MAKE_MOTATE_PIN(kOutput7_PinNumber, 'A', 7);              // PWM 0,3
 //_MAKE_MOTATE_PIN(kServo1_PinNumber, 'A', 7);                 //
