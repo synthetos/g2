@@ -52,14 +52,12 @@
 #define HAS_TEMPERATURE_SENSOR_3  false
 #endif
 #ifndef EXTRUDER_1_OUTPUT_PIN
-#warning using default extruder 1 output pin
 #define EXTRUDER_1_OUTPUT_PIN kOutput1_PinNumber
 #endif
 #ifndef EXTRUDER_1_FAN_PIN
 #define EXTRUDER_1_FAN_PIN    kOutput3_PinNumber
 #endif
 #ifndef EXTRUDER_2_OUTPUT_PIN
-#warning using default extruder 2 output pin
 #define EXTRUDER_2_OUTPUT_PIN kOutput2_PinNumber
 #endif
 #ifndef BED_OUTPUT_PIN
