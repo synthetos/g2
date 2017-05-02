@@ -697,10 +697,30 @@ static void _calculate_junction_vmax(mpBuf_t* bf)
 
     // uint8_t jerk_axis = AXIS_X;
     // cmAxes jerk_axis = AXIS_X;
+    bool using_junction_unit = false;
+    float junction_length_since = bf->junction_length_since + bf->length;
+    if (junction_length_since < 5.0) {
+        // push the length_since forward, and copy the junction_unit
+        bf->nx->junction_length_since = junction_length_since;
+        using_junction_unit = true;
+    } else {
+        bf->nx->junction_length_since = bf->length;
+    }
 
     for (uint8_t axis = 0; axis < AXES; axis++) {
         if (bf->axis_flags[axis] || bf->nx->axis_flags[axis]) {       // skip axes with no movement
             float delta = fabs(bf->unit[axis] - bf->nx->unit[axis]);  // formula (1)
+
+            if (using_junction_unit) {
+                // use the highest delta of the two
+                delta = std::max(delta, fabs(bf->junction_unit[axis] - bf->nx->unit[axis]));
+
+                // push the junction_unit for this axis into the next block
+                bf->nx->junction_unit[axis] = bf->junction_unit[axis];
+            } else {
+                // push this unit to the next junction_unit
+                bf->nx->junction_unit[axis] = bf->unit[axis];
+            }
 
             // Corner case: If an axis has zero delta, we might have a straight line.
             // Corner case: An axis doesn't change (and it's not a straight line).
