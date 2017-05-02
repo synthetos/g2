@@ -118,9 +118,26 @@
 #define M2_STEP_ANGLE               1.8
 #define M2_TRAVEL_PER_REV           99.9
 #define M2_MICROSTEPS               X_Y_MICROSTEPS
-#define M2_POLARITY                 0
+#define M2_POLARITY                 1
 #define M2_POWER_MODE               MOTOR_ALWAYS_POWERED
 #define M2_POWER_LEVEL              X_Y_POWER_LEVEL
+
+// Duplicate M1 on M4
+#define M4_MOTOR_MAP                AXIS_X
+#define M4_STEP_ANGLE               1.8
+#define M4_TRAVEL_PER_REV           99.9
+#define M4_MICROSTEPS               X_Y_MICROSTEPS
+#define M4_POLARITY                 1
+#define M4_POWER_MODE               MOTOR_ALWAYS_POWERED
+#define M4_POWER_LEVEL              X_Y_POWER_LEVEL
+
+#define M5_MOTOR_MAP                AXIS_Y                  // 1ma
+#define M5_STEP_ANGLE               1.8                     // 1sa
+#define M5_TRAVEL_PER_REV           99.9                    // 1tr
+#define M5_MICROSTEPS               X_Y_MICROSTEPS          // 1mi        1,2,4,8
+#define M5_POLARITY                 0                       // 1po        0=normal, 1=reversed
+#define M5_POWER_MODE               MOTOR_ALWAYS_POWERED    // 1pm        standard
+#define M5_POWER_LEVEL              X_Y_POWER_LEVEL         // 1pl
 
 #define M3_MOTOR_MAP                AXIS_Z
                                                             // This "stepper" is a hobby servo. Note that all hobby
