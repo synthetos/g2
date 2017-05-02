@@ -271,7 +271,7 @@ static PWMLikeOutputPin<kOutput7_PinNumber>  output_7_pin {(DO7_MODE == IO_ACTIV
 #if OUTPUT8_PWM == 1
 static PWMOutputPin<kOutput8_PinNumber>  output_8_pin {(DO8_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
 #else
-static PWMLikeOutputPin<kOutput8_PinNumber>  output_8_pin {(DO8_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow};
+static PWMLikeOutputPin<kOutput8_PinNumber>  output_8_pin {(DO8_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
 #endif
 #if OUTPUT9_PWM == 1
 static PWMOutputPin<kOutput9_PinNumber>  output_9_pin {(DO9_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
