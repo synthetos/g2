@@ -1,5 +1,5 @@
 /*
- * settings_not_maxidraw_v1.h - settings for the WaterColorBot v2 (http://watercolorbot.com/)
+ * settings_drosmm_v1.h - settings for the DROSMM
  * This file is part of the g2core project
  *
  * Copyright (c) 2016 Alden S. Hart Jr.
@@ -27,13 +27,13 @@
  */
 
 /***********************************************************************/
-/**** Not MaxiDraw v1 Configuration *****************************************/
+/**** DROSMM v1 Configuration *****************************************/
 /***********************************************************************/
 
 #include "hardware.h"
 
 // ***> NOTE: The init message must be a single line with no CRs or LFs
-#define INIT_MESSAGE "Initializing configs to Not MaxiDraw v1 settings"
+#define INIT_MESSAGE "Initializing configs to DROSMM v1 settings (rev2)"
 
 #define JUNCTION_INTEGRATION_TIME   2.5    // cornering - usually between 0.5 and 2.0 (higher is faster)
 #define CHORDAL_TOLERANCE           0.01    // chordal accuracy for arc drawing (in mm)
@@ -131,6 +131,7 @@
 #define M4_POWER_MODE               MOTOR_ALWAYS_POWERED
 #define M4_POWER_LEVEL              X_Y_POWER_LEVEL
 
+// Duplicate M2 on M5
 #define M5_MOTOR_MAP                AXIS_Y                  // 1ma
 #define M5_STEP_ANGLE               1.8                     // 1sa
 #define M5_TRAVEL_PER_REV           99.9                    // 1tr
@@ -138,6 +139,7 @@
 #define M5_POLARITY                 0                       // 1po        0=normal, 1=reversed
 #define M5_POWER_MODE               MOTOR_ALWAYS_POWERED    // 1pm        standard
 #define M5_POWER_LEVEL              X_Y_POWER_LEVEL         // 1pl
+
 
 #define M3_MOTOR_MAP                AXIS_Z
                                                             // This "stepper" is a hobby servo. Note that all hobby
