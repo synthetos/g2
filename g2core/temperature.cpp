@@ -471,7 +471,7 @@ const int32_t fet_pin1_freq = 2000;
 #if TEMPERATURE_OUTPUT_ON == 1
 PWMOutputPin<EXTRUDER_1_OUTPUT_PIN> fet_pin1 {kNormal, fet_pin1_freq};// {kPWMPinInverted, fet_pin1_freq};
 #else
-//PWMOutputPin<-1> fet_pin1;// {kPWMPinInverted};
+PWMOutputPin<-1> fet_pin1;// {kPWMPinInverted};
 #endif
 
 // DO_2: Extruder2_PWM
@@ -479,7 +479,7 @@ const int32_t fet_pin2_freq = 2000;
 #if TEMPERATURE_OUTPUT_ON == 1
 PWMOutputPin<EXTRUDER_2_OUTPUT_PIN> fet_pin2 {kNormal, fet_pin2_freq};// {kPWMPinInverted, fet_pin1_freq};
 #else
-//PWMOutputPin<-1> fet_pin2;// {kPWMPinInverted};
+PWMOutputPin<-1> fet_pin2;// {kPWMPinInverted};
 #endif
 
 // DO_11: Heated Bed FET
@@ -488,7 +488,7 @@ const int32_t fet_pin3_freq = 100;
 #if TEMPERATURE_OUTPUT_ON == 1
 PWMOutputPin<BED_OUTPUT_PIN> fet_pin3 BED_OUTPUT_INIT;
 #else
-//PWMOutputPin<-1> fet_pin3;// {kPWMPinInverted};
+PWMOutputPin<-1> fet_pin3;// {kPWMPinInverted};
 #endif
 
 
