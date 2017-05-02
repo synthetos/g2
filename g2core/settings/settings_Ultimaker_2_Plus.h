@@ -39,7 +39,7 @@
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
-#define JUNCTION_INTEGRATION_TIME   0.8                    // cornering - between 0.10 and 2.00 (higher is faster)
+#define JUNCTION_INTEGRATION_TIME   1.0                    // cornering - between 0.10 and 2.00 (higher is faster)
 #define CHORDAL_TOLERANCE           0.01                    // chordal accuracy for arc drawing (in mm)
 
 #define SOFT_LIMIT_ENABLE           0                       // 0=off, 1=on
@@ -83,7 +83,7 @@
 //#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","he1t","he1st","he1at","he1op","pid1p","pid1i","pid1d","feed","vel","unit","path","stat"
 
 // Defaults for thermistor tuning
-#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","he1t","he1st","he1at","he1tr","he1tv","he1op","he2t","he2st","he2at","he2tr","he2tv","he2op","he3t","he3st","he3at","he3tr","he3tv","he3op","feed","vel","unit","path","stat"
+#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","he1t","he1st","he1at","he1tr","he1tv","he1op","he2t","he2st","he2at","he2tr","he2tv","he2op","he3t","he3st","he3at","he3tr","he3tv","he3op","feed","vel","unit","path","stat","_fe1","_fe2","_fe3","_fe4","_xs1","_xs2","_xs3","_xs4"
 //{sr:{"line":t,"posx":t,"posy":t,"posz":t,"posa":t,"he1t":t,"he1st":t,"he1at":t,"he1tr":t,"he1tv":t,"he1op":t,"he3t":t,"he3st":t,"he3at":t,"he3tr":t,"he3tv":t,"he3op":t,"feed":t,"vel":t,"unit":t,"path":t,"stat":t}}
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS         MILLIMETERS             // MILLIMETERS or INCHES
@@ -103,7 +103,7 @@
 #define M1_STEP_ANGLE               1.8                     // 1sa
 // Marlin says 80 steps/unit, and 16 microsteps, with a 200-step/rev motor
 #define M1_TRAVEL_PER_REV           40                      // 1tr
-#define M1_MICROSTEPS               128                     // 1mi        1,2,4,8,16,32
+#define M1_MICROSTEPS               64                     // 1mi        1,2,4,8,16,32
 #define M1_POLARITY                 0                       // 1po        0=normal, 1=reversed
 #define M1_POWER_MODE               MOTOR_POWERED_IN_CYCLE  // 1pm        standard
 #define M1_POWER_LEVEL              0.5                     // 1pl
@@ -113,7 +113,7 @@
 #define M2_STEP_ANGLE               1.8
 // Marlin says 80 steps/unit, and 16 microsteps, with a 200-step/rev motor
 #define M2_TRAVEL_PER_REV           40
-#define M2_MICROSTEPS               128
+#define M2_MICROSTEPS               64
 #define M2_POLARITY                 1
 #define M2_POWER_MODE               MOTOR_POWERED_IN_CYCLE
 #define M2_POWER_LEVEL              0.5
@@ -135,11 +135,10 @@
 #define M4_POWER_MODE               MOTOR_POWER_MODE
 #define M4_POWER_LEVEL              0.6
 
-// 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
 #define M5_MOTOR_MAP                AXIS_B
 #define M5_STEP_ANGLE               1.8
 #define M5_TRAVEL_PER_REV           360            // degrees moved per motor rev
-#define M5_MICROSTEPS               128
+#define M5_MICROSTEPS               64
 #define M5_POLARITY                 0
 #define M5_POWER_MODE               MOTOR_POWER_MODE
 #define M5_POWER_LEVEL              0.8
@@ -220,9 +219,9 @@
 //#define A_FEEDRATE_MAX          36110.8 // ~15 mm/s
 //#define A_FEEDRATE_MAX          24073.9 // ~10 mm/s
 //#define A_FEEDRATE_MAX          12036.95 // ~5 mm/s
-//#define A_FEEDRATE_MAX          6018.475 // ~2.5 mm/s Testing: {afr:6018.475}
+#define A_FEEDRATE_MAX          6018.475 // ~2.5 mm/s Testing: {afr:6018.475}
 //#define A_FEEDRATE_MAX          1000.0 // ~0.415 mm/s
-#define A_FEEDRATE_MAX          800.0  // WORKS WELL
+//#define A_FEEDRATE_MAX          800.0  // WORKS WELL
 //#define A_FEEDRATE_MAX          500.0 // ~0.2075 mm/s
 #define A_TRAVEL_MIN            0
 #define A_TRAVEL_MAX            10
