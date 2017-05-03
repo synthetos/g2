@@ -103,7 +103,7 @@
 #define M1_STEP_ANGLE               1.8                     // 1sa
 // Marlin says 80 steps/unit, and 16 microsteps, with a 200-step/rev motor
 #define M1_TRAVEL_PER_REV           40                      // 1tr
-#define M1_MICROSTEPS               64                     // 1mi        1,2,4,8,16,32
+#define M1_MICROSTEPS               128                     // 1mi        1,2,4,8,16,32
 #define M1_POLARITY                 0                       // 1po        0=normal, 1=reversed
 #define M1_POWER_MODE               MOTOR_POWERED_IN_CYCLE  // 1pm        standard
 #define M1_POWER_LEVEL              0.5                     // 1pl
@@ -113,7 +113,7 @@
 #define M2_STEP_ANGLE               1.8
 // Marlin says 80 steps/unit, and 16 microsteps, with a 200-step/rev motor
 #define M2_TRAVEL_PER_REV           40
-#define M2_MICROSTEPS               64
+#define M2_MICROSTEPS               128
 #define M2_POLARITY                 1
 #define M2_POWER_MODE               MOTOR_POWERED_IN_CYCLE
 #define M2_POWER_LEVEL              0.5
@@ -122,7 +122,7 @@
 #define M3_STEP_ANGLE               1.8
 // Marlin says 200 steps/unit, and 8 microsteps, with a 200-step/rev motor
 #define M3_TRAVEL_PER_REV           8
-#define M3_MICROSTEPS               64
+#define M3_MICROSTEPS               128
 #define M3_POLARITY                 0
 #define M3_POWER_MODE               MOTOR_POWERED_IN_CYCLE
 #define M3_POWER_LEVEL              0.5
@@ -130,7 +130,7 @@
 #define M4_MOTOR_MAP                AXIS_A
 #define M4_STEP_ANGLE               1.8
 #define M4_TRAVEL_PER_REV           360            // degrees moved per motor rev
-#define M4_MICROSTEPS               64
+#define M4_MICROSTEPS               128
 #define M4_POLARITY                 0
 #define M4_POWER_MODE               MOTOR_POWER_MODE
 #define M4_POWER_LEVEL              0.6
@@ -146,7 +146,7 @@
 // *** axis settings **********************************************************************************
 
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX              18000                   // xvm  G0 max velocity in mm/min
+#define X_VELOCITY_MAX              12000                   // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX                230                     // xtm  travel between switches or crashes
@@ -160,7 +160,7 @@
 #define X_ZERO_BACKOFF              0.5                     // xzb  mm
 
 #define Y_AXIS_MODE                 AXIS_STANDARD
-#define Y_VELOCITY_MAX              18000
+#define Y_VELOCITY_MAX              12000
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                224.5
@@ -188,7 +188,7 @@
 #define Z_LATCH_BACKOFF             5
 #define Z_ZERO_BACKOFF              0
 
-#define G55_Z_OFFSET                0.25 // higher number is farther away from the bed
+#define G55_Z_OFFSET                0.3 // higher number is farther away from the bed
 
 
 // Rotary values are chosen to make the motor react the same as X for testing
