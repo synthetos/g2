@@ -336,7 +336,7 @@ char *get_status_message(stat_t status);
 #define STAT_SOFT_LIMIT_EXCEEDED_AMAX 228       // soft limit error - A maximum
 #define STAT_SOFT_LIMIT_EXCEEDED_BMIN 229       // soft limit error - B minimum
 
-#define STAT_SOFT_LIMIT_EXCEEDED_BMAX 220       // soft limit error - B maximum
+#define STAT_SOFT_LIMIT_EXCEEDED_BMAX 230       // soft limit error - B maximum
 #define STAT_SOFT_LIMIT_EXCEEDED_CMIN 231       // soft limit error - C minimum
 #define STAT_SOFT_LIMIT_EXCEEDED_CMAX 232       // soft limit error - C maximum
 #define STAT_SOFT_LIMIT_EXCEEDED_ARC 233        // soft limit err on arc
