@@ -140,6 +140,9 @@ const cfgItem_t cfgArray[] = {
     { "mpo","mpox",_f0, 5, cm_print_mpo, cm_get_mpo, set_ro, nullptr, 0 },    // X machine position
     { "mpo","mpoy",_f0, 5, cm_print_mpo, cm_get_mpo, set_ro, nullptr, 0 },    // Y machine position
     { "mpo","mpoz",_f0, 5, cm_print_mpo, cm_get_mpo, set_ro, nullptr, 0 },    // Z machine position
+    { "mpo","mpou",_f0, 5, cm_print_mpo, cm_get_mpo, set_ro, nullptr, 0 },    // U machine position
+    { "mpo","mpov",_f0, 5, cm_print_mpo, cm_get_mpo, set_ro, nullptr, 0 },    // V machine position
+    { "mpo","mpow",_f0, 5, cm_print_mpo, cm_get_mpo, set_ro, nullptr, 0 },    // W machine position
     { "mpo","mpoa",_f0, 5, cm_print_mpo, cm_get_mpo, set_ro, nullptr, 0 },    // A machine position
     { "mpo","mpob",_f0, 5, cm_print_mpo, cm_get_mpo, set_ro, nullptr, 0 },    // B machine position
     { "mpo","mpoc",_f0, 5, cm_print_mpo, cm_get_mpo, set_ro, nullptr, 0 },    // C machine position
@@ -147,6 +150,9 @@ const cfgItem_t cfgArray[] = {
     { "pos","posx",_f0, 5, cm_print_pos, cm_get_pos, set_ro, nullptr, 0 },    // X work position
     { "pos","posy",_f0, 5, cm_print_pos, cm_get_pos, set_ro, nullptr, 0 },    // Y work position
     { "pos","posz",_f0, 5, cm_print_pos, cm_get_pos, set_ro, nullptr, 0 },    // Z work position
+    { "pos","posu",_f0, 5, cm_print_pos, cm_get_pos, set_ro, nullptr, 0 },    // U work position
+    { "pos","posv",_f0, 5, cm_print_pos, cm_get_pos, set_ro, nullptr, 0 },    // V work position
+    { "pos","posw",_f0, 5, cm_print_pos, cm_get_pos, set_ro, nullptr, 0 },    // W work position
     { "pos","posa",_f0, 5, cm_print_pos, cm_get_pos, set_ro, nullptr, 0 },    // A work position
     { "pos","posb",_f0, 5, cm_print_pos, cm_get_pos, set_ro, nullptr, 0 },    // B work position
     { "pos","posc",_f0, 5, cm_print_pos, cm_get_pos, set_ro, nullptr, 0 },    // C work position
@@ -154,6 +160,9 @@ const cfgItem_t cfgArray[] = {
     { "ofs","ofsx",_f0, 5, cm_print_ofs, cm_get_ofs, set_ro, nullptr, 0 },    // X work offset
     { "ofs","ofsy",_f0, 5, cm_print_ofs, cm_get_ofs, set_ro, nullptr, 0 },    // Y work offset
     { "ofs","ofsz",_f0, 5, cm_print_ofs, cm_get_ofs, set_ro, nullptr, 0 },    // Z work offset
+    { "ofs","ofsu",_f0, 5, cm_print_ofs, cm_get_ofs, set_ro, nullptr, 0 },    // U work offset
+    { "ofs","ofsv",_f0, 5, cm_print_ofs, cm_get_ofs, set_ro, nullptr, 0 },    // V work offset
+    { "ofs","ofsw",_f0, 5, cm_print_ofs, cm_get_ofs, set_ro, nullptr, 0 },    // W work offset
     { "ofs","ofsa",_f0, 5, cm_print_ofs, cm_get_ofs, set_ro, nullptr, 0 },    // A work offset
     { "ofs","ofsb",_f0, 5, cm_print_ofs, cm_get_ofs, set_ro, nullptr, 0 },    // B work offset
     { "ofs","ofsc",_f0, 5, cm_print_ofs, cm_get_ofs, set_ro, nullptr, 0 },    // C work offset
@@ -162,6 +171,9 @@ const cfgItem_t cfgArray[] = {
     { "hom","homx",_i0, 0, cm_print_hom, cm_get_hom, set_ro, nullptr, 0 },    // X homed - Homing status group
     { "hom","homy",_i0, 0, cm_print_hom, cm_get_hom, set_ro, nullptr, 0 },    // Y homed
     { "hom","homz",_i0, 0, cm_print_hom, cm_get_hom, set_ro, nullptr, 0 },    // Z homed
+    { "hom","homu",_i0, 0, cm_print_hom, cm_get_hom, set_ro, nullptr, 0 },    // U homed
+    { "hom","homv",_i0, 0, cm_print_hom, cm_get_hom, set_ro, nullptr, 0 },    // V homed
+    { "hom","homw",_i0, 0, cm_print_hom, cm_get_hom, set_ro, nullptr, 0 },    // W homed
     { "hom","homa",_i0, 0, cm_print_hom, cm_get_hom, set_ro, nullptr, 0 },    // A homed
     { "hom","homb",_i0, 0, cm_print_hom, cm_get_hom, set_ro, nullptr, 0 },    // B homed
     { "hom","homc",_i0, 0, cm_print_hom, cm_get_hom, set_ro, nullptr, 0 },    // C homed
@@ -170,6 +182,9 @@ const cfgItem_t cfgArray[] = {
     { "prb","prbx",_f0, 5, tx_print_nul, cm_get_prb, set_ro, nullptr, 0 },    // X probe results
     { "prb","prby",_f0, 5, tx_print_nul, cm_get_prb, set_ro, nullptr, 0 },    // Y probe results
     { "prb","prbz",_f0, 5, tx_print_nul, cm_get_prb, set_ro, nullptr, 0 },    // Z probe results
+    { "prb","prbu",_f0, 5, tx_print_nul, cm_get_prb, set_ro, nullptr, 0 },    // U probe results
+    { "prb","prbv",_f0, 5, tx_print_nul, cm_get_prb, set_ro, nullptr, 0 },    // V probe results
+    { "prb","prbw",_f0, 5, tx_print_nul, cm_get_prb, set_ro, nullptr, 0 },    // W probe results
     { "prb","prba",_f0, 5, tx_print_nul, cm_get_prb, set_ro, nullptr, 0 },    // A probe results
     { "prb","prbb",_f0, 5, tx_print_nul, cm_get_prb, set_ro, nullptr, 0 },    // B probe results
     { "prb","prbc",_f0, 5, tx_print_nul, cm_get_prb, set_ro, nullptr, 0 },    // C probe results
@@ -177,6 +192,9 @@ const cfgItem_t cfgArray[] = {
     { "jog","jogx",_f0, 0, tx_print_nul, get_nul, cm_run_jog, nullptr, 0},    // jog in X axis
     { "jog","jogy",_f0, 0, tx_print_nul, get_nul, cm_run_jog, nullptr, 0},    // jog in Y axis
     { "jog","jogz",_f0, 0, tx_print_nul, get_nul, cm_run_jog, nullptr, 0},    // jog in Z axis
+    { "jog","jogu",_f0, 0, tx_print_nul, get_nul, cm_run_jog, nullptr, 0},    // jog in U axis
+    { "jog","jogv",_f0, 0, tx_print_nul, get_nul, cm_run_jog, nullptr, 0},    // jog in V axis
+    { "jog","jogw",_f0, 0, tx_print_nul, get_nul, cm_run_jog, nullptr, 0},    // jog in W axis
     { "jog","joga",_f0, 0, tx_print_nul, get_nul, cm_run_jog, nullptr, 0},    // jog in A axis
     { "jog","jogb",_f0, 0, tx_print_nul, get_nul, cm_run_jog, nullptr, 0},    // jog in B axis
     { "jog","jogc",_f0, 0, tx_print_nul, get_nul, cm_run_jog, nullptr, 0},    // jog in C axis
@@ -310,6 +328,48 @@ const cfgItem_t cfgArray[] = {
     { "z","zlv",_fipc, 2, cm_print_lv, cm_get_lv, cm_set_lv, nullptr, Z_LATCH_VELOCITY },
     { "z","zlb",_fipc, 5, cm_print_lb, cm_get_lb, cm_set_lb, nullptr, Z_LATCH_BACKOFF },
     { "z","zzb",_fipc, 5, cm_print_zb, cm_get_lb, cm_set_zb, nullptr, Z_ZERO_BACKOFF },
+
+    { "u","uam",_iip,  0, cm_print_am, cm_get_am, cm_set_am, nullptr, U_AXIS_MODE },
+    { "u","uvm",_fipc, 0, cm_print_vm, cm_get_vm, cm_set_vm, nullptr, U_VELOCITY_MAX },
+    { "u","ufr",_fipc, 0, cm_print_fr, cm_get_fr, cm_set_fr, nullptr, U_FEEDRATE_MAX },
+    { "u","utn",_fipc, 5, cm_print_tn, cm_get_tn, cm_set_tn, nullptr, U_TRAVEL_MIN },
+    { "u","utm",_fipc, 5, cm_print_tm, cm_get_tm, cm_set_tm, nullptr, U_TRAVEL_MAX },
+    { "u","ujm",_fipc, 0, cm_print_jm, cm_get_jm, cm_set_jm, nullptr, U_JERK_MAX },
+    { "u","ujh",_fipc, 0, cm_print_jh, cm_get_jh, cm_set_jh, nullptr, U_JERK_HIGH_SPEED },
+    { "u","uhi",_iip,  0, cm_print_hi, cm_get_hi, cm_set_hi, nullptr, U_HOMING_INPUT },
+    { "u","uhd",_iip,  0, cm_print_hd, cm_get_hd, cm_set_hd, nullptr, U_HOMING_DIRECTION },
+    { "u","usv",_fipc, 0, cm_print_sv, cm_get_sv, cm_set_sv, nullptr, U_SEARCH_VELOCITY },
+    { "u","ulv",_fipc, 2, cm_print_lv, cm_get_lv, cm_set_lv, nullptr, U_LATCH_VELOCITY },
+    { "u","ulb",_fipc, 5, cm_print_lb, cm_get_lb, cm_set_lb, nullptr, U_LATCH_BACKOFF },
+    { "u","uzb",_fipc, 5, cm_print_zb, cm_get_zb, cm_set_zb, nullptr, U_ZERO_BACKOFF },
+
+    { "v","vam",_iip,  0, cm_print_am, cm_get_am, cm_set_am, nullptr, V_AXIS_MODE },
+    { "v","vvm",_fipc, 0, cm_print_vm, cm_get_vm, cm_set_vm, nullptr, V_VELOCITY_MAX },
+    { "v","vfr",_fipc, 0, cm_print_fr, cm_get_fr, cm_set_fr, nullptr, V_FEEDRATE_MAX },
+    { "v","vtn",_fipc, 5, cm_print_tn, cm_get_tn, cm_set_tn, nullptr, V_TRAVEL_MIN },
+    { "v","vtm",_fipc, 5, cm_print_tm, cm_get_tm, cm_set_tm, nullptr, V_TRAVEL_MAX },
+    { "v","vjm",_fipc, 0, cm_print_jm, cm_get_jm, cm_set_jm, nullptr, V_JERK_MAX },
+    { "v","vjh",_fipc, 0, cm_print_jh, cm_get_jh, cm_set_jh, nullptr, V_JERK_HIGH_SPEED },
+    { "v","vhi",_iip,  0, cm_print_hi, cm_get_hi, cm_set_hi, nullptr, V_HOMING_INPUT },
+    { "v","vhd",_iip,  0, cm_print_hd, cm_get_hd, cm_set_hd, nullptr, V_HOMING_DIRECTION },
+    { "v","vsv",_fipc, 0, cm_print_sv, cm_get_sv, cm_set_sv, nullptr, V_SEARCH_VELOCITY },
+    { "v","vlv",_fipc, 2, cm_print_lv, cm_get_lv, cm_set_lv, nullptr, V_LATCH_VELOCITY },
+    { "v","vlb",_fipc, 5, cm_print_lb, cm_get_lb, cm_set_lb, nullptr, V_LATCH_BACKOFF },
+    { "v","vzb",_fipc, 5, cm_print_zb, cm_get_zb, cm_set_zb, nullptr, V_ZERO_BACKOFF },
+
+    { "w","wam",_iip,  0, cm_print_am, cm_get_am, cm_set_am, nullptr, W_AXIS_MODE },
+    { "w","wvm",_fipc, 0, cm_print_vm, cm_get_vm, cm_set_vm, nullptr, W_VELOCITY_MAX },
+    { "w","wfr",_fipc, 0, cm_print_fr, cm_get_fr, cm_set_fr, nullptr, W_FEEDRATE_MAX },
+    { "w","wtn",_fipc, 5, cm_print_tn, cm_get_tn, cm_set_tn, nullptr, W_TRAVEL_MIN },
+    { "w","wtm",_fipc, 5, cm_print_tm, cm_get_tm, cm_set_tm, nullptr, W_TRAVEL_MAX },
+    { "w","wjm",_fipc, 0, cm_print_jm, cm_get_jm, cm_set_jm, nullptr, W_JERK_MAX },
+    { "w","wjh",_fipc, 0, cm_print_jh, cm_get_jh, cm_set_jh, nullptr, W_JERK_HIGH_SPEED },
+    { "w","whi",_iip,  0, cm_print_hi, cm_get_hi, cm_set_hi, nullptr, W_HOMING_INPUT },
+    { "w","whd",_iip,  0, cm_print_hd, cm_get_hd, cm_set_hd, nullptr, W_HOMING_DIRECTION },
+    { "w","wsv",_fipc, 0, cm_print_sv, cm_get_sv, cm_set_sv, nullptr, W_SEARCH_VELOCITY },
+    { "w","wlv",_fipc, 2, cm_print_lv, cm_get_lv, cm_set_lv, nullptr, W_LATCH_VELOCITY },
+    { "w","wlb",_fipc, 5, cm_print_lb, cm_get_lb, cm_set_lb, nullptr, W_LATCH_BACKOFF },
+    { "w","wzb",_fipc, 5, cm_print_zb, cm_get_zb, cm_set_zb, nullptr, W_ZERO_BACKOFF },
 
     { "a","aam",_iip,  0, cm_print_am, cm_get_am, cm_set_am, nullptr, A_AXIS_MODE },
     { "a","avm",_fipc, 0, cm_print_vm, cm_get_vm, cm_set_vm, nullptr, A_VELOCITY_MAX },
@@ -537,6 +597,9 @@ const cfgItem_t cfgArray[] = {
     { "g54","g54x",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G54_X_OFFSET },
     { "g54","g54y",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G54_Y_OFFSET },
     { "g54","g54z",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G54_Z_OFFSET },
+    { "g54","g54u",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G54_U_OFFSET },
+    { "g54","g54v",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G54_V_OFFSET },
+    { "g54","g54w",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G54_W_OFFSET },
     { "g54","g54a",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G54_A_OFFSET },
     { "g54","g54b",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G54_B_OFFSET },
     { "g54","g54c",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G54_C_OFFSET },
@@ -544,6 +607,9 @@ const cfgItem_t cfgArray[] = {
     { "g55","g55x",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G55_X_OFFSET },
     { "g55","g55y",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G55_Y_OFFSET },
     { "g55","g55z",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G55_Z_OFFSET },
+    { "g55","g55u",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G55_U_OFFSET },
+    { "g55","g55v",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G55_V_OFFSET },
+    { "g55","g55w",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G55_W_OFFSET },
     { "g55","g55a",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G55_A_OFFSET },
     { "g55","g55b",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G55_B_OFFSET },
     { "g55","g55c",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G55_C_OFFSET },
@@ -551,6 +617,9 @@ const cfgItem_t cfgArray[] = {
     { "g56","g56x",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G56_X_OFFSET },
     { "g56","g56y",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G56_Y_OFFSET },
     { "g56","g56z",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G56_Z_OFFSET },
+    { "g56","g56u",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G56_U_OFFSET },
+    { "g56","g56v",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G56_V_OFFSET },
+    { "g56","g56w",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G56_W_OFFSET },
     { "g56","g56a",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G56_A_OFFSET },
     { "g56","g56b",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G56_B_OFFSET },
     { "g56","g56c",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G56_C_OFFSET },
@@ -558,6 +627,9 @@ const cfgItem_t cfgArray[] = {
     { "g57","g57x",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G57_X_OFFSET },
     { "g57","g57y",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G57_Y_OFFSET },
     { "g57","g57z",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G57_Z_OFFSET },
+    { "g57","g57u",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G57_U_OFFSET },
+    { "g57","g57v",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G57_V_OFFSET },
+    { "g57","g57w",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G57_W_OFFSET },
     { "g57","g57a",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G57_A_OFFSET },
     { "g57","g57b",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G57_B_OFFSET },
     { "g57","g57c",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G57_C_OFFSET },
@@ -565,6 +637,9 @@ const cfgItem_t cfgArray[] = {
     { "g58","g58x",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G58_X_OFFSET },
     { "g58","g58y",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G58_Y_OFFSET },
     { "g58","g58z",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G58_Z_OFFSET },
+    { "g58","g58u",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G58_U_OFFSET },
+    { "g58","g58v",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G58_V_OFFSET },
+    { "g58","g58w",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G58_W_OFFSET },
     { "g58","g58a",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G58_A_OFFSET },
     { "g58","g58b",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G58_B_OFFSET },
     { "g58","g58c",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G58_C_OFFSET },
@@ -572,6 +647,9 @@ const cfgItem_t cfgArray[] = {
     { "g59","g59x",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G59_X_OFFSET },
     { "g59","g59y",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G59_Y_OFFSET },
     { "g59","g59z",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G59_Z_OFFSET },
+    { "g59","g59u",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G59_U_OFFSET },
+    { "g59","g59v",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G59_V_OFFSET },
+    { "g59","g59w",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G59_W_OFFSET },
     { "g59","g59a",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G59_A_OFFSET },
     { "g59","g59b",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G59_B_OFFSET },
     { "g59","g59c",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G59_C_OFFSET },
@@ -579,6 +657,9 @@ const cfgItem_t cfgArray[] = {
     { "g92","g92x",_fic, 5, cm_print_cofs, cm_get_g92, set_ro, nullptr, 0 },// G92 handled differently
     { "g92","g92y",_fic, 5, cm_print_cofs, cm_get_g92, set_ro, nullptr, 0 },
     { "g92","g92z",_fic, 5, cm_print_cofs, cm_get_g92, set_ro, nullptr, 0 },
+    { "g92","g92u",_fic, 5, cm_print_cofs, cm_get_g92, set_ro, nullptr, 0 },
+    { "g92","g92v",_fic, 5, cm_print_cofs, cm_get_g92, set_ro, nullptr, 0 },
+    { "g92","g92w",_fic, 5, cm_print_cofs, cm_get_g92, set_ro, nullptr, 0 },
     { "g92","g92a",_fic, 5, cm_print_cofs, cm_get_g92, set_ro, nullptr, 0 },
     { "g92","g92b",_fic, 5, cm_print_cofs, cm_get_g92, set_ro, nullptr, 0 },
     { "g92","g92c",_fic, 5, cm_print_cofs, cm_get_g92, set_ro, nullptr, 0 },
@@ -587,6 +668,9 @@ const cfgItem_t cfgArray[] = {
     { "g28","g28x",_fic, 5, cm_print_cpos, cm_get_g28, set_ro, nullptr, 0 },// g28 handled differently
     { "g28","g28y",_fic, 5, cm_print_cpos, cm_get_g28, set_ro, nullptr, 0 },
     { "g28","g28z",_fic, 5, cm_print_cpos, cm_get_g28, set_ro, nullptr, 0 },
+    { "g28","g28u",_fic, 5, cm_print_cpos, cm_get_g28, set_ro, nullptr, 0 },
+    { "g28","g28v",_fic, 5, cm_print_cpos, cm_get_g28, set_ro, nullptr, 0 },
+    { "g28","g28w",_fic, 5, cm_print_cpos, cm_get_g28, set_ro, nullptr, 0 },
     { "g28","g28a",_fic, 5, cm_print_cpos, cm_get_g28, set_ro, nullptr, 0 },
     { "g28","g28b",_fic, 5, cm_print_cpos, cm_get_g28, set_ro, nullptr, 0 },
     { "g28","g28c",_fic, 5, cm_print_cpos, cm_get_g28, set_ro, nullptr, 0 },
@@ -594,6 +678,9 @@ const cfgItem_t cfgArray[] = {
     { "g30","g30x",_fic, 5, cm_print_cpos, cm_get_g30, set_ro, nullptr, 0 },// g30 handled differently
     { "g30","g30y",_fic, 5, cm_print_cpos, cm_get_g30, set_ro, nullptr, 0 },
     { "g30","g30z",_fic, 5, cm_print_cpos, cm_get_g30, set_ro, nullptr, 0 },
+    { "g30","g30u",_fic, 5, cm_print_cpos, cm_get_g30, set_ro, nullptr, 0 },
+    { "g30","g30v",_fic, 5, cm_print_cpos, cm_get_g30, set_ro, nullptr, 0 },
+    { "g30","g30w",_fic, 5, cm_print_cpos, cm_get_g30, set_ro, nullptr, 0 },
     { "g30","g30a",_fic, 5, cm_print_cpos, cm_get_g30, set_ro, nullptr, 0 },
     { "g30","g30b",_fic, 5, cm_print_cpos, cm_get_g30, set_ro, nullptr, 0 },
     { "g30","g30c",_fic, 5, cm_print_cpos, cm_get_g30, set_ro, nullptr, 0 },
@@ -711,6 +798,9 @@ const cfgItem_t cfgArray[] = {
     { "tof","tofx",_fipc, 5, cm_print_cofs, cm_get_tof, cm_set_tof, nullptr, 0 },
     { "tof","tofy",_fipc, 5, cm_print_cofs, cm_get_tof, cm_set_tof, nullptr, 0 },
     { "tof","tofz",_fipc, 5, cm_print_cofs, cm_get_tof, cm_set_tof, nullptr, 0 },
+    { "tof","tofu",_fipc, 5, cm_print_cofs, cm_get_tof, cm_set_tof, nullptr, 0 },
+    { "tof","tofv",_fipc, 5, cm_print_cofs, cm_get_tof, cm_set_tof, nullptr, 0 },
+    { "tof","tofw",_fipc, 5, cm_print_cofs, cm_get_tof, cm_set_tof, nullptr, 0 },
     { "tof","tofa",_fipc, 5, cm_print_cofs, cm_get_tof, cm_set_tof, nullptr, 0 },
     { "tof","tofb",_fipc, 5, cm_print_cofs, cm_get_tof, cm_set_tof, nullptr, 0 },
     { "tof","tofc",_fipc, 5, cm_print_cofs, cm_get_tof, cm_set_tof, nullptr, 0 },
@@ -719,6 +809,9 @@ const cfgItem_t cfgArray[] = {
     { "tt1","tt1x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT1_X_OFFSET },
     { "tt1","tt1y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT1_Y_OFFSET },
     { "tt1","tt1z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT1_Z_OFFSET },
+    { "tt1","tt1u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT1_U_OFFSET },
+    { "tt1","tt1v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT1_V_OFFSET },
+    { "tt1","tt1w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT1_W_OFFSET },
     { "tt1","tt1a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT1_A_OFFSET },
     { "tt1","tt1b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT1_B_OFFSET },
     { "tt1","tt1c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT1_C_OFFSET },
@@ -726,6 +819,9 @@ const cfgItem_t cfgArray[] = {
     { "tt2","tt2x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT2_X_OFFSET },
     { "tt2","tt2y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT2_Y_OFFSET },
     { "tt2","tt2z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT2_Z_OFFSET },
+    { "tt2","tt2u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT2_U_OFFSET },
+    { "tt2","tt2v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT2_V_OFFSET },
+    { "tt2","tt2w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT2_W_OFFSET },
     { "tt2","tt2a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT2_A_OFFSET },
     { "tt2","tt2b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT2_B_OFFSET },
     { "tt2","tt2c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT2_C_OFFSET },
@@ -733,6 +829,9 @@ const cfgItem_t cfgArray[] = {
     { "tt3","tt3x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT3_X_OFFSET },
     { "tt3","tt3y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT3_Y_OFFSET },
     { "tt3","tt3z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT3_Z_OFFSET },
+    { "tt3","tt3u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT3_U_OFFSET },
+    { "tt3","tt3v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT3_V_OFFSET },
+    { "tt3","tt3w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT3_W_OFFSET },
     { "tt3","tt3a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT3_A_OFFSET },
     { "tt3","tt3b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT3_B_OFFSET },
     { "tt3","tt3c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT1_C_OFFSET },
@@ -740,6 +839,9 @@ const cfgItem_t cfgArray[] = {
     { "tt4","tt4x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT4_X_OFFSET },
     { "tt4","tt4y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT4_Y_OFFSET },
     { "tt4","tt4z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT4_Z_OFFSET },
+    { "tt4","tt4u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT4_U_OFFSET },
+    { "tt4","tt4v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT4_V_OFFSET },
+    { "tt4","tt4w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT4_W_OFFSET },
     { "tt4","tt4a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT4_A_OFFSET },
     { "tt4","tt4b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT4_B_OFFSET },
     { "tt4","tt4c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT4_C_OFFSET },
@@ -747,6 +849,9 @@ const cfgItem_t cfgArray[] = {
     { "tt5","tt5x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT5_X_OFFSET },
     { "tt5","tt5y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT5_Y_OFFSET },
     { "tt5","tt5z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT5_Z_OFFSET },
+    { "tt5","tt5u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT5_U_OFFSET },
+    { "tt5","tt5v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT5_V_OFFSET },
+    { "tt5","tt5w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT5_W_OFFSET },
     { "tt5","tt5a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT5_A_OFFSET },
     { "tt5","tt5b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT5_B_OFFSET },
     { "tt5","tt5c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT5_C_OFFSET },
@@ -754,6 +859,9 @@ const cfgItem_t cfgArray[] = {
     { "tt6","tt6x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT6_X_OFFSET },
     { "tt6","tt6y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT6_Y_OFFSET },
     { "tt6","tt6z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT6_Z_OFFSET },
+    { "tt6","tt6u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT6_U_OFFSET },
+    { "tt6","tt6v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT6_V_OFFSET },
+    { "tt6","tt6w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT6_W_OFFSET },
     { "tt6","tt6a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT6_A_OFFSET },
     { "tt6","tt6b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT6_B_OFFSET },
     { "tt6","tt6c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT6_C_OFFSET },
@@ -761,6 +869,9 @@ const cfgItem_t cfgArray[] = {
     { "tt7","tt7x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT7_X_OFFSET },
     { "tt7","tt7y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT7_Y_OFFSET },
     { "tt7","tt7z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT7_Z_OFFSET },
+    { "tt7","tt7u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT7_U_OFFSET },
+    { "tt7","tt7v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT7_V_OFFSET },
+    { "tt7","tt7w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT7_W_OFFSET },
     { "tt7","tt7a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT7_A_OFFSET },
     { "tt7","tt7b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT7_B_OFFSET },
     { "tt7","tt7c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT7_C_OFFSET },
@@ -768,6 +879,9 @@ const cfgItem_t cfgArray[] = {
     { "tt8","tt8x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT8_X_OFFSET },
     { "tt8","tt8y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT8_Y_OFFSET },
     { "tt8","tt8z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT8_Z_OFFSET },
+    { "tt8","tt8u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT8_U_OFFSET },
+    { "tt8","tt8v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT8_V_OFFSET },
+    { "tt8","tt8w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT8_W_OFFSET },
     { "tt8","tt8a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT8_A_OFFSET },
     { "tt8","tt8b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT8_B_OFFSET },
     { "tt8","tt8c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT8_C_OFFSET },
@@ -775,6 +889,9 @@ const cfgItem_t cfgArray[] = {
     { "tt9","tt9x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT9_X_OFFSET },
     { "tt9","tt9y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT9_Y_OFFSET },
     { "tt9","tt9z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT9_Z_OFFSET },
+    { "tt9","tt9u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT9_U_OFFSET },
+    { "tt9","tt9v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT9_V_OFFSET },
+    { "tt9","tt9w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT9_W_OFFSET },
     { "tt9","tt9a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT9_A_OFFSET },
     { "tt9","tt9b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT9_B_OFFSET },
     { "tt9","tt9c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT9_C_OFFSET },
@@ -782,6 +899,9 @@ const cfgItem_t cfgArray[] = {
     { "tt10","tt10x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT10_X_OFFSET },
     { "tt10","tt10y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT10_Y_OFFSET },
     { "tt10","tt10z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT10_Z_OFFSET },
+    { "tt10","tt10u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT10_U_OFFSET },
+    { "tt10","tt10v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT10_V_OFFSET },
+    { "tt10","tt10w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT10_W_OFFSET },
     { "tt10","tt10a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT10_A_OFFSET },
     { "tt10","tt10b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT10_B_OFFSET },
     { "tt10","tt10c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT10_C_OFFSET },
@@ -789,6 +909,9 @@ const cfgItem_t cfgArray[] = {
     { "tt11","tt11x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT11_X_OFFSET },
     { "tt11","tt11y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT11_Y_OFFSET },
     { "tt11","tt11z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT11_Z_OFFSET },
+    { "tt11","tt11u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT11_U_OFFSET },
+    { "tt11","tt11v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT11_V_OFFSET },
+    { "tt11","tt11w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT11_W_OFFSET },
     { "tt11","tt11a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT11_A_OFFSET },
     { "tt11","tt11b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT11_B_OFFSET },
     { "tt11","tt11c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT11_C_OFFSET },
@@ -796,6 +919,9 @@ const cfgItem_t cfgArray[] = {
     { "tt12","tt12x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT12_X_OFFSET },
     { "tt12","tt12y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT12_Y_OFFSET },
     { "tt12","tt12z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT12_Z_OFFSET },
+    { "tt12","tt12u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT12_U_OFFSET },
+    { "tt12","tt12v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT12_V_OFFSET },
+    { "tt12","tt12w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT12_W_OFFSET },
     { "tt12","tt12a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT12_A_OFFSET },
     { "tt12","tt12b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT12_B_OFFSET },
     { "tt12","tt12c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT12_C_OFFSET },
@@ -803,6 +929,9 @@ const cfgItem_t cfgArray[] = {
     { "tt13","tt13x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT13_X_OFFSET },
     { "tt13","tt13y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT13_Y_OFFSET },
     { "tt13","tt13z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT13_Z_OFFSET },
+    { "tt13","tt13u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT13_U_OFFSET },
+    { "tt13","tt13v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT13_V_OFFSET },
+    { "tt13","tt13w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT13_W_OFFSET },
     { "tt13","tt13a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT13_A_OFFSET },
     { "tt13","tt13b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT13_B_OFFSET },
     { "tt13","tt13c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT13_C_OFFSET },
@@ -810,6 +939,9 @@ const cfgItem_t cfgArray[] = {
     { "tt14","tt14x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT14_X_OFFSET },
     { "tt14","tt14y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT14_Y_OFFSET },
     { "tt14","tt14z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT14_Z_OFFSET },
+    { "tt14","tt14u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT14_U_OFFSET },
+    { "tt14","tt14v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT14_V_OFFSET },
+    { "tt14","tt14w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT14_W_OFFSET },
     { "tt14","tt14a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT14_A_OFFSET },
     { "tt14","tt14b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT14_B_OFFSET },
     { "tt14","tt14c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT14_C_OFFSET },
@@ -817,6 +949,9 @@ const cfgItem_t cfgArray[] = {
     { "tt15","tt15x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT15_X_OFFSET },
     { "tt15","tt15y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT15_Y_OFFSET },
     { "tt15","tt15z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT15_Z_OFFSET },
+    { "tt15","tt15u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT15_U_OFFSET },
+    { "tt15","tt15v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT15_V_OFFSET },
+    { "tt15","tt15w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT15_W_OFFSET },
     { "tt15","tt15a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT15_A_OFFSET },
     { "tt15","tt15b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT15_B_OFFSET },
     { "tt15","tt15c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT15_C_OFFSET },
@@ -824,6 +959,9 @@ const cfgItem_t cfgArray[] = {
     { "tt16","tt16x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT16_X_OFFSET },
     { "tt16","tt16y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT16_Y_OFFSET },
     { "tt16","tt16z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT16_Z_OFFSET },
+    { "tt16","tt16u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT16_U_OFFSET },
+    { "tt16","tt16v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT16_V_OFFSET },
+    { "tt16","tt16w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT16_W_OFFSET },
     { "tt16","tt16a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT16_A_OFFSET },
     { "tt16","tt16b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT16_B_OFFSET },
     { "tt16","tt16c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT16_C_OFFSET },
@@ -831,6 +969,9 @@ const cfgItem_t cfgArray[] = {
     { "tt17","tt17x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT17_X_OFFSET },
     { "tt17","tt17y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT17_Y_OFFSET },
     { "tt17","tt17z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT17_Z_OFFSET },
+    { "tt17","tt17u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT17_U_OFFSET },
+    { "tt17","tt17v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT17_V_OFFSET },
+    { "tt17","tt17w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT17_W_OFFSET },
     { "tt17","tt17a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT17_A_OFFSET },
     { "tt17","tt17b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT17_B_OFFSET },
     { "tt17","tt17c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT17_C_OFFSET },
@@ -838,6 +979,9 @@ const cfgItem_t cfgArray[] = {
     { "tt18","tt18x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT18_X_OFFSET },
     { "tt18","tt18y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT18_Y_OFFSET },
     { "tt18","tt18z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT18_Z_OFFSET },
+    { "tt18","tt18u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT18_U_OFFSET },
+    { "tt18","tt18v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT18_V_OFFSET },
+    { "tt18","tt18w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT18_W_OFFSET },
     { "tt18","tt18a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT18_A_OFFSET },
     { "tt18","tt18b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT18_B_OFFSET },
     { "tt18","tt18c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT18_C_OFFSET },
@@ -845,6 +989,9 @@ const cfgItem_t cfgArray[] = {
     { "tt19","tt19x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT19_X_OFFSET },
     { "tt19","tt19y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT19_Y_OFFSET },
     { "tt19","tt19z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT19_Z_OFFSET },
+    { "tt19","tt19u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT19_U_OFFSET },
+    { "tt19","tt19v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT19_V_OFFSET },
+    { "tt19","tt19w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT19_W_OFFSET },
     { "tt19","tt19a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT19_A_OFFSET },
     { "tt19","tt19b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT19_B_OFFSET },
     { "tt19","tt19c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT19_C_OFFSET },
@@ -852,6 +999,9 @@ const cfgItem_t cfgArray[] = {
     { "tt20","tt20x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT20_X_OFFSET },
     { "tt20","tt20y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT20_Y_OFFSET },
     { "tt20","tt20z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT20_Z_OFFSET },
+    { "tt20","tt20u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT20_U_OFFSET },
+    { "tt20","tt20v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT20_V_OFFSET },
+    { "tt20","tt20w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT20_W_OFFSET },
     { "tt20","tt20a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT20_A_OFFSET },
     { "tt20","tt20b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT20_B_OFFSET },
     { "tt20","tt20c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT20_C_OFFSET },
@@ -859,6 +1009,9 @@ const cfgItem_t cfgArray[] = {
     { "tt21","tt21x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT21_X_OFFSET },
     { "tt21","tt21y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT21_Y_OFFSET },
     { "tt21","tt21z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT21_Z_OFFSET },
+    { "tt21","tt21u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT21_U_OFFSET },
+    { "tt21","tt21v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT21_V_OFFSET },
+    { "tt21","tt21w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT21_W_OFFSET },
     { "tt21","tt21a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT21_A_OFFSET },
     { "tt21","tt21b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT21_B_OFFSET },
     { "tt21","tt21c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT21_C_OFFSET },
@@ -866,6 +1019,9 @@ const cfgItem_t cfgArray[] = {
     { "tt22","tt22x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT22_X_OFFSET },
     { "tt22","tt22y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT22_Y_OFFSET },
     { "tt22","tt22z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT22_Z_OFFSET },
+    { "tt22","tt22u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT22_U_OFFSET },
+    { "tt22","tt22v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT22_V_OFFSET },
+    { "tt22","tt22w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT22_W_OFFSET },
     { "tt22","tt22a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT22_A_OFFSET },
     { "tt22","tt22b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT22_B_OFFSET },
     { "tt22","tt22c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT22_C_OFFSET },
@@ -873,6 +1029,9 @@ const cfgItem_t cfgArray[] = {
     { "tt23","tt23x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT23_X_OFFSET },
     { "tt23","tt23y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT23_Y_OFFSET },
     { "tt23","tt23z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT23_Z_OFFSET },
+    { "tt23","tt23u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT23_U_OFFSET },
+    { "tt23","tt23v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT23_V_OFFSET },
+    { "tt23","tt23w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT23_W_OFFSET },
     { "tt23","tt23a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT23_A_OFFSET },
     { "tt23","tt23b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT23_B_OFFSET },
     { "tt23","tt23c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT23_C_OFFSET },
@@ -880,6 +1039,9 @@ const cfgItem_t cfgArray[] = {
     { "tt24","tt24x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT24_X_OFFSET },
     { "tt24","tt24y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT24_Y_OFFSET },
     { "tt24","tt24z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT24_Z_OFFSET },
+    { "tt24","tt24u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT24_U_OFFSET },
+    { "tt24","tt24v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT24_V_OFFSET },
+    { "tt24","tt24w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT24_W_OFFSET },
     { "tt24","tt24a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT24_A_OFFSET },
     { "tt24","tt24b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT24_B_OFFSET },
     { "tt24","tt24c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT24_C_OFFSET },
@@ -887,6 +1049,9 @@ const cfgItem_t cfgArray[] = {
     { "tt25","tt25x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT25_X_OFFSET },
     { "tt25","tt25y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT25_Y_OFFSET },
     { "tt25","tt25z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT25_Z_OFFSET },
+    { "tt25","tt25u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT25_U_OFFSET },
+    { "tt25","tt25v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT25_V_OFFSET },
+    { "tt25","tt25w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT25_W_OFFSET },
     { "tt25","tt25a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT25_A_OFFSET },
     { "tt25","tt25b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT25_B_OFFSET },
     { "tt25","tt25c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT25_C_OFFSET },
@@ -894,6 +1059,9 @@ const cfgItem_t cfgArray[] = {
     { "tt26","tt26x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT26_X_OFFSET },
     { "tt26","tt26y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT26_Y_OFFSET },
     { "tt26","tt26z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT26_Z_OFFSET },
+    { "tt26","tt26u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT26_U_OFFSET },
+    { "tt26","tt26v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT26_V_OFFSET },
+    { "tt26","tt26w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT26_W_OFFSET },
     { "tt26","tt26a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT26_A_OFFSET },
     { "tt26","tt26b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT26_B_OFFSET },
     { "tt26","tt26c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT26_C_OFFSET },
@@ -901,6 +1069,9 @@ const cfgItem_t cfgArray[] = {
     { "tt27","tt27x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT27_X_OFFSET },
     { "tt27","tt27y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT27_Y_OFFSET },
     { "tt27","tt27z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT27_Z_OFFSET },
+    { "tt27","tt27u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT27_U_OFFSET },
+    { "tt27","tt27v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT27_V_OFFSET },
+    { "tt27","tt27w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT27_W_OFFSET },
     { "tt27","tt27a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT27_A_OFFSET },
     { "tt27","tt27b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT27_B_OFFSET },
     { "tt27","tt27c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT27_C_OFFSET },
@@ -908,6 +1079,9 @@ const cfgItem_t cfgArray[] = {
     { "tt28","tt28x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT28_X_OFFSET },
     { "tt28","tt28y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT28_Y_OFFSET },
     { "tt28","tt28z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT28_Z_OFFSET },
+    { "tt28","tt28u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT28_U_OFFSET },
+    { "tt28","tt28v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT28_V_OFFSET },
+    { "tt28","tt28w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT28_W_OFFSET },
     { "tt28","tt28a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT28_A_OFFSET },
     { "tt28","tt28b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT28_B_OFFSET },
     { "tt28","tt28c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT28_C_OFFSET },
@@ -915,6 +1089,9 @@ const cfgItem_t cfgArray[] = {
     { "tt29","tt29x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT29_X_OFFSET },
     { "tt29","tt29y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT29_Y_OFFSET },
     { "tt29","tt29z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT29_Z_OFFSET },
+    { "tt29","tt29u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT29_U_OFFSET },
+    { "tt29","tt29v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT29_V_OFFSET },
+    { "tt29","tt29w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT29_W_OFFSET },
     { "tt29","tt29a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT29_A_OFFSET },
     { "tt29","tt29b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT29_B_OFFSET },
     { "tt29","tt29c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT29_C_OFFSET },
@@ -922,6 +1099,9 @@ const cfgItem_t cfgArray[] = {
     { "tt30","tt30x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT30_X_OFFSET },
     { "tt30","tt30y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT30_Y_OFFSET },
     { "tt30","tt30z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT30_Z_OFFSET },
+    { "tt30","tt30u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT30_U_OFFSET },
+    { "tt30","tt30v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT30_V_OFFSET },
+    { "tt30","tt30w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT30_W_OFFSET },
     { "tt30","tt30a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT30_A_OFFSET },
     { "tt30","tt30b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT30_B_OFFSET },
     { "tt30","tt30c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT30_C_OFFSET },
@@ -929,6 +1109,9 @@ const cfgItem_t cfgArray[] = {
     { "tt31","tt31x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT31_X_OFFSET },
     { "tt31","tt31y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT31_Y_OFFSET },
     { "tt31","tt31z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT31_Z_OFFSET },
+    { "tt31","tt31u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT31_U_OFFSET },
+    { "tt31","tt31v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT31_V_OFFSET },
+    { "tt31","tt31w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT31_W_OFFSET },
     { "tt31","tt31a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT31_A_OFFSET },
     { "tt31","tt31b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT31_B_OFFSET },
     { "tt31","tt31c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT31_C_OFFSET },
@@ -936,6 +1119,9 @@ const cfgItem_t cfgArray[] = {
     { "tt32","tt32x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT32_X_OFFSET },
     { "tt32","tt32y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT32_Y_OFFSET },
     { "tt32","tt32z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT32_Z_OFFSET },
+    { "tt32","tt32u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT32_U_OFFSET },
+    { "tt32","tt32v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT32_V_OFFSET },
+    { "tt32","tt32w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT32_W_OFFSET },
     { "tt32","tt32a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT32_A_OFFSET },
     { "tt32","tt32b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT32_B_OFFSET },
     { "tt32","tt32c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT32_C_OFFSET },

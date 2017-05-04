@@ -64,12 +64,12 @@ typedef enum {
     AXIS_X = 0,
     AXIS_Y,
     AXIS_Z,
+    AXIS_U,
+    AXIS_V,
+    AXIS_W,
     AXIS_A,
     AXIS_B,
-    AXIS_C,
-    AXIS_U,     // reserved
-    AXIS_V,     // reserved
-    AXIS_W      // reserved
+    AXIS_C
 } cmAxes;
 
 typedef enum {

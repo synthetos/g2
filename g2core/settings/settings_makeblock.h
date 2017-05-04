@@ -172,6 +172,48 @@
 #define Z_LATCH_BACKOFF         4
 #define Z_ZERO_BACKOFF          2
 
+#define U_AXIS_MODE             AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
+#define U_VELOCITY_MAX          40000                   // xvm  G0 max velocity in mm/min
+#define U_FEEDRATE_MAX          U_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
+#define U_TRAVEL_MIN            0                       // xtn  minimum travel for soft limits
+#define U_TRAVEL_MAX            420                     // xtm  travel between switches or crashes
+#define U_JERK_MAX              JERK_MAX                // xjm  jerk * 1,000,000
+#define U_JERK_HIGH_SPEED       20000                   // xjh
+#define U_HOMING_INPUT          1                       // xhi  input used for homing or 0 to disable
+#define U_HOMING_DIRECTION      0                       // xhd  0=search moves negative, 1= search moves positive
+#define U_SEARCH_VELOCITY       3000                    // xsv  minus means move to minimum switch
+#define U_LATCH_VELOCITY        100                     // xlv  mm/min
+#define U_LATCH_BACKOFF         4                       // xlb  mm
+#define U_ZERO_BACKOFF          2                       // xzb  mm
+
+#define V_AXIS_MODE             AXIS_STANDARD
+#define V_VELOCITY_MAX          40000
+#define V_FEEDRATE_MAX          V_VELOCITY_MAX
+#define V_TRAVEL_MIN            0
+#define V_TRAVEL_MAX            420
+#define V_JERK_MAX              JERK_MAX
+#define V_JERK_HIGH_SPEED       20000
+#define V_HOMING_INPUT          3
+#define V_HOMING_DIRECTION      0
+#define V_SEARCH_VELOCITY       3000
+#define V_LATCH_VELOCITY        100
+#define V_LATCH_BACKOFF         4
+#define V_ZERO_BACKOFF          2
+
+#define W_AXIS_MODE             AXIS_STANDARD
+#define W_VELOCITY_MAX          1200
+#define W_FEEDRATE_MAX          W_VELOCITY_MAX
+#define W_TRAVEL_MAX            0
+#define W_TRAVEL_MIN            -95
+#define W_JERK_MAX              500
+#define W_JERK_HIGH_SPEED       1000
+#define W_HOMING_INPUT          6
+#define W_HOMING_DIRECTION      1
+#define W_SEARCH_VELOCITY       (W_VELOCITY_MAX * 0.66666)
+#define W_LATCH_VELOCITY        25
+#define W_LATCH_BACKOFF         4
+#define W_ZERO_BACKOFF          2
+
 #define A_AXIS_MODE             AXIS_STANDARD
 #define A_RADIUS                1
 #define A_VELOCITY_MAX          360000
