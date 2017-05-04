@@ -1754,6 +1754,7 @@ static int8_t _coord(nvObj_t *nv)   // extract coordinate system from 3rd charac
  *    - tofx          tool offsets
  *    - tt1x, tt32x   tool table
  *    - _tex, _tra    diagnostic parameters
+ *    - u,v,w         handles U, V and W axes
  *
  *  Note that this function will return an erroneous value if called by a non-axis tag, 
  *  such as 'coph' But it should not be called in these cases in any event.
@@ -1775,7 +1776,7 @@ static int8_t _axis(const nvObj_t *nv)
 
     // otherwise it's an axis. Or undefined, which is usually a global.
     char *ptr;
-    char axes[] = {"xyzabc"};
+    char axes[] = {"xyzuvwabc"};
 
     if ((ptr = strchr(axes, c)) == NULL) {      // not NULL indicates a prefixed axis
         c = *(cfgArray[nv->index].token + strlen(cfgArray[nv->index].token) -1); // get the last character

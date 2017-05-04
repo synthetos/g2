@@ -1134,6 +1134,9 @@ const cfgItem_t cfgArray[] = {
     { "_te","_tex",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->target[AXIS_X], 0 }, // X target endpoint
     { "_te","_tey",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->target[AXIS_Y], 0 },
     { "_te","_tez",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->target[AXIS_Z], 0 },
+    { "_te","_teu",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->target[AXIS_U], 0 },
+    { "_te","_tev",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->target[AXIS_V], 0 },
+    { "_te","_tew",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->target[AXIS_W], 0 },
     { "_te","_tea",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->target[AXIS_A], 0 },
     { "_te","_teb",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->target[AXIS_B], 0 },
     { "_te","_tec",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->target[AXIS_C], 0 },
@@ -1141,6 +1144,9 @@ const cfgItem_t cfgArray[] = {
     { "_tr","_trx",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->gm.target[AXIS_X], 0 },  // X target runtime
     { "_tr","_try",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->gm.target[AXIS_Y], 0 },
     { "_tr","_trz",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->gm.target[AXIS_Z], 0 },
+    { "_tr","_tru",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->gm.target[AXIS_U], 0 },
+    { "_tr","_trv",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->gm.target[AXIS_V], 0 },
+    { "_tr","_trw",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->gm.target[AXIS_W], 0 },
     { "_tr","_tra",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->gm.target[AXIS_A], 0 },
     { "_tr","_trb",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->gm.target[AXIS_B], 0 },
     { "_tr","_trc",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->gm.target[AXIS_C], 0 },
@@ -1258,6 +1264,9 @@ const cfgItem_t cfgArray[] = {
     { "","x",  _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // axis groups
     { "","y",  _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
     { "","z",  _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
+    { "","u",  _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
+    { "","v",  _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
+    { "","w",  _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
     { "","a",  _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
     { "","b",  _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
     { "","c",  _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },

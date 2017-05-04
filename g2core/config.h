@@ -69,10 +69,10 @@
  *   - axis tokens start with the axis letter and are typically 3 characters including the axis letter
  *   - motor tokens start with the motor digit and are typically 3 characters including the motor digit
  *   - non-axis or non-motor tokens are 2-6 characters and by convention generally should not start
- *      with: xyzabcuvw0123456789 (but there can be exceptions)
+ *      with: xyzuvwabc0123456789 (but there can be exceptions)
  *
  *  "Groups" are collections of values that mimic REST resources. Groups include:
- *   - axis groups prefixed by "xyzabc"     ("uvw" are reserved)
+ *   - axis groups prefixed by "xyzuvwabc"
  *   - motor groups prefixed by "123456"    ("789" are reserved)
  *   - PWM groups prefixed by p1, p2         (p3 - p9 are reserved)
  *   - coordinate system groups prefixed by g54, g55, g56, g57, g59, g28, g30, g92
