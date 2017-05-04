@@ -1657,7 +1657,7 @@ static stat_t _do_motors(nvObj_t *nv)  // print parameters for all motor groups
 
 static stat_t _do_axes(nvObj_t *nv)  // print parameters for all axis groups
 {
-    char list[][TOKEN_LEN+1] = {"x","y","z","a","b","c",""}; // must have a terminating element
+    char list[][TOKEN_LEN+1] = {"x","y","z","u","v","w","a","b","c",""}; // must have a terminating element
     return (_do_group_list(nv, list));
 }
 

@@ -533,7 +533,7 @@ stat_t cm_deferred_write_callback()
         nvObj_t nv;
         for (uint8_t i=1; i<=COORDS; i++) {
             for (uint8_t j=0; j<AXES; j++) {
-                sprintf((char *)nv.token, "g%2d%c", 53+i, ("xyzabc")[j]);
+                sprintf((char *)nv.token, "g%2d%c", 53+i, ("xyzuvwabc")[j]);
                 nv.index = nv_get_index((const char *)"", nv.token);
                 nv.value_flt = cm->coord_offset[i][j];
                 nv_persist(&nv);    // Note: nv_persist() only writes values that have changed

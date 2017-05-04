@@ -79,10 +79,12 @@
  *   - a system group is identified by "sys" and contains a collection of otherwise unrelated values
  *
  *  "Uber-groups" are groups of groups that are only used for text-mode printing - e.g.
- *   - group of all axes groups
- *   - group of all motor groups
- *   - group of all offset groups
- *   - group of all groups
+ *   - group of all motor groups            (m)
+ *   - group of all axes groups             (q)
+ *   - group of all offset groups           (o)
+ *   - group of all digital input groups    (di)
+ *   - group of all digital output groups   (do)
+ *   - group of all groups                  ($)
  */
 /*  --- Making changes and adding new values
  *
