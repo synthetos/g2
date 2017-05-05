@@ -792,7 +792,7 @@ static void _set_hw_microsteps(const uint8_t motor, const uint8_t microsteps)
  ***********************************************************************************/
 
 /* HELPERS
- * _motor()         - motor number as an index or -1 if na
+ * _motor() - motor number as an index or -1 if na
  */
 
 static int8_t _motor(const index_t index)
@@ -832,9 +832,50 @@ static float _set_motor_steps_per_unit(nvObj_t *nv)
  * st_set_pl() - set motor power level
  */
 
-// motor axis mapping
-stat_t st_get_ma(nvObj_t *nv) { return(get_integer(nv, st_cfg.mot[_motor(nv->index)].motor_map)); }
-stat_t st_set_ma(nvObj_t *nv) { return(set_integer(nv, st_cfg.mot[_motor(nv->index)].motor_map, 0, AXES)); }
+/*
+ * st_get_ma() - get motor axis mapping
+ *
+ *  Legacy axis numbers are     XYZABC    for axis 0-5
+ *  External axis numbers are   XYZABCUVW for axis 0-8
+ *  Internal axis numbers are   XYZUVWABC for axis 0-8 (for various code reasons)
+ *
+ *  This function retrieves an internal axis number and remaps it to an external axis number
+ */
+stat_t st_get_ma(nvObj_t *nv) 
+{
+    uint8_t remap_axis[9] = { 0,1,2,6,7,8,3,4,5 };
+    ritorno(get_integer(nv, st_cfg.mot[_motor(nv->index)].motor_map)); 
+    nv->value_int = remap_axis[nv->value_int];
+    return(STAT_OK);
+}
+
+/*
+ * st_set_ma() - set motor axis mapping
+ *
+ *  Legacy axis numbers are     XYZABC    for axis 0-5
+ *  External axis numbers are   XYZABCUVW for axis 0-8
+ *  Internal axis numbers are   XYZUVWABC for axis 0-8 (for various code reasons)
+ *
+ *  This function accepts an external axis number and remaps it to an external axis number,
+ *  writes the internal axis number and returns the external number in the JSON response.
+ */
+stat_t st_set_ma(nvObj_t *nv) 
+{
+    if (nv->value_int < 0) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    if (nv->value_int > AXES) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+    }
+    uint8_t external_axis = nv->value_int;
+    uint8_t remap_axis[9] = { 0,1,2,6,7,8,3,4,5 };
+    nv->value_int = remap_axis[nv->value_int];
+    ritorno(set_integer(nv, st_cfg.mot[_motor(nv->index)].motor_map, 0, AXES)); 
+    nv->value_int = external_axis;
+    return(STAT_OK);
+}
 
 // step angle
 stat_t st_get_sa(nvObj_t *nv) { return(get_float(nv, st_cfg.mot[_motor(nv->index)].step_angle)); }
