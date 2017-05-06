@@ -72,6 +72,18 @@ typedef enum {
     AXIS_C
 } cmAxes;
 
+typedef enum {  // external representation of axes (used in initialization)
+    AXIS_X_EXTERNAL = 0,
+    AXIS_Y_EXTERNAL,
+    AXIS_Z_EXTERNAL,
+    AXIS_A_EXTERNAL,
+    AXIS_B_EXTERNAL,
+    AXIS_C_EXTERNAL,
+    AXIS_U_EXTERNAL,
+    AXIS_V_EXTERNAL,
+    AXIS_W_EXTERNAL
+} cmAxesExternal;
+
 typedef enum {
     OFS_I = 0,
     OFS_J,

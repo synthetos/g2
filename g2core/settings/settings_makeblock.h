@@ -92,9 +92,9 @@
                                                         // 2=MOTOR_POWERED_IN_CYCLE, 
                                                         // 3=MOTOR_POWERED_ONLY_WHEN_MOVING
 #define M1_POWER_LEVEL          0.4                     // 1pl:   0.0=no power, 1.0=max power
-#define MOTOR_POWER_TIMEOUT     10.00                    // motor power timeout in seconds
+#define MOTOR_POWER_TIMEOUT     10.00                   // motor power timeout in seconds
 
-#define M1_MOTOR_MAP            AXIS_X                  // 1ma
+#define M1_MOTOR_MAP            AXIS_X_EXTERNAL         // 1ma
 #define M1_STEP_ANGLE           1.8                     // 1sa
 #define M1_TRAVEL_PER_REV       36.576                  // 1tr  2.032mm pitch * 18 teeth per revolution
 #define M1_MICROSTEPS           8                       // 1mi  1,2,4,8,16,32
@@ -102,7 +102,7 @@
 #define M1_POWER_MODE           MOTOR_POWER_MODE        // 1pm  0=MOTOR_DISABLED, 1=MOTOR_ALWAYS_POWERED, 2=MOTOR_POWERED_IN_CYCLE, 3=MOTOR_POWERED_ONLY_WHEN_MOVING
 #define M1_POWER_LEVEL          0.4
 
-#define M2_MOTOR_MAP            AXIS_Y
+#define M2_MOTOR_MAP            AXIS_Y_EXTERNAL
 #define M2_STEP_ANGLE           1.8
 #define M2_TRAVEL_PER_REV       36.576
 #define M2_MICROSTEPS           8
@@ -110,7 +110,7 @@
 #define M2_POWER_MODE           MOTOR_POWER_MODE
 #define M2_POWER_LEVEL          0.4
 
-#define M3_MOTOR_MAP            AXIS_Z  // Imaginary Z axis. For testing
+#define M3_MOTOR_MAP            AXIS_Z_EXTERNAL  // Imaginary Z axis. For testing
 #define M3_STEP_ANGLE           1.8
 #define M3_TRAVEL_PER_REV       1.25
 #define M3_MICROSTEPS           8
@@ -118,7 +118,7 @@
 #define M3_POWER_MODE           MOTOR_POWER_MODE
 #define M3_POWER_LEVEL          0.4
 
-#define M4_MOTOR_MAP            AXIS_A
+#define M4_MOTOR_MAP            AXIS_A_EXTERNAL
 #define M4_STEP_ANGLE           1.8
 #define M4_TRAVEL_PER_REV       1.25
 #define M4_MICROSTEPS           8

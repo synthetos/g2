@@ -222,7 +222,7 @@
 
 // MOTOR 1
 #ifndef M1_MOTOR_MAP
-#define M1_MOTOR_MAP                AXIS_X                  // {1ma: AXIS_X, AXIS_Y...
+#define M1_MOTOR_MAP                AXIS_X_EXTERNAL         // {1ma: AXIS_X, AXIS_Y...
 #endif
 #ifndef M1_STEP_ANGLE
 #define M1_STEP_ANGLE               1.8                     // {1sa: degrees per step
@@ -248,7 +248,7 @@
 
 // MOTOR 2
 #ifndef M2_MOTOR_MAP
-#define M2_MOTOR_MAP                AXIS_Y
+#define M2_MOTOR_MAP                AXIS_Y_EXTERNAL
 #endif
 #ifndef M2_STEP_ANGLE
 #define M2_STEP_ANGLE               1.8
@@ -274,7 +274,7 @@
 
 // MOTOR 3
 #ifndef M3_MOTOR_MAP
-#define M3_MOTOR_MAP                AXIS_Z
+#define M3_MOTOR_MAP                AXIS_Z_EXTERNAL
 #endif
 #ifndef M3_STEP_ANGLE
 #define M3_STEP_ANGLE               1.8
@@ -300,7 +300,7 @@
 
 // MOTOR 4
 #ifndef M4_MOTOR_MAP
-#define M4_MOTOR_MAP                AXIS_A
+#define M4_MOTOR_MAP                AXIS_A_EXTERNAL
 #endif
 #ifndef M4_STEP_ANGLE
 #define M4_STEP_ANGLE               1.8
@@ -326,7 +326,7 @@
 
 // MOTOR 5
 #ifndef M5_MOTOR_MAP
-#define M5_MOTOR_MAP                AXIS_B
+#define M5_MOTOR_MAP                AXIS_B_EXTERNAL
 #endif
 #ifndef M5_STEP_ANGLE
 #define M5_STEP_ANGLE               1.8
@@ -352,7 +352,7 @@
 
 // MOTOR 6
 #ifndef M6_MOTOR_MAP
-#define M6_MOTOR_MAP                AXIS_C
+#define M6_MOTOR_MAP                AXIS_C_EXTERNAL
 #endif
 #ifndef M6_STEP_ANGLE
 #define M6_STEP_ANGLE               1.8
