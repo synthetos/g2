@@ -475,7 +475,7 @@ float cm_get_display_position(const GCodeState_t *gcode_state, const uint8_t axi
     } else {
         position = mp_get_runtime_display_position(axis);
     }
-    if (axis <= AXIS_Z) {
+    if (axis <= AXIS_W) {   // linears
         if (gcode_state->units_mode == INCHES) {
             position /= MM_PER_INCH;
         }
@@ -720,8 +720,8 @@ void cm_set_model_target(const float target[], const bool flags[])
     // copy position to target so it always starts correctly
     copy_vector(cm->gm.target, cm->gmx.position);
 
-    // process XYZABC for lower modes
-    for (axis=AXIS_X; axis<=AXIS_Z; axis++) {
+    // process linear axes (XYZUVW) first
+    for (axis=AXIS_X; axis<=AXIS_W; axis++) {
         if (!flags[axis] || cm->a[axis].axis_mode == AXIS_DISABLED) {
             continue;        // skip axis if not flagged for update or its disabled
         } else if ((cm->a[axis].axis_mode == AXIS_STANDARD) || (cm->a[axis].axis_mode == AXIS_INHIBITED)) {
@@ -733,7 +733,7 @@ void cm_set_model_target(const float target[], const bool flags[])
             cm->return_flags[axis] = true;  // used to make a synthetic G28/G30 intermediate move
         }
     }
-    // FYI: The ABC loop below relies on the XYZ loop having been run first
+    // FYI: The ABC loop below relies on the XYZUVW loop having been run first
     for (axis=AXIS_A; axis<=AXIS_C; axis++) {
         if (!flags[axis] || cm->a[axis].axis_mode == AXIS_DISABLED) {
             continue;        // skip axis if not flagged for update or its disabled
