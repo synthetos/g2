@@ -120,9 +120,9 @@
 
 #define M4_MOTOR_MAP            AXIS_A_EXTERNAL
 #define M4_STEP_ANGLE           1.8
-#define M4_TRAVEL_PER_REV       1.25
+#define M4_TRAVEL_PER_REV       360                     // degrees moved per motor rev
 #define M4_MICROSTEPS           8
-#define M4_POLARITY             0
+#define M4_POLARITY             1
 #define M4_POWER_MODE           MOTOR_POWER_MODE
 #define M4_POWER_LEVEL          0.4
 

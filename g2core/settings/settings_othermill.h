@@ -107,18 +107,18 @@
 #define MOTOR_POWER_LEVEL_DISABLED  0.05
 
 #define MOTOR_POWER_MODE            MOTOR_POWERED_IN_CYCLE
-#define MOTOR_POWER_TIMEOUT         2.00                // motor power timeout in seconds
+#define MOTOR_POWER_TIMEOUT         2.00                    // motor power timeout in seconds
 
-#define M1_MOTOR_MAP                AXIS_X              // 1ma
-#define M1_STEP_ANGLE               1.8                 // 1sa
-#define M1_TRAVEL_PER_REV           4.8768              // 1tr
-#define M1_MICROSTEPS               8                   // 1mi  1,2,4,8,16,32
-#define M1_POLARITY                 1                   // 1po  0=normal, 1=reversed
-#define M1_POWER_MODE               MOTOR_POWER_MODE    // 1pm  See enum cmMotorPowerMode in stepper.h
-#define M1_POWER_LEVEL              MOTOR_POWER_LEVEL_XY  // 0.00=off, 1.00=max
+#define M1_MOTOR_MAP                AXIS_X_EXTERNAL         // 1ma
+#define M1_STEP_ANGLE               1.8                     // 1sa
+#define M1_TRAVEL_PER_REV           4.8768                  // 1tr
+#define M1_MICROSTEPS               8                       // 1mi  1,2,4,8,16,32
+#define M1_POLARITY                 1                       // 1po  0=normal, 1=reversed
+#define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm  See enum cmMotorPowerMode in stepper.h
+#define M1_POWER_LEVEL              MOTOR_POWER_LEVEL_XY    // 0.00=off, 1.00=max
 #define M1_POWER_LEVEL_IDLE         MOTOR_POWER_LEVEL_XY_IDLE
 
-#define M2_MOTOR_MAP                AXIS_Y
+#define M2_MOTOR_MAP                AXIS_Y_EXTERNAL
 #define M2_STEP_ANGLE               1.8
 #define M2_TRAVEL_PER_REV           4.8768
 #define M2_MICROSTEPS               8
@@ -127,7 +127,7 @@
 #define M2_POWER_LEVEL              MOTOR_POWER_LEVEL_XY
 #define M2_POWER_LEVEL_IDLE         MOTOR_POWER_LEVEL_XY_IDLE
 
-#define M3_MOTOR_MAP                AXIS_Z
+#define M3_MOTOR_MAP                AXIS_Z_EXTERNAL
 #if HAS_CANSTACK_Z_AXIS
 #define M3_STEP_ANGLE               15
 #define M3_TRAVEL_PER_REV           1.27254
@@ -141,7 +141,7 @@
 #define M3_POWER_LEVEL              MOTOR_POWER_LEVEL_Z
 #define M3_POWER_LEVEL_IDLE         MOTOR_POWER_LEVEL_Z_IDLE
 
-#define M4_MOTOR_MAP                AXIS_A
+#define M4_MOTOR_MAP                AXIS_A_EXTERNAL
 #define M4_STEP_ANGLE               1.8
 #define M4_TRAVEL_PER_REV           360  // degrees moved per motor rev
 #define M4_MICROSTEPS               8
@@ -150,7 +150,7 @@
 #define M4_POWER_LEVEL              MOTOR_POWER_LEVEL_DISABLED
 #define M4_POWER_LEVEL_IDLE         MOTOR_POWER_LEVEL_DISABLED
 
-#define M5_MOTOR_MAP                AXIS_B
+#define M5_MOTOR_MAP                AXIS_B_EXTERNAL
 #define M5_STEP_ANGLE               1.8
 #define M5_TRAVEL_PER_REV           360  // degrees moved per motor rev
 #define M5_MICROSTEPS               8
@@ -159,7 +159,7 @@
 #define M5_POWER_LEVEL              MOTOR_POWER_LEVEL_DISABLED
 #define M5_POWER_LEVEL_IDLE         MOTOR_POWER_LEVEL_DISABLED
 
-#define M6_MOTOR_MAP                AXIS_C
+#define M6_MOTOR_MAP                AXIS_C_EXTERNAL
 #define M6_STEP_ANGLE               1.8
 #define M6_TRAVEL_PER_REV           360  // degrees moved per motor rev
 #define M6_MICROSTEPS               8
