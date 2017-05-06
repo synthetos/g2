@@ -143,8 +143,8 @@ bool mp_runtime_is_idle() { return (!st_runtime_isbusy()); }
 
 stat_t mp_aline(GCodeState_t* _gm)
 {
-    float target_rotated[AXES] = {0,0,0,0,0,0};
-    float axis_square[AXES]    = {0,0,0,0,0,0};
+    float target_rotated[AXES] = { 0,0,0,0,0,0,0,0,0 };
+    float axis_square[AXES]    = { 0,0,0,0,0,0,0,0,0 };
     float axis_length[AXES];
     bool  flags[AXES];
     float length_square = 0;
@@ -169,23 +169,28 @@ stat_t mp_aline(GCodeState_t* _gm)
     //  c being target[2],
     //  x_1 being cm->rotation_matrix[1][0]
 
-    target_rotated[0] = _gm->target[0] * cm->rotation_matrix[0][0] + 
-                        _gm->target[1] * cm->rotation_matrix[0][1] +
-                        _gm->target[2] * cm->rotation_matrix[0][2];
+    target_rotated[AXIS_X] = _gm->target[AXIS_X] * cm->rotation_matrix[0][0] + 
+                             _gm->target[AXIS_Y] * cm->rotation_matrix[0][1] +
+                             _gm->target[AXIS_Z] * cm->rotation_matrix[0][2];
 
-    target_rotated[1] = _gm->target[0] * cm->rotation_matrix[1][0] + 
-                        _gm->target[1] * cm->rotation_matrix[1][1] +
-                        _gm->target[2] * cm->rotation_matrix[1][2];
+    target_rotated[AXIS_Y] = _gm->target[AXIS_X] * cm->rotation_matrix[1][0] + 
+                             _gm->target[AXIS_Y] * cm->rotation_matrix[1][1] +
+                             _gm->target[AXIS_Z] * cm->rotation_matrix[1][2];
 
-    target_rotated[2] = _gm->target[0] * cm->rotation_matrix[2][0] + 
-                        _gm->target[1] * cm->rotation_matrix[2][1] +
-                        _gm->target[2] * cm->rotation_matrix[2][2] + 
-                        cm->rotation_z_offset;
+    target_rotated[AXIS_Z] = _gm->target[AXIS_X] * cm->rotation_matrix[2][0] + 
+                             _gm->target[AXIS_Y] * cm->rotation_matrix[2][1] +
+                             _gm->target[AXIS_Z] * cm->rotation_matrix[2][2] + 
+                             cm->rotation_z_offset;
+
+    // copy rotation axes for UVW (no changes)
+    target_rotated[AXIS_U] = _gm->target[AXIS_U];
+    target_rotated[AXIS_V] = _gm->target[AXIS_V];
+    target_rotated[AXIS_W] = _gm->target[AXIS_W];
 
     // copy rotation axes for ABC (no changes)
-    target_rotated[3] = _gm->target[3];
-    target_rotated[4] = _gm->target[4];
-    target_rotated[5] = _gm->target[5];
+    target_rotated[AXIS_A] = _gm->target[AXIS_A];
+    target_rotated[AXIS_B] = _gm->target[AXIS_B];
+    target_rotated[AXIS_B] = _gm->target[AXIS_C];
 
     for (uint8_t axis = 0; axis < AXES; axis++) {
         axis_length[axis] = target_rotated[axis] - mp->position[axis];

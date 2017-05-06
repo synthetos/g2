@@ -318,7 +318,7 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     cmProbeState probe_state[PROBES_STORED];  // probing state machine (simple)
     float probe_results[PROBES_STORED][AXES]; // probing results
 
-    float rotation_matrix[3][3];            // three-by-three rotation matrix. We ignore rotary axes.
+    float rotation_matrix[3][3];            // three-by-three rotation matrix. We ignore UVW and ABC rotary axes
     float rotation_z_offset;                // separately handle a z-offset to maintain consistent distance to bed
 
     float jogging_dest;                     // jogging destination as a relative move from current position
