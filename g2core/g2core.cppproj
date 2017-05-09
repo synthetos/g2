@@ -178,8 +178,8 @@
       </ArmGccCpp>
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
-    <BuildTarget>BOARD=gShield CONFIG=ShapeokoDualY COLOR=0 VERBOSE=1</BuildTarget>
-    <CleanTarget>clean BOARD=gShield CONFIG=ShapeokoDualY </CleanTarget>
+    <BuildTarget>BOARD=gShield COLOR=0 VERBOSE=1</BuildTarget>
+    <CleanTarget>clean BOARD=gShield</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputDirectory />
   </PropertyGroup>
