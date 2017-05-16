@@ -71,9 +71,16 @@ ifeq ("$(CONFIG)","TestV9")
     SETTINGS_FILE="settings_test.h"
 endif
 
-ifeq ("$(CONFIG)","TestQuintic")
+ifeq ("$(CONFIG)","TestQuintic-b")
     ifeq ("$(BOARD)","NONE")
         BOARD=gquintic-b
+    endif
+    SETTINGS_FILE="settings_test.h"
+endif
+
+ifeq ("$(CONFIG)","TestQuintic")
+    ifeq ("$(BOARD)","NONE")
+        BOARD=gquintic-c
     endif
     SETTINGS_FILE="settings_test.h"
 endif
@@ -133,7 +140,7 @@ endif
 
 ifeq ("$(CONFIG)","Ultimaker2Plus")
     ifeq ("$(BOARD)","NONE")
-        BOARD=gquintic-b
+        BOARD=gquintic-c
     endif
     SETTINGS_FILE="settings_Ultimaker_2_Plus.h"
 endif
