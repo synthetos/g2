@@ -280,7 +280,9 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
     if (mp.planner_state == PLANNER_PRIMING) {
         // Timings from *here*
 
+
         if (bf->pv->plannable) {
+            // calculate junction with previous move
             _calculate_junction_vmax(bf->pv);  // compute maximum junction velocity constraint
             if (bf->pv->gm.path_control == PATH_EXACT_STOP) {
                 bf->pv->exit_vmax = 0;
@@ -288,6 +290,15 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
                 bf->pv->exit_vmax = std::min(std::min(bf->pv->junction_vmax, bf->pv->cruise_vmax), bf->cruise_vmax);
             }
         }
+
+        // calculate junction to stop
+        _calculate_junction_vmax(bf);  // compute maximum junction velocity constraint
+        if (bf->gm.path_control == PATH_EXACT_STOP) {
+            bf->exit_vmax = 0;
+        } else {
+            bf->exit_vmax = std::min(bf->junction_vmax, bf->cruise_vmax);
+        }
+
         _calculate_override(bf);  // adjust cruise_vmax for feed/traverse override
  //     bf->plannable_time = bf->pv->plannable_time;    // set plannable time - excluding current move
         bf->buffer_state = MP_BUFFER_IN_PROCESS;
@@ -692,6 +703,28 @@ static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const floa
 
 static void _calculate_junction_vmax(mpBuf_t* bf) 
 {
+    // special case for planning the last block
+    if (bf->nx->buffer_state == MP_BUFFER_EMPTY) {
+        // Compute a junction velocity to full stop
+        float velocity = bf->cruise_vmax;  // start with our maximum possible velocity
+
+        for (uint8_t axis = 0; axis < AXES; axis++) {
+            if (bf->axis_flags[axis]) {       // skip axes with no movement
+                float delta = bf->unit[axis];
+
+                // Corner case: If an axis has zero delta, we might have a straight line.
+                // Corner case: An axis doesn't change (and it's not a straight line).
+                //   In either case, division-by-zero is bad, m'kay?
+                if (delta > EPSILON) {
+                    velocity = std::min(velocity, (cm.a[axis].max_junction_accel / delta));
+                }
+            }
+        }
+
+        bf->junction_vmax = velocity;
+        return;
+    }
+
     // ++++ RG If we change cruise_vmax, we'll need to recompute junction_vmax, if we do this:
     float velocity = std::min(bf->cruise_vmax, bf->nx->cruise_vmax);  // start with our maximum possible velocity
 
@@ -699,7 +732,7 @@ static void _calculate_junction_vmax(mpBuf_t* bf)
     // cmAxes jerk_axis = AXIS_X;
     bool using_junction_unit = false;
     float junction_length_since = bf->junction_length_since + bf->length;
-    if (junction_length_since < 5.0) {
+    if (junction_length_since < 0.5) {
         // push the length_since forward, and copy the junction_unit
         bf->nx->junction_length_since = junction_length_since;
         using_junction_unit = true;
