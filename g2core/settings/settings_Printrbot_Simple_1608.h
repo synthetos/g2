@@ -55,6 +55,8 @@
 #define COOLANT_FLOOD_POLARITY      1                       // 0=active low, 1=active high
 #define COOLANT_PAUSE_ON_HOLD       false
 
+#define TRAVERSE_AT_HIGH_JERK             true                    // EXPERIMENTAL, primarily used here for retraction of extruder
+
 // Communications and reporting settings
 
 #define MARLIN_COMPAT_ENABLED       true                    // enable marlin compatibility mode
@@ -71,8 +73,9 @@
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
 
 // Defaults for 3DP
-#define STATUS_REPORT_DEFAULTS    "line","posx","posy","posz","posa","vel","he1t","he1st","he1at","feed","unit","path","stat"
-// There are no heater two or three, but these would show those: ,"he2t","he2st","he2at","he3t","he3st","he3at"
+#define STATUS_REPORT_DEFAULTS            \
+"line","posx","posy","posz","posa","vel","he1t","he1st","he1at","he1op","feed","vel","unit","path","stat", \
+"he2t","he2st","he2at","he2op","he3t","he3st","he3at","he3op"
 
 // Defaults for motion debugging
 //#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","he1t","he1st","he1at","he2t","he2st","he2at","he3t","he3st","he3at","_fe5","_fe4","feed","vel","unit","path","stat"
@@ -87,7 +90,7 @@
 #define GCODE_DEFAULT_PATH_CONTROL  PATH_CONTINUOUS
 #define GCODE_DEFAULT_DISTANCE_MODE ABSOLUTE_DISTANCE_MODE
 
-#define MARLIN_G29_SCRIPT \
+#define MARLIN_G29_SCRIPT                 \
     "(MSG Tramming started)\n" \
     "M100 ({\"_leds\":3})\n" \
     "G1 X0 Y145 Z6 F20000\n" \
@@ -102,7 +105,7 @@
     "G38.2 Z-10 F200\n" \
     "G1 Z5 F20000\n" \
     "M100 ({\"_leds\":3})\n" \
-    "M100 ({\"tram\":1})" \
+    "M100 ({\"tram\":1})\n" \
     "(MSG Tramming completed)\n"
 
 // *** motor settings ************************************************************************************
@@ -227,8 +230,8 @@
 //#define A_FEEDRATE_MAX        9720.0 // 9720.0 = G1 rate ~15 mm/s, 900 mm/min
 #define A_TRAVEL_MIN            0
 #define A_TRAVEL_MAX            10
-//#define A_JERK_MAX              81000 // 250 million mm/min^3 = 324000
-#define A_JERK_MAX            162000 // 250 million mm/min^3 = 324000
+//#define A_JERK_MAX            81000 // 250 million mm/min^3 = 324000
+#define A_JERK_MAX              162000 // 250 million mm/min^3 = 324000
 //#define A_JERK_MAX            324000 // 500 million mm/min^3 = 324000
 //#define A_JERK_MAX            648000 // 1,000 million mm/min^3 = 648000
 // * a million IF it's over a million
@@ -280,7 +283,7 @@
 #define EXTRUDER_1_OUTPUT_PIN kOutput1_PinNumber
 #define EXTRUDER_1_FAN_PIN    kOutput3_PinNumber
 
-#define HAS_TEMPERATURE_SENSOR_2  true
+#define HAS_TEMPERATURE_SENSOR_2  false
 #if HAS_TEMPERATURE_SENSOR_2
 #if 1 // 1 if a Thermistor, 0 if a PT100
     #define TEMPERATURE_SENSOR_2_TYPE  Thermistor<kADC2_PinNumber>
@@ -410,6 +413,9 @@
 
 /*** Extruders / Heaters ***/
 
+#define TEMP_MIN_BED_RISE_DEGREES_OVER_TIME 0.5
+
+
 #define MIX_FAN_VALUE               0.4   // (he1fm) at MIN_FAN_TEMP the fan comes on at this spped (0.0-1.0)
 #define MAX_FAN_VALUE               0.75  // (he1fp) at MAX_FAN_TEMP the fan is at this spped (0.0-1.0)
 #define MIN_FAN_TEMP                50.0  // (he1fl) at this temp the fan starts to ramp up linearly
@@ -425,7 +431,7 @@
 #define H2_DEFAULT_I                0.05
 #define H2_DEFAULT_D                150.0
 
-#define H3_DEFAULT_ENABLE           false
+#define H3_DEFAULT_ENABLE           true
 #define H3_DEFAULT_P                9.0
 #define H3_DEFAULT_I                0.12
 #define H3_DEFAULT_D                400.0
