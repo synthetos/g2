@@ -39,8 +39,8 @@
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
-#define JUNCTION_INTEGRATION_TIME   1.0                    // cornering - between 0.10 and 2.00 (higher is faster)
-//{jt:1.0}
+#define JUNCTION_INTEGRATION_TIME   1.2                    // cornering - between 0.10 and 2.00 (higher is faster)
+//{jt:1.2}
 //{jt:0.75}
 #define CHORDAL_TOLERANCE           0.01                    // chordal accuracy for arc drawing (in mm)
 
@@ -85,8 +85,8 @@
 //#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","he1t","he1st","he1at","he1op","pid1p","pid1i","pid1d","feed","vel","unit","path","stat"
 
 // Defaults for thermistor tuning
-#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","he1t","he1st","he1at","he1tr","he1tv","he1op","he2t","he2st","he2at","he2tr","he2tv","he2op","he3t","he3st","he3at","he3tr","he3tv","he3op","feed","vel","unit","path","stat","1ts","2ts","1sgr","1sgs","2sgr","2sgs","_xs1","_xs2","_xs3","_xs4"
-//{sr:{"line":t,"posx":t,"posy":t,"posz":t,"posa":t,"he1t":t,"he1st":t,"he1at":t,"he1tr":t,"he1tv":t,"he1op":t,"he3t":t,"he3st":t,"he3at":t,"he3tr":t,"he3tv":t,"he3op":t,"feed":t,"vel":t,"unit":t,"path":t,"stat":t}}
+//#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","he1t","he1st","he1at","he1op","he3t","he3st","he3at","he3op","feed","vel","unit","path","stat","1ts","1sgr","1csa","2ts","2sgr","2csa","3ts","3sgr","3csa","4ts","4sgr","4csa"
+#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","he1t","he1st","he1at","he1tr","he1tv","he1op","he2t","he2st","he2at","he2tr","he2tv","he2op","he3t","he3st","he3at","he3tr","he3tv","he3op","feed","vel","unit","path","stat","_xs1","_xs2","_xs3","_xs4"
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS         MILLIMETERS             // MILLIMETERS or INCHES
 #define GCODE_DEFAULT_PLANE         CANON_PLANE_XY          // CANON_PLANE_XY, CANON_PLANE_XZ, or CANON_PLANE_YZ
@@ -105,14 +105,23 @@
 #define M1_STEP_ANGLE               1.8                     // 1sa
 // Marlin says 80 steps/unit, and 16 microsteps, with a 200-step/rev motor
 #define M1_TRAVEL_PER_REV           40                      // 1tr
-#define M1_MICROSTEPS               128                      // 1mi        1,2,4,8,16,32
+#define M1_MICROSTEPS               128                     // 1mi        1,2,4,8,16,32
 #define M1_POLARITY                 0                       // 1po        0=normal, 1=reversed
 #define M1_POWER_MODE               MOTOR_POWERED_IN_CYCLE  // 1pm        standard
-#define M1_POWER_LEVEL              0.5                     // 1pl
-#define M1_TMC2130_TPWMTHRS         500                     // 1pth
-#define M1_TMC2130_TCOOLTHRS        200                     // 1cth
-#define M1_TMC2130_THIGH            100                     // 1hth
+#define M1_POWER_LEVEL              0.8                     // 1pl
+#define M1_TMC2130_TPWMTHRS         1200                    // 1pth
+#define M1_TMC2130_TCOOLTHRS        1000                    // 1cth
+#define M1_TMC2130_THIGH            10                      // 1hth
 #define M1_TMC2130_SGT              4                       // 1sgt
+#define M1_TMC2130_TBL              2                       // 1tbl
+#define M1_TMC2130_PWM_GRAD         1                       // 1pgrd
+#define M1_TMC2130_PWM_AMPL         200                     // 1pamp
+#define M1_TMC2130_HEND             0                       // 1hend
+#define M1_TMC2130_HSTRT            0                       // 1hsrt
+#define M1_TMC2130_SMIN             5                       // 1smin
+#define M1_TMC2130_SMAX             12                      // 1smax
+#define M1_TMC2130_SUP              2                       // 1sup
+#define M1_TMC2130_SDN              1                       // 1sdn
 
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
 #define M2_MOTOR_MAP                AXIS_Y
@@ -122,11 +131,20 @@
 #define M2_MICROSTEPS               128
 #define M2_POLARITY                 1
 #define M2_POWER_MODE               MOTOR_POWERED_IN_CYCLE
-#define M2_POWER_LEVEL              0.5
-#define M2_TMC2130_TPWMTHRS         500
-#define M2_TMC2130_TCOOLTHRS        200
-#define M2_TMC2130_THIGH            100
+#define M2_POWER_LEVEL              0.8
+#define M2_TMC2130_TPWMTHRS         1200
+#define M2_TMC2130_TCOOLTHRS        1000
+#define M2_TMC2130_THIGH            10
 #define M2_TMC2130_SGT              4
+#define M2_TMC2130_TBL              2
+#define M2_TMC2130_PWM_GRAD         1
+#define M2_TMC2130_PWM_AMPL         200
+#define M2_TMC2130_HEND             0
+#define M2_TMC2130_HSTRT            0
+#define M2_TMC2130_SMIN             5
+#define M2_TMC2130_SMAX             12
+#define M2_TMC2130_SUP              2
+#define M2_TMC2130_SDN              1
 
 #define M3_MOTOR_MAP                AXIS_Z
 #define M3_STEP_ANGLE               1.8
@@ -135,11 +153,20 @@
 #define M3_MICROSTEPS               128
 #define M3_POLARITY                 0
 #define M3_POWER_MODE               MOTOR_POWERED_IN_CYCLE
-#define M3_POWER_LEVEL              0.5
-#define M3_TMC2130_TPWMTHRS         500
+#define M3_POWER_LEVEL              0.4
+#define M3_TMC2130_TPWMTHRS         300
 #define M3_TMC2130_TCOOLTHRS        200
-#define M3_TMC2130_THIGH            100
+#define M3_TMC2130_THIGH            10
 #define M3_TMC2130_SGT              4
+#define M3_TMC2130_TBL              2
+#define M3_TMC2130_PWM_GRAD         1
+#define M3_TMC2130_PWM_AMPL         200
+#define M3_TMC2130_HEND             0
+#define M3_TMC2130_HSTRT            0
+#define M3_TMC2130_SMIN             5
+#define M3_TMC2130_SMAX             12
+#define M3_TMC2130_SUP              2
+#define M3_TMC2130_SDN              2
 
 #define M4_MOTOR_MAP                AXIS_A
 #define M4_STEP_ANGLE               1.8
@@ -147,23 +174,41 @@
 #define M4_MICROSTEPS               128
 #define M4_POLARITY                 0
 #define M4_POWER_MODE               MOTOR_POWER_MODE
-#define M4_POWER_LEVEL              0.6
-#define M4_TMC2130_TPWMTHRS         500
-#define M4_TMC2130_TCOOLTHRS        200
-#define M4_TMC2130_THIGH            100
-#define M4_TMC2130_SGT              4
+#define M4_POWER_LEVEL              0.8
+#define M4_TMC2130_TPWMTHRS         180000
+#define M4_TMC2130_TCOOLTHRS        100000
+#define M4_TMC2130_THIGH            10
+#define M4_TMC2130_SGT              3
+#define M4_TMC2130_TBL              2
+#define M4_TMC2130_PWM_GRAD         15
+#define M4_TMC2130_PWM_AMPL         255
+#define M4_TMC2130_HEND             0
+#define M4_TMC2130_HSTRT            0
+#define M4_TMC2130_SMIN             5
+#define M4_TMC2130_SMAX             10
+#define M4_TMC2130_SUP              3
+#define M4_TMC2130_SDN              0
 
 #define M5_MOTOR_MAP                AXIS_B
 #define M5_STEP_ANGLE               1.8
-#define M5_TRAVEL_PER_REV           360            // degrees moved per motor rev
-#define M5_MICROSTEPS               64
-#define M5_POLARITY                 0
-#define M5_POWER_MODE               MOTOR_POWER_MODE
+#define M5_TRAVEL_PER_REV           40
+#define M5_MICROSTEPS               128
+#define M5_POLARITY                 1
+#define M5_POWER_MODE               MOTOR_DISABLED
 #define M5_POWER_LEVEL              0.8
-#define M5_TMC2130_TPWMTHRS         500
-#define M5_TMC2130_TCOOLTHRS        200
-#define M5_TMC2130_THIGH            100
+#define M5_TMC2130_TPWMTHRS         1200
+#define M5_TMC2130_TCOOLTHRS        1000
+#define M5_TMC2130_THIGH            10
 #define M5_TMC2130_SGT              4
+#define M5_TMC2130_TBL              2
+#define M5_TMC2130_PWM_GRAD         1
+#define M5_TMC2130_PWM_AMPL         200
+#define M5_TMC2130_HEND             0
+#define M5_TMC2130_HSTRT            0
+#define M5_TMC2130_SMIN             5
+#define M5_TMC2130_SMAX             12
+#define M5_TMC2130_SUP              2
+#define M5_TMC2130_SDN              1
 
 // *** axis settings **********************************************************************************
 
@@ -212,9 +257,9 @@
 #define Z_LATCH_BACKOFF             5
 #define Z_ZERO_BACKOFF              0
 
-//#define G55_Z_OFFSET                0.3 // higher number is farther away from the bed
+#define G55_Z_OFFSET                0.3 // higher number is farther away from the bed
 // {g55z:0.3}
-#define G55_Z_OFFSET                0.25 // higher number is farther away from the bed
+//#define G55_Z_OFFSET                0.25 // higher number is farther away from the bed
 // {g55z:0.25}
 
 // Rotary values are chosen to make the motor react the same as X for testing
@@ -245,8 +290,8 @@
 //#define A_FEEDRATE_MAX          36110.8 // ~15 mm/s
 //#define A_FEEDRATE_MAX          24073.9 // ~10 mm/s
 //#define A_FEEDRATE_MAX          12036.95 // ~5 mm/s
-#define A_FEEDRATE_MAX          6018.475 // ~2.5 mm/s Testing: {afr:800}
-//#define A_FEEDRATE_MAX          1000.0 // ~0.415 mm/s
+//#define A_FEEDRATE_MAX          6018.475 // ~2.5 mm/s Testing: {afr:800}
+#define A_FEEDRATE_MAX          1000.0 // ~0.415 mm/s
 //#define A_FEEDRATE_MAX          800.0  // WORKS WELL
 //#define A_FEEDRATE_MAX          500.0 // ~0.2075 mm/s
 #define A_TRAVEL_MIN            0
@@ -311,10 +356,10 @@
         /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 4700 \
     }
 #else
-    #define TEMPERATURE_SENSOR_1_TYPE  PT100<ADCDifferentialPair<kADC3_PinNumber, kADC4_PinNumber>>
-    #define TEMPERATURE_SENSOR_1_INIT {/*pullup_resistance:*/ 2200, /*inline_resistance*/0.0, /*differential*/ true}
-//    #define TEMPERATURE_SENSOR_1_TYPE  PT100<MAX31865<SPIBus_used_t::SPIBusDevice>>
-//    #define TEMPERATURE_SENSOR_1_INIT {/*pullup_resistance:*/ 430, /*inline_resistance*/0, spiBus, spiCSPinMux.getCS(5)}
+    // #define TEMPERATURE_SENSOR_1_TYPE  PT100<ADCDifferentialPair<kADC1_Neg_PinNumber, kADC1_Pos_PinNumber>>
+    // #define TEMPERATURE_SENSOR_1_INIT {/*pullup_resistance:*/ 2000, /*inline_resistance*/0.0}
+   #define TEMPERATURE_SENSOR_1_TYPE  PT100<MAX31865<SPIBus_used_t::SPIBusDevice>>
+   #define TEMPERATURE_SENSOR_1_INIT {/*pullup_resistance:*/ 430, /*inline_resistance*/0, spiBus, spiCSPinMux.getCS(5)}
 #endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_1
 
@@ -330,10 +375,10 @@
     /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 4700 \
     }
 #else
-//    #define TEMPERATURE_SENSOR_2_TYPE  PT100<ADCPin<kADC3_PinNumber>>
-//    #define TEMPERATURE_SENSOR_2_INIT {/*pullup_resistance:*/ 2200, /*inline_resistance*/0.0, /*differential*/ true}
-    #define TEMPERATURE_SENSOR_2_TYPE  PT100<MAX31865<SPIBus_used_t::SPIBusDevice>>
-    #define TEMPERATURE_SENSOR_2_INIT {/*pullup_resistance:*/ 430, /*inline_resistance*/0, spiBus, spiCSPinMux.getCS(5)}
+    #define TEMPERATURE_SENSOR_2_TYPE  PT100<ADCDifferentialPair<kADC2_Neg_PinNumber, kADC2_Pos_PinNumber>>
+    #define TEMPERATURE_SENSOR_2_INIT {/*pullup_resistance:*/ 200, /*inline_resistance*/0.0}
+//    #define TEMPERATURE_SENSOR_2_TYPE  PT100<MAX31865<SPIBus_used_t::SPIBusDevice>>
+//    #define TEMPERATURE_SENSOR_2_INIT {/*pullup_resistance:*/ 430, /*inline_resistance*/0, spiBus, spiCSPinMux.getCS(5)}
 #endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_2
 
@@ -348,10 +393,10 @@
     /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 4700 \
     }
 #else
-//    #define TEMPERATURE_SENSOR_3_TYPE  PT100<ADCPin<kADC2_PinNumber>>
-//    #define TEMPERATURE_SENSOR_3_INIT {/*pullup_resistance:*/ 2200, /*inline_resistance*/0.003, /*differential*/ true}
-    #define TEMPERATURE_SENSOR_3_TYPE  PT100<MAX31865<SPIBus_used_t::SPIBusDevice>>
-    #define TEMPERATURE_SENSOR_3_INIT {/*pullup_resistance:*/ 430, /*inline_resistance*/0, spiBus, spiCSPinMux.getCS(6)}
+    // #define TEMPERATURE_SENSOR_3_TYPE  PT100<ADCDifferentialPair<kADC2_Neg_PinNumber, kADC2_Pos_PinNumber>>
+    // #define TEMPERATURE_SENSOR_3_INIT {/*pullup_resistance:*/ 200, /*inline_resistance*/0.0}
+   #define TEMPERATURE_SENSOR_3_TYPE  PT100<MAX31865<SPIBus_used_t::SPIBusDevice>>
+   #define TEMPERATURE_SENSOR_3_INIT {/*pullup_resistance:*/ 430, /*inline_resistance*/0, spiBus, spiCSPinMux.getCS(6)}
 
 #endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_3
@@ -463,7 +508,7 @@
 // PID debug string: {sr:{"he1t":t,"he1st":t,"pid1p":t, "pid1i":t, "pid1d":t, "pid1f":t, "he1op":t, "line":t, "stat":t}}
 
 #define H1_DEFAULT_ENABLE           true
-#define H1_DEFAULT_P                1
+#define H1_DEFAULT_P                2
 #define H1_DEFAULT_I                0.005
 #define H1_DEFAULT_D                500
 #define H1_DEFAULT_F                0.0015
@@ -485,5 +530,5 @@
 #define H3_DEFAULT_ENABLE           true
 #define H3_DEFAULT_P                9.0
 #define H3_DEFAULT_I                0.012
-#define H3_DEFAULT_D                100
-#define H3_DEFAULT_F                0.0
+#define H3_DEFAULT_D                50
+#define H3_DEFAULT_F                0.0015
