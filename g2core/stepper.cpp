@@ -304,39 +304,63 @@ void dda_timer_type::interrupt()
     // process DDAs for each motor
         if  ((st_run.mot[MOTOR_1].substep_accumulator += st_run.mot[MOTOR_1].substep_increment) > 0) {
             motor_1.stepStart();        // turn step bit on
+#if NEW_DDA == 1
             st_run.mot[MOTOR_1].substep_accumulator -= DDA_SUBSTEPS; //st_run.dda_ticks_X_substeps;
+#else
+            st_run.mot[MOTOR_1].substep_accumulator -= st_run.dda_ticks_X_substeps;
+#endif
             INCREMENT_ENCODER(MOTOR_1);
         }
         if ((st_run.mot[MOTOR_2].substep_accumulator += st_run.mot[MOTOR_2].substep_increment) > 0) {
             motor_2.stepStart();        // turn step bit on
+#if NEW_DDA == 1
             st_run.mot[MOTOR_2].substep_accumulator -= DDA_SUBSTEPS; //st_run.dda_ticks_X_substeps;
+#else
+            st_run.mot[MOTOR_2].substep_accumulator -= st_run.dda_ticks_X_substeps;
+#endif
             INCREMENT_ENCODER(MOTOR_2);
         }
 #if MOTORS > 2
         if ((st_run.mot[MOTOR_3].substep_accumulator += st_run.mot[MOTOR_3].substep_increment) > 0) {
             motor_3.stepStart();        // turn step bit on
+#if NEW_DDA == 1
             st_run.mot[MOTOR_3].substep_accumulator -= DDA_SUBSTEPS; //st_run.dda_ticks_X_substeps;
+#else
+            st_run.mot[MOTOR_3].substep_accumulator -= st_run.dda_ticks_X_substeps;
+#endif
             INCREMENT_ENCODER(MOTOR_3);
         }
 #endif
 #if MOTORS > 3
         if ((st_run.mot[MOTOR_4].substep_accumulator += st_run.mot[MOTOR_4].substep_increment) > 0) {
             motor_4.stepStart();        // turn step bit on
+#if NEW_DDA == 1
             st_run.mot[MOTOR_4].substep_accumulator -= DDA_SUBSTEPS; //st_run.dda_ticks_X_substeps;
+#else
+            st_run.mot[MOTOR_4].substep_accumulator -= st_run.dda_ticks_X_substeps;
+#endif
             INCREMENT_ENCODER(MOTOR_4);
         }
 #endif
 #if MOTORS > 4
         if ((st_run.mot[MOTOR_5].substep_accumulator += st_run.mot[MOTOR_5].substep_increment) > 0) {
             motor_5.stepStart();        // turn step bit on
+#if NEW_DDA == 1
             st_run.mot[MOTOR_5].substep_accumulator -= DDA_SUBSTEPS; //st_run.dda_ticks_X_substeps;
+#else
+            st_run.mot[MOTOR_5].substep_accumulator -= st_run.dda_ticks_X_substeps;
+#endif
             INCREMENT_ENCODER(MOTOR_5);
         }
 #endif
 #if MOTORS > 5
         if ((st_run.mot[MOTOR_6].substep_accumulator += st_run.mot[MOTOR_6].substep_increment) > 0) {
             motor_6.stepStart();        // turn step bit on
+#if NEW_DDA == 1
             st_run.mot[MOTOR_6].substep_accumulator -= DDA_SUBSTEPS; //st_run.dda_ticks_X_substeps;
+#else
+            st_run.mot[MOTOR_6].substep_accumulator -= st_run.dda_ticks_X_substeps;
+#endif
             INCREMENT_ENCODER(MOTOR_6);
         }
 #endif
@@ -491,8 +515,10 @@ static void _load_move()
         //**** setup the new segment ****
 
         // st_run.dda_ticks_downcount is setup right before turning on the interrupt, since we don't turn it off
-//        st_run.dda_ticks_X_substeps = st_pre.dda_ticks_X_substeps;
-
+#if NEW_DDA == 1
+#else
+        st_run.dda_ticks_X_substeps = st_pre.dda_ticks_X_substeps;
+#endif
         // INLINED VERSION: 4.3us
         //**** MOTOR_1 LOAD ****
 
@@ -507,7 +533,8 @@ static void _load_move()
             //     segments it may have been inactive in between.
 
             // Apply accumulator correction if the time base has changed since previous segment
-#if 0
+#if NEW_DDA == 1
+#else
             if (st_pre.mot[MOTOR_1].accumulator_correction_flag == true) {
                 st_pre.mot[MOTOR_1].accumulator_correction_flag = false;
                 st_run.mot[MOTOR_1].substep_accumulator *= st_pre.mot[MOTOR_1].accumulator_correction;
@@ -520,8 +547,11 @@ static void _load_move()
 
             if (st_pre.mot[MOTOR_1].direction != st_pre.mot[MOTOR_1].prev_direction) {
                 st_pre.mot[MOTOR_1].prev_direction = st_pre.mot[MOTOR_1].direction;
-//                st_run.mot[MOTOR_1].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_1].substep_accumulator);
+#if NEW_DDA == 1
                 st_run.mot[MOTOR_1].substep_accumulator = -(DDA_SUBSTEPS + st_run.mot[MOTOR_1].substep_accumulator); // invert the accumulator for the direction change
+#else
+                st_run.mot[MOTOR_1].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_1].substep_accumulator);
+#endif
                 motor_1.setDirection(st_pre.mot[MOTOR_1].direction);
             }
 
@@ -537,7 +567,8 @@ static void _load_move()
 
 #if (MOTORS >= 2)
         if ((st_run.mot[MOTOR_2].substep_increment = st_pre.mot[MOTOR_2].substep_increment) != 0) {
-#if 0
+#if NEW_DDA == 1
+#else
             if (st_pre.mot[MOTOR_2].accumulator_correction_flag == true) {
                 st_pre.mot[MOTOR_2].accumulator_correction_flag = false;
                 st_run.mot[MOTOR_2].substep_accumulator *= st_pre.mot[MOTOR_2].accumulator_correction;
@@ -545,7 +576,11 @@ static void _load_move()
 #endif
             if (st_pre.mot[MOTOR_2].direction != st_pre.mot[MOTOR_2].prev_direction) {
                 st_pre.mot[MOTOR_2].prev_direction = st_pre.mot[MOTOR_2].direction;
-                st_run.mot[MOTOR_2].substep_accumulator = -(DDA_SUBSTEPS + st_run.mot[MOTOR_2].substep_accumulator);
+#if NEW_DDA == 1
+                st_run.mot[MOTOR_2].substep_accumulator = -(DDA_SUBSTEPS + st_run.mot[MOTOR_2].substep_accumulator); // invert the accumulator for the direction change
+#else
+                st_run.mot[MOTOR_2].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_2].substep_accumulator);
+#endif
                 motor_2.setDirection(st_pre.mot[MOTOR_2].direction);
             }
             motor_2.enable();
@@ -557,7 +592,8 @@ static void _load_move()
 #endif
 #if (MOTORS >= 3)
         if ((st_run.mot[MOTOR_3].substep_increment = st_pre.mot[MOTOR_3].substep_increment) != 0) {
-#if 0
+#if NEW_DDA == 1
+#else
             if (st_pre.mot[MOTOR_3].accumulator_correction_flag == true) {
                 st_pre.mot[MOTOR_3].accumulator_correction_flag = false;
                 st_run.mot[MOTOR_3].substep_accumulator *= st_pre.mot[MOTOR_3].accumulator_correction;
@@ -565,7 +601,11 @@ static void _load_move()
 #endif
             if (st_pre.mot[MOTOR_3].direction != st_pre.mot[MOTOR_3].prev_direction) {
                 st_pre.mot[MOTOR_3].prev_direction = st_pre.mot[MOTOR_3].direction;
-                st_run.mot[MOTOR_3].substep_accumulator = -(DDA_SUBSTEPS + st_run.mot[MOTOR_3].substep_accumulator);
+#if NEW_DDA == 1
+                st_run.mot[MOTOR_3].substep_accumulator = -(DDA_SUBSTEPS + st_run.mot[MOTOR_3].substep_accumulator); // invert the accumulator for the direction change
+#else
+                st_run.mot[MOTOR_3].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_3].substep_accumulator);
+#endif
                 motor_3.setDirection(st_pre.mot[MOTOR_3].direction);
             }
             motor_3.enable();
@@ -577,7 +617,8 @@ static void _load_move()
 #endif
 #if (MOTORS >= 4)
         if ((st_run.mot[MOTOR_4].substep_increment = st_pre.mot[MOTOR_4].substep_increment) != 0) {
-#if 0
+#if NEW_DDA == 1
+#else
             if (st_pre.mot[MOTOR_4].accumulator_correction_flag == true) {
                 st_pre.mot[MOTOR_4].accumulator_correction_flag = false;
                 st_run.mot[MOTOR_4].substep_accumulator *= st_pre.mot[MOTOR_4].accumulator_correction;
@@ -585,7 +626,11 @@ static void _load_move()
 #endif
             if (st_pre.mot[MOTOR_4].direction != st_pre.mot[MOTOR_4].prev_direction) {
                 st_pre.mot[MOTOR_4].prev_direction = st_pre.mot[MOTOR_4].direction;
-                st_run.mot[MOTOR_4].substep_accumulator = -(DDA_SUBSTEPS + st_run.mot[MOTOR_4].substep_accumulator);
+#if NEW_DDA == 1
+                st_run.mot[MOTOR_4].substep_accumulator = -(DDA_SUBSTEPS + st_run.mot[MOTOR_4].substep_accumulator); // invert the accumulator for the direction change
+#else
+                st_run.mot[MOTOR_4].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_4].substep_accumulator);
+#endif
                 motor_4.setDirection(st_pre.mot[MOTOR_4].direction);
             }
             motor_4.enable();
@@ -597,7 +642,8 @@ static void _load_move()
 #endif
 #if (MOTORS >= 5)
         if ((st_run.mot[MOTOR_5].substep_increment = st_pre.mot[MOTOR_5].substep_increment) != 0) {
-#if 0
+#if NEW_DDA == 1
+#else
             if (st_pre.mot[MOTOR_5].accumulator_correction_flag == true) {
                 st_pre.mot[MOTOR_5].accumulator_correction_flag = false;
                 st_run.mot[MOTOR_5].substep_accumulator *= st_pre.mot[MOTOR_5].accumulator_correction;
@@ -605,7 +651,11 @@ static void _load_move()
 #endif
             if (st_pre.mot[MOTOR_5].direction != st_pre.mot[MOTOR_5].prev_direction) {
                 st_pre.mot[MOTOR_5].prev_direction = st_pre.mot[MOTOR_5].direction;
-                st_run.mot[MOTOR_5].substep_accumulator = -(DDA_SUBSTEPS + st_run.mot[MOTOR_5].substep_accumulator);
+#if NEW_DDA == 1
+                st_run.mot[MOTOR_5].substep_accumulator = -(DDA_SUBSTEPS + st_run.mot[MOTOR_5].substep_accumulator); // invert the accumulator for the direction change
+#else
+                st_run.mot[MOTOR_5].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_5].substep_accumulator);
+#endif
                 motor_5.setDirection(st_pre.mot[MOTOR_5].direction);
             }
             motor_5.enable();
@@ -617,7 +667,8 @@ static void _load_move()
 #endif
 #if (MOTORS >= 6)
         if ((st_run.mot[MOTOR_6].substep_increment = st_pre.mot[MOTOR_6].substep_increment) != 0) {
-#if 0
+#if NEW_DDA == 1
+#else
             if (st_pre.mot[MOTOR_6].accumulator_correction_flag == true) {
                 st_pre.mot[MOTOR_6].accumulator_correction_flag = false;
                 st_run.mot[MOTOR_6].substep_accumulator *= st_pre.mot[MOTOR_6].accumulator_correction;
@@ -625,7 +676,11 @@ static void _load_move()
 #endif
             if (st_pre.mot[MOTOR_6].direction != st_pre.mot[MOTOR_6].prev_direction) {
                 st_pre.mot[MOTOR_6].prev_direction = st_pre.mot[MOTOR_6].direction;
-                st_run.mot[MOTOR_6].substep_accumulator = -(DDA_SUBSTEPS + st_run.mot[MOTOR_6].substep_accumulator);
+#if NEW_DDA == 1
+                st_run.mot[MOTOR_6].substep_accumulator = -(DDA_SUBSTEPS + st_run.mot[MOTOR_6].substep_accumulator); // invert the accumulator for the direction change
+#else
+                st_run.mot[MOTOR_6].substep_accumulator = -(st_run.dda_ticks_X_substeps + st_run.mot[MOTOR_6].substep_accumulator);
+#endif
                 motor_6.setDirection(st_pre.mot[MOTOR_6].direction);
             }
             motor_6.enable();
@@ -702,7 +757,10 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
 
     //st_pre.dda_period = _f_to_period(FREQUENCY_DDA);                // FYI: this is a constant
     st_pre.dda_ticks = (int32_t)(segment_time * 60 * FREQUENCY_DDA);// NB: converts minutes to seconds
-    //st_pre.dda_ticks_X_substeps = st_pre.dda_ticks * DDA_SUBSTEPS;
+#if NEW_DDA == 1
+#else
+    st_pre.dda_ticks_X_substeps = st_pre.dda_ticks * DDA_SUBSTEPS;
+#endif
 
     // setup motor parameters
 
@@ -726,7 +784,8 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
             st_pre.mot[motor].step_sign = -1;
         }
 
-#if 0
+#if NEW_DDA == 1
+#else
         // Detect segment time changes and setup the accumulator correction factor and flag.
         // Putting this here computes the correct factor even if the motor was dormant for some
         // number of previous moves. Correction is computed based on the last segment time actually used.
@@ -762,7 +821,11 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
         // Rounding is performed to eliminate a negative bias in the uint32 conversion
         // that results in long-term negative drift. (fabs/round order doesn't matter)
 
-        st_pre.mot[motor].substep_increment = round(fabs(travel_steps[motor] * DDA_SUBSTEPS) / st_pre.dda_ticks);
+#if NEW_DDA == 1
+        st_pre.mot[motor].substep_increment = round(fabs(travel_steps[motor] / (float)st_pre.dda_ticks) * (float)DDA_SUBSTEPS);
+#else
+        st_pre.mot[motor].substep_increment = round(fabs(travel_steps[motor] * DDA_SUBSTEPS));
+#endif
     }
     st_pre.block_type = BLOCK_TYPE_ALINE;
     st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;    // signal that prep buffer is ready
@@ -818,7 +881,7 @@ void st_request_out_of_band_dwell(float milliseconds)
 /*
  * _set_hw_microsteps() - set microsteps in hardware
  */
-static void _set_hw_microsteps(const uint8_t motor, const uint8_t microsteps)
+static void _set_hw_microsteps(const uint8_t motor, const uint16_t microsteps)
 {
     if (motor >= MOTORS) {return;}
 
@@ -917,13 +980,13 @@ stat_t st_set_mi(nvObj_t *nv)            // motor microsteps
         return (STAT_INPUT_LESS_THAN_MIN_VALUE);
     }
 
-    uint8_t mi = (uint8_t)nv->value;
+    uint16_t mi = nv->value;
     if ((mi != 1) && (mi != 2) && (mi != 4) && (mi != 8) && (mi != 16) && (mi != 32)) {
         nv_add_conditional_message((const char *)"*** WARNING *** Setting non-standard microstep value");
     }
-    set_ui8(nv);                        // set it anyway, even if it's unsupported
+    set_int(nv);                        // set it anyway, even if it's unsupported
     _set_motor_steps_per_unit(nv);
-    _set_hw_microsteps(_get_motor(nv->index), (uint8_t)nv->value);
+    _set_hw_microsteps(_get_motor(nv->index), nv->value);
     return (STAT_OK);
 }
 

@@ -254,6 +254,8 @@
 #ifndef STEPPER_H_ONCE
 #define STEPPER_H_ONCE
 
+#define NEW_DDA 1
+
 #include "MotateUtilities.h" // for HOT_DATA and HOT_FUNC
 
 #include "planner.h"    // planner.h must precede stepper.h for moveType typedef
@@ -311,9 +313,11 @@ typedef enum {
  *  The ARM is roughly the same as the DDA clock rate is 4x higher but the segment time is ~1/5
  *  Decreasing the nominal segment time increases the number precision.
  */
-//#define DDA_SUBSTEPS ((MAX_LONG * 0.90) / (FREQUENCY_DDA * (NOM_SEGMENT_TIME * 60)))
-//#define DDA_SUBSTEPS (MAX_LONG * 0.90)
-#define DDA_SUBSTEPS (1932735283L)
+#if NEW_DDA == 1
+#define DDA_SUBSTEPS (2147483600L)
+#else
+#define DDA_SUBSTEPS ((MAX_LONG * 0.90) / (FREQUENCY_DDA * (NOM_SEGMENT_TIME * 60)))
+#endif
 
 /* Step correction settings
  *
@@ -350,9 +354,9 @@ typedef enum {
 
 typedef struct cfgMotor {                   // per-motor configs
     // public
-    uint8_t motor_map;                      // map motor to axis
-    uint8_t microsteps;                     // microsteps to apply for each axis (ex: 8)
-    uint8_t polarity;                       // 0=normal polarity, 1=reverse motor direction
+    uint8_t  motor_map;                     // map motor to axis
+    uint32_t microsteps;                    // microsteps to apply for each axis (ex: 8)
+    uint8_t  polarity;                      // 0=normal polarity, 1=reverse motor direction
     float power_level;                      // set 0.000 to 1.000 for PMW vref setting
     float step_angle;                       // degrees per whole step (ex: 1.8)
     float travel_rev;                       // mm or deg of travel per motor revolution
@@ -379,7 +383,11 @@ typedef struct stRunSingleton {             // Stepper static values and axis pa
     magic_t magic_start;                    // magic number to test memory integrity
     uint32_t dda_ticks_downcount;           // dda tick down-counter (unscaled)
     uint32_t dwell_ticks_downcount;         // dwell tick down-counter (unscaled)
+#if NEW_DDA == 1
     uint32_t dda_steps_tick_X_substeps;     // DDA substps per tick scaled by substep factor
+#else
+    uint32_t dda_ticks_X_substeps;          // ticks multiplied by scaling factor
+#endif
     stRunMotor_t mot[MOTORS];               // runtime motor structures
     magic_t magic_end;
 } stRunSingleton_t;
@@ -413,8 +421,12 @@ typedef struct stPrepSingleton {
     blockType block_type;                   // move type (requires planner.h)
 
     uint32_t dda_ticks;                     // DDA ticks for the move
+    float dda_ticks_holdover;               // partial DDA ticks from previous segment
     uint32_t dwell_ticks;                   // dwell ticks remaining
-//    uint32_t dda_ticks_X_substeps;          // DDA ticks scaled by substep factor
+#if NEW_DDA == 1
+#else
+    uint32_t dda_ticks_X_substeps;          // DDA ticks scaled by substep factor
+#endif
     stPrepMotor_t mot[MOTORS];              // prep time motor structs
     magic_t magic_end;
 } stPrepSingleton_t;
