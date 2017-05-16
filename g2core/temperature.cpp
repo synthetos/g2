@@ -230,7 +230,7 @@ struct Thermistor {
     float c1, c2, c3, pullup_resistance;
     // We'll pull adc top value from the adc_pin.getTop()
 
-    ADCPin<adc_pin_num> adc_pin {kNormal, [&]{this->adc_has_new_value();} };
+    ADCPin<adc_pin_num> adc_pin;
     uint16_t raw_adc_value = 0;
     float raw_adc_voltage = 0.0;
 
@@ -241,9 +241,15 @@ struct Thermistor {
     //  http://hydraraptor.blogspot.com/2012/11/more-accurate-thermistor-tables.html
 
     Thermistor(const float temp_low, const float temp_med, const float temp_high, const float res_low, const float res_med, const float res_high, const float pullup_resistance_)
-    : pullup_resistance{ pullup_resistance_ } {
+    : pullup_resistance{ pullup_resistance_ },
+      adc_pin {kNormal, [&]{this->adc_has_new_value();} }
+    {
         setup(temp_low, temp_med, temp_high, res_low, res_med, res_high);
         adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
+        adc_pin.setVoltageRange(kSystemVoltage,
+                                0, //get_voltage_of_temp(min_temp),
+                                kSystemVoltage, //get_voltage_of_temp(max_temp),
+                                6400.0);
     }
 
     void setup(const float temp_low, const float temp_med, const float temp_high, const float res_low, const float res_med, const float res_high) {
@@ -333,10 +339,10 @@ struct PT100 {
 
     typedef PT100<ADC_t, min_temp, max_temp> type;
 
-    PT100(const float pullup_resistance_, const float inline_resistance_, const bool differential_ = false)
+    PT100(const float pullup_resistance_, const float inline_resistance_)
     : pullup_resistance{ pullup_resistance_ },
       inline_resistance{ inline_resistance_ },
-      differential{differential_},
+      differential{adc_pin.is_differential},
       gives_raw_resistance{false},
       adc_pin{kDifferentialPair, [&]{this->adc_has_new_value();} }
     {
@@ -357,8 +363,8 @@ struct PT100 {
     {
         adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
         adc_pin.setVoltageRange(kSystemVoltage,
-                                get_resistance_of_temp(min_temp),
-                                get_resistance_of_temp(max_temp),
+                                get_voltage_of_temp(min_temp),
+                                get_voltage_of_temp(max_temp),
                                 1);    // ignored
     };
 
@@ -428,9 +434,8 @@ struct PT100 {
             raw_adc_voltage = (raw_adc_value*pullup_resistance)/32768;
             history.add_sample(raw_adc_voltage);
         } else {
-            raw_adc_value = adc_pin.getRaw();
-//            raw_adc_voltage = (raw_adc_voltage*10.0 + adc_pin.getVoltage())/11.0;
-            history.add_sample(adc_pin.getVoltage());
+            float v = fabs(adc_pin.getVoltage());
+            history.add_sample(v);
         }
     };
 };
