@@ -29,36 +29,60 @@
 #include "board_stepper.h"
 
 // These are identical to board_stepper.h, except for the word "extern" and the initialization
-//Trinamic2130<SPIBus_used_t::SPIBusDevice,
-//             Motate::kSocket1_StepPinNumber,
-//             Motate::kSocket1_DirPinNumber,
-//             Motate::kSocket1_EnablePinNumber>
-//    motor_1{spiBus, spiCSPinMux.getCS(4)};
+#if defined(USING_A_MAX31865) && USING_A_MAX31865 == 1
 HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
              Motate::kSocket2_StepPinNumber,
              Motate::kSocket2_DirPinNumber,
              Motate::kSocket2_EnablePinNumber>
-    motor_1{spiBus, spiCSPinMux.getCS(3)};
+    motor_1 {spiBus, spiCSPinMux.getCS(3)};
 HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
              Motate::kSocket3_StepPinNumber,
              Motate::kSocket3_DirPinNumber,
              Motate::kSocket3_EnablePinNumber>
-    motor_2{spiBus, spiCSPinMux.getCS(2)};
+    motor_2 {spiBus, spiCSPinMux.getCS(2)};
 HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
              Motate::kSocket4_StepPinNumber,
              Motate::kSocket4_DirPinNumber,
              Motate::kSocket4_EnablePinNumber>
-    motor_3{spiBus, spiCSPinMux.getCS(1)};
+    motor_3 {spiBus, spiCSPinMux.getCS(1)};
 HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
              Motate::kSocket5_StepPinNumber,
              Motate::kSocket5_DirPinNumber,
              Motate::kSocket5_EnablePinNumber>
-    motor_4{spiBus, spiCSPinMux.getCS(0)};
-
+    motor_4 {spiBus, spiCSPinMux.getCS(0)};
 HOT_DATA StepDirHobbyServo<Motate::kServo1_PinNumber> motor_5;
 
 Stepper* Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5};
-//Stepper* Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5, &motor_6};
+#else
+HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
+             Motate::kSocket1_StepPinNumber,
+             Motate::kSocket1_DirPinNumber,
+             Motate::kSocket1_EnablePinNumber>
+    motor_1 {spiBus, spiCSPinMux.getCS(4)};
+HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
+             Motate::kSocket2_StepPinNumber,
+             Motate::kSocket2_DirPinNumber,
+             Motate::kSocket2_EnablePinNumber>
+    motor_2 {spiBus, spiCSPinMux.getCS(3)};
+HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
+             Motate::kSocket3_StepPinNumber,
+             Motate::kSocket3_DirPinNumber,
+             Motate::kSocket3_EnablePinNumber>
+    motor_3 {spiBus, spiCSPinMux.getCS(2)};
+HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
+             Motate::kSocket4_StepPinNumber,
+             Motate::kSocket4_DirPinNumber,
+             Motate::kSocket4_EnablePinNumber>
+    motor_4 {spiBus, spiCSPinMux.getCS(1)};
+HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
+             Motate::kSocket5_StepPinNumber,
+             Motate::kSocket5_DirPinNumber,
+             Motate::kSocket5_EnablePinNumber>
+    motor_5 {spiBus, spiCSPinMux.getCS(0)};
+HOT_DATA StepDirHobbyServo<Motate::kServo1_PinNumber> motor_6;
+
+Stepper* Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5, &motor_6};
+#endif
 
 void board_stepper_init() {
     for (uint8_t motor = 0; motor < MOTORS; motor++) { Motors[motor]->init(); }

@@ -299,6 +299,8 @@
 
 #include "device/max31865/max31865.h"
 
+#define USING_A_MAX31865 1
+
 #define HAS_TEMPERATURE_SENSOR_1  true
 #if HAS_TEMPERATURE_SENSOR_1
 // Must choose Thermistor or PT100
