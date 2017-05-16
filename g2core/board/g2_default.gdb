@@ -10,13 +10,13 @@ set print pretty on
 
 # monitor adapter_khz 5000
 
-define reset
-  boot_from_flash
-  # for openocd
-  # monitor reset init
-  # for jlink
-  monitor reset
-end
+#define reset
+#  boot_from_flash
+#  # for openocd
+#  # monitor reset init
+#  # for jlink
+#  monitor reset
+#end
 
 define flash
   make
