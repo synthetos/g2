@@ -63,6 +63,11 @@ enum hwPlatform {
 #define PWMS        2           // number of supported PWM channels
 #define TOOLS       32          // number of entries in tool table (index starts at 1)
 
+#define MOTOR_1_IS_TRINAMIC
+#define MOTOR_2_IS_TRINAMIC
+#define MOTOR_3_IS_TRINAMIC
+#define MOTOR_4_IS_TRINAMIC
+//#define MOTOR_5_IS_TRINAMIC
 
 ////////////////////////////
 /////// ARM VERSION ////////
@@ -121,12 +126,12 @@ using Motate::OutputPin;
 /**** Stepper DDA and dwell timer settings ****/
 
 //#define FREQUENCY_DDA    200000UL    // Hz step frequency. Interrupts actually fire at 2x (400 KHz)
-#define FREQUENCY_DDA 400000UL  // Hz step frequency. Interrupts actually fire at 2x (300 KHz)
-#define FREQUENCY_DWELL 1000UL
+#define FREQUENCY_DDA  400000UL  // Hz step frequency. Interrupts actually fire at 2x (300 KHz)
+#define FREQUENCY_DWELL  1000UL
 
-#define MIN_SEGMENT_MS ((float)0.125)       // S70 can handle much much smaller segements
+#define MIN_SEGMENT_MS ((float)0.25)       // S70 can handle much much smaller segements
 
-#define PLANNER_BUFFER_POOL_SIZE (96)
+#define PLANNER_BUFFER_POOL_SIZE (60)
 
 /**** Motate Definitions ****/
 

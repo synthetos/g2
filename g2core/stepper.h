@@ -571,7 +571,7 @@ struct Stepper {
     virtual void stepStart() HOT_FUNC { /* must override */ }; // HOT - called from the DDA interrupt
     virtual void stepEnd() HOT_FUNC { /* must override */ };   // HOT - called from the DDA interrupt
     virtual void setDirection(uint8_t new_direction) HOT_FUNC { /* must override */ }; // HOT - called from the DDA interrupt
-    virtual void setMicrosteps(const uint8_t microsteps) { /* must override */ };
+    virtual void setMicrosteps(const uint16_t microsteps) { /* must override */ };
     virtual void setPowerLevel(float new_pl) { /* must override */ };
 };
 

@@ -42,7 +42,7 @@ const Motate::USBSettings_t Motate::USBSettings = {
 };
 /*gProductVersion   = */ //0.1,
 
-XIOUSBDevice_t usb;
+HOT_DATA XIOUSBDevice_t usb;
 
 decltype(usb.mixin<0>::Serial) &SerialUSB = usb.mixin<0>::Serial;
 #if USB_SERIAL_PORTS_EXPOSED == 2
@@ -57,13 +57,13 @@ MOTATE_SET_USB_SERIAL_NUMBER_STRING_FROM_CHIPID()
 
 //******** SPI ********
 #if XIO_HAS_SPI
-Motate::SPI<kSocket4_SPISlaveSelectPinNumber> spi;
+HOT_DATA Motate::SPI<kSocket4_SPISlaveSelectPinNumber> spi;
 #endif
 
 
 //******** UART ********
 #if XIO_HAS_UART
-Motate::UART<Motate::kSerial_RXPinNumber, Motate::kSerial_TXPinNumber, Motate::kSerial_RTSPinNumber, Motate::kSerial_CTSPinNumber> Serial {115200, Motate::UARTMode::RTSCTSFlowControl};
+HOT_DATA Motate::UART<Motate::kSerial_RXPinNumber, Motate::kSerial_TXPinNumber, Motate::kSerial_RTSPinNumber, Motate::kSerial_CTSPinNumber> Serial {115200, Motate::UARTMode::RTSCTSFlowControl};
 #endif
 
 void board_hardware_init(void) // called 1st

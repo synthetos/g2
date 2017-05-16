@@ -110,7 +110,7 @@ struct Trinamic2130 final : Stepper {
     // We can leave this as is:
     // bool canStep() override { return true; };
 
-    void setMicrosteps(const uint8_t microsteps) override
+    void setMicrosteps(const uint16_t microsteps) override
     {
         switch (microsteps) {
             case (  0): { CHOPCONF.MRES = 0; break; } // 256
@@ -122,6 +122,7 @@ struct Trinamic2130 final : Stepper {
             case ( 32): { CHOPCONF.MRES = 3; break; }
             case ( 64): { CHOPCONF.MRES = 2; break; }
             case (128): { CHOPCONF.MRES = 1; break; }
+            case (256): { CHOPCONF.MRES = 0; break; }
             default: return;
         }
         CHOPCONF_needs_written = true;
@@ -400,17 +401,30 @@ struct Trinamic2130 final : Stepper {
     volatile bool CHOPCONF_needs_read;
     volatile bool CHOPCONF_needs_written;
 
-    struct {
+    union {
         volatile uint32_t value;
-        //        uint8_t bytes[4];
-    } COOLCONF; // 0x6D - READ ONLY
-    void _postReadCoolConf() {
-        COOLCONF.value = fromBigEndian(in_buffer.value);
-    };
+        volatile struct {
+            uint32_t semin               : 4; //  0 -  3
+            uint32_t                     : 1; //  4
+            uint32_t seup                : 2; //  5 -  6
+            uint32_t                     : 1; //  7
+            uint32_t semax               : 4; //  8 - 11
+            uint32_t                     : 1; // 12
+            uint32_t sedn                : 2; // 13 - 14
+            uint32_t seimin              : 1; // 15
+
+            uint32_t sgt                 : 7; // 16-22
+            uint32_t                     : 1; // 23
+            uint32_t sfilt               : 1; // 24
+        }  __attribute__ ((packed));
+    } COOLCONF; // 0x6D - WRITE ONLY
+//    void _postReadCoolConf() {
+//        COOLCONF.value = fromBigEndian(in_buffer.value);
+//    };
     void _prepWriteCoolConf() {
         out_buffer.value = toBigEndian(COOLCONF.value);
     };
-    volatile bool COOLCONF_needs_read;
+//    volatile bool COOLCONF_needs_read;
     volatile bool COOLCONF_needs_written;
 
     union {
@@ -485,7 +499,7 @@ struct Trinamic2130 final : Stepper {
         if (XDIRECT_needs_read)       { next_reg = XDIRECT_reg;    XDIRECT_needs_read = false;    } else
         if (MSCNT_needs_read)         { next_reg = MSCNT_reg;      MSCNT_needs_read = false;      } else
         if (CHOPCONF_needs_read)      { next_reg = CHOPCONF_reg;   CHOPCONF_needs_read = false;   } else
-        if (COOLCONF_needs_read)      { next_reg = COOLCONF_reg;   COOLCONF_needs_read = false;   } else
+//        if (COOLCONF_needs_read)      { next_reg = COOLCONF_reg;   COOLCONF_needs_read = false;   } else
         if (DRV_STATUS_needs_read)    { next_reg = DRV_STATUS_reg; DRV_STATUS_needs_read = false; } else
 
         // otherwise, check to see if we need to finish a read
@@ -518,7 +532,7 @@ struct Trinamic2130 final : Stepper {
                 case XDIRECT_reg:    _postReadXDirect(); break;
                 case MSCNT_reg:      _postReadMSCount(); break;
                 case CHOPCONF_reg:   _postReadChopConf(); break;
-                case COOLCONF_reg:   _postReadCoolConf(); break;
+//                case COOLCONF_reg:   _postReadCoolConf(); break;
                 case DRV_STATUS_reg: _postReadDriverStatus(); break;
 
                 default:
@@ -559,29 +573,59 @@ struct Trinamic2130 final : Stepper {
         TPOWERDOWN.value = 256;
         TPOWERDOWN_needs_written = true;
 
+        // With a nominal 12mhz clock, 1 "tick" is 1/12000000
+        // TSTEP ≥ TPWMTHRS -> go into stealthChop
+        // TSTEP is ticks-per-step, so higher TSTEP means slower motion
+        // So, to convert 50mm/s to TSTEP, with 40mm/rev (M) and 200fs/rev (f), we get:
+        //   - convert mm to revolutions:  r=(S/M)
+        //   - then revolutions to steps
+        //   - then steps to 1/256th microsteps: s=(r*f*256)
+        //   - then convert microsteps/sec to ticks/microstep: T=s/(1/12000000) == T=12000000/s
+        // T = 12000000/((S/M)*f*256); f=200; M=40; S=20  -> T=187.5
+        TPWMTHRS.value = 24;  // 400mm/s
+        TPWMTHRS_needs_written = true;
+        TCOOLTHRS.value = 10;  // 300mm/s
+        TCOOLTHRS_needs_written = true;
+        THIGH.value = 10;      // 300mm/s
+        THIGH_needs_written = true;
+
         XDIRECT.value = 0;
         XDIRECT_needs_written = true;
 
         VDCMIN.value = 0;
         VDCMIN_needs_written = true;
 
-        GCONF.en_pwm_mode = 1;
-        GCONF_needs_written = true;
+        GCONF.i_scale_analog      = 0;
+        GCONF.internal_Rsense     = 0;
+        GCONF.en_pwm_mode         = 1; // enable stealthChop™
+        GCONF.enc_commutation     = 0;
+        GCONF.shaft               = 0;
+        GCONF.diag0_error         = 0;
+        GCONF.diag0_otpw          = 0;
+        GCONF.diag0_stall         = 0;
+        GCONF.diag1_stall         = 0;
+        GCONF.diag1_index         = 0;
+        GCONF.diag1_onstate       = 0;
+        GCONF.diag1_steps_skipped = 0;
+        GCONF.diag0_int_pushpull  = 0;
+        GCONF.diag1_pushpull      = 0;
+        GCONF.small_hysteresis    = 0;
+        GCONF_needs_written       = true;
 
-        CHOPCONF.TOFF = 0x5;
+        CHOPCONF.TOFF = 0x4; // was 5 "For operation with stealthChop, this parameter is not used, but it is required to enable the motor."
         CHOPCONF.HSTRT_TFD012 = 0x4;
-        CHOPCONF.HEND_OFFSET = 0x1;
+        CHOPCONF.HEND_OFFSET = 0x0; // value is 0 for -3, 1 for -2, etc.
         CHOPCONF.TFD3 = 0x0;
         CHOPCONF.disfdcc = 0x0;
-        CHOPCONF.rndtf = 0x0;
+        CHOPCONF.rndtf = 0x0; // enable spreadCycle™
         CHOPCONF.chm = 0x0;
-        CHOPCONF.TBL = 0x2;
-        CHOPCONF.vsense = 0x1;
+        CHOPCONF.TBL = 0x1; // was 2
+        CHOPCONF.vsense = 0x1; // was 1
         CHOPCONF.vhighfs = 0x0;
         CHOPCONF.vhighchm = 0x0;
-        CHOPCONF.SYNC = 0x0;
+        CHOPCONF.SYNC = 5;
         CHOPCONF.MRES = 0x3;
-        CHOPCONF.intpol = 0x0;
+        CHOPCONF.intpol = 0;
         CHOPCONF.dedge = 0x0;
         CHOPCONF.diss2g = 0x0;
         //        CHOPCONF.TOFF = 8;
@@ -603,8 +647,8 @@ struct Trinamic2130 final : Stepper {
         CHOPCONF_needs_written = true;
 
         PWMCONF.PWM_AMPL = 200;
-        PWMCONF.PWM_GRAD = 1;
-        PWMCONF.pwm_freq = 0;
+        PWMCONF.PWM_GRAD = 5; // 0 - 15
+        PWMCONF.pwm_freq = 3; // approx 19MHz with the internal clock
         PWMCONF.pwm_autoscale = 1;
         PWMCONF.pwm_symmetric = 0;
         PWMCONF.freewheel = 0;
@@ -615,6 +659,16 @@ struct Trinamic2130 final : Stepper {
         //        PWMCONF.pwm_symmetric = 0;
         //        PWMCONF.freewheel = 0;
         PWMCONF_needs_written = true;
+
+        COOLCONF.semin =  1;  // enable coolstep and set min sg (1-15)
+        COOLCONF.semax = 15; // set coolstep max sg(0-15)
+        COOLCONF.seup =   3; // set coolstep up rate (0-3)
+        COOLCONF.sedn =   3; // set coolstep down rate (0-3)
+//        COOLCONF.sgt  =  64+(64-60); // set stallGuard threshold (-64 to 63) (-60)
+        COOLCONF.sgt  =   0; // set stallGuard threshold (-64 to 63) (63)
+        COOLCONF.seimin=  1; // minimum current setting (0 for 1/2 IRUN, or 1 for 1/4 IRUN)
+        COOLCONF.sfilt=   1; // enable stallGuard filtering (0 or 1)
+        COOLCONF_needs_written = true;
 
         IOIN_needs_read = true;
         MSCNT_needs_read = true;
@@ -634,7 +688,301 @@ struct Trinamic2130 final : Stepper {
             IOIN_needs_read = true;
             CHOPCONF_needs_read = true;
             DRV_STATUS_needs_read = true;
+            TSTEP_needs_read = true;
             _startNextReadWrite();
         }
     };
+
+
+    // NV interface helpers
+    stat_t get_ts(nvObj_t *nv) {
+        nv->value = TSTEP.value;
+        nv->valuetype = TYPE_INT;
+        return STAT_OK;
+    };
+    // no set
+
+    stat_t get_pth(nvObj_t *nv) {
+        nv->value = TPWMTHRS.value;
+        nv->valuetype = TYPE_INT;
+        return STAT_OK;
+    };
+    stat_t set_pth(nvObj_t *nv) {
+        int32_t v = nv->value;
+        if (v < 0) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+        }
+        if (v > 1048575) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+        }
+        TPWMTHRS.value = v;
+        TPWMTHRS_needs_written = true;
+        return STAT_OK;
+    };
+
+    stat_t get_cth(nvObj_t *nv) {
+        nv->value = TCOOLTHRS.value;
+        nv->valuetype = TYPE_INT;
+        return STAT_OK;
+    };
+    stat_t set_cth(nvObj_t *nv) {
+        int32_t v = nv->value;
+        if (v < 0) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+        }
+        if (v > 1048575) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+        }
+        TCOOLTHRS.value = v;
+        TCOOLTHRS_needs_written = true;
+        return STAT_OK;
+    };
+
+    stat_t get_hth(nvObj_t *nv) {
+        nv->value = THIGH.value;
+        nv->valuetype = TYPE_INT;
+        return STAT_OK;
+    };
+    stat_t set_hth(nvObj_t *nv) {
+        int32_t v = nv->value;
+        if (v < 0) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+        }
+        if (v > 1048575) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+        }
+        THIGH.value = v;
+        THIGH_needs_written = true;
+        return STAT_OK;
+    };
+
+    stat_t get_sgt(nvObj_t *nv) {
+        int32_t v = COOLCONF.sgt;
+        nv->value = (int32_t)(63&v)-(v&64);
+        nv->valuetype = TYPE_INT;
+        return STAT_OK;
+    };
+    stat_t set_sgt(nvObj_t *nv) {
+        int32_t v = nv->value;
+        if (v < -64) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+        }
+        if (v > 63) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+        }
+        COOLCONF.sgt = (v<0)?127&(64|((~(-v))+1)):v;
+        COOLCONF_needs_written = true;
+        return STAT_OK;
+    };
+
+    stat_t get_csa(nvObj_t *nv) {
+        nv->value = DRV_STATUS.CS_ACTUAL;
+        nv->valuetype = TYPE_INT;
+        return STAT_OK;
+    };
+    // no set
+
+    stat_t get_sgr(nvObj_t *nv) {
+        nv->value = DRV_STATUS.SG_RESULT;
+        nv->valuetype = TYPE_INT;
+        return STAT_OK;
+    };
+    // no set
+
+    stat_t get_sgs(nvObj_t *nv) {
+        nv->value = DRV_STATUS.stallGuard;
+        nv->valuetype = TYPE_BOOL;
+        return STAT_OK;
+    };
+    // no set
+
+
+    stat_t get_tbl(nvObj_t *nv) {
+        nv->value = CHOPCONF.TBL;
+        nv->valuetype = TYPE_INT;
+        return STAT_OK;
+    };
+    stat_t set_tbl(nvObj_t *nv) {
+        int32_t v = nv->value;
+        if (v < 0) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+        }
+        if (v > 3) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+        }
+        CHOPCONF.TBL = v;
+        CHOPCONF_needs_written = true;
+        return STAT_OK;
+    };
+
+    stat_t get_pgrd(nvObj_t *nv) {
+        nv->value = PWMCONF.PWM_GRAD;
+        nv->valuetype = TYPE_INT;
+        return STAT_OK;
+    };
+    stat_t set_pgrd(nvObj_t *nv) {
+        int32_t v = nv->value;
+        if (v < 0) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+        }
+        if (v > 15) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+        }
+        PWMCONF.PWM_GRAD = v;
+        PWMCONF_needs_written = true;
+        return STAT_OK;
+    };
+
+    stat_t get_pamp(nvObj_t *nv) {
+        nv->value = PWMCONF.PWM_AMPL;
+        nv->valuetype = TYPE_INT;
+        return STAT_OK;
+    };
+    stat_t set_pamp(nvObj_t *nv) {
+        int32_t v = nv->value;
+        if (v < 0) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+        }
+        if (v > 255) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+        }
+        PWMCONF.PWM_AMPL = v;
+        PWMCONF_needs_written = true;
+        return STAT_OK;
+    };
+
+    stat_t get_hend(nvObj_t *nv) {
+        nv->value = CHOPCONF.HEND_OFFSET;
+        nv->valuetype = TYPE_INT;
+        return STAT_OK;
+    };
+    stat_t set_hend(nvObj_t *nv) {
+        int32_t v = nv->value;
+        if (v < 0) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+        }
+        if (v > 15) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+        }
+        CHOPCONF.HEND_OFFSET = v;
+        CHOPCONF_needs_written = true;
+        return STAT_OK;
+    };
+
+    stat_t get_hsrt(nvObj_t *nv) {
+        nv->value = CHOPCONF.HSTRT_TFD012;
+        nv->valuetype = TYPE_INT;
+        return STAT_OK;
+    };
+    stat_t set_hsrt(nvObj_t *nv) {
+        int32_t v = nv->value;
+        if (v < 0) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+        }
+        if (v > 15) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+        }
+        CHOPCONF.HSTRT_TFD012 = v;
+        CHOPCONF_needs_written = true;
+        return STAT_OK;
+    };
+
+    stat_t get_smin(nvObj_t *nv) {
+        nv->value = COOLCONF.semin;
+        nv->valuetype = TYPE_INT;
+        return STAT_OK;
+    };
+    stat_t set_smin(nvObj_t *nv) {
+        int32_t v = nv->value;
+        if (v < 0) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+        }
+        if (v > 15) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+        }
+        COOLCONF.semin = v;
+        COOLCONF_needs_written = true;
+        return STAT_OK;
+    };
+
+    stat_t get_smax(nvObj_t *nv) {
+        nv->value = COOLCONF.semax;
+        nv->valuetype = TYPE_INT;
+        return STAT_OK;
+    };
+    stat_t set_smax(nvObj_t *nv) {
+        int32_t v = nv->value;
+        if (v < 0) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+        }
+        if (v > 15) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+        }
+        COOLCONF.semax = v;
+        COOLCONF_needs_written = true;
+        return STAT_OK;
+    };
+
+    stat_t get_sup(nvObj_t *nv) {
+        nv->value = COOLCONF.seup;
+        nv->valuetype = TYPE_INT;
+        return STAT_OK;
+    };
+    stat_t set_sup(nvObj_t *nv) {
+        int32_t v = nv->value;
+        if (v < 0) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+        }
+        if (v > 15) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+        }
+        COOLCONF.seup = v;
+        COOLCONF_needs_written = true;
+        return STAT_OK;
+    };
+
+    stat_t get_sdn(nvObj_t *nv) {
+        nv->value = COOLCONF.sedn;
+        nv->valuetype = TYPE_INT;
+        return STAT_OK;
+    };
+    stat_t set_sdn(nvObj_t *nv) {
+        int32_t v = nv->value;
+        if (v < 0) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+        }
+        if (v > 15) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+        }
+        COOLCONF.sedn = v;
+        COOLCONF_needs_written = true;
+        return STAT_OK;
+    };
+
 };

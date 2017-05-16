@@ -43,7 +43,7 @@ typedef Motate::USBDevice< Motate::USBCDC > XIOUSBDevice_t;
 typedef Motate::USBDevice<Motate::USBCDC, Motate::USBCDC> XIOUSBDevice_t;
 #endif
 
-extern XIOUSBDevice_t usb HOT_DATA;
+extern XIOUSBDevice_t usb;
 extern decltype(usb.mixin<0>::Serial)& SerialUSB;
 #if USB_SERIAL_PORTS_EXPOSED == 2
 extern decltype(usb.mixin<1>::Serial)& SerialUSB1;

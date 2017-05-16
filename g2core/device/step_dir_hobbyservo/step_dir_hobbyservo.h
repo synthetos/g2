@@ -75,7 +75,7 @@ struct StepDirHobbyServo final : Stepper {
 
     bool canStep() override { return true; };
 
-    void setMicrosteps(const uint8_t microsteps) override {
+    void setMicrosteps(const uint16_t microsteps) override {
         switch (microsteps) {
             case (1): {
                 _microsteps_per_step = 32;

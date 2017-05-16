@@ -34,28 +34,28 @@
 //             Motate::kSocket1_DirPinNumber,
 //             Motate::kSocket1_EnablePinNumber>
 //    motor_1{spiBus, spiCSPinMux.getCS(4)};
-Trinamic2130<SPIBus_used_t::SPIBusDevice,
+HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
              Motate::kSocket2_StepPinNumber,
              Motate::kSocket2_DirPinNumber,
              Motate::kSocket2_EnablePinNumber>
     motor_1{spiBus, spiCSPinMux.getCS(3)};
-Trinamic2130<SPIBus_used_t::SPIBusDevice,
+HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
              Motate::kSocket3_StepPinNumber,
              Motate::kSocket3_DirPinNumber,
              Motate::kSocket3_EnablePinNumber>
     motor_2{spiBus, spiCSPinMux.getCS(2)};
-Trinamic2130<SPIBus_used_t::SPIBusDevice,
+HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
              Motate::kSocket4_StepPinNumber,
              Motate::kSocket4_DirPinNumber,
              Motate::kSocket4_EnablePinNumber>
     motor_3{spiBus, spiCSPinMux.getCS(1)};
-Trinamic2130<SPIBus_used_t::SPIBusDevice,
+HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
              Motate::kSocket5_StepPinNumber,
              Motate::kSocket5_DirPinNumber,
              Motate::kSocket5_EnablePinNumber>
     motor_4{spiBus, spiCSPinMux.getCS(0)};
 
-StepDirHobbyServo<Motate::kServo1_PinNumber> motor_5;
+HOT_DATA StepDirHobbyServo<Motate::kServo1_PinNumber> motor_5;
 
 Stepper* Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5};
 //Stepper* Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5, &motor_6};

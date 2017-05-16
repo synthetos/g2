@@ -75,7 +75,7 @@ struct StepDirStepper final : Stepper  {
 
     bool canStep() override { return !_step.isNull(); };
 
-    void setMicrosteps(const uint8_t microsteps) override {
+    void setMicrosteps(const uint16_t microsteps) override {
         if (!_enable.isNull()) {
             switch (microsteps) {
                 case (1): {

@@ -40,6 +40,8 @@
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
 #define JUNCTION_INTEGRATION_TIME   1.0                    // cornering - between 0.10 and 2.00 (higher is faster)
+//{jt:1.0}
+//{jt:0.75}
 #define CHORDAL_TOLERANCE           0.01                    // chordal accuracy for arc drawing (in mm)
 
 #define SOFT_LIMIT_ENABLE           0                       // 0=off, 1=on
@@ -83,7 +85,7 @@
 //#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","he1t","he1st","he1at","he1op","pid1p","pid1i","pid1d","feed","vel","unit","path","stat"
 
 // Defaults for thermistor tuning
-#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","he1t","he1st","he1at","he1tr","he1tv","he1op","he2t","he2st","he2at","he2tr","he2tv","he2op","he3t","he3st","he3at","he3tr","he3tv","he3op","feed","vel","unit","path","stat","_fe1","_fe2","_fe3","_fe4","_xs1","_xs2","_xs3","_xs4"
+#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","he1t","he1st","he1at","he1tr","he1tv","he1op","he2t","he2st","he2at","he2tr","he2tv","he2op","he3t","he3st","he3at","he3tr","he3tv","he3op","feed","vel","unit","path","stat","1ts","2ts","1sgr","1sgs","2sgr","2sgs","_xs1","_xs2","_xs3","_xs4"
 //{sr:{"line":t,"posx":t,"posy":t,"posz":t,"posa":t,"he1t":t,"he1st":t,"he1at":t,"he1tr":t,"he1tv":t,"he1op":t,"he3t":t,"he3st":t,"he3at":t,"he3tr":t,"he3tv":t,"he3op":t,"feed":t,"vel":t,"unit":t,"path":t,"stat":t}}
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS         MILLIMETERS             // MILLIMETERS or INCHES
@@ -103,10 +105,14 @@
 #define M1_STEP_ANGLE               1.8                     // 1sa
 // Marlin says 80 steps/unit, and 16 microsteps, with a 200-step/rev motor
 #define M1_TRAVEL_PER_REV           40                      // 1tr
-#define M1_MICROSTEPS               128                     // 1mi        1,2,4,8,16,32
+#define M1_MICROSTEPS               128                      // 1mi        1,2,4,8,16,32
 #define M1_POLARITY                 0                       // 1po        0=normal, 1=reversed
 #define M1_POWER_MODE               MOTOR_POWERED_IN_CYCLE  // 1pm        standard
 #define M1_POWER_LEVEL              0.5                     // 1pl
+#define M1_TMC2130_TPWMTHRS         500                     // 1pth
+#define M1_TMC2130_TCOOLTHRS        200                     // 1cth
+#define M1_TMC2130_THIGH            100                     // 1hth
+#define M1_TMC2130_SGT              4                       // 1sgt
 
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
 #define M2_MOTOR_MAP                AXIS_Y
@@ -117,6 +123,10 @@
 #define M2_POLARITY                 1
 #define M2_POWER_MODE               MOTOR_POWERED_IN_CYCLE
 #define M2_POWER_LEVEL              0.5
+#define M2_TMC2130_TPWMTHRS         500
+#define M2_TMC2130_TCOOLTHRS        200
+#define M2_TMC2130_THIGH            100
+#define M2_TMC2130_SGT              4
 
 #define M3_MOTOR_MAP                AXIS_Z
 #define M3_STEP_ANGLE               1.8
@@ -126,6 +136,10 @@
 #define M3_POLARITY                 0
 #define M3_POWER_MODE               MOTOR_POWERED_IN_CYCLE
 #define M3_POWER_LEVEL              0.5
+#define M3_TMC2130_TPWMTHRS         500
+#define M3_TMC2130_TCOOLTHRS        200
+#define M3_TMC2130_THIGH            100
+#define M3_TMC2130_SGT              4
 
 #define M4_MOTOR_MAP                AXIS_A
 #define M4_STEP_ANGLE               1.8
@@ -134,6 +148,10 @@
 #define M4_POLARITY                 0
 #define M4_POWER_MODE               MOTOR_POWER_MODE
 #define M4_POWER_LEVEL              0.6
+#define M4_TMC2130_TPWMTHRS         500
+#define M4_TMC2130_TCOOLTHRS        200
+#define M4_TMC2130_THIGH            100
+#define M4_TMC2130_SGT              4
 
 #define M5_MOTOR_MAP                AXIS_B
 #define M5_STEP_ANGLE               1.8
@@ -142,11 +160,15 @@
 #define M5_POLARITY                 0
 #define M5_POWER_MODE               MOTOR_POWER_MODE
 #define M5_POWER_LEVEL              0.8
+#define M5_TMC2130_TPWMTHRS         500
+#define M5_TMC2130_TCOOLTHRS        200
+#define M5_TMC2130_THIGH            100
+#define M5_TMC2130_SGT              4
 
 // *** axis settings **********************************************************************************
 
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX              12000                   // xvm  G0 max velocity in mm/min
+#define X_VELOCITY_MAX              9000                   // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX                230                     // xtm  travel between switches or crashes
@@ -158,9 +180,11 @@
 #define X_LATCH_VELOCITY            200                     // xlv  mm/min
 #define X_LATCH_BACKOFF             10                       // xlb  mm
 #define X_ZERO_BACKOFF              0.5                     // xzb  mm
+//{xjm:5000}
+//{yjm:5000}
 
 #define Y_AXIS_MODE                 AXIS_STANDARD
-#define Y_VELOCITY_MAX              12000
+#define Y_VELOCITY_MAX              9000
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                224.5
@@ -188,8 +212,10 @@
 #define Z_LATCH_BACKOFF             5
 #define Z_ZERO_BACKOFF              0
 
-#define G55_Z_OFFSET                0.3 // higher number is farther away from the bed
-
+//#define G55_Z_OFFSET                0.3 // higher number is farther away from the bed
+// {g55z:0.3}
+#define G55_Z_OFFSET                0.25 // higher number is farther away from the bed
+// {g55z:0.25}
 
 // Rotary values are chosen to make the motor react the same as X for testing
 /***************************************************************************************
@@ -219,7 +245,7 @@
 //#define A_FEEDRATE_MAX          36110.8 // ~15 mm/s
 //#define A_FEEDRATE_MAX          24073.9 // ~10 mm/s
 //#define A_FEEDRATE_MAX          12036.95 // ~5 mm/s
-#define A_FEEDRATE_MAX          6018.475 // ~2.5 mm/s Testing: {afr:6018.475}
+#define A_FEEDRATE_MAX          6018.475 // ~2.5 mm/s Testing: {afr:800}
 //#define A_FEEDRATE_MAX          1000.0 // ~0.415 mm/s
 //#define A_FEEDRATE_MAX          800.0  // WORKS WELL
 //#define A_FEEDRATE_MAX          500.0 // ~0.2075 mm/s
@@ -227,7 +253,7 @@
 #define A_TRAVEL_MAX            10
 //#define A_JERK_MAX              288886.4 // ~120 million mm/min^3
 //#define A_JERK_MAX              144443.2 // ~60 million mm/min^3
-#define A_JERK_MAX              48147.7 // ~20 million mm/min^3
+#define A_JERK_MAX              48147.7 // ~20 million mm/min^3 {ajm:48147.7}
 #define A_HOMING_INPUT          0
 #define A_HOMING_DIRECTION      0
 #define A_SEARCH_VELOCITY       2000
@@ -252,7 +278,20 @@
 #define B_LATCH_BACKOFF         5
 #define B_ZERO_BACKOFF          2
 #define B_JERK_HIGH_SPEED       361108.0 // ~150 million mm/min^3
+//
+//{afr:6018.475}
+//{ajm:48147.7}
+//{xjm:8000}
+//{yjm:8000}
+//{xfr:3000}
+//{yfr:3000}
+//{1pl:0.25}
+//{2pl:0.25}
+//{4pl:0.35}
 
+//{1pl:0.6}
+//{2pl:0.6}
+//{4pl:0.6}
 
 //*** Input / output settings ***
 
