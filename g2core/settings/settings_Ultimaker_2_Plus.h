@@ -85,8 +85,8 @@
 //#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","he1t","he1st","he1at","he1op","pid1p","pid1i","pid1d","feed","vel","unit","path","stat"
 
 // Defaults for thermistor tuning
-//#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","he1t","he1st","he1at","he1op","he3t","he3st","he3at","he3op","feed","vel","unit","path","stat","1ts","1sgr","1csa","2ts","2sgr","2csa","3ts","3sgr","3csa","4ts","4sgr","4csa"
-#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","he1t","he1st","he1at","he1tr","he1tv","he1op","he2t","he2st","he2at","he2tr","he2tv","he2op","he3t","he3st","he3at","he3tr","he3tv","he3op","feed","vel","unit","path","stat","_xs1","_xs2","_xs3","_xs4"
+#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","he1t","he1st","he1at","he1op","he3t","he3st","he3at","he3op","feed","vel","unit","path","stat","1ts","1sgr","1csa","2ts","2sgr","2csa","3ts","3sgr","3csa","4ts","4sgr","4csa"
+//#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","he1t","he1st","he1at","he1tr","he1tv","he1op","he2t","he2st","he2at","he2tr","he2tv","he2op","he3t","he3st","he3at","he3tr","he3tv","he3op","feed","vel","unit","path","stat","_xs1","_xs2","_xs3","_xs4"
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS         MILLIMETERS             // MILLIMETERS or INCHES
 #define GCODE_DEFAULT_PLANE         CANON_PLANE_XY          // CANON_PLANE_XY, CANON_PLANE_XZ, or CANON_PLANE_YZ
@@ -98,6 +98,22 @@
 // *** motor settings ************************************************************************************
 
 #define MOTOR_POWER_TIMEOUT         30 // don't disable motors (without an explicit {md:0}) for 30 seconds
+
+#if 0
+
+{jt:1.2}
+
+{afr:1000}
+
+{jt:1.0}
+
+{afr:900}
+{sr:{"line":t,"posx":t,"posy":t,"posz":t,"posa":t,"he1t":t,"he1st":t,"he1at":t,"he1op":t,"he3t":t,"he3st":t,"he3at":t,"he3op":t,"feed":t,"vel":t,"stat":t,"1ts":t,"1sgr":t,"1csa":t,"2ts":t,"2sgr":t,"2csa":t,"3ts":t,"3sgr":t,"3csa":t,"4ts":t,"4sgr":t,"4csa":t}}
+
+{afr:2000}
+{afr:6000}
+
+#endif
 
 #define MOTOR_POWER_MODE            MOTOR_POWERED_IN_CYCLE  // default motor power mode (see cmMotorPowerMode in stepper.h)
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
@@ -119,7 +135,7 @@
 #define M1_TMC2130_HEND             0                       // 1hend
 #define M1_TMC2130_HSTRT            0                       // 1hsrt
 #define M1_TMC2130_SMIN             5                       // 1smin
-#define M1_TMC2130_SMAX             12                      // 1smax
+#define M1_TMC2130_SMAX             5                      // 1smax
 #define M1_TMC2130_SUP              2                       // 1sup
 #define M1_TMC2130_SDN              1                       // 1sdn
 
@@ -142,7 +158,7 @@
 #define M2_TMC2130_HEND             0
 #define M2_TMC2130_HSTRT            0
 #define M2_TMC2130_SMIN             5
-#define M2_TMC2130_SMAX             12
+#define M2_TMC2130_SMAX             5
 #define M2_TMC2130_SUP              2
 #define M2_TMC2130_SDN              1
 
@@ -213,7 +229,7 @@
 // *** axis settings **********************************************************************************
 
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX              9000                   // xvm  G0 max velocity in mm/min
+#define X_VELOCITY_MAX              8700                   // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX                230                     // xtm  travel between switches or crashes
@@ -229,7 +245,7 @@
 //{yjm:5000}
 
 #define Y_AXIS_MODE                 AXIS_STANDARD
-#define Y_VELOCITY_MAX              9000
+#define Y_VELOCITY_MAX              8700
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                224.5
@@ -257,8 +273,8 @@
 #define Z_LATCH_BACKOFF             5
 #define Z_ZERO_BACKOFF              0
 
-#define G55_Z_OFFSET                0.3 // higher number is farther away from the bed
-// {g55z:0.3}
+#define G55_Z_OFFSET                0.35 // higher number is farther away from the bed
+// {g55z:0.35}
 //#define G55_Z_OFFSET                0.25 // higher number is farther away from the bed
 // {g55z:0.25}
 
@@ -284,21 +300,25 @@
 //#define A_VELOCITY_MAX          288886.4
 //#define A_VELOCITY_MAX          144443.0  // G0 rate ~60 mm/s, 3,600 mm/min
 #define A_VELOCITY_MAX          72221.5  // G0 rate ~30 mm/s, 3,600 mm/min
-//define A_VELOCITY_MAX           48147.7 // G0 rate ~20 mm/s
+//NYLON
+//#define A_VELOCITY_MAX           30000.0 // G0 rate ~20 mm/s {avm:60000.0}
 
 //#define A_FEEDRATE_MAX          48147.7 // ~20 mm/s
 //#define A_FEEDRATE_MAX          36110.8 // ~15 mm/s
 //#define A_FEEDRATE_MAX          24073.9 // ~10 mm/s
 //#define A_FEEDRATE_MAX          12036.95 // ~5 mm/s
-//#define A_FEEDRATE_MAX          6018.475 // ~2.5 mm/s Testing: {afr:800}
-#define A_FEEDRATE_MAX          1000.0 // ~0.415 mm/s
-//#define A_FEEDRATE_MAX          800.0  // WORKS WELL
+//#define A_FEEDRATE_MAX          6018.475 // ~2.5 mm/s
+#define A_FEEDRATE_MAX          1000.0 // ~0.415 mm/s {afr:1000}
+// NYLON
+//#define A_FEEDRATE_MAX          800.0  // {afr:800}
 //#define A_FEEDRATE_MAX          500.0 // ~0.2075 mm/s
 #define A_TRAVEL_MIN            0
 #define A_TRAVEL_MAX            10
 //#define A_JERK_MAX              288886.4 // ~120 million mm/min^3
 //#define A_JERK_MAX              144443.2 // ~60 million mm/min^3
 #define A_JERK_MAX              48147.7 // ~20 million mm/min^3 {ajm:48147.7}
+//NYLON
+//#define A_JERK_MAX              25000.0 // ~20 million mm/min^3 {ajm:15000.0}
 #define A_HOMING_INPUT          0
 #define A_HOMING_DIRECTION      0
 #define A_SEARCH_VELOCITY       2000
@@ -307,7 +327,12 @@
 #define A_ZERO_BACKOFF          2
 //#define A_JERK_HIGH_SPEED       288886.4 // ~120 million mm/min^3
 //#define A_JERK_HIGH_SPEED       240739.0 // ~100 million mm/min^3
-#define A_JERK_HIGH_SPEED       144443.2 // ~60 million mm/min^3
+//#define A_JERK_HIGH_SPEED       144443.2 // ~60 million mm/min^3
+#define A_JERK_HIGH_SPEED         120000.0 // 
+//#define A_JERK_HIGH_SPEED        95000.0 // ~40 million mm/min^3
+// NYLON
+//#define A_JERK_HIGH_SPEED       35000.0 // ~30 million mm/min^3 {ajh:35000.0}
+
 
 #define B_AXIS_MODE             AXIS_RADIUS
 #define B_RADIUS                1.428
@@ -323,20 +348,22 @@
 #define B_LATCH_BACKOFF         5
 #define B_ZERO_BACKOFF          2
 #define B_JERK_HIGH_SPEED       361108.0 // ~150 million mm/min^3
-//
-//{afr:6018.475}
-//{ajm:48147.7}
-//{xjm:8000}
-//{yjm:8000}
-//{xfr:3000}
-//{yfr:3000}
-//{1pl:0.25}
-//{2pl:0.25}
-//{4pl:0.35}
 
-//{1pl:0.6}
-//{2pl:0.6}
-//{4pl:0.6}
+/* NYLON
+M100.1 ({{avm:90000.0}})
+M100.1 ({{afr:1000}})
+M100.1 ({{ajm:25000.0}})
+M100.1 ({{ajh:144000.0}})
+ 
+ {ajh:50000.0}
+ {ajh:60000.0}
+
+ {avm:90000.0}
+ {afr:1000}
+ {ajh:70000.0}
+ {ajm:25000.0}
+ {ajh:144000.0}
+ */
 
 //*** Input / output settings ***
 
@@ -518,6 +545,14 @@
 {he1i:0.005}
 {he1d:500}
 {he1f:0.0015}
+
+{he1fp:0.25}
+{out4:0.7}
+
+{he1fp:0.0}
+
+{he1fp:1.0}
+{out4:1.0}
 
 #endif
 
