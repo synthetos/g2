@@ -270,7 +270,7 @@
 #define Z_HOMING_DIRECTION          1
 #define Z_SEARCH_VELOCITY           1000
 #define Z_LATCH_VELOCITY            100
-#define Z_LATCH_BACKOFF             5
+#define Z_LATCH_BACKOFF             15
 #define Z_ZERO_BACKOFF              0
 
 #define G55_Z_OFFSET                0.35 // higher number is farther away from the bed
