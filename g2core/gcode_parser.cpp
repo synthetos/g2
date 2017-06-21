@@ -106,6 +106,7 @@ typedef enum {                                  // these are in order to optimiz
     NEXT_ACTION_MARLIN_REPORT_VERSION,          // M115
     NEXT_ACTION_MARLIN_DISPLAY_ON_SCREEN,       // M117
     NEXT_ACTION_MARLIN_SET_BED_TEMP,            // M140, M190
+    NEXT_ACTION_MARLIN_SET_JERK,                // M205
 #endif
 
 } gpNextAction;
@@ -851,6 +852,8 @@ stat_t _parse_gcode_block(char *buf, char *active_comment)
 
                 case 115: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_REPORT_VERSION);   // report version information
                 case 117: status = STAT_COMPLETE; break;  //SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_DISPLAY_ON_SCREEN);
+
+                case 205: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_SET_JERK);         // set jerk
 #endif // MARLIN_COMPAT_ENABLED
 
                 default: status = STAT_MCODE_COMMAND_UNSUPPORTED;
@@ -1218,7 +1221,25 @@ static stat_t _execute_gcode_block_marlin()
             break;
         }
         case NEXT_ACTION_MARLIN_RESET_LINE_NUMBERS:{        // M110
-            js.json_mode = MARLIN_COMM_MODE;                // we already did this above in if (gf.linenum) {}
+            js.json_mode = MARLIN_COMM_MODE;
+            return (STAT_OK);
+        }
+        case NEXT_ACTION_MARLIN_SET_JERK:{                  // M205
+            mst.marlin_flavor = true;                       // these gcodes are ONLY in marlin flavor
+            // example: M205 X20
+            // This should translate to, roughly, {xjm:5832} + {yjm:5832}
+            if (gf.target[AXIS_X]) {
+                gf.target[AXIS_X] = false; // make sure nothing else picks it up
+                gv.target[AXIS_X] = (gv.target[AXIS_X] * gv.target[AXIS_X] * gv.target[AXIS_X]) * 0.216; // (X^3 * 60^3) / 1000000
+                if (gv.target[AXIS_X] < JERK_INPUT_MIN) {
+                    return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+                }
+                if (gv.target[AXIS_X] > JERK_INPUT_MAX) {
+                    return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+                }
+                cm_set_axis_jerk(AXIS_X, gv.target[AXIS_X]);
+                cm_set_axis_jerk(AXIS_Y, gv.target[AXIS_X]);
+            }
             return (STAT_OK);
         }
         case NEXT_ACTION_DEFAULT: {
