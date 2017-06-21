@@ -169,7 +169,7 @@
 #define M3_MICROSTEPS               128
 #define M3_POLARITY                 0
 #define M3_POWER_MODE               MOTOR_POWERED_IN_CYCLE
-#define M3_POWER_LEVEL              0.4
+#define M3_POWER_LEVEL              0.8
 #define M3_TMC2130_TPWMTHRS         300
 #define M3_TMC2130_TCOOLTHRS        200
 #define M3_TMC2130_THIGH            10
@@ -260,17 +260,17 @@
 
 #define Z_AXIS_MODE                 AXIS_STANDARD
 #define Z_VELOCITY_MAX              1500
-#define Z_FEEDRATE_MAX              Z_VELOCITY_MAX
+#define Z_FEEDRATE_MAX              1000
 #define Z_TRAVEL_MIN                0
 #define Z_TRAVEL_MAX                215
-//#define Z_JERK_MAX                  500
-#define Z_JERK_MAX                  800
+#define Z_JERK_MAX                  500
+//#define Z_JERK_MAX                  800
 #define Z_JERK_HIGH_SPEED           1000
 #define Z_HOMING_INPUT              6
 #define Z_HOMING_DIRECTION          1
 #define Z_SEARCH_VELOCITY           1000
 #define Z_LATCH_VELOCITY            100
-#define Z_LATCH_BACKOFF             15
+#define Z_LATCH_BACKOFF             10
 #define Z_ZERO_BACKOFF              0
 
 #define G55_Z_OFFSET                0.35 // higher number is farther away from the bed
@@ -308,7 +308,7 @@
 //#define A_FEEDRATE_MAX          24073.9 // ~10 mm/s
 //#define A_FEEDRATE_MAX          12036.95 // ~5 mm/s
 //#define A_FEEDRATE_MAX          6018.475 // ~2.5 mm/s
-#define A_FEEDRATE_MAX          1000.0 // ~0.415 mm/s {afr:1000}
+#define A_FEEDRATE_MAX          3000.0 // ~0.415 mm/s {afr:1000}
 // NYLON
 //#define A_FEEDRATE_MAX          800.0  // {afr:800}
 //#define A_FEEDRATE_MAX          500.0 // ~0.2075 mm/s
@@ -316,7 +316,7 @@
 #define A_TRAVEL_MAX            10
 //#define A_JERK_MAX              288886.4 // ~120 million mm/min^3
 //#define A_JERK_MAX              144443.2 // ~60 million mm/min^3
-#define A_JERK_MAX              48147.7 // ~20 million mm/min^3 {ajm:48147.7}
+#define A_JERK_MAX              40000.0 // ~20 million mm/min^3 {ajm:48147.7}
 //NYLON
 //#define A_JERK_MAX              25000.0 // ~20 million mm/min^3 {ajm:15000.0}
 #define A_HOMING_INPUT          0
