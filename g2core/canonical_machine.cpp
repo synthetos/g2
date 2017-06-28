@@ -2545,18 +2545,17 @@ static const float _junction_accel_multiplier = sqrt(3.0)/10.0;
 
 // Important note: Actual jerk is stored jerk * JERK_MULTIPLIER, and
 // Time Quanta is junction_integration_time / 1000.
+// We no longer incorporate jerk into this, since it can be channged per-move.
 void _cm_recalc_max_junction_accel(const uint8_t axis) {
     float T = cm.junction_integration_time / 1000.0;
     float T2 = T*T;
 
-    cm.a[axis].max_junction_accel = _junction_accel_multiplier * T2 * (cm.a[axis].jerk_max * JERK_MULTIPLIER);
+    cm.a[axis].max_junction_accel = _junction_accel_multiplier * T2 * JERK_MULTIPLIER;
 }
 
 void cm_set_axis_jerk(const uint8_t axis, const float jerk)
 {
     cm.a[axis].jerk_max = jerk;
-    // Must recalculate the max_junction_accel now that the jerk has changed.
-    _cm_recalc_max_junction_accel(axis);
 }
 
 stat_t cm_set_vm(nvObj_t *nv)
