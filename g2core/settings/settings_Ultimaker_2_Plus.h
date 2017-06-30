@@ -169,7 +169,7 @@
 #define M3_MICROSTEPS               128
 #define M3_POLARITY                 0
 #define M3_POWER_MODE               MOTOR_POWERED_IN_CYCLE
-#define M3_POWER_LEVEL              0.8
+#define M3_POWER_LEVEL              0.6
 #define M3_TMC2130_TPWMTHRS         300
 #define M3_TMC2130_TCOOLTHRS        200
 #define M3_TMC2130_THIGH            10
@@ -308,7 +308,7 @@
 //#define A_FEEDRATE_MAX          24073.9 // ~10 mm/s
 //#define A_FEEDRATE_MAX          12036.95 // ~5 mm/s
 //#define A_FEEDRATE_MAX          6018.475 // ~2.5 mm/s
-#define A_FEEDRATE_MAX          3000.0 // ~0.415 mm/s {afr:1000}
+#define A_FEEDRATE_MAX          3000.0 // ~0.415 mm/s {afr:2000}
 // NYLON
 //#define A_FEEDRATE_MAX          800.0  // {afr:800}
 //#define A_FEEDRATE_MAX          500.0 // ~0.2075 mm/s
@@ -535,8 +535,8 @@ M100.1 ({{ajh:144000.0}})
 // PID debug string: {sr:{"he1t":t,"he1st":t,"pid1p":t, "pid1i":t, "pid1d":t, "pid1f":t, "he1op":t, "line":t, "stat":t}}
 
 #define H1_DEFAULT_ENABLE           true
-#define H1_DEFAULT_P                2
-#define H1_DEFAULT_I                0.005
+#define H1_DEFAULT_P                5
+#define H1_DEFAULT_I                0.01
 #define H1_DEFAULT_D                500
 #define H1_DEFAULT_F                0.0015
 #if 0
@@ -563,7 +563,9 @@ M100.1 ({{ajh:144000.0}})
 #define H2_DEFAULT_F                0.0
 
 #define H3_DEFAULT_ENABLE           true
-#define H3_DEFAULT_P                9.0
-#define H3_DEFAULT_I                0.012
+#define H3_DEFAULT_P                20.0
+#define H3_DEFAULT_I                0.05
 #define H3_DEFAULT_D                50
 #define H3_DEFAULT_F                0.0015
+
+#define TEMP_MIN_BED_RISE_DEGREES_OVER_TIME 0.1
