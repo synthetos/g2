@@ -328,6 +328,9 @@ struct mpBuffer_to_clear {
     float unit[AXES];               // unit vector for axis scaling & planning
     bool axis_flags[AXES];          // set true for axes participating in the move & for command parameters
 
+    float junction_unit[AXES];      // unit vector delta at the junction for cornering. Needed for groups of small moves.
+    float junction_length_since;    // length total of the moves since the junction_unit was captured. See _calculate_junction_vmax() comments.
+
     bool plannable;                 // set true when this block can be used for planning
 
     float length;                   // total length of line or helix in mm
@@ -379,6 +382,8 @@ struct mpBuffer_to_clear {
 
         for (uint8_t i = 0; i< AXES; i++) {
             unit[i] = 0;
+            junction_unit[i] = 0;
+            junction_length_since = 0;
             axis_flags[i] = 0;
         }
 

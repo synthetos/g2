@@ -29,6 +29,7 @@
  */
 
 #include "config.h"
+#include "settings.h"
 #include "error.h"
 
 #ifndef HARDWARE_H_ONCE
@@ -58,12 +59,23 @@ enum hwPlatform {
 
 #define AXES        6           // number of axes supported in this version
 #define HOMING_AXES 4           // number of axes that can be homed (assumes Zxyabc sequence)
+#if defined(USING_A_MAX31865) && USING_A_MAX31865 == 1
+#define MOTORS      5           // number of motors on the board - 4 Trinamics + 1 servo
+#else
 #define MOTORS      6           // number of motors on the board - 5 Trinamics + 1 servo
+#endif
 #define COORDS      6           // number of supported coordinate systems (index starts at 1)
 #define PWMS        2           // number of supported PWM channels
 #define TOOLS       32          // number of entries in tool table (index starts at 1)
 
-
+#define MOTOR_1_IS_TRINAMIC
+#define MOTOR_2_IS_TRINAMIC
+#define MOTOR_3_IS_TRINAMIC
+#define MOTOR_4_IS_TRINAMIC
+#if defined(USING_A_MAX31865) && USING_A_MAX31865 == 1
+#else
+#define MOTOR_5_IS_TRINAMIC
+#endif
 ////////////////////////////
 /////// ARM VERSION ////////
 ////////////////////////////
@@ -121,12 +133,12 @@ using Motate::OutputPin;
 /**** Stepper DDA and dwell timer settings ****/
 
 //#define FREQUENCY_DDA    200000UL    // Hz step frequency. Interrupts actually fire at 2x (400 KHz)
-#define FREQUENCY_DDA 400000UL  // Hz step frequency. Interrupts actually fire at 2x (300 KHz)
-#define FREQUENCY_DWELL 1000UL
+#define FREQUENCY_DDA  400000UL  // Hz step frequency. Interrupts actually fire at 2x (300 KHz)
+#define FREQUENCY_DWELL  1000UL
 
 #define MIN_SEGMENT_MS ((float)0.125)       // S70 can handle much much smaller segements
 
-#define PLANNER_BUFFER_POOL_SIZE (96)
+#define PLANNER_BUFFER_POOL_SIZE (60)
 
 /**** Motate Definitions ****/
 

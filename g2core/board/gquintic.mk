@@ -16,7 +16,12 @@ ifeq ("$(BOARD)","gquintic-b")
     BASE_BOARD=gquintic
     DEVICE_DEFINES += MOTATE_BOARD="gquintic-b"
     DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
-    DEVICE_DEFINES += SERVO_MOTOR=6
+endif
+
+ifeq ("$(BOARD)","gquintic-c")
+    BASE_BOARD=gquintic
+    DEVICE_DEFINES += MOTATE_BOARD="gquintic-c"
+    DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
 endif
 
 

@@ -254,6 +254,10 @@
 #ifndef STEPPER_H_ONCE
 #define STEPPER_H_ONCE
 
+#define NEW_DDA 1
+
+#include "MotateUtilities.h" // for HOT_DATA and HOT_FUNC
+
 #include "planner.h"    // planner.h must precede stepper.h for moveType typedef
 
 /*********************************
@@ -309,7 +313,11 @@ typedef enum {
  *  The ARM is roughly the same as the DDA clock rate is 4x higher but the segment time is ~1/5
  *  Decreasing the nominal segment time increases the number precision.
  */
+#if NEW_DDA == 1
+#define DDA_SUBSTEPS (2147483600L)
+#else
 #define DDA_SUBSTEPS ((MAX_LONG * 0.90) / (FREQUENCY_DDA * (NOM_SEGMENT_TIME * 60)))
+#endif
 
 /* Step correction settings
  *
@@ -346,9 +354,9 @@ typedef enum {
 
 typedef struct cfgMotor {                   // per-motor configs
     // public
-    uint8_t motor_map;                      // map motor to axis
-    uint8_t microsteps;                     // microsteps to apply for each axis (ex: 8)
-    uint8_t polarity;                       // 0=normal polarity, 1=reverse motor direction
+    uint8_t  motor_map;                     // map motor to axis
+    uint32_t microsteps;                    // microsteps to apply for each axis (ex: 8)
+    uint8_t  polarity;                      // 0=normal polarity, 1=reverse motor direction
     float power_level;                      // set 0.000 to 1.000 for PMW vref setting
     float step_angle;                       // degrees per whole step (ex: 1.8)
     float travel_rev;                       // mm or deg of travel per motor revolution
@@ -375,7 +383,11 @@ typedef struct stRunSingleton {             // Stepper static values and axis pa
     magic_t magic_start;                    // magic number to test memory integrity
     uint32_t dda_ticks_downcount;           // dda tick down-counter (unscaled)
     uint32_t dwell_ticks_downcount;         // dwell tick down-counter (unscaled)
+#if NEW_DDA == 1
+    uint32_t dda_steps_tick_X_substeps;     // DDA substps per tick scaled by substep factor
+#else
     uint32_t dda_ticks_X_substeps;          // ticks multiplied by scaling factor
+#endif
     stRunMotor_t mot[MOTORS];               // runtime motor structures
     magic_t magic_end;
 } stRunSingleton_t;
@@ -409,8 +421,12 @@ typedef struct stPrepSingleton {
     blockType block_type;                   // move type (requires planner.h)
 
     uint32_t dda_ticks;                     // DDA ticks for the move
+    float dda_ticks_holdover;               // partial DDA ticks from previous segment
     uint32_t dwell_ticks;                   // dwell ticks remaining
+#if NEW_DDA == 1
+#else
     uint32_t dda_ticks_X_substeps;          // DDA ticks scaled by substep factor
+#endif
     stPrepMotor_t mot[MOTORS];              // prep time motor structs
     magic_t magic_end;
 } stPrepSingleton_t;
@@ -426,6 +442,7 @@ struct Stepper {
     uint32_t _motor_disable_timeout_ms;     // the number of ms that the timeout is reset to
     stPowerState _power_state;              // state machine for managing motor power
     stPowerMode _power_mode;                // See stPowerMode for values
+    bool _was_enabled;                      // store if we enabled a motor to handle timout setup outside of load
 
     /* stepper default values */
 
@@ -473,8 +490,9 @@ struct Stepper {
 //    };
     
     // turn on motor in all cases unless it's disabled
-    // NOTE: in the future the default assigned timeout will be the motor's default value
-    void enable(float timeout = st_cfg.motor_power_timeout)
+    // this version is called from the loader, and explicitly does NOT have floating point computations
+    // HOT - called from the DDA interrupt
+    void enable() HOT_FUNC
     {
         if (_power_mode == MOTOR_DISABLED) {
             return;
@@ -482,14 +500,30 @@ struct Stepper {
         this->_enableImpl();
         _power_state = MOTOR_RUNNING;
 
+        _was_enabled = true; // flag to handle it in the periodic call
+    };
+
+    // turn on motor in all cases unless it's disabled
+    // this version has the timeout computed here, as provided
+    void enable(float timeout) HOT_FUNC
+    {
+        if (_power_mode == MOTOR_DISABLED) {
+            return;
+        }
+        this->_enableImpl();
+        _power_state = MOTOR_RUNNING;
+        _was_enabled = false; // we're doing it here, so don't do it elsewhere
+
         if ((uint8_t)timeout == 0) {
             timeout = st_cfg.motor_power_timeout;
         }
         _motor_disable_timeout_ms = timeout * 1000.0;
+
     };
 
     // turn off motor in all cases unless it's permanently enabled
-    void disable()
+    // HOT - called from the DDA interrupt
+    void disable() HOT_FUNC
     {
         if (this->getPowerMode() == MOTOR_ALWAYS_POWERED) {
             return;
@@ -500,7 +534,8 @@ struct Stepper {
     };
     
     // turn off motor is only powered when moving
-    void motionStopped() {
+    // HOT - called from the DDA interrupt
+    void motionStopped() HOT_FUNC {
         if (_power_mode == MOTOR_POWERED_IN_CYCLE) {
             this->enable();
             _power_state = MOTOR_POWER_TIMEOUT_START;
@@ -513,6 +548,10 @@ struct Stepper {
     
     virtual void periodicCheck(bool have_actually_stopped) // can be overridden
     {
+        if (_was_enabled) {
+            _motor_disable_timeout_ms = st_cfg.motor_power_timeout * 1000.0;
+        }
+
         if (have_actually_stopped && _power_state == MOTOR_RUNNING) {
             _power_state = MOTOR_POWER_TIMEOUT_START;    // ...start motor power timeouts
         }
@@ -541,10 +580,10 @@ struct Stepper {
     virtual bool canStep() { return true; };
     virtual void _enableImpl() { /* must override */ };
     virtual void _disableImpl() { /* must override */ };
-    virtual void stepStart() { /* must override */ };
-    virtual void stepEnd() { /* must override */ };
-    virtual void setDirection(uint8_t new_direction) { /* must override */ };
-    virtual void setMicrosteps(const uint8_t microsteps) { /* must override */ };
+    virtual void stepStart() HOT_FUNC { /* must override */ }; // HOT - called from the DDA interrupt
+    virtual void stepEnd() HOT_FUNC { /* must override */ };   // HOT - called from the DDA interrupt
+    virtual void setDirection(uint8_t new_direction) HOT_FUNC { /* must override */ }; // HOT - called from the DDA interrupt
+    virtual void setMicrosteps(const uint16_t microsteps) { /* must override */ };
     virtual void setPowerLevel(float new_pl) { /* must override */ };
 };
 

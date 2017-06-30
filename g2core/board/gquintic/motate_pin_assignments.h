@@ -137,12 +137,13 @@ pin_number kInput4_PinNumber = 103;
 pin_number kInput5_PinNumber = 104;
 pin_number kInput6_PinNumber = 105;
 
-pin_number kInput7_PinNumber  = 106;
-pin_number kInput8_PinNumber  = 107;
-pin_number kInput9_PinNumber  = 108;
-pin_number kInput10_PinNumber = 109;
-pin_number kInput11_PinNumber = 110;
-pin_number kInput12_PinNumber = 111;
+pin_number kInput7_PinNumber        = 106;
+pin_number kInput8_PinNumber        = 107;
+pin_number kInput9_PinNumber        = 108;
+pin_number kInput10_PinNumber       = 109;
+pin_number kInput11_PinNumber       = 110;
+pin_number kInput12_PinNumber       = -1;
+pin_number kTMC2130_DIAG0_pinNumber = 111;
 
 // START DEBUG PINS - Convenient pins to hijack for hardware debugging
 // To reuse a pin for debug change the original pin number to -1
@@ -179,8 +180,10 @@ pin_number kGRBL_CommonEnablePinNumber = -1;
 
 // g2ref extensions
 // These first 5 may replace the Spindle and Coolant pins, above
-pin_number kOutput1_PinNumber = 130;  // DO_1: Extruder1_PWM
-pin_number kOutput2_PinNumber = 131;  // DO_2: Extruder2_PWM
+pin_number kHeaterOutput1_PinNumber = 130;  // DO_1: Extruder1_PWM
+pin_number kHeaterOutput2_PinNumber = 131;  // DO_2: Extruder2_PWM
+pin_number kOutput1_PinNumber = -1;  // DO_1: Extruder1_PWM
+pin_number kOutput2_PinNumber = -1;  // DO_2: Extruder2_PWM
 pin_number kOutput3_PinNumber = 132;  // DO_3: Fan1A_PWM
 pin_number kOutput4_PinNumber = 133;  // DO_4: Fan1B_PWM
 pin_number kOutput5_PinNumber = 134;  // DO_5: Fan2A_PWM
@@ -191,28 +194,20 @@ pin_number kOutput8_PinNumber  = 137;  // See Coolant Enable
 pin_number kOutput9_PinNumber  = 138;  // DO_09: May be resued for Servo1
 pin_number kOutput10_PinNumber = 139;  // DO_10: May be resued for Servo2
 
-pin_number kOutput11_PinNumber = 140;  // DO_11: Heated Bed FET
+pin_number kHeaterOutput11_PinNumber = 140;  // DO_11: Heated Bed FET
+pin_number kOutput11_PinNumber = -1;   // DO_11: Heated Bed FET
 pin_number kOutput12_PinNumber = 141;  // DO_12: Indicator_LED
 pin_number kOutput13_PinNumber = -1;   // 142;
 pin_number kOutput14_PinNumber = -1;   // 143;
 pin_number kOutput15_PinNumber = -1;   // 144;
 pin_number kOutput16_PinNumber = -1;   // 145;
 
-pin_number kADC1_PinNumber  = 150;  // Heated bed thermistor ADC
-pin_number kADC2_PinNumber  = 151;  // Extruder1_ADC
-pin_number kADC3_PinNumber  = 152;  // Extruder2_ADC
-pin_number kADC4_PinNumber  = 153;  // Aux ADC
-pin_number kADC5_PinNumber  = 154;  // Not physically pinned out
-pin_number kADC6_PinNumber  = 155;  // Not physically pinned out
-pin_number kADC7_PinNumber  = 156;  // Not physically pinned out
-pin_number kADC8_PinNumber  = 157;  // Not physically pinned out
-pin_number kADC9_PinNumber  = 158;  // Not physically pinned out
-pin_number kADC10_PinNumber = 159;  // Not physically pinned out
-pin_number kADC11_PinNumber = 160;  // Not physically pinned out
-pin_number kADC12_PinNumber = 161;  // Not physically pinned out
-pin_number kADC13_PinNumber = 162;  // Not physically pinned out
-pin_number kADC14_PinNumber = 163;  // Not physically pinned out
-pin_number kADC15_PinNumber = 164;  // Not physically pinned out
+pin_number kADC1_Pos_PinNumber  = 150;  // Extruder1_ADC
+pin_number kADC1_Neg_PinNumber  = 151;  // Extruder1_ADC
+pin_number kADC2_Pos_PinNumber  = 152;  // Extruder2_ADC
+pin_number kADC2_Neg_PinNumber  = 153;  // Extruder2_ADC
+pin_number kADC3_Pos_PinNumber  = 154;  // Heated bed thermistor ADC
+pin_number kADC3_Neg_PinNumber  = 155;  // Heated bed thermistor ADC
 
 pin_number kExternalClock1_PinNumber = 170;  // External pins for exporting a clock signal (for Trinamics)
 
