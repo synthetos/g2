@@ -168,6 +168,15 @@ ifeq ("$(CONFIG)","AxiDrawv3")
     SETTINGS_FILE="settings_axidraw_v3.h"
 endif
 
+##########
+# Ender config:
+# http://www.gearbest.com/3d-printers-3d-printer-kits/pp_620372.html
+
+ifeq ("$(CONFIG)","Quintic-Ender")
+   ifeq ("$(BOARD)","NONE")
+       BOARD=gquintic-c
+   endif
+   SETTINGS_FILE="settings_ender.h"
+endif
 
 include $(wildcard ./board/$(STAR).mk)
-
