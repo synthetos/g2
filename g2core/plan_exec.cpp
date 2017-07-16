@@ -50,17 +50,17 @@ static void _init_forward_diffs(float v_0, float v_1);
  * mp_forward_plan() - plan commands and moves ahead of exec; call ramping for moves
  *
  **** WARNING ****
- * This function should NOT be called directly! 
- * Instead call st_request_forward_plan(), which mediates access. 
+ * This function should NOT be called directly!
+ * Instead call st_request_forward_plan(), which mediates access.
  *
- *  mp_forward_plan() performs just-in-time forward planning immediately before 
- *  lines and commands are queued to the move execution runtime (exec). 
+ *  mp_forward_plan() performs just-in-time forward planning immediately before
+ *  lines and commands are queued to the move execution runtime (exec).
  *  Unlike backward planning, buffers are only forward planned once.
  *
  *  mp_forward_plan() is called aggressively via st_request_forward_plan().
  *  It has a relatively low interrupt level to call its own.
  *  See also: Planner Overview notes in planner.h
- * 
+ *
  *  It examines the currently running buffer and its adjacent buffers to:
  *
  *  - Stop the system from re-planning or planning something that's not prepped
@@ -68,43 +68,43 @@ static void _init_forward_diffs(float v_0, float v_1);
  *  - Skip past/ or pre-plan COMMAND blocks while labeling them as PLANNED
  *
  *  Returns:
- *   - STAT_OK if exec should be called to kickstart (or continue) movement 
+ *   - STAT_OK if exec should be called to kickstart (or continue) movement
  *   - STAT_NOOP to exit with no action taken (do not call exec)
  */
 /*
  * --- Forward Planning Processing and Cases ---
- *    
- *  These cases describe all possible sequences of buffers in the planner queue starting 
+ *
+ *  These cases describe all possible sequences of buffers in the planner queue starting
  *  with the currently executing (or about to execute) Run buffer, looking forward
- *  to more recently arrived buffers. In most cases only one or two buffers need to 
- *  be examined, but contiguous groups of commands may need to be processed. 
+ *  to more recently arrived buffers. In most cases only one or two buffers need to
+ *  be examined, but contiguous groups of commands may need to be processed.
  *
  * 'Running' cases are where the run buffer state is RUNNING. Bootstrap handles all other cases.
  * 'Bootstrap' occurs during the startup phase where moves are collected before starting movement.
  *  Conditions that are impossible based on this definition are not listed in the tables below.
  *
- *  See planner.h / bufferState enum for shorthand used in the descriptions. 
+ *  See planner.h / bufferState enum for shorthand used in the descriptions.
  *  All cases assume a mix of moves and commands, as noted in the shorthand.
- *  All cases assume 2 'blocks' - Run block & Plan block. Cases will need to be 
- *  revisited and generalized if more blocks are used in the future (deeper 
+ *  All cases assume 2 'blocks' - Run block & Plan block. Cases will need to be
+ *  revisited and generalized if more blocks are used in the future (deeper
  *  forward planning).
  *
  *  'NOT_PREPPED' refers to any preliminary state below PREPPED, i.e. < PREPPED.
  * ' NOT_PREPPED' can be either a move or command, we don't care so it's not specified.
  *
  *  'COMMAND' or 'COMMAND(s)' refers to one command or a contiguous group of command buffers
- *  that may be in PREPPED or PLANNED states. Processing is always the same. Plan all 
+ *  that may be in PREPPED or PLANNED states. Processing is always the same. Plan all
  *  PREPPED commands and skip past all PLANNED commands.
  *
- *  Note 1: For MOVEs use the exit velocity of the Run block (mr.r->exit_velocity) as the 
+ *  Note 1: For MOVEs use the exit velocity of the Run block (mr.r->exit_velocity) as the
  *  entry velocity of the next adjacent move.
  *
- *  Note 1a: In this special COMMAND case we trust mr.r->exit_velocity  because the 
+ *  Note 1a: In this special COMMAND case we trust mr.r->exit_velocity  because the
  *  backplanner has already handled this case for us.
  *
  *  Note 2: For COMMANDs use the entry velocity of the current runtime (mr.entry_velocity)
- *  as the entry velocity for the next adjacent move. mr.entry_velocity is almost always 0, 
- *  but could be non-0 in a race condition. 
+ *  as the entry velocity for the next adjacent move. mr.entry_velocity is almost always 0,
+ *  but could be non-0 in a race condition.
  *  FYI: mr.entry_velocity is set at the end of the last running block in mp_exec_aline().
  *
  *
@@ -197,7 +197,7 @@ stat_t mp_forward_plan()
 {
     mpBuf_t *bf = mp_get_run_buffer();
     float entry_velocity;
-    
+
     // Case 0: Examine current running buffer for early exit conditions
     if (bf == NULL) {                               // case 0a: NULL means nothing is running - this is OK
         st_prep_null();
@@ -221,11 +221,11 @@ stat_t mp_forward_plan()
         // bf now points to the first non-command buffer past the command(s)
         if ((bf->block_type == BLOCK_TYPE_ALINE) && (bf->buffer_state > MP_BUFFER_PREPPED )) { // case 1i
             entry_velocity = mr.r->exit_velocity;   // set entry_velocity for Note 1a
-        }        
-    } 
+        }
+    }
     // bf will always be on a non-command at this point - either a move or empty buffer
 
-    // process move                           
+    // process move
     if (bf->block_type == BLOCK_TYPE_ALINE) {       // do cases 1a - 1e; finish cases 1f - 1k
         if (bf->buffer_state == MP_BUFFER_PREPPED) {// do 1a; finish 1f, 1j, 2d, 2i
             return (_plan_move(bf, entry_velocity));
@@ -322,12 +322,12 @@ stat_t mp_exec_move()
  *     STAT_NOOP      cause no operation from the steppers - do not load the move
  *     STAT_xxxxx     fatal error. Ends the move and frees the bf buffer
  *
- *  This routine is called from the (LO) interrupt level. The interrupt sequencing 
- *  relies on the behaviors of the routines being exactly correct. Each call to 
- *  _exec_aline() must execute and prep *one and only one* segment. If the segment 
- *  is the not the last segment in the bf buffer the _aline() must return STAT_EAGAIN. 
- *  If it's the last segment it must return STAT_OK. If it encounters a fatal error 
- *  that would terminate the move it should return a valid error code. Failure to 
+ *  This routine is called from the (LO) interrupt level. The interrupt sequencing
+ *  relies on the behaviors of the routines being exactly correct. Each call to
+ *  _exec_aline() must execute and prep *one and only one* segment. If the segment
+ *  is the not the last segment in the bf buffer the _aline() must return STAT_EAGAIN.
+ *  If it's the last segment it must return STAT_OK. If it encounters a fatal error
+ *  that would terminate the move it should return a valid error code. Failure to
  *  obey this will introduce subtle and very difficult to diagnose bugs (trust us on this).
  *
  *   Note 1: Returning STAT_OK ends the move and frees the bf buffer.
@@ -358,26 +358,26 @@ stat_t mp_exec_move()
  */
 /* Synchronization of run BUFFER and run BLOCK
  *
- * Note first: mp_exec_aline() makes a huge assumption: When it comes time to get a 
- *  new run block (mr.r) it assumes the planner block (mr.p) has been fully planned 
+ * Note first: mp_exec_aline() makes a huge assumption: When it comes time to get a
+ *  new run block (mr.r) it assumes the planner block (mr.p) has been fully planned
  *  via the JIT forward planning and is ready for use as the new run block.
  *
- * The runtime uses 2 structures for the current move or commend, the run BUFFER 
- *  from the planner queue (mb.r, aka bf), and the run BLOCK from the runtime 
- *  singleton (mr.r). These structures are synchronized implicitly, but not 
- *  explicitly referenced, as pointers can lead to race conditions. 
+ * The runtime uses 2 structures for the current move or commend, the run BUFFER
+ *  from the planner queue (mb.r, aka bf), and the run BLOCK from the runtime
+ *  singleton (mr.r). These structures are synchronized implicitly, but not
+ *  explicitly referenced, as pointers can lead to race conditions.
  *  See plan_zoid.cpp / mp_calculate_ramps() for more details
  *
- * When mp_exec_aline() needs to grab a new planner buffer for a new move or command 
+ * When mp_exec_aline() needs to grab a new planner buffer for a new move or command
  *  (i.e. block state is inactive) it swaps (rolls) the run and planner BLOCKS so that
- *  mr.p (planner block) is now the mr.r (run block), and the old mr.r block becomes 
+ *  mr.p (planner block) is now the mr.r (run block), and the old mr.r block becomes
  *  available for planning; it becomes mr.p block.
  *
- * At the same time, it's when finished with its current run buffer (mb.r), it has already 
+ * At the same time, it's when finished with its current run buffer (mb.r), it has already
  *  advanced to the next buffer. mp_exec_move() does this at the end of previous move.
  *  Or in the bootstrap case, there never was a previous mb.r, so the current one is OK.
- * 
- * As if by magic, the new mb.r aligns with the run block that was just moved in from 
+ *
+ * As if by magic, the new mb.r aligns with the run block that was just moved in from
  *  the planning block.
  */
 
@@ -786,6 +786,16 @@ void mp_exit_hold_state()
  *        F_1 = 120Ah^5
  *
  *  Note that with our current control points, D and E are actually 0.
+ *
+ *  Further expansion, if we can do linear extroplation during a segment, we actually do want to start
+ *  at t = 0.
+ *
+ *        F_5(h)-F_5(0) =    Ah^5 +   Bh^4 +  Ch^3 +  Dh^2 + Eh
+ *        F_4(h)-F_4(0) =  30Ah^5 + 14Bh^4 + 6Ch^3 + 2Dh^2
+ *        F_3(h)-F_3(0) = 150Ah^5 + 36Bh^4 + 6Ch^3
+ *        F_2(h)-F_2(0) = 240Ah^5 + 24Bh^4
+ *        F_1(h)-F_1(0) = 120Ah^5
+ *
  */
 
 // Total time: 147us
@@ -829,6 +839,7 @@ static void _init_forward_diffs(const float v_0, const float v_1)
     const float Bh_4 = B * h_4;
     const float Ch_3 = C * h_3;
 
+#if !defined(NEW_FWD_DIFF) || (NEW_FWD_DIFF==0)
     const float const1 = 7.5625; // (121.0/16.0)
     const float const2 = 3.25;   // ( 13.0/ 4.0)
     const float const3 = 82.5;   // (165.0/ 2.0)
@@ -858,6 +869,28 @@ static void _init_forward_diffs(const float v_0, const float v_1)
     const float half_Ah_5 = A * half_h_5;
 
     mr.segment_velocity = half_Ah_5 + half_Bh_4 + half_Ch_3 + v_0;
+
+#else
+    // NEW_FWD_DIFF == 1
+
+    /*
+     *  F_5 =     A h^5 +    B h^4 +   C h^3 +   D h^2 + E h
+     *  F_4 =  30 A h^5 + 14 B h^4 + 6 C h^3 + 2 D h^2
+     *  F_3 = 150 A h^5 + 36 B h^4 + 6 C h^3
+     *  F_2 = 240 A h^5 + 24 B h^4
+     *  F_1 = 120 A h^5
+     */
+
+    mr.forward_diff_5 =        Ah_5 +      Bh_4 +        Ch_3;
+    mr.forward_diff_4 =   30.0*Ah_5 + 14.0*Bh_4 +    6.0*Ch_3;
+    mr.forward_diff_3 =  150.0*Ah_5 + 36.0*Bh_4 +    6.0*Ch_3;
+    mr.forward_diff_2 =  240.0*Ah_5 + 24.0*Bh_4;
+    mr.forward_diff_1 =  120.0*Ah_5;
+
+    mr.segment_velocity = v_0;
+    mr.target_velocity = v_0 + mr.forward_diff_5;
+#endif
+
 }
 
 /*********************************************************************************************
@@ -868,7 +901,9 @@ static stat_t _exec_aline_head(mpBuf_t *bf)
 {
     bool first_pass = false;
     if (mr.section_state == SECTION_NEW) {                          // INITIALIZATION
+#if !defined(NEW_FWD_DIFF) || (NEW_FWD_DIFF==0)
         first_pass = true;
+#endif
         if (fp_ZERO(mr.r->head_length)) {
             mr.section = SECTION_BODY;
             return(_exec_aline_body(bf));                            // skip ahead to the body generator
@@ -879,7 +914,13 @@ static stat_t _exec_aline_head(mpBuf_t *bf)
 
         if (mr.segment_count == 1) {
             // We will only have one segment, simply average the velocities
+#if !defined(NEW_FWD_DIFF) || (NEW_FWD_DIFF==0)
             mr.segment_velocity = mr.r->head_length / mr.segment_time;
+#else
+            mr.segment_velocity = mr.entry_velocity;
+            mr.target_velocity = mr.r->cruise_velocity;
+#endif
+
         } else {
             _init_forward_diffs(mr.entry_velocity, mr.r->cruise_velocity); // <-- sets inital segment_velocity
         }
@@ -890,7 +931,12 @@ static stat_t _exec_aline_head(mpBuf_t *bf)
         mr.section = SECTION_HEAD;
         mr.section_state = SECTION_RUNNING;
     } else {
+#if !defined(NEW_FWD_DIFF) || (NEW_FWD_DIFF==0)
         mr.segment_velocity += mr.forward_diff_5;
+#else
+        mr.segment_velocity = mr.target_velocity;
+        mr.target_velocity += mr.forward_diff_5;
+#endif
     }
 
     if (_exec_aline_segment() == STAT_OK) {                     // set up for second half
@@ -927,6 +973,7 @@ static stat_t _exec_aline_body(mpBuf_t *bf)
         mr.segments = ceil(uSec(body_time) / NOM_SEGMENT_USEC);
         mr.segment_time = body_time / mr.segments;
         mr.segment_velocity = mr.r->cruise_velocity;
+        mr.target_velocity = mr.segment_velocity;
         mr.segment_count = (uint32_t)mr.segments;
         if (mr.segment_time < MIN_SEGMENT_TIME) {
             _debug_trap("mr.segment_time < MIN_SEGMENT_TIME");
@@ -954,7 +1001,9 @@ static stat_t _exec_aline_tail(mpBuf_t *bf)
 {
     bool first_pass = false;
     if (mr.section_state == SECTION_NEW) {                          // INITIALIZATION
+#if !defined(NEW_FWD_DIFF) || (NEW_FWD_DIFF==0)
         first_pass = true;
+#endif
 
         // Mark the block as unplannable
         bf->plannable = false;
@@ -965,7 +1014,12 @@ static stat_t _exec_aline_tail(mpBuf_t *bf)
         mr.segment_time = mr.r->tail_time / mr.segments;             // time to advance for each segment
 
         if (mr.segment_count == 1) {
+#if !defined(NEW_FWD_DIFF) || (NEW_FWD_DIFF==0)
             mr.segment_velocity = mr.r->tail_length / mr.segment_time;
+#else
+            mr.segment_velocity = mr.r->cruise_velocity;
+            mr.target_velocity = mr.r->exit_velocity;
+#endif
         } else {
             _init_forward_diffs(mr.r->cruise_velocity, mr.r->exit_velocity); // <-- sets inital segment_velocity
         }
@@ -977,7 +1031,12 @@ static stat_t _exec_aline_tail(mpBuf_t *bf)
         mr.section = SECTION_TAIL;
         mr.section_state = SECTION_RUNNING;
     } else {
+#if !defined(NEW_FWD_DIFF) || (NEW_FWD_DIFF==0)
         mr.segment_velocity += mr.forward_diff_5;
+#else
+        mr.segment_velocity = mr.target_velocity;
+        mr.target_velocity += mr.forward_diff_5;
+#endif
     }
 
     if (_exec_aline_segment() == STAT_OK) {
@@ -1023,18 +1082,21 @@ static stat_t _exec_aline_segment()
     if ((--mr.segment_count == 0) && (cm.motion_state != MOTION_HOLD)) {
         copy_vector(mr.gm.target, mr.waypoint[mr.section]);
     } else {
+#if !defined(NEW_FWD_DIFF) || (NEW_FWD_DIFF==0)
         float segment_length = mr.segment_velocity * mr.segment_time;
+#else
+        float segment_length = (mr.segment_velocity+mr.target_velocity) * 0.5 * mr.segment_time;
+#endif
         // see https://en.wikipedia.org/wiki/Kahan_summation_algorithm
         //   for the summation compensation description
         for (uint8_t a=0; a<AXES; a++) {
-#if 1
+            // The following is equivalent to:
+            // mr.gm.target[a] = mr.position[a] + (mr.unit[a] * segment_length);
+
             float to_add = (mr.unit[a] * segment_length) - mr.gm.target_comp[a];
             float target = mr.position[a] + to_add;
             mr.gm.target_comp[a] = (target - mr.position[a]) - to_add;
             mr.gm.target[a] = target;
-#else
-            mr.gm.target[a] = mr.position[a] + (mr.unit[a] * segment_length);
-#endif
         }
     }
 
@@ -1063,7 +1125,12 @@ static stat_t _exec_aline_segment()
     }
 
     // Call the stepper prep function
+#if !defined(NEW_FWD_DIFF) || (NEW_FWD_DIFF==0)
     ritorno(st_prep_line(travel_steps, mr.following_error, mr.segment_time));
+#else
+    ritorno(st_prep_line(mr.segment_velocity, mr.target_velocity, travel_steps, mr.following_error, mr.segment_time));
+#endif
+
     copy_vector(mr.position, mr.gm.target);                 // update position from target
     if (mr.segment_count == 0) {
         return (STAT_OK);                                   // this section has run all its segments
