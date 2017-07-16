@@ -492,7 +492,7 @@ struct Stepper {
     // turn on motor in all cases unless it's disabled
     // this version is called from the loader, and explicitly does NOT have floating point computations
     // HOT - called from the DDA interrupt
-    void enable() HOT_FUNC
+    void enable()
     {
         if (_power_mode == MOTOR_DISABLED) {
             return;
@@ -505,7 +505,7 @@ struct Stepper {
 
     // turn on motor in all cases unless it's disabled
     // this version has the timeout computed here, as provided
-    void enable(float timeout) HOT_FUNC
+    void enable(float timeout) 
     {
         if (_power_mode == MOTOR_DISABLED) {
             return;
@@ -523,7 +523,7 @@ struct Stepper {
 
     // turn off motor in all cases unless it's permanently enabled
     // HOT - called from the DDA interrupt
-    void disable() HOT_FUNC
+    void disable() 
     {
         if (this->getPowerMode() == MOTOR_ALWAYS_POWERED) {
             return;
@@ -535,7 +535,7 @@ struct Stepper {
     
     // turn off motor is only powered when moving
     // HOT - called from the DDA interrupt
-    void motionStopped() HOT_FUNC {
+    void motionStopped()  {
         if (_power_mode == MOTOR_POWERED_IN_CYCLE) {
             this->enable();
             _power_state = MOTOR_POWER_TIMEOUT_START;

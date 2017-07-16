@@ -85,6 +85,19 @@ ifeq ("$(CONFIG)","TestQuintic")
     SETTINGS_FILE="settings_test.h"
 endif
 
+ifeq ("$(CONFIG)","Quintic-Ender")
+    ifeq ("$(BOARD)","NONE")
+        BOARD=gquintic-c
+    endif
+    SETTINGS_FILE="settings_ender.h"
+endif
+
+ifeq ("$(CONFIG)","Quintic-Xcarve-Extended")
+    ifeq ("$(BOARD)","NONE")
+        BOARD=gquintic-c
+    endif
+    SETTINGS_FILE="settings_xcarve_extended.h"
+endif
 
 ifeq ("$(CONFIG)","TestQuadratic")
     ifeq ("$(BOARD)","NONE")
