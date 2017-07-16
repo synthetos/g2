@@ -225,16 +225,16 @@ struct ValueHistory {
 };
 
 
-template<pin_number adc_pin_num, uint16_t min_temp = 0, uint16_t max_temp = 300>
+template<typename ADC_t, uint16_t min_temp = 0, uint16_t max_temp = 300>
 struct Thermistor {
     float c1, c2, c3, pullup_resistance;
     // We'll pull adc top value from the adc_pin.getTop()
 
-    ADCPin<adc_pin_num> adc_pin;
+    ADC_t adc_pin;
     uint16_t raw_adc_value = 0;
     float raw_adc_voltage = 0.0;
 
-    typedef Thermistor<adc_pin_num, min_temp, max_temp> type;
+    typedef Thermistor<ADC_t, min_temp, max_temp> type;
 
     // References for thermistor formulas:
     //  http://assets.newport.com/webDocuments-EN/images/AN04_Thermistor_Calibration_IX.PDF
@@ -242,7 +242,7 @@ struct Thermistor {
 
     Thermistor(const float temp_low, const float temp_med, const float temp_high, const float res_low, const float res_med, const float res_high, const float pullup_resistance_)
     : pullup_resistance{ pullup_resistance_ },
-      adc_pin {kNormal, [&]{this->adc_has_new_value();} }
+      adc_pin {ADC_t::is_differential ? kDifferentialPair : kNormal, [&]{this->adc_has_new_value();} }
     {
         setup(temp_low, temp_med, temp_high, res_low, res_med, res_high);
         adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
@@ -250,7 +250,20 @@ struct Thermistor {
                                 0, //get_voltage_of_temp(min_temp),
                                 kSystemVoltage, //get_voltage_of_temp(max_temp),
                                 6400.0);
-    }
+    };
+
+    template <typename... Ts>
+    Thermistor(const float temp_low, const float temp_med, const float temp_high, const float res_low, const float res_med, const float res_high, const float pullup_resistance_, Ts&&... additional_values)
+    : pullup_resistance{ pullup_resistance_ },
+    adc_pin{ADC_t::is_differential ? kDifferentialPair : kNormal, [&]{this->adc_has_new_value();}, additional_values...}
+    {
+        setup(temp_low, temp_med, temp_high, res_low, res_med, res_high);
+        adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
+        adc_pin.setVoltageRange(kSystemVoltage,
+                                0, //get_voltage_of_temp(min_temp),
+                                kSystemVoltage, //get_voltage_of_temp(max_temp),
+                                6400.0);
+    };
 
     void setup(const float temp_low, const float temp_med, const float temp_high, const float res_low, const float res_med, const float res_high) {
         float temp_low_fixed = temp_low + 273.15;
@@ -344,7 +357,7 @@ struct PT100 {
       inline_resistance{ inline_resistance_ },
       differential{adc_pin.is_differential},
       gives_raw_resistance{false},
-      adc_pin{kDifferentialPair, [&]{this->adc_has_new_value();} }
+      adc_pin{ADC_t::is_differential ? kDifferentialPair : kNormal, [&]{this->adc_has_new_value();} }
     {
         adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
         adc_pin.setVoltageRange(kSystemVoltage,
