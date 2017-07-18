@@ -135,6 +135,13 @@ ifeq ("$(CONFIG)","PrintrbotPlay")
     SETTINGS_FILE="settings_Printrbot_Play.h"
 endif
 
+ifeq ("$(CONFIG)","PrintrbotPlayQuintic")
+    ifeq ("$(BOARD)","NONE")
+        BOARD=gquintic-c
+    endif
+    SETTINGS_FILE="settings_Printrbot_Play.h"
+endif
+
 ##########
 # Ultimaker configs:
 
