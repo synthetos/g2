@@ -227,12 +227,17 @@ struct ValueHistory {
 
 template<typename ADC_t, uint16_t min_temp = 0, uint16_t max_temp = 300>
 struct Thermistor {
+    const bool differential;
+
     float c1, c2, c3, pullup_resistance;
     // We'll pull adc top value from the adc_pin.getTop()
 
     ADC_t adc_pin;
     uint16_t raw_adc_value = 0;
     float raw_adc_voltage = 0.0;
+
+    const float variance_max = 1.1;
+    ValueHistory<20> history {variance_max};
 
     typedef Thermistor<ADC_t, min_temp, max_temp> type;
 
@@ -241,28 +246,28 @@ struct Thermistor {
     //  http://hydraraptor.blogspot.com/2012/11/more-accurate-thermistor-tables.html
 
     Thermistor(const float temp_low, const float temp_med, const float temp_high, const float res_low, const float res_med, const float res_high, const float pullup_resistance_)
-    : pullup_resistance{ pullup_resistance_ },
-      adc_pin {ADC_t::is_differential ? kDifferentialPair : kNormal, [&]{this->adc_has_new_value();} }
+    : differential{ adc_pin.is_differential }, pullup_resistance{ pullup_resistance_ },
+      adc_pin {adc_pin.is_differential ? kDifferentialPair : kNormal, [&]{this->adc_has_new_value();} }
     {
         setup(temp_low, temp_med, temp_high, res_low, res_med, res_high);
         adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
         adc_pin.setVoltageRange(kSystemVoltage,
                                 0, //get_voltage_of_temp(min_temp),
                                 kSystemVoltage, //get_voltage_of_temp(max_temp),
-                                6400.0);
+                                1000000.0);
     };
 
     template <typename... Ts>
     Thermistor(const float temp_low, const float temp_med, const float temp_high, const float res_low, const float res_med, const float res_high, const float pullup_resistance_, Ts&&... additional_values)
-    : pullup_resistance{ pullup_resistance_ },
-    adc_pin{ADC_t::is_differential ? kDifferentialPair : kNormal, [&]{this->adc_has_new_value();}, additional_values...}
+    : differential{ adc_pin.is_differential }, pullup_resistance{ pullup_resistance_ },
+    adc_pin{adc_pin.is_differential ? kDifferentialPair : kNormal, [&]{this->adc_has_new_value();}, additional_values...}
     {
         setup(temp_low, temp_med, temp_high, res_low, res_med, res_high);
         adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
         adc_pin.setVoltageRange(kSystemVoltage,
                                 0, //get_voltage_of_temp(min_temp),
                                 kSystemVoltage, //get_voltage_of_temp(max_temp),
-                                6400.0);
+                                1000000.0);
     };
 
     void setup(const float temp_low, const float temp_med, const float temp_high, const float res_low, const float res_med, const float res_high) {
@@ -295,8 +300,7 @@ struct Thermistor {
             return -1; // invalid temperature from a thermistor
         }
 
-        float v = raw_adc_voltage; // convert the ADC value to a voltage
-        float r = ((pullup_resistance * v) / (kSystemVoltage - v));   // resistance of thermistor
+        float r = get_resistance(); // resistance of thermistor
 
         if ((r < 0) || (r > TEMP_MIN_DISCONNECTED_RESISTANCE)) {
             return -1;
@@ -308,13 +312,32 @@ struct Thermistor {
     };
 
     float get_resistance() {
-        if (raw_adc_value < 1) {
-            return -1; // invalid temperature from a thermistor
+        float r;
+        raw_adc_voltage = history.value();
+
+        if (isnan(raw_adc_voltage)) {
+            return -1;
         }
 
-        float v = raw_adc_voltage; // convert the ADC value to a voltage
-        return ((pullup_resistance * v) / (kSystemVoltage - v));   // resistance of thermistor
+        if (differential) {
+            float v = raw_adc_voltage / kSystemVoltage;
+            r = (v * 2.0 * pullup_resistance)/(1.0 - v);// - inline_resistance;
+        }
+        else {
+            float v = raw_adc_voltage;
+            r = ((pullup_resistance * v) / (kSystemVoltage - v));// - inline_resistance;
+        }
+        return r;
     };
+
+//    float get_resistance() {
+//        if (raw_adc_value < 1) {
+//            return -1; // invalid temperature from a thermistor
+//        }
+//
+//        float v = raw_adc_voltage; // convert the ADC value to a voltage
+//        return ((pullup_resistance * v) / (kSystemVoltage - v));   // resistance of thermistor
+//    };
 
     uint16_t get_raw_value() {
         return raw_adc_value;
@@ -330,8 +353,9 @@ struct Thermistor {
 
     // Call back function from the ADC to tell it that the ADC has a new sample...
     void adc_has_new_value() {
-        raw_adc_voltage = (raw_adc_voltage * 2.0 + adc_pin.getVoltage())/3.0;
-        raw_adc_value = (adc_pin.getRaw() + (9 * raw_adc_value))/10;
+        raw_adc_value = adc_pin.getRaw();
+        float v = fabs(adc_pin.getVoltage());
+        history.add_sample(v);
     };
 };
 
@@ -340,7 +364,7 @@ template<typename ADC_t, uint16_t min_temp = 0, uint16_t max_temp = 400>
 struct PT100 {
     const float pullup_resistance;
     const float inline_resistance;
-    bool differential;
+    const bool differential;
     bool gives_raw_resistance = false;
 
     ADC_t adc_pin;

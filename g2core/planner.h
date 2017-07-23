@@ -149,6 +149,8 @@
 #ifndef PLANNER_H_ONCE
 #define PLANNER_H_ONCE
 
+#define NEW_FWD_DIFF 1
+
 #include "canonical_machine.h"    // used for GCodeState_t
 #include "hardware.h"             // for MIN_SEGMENT_MS
 
@@ -506,7 +508,8 @@ typedef struct mpMotionRuntimeSingleton {    // persistent runtime variables
 
     float segments;                     // number of segments in line (also used by arc generation)
     uint32_t segment_count;             // count of running segments
-    float segment_velocity;             // computed velocity for aline segment
+    float segment_velocity;             // computed start velocity for aline segment
+    float target_velocity;              // computed end velocity for aline segment
     float segment_time;                 // actual time increment per aline segment
 
     float forward_diff_1;               // forward difference level 1

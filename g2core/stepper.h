@@ -372,7 +372,8 @@ typedef struct stConfig {                   // stepper configs
 // Motor runtime structure. Used exclusively by step generation ISR (HI)
 
 typedef struct stRunMotor {                 // one per controlled motor
-    uint32_t substep_increment;             // total steps in axis times substeps factor
+    uint32_t substep_increment;             // partial steps to increment substep_accumulator per tick
+    uint32_t substep_increment_increment;   // partial steps to increment substep_increment per tick
     int32_t substep_accumulator;            // DDA phase angle accumulator
     bool motor_flag;                        // true if motor is participating in this move
     uint32_t power_systick;                 // sys_tick for next motor power state transition
@@ -396,7 +397,8 @@ typedef struct stRunSingleton {             // Stepper static values and axis pa
 // Must be careful about volatiles in this one
 
 typedef struct stPrepMotor {
-    uint32_t substep_increment;             // total steps in axis times substep factor
+    uint32_t substep_increment;             // partial steps to increment substep_accumulator per tick
+    uint32_t substep_increment_increment;   // partial steps to increment substep_increment per tick
     bool motor_flag;                        // true if motor is participating in this move
 
     // direction and direction change
@@ -492,7 +494,7 @@ struct Stepper {
     // turn on motor in all cases unless it's disabled
     // this version is called from the loader, and explicitly does NOT have floating point computations
     // HOT - called from the DDA interrupt
-    void enable()
+    void enable() //HOT_FUNC
     {
         if (_power_mode == MOTOR_DISABLED) {
             return;
@@ -505,7 +507,7 @@ struct Stepper {
 
     // turn on motor in all cases unless it's disabled
     // this version has the timeout computed here, as provided
-    void enable(float timeout) 
+    void enable(float timeout) //HOT_FUNC
     {
         if (_power_mode == MOTOR_DISABLED) {
             return;
@@ -523,7 +525,7 @@ struct Stepper {
 
     // turn off motor in all cases unless it's permanently enabled
     // HOT - called from the DDA interrupt
-    void disable() 
+    void disable() //HOT_FUNC
     {
         if (this->getPowerMode() == MOTOR_ALWAYS_POWERED) {
             return;
@@ -535,7 +537,8 @@ struct Stepper {
     
     // turn off motor is only powered when moving
     // HOT - called from the DDA interrupt
-    void motionStopped()  {
+    void motionStopped() //HOT_FUNC
+    {
         if (_power_mode == MOTOR_POWERED_IN_CYCLE) {
             this->enable();
             _power_state = MOTOR_POWER_TIMEOUT_START;
@@ -607,7 +610,11 @@ void st_prep_null(void);
 void st_prep_command(void *bf);        // use a void pointer since we don't know about mpBuf_t yet)
 void st_prep_dwell(float milliseconds);
 void st_request_out_of_band_dwell(float microseconds);
+#if !defined(NEW_FWD_DIFF) || (NEW_FWD_DIFF==0)
 stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time)  HOT_FUNC;
+#else
+stat_t st_prep_line(float start_velocity, float end_velocity, float travel_steps[], float following_error[], float segment_time)  HOT_FUNC;
+#endif
 
 stat_t st_set_ma(nvObj_t *nv);
 stat_t st_set_sa(nvObj_t *nv);
