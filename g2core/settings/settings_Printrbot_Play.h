@@ -307,29 +307,34 @@
 
 //** Temperature Sensors **
 
-//#include "device/max31865/max31865.h"
+#include "device/max31865/max31865.h"
 
-//#define USING_A_MAX31865 1
+#define USING_A_MAX31865 1
 
 #define HAS_TEMPERATURE_SENSOR_1  true
 #if HAS_TEMPERATURE_SENSOR_1
-// Must choose Thermistor or PT100
-#if 1 // 1 if a Thermistor, 0 if a PT100
-    #define TEMPERATURE_SENSOR_1_TYPE  Thermistor<ADCDifferentialPair<kADC1_Neg_PinNumber, kADC1_Pos_PinNumber>>
+//    #define TEMPERATURE_SENSOR_1_CIRCUIT_TYPE ADCCircuitSimplePullup
+//    #define TEMPERATURE_SENSOR_1_CIRCUIT_INIT { /*pullup_resistance:*/ 4700 }
+//    #define TEMPERATURE_SENSOR_1_TYPE  Thermistor<kADC1_PinNumber>
+//    #define TEMPERATURE_SENSOR_1_INIT { \
+//        /*T1:*/     20.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
+//        /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, &temperature_sensor_1_circuit \
+//    }
+
+    #define TEMPERATURE_SENSOR_1_CIRCUIT_TYPE ADCCircuitRawResistance
+    #define TEMPERATURE_SENSOR_1_CIRCUIT_INIT { }
+    #define TEMPERATURE_SENSOR_1_TYPE  Thermistor<MAX31865<SPIBus_used_t::SPIBusDevice>>
     #define TEMPERATURE_SENSOR_1_INIT { \
-    /*T1:*/     25.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
-    /*R1:*/  99500.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 200 \
+        /*T1:*/     20.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
+        /*R1:*/  99500.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 10500.0 \
+        /*MAX31865 config*/ spiBus, spiCSPinMux.getCS(5), 150000 \
     }
-#else
-    // #define TEMPERATURE_SENSOR_1_TYPE  PT100<ADCDifferentialPair<kADC1_Neg_PinNumber, kADC1_Pos_PinNumber>>
-    // #define TEMPERATURE_SENSOR_1_INIT {/*pullup_resistance:*/ 2000, /*inline_resistance*/0.0}
-   #define TEMPERATURE_SENSOR_1_TYPE  PT100<MAX31865<SPIBus_used_t::SPIBusDevice>>
-   #define TEMPERATURE_SENSOR_1_INIT {/*pullup_resistance:*/ 430, /*inline_resistance*/0, spiBus, spiCSPinMux.getCS(5)}
-#endif // 0 or 1
+
 #endif // HAS_TEMPERATURE_SENSOR_1
 
 #define EXTRUDER_1_OUTPUT_PIN kHeaterOutput1_PinNumber
 #define EXTRUDER_1_FAN_PIN    kOutput5_PinNumber
+
 
 #define HAS_TEMPERATURE_SENSOR_2  false
 #if HAS_TEMPERATURE_SENSOR_2
@@ -337,7 +342,7 @@
     #define TEMPERATURE_SENSOR_2_TYPE  Thermistor<ADCDifferentialPair<kADC2_Neg_PinNumber, kADC2_Pos_PinNumber>>
     #define TEMPERATURE_SENSOR_2_INIT { \
     /*T1:*/     25.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
-    /*R1:*/  99500.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 200 \
+    /*R1:*/  99500.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 10500.0 \
     }
 #else
     #define TEMPERATURE_SENSOR_2_TYPE  PT100<ADCDifferentialPair<kADC2_Neg_PinNumber, kADC2_Pos_PinNumber>>
@@ -349,13 +354,14 @@
 
 #define EXTRUDER_2_OUTPUT_PIN kHeaterOutput2_PinNumber
 
-#define HAS_TEMPERATURE_SENSOR_3  true
+
+#define HAS_TEMPERATURE_SENSOR_3  false
 #if HAS_TEMPERATURE_SENSOR_3
 #if 1 // 1 if a Thermistor, 0 if a PT100
     #define TEMPERATURE_SENSOR_3_TYPE  Thermistor<ADCDifferentialPair<kADC2_Neg_PinNumber, kADC2_Pos_PinNumber>>
     #define TEMPERATURE_SENSOR_3_INIT { \
     /*T1:*/     20.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
-    /*R1:*/ 100000.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 200 \
+    /*R1:*/  99500.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 10500.0 \
     }
 #else
     // #define TEMPERATURE_SENSOR_3_TYPE  PT100<ADCDifferentialPair<kADC3_Neg_PinNumber, kADC3_Pos_PinNumber>>
