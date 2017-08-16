@@ -85,7 +85,6 @@
 
 // *** motor settings ************************************************************************************
 
-
 #define MOTOR_POWER_MODE        MOTOR_POWERED_IN_CYCLE  // default motor power mode (see stPowerMode in stepper.h)
                                                         // 0=MOTOR_DISABLED, 
                                                         // 1=MOTOR_ALWAYS_POWERED, 
@@ -118,9 +117,9 @@
 #define M3_POWER_MODE           MOTOR_POWER_MODE
 #define M3_POWER_LEVEL          0.4
 
-#define M4_MOTOR_MAP            AXIS_A_EXTERNAL
+#define M4_MOTOR_MAP            AXIS_W_EXTERNAL  // Imaginary W axis. For testing
 #define M4_STEP_ANGLE           1.8
-#define M4_TRAVEL_PER_REV       360                     // degrees moved per motor rev
+#define M4_TRAVEL_PER_REV       1.25
 #define M4_MICROSTEPS           8
 #define M4_POLARITY             1
 #define M4_POWER_MODE           MOTOR_POWER_MODE
@@ -228,6 +227,36 @@
 #define A_LATCH_VELOCITY        100
 #define A_LATCH_BACKOFF         10
 #define A_ZERO_BACKOFF          2
+
+#define B_AXIS_MODE             AXIS_STANDARD
+#define B_RADIUS                1
+#define B_VELOCITY_MAX          360000
+#define B_FEEDRATE_MAX          B_VELOCITY_MAX
+#define B_TRAVEL_MIN            -1
+#define B_TRAVEL_MAX            -1
+#define B_JERK_MAX              100000
+#define B_JERK_HIGH_SPEED       B_JERK_MAX
+#define B_HOMING_INPUT          0
+#define B_HOMING_DIRECTION      0
+#define B_SEARCH_VELOCITY       600
+#define B_LATCH_VELOCITY        100
+#define B_LATCH_BACKOFF         10
+#define B_ZERO_BACKOFF          2
+
+#define C_AXIS_MODE             AXIS_STANDARD
+#define C_RADIUS                1
+#define C_VELOCITY_MAX          360000
+#define C_FEEDRATE_MAX          C_VELOCITY_MAX
+#define C_TRAVEL_MIN            -1
+#define C_TRAVEL_MAX            -1
+#define C_JERK_MAX              100000
+#define C_JERK_HIGH_SPEED       C_JERK_MAX
+#define C_HOMING_INPUT          0
+#define C_HOMING_DIRECTION      0
+#define C_SEARCH_VELOCITY       600
+#define C_LATCH_VELOCITY        100
+#define C_LATCH_BACKOFF         10
+#define C_ZERO_BACKOFF          2
 
 //*** Input / output settings ***
 /*
