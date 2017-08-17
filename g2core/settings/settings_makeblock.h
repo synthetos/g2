@@ -69,10 +69,13 @@
 #define STATUS_REPORT_MIN_MS        200         // milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS   250         // milliseconds - set $SV=0 to disable
 
-#define STATUS_REPORT_DEFAULTS      "line","stat","posx","posy","posz",\
+#define STATUS_REPORT_DEFAULTS      "line","stat",\
+                                    "posx","posy","posz",\
+                                    "posu","posv","posw",\
                                     "vel", "unit","feed","coor","momo",\
                                     "plan","path","dist","prbe","prbz",\
                                     "mpox","mpoy","mpoz",\
+                                    "mpou","mpov","mpow",\
                                     "admo","frmo","cycs","hold"
 //                                     "_ts1","_cs1","_es1","_xs1","_fe1"
 
