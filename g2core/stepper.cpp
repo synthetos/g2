@@ -158,7 +158,7 @@ void stepper_reset()
     for (uint8_t motor=0; motor<MOTORS; motor++) {
         st_pre.mot[motor].prev_direction = STEP_INITIAL_DIRECTION;
         st_pre.mot[motor].direction = STEP_INITIAL_DIRECTION;
-        st_run.mot[motor].substep_accumulator = 0;      // will become max negative during per-motor setup;
+        st_run.mot[motor].substep_accumulator = -DDA_SUBSTEPS;
         st_pre.mot[motor].corrected_steps = 0;          // diagnostic only - no action effect
     }
     mp_set_steps_to_runtime_position();                 // reset encoder to agree with the above
@@ -822,7 +822,7 @@ stat_t st_prep_line(float start_velocity, float end_velocity, float travel_steps
     // setup motor parameters
 #if defined(NEW_FWD_DIFF) && (NEW_FWD_DIFF==1)
     // this is explained later
-    float t_v0_v1 = (float)st_pre.dda_ticks * (start_velocity + end_velocity);
+    double t_v0_v1 = (double)st_pre.dda_ticks * (start_velocity + end_velocity);
 #endif
 
     float correction_steps;
@@ -922,19 +922,19 @@ stat_t st_prep_line(float start_velocity, float end_velocity, float travel_steps
         // option 2:
         //  d = (b (v_1 - v_0))/((t-1) a)
 
-        float s_double = fabs(travel_steps[motor] * 2.0);
+        double s_double = fabs(travel_steps[motor] * 2.0);
 
         // 1/m_0 = (2 s v_0)/(t (v_0 + v_1))
-        st_pre.mot[motor].substep_increment = round(((s_double * start_velocity)/(t_v0_v1)) * (float)DDA_SUBSTEPS);
+        st_pre.mot[motor].substep_increment = round(((s_double * start_velocity)/(t_v0_v1)) * (double)DDA_SUBSTEPS);
         // option 1:
         //  d = ((b v_1)/a - c)/(t-1)
         // option 2:
         //  d = (b (v_1 - v_0))/((t-1) a)
-        st_pre.mot[motor].substep_increment_increment = round(((s_double*(end_velocity-start_velocity))/(((float)st_pre.dda_ticks-1.0)*t_v0_v1)) * (float)DDA_SUBSTEPS);
+        st_pre.mot[motor].substep_increment_increment = round(((s_double*(end_velocity-start_velocity))/(((double)st_pre.dda_ticks-1.0)*t_v0_v1)) * (double)DDA_SUBSTEPS);
 #warning Using new increment style!
 #endif
 #else
-        st_pre.mot[motor].substep_increment = round(fabs(travel_steps[motor] * DDA_SUBSTEPS));
+        st_pre.mot[motor].substep_increment = round(fabs(travel_steps[motor] * (double)DDA_SUBSTEPS));
 #endif
     }
     st_pre.block_type = BLOCK_TYPE_ALINE;

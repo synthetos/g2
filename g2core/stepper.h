@@ -314,7 +314,7 @@ typedef enum {
  *  Decreasing the nominal segment time increases the number precision.
  */
 #if NEW_DDA == 1
-#define DDA_SUBSTEPS (2147483600L)
+#define DDA_SUBSTEPS (INT64_MAX-100)
 #else
 #define DDA_SUBSTEPS ((MAX_LONG * 0.90) / (FREQUENCY_DDA * (NOM_SEGMENT_TIME * 60)))
 #endif
@@ -372,9 +372,9 @@ typedef struct stConfig {                   // stepper configs
 // Motor runtime structure. Used exclusively by step generation ISR (HI)
 
 typedef struct stRunMotor {                 // one per controlled motor
-    uint32_t substep_increment;             // partial steps to increment substep_accumulator per tick
-    uint32_t substep_increment_increment;   // partial steps to increment substep_increment per tick
-    int32_t substep_accumulator;            // DDA phase angle accumulator
+    int64_t substep_increment;             // partial steps to increment substep_accumulator per tick
+    int64_t substep_increment_increment;   // partial steps to increment substep_increment per tick
+    int64_t substep_accumulator;            // DDA phase angle accumulator
     bool motor_flag;                        // true if motor is participating in this move
     uint32_t power_systick;                 // sys_tick for next motor power state transition
     float power_level_dynamic;              // power level for this segment of idle
@@ -385,7 +385,6 @@ typedef struct stRunSingleton {             // Stepper static values and axis pa
     uint32_t dda_ticks_downcount;           // dda tick down-counter (unscaled)
     uint32_t dwell_ticks_downcount;         // dwell tick down-counter (unscaled)
 #if NEW_DDA == 1
-    uint32_t dda_steps_tick_X_substeps;     // DDA substps per tick scaled by substep factor
 #else
     uint32_t dda_ticks_X_substeps;          // ticks multiplied by scaling factor
 #endif
@@ -397,8 +396,8 @@ typedef struct stRunSingleton {             // Stepper static values and axis pa
 // Must be careful about volatiles in this one
 
 typedef struct stPrepMotor {
-    uint32_t substep_increment;             // partial steps to increment substep_accumulator per tick
-    uint32_t substep_increment_increment;   // partial steps to increment substep_increment per tick
+    int64_t substep_increment;             // partial steps to increment substep_accumulator per tick
+    int64_t substep_increment_increment;   // partial steps to increment substep_increment per tick
     bool motor_flag;                        // true if motor is participating in this move
 
     // direction and direction change
