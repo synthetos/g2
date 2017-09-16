@@ -150,7 +150,7 @@
 #define M3_MICROSTEPS               32
 #define M3_POLARITY                 1
 #define M3_POWER_MODE               MOTOR_ALWAYS_POWERED
-#define M3_POWER_LEVEL              0.5
+#define M3_POWER_LEVEL              0.55482
 #define M3_TMC2130_TPWMTHRS         300
 #define M3_TMC2130_TCOOLTHRS        200
 #define M3_TMC2130_THIGH            10
