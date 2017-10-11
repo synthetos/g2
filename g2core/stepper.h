@@ -430,7 +430,7 @@ extern stPrepSingleton_t st_pre;            // only used by config_app diagnosti
 /**** Stepper (base object) ****/
 
 struct Stepper {
-    Timeout _motor_disable_timeout;         // this is the timeout object that will let us know when time is u
+    Timeout _motor_disable_timeout;         // this is the timeout object that will let us know when time is up
     uint32_t _motor_disable_timeout_ms;     // the number of ms that the timeout is reset to
     stPowerState _power_state;              // state machine for managing motor power
     stPowerMode _power_mode;                // See stPowerMode for values

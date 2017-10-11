@@ -22,23 +22,14 @@ endif
 ##########
 # BOARDs for use directly from the make command line (with default settings) or by CONFIGs.
 
-ifeq ("$(BOARD)","gShield")
+ifeq ("$(BOARD)","geratech_proto")
     # This is a due with a Synthetos gShield. We'll use the Due platform, but set defines
     # for the code to get the pinout right.
 
     # Note: we call it "g2core-due" instead of "due" since the Motate built-in provides
     # a "due" BASE_BOARD.
     BASE_BOARD = g2core-due
-    DEVICE_DEFINES += MOTATE_BOARD="gShield"
-    DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
-endif
-
-ifeq ("$(BOARD)","shopbotShield")
-    # This is a due with a shopbot shield. We'll use the Due platform, but set defines
-    # for the code to get the pinout right.
-
-    BASE_BOARD = g2core-due
-    DEVICE_DEFINES += MOTATE_BOARD="shopbotShield"
+    DEVICE_DEFINES += MOTATE_BOARD="geratech_proto"
     DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
 endif
 
@@ -58,7 +49,7 @@ ifeq ("$(BASE_BOARD)","g2core-due")
 
     # Note: we call it "g2core-due" instead of "due" since the Motate built-in provides
     # a "due" BASE_BOARD.
-    BOARD_PATH = ./board/ArduinoDue
+    BOARD_PATH = ./board/geratech_proto
     SOURCE_DIRS += ${BOARD_PATH} device/step_dir_driver
 
     PLATFORM_BASE = ${MOTATE_PATH}/platform/atmel_sam
