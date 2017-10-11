@@ -47,7 +47,7 @@
 #include "encoder.h"
 #include "hardware.h"
 #include "canonical_machine.h"
-
+#include "can_bus.h"
 #include "text_parser.h"
 #include "controller.h"
 #include "util.h"
@@ -59,10 +59,10 @@ using namespace Motate;
 
 /**** Allocate structures ****/
 
-d_in_t   d_in[D_IN_CHANNELS];
-d_out_t  d_out[D_OUT_CHANNELS];
-a_in_t   a_in[A_IN_CHANNELS];
-a_out_t  a_out[A_OUT_CHANNELS];
+d_in_t   d_in  [D_IN_CHANNELS  + D_IN_CAN_CHANNELS];
+d_out_t  d_out [D_OUT_CHANNELS + D_OUT_CAN_CHANNELS];
+a_in_t   a_in  [A_IN_CHANNELS  + A_IN_CAN_CHANNELS];
+a_out_t  a_out [A_OUT_CHANNELS + A_OUT_CAN_CHANNELS];
 
 /**** Extended DI structure ****/
 
@@ -215,6 +215,141 @@ struct ioDigitalInputExt {
     };
 };
 
+template <uint8_t ext_pin_number>
+struct ioDigitalInputVirtual {
+
+    void reset() {
+        if (D_IN_CAN_CHANNELS < ext_pin_number) { return; }
+
+        d_in_t *in = &d_in[ext_pin_number-1+D_IN_CHANNELS];
+
+        if (in->mode == IO_MODE_DISABLED) {
+            in->state = INPUT_DISABLED;
+            return;
+        }
+
+        /*bool pin_value = (bool)input_pin;
+        int8_t pin_value_corrected = (pin_value ^ ((int)in->mode ^ 1));    // correct for NO or NC mode
+        in->state = (ioState)pin_value_corrected;*/
+
+    }
+
+    void reset_with_value (bool pin_value) {
+      reset();
+      d_in_t *in = &d_in[ext_pin_number-1+D_IN_CHANNELS];
+      int8_t pin_value_corrected = (pin_value ^ ((int)in->mode ^ 1));    // correct for NO or NC mode
+      in->state = (ioState)pin_value_corrected;
+    }
+
+    void pin_changed(bool pin_value) {
+        if (D_IN_CAN_CHANNELS < ext_pin_number) { return; }
+
+        d_in_t *in = &d_in[ext_pin_number-1+D_IN_CHANNELS];
+
+        // return if input is disabled (not supposed to happen)
+        if (in->mode == IO_MODE_DISABLED) {
+            in->state = INPUT_DISABLED;
+            return;
+        }
+
+        // return if the input is in lockout period (take no action)
+        if (in->lockout_timer.isSet() && !in->lockout_timer.isPast()) {
+            return;
+        }
+
+        // return if no change in state
+        int8_t pin_value_corrected = (pin_value ^ ((int)in->mode ^ 1));    // correct for NO or NC mode
+        if (in->state == (ioState)pin_value_corrected) {
+            return;
+        }
+
+        // lockout the pin for lockout_ms
+        in->lockout_timer.set(in->lockout_ms);
+
+        // record the changed state
+        in->state = (ioState)pin_value_corrected;
+        if (pin_value_corrected == INPUT_ACTIVE) {
+            in->edge = INPUT_EDGE_LEADING;
+        } else {
+            in->edge = INPUT_EDGE_TRAILING;
+        }
+
+        // perform homing operations if in homing mode
+        if (in->homing_mode) {
+            if (in->edge == INPUT_EDGE_LEADING) {   // we only want the leading edge to fire
+                en_take_encoder_snapshot();
+                cm_start_hold();
+            }
+            return;
+        }
+
+        // perform probing operations if in probing mode
+        if (in->probing_mode) {
+            // We want to capture either way.
+            // Probing tests the start condition for the correct direction ahead of time.
+            // If we see any edge, it's the right one.
+            en_take_encoder_snapshot();
+            cm_start_hold();
+            return;
+        }
+
+        // *** NOTE: From this point on all conditionals assume we are NOT in homing or probe mode ***
+
+        // trigger the action on leading edges
+        if (in->edge == INPUT_EDGE_LEADING) {
+            if (in->action == INPUT_ACTION_STOP) {
+                cm_start_hold();
+            }
+            if (in->action == INPUT_ACTION_FAST_STOP) {
+                cm_start_hold();                        // for now is same as STOP
+            }
+            if (in->action == INPUT_ACTION_HALT) {
+                cm_halt_all();                            // hard stop, including spindle and coolant
+            }
+            if (in->action == INPUT_ACTION_ALARM) {
+                char msg[10];
+                sprintf(msg, "input %d", ext_pin_number);
+                cm_alarm(STAT_ALARM, msg);
+            }
+            if (in->action == INPUT_ACTION_SHUTDOWN) {
+                char msg[10];
+                sprintf(msg, "input %d", ext_pin_number);
+                cm_shutdown(STAT_SHUTDOWN, msg);
+            }
+            if (in->action == INPUT_ACTION_PANIC) {
+                char msg[10];
+                sprintf(msg, "input %d", ext_pin_number);
+                cm_panic(STAT_PANIC, msg);
+            }
+            if (in->action == INPUT_ACTION_RESET) {
+                hw_hard_reset();
+            }
+        }
+
+        // these functions trigger on the leading edge
+        if (in->edge == INPUT_EDGE_LEADING) {
+            if (in->function == INPUT_FUNCTION_LIMIT) {
+                cm.limit_requested = ext_pin_number;
+
+            } else if (in->function == INPUT_FUNCTION_SHUTDOWN) {
+                cm.shutdown_requested = ext_pin_number;
+
+            } else if (in->function == INPUT_FUNCTION_INTERLOCK) {
+                cm.safety_interlock_disengaged = ext_pin_number;
+            }
+        }
+
+        // trigger interlock release on trailing edge
+        if (in->edge == INPUT_EDGE_TRAILING) {
+            if (in->function == INPUT_FUNCTION_INTERLOCK) {
+                cm.safety_interlock_reengaged = ext_pin_number;
+            }
+        }
+
+        sr_request_status_report(SR_REQUEST_TIMED);   //+++++ Put this one back in.
+    };
+};
+
 /**** Setup Low Level Stuff ****/
 
 ioDigitalInputExt<kInput1_PinNumber  ,  1> _din1;
@@ -229,6 +364,41 @@ ioDigitalInputExt<kInput9_PinNumber  ,  9> _din9;
 ioDigitalInputExt<kInput10_PinNumber , 10> _din10;
 ioDigitalInputExt<kInput11_PinNumber , 11> _din11;
 ioDigitalInputExt<kInput12_PinNumber , 12> _din12;
+
+#ifdef CAN_ENABLED
+
+ioDigitalInputVirtual<1>  _vdin1;
+ioDigitalInputVirtual<2>  _vdin2;
+ioDigitalInputVirtual<3>  _vdin3;
+ioDigitalInputVirtual<4>  _vdin4;
+ioDigitalInputVirtual<5>  _vdin5;
+ioDigitalInputVirtual<6>  _vdin6;
+ioDigitalInputVirtual<7>  _vdin7;
+ioDigitalInputVirtual<8>  _vdin8;
+ioDigitalInputVirtual<9>  _vdin9;
+ioDigitalInputVirtual<10> _vdin10;
+ioDigitalInputVirtual<11> _vdin11;
+ioDigitalInputVirtual<12> _vdin12;
+
+void can_gpio_received (int pin_num, bool pin_value) {
+  switch (pin_num) {
+    case 1: _vdin1.pin_changed(pin_value); break;
+    case 2: _vdin2.pin_changed(pin_value); break;
+    case 3: _vdin3.pin_changed(pin_value); break;
+    case 4: _vdin4.pin_changed(pin_value); break;
+    case 5: _vdin5.pin_changed(pin_value); break;
+    case 6: _vdin6.pin_changed(pin_value); break;
+    case 7: _vdin7.pin_changed(pin_value); break;
+    case 8: _vdin8.pin_changed(pin_value); break;
+    case 9: _vdin9.pin_changed(pin_value); break;
+    case 10: _vdin10.pin_changed(pin_value); break;
+    case 11: _vdin11.pin_changed(pin_value); break;
+    case 12: _vdin12.pin_changed(pin_value); break;
+
+  }
+}
+
+#endif
 
 // Generated with:
 // perl -e 'for($i=1;$i<14;$i++) { print "#if OUTPUT${i}_PWM == 1\nstatic PWMOutputPin<kOutput${i}_PinNumber>  output_${i}_pin;\n#else\nstatic PWMLikeOutputPin<kOutput${i}_PinNumber>  output_${i}_pin;\n#endif\n";}'
@@ -374,12 +544,20 @@ void outputs_reset(void) {
 #if D_OUT_CHANNELS >= 13
     if (d_out[13-1].mode != IO_MODE_DISABLED) { (output_13_pin   = (d_out[13-1].mode == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
 #endif
+
+  //Can reset
+
+  for (int i=D_OUT_CHANNELS; i< D_OUT_CHANNELS+D_OUT_CAN_CHANNELS-1; i++){
+    if (d_out[i].mode != IO_MODE_DISABLED) {
+      can_digital_output(i, ((d_out[13-1].mode == IO_ACTIVE_LOW) ? true : false));
+    }
+  }
 }
 
 void inputs_reset(void) {
     d_in_t *in;
 
-    for (uint8_t i=0; i<D_IN_CHANNELS; i++) {
+    for (uint8_t i=0; i<D_IN_CHANNELS+D_IN_CAN_CHANNELS; i++) {
         in = &d_in[i];
         if (in->mode == IO_MODE_DISABLED) {
             in->state = INPUT_DISABLED;
@@ -401,6 +579,22 @@ void inputs_reset(void) {
   _din10.reset();
   _din11.reset();
   _din12.reset();
+
+
+//#ifdef CAN_ENABLED
+  _vdin1.reset();
+  _vdin2.reset();
+  _vdin3.reset();
+  _vdin4.reset();
+  _vdin5.reset();
+  _vdin6.reset();
+  _vdin7.reset();
+  _vdin8.reset();
+  _vdin9.reset();
+  _vdin10.reset();
+  _vdin11.reset();
+  _vdin12.reset();
+//#endif
 
 }
 
@@ -453,9 +647,9 @@ void  gpio_set_probing_mode(const uint8_t input_num_ext, const bool is_probing)
     d_in[input_num_ext-1].probing_mode = is_probing;
 }
 
-int8_t gpio_get_probing_input(void) 
+int8_t gpio_get_probing_input(void)
 {
-    for (uint8_t i = 0; i <= D_IN_CHANNELS; i++) {
+    for (uint8_t i = 0; i <= D_IN_CHANNELS+D_IN_CAN_CHANNELS; i++) {
         if (d_in[i-1].function == INPUT_FUNCTION_PROBE) {
             return (i);
         }
@@ -550,29 +744,29 @@ stat_t io_set_domode(nvObj_t *nv)            // output function
     // the token has been stripped down to an ASCII digit string - use it as an index
     uint8_t output_num = strtol(num_start, NULL, 10);
 
-    if (output_num > D_OUT_CHANNELS) {
+    if (output_num > D_OUT_CHANNELS+D_OUT_CAN_CHANNELS) {
         nv->valuetype = TYPE_NULL;
         return(STAT_NO_GPIO);
-    }
+    } // Force pins that aren't available to be "disabled"
+    else if (output_num <= D_OUT_CHANNELS) {
+      switch (output_num) {
+          case 1:  if (output_1_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
+          case 2:  if (output_2_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
+          case 3:  if (output_3_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
+          case 4:  if (output_4_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
+          case 5:  if (output_5_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
+          case 6:  if (output_6_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
+          case 7:  if (output_7_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
+          case 8:  if (output_8_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
+          case 9:  if (output_9_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
+          case 10: if (output_10_pin.isNull()) { nv->value = IO_MODE_DISABLED; } break;
+          case 11: if (output_11_pin.isNull()) { nv->value = IO_MODE_DISABLED; } break;
+          case 12: if (output_12_pin.isNull()) { nv->value = IO_MODE_DISABLED; } break;
+          case 13: if (output_13_pin.isNull()) { nv->value = IO_MODE_DISABLED; } break;
 
-    // Force pins that aren't available to be "disabled"
-    switch (output_num) {
-        case 1:  if (output_1_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
-        case 2:  if (output_2_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
-        case 3:  if (output_3_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
-        case 4:  if (output_4_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
-        case 5:  if (output_5_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
-        case 6:  if (output_6_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
-        case 7:  if (output_7_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
-        case 8:  if (output_8_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
-        case 9:  if (output_9_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
-        case 10: if (output_10_pin.isNull()) { nv->value = IO_MODE_DISABLED; } break;
-        case 11: if (output_11_pin.isNull()) { nv->value = IO_MODE_DISABLED; } break;
-        case 12: if (output_12_pin.isNull()) { nv->value = IO_MODE_DISABLED; } break;
-        case 13: if (output_13_pin.isNull()) { nv->value = IO_MODE_DISABLED; } break;
-
-        default:
-            break;
+          default:
+              break;
+      }
     }
 
     return (_output_set_helper(nv, IO_ACTIVE_LOW, IO_MODE_MAX));
@@ -592,7 +786,7 @@ stat_t io_get_output(nvObj_t *nv)
     // the token has been stripped down to an ASCII digit string - use it as an index
     uint8_t output_num = strtol(num_start, NULL, 10);
 
-    if (output_num > D_OUT_CHANNELS) {
+    if (output_num > D_OUT_CHANNELS + D_OUT_CAN_CHANNELS) {
         nv->valuetype = TYPE_NULL;
         return(STAT_NO_GPIO);
     }
@@ -606,27 +800,33 @@ stat_t io_get_output(nvObj_t *nv)
         nv->precision = 2;
         bool invert = (outMode == 0);
         // Note: !! forces a value to boolean 0 or 1
-        switch (output_num) {
-            case 1:  { nv->value = (float)output_1_pin; } break;
-            case 2:  { nv->value = (float)output_2_pin; } break;
-            case 3:  { nv->value = (float)output_3_pin; } break;
-            case 4:  { nv->value = (float)output_4_pin; } break;
-            case 5:  { nv->value = (float)output_5_pin; } break;
-            case 6:  { nv->value = (float)output_6_pin; } break;
-            case 7:  { nv->value = (float)output_7_pin; } break;
-            case 8:  { nv->value = (float)output_8_pin; } break;
-            case 9:  { nv->value = (float)output_9_pin; } break;
-            case 10: { nv->value = (float)output_10_pin; } break;
-            case 11: { nv->value = (float)output_11_pin; } break;
-            case 12: { nv->value = (float)output_12_pin; } break;
-            case 13: { nv->value = (float)output_13_pin; } break;
 
-            default:
-                {
-//                  nv->value = 0;              // inactive
-                    nv->valuetype = TYPE_NULL;  // reports back as NULL
-                }
+        if (output_num <= D_OUT_CHANNELS) {
+          switch (output_num) {
+              case 1:  { nv->value = (float)output_1_pin; } break;
+              case 2:  { nv->value = (float)output_2_pin; } break;
+              case 3:  { nv->value = (float)output_3_pin; } break;
+              case 4:  { nv->value = (float)output_4_pin; } break;
+              case 5:  { nv->value = (float)output_5_pin; } break;
+              case 6:  { nv->value = (float)output_6_pin; } break;
+              case 7:  { nv->value = (float)output_7_pin; } break;
+              case 8:  { nv->value = (float)output_8_pin; } break;
+              case 9:  { nv->value = (float)output_9_pin; } break;
+              case 10: { nv->value = (float)output_10_pin; } break;
+              case 11: { nv->value = (float)output_11_pin; } break;
+              case 12: { nv->value = (float)output_12_pin; } break;
+              case 13: { nv->value = (float)output_13_pin; } break;
+
+              default:
+                  {
+  //                  nv->value = 0;              // inactive
+                      nv->valuetype = TYPE_NULL;  // reports back as NULL
+                  }
+          }
+        } else {
+          nv->valuetype = TYPE_NULL; // report back null for now
         }
+
         if (invert) {
             nv->value = 1.0 - nv->value;
         }
@@ -657,25 +857,31 @@ stat_t io_set_output(nvObj_t *nv)
         if (invert) {
             value = 1.0 - value;
         }
-        switch (output_num) {
-            // Generated with:
-            // perl -e 'for($i=1;$i<14;$i++) { print "case ${i}:  { output_${i}_pin = value; } break;\n";}'
-            // BEGIN generated
-            case 1:  { output_1_pin = value; } break;
-            case 2:  { output_2_pin = value; } break;
-            case 3:  { output_3_pin = value; } break;
-            case 4:  { output_4_pin = value; } break;
-            case 5:  { output_5_pin = value; } break;
-            case 6:  { output_6_pin = value; } break;
-            case 7:  { output_7_pin = value; } break;
-            case 8:  { output_8_pin = value; } break;
-            case 9:  { output_9_pin = value; } break;
-            case 10:  { output_10_pin = value; } break;
-            case 11:  { output_11_pin = value; } break;
-            case 12:  { output_12_pin = value; } break;
-            case 13:  { output_13_pin = value; } break;
-            // END generated
-            default: { nv->value = 0; } // inactive
+        if (output_num <= D_OUT_CHANNELS) {
+          switch (output_num) {
+              // Generated with:
+              // perl -e 'for($i=1;$i<14;$i++) { print "case ${i}:  { output_${i}_pin = value; } break;\n";}'
+              // BEGIN generated
+              case 1:  { output_1_pin = value; } break;
+              case 2:  { output_2_pin = value; } break;
+              case 3:  { output_3_pin = value; } break;
+              case 4:  { output_4_pin = value; } break;
+              case 5:  { output_5_pin = value; } break;
+              case 6:  { output_6_pin = value; } break;
+              case 7:  { output_7_pin = value; } break;
+              case 8:  { output_8_pin = value; } break;
+              case 9:  { output_9_pin = value; } break;
+              case 10:  { output_10_pin = value; } break;
+              case 11:  { output_11_pin = value; } break;
+              case 12:  { output_12_pin = value; } break;
+              case 13:  { output_13_pin = value; } break;
+              // END generated
+              default: { nv->value = 0; } // inactive
+          }
+        } else {
+          // bool op = true;
+          // if (op <= 0.01) op=false;
+          can_digital_output(output_num, (bool)value);
         }
     }
     return (STAT_OK);

@@ -25,6 +25,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 #ifndef GPIO_H_ONCE
 #define GPIO_H_ONCE
 
@@ -33,11 +34,14 @@
  */
 //--- change as required for board and switch hardware ---//
 
-#define D_IN_CHANNELS       9  // v9    // number of digital inputs supported
-//#define D_OUT_CHANNELS    13          // number of digital outputs supported
-#define D_OUT_CHANNELS	    9           // number of digital outputs supported
-#define A_IN_CHANNELS	    0           // number of analog inputs supported
-#define A_OUT_CHANNELS	    0           // number of analog outputs supported
+#define D_IN_CHANNELS      9           // number of digital inputs supported
+#define D_OUT_CHANNELS	   9           // number of digital outputs supported
+#define A_IN_CHANNELS	     0           // number of analog inputs supported
+#define A_OUT_CHANNELS	   0           // number of analog outputs supported
+#define D_IN_CAN_CHANNELS  1
+#define D_OUT_CAN_CHANNELS 1
+#define A_IN_CAN_CHANNELS  0
+#define A_OUT_CAN_CHANNELS 0
 
 //#define INPUT_LOCKOUT_MS    50        // milliseconds to go dead after input firing
 #define INPUT_LOCKOUT_MS    10          // milliseconds to go dead after input firing
@@ -114,10 +118,10 @@ typedef struct gpioAnalogOutput {       // one struct per analog output
     ioMode mode;
 } a_out_t;
 
-extern d_in_t   d_in[D_IN_CHANNELS];
-extern d_out_t  d_out[D_OUT_CHANNELS];
-extern a_in_t   a_in[A_IN_CHANNELS];
-extern a_out_t  a_out[A_OUT_CHANNELS];
+extern d_in_t   d_in[D_IN_CHANNELS   + D_IN_CAN_CHANNELS];
+extern d_out_t  d_out[D_OUT_CHANNELS + D_OUT_CAN_CHANNELS];
+extern a_in_t   a_in[A_IN_CHANNELS   + A_IN_CAN_CHANNELS];
+extern a_out_t  a_out[A_OUT_CHANNELS + A_OUT_CAN_CHANNELS];
 
 /*
  * GPIO function prototypes
@@ -138,7 +142,6 @@ stat_t io_set_ac(nvObj_t *nv);
 stat_t io_set_fn(nvObj_t *nv);
 
 stat_t io_get_input(nvObj_t *nv);
-
 
 stat_t io_set_domode(nvObj_t *nv);			// output sense
 stat_t io_get_output(nvObj_t *nv);

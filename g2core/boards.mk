@@ -155,6 +155,11 @@ ifeq ("$(CONFIG)","EggBot")
     SETTINGS_FILE="settings_eggbot.h"
 endif
 
+ifeq ("$(CONFIG)","geratech")
+    ifeq ("$(BOARD)","NONE")
+        BOARD=geratech_proto
+    endif
+    SETTINGS_FILE="settings_geratech.h"
+endif
 
 include $(wildcard ./board/$(STAR).mk)
-
