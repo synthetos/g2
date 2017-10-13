@@ -96,18 +96,11 @@
 /**** Macros ****/
 // used to abstract the encoder code out of the stepper so it can be managed in one place
 
-
-#ifndef STEP_DIR_SERVO
 #define SET_ENCODER_STEP_SIGN(m, s) en.en[m].step_sign = s;
 #define INCREMENT_ENCODER(m) en.en[m].steps_run += en.en[m].step_sign;
 #define ACCUMULATE_ENCODER(m)                     \
     en.en[m].encoder_steps += en.en[m].steps_run; \
     en.en[m].steps_run = 0;
-#else
-#define SET_ENCODER_STEP_SIGN(m, s)
-#define INCREMENT_ENCODER(m)
-#define ACCUMULATE_ENCODER(m)
-#endif
 
 /**** Structures ****/
 
