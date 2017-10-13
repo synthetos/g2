@@ -33,8 +33,7 @@
 
 #ifndef HARDWARE_H_ONCE
 #define HARDWARE_H_ONCE
-
-#define STEP_DIR_SERVO
+//#define STEP_DIR_SERVO
 
 /*--- Hardware platform enumerations ---*/
 

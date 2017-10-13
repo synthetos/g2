@@ -18,14 +18,13 @@
 
 #ifndef _CAN_LIBRARY_
 #define _CAN_LIBRARY_
-#define CAN_ENABLED
+//#define CAN_ENABLED
 
 #include "../../g2core.h"
 
 namespace libsam {
 	#include "pio.h"
 	#include "pmc.h"
-
 }
 
 #define DUE_CAN_MAILBOX_TX_BUFFER_SUPPORT  // helper definition for handling different FlexCAN revisions

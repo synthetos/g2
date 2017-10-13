@@ -400,12 +400,6 @@ void can_gpio_received (int pin_num, uint8_t length, uint8_t* data) {
     case 12: _vdin12.pin_changed(pin_value); break;
 
   }
-
-  // if (d_in[0].state == INPUT_ACTIVE) {
-  //   d_in[0].state = INPUT_INACTIVE;
-  // } else {
-  //   d_in[0].state = INPUT_ACTIVE;
-  // }
 }
 
 #endif

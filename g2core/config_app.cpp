@@ -346,7 +346,7 @@ const cfgItem_t cfgArray[] = {
     { "c","ctn",_fip,  3, cm_print_tn, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].travel_min,     C_TRAVEL_MIN },
     { "c","ctm",_fip,  3, cm_print_tm, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].travel_max,     C_TRAVEL_MAX },
     { "c","cjm",_fip,  0, cm_print_jm, get_flt,   cm_set_jm, (float *)&cm.a[AXIS_C].jerk_max,       C_JERK_MAX },
-    { "c","cjh",_fip,  0, cm_print_jh, get_flt,   cm_set_jh, (float *)&cm.a[AXIS_C].jerk_high,       C_JERK_HIGH_SPEED },
+    { "c","cjh",_fip,  0, cm_print_jh, get_flt,   cm_set_jh, (float *)&cm.a[AXIS_C].jerk_high,      C_JERK_HIGH_SPEED },
     { "c","cra",_fipc, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].radius,         C_RADIUS },
     { "c","chi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_C].homing_input,   C_HOMING_INPUT },
     { "c","chd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_C].homing_dir,     C_HOMING_DIRECTION },
