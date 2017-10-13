@@ -241,7 +241,7 @@
 //! available greater size, then applies register format of UOTGHS controller
 //! for pipe size bit-field.
 #define uhd_format_pipe_size(size) \
-		(32 - clz(((uint32_t)min(max(size, 8), 1024) << 1) - 1) - 1 - 3)
+		(32 - clz(((uint32_t)minUSB(maxUSB(size, 8), 1024) << 1) - 1) - 1 - 3)
 #define uhd_configure_pipe_size(p,size) \
 		(Wr_bits(UOTGHS->UOTGHS_HSTPIPCFG[p], UOTGHS_HSTPIPCFG_PSIZE_Msk, uhd_format_pipe_size(size)))
 #define uhd_get_pipe_size(p)                     (8<<((Rd_bits(UOTGHS->UOTGHS_HSTPIPCFG[p], (UOTGHS_HSTPIPCFG_PSIZE_Msk)))>> UOTGHS_HSTPIPCFG_PSIZE_Pos))

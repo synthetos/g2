@@ -127,6 +127,8 @@ extern a_out_t  a_out[A_OUT_CHANNELS + A_OUT_CAN_CHANNELS];
  * GPIO function prototypes
  */
 
+ void can_gpio_received (int, uint8_t, uint8_t*);
+
 void gpio_init(void);
 void gpio_reset(void);
 void input_reset(void);

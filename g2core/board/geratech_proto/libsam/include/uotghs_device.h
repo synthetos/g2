@@ -379,11 +379,11 @@
   //! Tests if an interrupt is triggered by the selected endpoint
 #define Is_udd_endpoint_interrupt(ep)             (Tst_bits(UOTGHS->UOTGHS_DEVISR, UOTGHS_DEVISR_PEP_0 << (ep)))
   //! Returns the lowest endpoint number generating an endpoint interrupt or MAX_PEP_NB if none
-#define udd_get_interrupt_endpoint_number()       (ctz(((UOTGHS->UOTGHS_DEVISR >> UOTGHS_DEVISR_PEP_Pos) & \
-                                                   (UOTGHS->UOTGHS_DEVIMR >> UOTGHS_DEVIMR_PEP_Pos)) |     \
+#define udd_get_interrupt_endpoint_number()       (ctz(((UOTGHS->UOTGHS_DEVISR >> LIBSAM_UOTGHS_DEVISR_PEP_Pos) & \
+                                                   (UOTGHS->UOTGHS_DEVIMR >> LIBSAM_UOTGHS_DEVIMR_PEP_Pos)) |     \
                                                    (1 << MAX_PEP_NB)))
-#define UOTGHS_DEVISR_PEP_Pos   12
-#define UOTGHS_DEVIMR_PEP_Pos   12
+#define LIBSAM_UOTGHS_DEVISR_PEP_Pos   12
+#define LIBSAM_UOTGHS_DEVIMR_PEP_Pos   12
 //! @}
 
 //! @name UOTGHS Device control endpoint errors

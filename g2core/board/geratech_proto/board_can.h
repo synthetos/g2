@@ -21,7 +21,12 @@
 #define CAN_ENABLED
 
 #include "../../g2core.h"
-#include "libsam/chip.h"
+
+namespace libsam {
+	#include "pio.h"
+	#include "pmc.h"
+
+}
 
 #define DUE_CAN_MAILBOX_TX_BUFFER_SUPPORT  // helper definition for handling different FlexCAN revisions
 #define DUE_CAN_DYNAMIC_BUFFER_SUPPORT  // helper definition for handling different FlexCAN revisions
@@ -37,12 +42,6 @@
 	#define PINS_CAN1            (91u)
 	#define ARDUINO152
 #endif
-
-#define CAN		Can0
-#define CAN2	Can1
-
-#define CAN0_EN  50 //these enable pins match most all recent EVTV boards (EVTVDue, CAN Due 2.0)
-#define CAN1_EN  48 //they're only defaults, you can set whichever pin you need when calling begin()
 
 /** Define the Mailbox mask for eight mailboxes. */
 #define GLOBAL_MAILBOX_MASK           0x000000ff
@@ -368,11 +367,11 @@ class CANRaw
 };
 
 void hw_can_init();
-void hw_can_send_frame();
+void hw_can_send_frame(uint32_t, uint8_t, uint8_t*);
 
 extern CANRaw Can0;
 extern CANRaw Can1;
 
-extern void can_message_received (uint32_t id, uint8_t length, uint8_t *data);
+extern void can_message_received (uint32_t, uint8_t, uint8_t*);
 
 #endif // _CAN_LIBRARY_

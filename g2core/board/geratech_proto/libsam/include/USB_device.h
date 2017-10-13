@@ -350,7 +350,7 @@ typedef uint32_t                iram_size_t;
  *
  * \note More optimized if only used with values known at compile time.
  */
-#define Abs(a)              (((a) <  0 ) ? -(a) : (a))
+#define AbsUSB(a)              (((a) <  0 ) ? -(a) : (a))
 
 /*! \brief Takes the minimal value of \a a and \a b.
  *
@@ -361,7 +361,7 @@ typedef uint32_t                iram_size_t;
  *
  * \note More optimized if only used with values known at compile time.
  */
-#define Min(a, b)           (((a) < (b)) ?  (a) : (b))
+#define MinUSB(a, b)           (((a) < (b)) ?  (a) : (b))
 
 /*! \brief Takes the maximal value of \a a and \a b.
  *
@@ -372,7 +372,7 @@ typedef uint32_t                iram_size_t;
  *
  * \note More optimized if only used with values known at compile time.
  */
-#define Max(a, b)           (((a) > (b)) ?  (a) : (b))
+#define MaxUSB(a, b)           (((a) > (b)) ?  (a) : (b))
 
 // abs() is already defined by stdlib.h
 
@@ -385,7 +385,7 @@ typedef uint32_t                iram_size_t;
  *
  * \note More optimized if only used with values unknown at compile time.
  */
-#define min(a, b)   Min(a, b)
+#define minUSB(a, b)   MinUSB(a, b)
 
 /*! \brief Takes the maximal value of \a a and \a b.
  *
@@ -396,7 +396,7 @@ typedef uint32_t                iram_size_t;
  *
  * \note More optimized if only used with values unknown at compile time.
  */
-#define max(a, b)   Max(a, b)
+#define maxUSB(a, b)   MaxUSB(a, b)
 
 //! @}
 

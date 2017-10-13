@@ -95,7 +95,7 @@ static stat_t get_tick(nvObj_t *nv);        // get system tick count
  *    cannot exceed TOKEN_LEN. String functions working on the table assume these
  *    rules are followed and do not check lengths or perform other validation.
  *
- *  - If the count of lines in cfgArray exceeds 255 (which it does) you need to 
+ *  - If the count of lines in cfgArray exceeds 255 (which it does) you need to
  *    ensure index_t is uint16_t in the config.h file (and not uint8_t).
  *
  *  - The precision value 'p' only affects JSON responses. You need to also set
@@ -387,22 +387,22 @@ const cfgItem_t cfgArray[] = {
     { "di8","di8mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[7].mode,     DI8_MODE },
     { "di8","di8ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[7].action,   DI8_ACTION },
     { "di8","di8fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[7].function, DI8_FUNCTION },
-#if (D_IN_CHANNELS >= 9)
+#if (D_IN_CAN_CHANNELS+D_IN_CHANNELS >= 9)
     { "di9","di9mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[8].mode,     DI9_MODE },
     { "di9","di9ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[8].action,   DI9_ACTION },
     { "di9","di9fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[8].function, DI9_FUNCTION },
 #endif
-#if (D_IN_CHANNELS >= 10)
+#if (D_IN_CAN_CHANNELS+D_IN_CHANNELS >= 10)
     { "di10","di10mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[9].mode,     DI10_MODE },
     { "di10","di10ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[9].action,   DI10_ACTION },
     { "di10","di10fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[9].function, DI10_FUNCTION },
 #endif
-#if (D_IN_CHANNELS >= 11)
+#if (D_IN_CAN_CHANNELS+D_IN_CHANNELS >= 11)
     { "di11","di11mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[10].mode,     DI11_MODE },
     { "di11","di11ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[10].action,   DI11_ACTION },
     { "di11","di11fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[10].function, DI11_FUNCTION },
 #endif
-#if (D_IN_CHANNELS >= 12)
+#if (D_IN_CAN_CHANNELS+D_IN_CHANNELS >= 12)
     { "di12","di12mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[11].mode,     DI12_MODE },
     { "di12","di12ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[11].action,   DI12_ACTION },
     { "di12","di12fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[11].function, DI12_FUNCTION },
@@ -417,16 +417,16 @@ const cfgItem_t cfgArray[] = {
     { "in","in6", _f0, 0, io_print_in, io_get_input, set_ro,  (float *)&cs.null, 0 },
     { "in","in7", _f0, 0, io_print_in, io_get_input, set_ro,  (float *)&cs.null, 0 },
     { "in","in8", _f0, 0, io_print_in, io_get_input, set_ro,  (float *)&cs.null, 0 },
-#if (D_IN_CHANNELS >= 9)
+#if (D_IN_CAN_CHANNELS+D_IN_CHANNELS >= 9)
     { "in","in9", _f0, 0, io_print_in, io_get_input, set_ro,  (float *)&cs.null, 0 },
 #endif
-#if (D_IN_CHANNELS >= 10)
+#if (D_IN_CAN_CHANNELS+D_IN_CHANNELS >= 10)
     { "in","in10", _f0, 0, io_print_in, io_get_input, set_ro,  (float *)&cs.null, 0 },
 #endif
-#if (D_IN_CHANNELS >= 11)
+#if (D_IN_CAN_CHANNELS+D_IN_CHANNELS >= 11)
     { "in","in11", _f0, 0, io_print_in, io_get_input, set_ro,  (float *)&cs.null, 0 },
 #endif
-#if (D_IN_CHANNELS >= 12)
+#if (D_IN_CAN_CHANNELS+D_IN_CHANNELS >= 12)
     { "in","in12", _f0, 0, io_print_in, io_get_input, set_ro,  (float *)&cs.null, 0 },
 #endif
 
@@ -847,8 +847,8 @@ const cfgItem_t cfgArray[] = {
     { "sys","mfo", _fipn,3, cm_print_mfo, get_flt,cm_set_mfo,(float *)&cm.gmx.mfo_factor,           FEED_OVERRIDE_FACTOR},
     { "sys","mtoe",_fipn,0, cm_print_mtoe,get_ui8, set_01,   (float *)&cm.gmx.mto_enable,           TRAVERSE_OVERRIDE_ENABLE},
     { "sys","mto", _fipn,3, cm_print_mto, get_flt,cm_set_mto,(float *)&cm.gmx.mto_factor,           TRAVERSE_OVERRIDE_FACTOR},
-	
-	// Power management 
+
+	// Power management
     { "sys","mt",  _fipn,2, st_print_mt,  get_flt, st_set_mt,  (float *)&st_cfg.motor_power_timeout,  MOTOR_POWER_TIMEOUT},
     { "",   "me",  _f0,  0, st_print_me,  st_set_me, st_set_me,(float *)&cs.null, 0 },    // SET to enable  motors (null value sets to maintain compatability)
     { "",   "md",  _f0,  0, st_print_md,  st_set_md, st_set_md,(float *)&cs.null, 0 },    // SET to disable motors (null value sets to maintain compatability)
@@ -1270,14 +1270,14 @@ stat_t set_fltp(nvObj_t *nv)
 /*
  * preprocess_float() - pre-process floating point number for units display
  *
- *  Apologies in advance for this twisty little function. This function is used to 
+ *  Apologies in advance for this twisty little function. This function is used to
  *  convert the native, canonical form of a parameter (mm, or whatever), into a display
  *  format appropriate to the units mode in effect. It uses the flags in the config table
- *  to determine what type of conversion to perform. It's complicated by the fact that  
- *  only linear axes actually convert - rotaries do not. Plus, determining the axis for 
- *  a motor requires unraveling the motor mapping (handled in cm_get_axis_type()). 
+ *  to determine what type of conversion to perform. It's complicated by the fact that
+ *  only linear axes actually convert - rotaries do not. Plus, determining the axis for
+ *  a motor requires unraveling the motor mapping (handled in cm_get_axis_type()).
  *  Also, there are global SYS group values that are not associated with any axis.
- *  Lastly, the steps-per-unit value (1su) is actually kept in inverse conversion form, 
+ *  Lastly, the steps-per-unit value (1su) is actually kept in inverse conversion form,
  *  as its native form would be units-per-step.
  */
 
@@ -1383,7 +1383,7 @@ static stat_t _do_offsets(nvObj_t *nv)  // print offset parameters for G54-G59,G
 static stat_t _do_inputs(nvObj_t *nv)  // print parameters for all input groups
 {
     char group[GROUP_LEN];
-    for (uint8_t i=1; i < D_IN_CHANNELS+1; i++) {
+    for (uint8_t i=1; i < D_IN_CAN_CHANNELS+D_IN_CHANNELS+1; i++) {
         sprintf(group, "di%d", i);
         _do_group(nv, group);
     }
@@ -1393,7 +1393,7 @@ static stat_t _do_inputs(nvObj_t *nv)  // print parameters for all input groups
 static stat_t _do_outputs(nvObj_t *nv)  // print parameters for all output groups
 {
     char group[GROUP_LEN];
-    for (uint8_t i=1; i < D_OUT_CHANNELS+1; i++) {
+    for (uint8_t i=1; i < D_OUT_CHANNELS+D_OUT_CAN_CHANNELS+1; i++) {
         sprintf(group, "do%d", i);
         _do_group(nv, group);
     }

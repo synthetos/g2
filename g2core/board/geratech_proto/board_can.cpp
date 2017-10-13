@@ -19,13 +19,6 @@
 
 #include "board_can.h"
 
-/**
-* \brief constructor for the class
-*
-* \param pCan Which canbus hardware to use (CAN0 or CAN1)
-* \param Rs pin to use for transceiver Rs control
-* \param En pin to use for transceiver enable
-*/
 CANRaw::CANRaw(Can* pCan, uint32_t En ) {
 	m_pCan = pCan;
   nIRQ=(m_pCan == CAN0 ? CAN0_IRQn : CAN1_IRQn);
@@ -193,28 +186,30 @@ uint32_t CANRaw::init(uint32_t ul_baudrate)
 	uint32_t ul_flag;
 	uint32_t ul_tick;
 
-  initializeBuffers();
+	//pmc_enable_all_periph_clk();
+
+  //initializeBuffers();
 
 	numBusErrors = 0;
-    numRxFrames = 0;
+  numRxFrames = 0;
 
 	//initialize all function pointers to null
 	for (int i = 0; i < getNumMailBoxes()+1; i++) cbCANFrame[i] = 0;
 
-//arduino 1.5.2 doesn't init canbus so make sure to do it here.
-#ifdef ARDUINO152
-	PIO_Configure(PIOA,PIO_PERIPH_A, PIO_PA1A_CANRX0|PIO_PA0A_CANTX0, PIO_DEFAULT);
-	PIO_Configure(PIOB,PIO_PERIPH_A, PIO_PB15A_CANRX1|PIO_PB14A_CANTX1, PIO_DEFAULT);
-#endif
-
-	if (m_pCan == CAN0) pmc_enable_periph_clk(ID_CAN0);
-	if (m_pCan == CAN1) pmc_enable_periph_clk(ID_CAN1);
-
-	/*if (enablePin != 255) {
-		pinMode(enablePin, OUTPUT);
-		digitalWrite(enablePin, HIGH);
-	}*/
-
+// //arduino 1.5.2 doesn't init canbus so make sure to do it here.
+// /*#ifdef ARDUINO152
+libsam::PIO_Configure(PIOA,libsam::PIO_PERIPH_A, PIO_PA1A_CANRX0|PIO_PA0A_CANTX0, PIO_DEFAULT);
+libsam::PIO_Configure(PIOB,libsam::PIO_PERIPH_A, PIO_PB15A_CANRX1|PIO_PB14A_CANTX1, PIO_DEFAULT);
+// #endif*/
+//
+libsam::pmc_enable_periph_clk(ID_CAN0);
+libsam::pmc_enable_periph_clk(ID_CAN1);
+//
+// 	/*if (enablePin != 255) {
+// 		pinMode(enablePin, OUTPUT);
+// 		digitalWrite(enablePin, HIGH);
+// 	}*/
+//
 	/* Initialize the baudrate for CAN module. */
 	ul_flag = set_baudrate(ul_baudrate);
 	if (ul_flag == 0) {
@@ -1539,7 +1534,7 @@ CANListener::CANListener()
 }
 
 //an empty version so that the linker doesn't complain that no implementation exists.
-void CANListener::gotFrame(CAN_FRAME */*frame*/, int /*mailbox*/)
+void CANListener::gotFrame(CAN_FRAME* /*frame*/, int /*mailbox*/)
 {
 
 }
@@ -1586,18 +1581,40 @@ void CAN1_Handler(void)
 }
 
 /// instantiate the two canbus adapters
-CANRaw Can0(CAN0, CAN0_EN);
-CANRaw Can1(CAN1, CAN1_EN);
+CANRaw Can0(CAN0, 0);
+CANRaw Can1(CAN1, 0);
 
 void hw_can_message_received (CAN_FRAME *frame) {
 	can_message_received(frame->id, frame->length, frame->data.bytes);
 }
 
 void hw_can_init () {
-	Can0.begin();
-	Can0.watchFor();
+  Can0.begin(CAN_BPS_1000K);
 
-	Can0.attachCANInterrupt(hw_can_message_received);
+  //By default there are 7 RX mailboxes for each device
+  //extended
+  //syntax is mailbox, ID, mask, extended
+  Can0.setRXFilter(0, 0x2FF00, 0x1FF2FF00, true);
+  Can0.setRXFilter(1, 0x1F0000, 0x1F1F0000, true);
+  Can0.setRXFilter(2, 0, 0, true); //catch all mailbox
+
+  //standard
+  Can0.setRXFilter(3, 0x40F, 0x7FF, false);
+  Can0.setRXFilter(4, 0x310, 0x7F0, false);
+  Can0.watchFor(0x200, 0x700); //used in place of above syntax
+  Can0.setRXFilter(0, 0, false); //catch all mailbox - no mailbox ID specified
+
+  //now register all of the callback functions.
+  Can0.setCallback(0, hw_can_message_received);
+  Can0.setCallback(1, hw_can_message_received);
+  Can0.setCallback(3, hw_can_message_received);
+  Can0.setCallback(4, hw_can_message_received);
+  Can0.setCallback(5, hw_can_message_received);
+  //this function will get a callback for any mailbox that doesn't have a registered callback from above -> 2 and 6
+  Can0.setGeneralCallback(hw_can_message_received);
+
+  uint8_t* data=0;
+  can_message_received(1,1,data);
 }
 
 void hw_can_send_frame (uint32_t id, uint8_t length, uint8_t *data) {

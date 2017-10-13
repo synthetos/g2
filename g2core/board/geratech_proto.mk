@@ -50,7 +50,12 @@ ifeq ("$(BASE_BOARD)","g2core-due")
     # Note: we call it "g2core-due" instead of "due" since the Motate built-in provides
     # a "due" BASE_BOARD.
     BOARD_PATH = ./board/geratech_proto
-    SOURCE_DIRS += ${BOARD_PATH} device/step_dir_driver
+		#SOURCE_DIRS += ${BOARD_PATH} device/step_dir_driver
+		SOURCE_DIRS += ${BOARD_PATH} device/step_dir_geratech_servo
+
+		#SOURCE_DIRS += ./board/geratech_proto/libsam/source
+		#DEVICE_INCLUDE_DIRS += ./board/geratech_proto/libsam/include
+		#DEVICE_INCLUDE_DIRS += ./board/geratech_proto/libsam/
 
     PLATFORM_BASE = ${MOTATE_PATH}/platform/atmel_sam
 

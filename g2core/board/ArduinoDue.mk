@@ -19,6 +19,7 @@ ifneq ("$(PLATFORM:-)","")
     BOARD = $(PLATFORM)
 endif
 
+
 ##########
 # BOARDs for use directly from the make command line (with default settings) or by CONFIGs.
 
@@ -41,6 +42,8 @@ ifeq ("$(BOARD)","shopbotShield")
     DEVICE_DEFINES += MOTATE_BOARD="shopbotShield"
     DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
 endif
+
+
 
 ##########
 # The general g2core-due BASE_BOARD.

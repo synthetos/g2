@@ -30,12 +30,11 @@
 
 #include "config.h"
 #include "error.h"
-#include "board_can.h"
 
 #ifndef HARDWARE_H_ONCE
 #define HARDWARE_H_ONCE
 
-#define CAN_ENABLED
+#define STEP_DIR_SERVO
 
 /*--- Hardware platform enumerations ---*/
 
@@ -76,9 +75,7 @@ enum hwPlatform {
 #include "MotateTimers.h" // for TimerChanel<> and related...
 #include "MotateServiceCall.h" // for ServiceCall<>
 
-#define SAM3XA_SERIES
-#define SAM3XA_SERIES (SAM3X4 || SAM3X8 || SAM3A4 || SAM3A8)
-#include "libsam/chip.h"
+#include "board_can.h"
 
 using Motate::TimerChannel;
 using Motate::ServiceCall;

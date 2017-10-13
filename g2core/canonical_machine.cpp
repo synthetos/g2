@@ -784,7 +784,7 @@ void canonical_machine_reset()
 
     // NOTE: Should unhome axes here
 
-    // reset requests and flags 
+    // reset requests and flags
     cm.queue_flush_state = FLUSH_OFF;
     cm.end_hold_requested = false;
     cm.limit_requested = 0;                     // resets switch closures that occurred during initialization
@@ -1118,7 +1118,7 @@ stat_t cm_set_g10_data(const uint8_t P_word, const bool P_flag,
                     cm.offset[P_word][axis] = _to_millimeters(offset[axis]);
                 } else {
                     // Should L20 take into account G92 offsets?
-                    cm.offset[P_word][axis] = 
+                    cm.offset[P_word][axis] =
                         cm.gmx.position[axis] -
                         _to_millimeters(offset[axis]) -
                         cm.tl_offset[axis];
@@ -1222,7 +1222,7 @@ static void _exec_offset(float *value, bool *flag)
     float offsets[AXES];
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
 
-        offsets[axis] = cm.offset[coord_system][axis] + cm.tl_offset[axis] + 
+        offsets[axis] = cm.offset[coord_system][axis] + cm.tl_offset[axis] +
                         (cm.gmx.origin_offset[axis] * cm.gmx.origin_offset_enable);
     }
     mp_set_runtime_work_offset(offsets);
@@ -1317,7 +1317,7 @@ stat_t cm_set_origin_offsets(const float offset[], const bool flag[])
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         if (flag[axis]) {
             cm.gmx.origin_offset[axis] = cm.gmx.position[axis] -
-                                         cm.offset[cm.gm.coord_system][axis] - 
+                                         cm.offset[cm.gm.coord_system][axis] -
                                          cm.tl_offset[axis] -
                                          _to_millimeters(offset[axis]);
         }
@@ -1381,7 +1381,7 @@ stat_t cm_straight_traverse(const float target[], const bool flags[])
     cm_cycle_start();                               // required for homing & other cycles
     stat_t status = mp_aline(&cm.gm);               // send the move to the planner
     cm_finalize_move();
-    
+
     if (status == STAT_MINIMUM_LENGTH_MOVE) {
         if (!mp_has_runnable_buffer()) {            // handle condition where zero-length move is last or only move
             cm_cycle_end();                         // ...otherwise cycle will not end properly
@@ -1415,7 +1415,7 @@ stat_t _goto_stored_position(const float stored_position[],     // always in mm
             target[i] *= INCHES_PER_MM;
         }
     }
-    
+
     // Run the stored position move
     while (mp_planner_is_full());                           // Make sure you have available buffers
 
@@ -2282,7 +2282,7 @@ static const char *const msg_frmo[] = { msg_g93, msg_g94, msg_g95 };
 
 static int8_t _get_axis(const index_t index)
 {
-    // test if this is a SYS parameter (global), in which case there will be no axis    
+    // test if this is a SYS parameter (global), in which case there will be no axis
     if (strcmp("sys", cfgArray[index].group) == 0) {
         return (AXIS_TYPE_SYSTEM);
     }
@@ -2292,7 +2292,7 @@ static int8_t _get_axis(const index_t index)
     if (isdigit(cfgArray[index].token[0])) {
         return(st_cfg.mot[c-0x31].motor_map);
     }
-        
+
     // otherwise it's an axis. Or undefined, which is usually a global.
     char *ptr;
     char axes[] = {"xyzabc"};
@@ -2486,12 +2486,12 @@ stat_t cm_get_am(nvObj_t *nv)
 stat_t cm_set_am(nvObj_t *nv)        // axis mode
 {
     if (cm_get_axis_type(nv->index) == 0) {    // linear
-        if (nv->value > AXIS_MODE_MAX_LINEAR) { 
+        if (nv->value > AXIS_MODE_MAX_LINEAR) {
             nv->valuetype = TYPE_NULL;
             return (STAT_INPUT_EXCEEDS_MAX_VALUE);
         }
     } else {
-        if (nv->value > AXIS_MODE_MAX_ROTARY) { 
+        if (nv->value > AXIS_MODE_MAX_ROTARY) {
             nv->valuetype = TYPE_NULL;
             return (STAT_INPUT_EXCEEDS_MAX_VALUE);
         }
@@ -2506,7 +2506,7 @@ stat_t cm_set_hi(nvObj_t *nv)
         nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_LESS_THAN_MIN_VALUE);
     }
-    if (nv->value > D_IN_CHANNELS) {
+    if (nv->value > D_IN_CHANNELS+D_IN_CAN_CHANNELS) {
         nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }

@@ -143,6 +143,9 @@ void setup(void)
 
     application_init_machine();
     application_init_startup();
+#ifdef CAN_ENABLED
+    hw_can_init();
+#endif
 }
 
 void loop() {

@@ -41,7 +41,7 @@
 /*
  * Peripherals
  */
-// #include "include/adc.h"
+#include "include/adc.h"
 #if (SAM3XA_SERIES) || (SAM3N_SERIES) || (SAM3S_SERIES)
 #include "include/dacc.h"
 #endif // (SAM3XA_SERIES) || (SAM3N_SERIES) || (SAM3S_SERIES)
@@ -63,15 +63,15 @@
 #include "include/wdt.h"
 
 #include "include/timetick.h"
-//#include "include/USB_device.h"
-//#include "include/USB_host.h"
+#include "include/USB_device.h"
+#include "include/USB_host.h"
 
 #if (SAM3XA_SERIES)
 #include "include/can.h"
 #include "include/emac.h"
 #include "include/trng.h"
-//#include "include/uotghs_device.h"
-//#include "include/uotghs_host.h"
+#include "include/uotghs_device.h"
+#include "include/uotghs_host.h"
 #endif /* (SAM3XA_SERIES) */
 
 #endif /* _LIB_SAM_ */

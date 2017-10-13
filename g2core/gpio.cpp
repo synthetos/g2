@@ -380,7 +380,11 @@ ioDigitalInputVirtual<10> _vdin10;
 ioDigitalInputVirtual<11> _vdin11;
 ioDigitalInputVirtual<12> _vdin12;
 
-void can_gpio_received (int pin_num, bool pin_value) {
+void can_gpio_received (int pin_num, uint8_t length, uint8_t* data) {
+  bool pin_value=false;
+
+  if (data[length-1]%2) pin_value=true;
+
   switch (pin_num) {
     case 1: _vdin1.pin_changed(pin_value); break;
     case 2: _vdin2.pin_changed(pin_value); break;
@@ -396,6 +400,12 @@ void can_gpio_received (int pin_num, bool pin_value) {
     case 12: _vdin12.pin_changed(pin_value); break;
 
   }
+
+  // if (d_in[0].state == INPUT_ACTIVE) {
+  //   d_in[0].state = INPUT_INACTIVE;
+  // } else {
+  //   d_in[0].state = INPUT_ACTIVE;
+  // }
 }
 
 #endif
@@ -546,12 +556,13 @@ void outputs_reset(void) {
 #endif
 
   //Can reset
-
+#ifdef CAN_ENABLED
   for (int i=D_OUT_CHANNELS; i< D_OUT_CHANNELS+D_OUT_CAN_CHANNELS-1; i++){
     if (d_out[i].mode != IO_MODE_DISABLED) {
       can_digital_output(i, ((d_out[13-1].mode == IO_ACTIVE_LOW) ? true : false));
     }
   }
+#endif
 }
 
 void inputs_reset(void) {
@@ -581,7 +592,7 @@ void inputs_reset(void) {
   _din12.reset();
 
 
-//#ifdef CAN_ENABLED
+#ifdef CAN_ENABLED
   _vdin1.reset();
   _vdin2.reset();
   _vdin3.reset();
@@ -594,7 +605,7 @@ void inputs_reset(void) {
   _vdin10.reset();
   _vdin11.reset();
   _vdin12.reset();
-//#endif
+#endif
 
 }
 
@@ -879,9 +890,12 @@ stat_t io_set_output(nvObj_t *nv)
               default: { nv->value = 0; } // inactive
           }
         } else {
-          // bool op = true;
-          // if (op <= 0.01) op=false;
-          can_digital_output(output_num, (bool)value);
+
+          #ifdef CAN_ENABLED
+            bool op = true;
+            if (op <= 0.1) op=false;
+            can_digital_output(output_num, op);
+          #endif
         }
     }
     return (STAT_OK);

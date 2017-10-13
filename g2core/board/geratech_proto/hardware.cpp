@@ -45,6 +45,7 @@
 void hardware_init()
 {
   board_hardware_init();
+  //hw_can_init();
   return;
 }
 

@@ -1,6 +1,6 @@
 /*
- * board_stepper.h - board-specific code for stepper.h
- * This file is part of the g2core project
+ * step_dir_driver.cpp - control over a Step/Direction/Enable stepper motor driver
+ * This file is part of G2 project
  *
  * Copyright (c) 2016 Alden S. Hart, Jr.
  * Copyright (c) 2016 Robert Giseburt
@@ -25,19 +25,59 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef BOARD_STEPPER_H_ONCE
-#define BOARD_STEPPER_H_ONCE
+#ifndef STEPP_DIR_GERATECH_DRIVER_H_ONCE
+#define STEPP_DIR_GERATECH_DRIVER_H_ONCE
 
-#include "hardware.h"  // for MOTORS
-#include "step_dir_driver.h"
+#include "MotatePins.h"
+#include "MotateTimers.h"
+#include "MotateSPI.h"
 
-extern GeratechServo<1> motor_1;
-extern GeratechServo<1> motor_2;
-extern GeratechServo<1> motor_3;
-extern GeratechServo<1> motor_4;
+#include "board_xio.h"
+#include "encoder.h"
 
-extern Stepper* Motors[MOTORS];
+#include "stepper.h"
 
-void board_stepper_init();
+using Motate::pin_number;
+using Motate::OutputPin;
+using Motate::PWMOutputPin;
+using Motate::kStartHigh;
+using Motate::kNormal;
+using Motate::Timeout;
 
-#endif  // BOARD_STEPPER_H_ONCE
+template <uint8_t t>
+struct GeratechServo final : Stepper  {
+
+    bool canStep() override {
+      return true;
+    };
+
+    void setMicrosteps(const uint8_t microsteps) override {
+
+    };
+
+    void _enableImpl() override {
+
+    };
+
+    void _disableImpl() override {
+
+    };
+
+    void stepStart() override {
+
+    };
+
+    void stepEnd() override {
+
+    };
+
+    void setDirection(uint8_t new_direction) override {
+
+    };
+
+    void setPowerLevel(float new_pl) override {
+
+    };
+};
+
+#endif  // STEPP_DIR_DRIVER_H_ONCE

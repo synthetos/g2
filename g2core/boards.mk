@@ -162,4 +162,11 @@ ifeq ("$(CONFIG)","geratech")
     SETTINGS_FILE="settings_geratech.h"
 endif
 
+ifeq ("$(CONFIG)","default")
+    ifeq ("$(BOARD)","NONE")
+        BOARD=gShield
+    endif
+    SETTINGS_FILE="settings_geratech.h"
+endif
+
 include $(wildcard ./board/$(STAR).mk)

@@ -1,6 +1,6 @@
 /*
- * board_stepper.h - board-specific code for stepper.h
- * This file is part of the g2core project
+ * step_dir_driver.cpp - control over a Step/Direction/Enable stepper motor driver
+ * This file is part of the G2 project
  *
  * Copyright (c) 2016 Alden S. Hart, Jr.
  * Copyright (c) 2016 Robert Giseburt
@@ -25,19 +25,3 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef BOARD_STEPPER_H_ONCE
-#define BOARD_STEPPER_H_ONCE
-
-#include "hardware.h"  // for MOTORS
-#include "step_dir_driver.h"
-
-extern GeratechServo<1> motor_1;
-extern GeratechServo<1> motor_2;
-extern GeratechServo<1> motor_3;
-extern GeratechServo<1> motor_4;
-
-extern Stepper* Motors[MOTORS];
-
-void board_stepper_init();
-
-#endif  // BOARD_STEPPER_H_ONCE
