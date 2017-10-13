@@ -38,8 +38,8 @@
 #define D_OUT_CHANNELS	   9           // number of digital outputs supported
 #define A_IN_CHANNELS	     0           // number of analog inputs supported
 #define A_OUT_CHANNELS	   0           // number of analog outputs supported
-#define D_IN_CAN_CHANNELS  1
-#define D_OUT_CAN_CHANNELS 1
+#define D_IN_CAN_CHANNELS  0
+#define D_OUT_CAN_CHANNELS 0
 #define A_IN_CAN_CHANNELS  0
 #define A_OUT_CAN_CHANNELS 0
 
