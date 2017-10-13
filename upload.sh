@@ -3,14 +3,21 @@ cd ./g2core
 make CONFIG=geratech
 
 set -x
-PORT=$(python3 ../find_port.py --vendor Synthetos)
+
+if [ ! -n "$PORT" ]; then
+  PORT=$(python3 ../find_port.py --vendor Synthetos)
+fi
 
 if [ ! -n "$PORT" ]; then
   PORT=$(python3 ../find_port.py --vendor 03eb)
 fi
 
 if [ ! -n "$PORT" ]; then
-  echo "No port found"
+  PORT=$(python3 ../find_port.py --vendor Arduino_LLC)
+fi
+
+if [ ! -n "$PORT" ]; then
+  echo "No port found. Please enter a port"
   exit
 fi
 
@@ -21,6 +28,6 @@ stty -F ${PORT} 9600
 sleep 3
 
 # Program
-bossac -e -w -v -i -b -R ./bin/geratech-gShield/g2core.bin
+bossac -e -w -v -i -b -R ./bin/geratech-geratech_proto/g2core.bin
 
 cd ../
