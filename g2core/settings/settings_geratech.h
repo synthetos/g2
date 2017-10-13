@@ -390,10 +390,10 @@
 #define X_JERK_HIGH_SPEED           1000.0                  // {xjh:
 #endif
 #ifndef X_HOMING_INPUT
-#define X_HOMING_INPUT              2                       // {xhi:  input used for homing or 0 to disable
+#define X_HOMING_INPUT              1                       // {xhi:  input used for homing or 0 to disable
 #endif
 #ifndef X_HOMING_DIRECTION
-#define X_HOMING_DIRECTION          1                       // {xhd:  0=search moves negative, 1= search moves positive
+#define X_HOMING_DIRECTION          0                       // {xhd:  0=search moves negative, 1= search moves positive
 #endif
 #ifndef X_SEARCH_VELOCITY
 #define X_SEARCH_VELOCITY           1000.0                   // {xsv:  minus means move to minimum switch
