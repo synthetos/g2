@@ -366,19 +366,45 @@ ioDigitalInputExt<kInput11_PinNumber , 11> _din11;
 ioDigitalInputExt<kInput12_PinNumber , 12> _din12;
 
 #ifdef CAN_ENABLED
-
-ioDigitalInputVirtual<1>  _vdin1;
-ioDigitalInputVirtual<2>  _vdin2;
-ioDigitalInputVirtual<3>  _vdin3;
-ioDigitalInputVirtual<4>  _vdin4;
-ioDigitalInputVirtual<5>  _vdin5;
-ioDigitalInputVirtual<6>  _vdin6;
-ioDigitalInputVirtual<7>  _vdin7;
-ioDigitalInputVirtual<8>  _vdin8;
-ioDigitalInputVirtual<9>  _vdin9;
+//Generated with
+//perl -e 'for($i=1;$i<13;$i++) { print "#if D_IN_CAN_CHANNELS >= ${i}\nioDigitalInputVirtual<${i}> _vdin${i};\n#endif\n";}'
+#if D_IN_CAN_CHANNELS >= 1
+ioDigitalInputVirtual<1> _vdin1;
+#endif
+#if D_IN_CAN_CHANNELS >= 2
+ioDigitalInputVirtual<2> _vdin2;
+#endif
+#if D_IN_CAN_CHANNELS >= 3
+ioDigitalInputVirtual<3> _vdin3;
+#endif
+#if D_IN_CAN_CHANNELS >= 4
+ioDigitalInputVirtual<4> _vdin4;
+#endif
+#if D_IN_CAN_CHANNELS >= 5
+ioDigitalInputVirtual<5> _vdin5;
+#endif
+#if D_IN_CAN_CHANNELS >= 6
+ioDigitalInputVirtual<6> _vdin6;
+#endif
+#if D_IN_CAN_CHANNELS >= 7
+ioDigitalInputVirtual<7> _vdin7;
+#endif
+#if D_IN_CAN_CHANNELS >= 8
+ioDigitalInputVirtual<8> _vdin8;
+#endif
+#if D_IN_CAN_CHANNELS >= 9
+ioDigitalInputVirtual<9> _vdin9;
+#endif
+#if D_IN_CAN_CHANNELS >= 10
 ioDigitalInputVirtual<10> _vdin10;
+#endif
+#if D_IN_CAN_CHANNELS >= 11
 ioDigitalInputVirtual<11> _vdin11;
+#endif
+#if D_IN_CAN_CHANNELS >= 12
 ioDigitalInputVirtual<12> _vdin12;
+#endif
+
 
 void can_gpio_received (int pin_num, uint8_t length, uint8_t* data) {
   bool pin_value=false;

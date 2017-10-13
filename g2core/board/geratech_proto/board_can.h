@@ -18,7 +18,7 @@
 
 #ifndef _CAN_LIBRARY_
 #define _CAN_LIBRARY_
-//#define CAN_ENABLED
+#define CAN_ENABLED
 
 #include "../../g2core.h"
 
