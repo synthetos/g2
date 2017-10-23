@@ -371,6 +371,7 @@ static stat_t _populate_unfiltered_status_report()
  */
 static uint8_t _populate_filtered_status_report()
 {
+    float powers_of_10[] = {1.0, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, 10000000.0};
     const char sr_str[] = "sr";
     bool has_data = false;
     char tmp[TOKEN_LEN+1];
@@ -387,8 +388,17 @@ static uint8_t _populate_filtered_status_report()
         }
         nv_get_nvObj(nv);
 
-        // report values that have changed by more than 0.0001, but always stops and ends
-        if ((fabs(nv->value - sr.status_report_value[i]) > EPSILON3) ||
+        // Always report stops and ends, but otherwise report only
+        // values that have changed, considering the report precision.
+        // It is tempting to look for changes by comparing the
+        // numerical difference to some epsilon value, but that misses
+        // small changes that just barely "roll over" in the
+        // least-significant-digit.  For example, with precision 3,
+        // 0.00049 rounds to 0.000 while 0.00050 rounds to 0.001,
+        // despite their numerical difference being only 0.00001.
+
+        float mul = powers_of_10[nv->precision > 7 ? 7 : nv->precision];
+        if ((lrint(nv->value*mul) != lrint(sr.status_report_value[i]*mul)) ||
             ((nv->index == sr.stat_index) && fp_EQ(nv->value, COMBINED_PROGRAM_STOP)) ||
             ((nv->index == sr.stat_index) && fp_EQ(nv->value, COMBINED_PROGRAM_END))) {
 

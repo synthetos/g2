@@ -1293,6 +1293,9 @@ void preprocess_float(nvObj_t *nv)
         if (cfgArray[nv->index].flags & F_CONVERT) {        // standard units conversion
             if ((type == AXIS_TYPE_LINEAR) || (type == AXIS_TYPE_SYSTEM)) {
                 nv->value *= INCHES_PER_MM;
+                // After conversion to inches, more postdecimal digits are needed
+                // to retain significance.  Three extra digits is generally enough.
+                nv->precision += 3;
             }
         } else if (cfgArray[nv->index].flags & F_ICONVERT) {// inverse units conversion
             if ((type == AXIS_TYPE_LINEAR) || (type == AXIS_TYPE_SYSTEM)) {
@@ -1300,8 +1303,6 @@ void preprocess_float(nvObj_t *nv)
             }
         }
     }
-    nv->precision = GET_TABLE_WORD(precision);
-    nv->valuetype = TYPE_FLOAT;
 }
 
 /*

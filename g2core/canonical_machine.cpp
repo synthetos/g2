@@ -2439,8 +2439,14 @@ stat_t cm_get_feed(nvObj_t *nv)
 
 stat_t cm_get_pos(nvObj_t *nv)
 {
-    nv->value = cm_get_work_position(ACTIVE_MODEL, _get_axis(nv->index));
+    uint8_t axis = _get_axis(nv->index);
+    nv->value = cm_get_work_position(ACTIVE_MODEL, axis);
     nv->precision = GET_TABLE_WORD(precision);
+    if ((axis <= AXIS_Z) && (cm_get_units_mode(ACTIVE_MODEL) == INCHES)) {
+      // Display in inches needs more postdecimal digits to retain
+      // significance.  Three extra digits is generally enough.
+      nv->precision += 3;
+    }
     nv->valuetype = TYPE_FLOAT;
     return (STAT_OK);
 }
@@ -2890,6 +2896,7 @@ static const char fmt_cofs[] = "[%s%s] %s %s offset%20.3f%s\n";
 static const char fmt_cpos[] = "[%s%s] %s %s position%18.3f%s\n";
 
 static const char fmt_pos[] = "%c position:%15.3f%s\n";
+static const char fmt_pos_inches[] = "%c position:%15.6f%s\n";
 static const char fmt_mpo[] = "%c machine posn:%11.3f%s\n";
 static const char fmt_ofs[] = "%c work offset:%12.3f%s\n";
 static const char fmt_tof[] = "%c tool length offset:%12.3f%s\n";
@@ -2967,7 +2974,7 @@ void cm_print_zb(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xzb);}
 void cm_print_cofs(nvObj_t *nv) { _print_axis_coord_flt(nv, fmt_cofs);}
 void cm_print_cpos(nvObj_t *nv) { _print_axis_coord_flt(nv, fmt_cpos);}
 
-void cm_print_pos(nvObj_t *nv) { _print_pos(nv, fmt_pos, cm_get_units_mode(MODEL));}
+void cm_print_pos(nvObj_t *nv) { _print_pos(nv, (cm_get_units_mode(MODEL) == INCHES) ? fmt_pos_inches : fmt_pos, cm_get_units_mode(MODEL));}
 void cm_print_mpo(nvObj_t *nv) { _print_pos(nv, fmt_mpo, MILLIMETERS);}
 void cm_print_ofs(nvObj_t *nv) { _print_pos(nv, fmt_ofs, MILLIMETERS);}
 void cm_print_tof(nvObj_t *nv) { _print_pos(nv, fmt_tof, MILLIMETERS);}

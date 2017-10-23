@@ -297,6 +297,7 @@ static stat_t _get_nv_pair(nvObj_t *nv, char **pstr, int8_t *depth)
             nv->valuetype = TYPE_NULL;                  // report back an error
             return (STAT_BAD_NUMBER_FORMAT);
         }
+        nv->precision = 7;                              // Full precision of single float
         nv->valuetype = TYPE_FLOAT;
 
     // object parent

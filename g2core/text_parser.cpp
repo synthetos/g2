@@ -124,6 +124,7 @@ static stat_t _text_parser_kernal(char *str, nvObj_t *nv)
         nv->value = strtof(str, &rd);           // rd used as end pointer
         if (rd != str) {
             nv->valuetype = TYPE_FLOAT;
+            nv->precision = 7;                  // Full precision of single float
         }
     }
 
