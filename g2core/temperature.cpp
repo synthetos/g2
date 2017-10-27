@@ -459,7 +459,13 @@ struct PT100 {
         // from https://www.maximintegrated.com/en/app-notes/index.mvp/id/3450
         // run through wolfram as:
         // solve R = 100(1 + A*T + B*T^2); A = 3.9083*10^-3; B = -5.775*10^-7 for T
-        return 3383.81 - (0.287154*sqrt(159861899.0 - 210000.0*r));
+        float t = 3383.81 - (0.287154*sqrt(159861899.0 - 210000.0*r));
+
+        if (t > max_temp) {
+            return -1;
+        }
+
+        return t;
     };
 
     float get_resistance() {
@@ -509,7 +515,15 @@ struct PT100 {
 
     // Call back function from the ADC to tell it that the ADC has a new sample...
     void adc_has_new_value() {
+        raw_adc_value = adc_pin.getRaw();
         float v = fabs(adc_pin.getVoltage());
+//        if (v < 0) {
+//            char buffer[128];
+//            char *str = buffer;
+//            str += sprintf(str, "Heater sensor failure. Reading was: %f", v);
+//            cm_alarm(STAT_TEMPERATURE_CONTROL_ERROR, buffer);
+//            return;
+//        }
         history.add_sample(v);
     };
 };
