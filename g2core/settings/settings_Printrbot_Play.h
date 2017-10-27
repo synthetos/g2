@@ -322,11 +322,11 @@
 //    }
 
     #define TEMPERATURE_SENSOR_1_CIRCUIT_TYPE ADCCircuitRawResistance
-    #define TEMPERATURE_SENSOR_1_CIRCUIT_INIT { }
+    #define TEMPERATURE_SENSOR_1_CIRCUIT_INIT { /*pullup_resistance:*/ 430 }
     #define TEMPERATURE_SENSOR_1_TYPE  Thermistor<MAX31865<SPIBus_used_t::SPIBusDevice>>
     #define TEMPERATURE_SENSOR_1_INIT { \
         /*T1:*/     20.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
-        /*R1:*/  99500.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 10500.0 \
+        /*R1:*/  99500.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, &temperature_sensor_1_circuit \
         /*MAX31865 config*/ spiBus, spiCSPinMux.getCS(5), 150000 \
     }
 
