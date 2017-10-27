@@ -27,11 +27,11 @@
  */
 
 /***********************************************************************/
-/**** Printrbot Play profile *******************************************/
+/**** Ender 3d Printer profile *****************************************/
 /***********************************************************************/
 
 // ***> NOTE: The init message must be a single line with no CRs or LFs
-#define INIT_MESSAGE "Initializing configs to Ender Printer Play profile"
+#define INIT_MESSAGE "Initializing configs to Ender Printer profile"
 #define PROBE_REPORT_ENABLE 1
 #ifndef PI
 #define PI 3.14159628
@@ -70,7 +70,7 @@
 #define JSON_VERBOSITY              JV_LINENUM              // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
 #define QUEUE_REPORT_VERBOSITY      QR_OFF                  // one of: QR_OFF, QR_SINGLE, QR_TRIPLE
 
-#define STATUS_REPORT_VERBOSITY     SR_FILTERED             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
+#define STATUS_REPORT_VERBOSITY     SR_VERBOSE             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 #define STATUS_REPORT_MIN_MS        100                     // milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
 
@@ -97,13 +97,13 @@
 
 // *** motor settings ************************************************************************************
 
-#define MOTOR_POWER_MODE            MOTOR_POWERED_IN_CYCLE  // default motor power mode (see cmMotorPowerMode in stepper.h)
+#define MOTOR_POWER_MODE            MOTOR_ALWAYS_POWERED  // default motor power mode (see cmMotorPowerMode in stepper.h)
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
 #define M1_MOTOR_MAP                AXIS_X                  // 1ma
 #define M1_STEP_ANGLE               1.8                     // 1sa
 // Marlin says 80 steps/unit, and 16 microsteps, with a 200-step/rev motor
-#define M1_TRAVEL_PER_REV           40.64                   // 1tr
-#define M1_MICROSTEPS               128                     // 1mi        1,2,4,8,16,32
+#define M1_TRAVEL_PER_REV           40                      // 1tr
+#define M1_MICROSTEPS               32                      // 1mi        1,2,4,8,16,32
 #define M1_POLARITY                 0                       // 1po        0=normal, 1=reversed
 #define M1_POWER_MODE               MOTOR_POWERED_IN_CYCLE  // 1pm        standard
 #define M1_POWER_LEVEL              0.8                     // 1pl
@@ -117,7 +117,7 @@
 #define M1_TMC2130_HEND             0                       // 1hend
 #define M1_TMC2130_HSTRT            0                       // 1hsrt
 #define M1_TMC2130_SMIN             5                       // 1smin
-#define M1_TMC2130_SMAX             5                      // 1smax
+#define M1_TMC2130_SMAX             5                       // 1smax
 #define M1_TMC2130_SUP              2                       // 1sup
 #define M1_TMC2130_SDN              1                       // 1sdn
 
@@ -125,10 +125,10 @@
 #define M2_MOTOR_MAP                AXIS_Y
 #define M2_STEP_ANGLE               1.8
 // Marlin says 80 steps/unit, and 16 microsteps, with a 200-step/rev motor
-#define M2_TRAVEL_PER_REV           40.64
-#define M2_MICROSTEPS               128
-#define M2_POLARITY                 0
-#define M2_POWER_MODE               MOTOR_POWERED_IN_CYCLE
+#define M2_TRAVEL_PER_REV           40
+#define M2_MICROSTEPS               32
+#define M2_POLARITY                 1
+#define M2_POWER_MODE               MOTOR_ALWAYS_POWERED
 #define M2_POWER_LEVEL              0.8
 #define M2_TMC2130_TPWMTHRS         1200
 #define M2_TMC2130_TCOOLTHRS        1000
@@ -146,11 +146,11 @@
 
 #define M3_MOTOR_MAP                AXIS_Z
 #define M3_STEP_ANGLE               1.8
-#define M3_TRAVEL_PER_REV           2
-#define M3_MICROSTEPS               128
+#define M3_TRAVEL_PER_REV           8
+#define M3_MICROSTEPS               32
 #define M3_POLARITY                 1
-#define M3_POWER_MODE               MOTOR_POWERED_IN_CYCLE
-#define M3_POWER_LEVEL              0.6
+#define M3_POWER_MODE               MOTOR_ALWAYS_POWERED
+#define M3_POWER_LEVEL              0.55482
 #define M3_TMC2130_TPWMTHRS         300
 #define M3_TMC2130_TCOOLTHRS        200
 #define M3_TMC2130_THIGH            10
@@ -230,8 +230,8 @@
 #define Y_TRAVEL_MAX 150
 #define Y_JERK_MAX 15000
 #define Y_JERK_HIGH_SPEED 25000
-#define Y_HOMING_INPUT 4
-#define Y_HOMING_DIRECTION          1
+#define Y_HOMING_INPUT 3
+#define Y_HOMING_DIRECTION          0
 #define Y_SEARCH_VELOCITY 1500
 #define Y_LATCH_VELOCITY            200
 #define Y_LATCH_BACKOFF 5
@@ -319,7 +319,7 @@
     #define TEMPERATURE_SENSOR_1_TYPE  Thermistor<ADCDifferentialPair<kADC1_Neg_PinNumber, kADC1_Pos_PinNumber>>
     #define TEMPERATURE_SENSOR_1_INIT { \
         /*T1:*/     20.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
-        /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 4700 \
+        /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 200 \
     }
 #else
     // #define TEMPERATURE_SENSOR_1_TYPE  PT100<ADCDifferentialPair<kADC1_Neg_PinNumber, kADC1_Pos_PinNumber>>
@@ -404,7 +404,7 @@
 #define DI3_FUNCTION                INPUT_FUNCTION_NONE
 
 // Ymax
-#define DI4_MODE                    IO_ACTIVE_LOW
+#define DI4_MODE                    IO_MODE_DISABLED
 #define DI4_ACTION                  INPUT_ACTION_NONE
 #define DI4_FUNCTION                INPUT_FUNCTION_NONE
 
