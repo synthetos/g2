@@ -234,7 +234,9 @@ struct MAX31865 final {
     } _fault_status;
     bool _fault_status_needs_read = false;
     void _postReadFaultStatus() {
-        /* here is where we would call alarm or something!! */
+        if (_interrupt_handler) {
+            _interrupt_handler();
+        }
     };
 
     void _startNextReadWrite()
@@ -398,6 +400,9 @@ struct MAX31865 final {
 
     // getRaw is to return the last sampled value
     int32_t getRaw() {
+        if (_fault_status.value) {
+            return -_fault_status.value;
+        }
         return _rtd_value;
     };
 
@@ -429,7 +434,11 @@ struct MAX31865 final {
         // All of the rest are ignored, but here for compatibility of interface
     };
     float getVoltage() {
-        return ((getRaw()*_pullup_resistance)/32768.0) * _vref;
+        float r = getRaw();
+        if (r < 0) {
+            return r*1000.0;
+        }
+        return ((r*_pullup_resistance)/32768.0) * _vref;
     };
     operator float() { return getVoltage(); };
 
