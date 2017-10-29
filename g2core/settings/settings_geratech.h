@@ -62,7 +62,6 @@
 #define USB_SERIAL_PORTS_EXPOSED   1        // Valid options are 1 or 2, only!
 #endif
 
-
 #ifndef JUNCTION_INTEGRATION_TIME
 #define JUNCTION_INTEGRATION_TIME   0.75    // {jt: cornering - between 0.05 and 2.00 (max)
 #endif
@@ -76,7 +75,7 @@
 #endif
 
 #ifndef SOFT_LIMIT_ENABLE
-#define SOFT_LIMIT_ENABLE           0       // {sl: 0=off, 1=on
+#define SOFT_LIMIT_ENABLE           1       // {sl: 0=off, 1=on
 #endif
 
 #ifndef HARD_LIMIT_ENABLE
@@ -202,6 +201,12 @@
 #define GCODE_DEFAULT_DISTANCE_MODE ABSOLUTE_DISTANCE_MODE  // {gdi: ABSOLUTE_DISTANCE_MODE, INCREMENTAL_DISTANCE_MODE
 #endif
 
+
+//*****************************************************************************
+//*** CAN Settings ************************************************************
+//*****************************************************************************
+
+#define CAN_GPIO_INPUT_ADDRESS_1 0x42
 
 //*****************************************************************************
 //*** Motor Settings **********************************************************
@@ -372,10 +377,10 @@
 #define X_AXIS_MODE                 AXIS_STANDARD           // {xam:  see canonical_machine.h cmAxisMode for valid values
 #endif
 #ifndef X_VELOCITY_MAX
-#define X_VELOCITY_MAX              1000.0                  // {xvm:  G0 max velocity in mm/min
+#define X_VELOCITY_MAX              3000.0                  // {xvm:  G0 max velocity in mm/min
 #endif
 #ifndef X_FEEDRATE_MAX
-#define X_FEEDRATE_MAX              1000.0                  // {xfr:  G1 max feed rate in mm/min
+#define X_FEEDRATE_MAX              3000.0                  // {xfr:  G1 max feed rate in mm/min
 #endif
 #ifndef X_TRAVEL_MIN
 #define X_TRAVEL_MIN                0.0                     // {xtn:  minimum travel for soft limits
@@ -402,10 +407,10 @@
 #define X_LATCH_VELOCITY            200.0                   // {xlv:  mm/min
 #endif
 #ifndef X_LATCH_BACKOFF
-#define X_LATCH_BACKOFF             4.0                     // {xlb:  mm
+#define X_LATCH_BACKOFF             6.0                     // {xlb:  mm
 #endif
 #ifndef X_ZERO_BACKOFF
-#define X_ZERO_BACKOFF              2.0                     // {xzb:  mm
+#define X_ZERO_BACKOFF              6.0                     // {xzb:  mm
 #endif
 
 // Y AXIS
@@ -413,16 +418,16 @@
 #define Y_AXIS_MODE                 AXIS_STANDARD
 #endif
 #ifndef Y_VELOCITY_MAX
-#define Y_VELOCITY_MAX              1000.0
+#define Y_VELOCITY_MAX              3000.0
 #endif
 #ifndef Y_FEEDRATE_MAX
-#define Y_FEEDRATE_MAX              1000.0
+#define Y_FEEDRATE_MAX              3000.0
 #endif
 #ifndef Y_TRAVEL_MIN
 #define Y_TRAVEL_MIN                0.0
 #endif
 #ifndef Y_TRAVEL_MAX
-#define Y_TRAVEL_MAX                240.0
+#define Y_TRAVEL_MAX                286.0
 #endif
 #ifndef Y_JERK_MAX
 #define Y_JERK_MAX                  1000.0
@@ -443,10 +448,10 @@
 #define Y_LATCH_VELOCITY            200.0
 #endif
 #ifndef Y_LATCH_BACKOFF
-#define Y_LATCH_BACKOFF             4.0
+#define Y_LATCH_BACKOFF             6.0
 #endif
 #ifndef Y_ZERO_BACKOFF
-#define Y_ZERO_BACKOFF              2.0
+#define Y_ZERO_BACKOFF              6.0
 #endif
 
 // Z AXIS
@@ -454,10 +459,10 @@
 #define Z_AXIS_MODE                 AXIS_STANDARD
 #endif
 #ifndef Z_VELOCITY_MAX
-#define Z_VELOCITY_MAX              1000.0
+#define Z_VELOCITY_MAX              2000.0
 #endif
 #ifndef Z_FEEDRATE_MAX
-#define Z_FEEDRATE_MAX              1000.0
+#define Z_FEEDRATE_MAX              2000.0
 #endif
 #ifndef Z_TRAVEL_MAX
 #define Z_TRAVEL_MAX                410.0
@@ -478,16 +483,16 @@
 #define Z_HOMING_DIRECTION          1
 #endif
 #ifndef Z_SEARCH_VELOCITY
-#define Z_SEARCH_VELOCITY           500.0
+#define Z_SEARCH_VELOCITY           1000.0
 #endif
 #ifndef Z_LATCH_VELOCITY
 #define Z_LATCH_VELOCITY            200.0
 #endif
 #ifndef Z_LATCH_BACKOFF
-#define Z_LATCH_BACKOFF             4.0
+#define Z_LATCH_BACKOFF             6.0
 #endif
 #ifndef Z_ZERO_BACKOFF
-#define Z_ZERO_BACKOFF              2.0
+#define Z_ZERO_BACKOFF              6.0
 #endif
 
 /***************************************************************************************
@@ -774,20 +779,20 @@
 #define DI9_MODE                    IO_ACTIVE_HIGH     // Normally closed
 #endif
 #ifndef DI9_ACTION
-#define DI9_ACTION                  INPUT_ACTION_NONE
+#define DI9_ACTION                  INPUT_ACTION_STOP
 #endif
 #ifndef DI9_FUNCTION
-#define DI9_FUNCTION                INPUT_FUNCTION_NONE
+#define DI9_FUNCTION                INPUT_FUNCTION_PROBE
 #endif
 
 #ifndef DI10_MODE
 #define DI10_MODE                   IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI10_ACTION
-#define DI10_ACTION                 INPUT_ACTION_NONE
+#define DI10_ACTION                 INPUT_ACTION_STOP
 #endif
 #ifndef DI10_FUNCTION
-#define DI10_FUNCTION               INPUT_FUNCTION_NONE
+#define DI10_FUNCTION               INPUT_FUNCTION_PROBE
 #endif
 
 #ifndef DI11_MODE
@@ -874,31 +879,31 @@
 #define P1_PWM_FREQUENCY            1000                   // in Hz
 #endif
 #ifndef P1_CW_SPEED_LO
-#define P1_CW_SPEED_LO              0                  // in RPM (arbitrary units)
+#define P1_CW_SPEED_LO              0.0                  // in RPM (arbitrary units)
 #endif
 #ifndef P1_CW_SPEED_HI
-#define P1_CW_SPEED_HI              24000
+#define P1_CW_SPEED_HI              15800.0
 #endif
 #ifndef P1_CW_PHASE_LO
-#define P1_CW_PHASE_LO              0                    // phase [0..1]
+#define P1_CW_PHASE_LO              0.0                    // phase [0..1]
 #endif
 #ifndef P1_CW_PHASE_HI
-#define P1_CW_PHASE_HI              1
+#define P1_CW_PHASE_HI              1.0
 #endif
 #ifndef P1_CCW_SPEED_LO
 #define P1_CCW_SPEED_LO             0.0
 #endif
 #ifndef P1_CCW_SPEED_HI
-#define P1_CCW_SPEED_HI             0.0
+#define P1_CCW_SPEED_HI             15800.0
 #endif
 #ifndef P1_CCW_PHASE_LO
-#define P1_CCW_PHASE_LO             0.1
+#define P1_CCW_PHASE_LO             0.0
 #endif
 #ifndef P1_CCW_PHASE_HI
-#define P1_CCW_PHASE_HI             0.1
+#define P1_CCW_PHASE_HI             1.0
 #endif
 #ifndef P1_PWM_PHASE_OFF
-#define P1_PWM_PHASE_OFF            0.1
+#define P1_PWM_PHASE_OFF            0.0
 #endif
 
 // *** Heater Settings - relevant to 3dp machines *** //
