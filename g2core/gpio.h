@@ -34,17 +34,26 @@
  */
 //--- change as required for board and switch hardware ---//
 
-#define D_IN_CHANNELS      9           // number of digital inputs supported
+#define D_IN_CHANNELS      8           // number of digital inputs supported
 #define D_OUT_CHANNELS	   9           // number of digital outputs supported
 #define A_IN_CHANNELS	     0           // number of analog inputs supported
 #define A_OUT_CHANNELS	   0           // number of analog outputs supported
-#define D_IN_CAN_CHANNELS  0
-#define D_OUT_CAN_CHANNELS 0
-#define A_IN_CAN_CHANNELS  0
-#define A_OUT_CAN_CHANNELS 0
 
-//#define INPUT_LOCKOUT_MS    50        // milliseconds to go dead after input firing
-#define INPUT_LOCKOUT_MS    10          // milliseconds to go dead after input firing
+// #ifndef D_IN_CAN_CHANNELS
+#define D_IN_CAN_CHANNELS  1
+// #endif
+#ifndef D_OUT_CAN_CHANNELS
+#define D_OUT_CAN_CHANNELS 0
+#endif
+#ifndef A_IN_CAN_CHANNELS
+#define A_IN_CAN_CHANNELS  0
+#endif
+#ifndef A_OUT_CAN_CHANNELS
+#define A_OUT_CAN_CHANNELS 0
+#endif
+
+#define INPUT_LOCKOUT_MS    50        // milliseconds to go dead after input firing
+//#define INPUT_LOCKOUT_MS    10          // milliseconds to go dead after input firing
 
 //--- do not change from here down ---//
 

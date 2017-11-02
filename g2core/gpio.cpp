@@ -215,54 +215,57 @@ struct ioDigitalInputExt {
     };
 };
 
-template <uint8_t ext_pin_number>
 struct ioDigitalInputVirtual {
+    uint8_t ext_pin_number = D_IN_CHANNELS;
 
-    void reset() {
-        if (D_IN_CAN_CHANNELS < ext_pin_number) { return; }
+    bool reset() {
+        if (D_IN_CAN_CHANNELS+D_IN_CHANNELS < ext_pin_number) { return false; }
 
-        d_in_t *in = &d_in[ext_pin_number-1+D_IN_CHANNELS];
+        d_in_t *in = &d_in[ext_pin_number-1];
 
         if (in->mode == IO_MODE_DISABLED) {
             in->state = INPUT_DISABLED;
-            return;
+            return false;
         }
 
         /*bool pin_value = (bool)input_pin;
         int8_t pin_value_corrected = (pin_value ^ ((int)in->mode ^ 1));    // correct for NO or NC mode
         in->state = (ioState)pin_value_corrected;*/
-
+        return true;
     }
 
     void reset_with_value (bool pin_value) {
-      reset();
-      d_in_t *in = &d_in[ext_pin_number-1+D_IN_CHANNELS];
+      if (reset()) return;
+      d_in_t *in = &d_in[ext_pin_number-1];
       int8_t pin_value_corrected = (pin_value ^ ((int)in->mode ^ 1));    // correct for NO or NC mode
       in->state = (ioState)pin_value_corrected;
     }
 
     void pin_changed(bool pin_value) {
-        if (D_IN_CAN_CHANNELS < ext_pin_number) { return; }
-
-        d_in_t *in = &d_in[ext_pin_number-1+D_IN_CHANNELS];
+        // xio_writeline("pin_changed\n");
+        if (D_IN_CAN_CHANNELS+D_IN_CHANNELS < ext_pin_number) { return; }
+        // xio_writeline("in_range\n");
+        d_in_t *in = &d_in[ext_pin_number-1];
 
         // return if input is disabled (not supposed to happen)
         if (in->mode == IO_MODE_DISABLED) {
             in->state = INPUT_DISABLED;
             return;
         }
-
+        // xio_writeline("input_enabled\n");
         // return if the input is in lockout period (take no action)
         if (in->lockout_timer.isSet() && !in->lockout_timer.isPast()) {
             return;
         }
-
+        // xio_writeline("no_lockout\n");
         // return if no change in state
         int8_t pin_value_corrected = (pin_value ^ ((int)in->mode ^ 1));    // correct for NO or NC mode
+        // printf("new_pin_value: %i\n", pin_value);
+        // printf("new_pin_state: %i\n", pin_value_corrected);
         if (in->state == (ioState)pin_value_corrected) {
             return;
         }
-
+        //xio_writeline("input_different_to_last_state");
         // lockout the pin for lockout_ms
         in->lockout_timer.set(in->lockout_ms);
 
@@ -273,6 +276,7 @@ struct ioDigitalInputVirtual {
         } else {
             in->edge = INPUT_EDGE_TRAILING;
         }
+
 
         // perform homing operations if in homing mode
         if (in->homing_mode) {
@@ -368,64 +372,19 @@ ioDigitalInputExt<kInput12_PinNumber , 12> _din12;
 #ifdef CAN_ENABLED
 //Generated with
 //perl -e 'for($i=1;$i<13;$i++) { print "#if D_IN_CAN_CHANNELS >= ${i}\nioDigitalInputVirtual<${i}> _vdin${i};\n#endif\n";}'
-#if D_IN_CAN_CHANNELS >= 1
-ioDigitalInputVirtual<1> _vdin1;
-#endif
-#if D_IN_CAN_CHANNELS >= 2
-ioDigitalInputVirtual<2> _vdin2;
-#endif
-#if D_IN_CAN_CHANNELS >= 3
-ioDigitalInputVirtual<3> _vdin3;
-#endif
-#if D_IN_CAN_CHANNELS >= 4
-ioDigitalInputVirtual<4> _vdin4;
-#endif
-#if D_IN_CAN_CHANNELS >= 5
-ioDigitalInputVirtual<5> _vdin5;
-#endif
-#if D_IN_CAN_CHANNELS >= 6
-ioDigitalInputVirtual<6> _vdin6;
-#endif
-#if D_IN_CAN_CHANNELS >= 7
-ioDigitalInputVirtual<7> _vdin7;
-#endif
-#if D_IN_CAN_CHANNELS >= 8
-ioDigitalInputVirtual<8> _vdin8;
-#endif
-#if D_IN_CAN_CHANNELS >= 9
-ioDigitalInputVirtual<9> _vdin9;
-#endif
-#if D_IN_CAN_CHANNELS >= 10
-ioDigitalInputVirtual<10> _vdin10;
-#endif
-#if D_IN_CAN_CHANNELS >= 11
-ioDigitalInputVirtual<11> _vdin11;
-#endif
-#if D_IN_CAN_CHANNELS >= 12
-ioDigitalInputVirtual<12> _vdin12;
-#endif
 
+ioDigitalInputVirtual _vdin[D_IN_CAN_CHANNELS];
 
 void can_gpio_received (int pin_num, uint8_t length, uint8_t* data) {
+  //printf("pin: %i\n value: %i\n", pin_num, data[0]);
+
+  if (pin_num >= D_IN_CAN_CHANNELS) return;
+
   bool pin_value=false;
 
-  if (data[length-1]%2) pin_value=true;
+  if (data[0] > 0) pin_value=true;
 
-  switch (pin_num) {
-    case 1: _vdin1.pin_changed(pin_value); break;
-    case 2: _vdin2.pin_changed(pin_value); break;
-    case 3: _vdin3.pin_changed(pin_value); break;
-    case 4: _vdin4.pin_changed(pin_value); break;
-    case 5: _vdin5.pin_changed(pin_value); break;
-    case 6: _vdin6.pin_changed(pin_value); break;
-    case 7: _vdin7.pin_changed(pin_value); break;
-    case 8: _vdin8.pin_changed(pin_value); break;
-    case 9: _vdin9.pin_changed(pin_value); break;
-    case 10: _vdin10.pin_changed(pin_value); break;
-    case 11: _vdin11.pin_changed(pin_value); break;
-    case 12: _vdin12.pin_changed(pin_value); break;
-
-  }
+  _vdin[pin_num].pin_changed(pin_value);
 }
 
 #endif
@@ -530,6 +489,10 @@ void gpio_init(void)
     output_13_pin.setFrequency(200000);
     // END generated
 
+    for (int i=0;i<D_IN_CAN_CHANNELS;i++) {
+      _vdin[i].ext_pin_number=D_IN_CHANNELS+i+1;
+    }
+
     return(gpio_reset());
 }
 
@@ -611,22 +574,7 @@ void inputs_reset(void) {
   _din11.reset();
   _din12.reset();
 
-
-#ifdef CAN_ENABLED
-  _vdin1.reset();
-  _vdin2.reset();
-  _vdin3.reset();
-  _vdin4.reset();
-  _vdin5.reset();
-  _vdin6.reset();
-  _vdin7.reset();
-  _vdin8.reset();
-  _vdin9.reset();
-  _vdin10.reset();
-  _vdin11.reset();
-  _vdin12.reset();
-#endif
-
+  for (int i=0;i<D_IN_CAN_CHANNELS;i++) _vdin[i].reset();
 }
 
 void gpio_reset(void)

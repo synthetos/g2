@@ -1589,7 +1589,7 @@ void hw_can_message_received (CAN_FRAME *frame) {
 }
 
 void hw_can_init () {
-  Can0.begin(CAN_BPS_1000K);
+  Can0.begin(CAN_BPS_250K);
 
   //By default there are 7 RX mailboxes for each device
   //extended
@@ -1612,9 +1612,6 @@ void hw_can_init () {
   Can0.setCallback(5, hw_can_message_received);
   //this function will get a callback for any mailbox that doesn't have a registered callback from above -> 2 and 6
   Can0.setGeneralCallback(hw_can_message_received);
-
-  uint8_t* data=0;
-  can_message_received(1,1,data);
 }
 
 void hw_can_send_frame (uint32_t id, uint8_t length, uint8_t *data) {
