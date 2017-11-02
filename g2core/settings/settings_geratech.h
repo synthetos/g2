@@ -170,9 +170,7 @@
 #endif
 
 #ifndef STATUS_REPORT_DEFAULTS                              // {sr: See Status Reports wiki page
-#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","admo","frmo","momo","stat"
-// Alternate SRs that report in drawable units
-//#define STATUS_REPORT_DEFAULTS "line","vel","mpox","mpoy","mpoz","mpoa","coor","ofsa","ofsx","ofsy","ofsz","dist","unit","stat","homz","homy","homx","momo"
+#define STATUS_REPORT_DEFAULTS "stat","n","vel","feed","coor","momo","plan","tool","posx","mpox","posy","mpoy","posz","mpoz"
 #endif
 
 
