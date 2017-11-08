@@ -40,7 +40,7 @@
 #define A_OUT_CHANNELS	   0           // number of analog outputs supported
 
 // #ifndef D_IN_CAN_CHANNELS
-#define D_IN_CAN_CHANNELS  1
+#define D_IN_CAN_CHANNELS  2
 // #endif
 #ifndef D_OUT_CAN_CHANNELS
 #define D_OUT_CAN_CHANNELS 0

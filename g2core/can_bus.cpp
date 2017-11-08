@@ -15,41 +15,41 @@ void can_message_received (uint32_t id, uint8_t length, uint8_t* data) {
     case CAN_GPIO_INPUT_ADDRESS_1: can_gpio_received(0, 1, data); break;
     #endif
     #ifdef CAN_GPIO_INPUT_ADDRESS_2
-    case CAN_GPIO_INPUT_ADDRESS_2: can_gpio_received(2, length, data); break;
+    case CAN_GPIO_INPUT_ADDRESS_2: can_gpio_received(1, 1, data); break;
     #endif
     #ifdef CAN_GPIO_INPUT_ADDRESS_3
-    case CAN_GPIO_INPUT_ADDRESS_3: can_gpio_received(3, length, data); break;
+    case CAN_GPIO_INPUT_ADDRESS_3: can_gpio_received(2, 1, data); break;
     #endif
     #ifdef CAN_GPIO_INPUT_ADDRESS_4
-    case CAN_GPIO_INPUT_ADDRESS_4: can_gpio_received(4, length, data); break;
+    case CAN_GPIO_INPUT_ADDRESS_4: can_gpio_received(3, 1, data); break;
     #endif
     #ifdef CAN_GPIO_INPUT_ADDRESS_5
-    case CAN_GPIO_INPUT_ADDRESS_5: can_gpio_received(5, length, data); break;
+    case CAN_GPIO_INPUT_ADDRESS_5: can_gpio_received(4, 1, data); break;
     #endif
     #ifdef CAN_GPIO_INPUT_ADDRESS_6
-    case CAN_GPIO_INPUT_ADDRESS_6: can_gpio_received(6, length, data); break;
+    case CAN_GPIO_INPUT_ADDRESS_6: can_gpio_received(5, 1, data); break;
     #endif
     #ifdef CAN_GPIO_INPUT_ADDRESS_7
-    case CAN_GPIO_INPUT_ADDRESS_7: can_gpio_received(7, length, data); break;
+    case CAN_GPIO_INPUT_ADDRESS_7: can_gpio_received(6, 1, data); break;
     #endif
     #ifdef CAN_GPIO_INPUT_ADDRESS_8
-    case CAN_GPIO_INPUT_ADDRESS_8: can_gpio_received(8, length, data); break;
+    case CAN_GPIO_INPUT_ADDRESS_8: can_gpio_received(7, 1, data); break;
     #endif
     #ifdef CAN_GPIO_INPUT_ADDRESS_9
-    case CAN_GPIO_INPUT_ADDRESS_9: can_gpio_received(9, length, data); break;
+    case CAN_GPIO_INPUT_ADDRESS_9: can_gpio_received(8, 1, data); break;
     #endif
     #ifdef CAN_GPIO_INPUT_ADDRESS_10
-    case CAN_GPIO_INPUT_ADDRESS_10: can_gpio_received(10, length, data); break;
+    case CAN_GPIO_INPUT_ADDRESS_10: can_gpio_received(9, 1, data); break;
     #endif
     #ifdef CAN_GPIO_INPUT_ADDRESS_11
-    case CAN_GPIO_INPUT_ADDRESS_11: can_gpio_received(11, length, data); break;
+    case CAN_GPIO_INPUT_ADDRESS_11: can_gpio_received(10, 1, data); break;
     #endif
     #ifdef CAN_GPIO_INPUT_ADDRESS_12
-    case CAN_GPIO_INPUT_ADDRESS_12: can_gpio_received(12, length, data); break;
+    case CAN_GPIO_INPUT_ADDRESS_12: can_gpio_received(11, 1, data); break;
     #endif
 
   }
-
+  
   //can_gpio_received(100, 1, data);
 }
 

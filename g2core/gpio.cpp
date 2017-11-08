@@ -228,9 +228,9 @@ struct ioDigitalInputVirtual {
             return false;
         }
 
-        /*bool pin_value = (bool)input_pin;
-        int8_t pin_value_corrected = (pin_value ^ ((int)in->mode ^ 1));    // correct for NO or NC mode
-        in->state = (ioState)pin_value_corrected;*/
+        // bool pin_value = (bool)input_pin;
+        // int8_t pin_value_corrected = (pin_value ^ ((int)in->mode ^ 1));    // correct for NO or NC mode
+        in->state = INPUT_INACTIVE;
         return true;
     }
 
@@ -383,7 +383,7 @@ void can_gpio_received (int pin_num, uint8_t length, uint8_t* data) {
   bool pin_value=false;
 
   if (data[0] > 0) pin_value=true;
-
+  printf("%i/n", pin_num);
   _vdin[pin_num].pin_changed(pin_value);
 }
 
@@ -628,6 +628,8 @@ void  gpio_set_probing_mode(const uint8_t input_num_ext, const bool is_probing)
 
 int8_t gpio_get_probing_input(void)
 {
+    //inputs_reset();
+
     for (uint8_t i = 0; i <= D_IN_CHANNELS+D_IN_CAN_CHANNELS; i++) {
         if (d_in[i-1].function == INPUT_FUNCTION_PROBE) {
             return (i);

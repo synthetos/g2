@@ -205,6 +205,7 @@
 //*****************************************************************************
 
 #define CAN_GPIO_INPUT_ADDRESS_1 0xA1
+#define CAN_GPIO_INPUT_ADDRESS_2 0x42
 //#define D_IN_CAN_CHANNELS  0
 
 //*****************************************************************************
@@ -731,13 +732,13 @@
 
 // Zmin
 #ifndef DI5_MODE
-#define DI5_MODE                    IO_ACTIVE_LOW
+#define DI5_MODE                    IO_MODE_DISABLED
 #endif
 #ifndef DI5_ACTION
-#define DI5_ACTION                  INPUT_ACTION_STOP
+#define DI5_ACTION                  INPUT_ACTION_NONE
 #endif
 #ifndef DI5_FUNCTION
-#define DI5_FUNCTION                INPUT_FUNCTION_PROBE
+#define DI5_FUNCTION                INPUT_FUNCTION_NONE
 #endif
 
 // Zmax
@@ -781,7 +782,7 @@
 #define DI9_ACTION                  INPUT_ACTION_STOP
 #endif
 #ifndef DI9_FUNCTION
-#define DI9_FUNCTION                INPUT_FUNCTION_PROBE
+#define DI9_FUNCTION                INPUT_FUNCTION_NONE
 #endif
 
 #ifndef DI10_MODE
