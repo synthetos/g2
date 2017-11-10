@@ -52,8 +52,8 @@
 #define A_OUT_CAN_CHANNELS 0
 #endif
 
-#define INPUT_LOCKOUT_MS    50        // milliseconds to go dead after input firing
-//#define INPUT_LOCKOUT_MS    10          // milliseconds to go dead after input firing
+//#define INPUT_LOCKOUT_MS    50        // milliseconds to go dead after input firing
+#define INPUT_LOCKOUT_MS    10          // milliseconds to go dead after input firing
 
 //--- do not change from here down ---//
 

@@ -389,10 +389,10 @@
 #define X_TRAVEL_MAX                340.0                     // {xtm:  travel between switches or crashes
 #endif
 #ifndef X_JERK_MAX
-#define X_JERK_MAX                  1000.0                  // {xjm:
+#define X_JERK_MAX                  30000.0                  // {xjm:
 #endif
 #ifndef X_JERK_HIGH_SPEED
-#define X_JERK_HIGH_SPEED           1000.0                  // {xjh:
+#define X_JERK_HIGH_SPEED           50000.0                  // {xjh:
 #endif
 #ifndef X_HOMING_INPUT
 #define X_HOMING_INPUT              1                       // {xhi:  input used for homing or 0 to disable
@@ -401,13 +401,13 @@
 #define X_HOMING_DIRECTION          0                       // {xhd:  0=search moves negative, 1= search moves positive
 #endif
 #ifndef X_SEARCH_VELOCITY
-#define X_SEARCH_VELOCITY           1000.0                   // {xsv:  minus means move to minimum switch
+#define X_SEARCH_VELOCITY           2000.0                   // {xsv:  minus means move to minimum switch
 #endif
 #ifndef X_LATCH_VELOCITY
 #define X_LATCH_VELOCITY            200.0                   // {xlv:  mm/min
 #endif
 #ifndef X_LATCH_BACKOFF
-#define X_LATCH_BACKOFF             6.0                     // {xlb:  mm
+#define X_LATCH_BACKOFF             10.0                     // {xlb:  mm
 #endif
 #ifndef X_ZERO_BACKOFF
 #define X_ZERO_BACKOFF              6.0                     // {xzb:  mm
@@ -430,10 +430,10 @@
 #define Y_TRAVEL_MAX                286.0
 #endif
 #ifndef Y_JERK_MAX
-#define Y_JERK_MAX                  1000.0
+#define Y_JERK_MAX                  30000.0
 #endif
 #ifndef Y_JERK_HIGH_SPEED
-#define Y_JERK_HIGH_SPEED           1000.0
+#define Y_JERK_HIGH_SPEED           50000.0
 #endif
 #ifndef Y_HOMING_INPUT
 #define Y_HOMING_INPUT              4
@@ -442,13 +442,13 @@
 #define Y_HOMING_DIRECTION          1
 #endif
 #ifndef Y_SEARCH_VELOCITY
-#define Y_SEARCH_VELOCITY           1000.0
+#define Y_SEARCH_VELOCITY           2000.0
 #endif
 #ifndef Y_LATCH_VELOCITY
 #define Y_LATCH_VELOCITY            200.0
 #endif
 #ifndef Y_LATCH_BACKOFF
-#define Y_LATCH_BACKOFF             6.0
+#define Y_LATCH_BACKOFF             10.0
 #endif
 #ifndef Y_ZERO_BACKOFF
 #define Y_ZERO_BACKOFF              6.0
@@ -471,10 +471,10 @@
 #define Z_TRAVEL_MIN                0.0
 #endif
 #ifndef Z_JERK_MAX
-#define Z_JERK_MAX                  1000.0
+#define Z_JERK_MAX                  10000.0
 #endif
 #ifndef Z_JERK_HIGH_SPEED
-#define Z_JERK_HIGH_SPEED           1000.0
+#define Z_JERK_HIGH_SPEED           20000.0
 #endif
 #ifndef Z_HOMING_INPUT
 #define Z_HOMING_INPUT              6
@@ -483,13 +483,13 @@
 #define Z_HOMING_DIRECTION          1
 #endif
 #ifndef Z_SEARCH_VELOCITY
-#define Z_SEARCH_VELOCITY           1000.0
+#define Z_SEARCH_VELOCITY           2000.0
 #endif
 #ifndef Z_LATCH_VELOCITY
 #define Z_LATCH_VELOCITY            200.0
 #endif
 #ifndef Z_LATCH_BACKOFF
-#define Z_LATCH_BACKOFF             6.0
+#define Z_LATCH_BACKOFF             10.0
 #endif
 #ifndef Z_ZERO_BACKOFF
 #define Z_ZERO_BACKOFF              6.0
