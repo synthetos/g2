@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <img src="https://raw.githubusercontent.com/wiki/synthetos/g2/images/g2core.png" width="300" height="129" alt="g2core">
 
 [![Build Status](https://travis-ci.org/synthetos/g2.svg?branch=edge)](https://travis-ci.org/synthetos/g2) [![Issues in Ready](https://badge.waffle.io/synthetos/g2.svg?label=ready&title=Ready)](http://waffle.io/synthetos/g2) [![Issues in Progress](https://badge.waffle.io/synthetos/g2.svg?label=in%20progress&title=In%20Progress)](http://waffle.io/synthetos/g2)
@@ -209,6 +208,3 @@ These changes are primarily fixes applied after testing
 
 * **Different Behaviors**. There are some behaviors that are different.
   * Feedhold / queue flush on v8 works with !%~ in one line. In g2 it requires a newline. Use !\n%\n  This is due to using a USB stack that is partly on the chip and not being able to get at the individual characters that far upstream. This will probably not change in v9.
-=======
-# controller
->>>>>>> 18e9df3c23572f38c4495d0cfb370c132efb74ed
