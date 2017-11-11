@@ -754,13 +754,13 @@
 
 // Amin
 #ifndef DI7_MODE
-#define DI7_MODE                    IO_ACTIVE_LOW     // Normally open
+#define DI7_MODE                    IO_ACTIVE_HIGH     // Normally open
 #endif
 #ifndef DI7_ACTION
-#define DI7_ACTION                  INPUT_ACTION_NONE
+#define DI7_ACTION                  INPUT_ACTION_STOP
 #endif
 #ifndef DI7_FUNCTION
-#define DI7_FUNCTION                INPUT_FUNCTION_NONE
+#define DI7_FUNCTION                INPUT_FUNCTION_SHUTDOWN
 #endif
 
 // Amax
