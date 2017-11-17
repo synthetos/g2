@@ -231,7 +231,7 @@
 // *** axis settings **********************************************************************************
 
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX              8700                   // xvm  G0 max velocity in mm/min
+#define X_VELOCITY_MAX              8700                    // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX                230                     // xtm  travel between switches or crashes
@@ -377,15 +377,15 @@ M100.1 ({{ajh:144000.0}})
 
 #define HAS_TEMPERATURE_SENSOR_1  true
 #if HAS_TEMPERATURE_SENSOR_1
-    #define TEMPERATURE_SENSOR_1_CIRCUIT_TYPE ADCCircuitDifferentialPullup
-    #define TEMPERATURE_SENSOR_1_CIRCUIT_INIT { /*pullup_resistance:*/ 200 }
-    #define TEMPERATURE_SENSOR_1_TYPE  PT100<ADCDifferentialPair<kADC1_Neg_PinNumber, kADC1_Pos_PinNumber>>
-    #define TEMPERATURE_SENSOR_1_INIT {&temperature_sensor_1_circuit}
+//    #define TEMPERATURE_SENSOR_1_CIRCUIT_TYPE ADCCircuitDifferentialPullup
+//    #define TEMPERATURE_SENSOR_1_CIRCUIT_INIT { /*pullup_resistance:*/ 200 }
+//    #define TEMPERATURE_SENSOR_1_TYPE  PT100<ADCDifferentialPair<kADC1_Neg_PinNumber, kADC1_Pos_PinNumber>>
+//    #define TEMPERATURE_SENSOR_1_INIT {&temperature_sensor_1_circuit}
 
-//    #define TEMPERATURE_SENSOR_1_CIRCUIT_TYPE ADCCircuitRawResistance
-//    #define TEMPERATURE_SENSOR_1_CIRCUIT_INIT {  }
-//    #define TEMPERATURE_SENSOR_1_TYPE  PT100<MAX31865<SPIBus_used_t::SPIBusDevice>>
-//    #define TEMPERATURE_SENSOR_1_INIT {&temperature_sensor_1_circuit, spiBus, spiCSPinMux.getCS(5), /*pullup_resistance:*/ 430.0}
+    #define TEMPERATURE_SENSOR_1_CIRCUIT_TYPE ADCCircuitRawResistance
+    #define TEMPERATURE_SENSOR_1_CIRCUIT_INIT { }
+    #define TEMPERATURE_SENSOR_1_TYPE  PT100<MAX31865<SPIBus_used_t::SPIBusDevice>>
+    #define TEMPERATURE_SENSOR_1_INIT {&temperature_sensor_1_circuit, spiBus, spiCSPinMux.getCS(5), /*pullup_resistance:*/ 430.0f}
 #endif // HAS_TEMPERATURE_SENSOR_1
 
 #define EXTRUDER_1_OUTPUT_PIN kHeaterOutput1_PinNumber
@@ -406,16 +406,17 @@ M100.1 ({{ajh:144000.0}})
 
 #define EXTRUDER_2_OUTPUT_PIN kHeaterOutput2_PinNumber
 
-#define HAS_TEMPERATURE_SENSOR_3  false
+#define HAS_TEMPERATURE_SENSOR_3  true
 #if HAS_TEMPERATURE_SENSOR_3
-    #define TEMPERATURE_SENSOR_3_CIRCUIT_TYPE ADCCircuitDifferentialPullup
-    #define TEMPERATURE_SENSOR_3_CIRCUIT_INIT { /*pullup_resistance:*/ 200 }
-    #define TEMPERATURE_SENSOR_3_TYPE  PT100<ADCDifferentialPair<kADC3_Neg_PinNumber, kADC3_Pos_PinNumber>>
-    #define TEMPERATURE_SENSOR_3_INIT {&temperature_sensor_3_circuit}
-//    #define TEMPERATURE_SENSOR_3_CIRCUIT_TYPE ADCCircuitRawResistance
-//    #define TEMPERATURE_SENSOR_3_CIRCUIT_INIT {  }
-//    #define TEMPERATURE_SENSOR_3_TYPE  PT100<MAX31865<SPIBus_used_t::SPIBusDevice>>
-//    #define TEMPERATURE_SENSOR_3_INIT {&temperature_sensor_3_circuit, spiBus, spiCSPinMux.getCS(6), /*pullup_resistance:*/ 430.0}
+//    #define TEMPERATURE_SENSOR_3_CIRCUIT_TYPE ADCCircuitDifferentialPullup
+//    #define TEMPERATURE_SENSOR_3_CIRCUIT_INIT { /*pullup_resistance:*/ 200 }
+//    #define TEMPERATURE_SENSOR_3_TYPE  PT100<ADCDifferentialPair<kADC3_Neg_PinNumber, kADC3_Pos_PinNumber>>
+//    #define TEMPERATURE_SENSOR_3_INIT {&temperature_sensor_3_circuit}
+
+    #define TEMPERATURE_SENSOR_3_CIRCUIT_TYPE ADCCircuitRawResistance
+    #define TEMPERATURE_SENSOR_3_CIRCUIT_INIT { }
+    #define TEMPERATURE_SENSOR_3_TYPE  PT100<MAX31865<SPIBus_used_t::SPIBusDevice>>
+    #define TEMPERATURE_SENSOR_3_INIT {&temperature_sensor_3_circuit, spiBus, spiCSPinMux.getCS(6), /*pullup_resistance:*/ 430.0f}
 #endif // HAS_TEMPERATURE_SENSOR_3
 
 #define BED_OUTPUT_PIN kHeaterOutput11_PinNumber

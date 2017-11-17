@@ -266,17 +266,16 @@ struct ADCCircuitDifferentialPullup : ADCCircuit
 
 struct ADCCircuitRawResistance : ADCCircuit
 {
-    const float _vref;
-    ADCCircuitRawResistance(const float vref = kSystemVoltage) : _vref{vref} {};
+    ADCCircuitRawResistance() {};
 
     float get_resistance(float v) const override
     {
-        return v/_vref;
+        return v;
     };
 
     float get_voltage(const float r) const override
     {
-        return r*_vref;
+        return r;
     };
 };
 
@@ -413,6 +412,9 @@ struct PT100 {
     float raw_adc_voltage = 0.0;
     int32_t raw_adc_value = 0;
 
+    bool new_sample_since_read = false;
+    uint8_t reads_without_sample = 0;
+
     const float variance_max = 1.1;
     ValueHistory<20> history {variance_max};
 
@@ -432,7 +434,7 @@ struct PT100 {
     template <typename... Ts>
     PT100(const ADCCircuit *_circuit, Ts&&... additional_values)
     : circuit{_circuit},
-      adc_pin{kNormal, [&]{this->adc_has_new_value();}, additional_values...}
+      adc_pin{kNormal, [&](bool e){this->adc_has_new_value(e);}, additional_values...}
     {
         adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
         adc_pin.setVoltageRange(kSystemVoltage,
@@ -453,6 +455,16 @@ struct PT100 {
     };
 
     float temperature_exact() {
+        if (!new_sample_since_read) {
+            reads_without_sample++;
+            if (reads_without_sample > 10) {
+                cm_alarm(STAT_TEMPERATURE_CONTROL_ERROR, "Sensor read failed 10 times.");
+            }
+        } else {
+            reads_without_sample = 0;
+        }
+        new_sample_since_read = false;
+
         float r = get_resistance();
         if (r < 0.0) { return -1; }
 
@@ -514,7 +526,7 @@ struct PT100 {
     };
 
     // Call back function from the ADC to tell it that the ADC has a new sample...
-    void adc_has_new_value() {
+    void adc_has_new_value(bool error = false) {
         raw_adc_value = adc_pin.getRaw();
         float v = fabs(adc_pin.getVoltage());
 //        if (v < 0) {
@@ -525,6 +537,7 @@ struct PT100 {
 //            return;
 //        }
         history.add_sample(v);
+        new_sample_since_read = true;
     };
 };
 

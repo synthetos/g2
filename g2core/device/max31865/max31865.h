@@ -94,7 +94,7 @@ struct MAX31865 final {
 
     template <typename SPIBus_t, typename chipSelect_t>
     MAX31865(const Motate::PinOptions_t options, // completely ignored, but for compatibility with ADCPin
-             std::function<void(void)> &&_interrupt,
+             std::function<void(bool)> &&_interrupt,
              SPIBus_t &spi_bus,
              const chipSelect_t &_cs,
              float pullup_resistance = 430,         // 430 is the value used on the Adafruit breakout
@@ -194,7 +194,7 @@ struct MAX31865 final {
             _fault_status_needs_read = true;
         }
         if (_interrupt_handler) {
-            _interrupt_handler();
+            _interrupt_handler(fault_detected);
         }
         _state = NEEDS_SAMPLED;
     };
@@ -235,7 +235,7 @@ struct MAX31865 final {
     bool _fault_status_needs_read = false;
     void _postReadFaultStatus() {
         if (_interrupt_handler) {
-            _interrupt_handler();
+            _interrupt_handler(_fault_status.value != 0);
         }
     };
 
@@ -339,8 +339,7 @@ struct MAX31865 final {
 
     // interface to make this a drop-in replacement (after init) for an ADCPin
 
-    float _vref = 3.3;
-    std::function<void(void)> _interrupt_handler;
+    std::function<void(bool)> _interrupt_handler;
 
     void startSampling()
     {
@@ -411,25 +410,25 @@ struct MAX31865 final {
     int32_t getValue() {
         return getRaw();
     };
-    int32_t getBottom() {
-        return 0;
-    };
-    float getBottomVoltage() {
-        return 0;
-    };
-    int32_t getTop() {
-        return 32767;
-    };
-    float getTopVoltage() {
-        return _vref;
-    };
+//    int32_t getBottom() {
+//        return 0;
+//    };
+//    float getBottomVoltage() {
+//        return 0;
+//    };
+//    int32_t getTop() {
+//        return 32767;
+//    };
+//    float getTopVoltage() {
+//        return _vref;
+//    };
 
     void setVoltageRange(const float vref,
                          const float min_expected = 0,
                          const float max_expected = -1,
                          const float ideal_steps = 1)
     {
-        _vref = vref;
+//        _vref = vref;
 
         // All of the rest are ignored, but here for compatibility of interface
     };
@@ -438,19 +437,27 @@ struct MAX31865 final {
         if (r < 0) {
             return r*1000.0;
         }
-        return ((r*_pullup_resistance)/32768.0) * _vref;
+        return ((r*_pullup_resistance)/32768.0);
     };
     operator float() { return getVoltage(); };
+
+    float getResistance() {
+        float r = getRaw();
+        if (r < 0) {
+            return r*1000.0;
+        }
+        return (r*_pullup_resistance)/32768.0;
+    }
 
     void setInterrupts(const uint32_t interrupts) {
         // ignore this -- it's too dangerous to accidentally change the SPI interrupts
     };
 
     // We can only support interrupt inferface option 2: a function with a closure or function pointer
-    void setInterruptHandler(std::function<void(void)> &&handler) {
+    void setInterruptHandler(std::function<void(bool)> &&handler) {
         _interrupt_handler = std::move(handler);
     };
-    void setInterruptHandler(const std::function<void(void)> &handler) {
+    void setInterruptHandler(const std::function<void(bool)> &handler) {
         _interrupt_handler = handler;
     };
 
