@@ -13,9 +13,10 @@ That said, Edge is for the adventurous. It is not guaranteed to be stable, but w
 ### Feature Enhancements
 The fb:100 release is a major change from the fb:089 and earlier branches. It represents about a year of development and has many major feature enhancements summarized below. These are described in more detail in the rest of this readme and the linked wiki pages.
 - New Gcode and CNC features
-- 3d printing support
+- 3d printing support, including [Marlin Compatibility](https://github.com/synthetos/g2/wiki/Marlin-Compatibility)
 - GPIO system enhancements
 - Planner enhancements and other operating improvements for high-speed operation
+- Intital support for new processors, including the ARM M7
 
 ### Project Changes
 The project is now called g2core (even if the repo remains g2). As of this release the g2core code base is split from the TinyG code base. TinyG will continue to be supported for the Xmega 8-bit platform, and new features will be added, specifically as related to continued support for CNC milling applications. The g2core project will focus on various ARM platforms, as it currently does, and add functions that are not possible in the 8-bit platform.
