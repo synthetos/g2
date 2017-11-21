@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "group:g2core/g2core.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:Motate/MotateProject/Motate.xcodeproj">
+   </FileRef>
+</Workspace>

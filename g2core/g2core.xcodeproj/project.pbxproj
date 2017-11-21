@@ -1,0 +1,891 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		D44E72C11D663B0300ECD5DD /* coolant.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D44E72C01D663B0300ECD5DD /* coolant.cpp */; };
+		D457117C17053EFA00EA19A8 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D457117B17053EFA00EA19A8 /* Makefile */; };
+		D4694F9E1E295B5E00F813BA /* marlin_compatibility.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4694F9C1E295B5E00F813BA /* marlin_compatibility.cpp */; };
+		D48F5A56172CB1FA00D0E055 /* canonical_machine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A40172CB1F900D0E055 /* canonical_machine.cpp */; };
+		D48F5A57172CB1FA00D0E055 /* config_app.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A41172CB1F900D0E055 /* config_app.cpp */; };
+		D48F5A58172CB1FA00D0E055 /* config.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A42172CB1F900D0E055 /* config.cpp */; };
+		D48F5A59172CB1FA00D0E055 /* controller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A43172CB1F900D0E055 /* controller.cpp */; };
+		D48F5A5A172CB1FA00D0E055 /* cycle_homing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A44172CB1F900D0E055 /* cycle_homing.cpp */; };
+		D48F5A5B172CB1FA00D0E055 /* gcode_parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A45172CB1F900D0E055 /* gcode_parser.cpp */; };
+		D48F5A5E172CB1FA00D0E055 /* help.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A48172CB1FA00D0E055 /* help.cpp */; };
+		D48F5A5F172CB1FA00D0E055 /* json_parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A49172CB1FA00D0E055 /* json_parser.cpp */; };
+		D48F5A60172CB1FA00D0E055 /* kinematics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A4A172CB1FA00D0E055 /* kinematics.cpp */; };
+		D48F5A61172CB1FA00D0E055 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A4B172CB1FA00D0E055 /* main.cpp */; };
+		D48F5A62172CB1FA00D0E055 /* persistence.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A4C172CB1FA00D0E055 /* persistence.cpp */; };
+		D48F5A63172CB1FA00D0E055 /* plan_arc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A4D172CB1FA00D0E055 /* plan_arc.cpp */; };
+		D48F5A64172CB1FA00D0E055 /* plan_line.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A4E172CB1FA00D0E055 /* plan_line.cpp */; };
+		D48F5A65172CB1FA00D0E055 /* planner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A4F172CB1FA00D0E055 /* planner.cpp */; };
+		D48F5A66172CB1FA00D0E055 /* report.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A50172CB1FA00D0E055 /* report.cpp */; };
+		D48F5A67172CB1FA00D0E055 /* spindle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A51172CB1FA00D0E055 /* spindle.cpp */; };
+		D48F5A68172CB1FA00D0E055 /* stepper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A52172CB1FA00D0E055 /* stepper.cpp */; };
+		D48F5A69172CB1FA00D0E055 /* text_parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A53172CB1FA00D0E055 /* text_parser.cpp */; };
+		D48F5A6A172CB1FA00D0E055 /* util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A54172CB1FA00D0E055 /* util.cpp */; };
+		D48F5A6B172CB1FA00D0E055 /* xio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A55172CB1FA00D0E055 /* xio.cpp */; };
+		D49367D91B87CA8A000BB759 /* temperature.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49367D71B87CA8A000BB759 /* temperature.cpp */; };
+		D4B485B61AB1FBC900C6614F /* gpio.h in Sources */ = {isa = PBXBuildFile; fileRef = D4B93DF01AAA9DFE00632FAB /* gpio.h */; };
+		D4B6579D18B5C1DE00F8616C /* plan_exec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4B6579C18B5C1DE00F8616C /* plan_exec.cpp */; };
+		D4B657A218B5C21600F8616C /* cycle_jogging.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4B6579E18B5C21500F8616C /* cycle_jogging.cpp */; };
+		D4B657A318B5C21600F8616C /* cycle_probing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4B6579F18B5C21500F8616C /* cycle_probing.cpp */; };
+		D4B657A418B5C21600F8616C /* encoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4B657A018B5C21500F8616C /* encoder.cpp */; };
+		D4B657A718B5C23C00F8616C /* pwm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4B657A518B5C23C00F8616C /* pwm.cpp */; };
+		D4B93DF11AAA9DFE00632FAB /* gpio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4B93DEF1AAA9DFE00632FAB /* gpio.cpp */; };
+		D4D6453919BCAE3F0053705B /* plan_zoid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4D6453819BCAE3F0053705B /* plan_zoid.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D457112217053BFB00EA19A8 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		D41997401DF9D6A800E0FB51 /* settings */ = {isa = PBXFileReference; lastKnownFileType = folder; path = settings; sourceTree = "<group>"; };
+		D43FF6F51D52C8AF00FB5B53 /* board */ = {isa = PBXFileReference; lastKnownFileType = folder; path = board; sourceTree = "<group>"; };
+		D44E72C01D663B0300ECD5DD /* coolant.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = coolant.cpp; sourceTree = "<group>"; };
+		D44E72C21D663B0F00ECD5DD /* coolant.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = coolant.h; sourceTree = "<group>"; };
+		D4522DC91C45F41D0086AAE6 /* g2core_info.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = g2core_info.h; sourceTree = "<group>"; };
+		D457117B17053EFA00EA19A8 /* Makefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makefile; sourceTree = "<group>"; usesTabs = 1; xcLanguageSpecificationIdentifier = xcode.lang.sh; };
+		D4694F9C1E295B5E00F813BA /* marlin_compatibility.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = marlin_compatibility.cpp; sourceTree = "<group>"; };
+		D4694F9D1E295B5E00F813BA /* marlin_compatibility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = marlin_compatibility.h; sourceTree = "<group>"; };
+		D47B744C1D4925B4004FAB53 /* device */ = {isa = PBXFileReference; lastKnownFileType = folder; path = device; sourceTree = "<group>"; };
+		D48F5A40172CB1F900D0E055 /* canonical_machine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = canonical_machine.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D48F5A41172CB1F900D0E055 /* config_app.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = config_app.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D48F5A42172CB1F900D0E055 /* config.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = config.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D48F5A43172CB1F900D0E055 /* controller.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = controller.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D48F5A44172CB1F900D0E055 /* cycle_homing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = cycle_homing.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D48F5A45172CB1F900D0E055 /* gcode_parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = gcode_parser.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D48F5A48172CB1FA00D0E055 /* help.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = help.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D48F5A49172CB1FA00D0E055 /* json_parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = json_parser.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D48F5A4A172CB1FA00D0E055 /* kinematics.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = kinematics.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D48F5A4B172CB1FA00D0E055 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = main.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D48F5A4C172CB1FA00D0E055 /* persistence.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = persistence.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D48F5A4D172CB1FA00D0E055 /* plan_arc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = plan_arc.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D48F5A4E172CB1FA00D0E055 /* plan_line.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = plan_line.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D48F5A4F172CB1FA00D0E055 /* planner.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = planner.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D48F5A50172CB1FA00D0E055 /* report.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = report.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D48F5A51172CB1FA00D0E055 /* spindle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = spindle.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D48F5A52172CB1FA00D0E055 /* stepper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = stepper.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D48F5A53172CB1FA00D0E055 /* text_parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = text_parser.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D48F5A54172CB1FA00D0E055 /* util.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = util.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D48F5A55172CB1FA00D0E055 /* xio.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = xio.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D48F5A6C172CB21000D0E055 /* canonical_machine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = canonical_machine.h; sourceTree = "<group>"; };
+		D48F5A6D172CB21100D0E055 /* config_app.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config_app.h; sourceTree = "<group>"; };
+		D48F5A6E172CB21100D0E055 /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = config.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		D48F5A6F172CB21100D0E055 /* controller.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = controller.h; sourceTree = "<group>"; };
+		D48F5A70172CB21100D0E055 /* gcode_parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gcode_parser.h; sourceTree = "<group>"; };
+		D48F5A73172CB21100D0E055 /* help.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = help.h; sourceTree = "<group>"; };
+		D48F5A74172CB21100D0E055 /* json_parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = json_parser.h; sourceTree = "<group>"; };
+		D48F5A75172CB21100D0E055 /* kinematics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = kinematics.h; sourceTree = "<group>"; };
+		D48F5A76172CB21100D0E055 /* persistence.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = persistence.h; sourceTree = "<group>"; };
+		D48F5A77172CB21100D0E055 /* plan_arc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = plan_arc.h; sourceTree = "<group>"; };
+		D48F5A79172CB21100D0E055 /* planner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = planner.h; sourceTree = "<group>"; };
+		D48F5A7A172CB21100D0E055 /* report.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = report.h; sourceTree = "<group>"; };
+		D48F5A7B172CB21100D0E055 /* settings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = settings.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		D48F5A7C172CB21100D0E055 /* spindle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = spindle.h; sourceTree = "<group>"; };
+		D48F5A7D172CB21100D0E055 /* stepper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = stepper.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		D48F5A7E172CB21100D0E055 /* text_parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = text_parser.h; sourceTree = "<group>"; };
+		D48F5A7F172CB21100D0E055 /* g2core.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = g2core.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		D48F5A80172CB21100D0E055 /* util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = util.h; sourceTree = "<group>"; };
+		D48F5A81172CB21100D0E055 /* xio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = xio.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		D4922F3F1CB8361B00A565FF /* boards.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = boards.mk; sourceTree = "<group>"; };
+		D49367D71B87CA8A000BB759 /* temperature.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = temperature.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D49367D81B87CA8A000BB759 /* temperature.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = temperature.h; sourceTree = "<group>"; };
+		D49367DB1B8E0AF1000BB759 /* error.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = error.h; sourceTree = "<group>"; };
+		D4B6579C18B5C1DE00F8616C /* plan_exec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = plan_exec.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D4B6579E18B5C21500F8616C /* cycle_jogging.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = cycle_jogging.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D4B6579F18B5C21500F8616C /* cycle_probing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = cycle_probing.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D4B657A018B5C21500F8616C /* encoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = encoder.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D4B657A118B5C21500F8616C /* encoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = encoder.h; sourceTree = "<group>"; };
+		D4B657A518B5C23C00F8616C /* pwm.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = pwm.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D4B657A618B5C23C00F8616C /* pwm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pwm.h; sourceTree = "<group>"; };
+		D4B93DEF1AAA9DFE00632FAB /* gpio.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = gpio.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D4B93DF01AAA9DFE00632FAB /* gpio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gpio.h; sourceTree = "<group>"; };
+		D4C10A501A4397AD00B3F2EA /* openocd.cfg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = openocd.cfg; sourceTree = "<group>"; };
+		D4D6453819BCAE3F0053705B /* plan_zoid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = plan_zoid.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D4FEBFF81B0A65E30042EA32 /* index */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = index; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D457112117053BFB00EA19A8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D45710B7170532AC00EA19A8 = {
+			isa = PBXGroup;
+			children = (
+				D457117B17053EFA00EA19A8 /* Makefile */,
+				D4C10A501A4397AD00B3F2EA /* openocd.cfg */,
+				D48F5A4B172CB1FA00D0E055 /* main.cpp */,
+				D48F5A40172CB1F900D0E055 /* canonical_machine.cpp */,
+				D48F5A6C172CB21000D0E055 /* canonical_machine.h */,
+				D48F5A42172CB1F900D0E055 /* config.cpp */,
+				D48F5A6E172CB21100D0E055 /* config.h */,
+				D48F5A41172CB1F900D0E055 /* config_app.cpp */,
+				D48F5A6D172CB21100D0E055 /* config_app.h */,
+				D48F5A43172CB1F900D0E055 /* controller.cpp */,
+				D48F5A6F172CB21100D0E055 /* controller.h */,
+				D44E72C21D663B0F00ECD5DD /* coolant.h */,
+				D44E72C01D663B0300ECD5DD /* coolant.cpp */,
+				D48F5A44172CB1F900D0E055 /* cycle_homing.cpp */,
+				D4B6579E18B5C21500F8616C /* cycle_jogging.cpp */,
+				D4B6579F18B5C21500F8616C /* cycle_probing.cpp */,
+				D4B657A018B5C21500F8616C /* encoder.cpp */,
+				D4B657A118B5C21500F8616C /* encoder.h */,
+				D49367DB1B8E0AF1000BB759 /* error.h */,
+				D48F5A45172CB1F900D0E055 /* gcode_parser.cpp */,
+				D48F5A70172CB21100D0E055 /* gcode_parser.h */,
+				D4B93DEF1AAA9DFE00632FAB /* gpio.cpp */,
+				D4B93DF01AAA9DFE00632FAB /* gpio.h */,
+				D48F5A48172CB1FA00D0E055 /* help.cpp */,
+				D48F5A73172CB21100D0E055 /* help.h */,
+				D48F5A49172CB1FA00D0E055 /* json_parser.cpp */,
+				D48F5A74172CB21100D0E055 /* json_parser.h */,
+				D48F5A4A172CB1FA00D0E055 /* kinematics.cpp */,
+				D48F5A75172CB21100D0E055 /* kinematics.h */,
+				D4694F9C1E295B5E00F813BA /* marlin_compatibility.cpp */,
+				D4694F9D1E295B5E00F813BA /* marlin_compatibility.h */,
+				D48F5A4C172CB1FA00D0E055 /* persistence.cpp */,
+				D48F5A76172CB21100D0E055 /* persistence.h */,
+				D48F5A4D172CB1FA00D0E055 /* plan_arc.cpp */,
+				D48F5A77172CB21100D0E055 /* plan_arc.h */,
+				D4B6579C18B5C1DE00F8616C /* plan_exec.cpp */,
+				D48F5A4E172CB1FA00D0E055 /* plan_line.cpp */,
+				D4D6453819BCAE3F0053705B /* plan_zoid.cpp */,
+				D48F5A4F172CB1FA00D0E055 /* planner.cpp */,
+				D48F5A79172CB21100D0E055 /* planner.h */,
+				D4B657A518B5C23C00F8616C /* pwm.cpp */,
+				D4B657A618B5C23C00F8616C /* pwm.h */,
+				D48F5A50172CB1FA00D0E055 /* report.cpp */,
+				D48F5A7A172CB21100D0E055 /* report.h */,
+				D48F5A7B172CB21100D0E055 /* settings.h */,
+				D48F5A51172CB1FA00D0E055 /* spindle.cpp */,
+				D48F5A7C172CB21100D0E055 /* spindle.h */,
+				D48F5A52172CB1FA00D0E055 /* stepper.cpp */,
+				D48F5A7D172CB21100D0E055 /* stepper.h */,
+				D49367D71B87CA8A000BB759 /* temperature.cpp */,
+				D49367D81B87CA8A000BB759 /* temperature.h */,
+				D48F5A53172CB1FA00D0E055 /* text_parser.cpp */,
+				D48F5A7E172CB21100D0E055 /* text_parser.h */,
+				D48F5A7F172CB21100D0E055 /* g2core.h */,
+				D4522DC91C45F41D0086AAE6 /* g2core_info.h */,
+				D48F5A54172CB1FA00D0E055 /* util.cpp */,
+				D48F5A80172CB21100D0E055 /* util.h */,
+				D48F5A55172CB1FA00D0E055 /* xio.cpp */,
+				D48F5A81172CB21100D0E055 /* xio.h */,
+				D4922F3F1CB8361B00A565FF /* boards.mk */,
+				D43FF6F51D52C8AF00FB5B53 /* board */,
+				D47B744C1D4925B4004FAB53 /* device */,
+				D41997401DF9D6A800E0FB51 /* settings */,
+				D4FEBFF81B0A65E30042EA32 /* index */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXLegacyTarget section */
+		D4037C091CDA42F300BC72AD /* G2 printrboardG2v3 PrintrbotPlus */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=PrintrbotPlus BOARD=printrboardG2v3 DEBUG=1";
+			buildConfigurationList = D4037C0A1CDA42F300BC72AD /* Build configuration list for PBXLegacyTarget "G2 printrboardG2v3 PrintrbotPlus" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "G2 printrboardG2v3 PrintrbotPlus";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
+		D43C7AE31B155C33007440D6 /* G2 G2V9k */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s BOARD=g2v9k";
+			buildConfigurationList = D43C7AE41B155C33007440D6 /* Build configuration list for PBXLegacyTarget "G2 G2V9k" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "G2 G2V9k";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
+		D43FF7141D537A5C00FB5B53 /* G2 gQuadratic Test */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=TestQuadratic DEBUG=2";
+			buildConfigurationList = D43FF7151D537A5C00FB5B53 /* Build configuration list for PBXLegacyTarget "G2 gQuadratic Test" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "G2 gQuadratic Test";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
+		D45710C21705330C00EA19A8 /* G2 gShield */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s BOARD=gShield";
+			buildConfigurationList = D45710C31705330D00EA19A8 /* Build configuration list for PBXLegacyTarget "G2 gShield" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "G2 gShield";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
+		D4782AAE1D9B16BE00B32136 /* G2 Probotix */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=ProbotixV90 DEBUG=1";
+			buildConfigurationList = D4782AAF1D9B16BE00B32136 /* Build configuration list for PBXLegacyTarget "G2 Probotix" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "G2 Probotix";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
+		D4782AB61D9E39EC00B32136 /* G2 EggBot */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=EggBot DEBUG=1";
+			buildConfigurationList = D4782AB71D9E39EC00B32136 /* Build configuration list for PBXLegacyTarget "G2 EggBot" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "G2 EggBot";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
+		D4AC391A1C7BAB8E0098D685 /* G2 sbv300 */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=sbv300 DEBUG=2";
+			buildConfigurationList = D4AC391B1C7BAB8E0098D685 /* Build configuration list for PBXLegacyTarget "G2 sbv300" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "G2 sbv300";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
+		D4B485B21AB1F3CB00C6614F /* G2 V9 Shapeoko Dual-Y */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=ShapeokoDualY";
+			buildConfigurationList = D4B485B31AB1F3CB00C6614F /* Build configuration list for PBXLegacyTarget "G2 V9 Shapeoko Dual-Y" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "G2 V9 Shapeoko Dual-Y";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
+		D4CBBAD01A0D51FE00150DE2 /* G2 G2V9k Ultimaker */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=UltimakerTests BOARD=g2v9k";
+			buildConfigurationList = D4CBBAD11A0D51FE00150DE2 /* Build configuration list for PBXLegacyTarget "G2 G2V9k Ultimaker" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "G2 G2V9k Ultimaker";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
+		D4E9135D1AC46B8B0042A16C /* G2 gShield Debugger */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 OPTIMIZATION=s BOARD=gShield DEBUG=2";
+			buildConfigurationList = D4E9135E1AC46B8B0042A16C /* Build configuration list for PBXLegacyTarget "G2 gShield Debugger" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "G2 gShield Debugger";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
+		D4F226F31D088A48008ED57C /* G2 gQuintic PrintrbotPlus */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=PrintrbotPlus BOARD=gquintic-b DEBUG=2";
+			buildConfigurationList = D4F226F41D088A48008ED57C /* Build configuration list for PBXLegacyTarget "G2 gQuintic PrintrbotPlus" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "G2 gQuintic PrintrbotPlus";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
+/* End PBXLegacyTarget section */
+
+/* Begin PBXNativeTarget section */
+		D457112317053BFB00EA19A8 /* index */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D457112D17053BFB00EA19A8 /* Build configuration list for PBXNativeTarget "index" */;
+			buildPhases = (
+				D457112017053BFB00EA19A8 /* Sources */,
+				D457112117053BFB00EA19A8 /* Frameworks */,
+				D457112217053BFB00EA19A8 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = index;
+			productName = index;
+			productReference = D4FEBFF81B0A65E30042EA32 /* index */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D45710B8170532AC00EA19A8 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0800;
+				ORGANIZATIONNAME = "Rob Giseburt";
+			};
+			buildConfigurationList = D45710BB170532AC00EA19A8 /* Build configuration list for PBXProject "g2core" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = D45710B7170532AC00EA19A8;
+			productRefGroup = D45710B7170532AC00EA19A8;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D45710C21705330C00EA19A8 /* G2 gShield */,
+				D4E9135D1AC46B8B0042A16C /* G2 gShield Debugger */,
+				D43C7AE31B155C33007440D6 /* G2 G2V9k */,
+				D4CBBAD01A0D51FE00150DE2 /* G2 G2V9k Ultimaker */,
+				D4B485B21AB1F3CB00C6614F /* G2 V9 Shapeoko Dual-Y */,
+				D4037C091CDA42F300BC72AD /* G2 printrboardG2v3 PrintrbotPlus */,
+				D4AC391A1C7BAB8E0098D685 /* G2 sbv300 */,
+				D4F226F31D088A48008ED57C /* G2 gQuintic PrintrbotPlus */,
+				D43FF7141D537A5C00FB5B53 /* G2 gQuadratic Test */,
+				D4782AAE1D9B16BE00B32136 /* G2 Probotix */,
+				D457112317053BFB00EA19A8 /* index */,
+				D4782AB61D9E39EC00B32136 /* G2 EggBot */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D457112017053BFB00EA19A8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D4B93DF11AAA9DFE00632FAB /* gpio.cpp in Sources */,
+				D4B485B61AB1FBC900C6614F /* gpio.h in Sources */,
+				D457117C17053EFA00EA19A8 /* Makefile in Sources */,
+				D4B657A718B5C23C00F8616C /* pwm.cpp in Sources */,
+				D44E72C11D663B0300ECD5DD /* coolant.cpp in Sources */,
+				D4694F9E1E295B5E00F813BA /* marlin_compatibility.cpp in Sources */,
+				D4B657A318B5C21600F8616C /* cycle_probing.cpp in Sources */,
+				D4D6453919BCAE3F0053705B /* plan_zoid.cpp in Sources */,
+				D4B657A218B5C21600F8616C /* cycle_jogging.cpp in Sources */,
+				D4B657A418B5C21600F8616C /* encoder.cpp in Sources */,
+				D4B6579D18B5C1DE00F8616C /* plan_exec.cpp in Sources */,
+				D48F5A56172CB1FA00D0E055 /* canonical_machine.cpp in Sources */,
+				D48F5A57172CB1FA00D0E055 /* config_app.cpp in Sources */,
+				D48F5A58172CB1FA00D0E055 /* config.cpp in Sources */,
+				D49367D91B87CA8A000BB759 /* temperature.cpp in Sources */,
+				D48F5A59172CB1FA00D0E055 /* controller.cpp in Sources */,
+				D48F5A5A172CB1FA00D0E055 /* cycle_homing.cpp in Sources */,
+				D48F5A5B172CB1FA00D0E055 /* gcode_parser.cpp in Sources */,
+				D48F5A5E172CB1FA00D0E055 /* help.cpp in Sources */,
+				D48F5A5F172CB1FA00D0E055 /* json_parser.cpp in Sources */,
+				D48F5A60172CB1FA00D0E055 /* kinematics.cpp in Sources */,
+				D48F5A61172CB1FA00D0E055 /* main.cpp in Sources */,
+				D48F5A62172CB1FA00D0E055 /* persistence.cpp in Sources */,
+				D48F5A63172CB1FA00D0E055 /* plan_arc.cpp in Sources */,
+				D48F5A64172CB1FA00D0E055 /* plan_line.cpp in Sources */,
+				D48F5A65172CB1FA00D0E055 /* planner.cpp in Sources */,
+				D48F5A66172CB1FA00D0E055 /* report.cpp in Sources */,
+				D48F5A67172CB1FA00D0E055 /* spindle.cpp in Sources */,
+				D48F5A68172CB1FA00D0E055 /* stepper.cpp in Sources */,
+				D48F5A69172CB1FA00D0E055 /* text_parser.cpp in Sources */,
+				D48F5A6A172CB1FA00D0E055 /* util.cpp in Sources */,
+				D48F5A6B172CB1FA00D0E055 /* xio.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		D4037C0B1CDA42F300BC72AD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		D4037C0C1CDA42F300BC72AD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		D43C7AE51B155C33007440D6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "TinyG2 G2V9k";
+			};
+			name = Debug;
+		};
+		D43C7AE61B155C33007440D6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "TinyG2 G2V9k";
+			};
+			name = Release;
+		};
+		D43FF7161D537A5C00FB5B53 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		D43FF7171D537A5C00FB5B53 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		D45710BD170532AC00EA19A8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				ONLY_ACTIVE_ARCH = YES;
+			};
+			name = Debug;
+		};
+		D45710BE170532AC00EA19A8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+			};
+			name = Release;
+		};
+		D45710C41705330D00EA19A8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BOARD = ArduinoDue;
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PLATFORM = atmel_sam;
+				PRODUCT_NAME = bin/SAM3X8E/TinyG2_SAM3X8E_flash.elf;
+			};
+			name = Debug;
+		};
+		D45710C51705330D00EA19A8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BOARD = ArduinoDue;
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PLATFORM = atmel_sam;
+				PRODUCT_NAME = bin/SAM3X8E/TinyG2_SAM3X8E_flash.elf;
+			};
+			name = Release;
+		};
+		D457112B17053BFB00EA19A8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/board/$(BOARD)/\"",
+					"\"$(SRCROOT)/../Motate/MotateProject/Motate/motate/board/$(BOARD)/\"",
+					"\"$(SRCROOT)/../Motate/MotateProject/Motate/motate/platform/$(PLATFORM)/\"",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = (
+					"-D__SAM3X8E__",
+					"-Imotate",
+					"-DXCODE_INDEX",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		D457112C17053BFB00EA19A8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/board/$(BOARD)/\"",
+					"\"$(SRCROOT)/../Motate/MotateProject/Motate/motate/board/$(BOARD)/\"",
+					"\"$(SRCROOT)/../Motate/MotateProject/Motate/motate/platform/$(PLATFORM)/\"",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				OTHER_CFLAGS = (
+					"-D__SAM3X8E__",
+					"-Imotate",
+					"-DXCODE_INDEX",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		D4782AB01D9B16BE00B32136 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		D4782AB11D9B16BE00B32136 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		D4782AB81D9E39EC00B32136 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		D4782AB91D9E39EC00B32136 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		D4AC391C1C7BAB8E0098D685 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		D4AC391D1C7BAB8E0098D685 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		D4B485B41AB1F3CB00C6614F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "TinyG2 V9 Shapeoko Dual-Y";
+			};
+			name = Debug;
+		};
+		D4B485B51AB1F3CB00C6614F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "TinyG2 V9 Shapeoko Dual-Y";
+			};
+			name = Release;
+		};
+		D4CBBAD21A0D51FE00150DE2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "TinyG2 G2V9k Ultimaker";
+			};
+			name = Debug;
+		};
+		D4CBBAD31A0D51FE00150DE2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "TinyG2 G2V9k Ultimaker";
+			};
+			name = Release;
+		};
+		D4E9135F1AC46B8B0042A16C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "TinyG2 gShield Debugger";
+			};
+			name = Debug;
+		};
+		D4E913601AC46B8B0042A16C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "TinyG2 gShield Debugger";
+			};
+			name = Release;
+		};
+		D4F226F51D088A48008ED57C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		D4F226F61D088A48008ED57C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D4037C0A1CDA42F300BC72AD /* Build configuration list for PBXLegacyTarget "G2 printrboardG2v3 PrintrbotPlus" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4037C0B1CDA42F300BC72AD /* Debug */,
+				D4037C0C1CDA42F300BC72AD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D43C7AE41B155C33007440D6 /* Build configuration list for PBXLegacyTarget "G2 G2V9k" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D43C7AE51B155C33007440D6 /* Debug */,
+				D43C7AE61B155C33007440D6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D43FF7151D537A5C00FB5B53 /* Build configuration list for PBXLegacyTarget "G2 gQuadratic Test" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D43FF7161D537A5C00FB5B53 /* Debug */,
+				D43FF7171D537A5C00FB5B53 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D45710BB170532AC00EA19A8 /* Build configuration list for PBXProject "g2core" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D45710BD170532AC00EA19A8 /* Debug */,
+				D45710BE170532AC00EA19A8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D45710C31705330D00EA19A8 /* Build configuration list for PBXLegacyTarget "G2 gShield" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D45710C41705330D00EA19A8 /* Debug */,
+				D45710C51705330D00EA19A8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D457112D17053BFB00EA19A8 /* Build configuration list for PBXNativeTarget "index" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D457112B17053BFB00EA19A8 /* Debug */,
+				D457112C17053BFB00EA19A8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4782AAF1D9B16BE00B32136 /* Build configuration list for PBXLegacyTarget "G2 Probotix" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4782AB01D9B16BE00B32136 /* Debug */,
+				D4782AB11D9B16BE00B32136 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4782AB71D9E39EC00B32136 /* Build configuration list for PBXLegacyTarget "G2 EggBot" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4782AB81D9E39EC00B32136 /* Debug */,
+				D4782AB91D9E39EC00B32136 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4AC391B1C7BAB8E0098D685 /* Build configuration list for PBXLegacyTarget "G2 sbv300" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4AC391C1C7BAB8E0098D685 /* Debug */,
+				D4AC391D1C7BAB8E0098D685 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4B485B31AB1F3CB00C6614F /* Build configuration list for PBXLegacyTarget "G2 V9 Shapeoko Dual-Y" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4B485B41AB1F3CB00C6614F /* Debug */,
+				D4B485B51AB1F3CB00C6614F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4CBBAD11A0D51FE00150DE2 /* Build configuration list for PBXLegacyTarget "G2 G2V9k Ultimaker" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4CBBAD21A0D51FE00150DE2 /* Debug */,
+				D4CBBAD31A0D51FE00150DE2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4E9135E1AC46B8B0042A16C /* Build configuration list for PBXLegacyTarget "G2 gShield Debugger" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4E9135F1AC46B8B0042A16C /* Debug */,
+				D4E913601AC46B8B0042A16C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4F226F41D088A48008ED57C /* Build configuration list for PBXLegacyTarget "G2 gQuintic PrintrbotPlus" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4F226F51D088A48008ED57C /* Debug */,
+				D4F226F61D088A48008ED57C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D45710B8170532AC00EA19A8 /* Project object */;
+}
