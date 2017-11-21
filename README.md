@@ -1,13 +1,12 @@
 <img src="https://raw.githubusercontent.com/wiki/synthetos/g2/images/g2core.png" width="300" height="129" alt="g2core">
 
-[![Build Status](https://travis-ci.org/synthetos/g2.svg?branch=edge)](https://travis-ci.org/synthetos/g2) [![Issues in Ready](https://badge.waffle.io/synthetos/g2.svg?label=ready&title=Ready)](http://waffle.io/synthetos/g2) [![Issues in Progress](https://badge.waffle.io/synthetos/g2.svg?label=in%20progress&title=In%20Progress)](http://waffle.io/synthetos/g2)
+[![Build Status](https://travis-ci.org/synthetos/g2.svg?branch=master)](https://travis-ci.org/synthetos/g2) [![Issues in Ready](https://badge.waffle.io/synthetos/g2.svg?label=ready&title=Ready)](http://waffle.io/synthetos/g2) [![Issues in Progress](https://badge.waffle.io/synthetos/g2.svg?label=in%20progress&title=In%20Progress)](http://waffle.io/synthetos/g2)
 
-# g2core - Edge Branch
+# g2core - Master Branch
 
-G2 [Edge](https://github.com/synthetos/g2/tree/edge) is the branch for beta testing new features under development. New features are developed in feature branches and merged into the edge branch. Periodically edge is promoted to master.
+g2core [master](https://github.com/synthetos/g2/tree/master) is the stable branch. New features are developed in feature branches and merged into the edge branch, and after thorough testing are merged here to master.
 
-That said, Edge is for the adventurous. It is not guaranteed to be stable, but we do our best to achieve this. For production uses we recommend using the [Master branch](https://github.com/synthetos/g2/tree/master).
-
+For production uses we recommend using this [master branch](https://github.com/synthetos/g2/tree/master). For the adventurous (or developers wishing to lend a hand), we have the [edge branch](https://github.com/synthetos/g2/tree/edge). It is not guaranteed to be stable, but we do our best to achieve this.
 
 ## Firmware Build 100 `{fb:100.xx}`
 ### Feature Enhancements
