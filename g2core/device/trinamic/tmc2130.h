@@ -26,6 +26,10 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include "controller.h"
+#include "json_parser.h"       // for nv, etc
+#include "text_parser.h"       // for txt_* commands
+
 #include "stepper.h"
 
 #include "MotateSPI.h"
@@ -47,6 +51,8 @@ template <typename device_t,
           pin_number dir_num,
           pin_number enable_num>
 struct Trinamic2130 final : Stepper {
+    typedef Trinamic2130<device_t, step_num, dir_num, enable_num> type;
+
     // Pins that are directly managed
     OutputPin<step_num> _step;
     OutputPin<dir_num> _dir;
@@ -693,6 +699,12 @@ struct Trinamic2130 final : Stepper {
         }
     };
 
+    // helper to create functions that retrieve the object from the cfgArray[...].target
+    // and call the correct function of that target
+    template <stat_t(type::*T)(nvObj_t *nv)>
+    static stat_t get_fn(nvObj_t *nv) {
+        return (reinterpret_cast<type*>(cfgArray[nv->index].target)->*T)(nv);
+    };
 
     // NV interface helpers
     stat_t get_ts(nvObj_t *nv) {
@@ -700,6 +712,7 @@ struct Trinamic2130 final : Stepper {
         nv->valuetype = TYPE_INT;
         return STAT_OK;
     };
+    static stat_t get_ts_fn(nvObj_t *nv) { return get_fn<&type::get_ts>(nv); };
     // no set
 
     stat_t get_pth(nvObj_t *nv) {
@@ -707,6 +720,7 @@ struct Trinamic2130 final : Stepper {
         nv->valuetype = TYPE_INT;
         return STAT_OK;
     };
+    static stat_t get_pth_fn(nvObj_t *nv) { return get_fn<&type::get_pth>(nv); };
     stat_t set_pth(nvObj_t *nv) {
         int32_t v = nv->value;
         if (v < 0) {
@@ -721,12 +735,14 @@ struct Trinamic2130 final : Stepper {
         TPWMTHRS_needs_written = true;
         return STAT_OK;
     };
+    static stat_t set_pth_fn(nvObj_t *nv) { return get_fn<&type::set_pth>(nv); };
 
     stat_t get_cth(nvObj_t *nv) {
         nv->value = TCOOLTHRS.value;
         nv->valuetype = TYPE_INT;
         return STAT_OK;
     };
+    static stat_t get_cth_fn(nvObj_t *nv) { return get_fn<&type::get_cth>(nv); };
     stat_t set_cth(nvObj_t *nv) {
         int32_t v = nv->value;
         if (v < 0) {
@@ -741,12 +757,14 @@ struct Trinamic2130 final : Stepper {
         TCOOLTHRS_needs_written = true;
         return STAT_OK;
     };
+    static stat_t set_cth_fn(nvObj_t *nv) { return get_fn<&type::set_cth>(nv); };
 
     stat_t get_hth(nvObj_t *nv) {
         nv->value = THIGH.value;
         nv->valuetype = TYPE_INT;
         return STAT_OK;
     };
+    static stat_t get_hth_fn(nvObj_t *nv) { return get_fn<&type::get_hth>(nv); };
     stat_t set_hth(nvObj_t *nv) {
         int32_t v = nv->value;
         if (v < 0) {
@@ -761,6 +779,7 @@ struct Trinamic2130 final : Stepper {
         THIGH_needs_written = true;
         return STAT_OK;
     };
+    static stat_t set_hth_fn(nvObj_t *nv) { return get_fn<&type::set_hth>(nv); };
 
     stat_t get_sgt(nvObj_t *nv) {
         int32_t v = COOLCONF.sgt;
@@ -768,6 +787,7 @@ struct Trinamic2130 final : Stepper {
         nv->valuetype = TYPE_INT;
         return STAT_OK;
     };
+    static stat_t get_sgt_fn(nvObj_t *nv) { return get_fn<&type::get_sgt>(nv); };
     stat_t set_sgt(nvObj_t *nv) {
         int32_t v = nv->value;
         if (v < -64) {
@@ -782,12 +802,14 @@ struct Trinamic2130 final : Stepper {
         COOLCONF_needs_written = true;
         return STAT_OK;
     };
+    static stat_t set_sgt_fn(nvObj_t *nv) { return get_fn<&type::set_sgt>(nv); };
 
     stat_t get_csa(nvObj_t *nv) {
         nv->value = DRV_STATUS.CS_ACTUAL;
         nv->valuetype = TYPE_INT;
         return STAT_OK;
     };
+    static stat_t get_csa_fn(nvObj_t *nv) { return get_fn<&type::get_csa>(nv); };
     // no set
 
     stat_t get_sgr(nvObj_t *nv) {
@@ -795,6 +817,7 @@ struct Trinamic2130 final : Stepper {
         nv->valuetype = TYPE_INT;
         return STAT_OK;
     };
+    static stat_t get_sgr_fn(nvObj_t *nv) { return get_fn<&type::get_sgr>(nv); };
     // no set
 
     stat_t get_sgs(nvObj_t *nv) {
@@ -802,6 +825,7 @@ struct Trinamic2130 final : Stepper {
         nv->valuetype = TYPE_BOOL;
         return STAT_OK;
     };
+    static stat_t get_sgs_fn(nvObj_t *nv) { return get_fn<&type::get_sgs>(nv); };
     // no set
 
 
@@ -810,6 +834,7 @@ struct Trinamic2130 final : Stepper {
         nv->valuetype = TYPE_INT;
         return STAT_OK;
     };
+    static stat_t get_tbl_fn(nvObj_t *nv) { return get_fn<&type::get_tbl>(nv); };
     stat_t set_tbl(nvObj_t *nv) {
         int32_t v = nv->value;
         if (v < 0) {
@@ -824,12 +849,14 @@ struct Trinamic2130 final : Stepper {
         CHOPCONF_needs_written = true;
         return STAT_OK;
     };
+    static stat_t set_tbl_fn(nvObj_t *nv) { return get_fn<&type::set_tbl>(nv); };
 
     stat_t get_pgrd(nvObj_t *nv) {
         nv->value = PWMCONF.PWM_GRAD;
         nv->valuetype = TYPE_INT;
         return STAT_OK;
     };
+    static stat_t get_pgrd_fn(nvObj_t *nv) { return get_fn<&type::get_pgrd>(nv); };
     stat_t set_pgrd(nvObj_t *nv) {
         int32_t v = nv->value;
         if (v < 0) {
@@ -844,12 +871,14 @@ struct Trinamic2130 final : Stepper {
         PWMCONF_needs_written = true;
         return STAT_OK;
     };
+    static stat_t set_pgrd_fn(nvObj_t *nv) { return get_fn<&type::set_pgrd>(nv); };
 
     stat_t get_pamp(nvObj_t *nv) {
         nv->value = PWMCONF.PWM_AMPL;
         nv->valuetype = TYPE_INT;
         return STAT_OK;
     };
+    static stat_t get_pamp_fn(nvObj_t *nv) { return get_fn<&type::get_pamp>(nv); };
     stat_t set_pamp(nvObj_t *nv) {
         int32_t v = nv->value;
         if (v < 0) {
@@ -864,12 +893,14 @@ struct Trinamic2130 final : Stepper {
         PWMCONF_needs_written = true;
         return STAT_OK;
     };
+    static stat_t set_pamp_fn(nvObj_t *nv) { return get_fn<&type::set_pamp>(nv); };
 
     stat_t get_hend(nvObj_t *nv) {
         nv->value = CHOPCONF.HEND_OFFSET;
         nv->valuetype = TYPE_INT;
         return STAT_OK;
     };
+    static stat_t get_hend_fn(nvObj_t *nv) { return get_fn<&type::get_hend>(nv); };
     stat_t set_hend(nvObj_t *nv) {
         int32_t v = nv->value;
         if (v < 0) {
@@ -884,12 +915,14 @@ struct Trinamic2130 final : Stepper {
         CHOPCONF_needs_written = true;
         return STAT_OK;
     };
+    static stat_t set_hend_fn(nvObj_t *nv) { return get_fn<&type::set_hend>(nv); };
 
     stat_t get_hsrt(nvObj_t *nv) {
         nv->value = CHOPCONF.HSTRT_TFD012;
         nv->valuetype = TYPE_INT;
         return STAT_OK;
     };
+    static stat_t get_hsrt_fn(nvObj_t *nv) { return get_fn<&type::get_hsrt>(nv); };
     stat_t set_hsrt(nvObj_t *nv) {
         int32_t v = nv->value;
         if (v < 0) {
@@ -904,12 +937,14 @@ struct Trinamic2130 final : Stepper {
         CHOPCONF_needs_written = true;
         return STAT_OK;
     };
+    static stat_t set_hsrt_fn(nvObj_t *nv) { return get_fn<&type::set_hsrt>(nv); };
 
     stat_t get_smin(nvObj_t *nv) {
         nv->value = COOLCONF.semin;
         nv->valuetype = TYPE_INT;
         return STAT_OK;
     };
+    static stat_t get_smin_fn(nvObj_t *nv) { return get_fn<&type::get_smin>(nv); };
     stat_t set_smin(nvObj_t *nv) {
         int32_t v = nv->value;
         if (v < 0) {
@@ -924,12 +959,14 @@ struct Trinamic2130 final : Stepper {
         COOLCONF_needs_written = true;
         return STAT_OK;
     };
+    static stat_t set_smin_fn(nvObj_t *nv) { return get_fn<&type::set_smin>(nv); };
 
     stat_t get_smax(nvObj_t *nv) {
         nv->value = COOLCONF.semax;
         nv->valuetype = TYPE_INT;
         return STAT_OK;
     };
+    static stat_t get_smax_fn(nvObj_t *nv) { return get_fn<&type::get_smax>(nv); };
     stat_t set_smax(nvObj_t *nv) {
         int32_t v = nv->value;
         if (v < 0) {
@@ -944,12 +981,14 @@ struct Trinamic2130 final : Stepper {
         COOLCONF_needs_written = true;
         return STAT_OK;
     };
+    static stat_t set_smax_fn(nvObj_t *nv) { return get_fn<&type::set_smax>(nv); };
 
     stat_t get_sup(nvObj_t *nv) {
         nv->value = COOLCONF.seup;
         nv->valuetype = TYPE_INT;
         return STAT_OK;
     };
+    static stat_t get_sup_fn(nvObj_t *nv) { return get_fn<&type::get_sup>(nv); };
     stat_t set_sup(nvObj_t *nv) {
         int32_t v = nv->value;
         if (v < 0) {
@@ -964,12 +1003,14 @@ struct Trinamic2130 final : Stepper {
         COOLCONF_needs_written = true;
         return STAT_OK;
     };
+    static stat_t set_sup_fn(nvObj_t *nv) { return get_fn<&type::set_sup>(nv); };
 
     stat_t get_sdn(nvObj_t *nv) {
         nv->value = COOLCONF.sedn;
         nv->valuetype = TYPE_INT;
         return STAT_OK;
     };
+    static stat_t get_sdn_fn(nvObj_t *nv) { return get_fn<&type::get_sdn>(nv); };
     stat_t set_sdn(nvObj_t *nv) {
         int32_t v = nv->value;
         if (v < 0) {
@@ -984,5 +1025,6 @@ struct Trinamic2130 final : Stepper {
         COOLCONF_needs_written = true;
         return STAT_OK;
     };
+    static stat_t set_sdn_fn(nvObj_t *nv) { return get_fn<&type::set_sdn>(nv); };
 
 };
