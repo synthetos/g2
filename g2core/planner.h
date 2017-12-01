@@ -489,6 +489,8 @@ typedef struct mpMotionRuntimeSingleton {    // persistent runtime variables
     sectionState section_state;         // state within a move section
 
     float unit[AXES];                   // unit vector for axis scaling & planning
+    float spring_offset[AXES];          // amount of spring offset compensation in effect per axis
+    bool spring_retraction_backward[AXES]; // true if that axis is retracting
     bool axis_flags[AXES];              // set true for axes participating in the move
     float target[AXES];                 // final target for bf (used to correct rounding errors)
     float position[AXES];               // current move position
@@ -592,6 +594,7 @@ float mp_get_runtime_work_position(uint8_t axis);
 void mp_set_runtime_work_offset(float offset[]);
 bool mp_get_runtime_busy(void) HOT_FUNC;
 bool mp_runtime_is_idle(void) HOT_FUNC;
+float mp_get_runtime_spring_value(uint8_t axis);
 
 stat_t mp_aline(GCodeState_t *gm_in) HOT_FUNC;                   // line planning...
 void mp_plan_block_list(void) HOT_FUNC;

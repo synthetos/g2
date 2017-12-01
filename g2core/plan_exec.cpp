@@ -1073,11 +1073,54 @@ static stat_t _exec_aline_tail(mpBuf_t *bf)
 static stat_t _exec_aline_segment()
 {
     float travel_steps[MOTORS];
+    // we don't want to keep the adjusted target in the recorded position, so we'll adjust after
+    float adjusted_target[AXES];
+
+    for (uint8_t a=0; a<AXES; a++) {
+#if !defined(NEW_FWD_DIFF) || (NEW_FWD_DIFF==0)
+#else
+        // recompute the new spring offset
+        if (a == AXIS_A) {
+            float axis_velocity = mr.target_velocity * mr.unit[a];
+            float new_spring_offset = 0.0;
+            if (fabs(axis_velocity) < 0.00001) {
+                // this axis isn't moving, so execute retraction vibration
+                if (mr.spring_retraction_backward[a] && mr.spring_offset[a] > -cm.a[a].spring_retraction_factor) {
+                    // retract backward as fast as allowed, up to -cm.a[a].spring_retraction_factor
+                    new_spring_offset = mr.spring_offset[a]-(mr.segment_time * cm.a[a].velocity_max);
+                    if (new_spring_offset <= -cm.a[a].spring_retraction_factor) {
+                        new_spring_offset = -cm.a[a].spring_retraction_factor;
+                        mr.spring_retraction_backward[a] = false;
+                    }
+                } else {
+                    // undo retract at half velocity
+                    new_spring_offset = std::max(0.0, mr.spring_offset[a] + (mr.segment_time * cm.a[a].velocity_max)/2.0);
+                    mr.spring_retraction_backward[a] = false;
+                }
+            } else {
+                new_spring_offset = std::min(
+                    (double)cm.a[a].spring_offset_factor * axis_velocity, // new actual offset
+                    (double)mr.spring_offset[a]+((mr.segment_time * cm.a[a].velocity_max)-(mr.unit[a] * (mr.segment_velocity+mr.target_velocity) * 0.5 * mr.segment_time)) // offset at max speed
+                );
+                mr.spring_retraction_backward[a] = true; // next zero-velocity move should be a retraction
+            }
+            new_spring_offset = std::max(-cm.a[a].spring_offset_max, std::min(cm.a[a].spring_offset_max, new_spring_offset));
+            mr.spring_offset[a] = new_spring_offset;
+        } else
+#endif
+        {
+            mr.spring_offset[a] = 0;
+        }
+    }
+
 
     // Set target position for the segment
     // If the segment ends on a section waypoint synchronize to the head, body or tail end
     // Otherwise if not at a section waypoint compute target from segment time and velocity
     // Don't do waypoint correction if you are going into a hold.
+
+    // See https://en.wikipedia.org/wiki/Kahan_summation_algorithm
+    //   for the description of the summation compensation used.
 
     if ((--mr.segment_count == 0) && (cm.motion_state != MOTION_HOLD)) {
         copy_vector(mr.gm.target, mr.waypoint[mr.section]);
@@ -1099,6 +1142,11 @@ static stat_t _exec_aline_segment()
             mr.gm.target[a] = target;
         }
     }
+    copy_vector(adjusted_target, mr.gm.target);
+    {
+        uint8_t a = AXIS_A;
+        adjusted_target[a] += mr.spring_offset[a];
+    }
 
     // Convert target position to steps
     // Bucket-brigade the old target down the chain before getting the new target from kinematics
@@ -1113,7 +1161,7 @@ static stat_t _exec_aline_segment()
         mr.encoder_steps[m] = en_read_encoder(m);           // get current encoder position (time aligns to commanded_steps)
         mr.following_error[m] = mr.encoder_steps[m] - mr.commanded_steps[m];
     }
-    kn_inverse_kinematics(mr.gm.target, mr.target_steps);   // now determine the target steps...
+    kn_inverse_kinematics(adjusted_target, mr.target_steps);   // now determine the target steps...
     for (uint8_t m=0; m<MOTORS; m++) {                      // and compute the distances to be traveled
         travel_steps[m] = mr.target_steps[m] - mr.position_steps[m];
     }
