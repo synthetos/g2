@@ -20,6 +20,8 @@ The fb:101 release is a mostly internal change from the fb:100 branches. Here ar
 - Temperature control enhancements. (Ongoing.)
 - More complete support for TMC2130 by adding more JSON controls for live feedback and configuration.
 - Initial support for Core XY kinematics.
+- Boards are in more control of the planner settings.
+- Experimental setting to have traverse (G0) use the 'high jerk' axis settings.
 
 ### Project Changes
 
@@ -92,4 +94,24 @@ This build is primarily focused on support for the new boards based on the Atmel
   #define M1_MOTOR_MAP                AXIS_COREXY_A           // 1ma
   #define M2_MOTOR_MAP                AXIS_COREXY_B           // 2ma
   ```
+</details>
+
+<details><summary><strong>Planner settings control from board files</strong></summary>
+
+  - The defines `PLANNER_BUFFER_POOL_SIZE` and `MIN_SEGMENT_MS` are now set in the `board/*/hardware.h` files.
+  - `PLANNER_BUFFER_POOL_SIZE` sets the size of the planner buffer array.
+    - Default value if not defined: `48`
+  - `MIN_SEGMENT_MS` sets the minimum segment time (in milliseconds) and several other settings that are comuted based on it.
+    - Default values if not defined: `0.75`
+    - A few of the computed values are shown:
+    ```c++
+    #define NOM_SEGMENT_MS              ((float)MIN_SEGMENT_MS*2.0)        // nominal segment ms (at LEAST MIN_SEGMENT_MS * 2)
+    #define MIN_BLOCK_MS                ((float)MIN_SEGMENT_MS*2.0)        // minimum block (whole move) milliseconds
+    ```
+</details>
+
+<details><summary><strong>Planner settings control from board files</strong></summary>
+
+  - The new define `TRAVERSE_AT_HIGH_JERK` can be set to `true`, making traverse (`G0`) moves (including `E`-only moves in Marlin-flavored gcode mode) will use the jerk-high (`jh`) settings.
+    - If set to `false` or undefined `G0` moves will continue to use the jerk-max (`jm`) settings that feed (`G1`) moves use.
 </details>
