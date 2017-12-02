@@ -58,6 +58,11 @@ This build is primarily focused on support for the new boards based on the Atmel
    - Added `BED_OUTPUT_INIT` in order to control configuration of the Bed output pin settings.
      - Defaults to `{kNormal, fet_pin3_freq}`.
    - `EXTRUDER_1_FAN_PIN` for control of the temperature-enabled fan on extruder 1. (Only available on extruder 1 at the moment.)
+  - (*Experimental*) Analog input is now interpreted through one of various `ADCCircuit` objects.
+    - Three are provided currently: `ADCCircuitSimplePullup`, `ADCCircuitDifferentialPullup`, `ADCCircuitRawResistance`
+    - `Thermistor` and `PT100` objects no longer take the pullup value in their constructor, but instead take a pointer to an `ADCCircuit` object.
+  - `Thermistor` and `PT100` objects no longer assume an `ADCPin` is used, but now take the type that conforms to the `ADCPin` interface as a template argument.
+  - **TODO:** Make more of these configurable at runtime. Separate the ADC input from the consumer, and allow other things than temperature to read it.
 </details>
 
 <details><summary><strong>TMC2130 JSON controls</strong></summary>
@@ -110,7 +115,7 @@ This build is primarily focused on support for the new boards based on the Atmel
     ```
 </details>
 
-<details><summary><strong>Planner settings control from board files</strong></summary>
+<details><summary><strong>Experimental traverse at high jerk</strong></summary>
 
   - The new define `TRAVERSE_AT_HIGH_JERK` can be set to `true`, making traverse (`G0`) moves (including `E`-only moves in Marlin-flavored gcode mode) will use the jerk-high (`jh`) settings.
     - If set to `false` or undefined `G0` moves will continue to use the jerk-max (`jm`) settings that feed (`G1`) moves use.
