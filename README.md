@@ -33,6 +33,8 @@ This build is primarily focused on support for the new boards based on the Atmel
 
 #### Functional Changes:
 
+*Note: Click the header next to the arrow to expand and display the details.*
+
 <details><summary><strong>Linear-Velocity Segment Execution</strong></summary>
 
   - The overall motion is still jerk-controlled and the computation of motion remains largely the same (although slightly simplified). At the smallest level above raw steps (what we call "segments," which are nominally 0.25ms to 1ms in duration) we previously executed the steps at a constant velocity. We now execute them with a linear change from a start velocity to an end velocity. This results in smoother motion that is more faithful to the planned jerk constraints.
