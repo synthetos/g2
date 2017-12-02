@@ -267,7 +267,7 @@
     }
 #endif // HAS_TEMPERATURE_SENSOR_1
 
-#define EXTRUDER_1_OUTPUT_PIN kOutput1_PinNumber
+#define EXTRUDER_1_OUTPUT_PIN kHeaterOutput1_PinNumber
 #define EXTRUDER_1_FAN_PIN    kOutput3_PinNumber
 
 #define HAS_TEMPERATURE_SENSOR_2  false
@@ -282,7 +282,8 @@
     }
 #endif // HAS_TEMPERATURE_SENSOR_2
 
-#define EXTRUDER_2_OUTPUT_PIN kOutput2_PinNumber
+// Warning - the PrintrBoardG2 doesn't have a Output2
+#define EXTRUDER_2_OUTPUT_PIN kHeaterOutput2_PinNumber
 
 #define HAS_TEMPERATURE_SENSOR_3  false
 #if HAS_TEMPERATURE_SENSOR_3
@@ -296,7 +297,7 @@
     }
 #endif // HAS_TEMPERATURE_SENSOR_3
 
-#define BED_OUTPUT_PIN kOutput11_PinNumber
+#define BED_OUTPUT_PIN kHeaterOutput11_PinNumber
 
 //** Digital Inputs **
 
