@@ -19,6 +19,7 @@ The fb:101 release is a mostly internal change from the fb:100 branches. Here ar
 - Added support for gQuintic (rev B) and fixed issues with gQuadratic board support. (This mostly happened in Motate.)
 - Temperature control enhancements. (Ongoing.)
 - More complete support for TMC2130 by adding more JSON controls for live feedback and configuration.
+- Initial support for Core XY kinematics.
 
 ### Project Changes
 
@@ -30,18 +31,28 @@ This build is primarily focused on support for the new boards based on the Atmel
 
 #### Functional Changes:
 
-- **Linear-Velocity Segment Execution**
+<details><summary><strong>Linear-Velocity Segment Execution</strong></summary>
+
   - The overall motion is still jerk-controlled and the computation of motion remains largely the same (although slightly simplified). At the smallest level above raw steps (what we call "segments," which are nominally 0.25ms to 1ms in duration) we previously executed the steps at a constant velocity. We now execute them with a linear change from a start velocity to an end velocity. This results in smoother motion that is more faithful to the planned jerk constraints.
   - This changed the way the forward differences are used to compute the segment speeds as well. Previously, we were computing the curve at the midpoint (time-wise) of each segment in order to get the median velocity. Now that we want the start and end velocity of each segment we only compute the end (time-wise) of each segment, and use that again later as the start-point of the next segment.
 
-- **Probing enhancements**
+</details>
+
+<details><summary><strong>Probing enhancements</strong></summary>
+
   - Added `{"prbs":true}` to store the current position as if it were to position of a succesful probe.
   - Added `{"prbr":true}` to enable and `{"prbr":false}` to enable and disable (respectively) the JSON `{prb:{...}}` report after a probe.
 
-- **gQuintic support**
+</details>
+
+<details><summary><strong>gQuintic support</strong></summary>
+
   - Support for the gQuintic rev B was added. Support for rev D will come shortly.
 
-- **Temperature control enhancements**
+</details>
+
+<details><summary><strong>Temperature control enhancements</strong></summary>
+
   - Added the following settings defines:
    - `HAS_TEMPERATURE_SENSOR_1`, `HAS_TEMPERATURE_SENSOR_2`, and `HAS_TEMPERATURE_SENSOR_3`
    - `EXTRUDER_1_OUTPUT_PIN`, `EXTRUDER_2_OUTPUT_PIN`, and `BED_OUTPUT_PIN`
@@ -49,7 +60,10 @@ This build is primarily focused on support for the new boards based on the Atmel
      - Defaults to `{kNormal, fet_pin3_freq}`.
    - `EXTRUDER_1_FAN_PIN` for control of the temperature-enabled fan on extruder 1. (Only available on extruder 1 at the moment.)
 
-- **TMC2130 JSON controls**
+</details>
+
+<details><summary><strong>TMC2130 JSON controls</strong></summary>
+
   - Added the following setting keys to the motors (`1` - `6`):
     - `ts`   - *(R)* get the value of the `TSTEP` register
     - `pth`  - *(R/W)* get/set the value of the `TPWMTHRS` register
@@ -69,3 +83,16 @@ This build is primarily focused on support for the new boards based on the Atmel
     - `sup`  - *(R/W)* get/set the `seup` value of the `COOLCONF` register
     - `sdn`  - *(R/W)* get/set the `sedn` value of the `COOLCONF` register
   - Note that all gets retrieve the last cached value.
+</details>
+
+<details><summary><strong>Core XY Kinematics Support</strong></summary>
+  - Enabled at compile-time by setting the `KINEMATICS` define to `KINE_CORE_XY`
+    - The default (and only other valid value) for `KINEMATICS` is `KINE_CARTESIAN`
+  - Note that the X and Y axes must have the same settings, or the behavior is undefined.
+  - For the sake of motor mapping, the values `AXIS_COREXY_A` and `AXIS_COREXY_B` have been created.
+  - Example usage:
+  ```c++
+  #define M1_MOTOR_MAP                AXIS_COREXY_A           // 1ma
+  #define M2_MOTOR_MAP                AXIS_COREXY_B           // 2ma
+  ```
+</details>
