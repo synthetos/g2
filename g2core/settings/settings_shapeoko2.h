@@ -54,6 +54,7 @@
 
 // Communications and reporting settings
 
+#define USB_SERIAL_PORTS_EXPOSED	1						// 1=single endpoint usb, 2=dual endpoint usb
 #define COMM_MODE                   JSON_MODE               // one of: TEXT_MODE, JSON_MODE
 #define XIO_ENABLE_FLOW_CONTROL FLOW_CONTROL_RTS            // FLOW_CONTROL_OFF, FLOW_CONTROL_RTS
 
@@ -101,21 +102,13 @@
 #define M2_POWER_MODE               MOTOR_POWER_MODE
 #define M2_POWER_LEVEL              0.500
 
-#define M3_MOTOR_MAP                AXIS_Y
+#define M3_MOTOR_MAP                AXIS_Z
 #define M3_STEP_ANGLE               1.8
-#define M3_TRAVEL_PER_REV           40.00
+#define M3_TRAVEL_PER_REV           1.25
 #define M3_MICROSTEPS               8
-#define M3_POLARITY                 1
+#define M3_POLARITY                 0
 #define M3_POWER_MODE               MOTOR_POWER_MODE
-#define M3_POWER_LEVEL              0.500
-
-#define M4_MOTOR_MAP                AXIS_Z
-#define M4_STEP_ANGLE               1.8
-#define M4_TRAVEL_PER_REV           1.25
-#define M4_MICROSTEPS               8
-#define M4_POLARITY                 0
-#define M4_POWER_MODE               MOTOR_POWER_MODE
-#define M4_POWER_LEVEL              0.750
+#define M3_POWER_LEVEL              0.750
 
 // *** axis settings **********************************************************************************
 

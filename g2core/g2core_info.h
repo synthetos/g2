@@ -21,7 +21,7 @@
 #ifndef G2CORE_INFO_H_ONCE
 #define G2CORE_INFO_H_ONCE
 
-#define G2CORE_FIRMWARE_BUILD			100.22  // Merged dev-253-text-mode-compile. See PR #254
+#define G2CORE_FIRMWARE_BUILD			100.26  // Merged fixes for #267 and PR #258
 #ifdef GIT_VERSION
 #define G2CORE_FIRMWARE_BUILD_STRING	GIT_VERSION
 #else
