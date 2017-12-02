@@ -839,40 +839,6 @@ static void _init_forward_diffs(const float v_0, const float v_1)
     const float Bh_4 = B * h_4;
     const float Ch_3 = C * h_3;
 
-#if !defined(NEW_FWD_DIFF) || (NEW_FWD_DIFF==0)
-    const float const1 = 7.5625; // (121.0/16.0)
-    const float const2 = 3.25;   // ( 13.0/ 4.0)
-    const float const3 = 82.5;   // (165.0/ 2.0)
-
-    /*
-     *  F_5 = (121/16)A h^5 +  5 B h^4 + (13/4) C h^3 + 2 D h^2 + Eh
-     *  F_4 =  (165/2)A h^5 + 29 B h^4 +     9  C h^3 + 2 D h^2
-     *  F_3 =     255 A h^5 + 48 B h^4 +     6  C h^3
-     *  F_2 =     300 A h^5 + 24 B h^4
-     *  F_1 =     120 A h^5
-     */
-
-    mr.forward_diff_5 = const1*Ah_5 +  5.0*Bh_4 + const2*Ch_3;
-    mr.forward_diff_4 = const3*Ah_5 + 29.0*Bh_4 +    9.0*Ch_3;
-    mr.forward_diff_3 =  255.0*Ah_5 + 48.0*Bh_4 +    6.0*Ch_3;
-    mr.forward_diff_2 =  300.0*Ah_5 + 24.0*Bh_4;
-    mr.forward_diff_1 =  120.0*Ah_5;
-
-    // Calculate the initial velocity by calculating V(h/2)
-    const float half_h   = h * 0.5; // h/2
-    const float half_h_3 = half_h   * half_h * half_h;
-    const float half_h_4 = half_h_3 * half_h;
-    const float half_h_5 = half_h_4 * half_h;
-
-    const float half_Ch_3 = C * half_h_3;
-    const float half_Bh_4 = B * half_h_4;
-    const float half_Ah_5 = A * half_h_5;
-
-    mr.segment_velocity = half_Ah_5 + half_Bh_4 + half_Ch_3 + v_0;
-
-#else
-    // NEW_FWD_DIFF == 1
-
     /*
      *  F_5 =     A h^5 +    B h^4 +   C h^3 +   D h^2 + E h
      *  F_4 =  30 A h^5 + 14 B h^4 + 6 C h^3 + 2 D h^2
@@ -889,8 +855,6 @@ static void _init_forward_diffs(const float v_0, const float v_1)
 
     mr.segment_velocity = v_0;
     mr.target_velocity = v_0 + mr.forward_diff_5;
-#endif
-
 }
 
 /*********************************************************************************************
@@ -901,9 +865,6 @@ static stat_t _exec_aline_head(mpBuf_t *bf)
 {
     bool first_pass = false;
     if (mr.section_state == SECTION_NEW) {                          // INITIALIZATION
-#if !defined(NEW_FWD_DIFF) || (NEW_FWD_DIFF==0)
-        first_pass = true;
-#endif
         if (fp_ZERO(mr.r->head_length)) {
             mr.section = SECTION_BODY;
             return(_exec_aline_body(bf));                            // skip ahead to the body generator
@@ -914,13 +875,8 @@ static stat_t _exec_aline_head(mpBuf_t *bf)
 
         if (mr.segment_count == 1) {
             // We will only have one segment, simply average the velocities
-#if !defined(NEW_FWD_DIFF) || (NEW_FWD_DIFF==0)
-            mr.segment_velocity = mr.r->head_length / mr.segment_time;
-#else
             mr.segment_velocity = mr.entry_velocity;
             mr.target_velocity = mr.r->cruise_velocity;
-#endif
-
         } else {
             _init_forward_diffs(mr.entry_velocity, mr.r->cruise_velocity); // <-- sets inital segment_velocity
         }
@@ -931,12 +887,8 @@ static stat_t _exec_aline_head(mpBuf_t *bf)
         mr.section = SECTION_HEAD;
         mr.section_state = SECTION_RUNNING;
     } else {
-#if !defined(NEW_FWD_DIFF) || (NEW_FWD_DIFF==0)
-        mr.segment_velocity += mr.forward_diff_5;
-#else
         mr.segment_velocity = mr.target_velocity;
         mr.target_velocity += mr.forward_diff_5;
-#endif
     }
 
     if (_exec_aline_segment() == STAT_OK) {                     // set up for second half
@@ -1001,10 +953,6 @@ static stat_t _exec_aline_tail(mpBuf_t *bf)
 {
     bool first_pass = false;
     if (mr.section_state == SECTION_NEW) {                          // INITIALIZATION
-#if !defined(NEW_FWD_DIFF) || (NEW_FWD_DIFF==0)
-        first_pass = true;
-#endif
-
         // Mark the block as unplannable
         bf->plannable = false;
 
@@ -1014,12 +962,8 @@ static stat_t _exec_aline_tail(mpBuf_t *bf)
         mr.segment_time = mr.r->tail_time / mr.segments;             // time to advance for each segment
 
         if (mr.segment_count == 1) {
-#if !defined(NEW_FWD_DIFF) || (NEW_FWD_DIFF==0)
-            mr.segment_velocity = mr.r->tail_length / mr.segment_time;
-#else
             mr.segment_velocity = mr.r->cruise_velocity;
             mr.target_velocity = mr.r->exit_velocity;
-#endif
         } else {
             _init_forward_diffs(mr.r->cruise_velocity, mr.r->exit_velocity); // <-- sets inital segment_velocity
         }
@@ -1031,12 +975,8 @@ static stat_t _exec_aline_tail(mpBuf_t *bf)
         mr.section = SECTION_TAIL;
         mr.section_state = SECTION_RUNNING;
     } else {
-#if !defined(NEW_FWD_DIFF) || (NEW_FWD_DIFF==0)
-        mr.segment_velocity += mr.forward_diff_5;
-#else
         mr.segment_velocity = mr.target_velocity;
         mr.target_velocity += mr.forward_diff_5;
-#endif
     }
 
     if (_exec_aline_segment() == STAT_OK) {
@@ -1082,11 +1022,7 @@ static stat_t _exec_aline_segment()
     if ((--mr.segment_count == 0) && (cm.motion_state != MOTION_HOLD)) {
         copy_vector(mr.gm.target, mr.waypoint[mr.section]);
     } else {
-#if !defined(NEW_FWD_DIFF) || (NEW_FWD_DIFF==0)
-        float segment_length = mr.segment_velocity * mr.segment_time;
-#else
         float segment_length = (mr.segment_velocity+mr.target_velocity) * 0.5 * mr.segment_time;
-#endif
         // see https://en.wikipedia.org/wiki/Kahan_summation_algorithm
         //   for the summation compensation description
         for (uint8_t a=0; a<AXES; a++) {
@@ -1125,11 +1061,7 @@ static stat_t _exec_aline_segment()
     }
 
     // Call the stepper prep function
-#if !defined(NEW_FWD_DIFF) || (NEW_FWD_DIFF==0)
-    ritorno(st_prep_line(travel_steps, mr.following_error, mr.segment_time));
-#else
     ritorno(st_prep_line(mr.segment_velocity, mr.target_velocity, travel_steps, mr.following_error, mr.segment_time));
-#endif
 
     copy_vector(mr.position, mr.gm.target);                 // update position from target
     if (mr.segment_count == 0) {

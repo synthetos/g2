@@ -149,8 +149,6 @@
 #ifndef PLANNER_H_ONCE
 #define PLANNER_H_ONCE
 
-#define NEW_FWD_DIFF 1
-
 #include "canonical_machine.h"    // used for GCodeState_t
 #include "hardware.h"             // for MIN_SEGMENT_MS
 
