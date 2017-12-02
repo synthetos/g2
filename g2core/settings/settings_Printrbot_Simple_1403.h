@@ -243,50 +243,43 @@
 
 #define HAS_TEMPERATURE_SENSOR_1  true
 #if HAS_TEMPERATURE_SENSOR_1
-// Must choose Thermistor or PT100
-#if 1 // 1 if a Thermistor, 0 if a PT100
-    #define TEMPERATURE_SENSOR_1_TYPE  Thermistor<kADC1_PinNumber>
+    #define TEMPERATURE_SENSOR_1_CIRCUIT_TYPE ADCCircuitSimplePullup
+    #define TEMPERATURE_SENSOR_1_CIRCUIT_INIT { /*pullup_resistance:*/ 4700 }
+    #define TEMPERATURE_SENSOR_1_TYPE  Thermistor<ADCPin<kADC1_PinNumber>>
     #define TEMPERATURE_SENSOR_1_INIT { \
         /*T1:*/     20.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
-        /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 4700 \
+        /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, \
+        &temperature_sensor_1_circuit \
     }
-#else
-    #define TEMPERATURE_SENSOR_1_TYPE  PT100<kADC1_PinNumber>
-    #define TEMPERATURE_SENSOR_1_INIT {/*pullup_resistance:*/ 2325, /*inline_resistance*/0.75}
-#endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_1
 
 #define EXTRUDER_1_OUTPUT_PIN kOutput1_PinNumber
 #define EXTRUDER_1_FAN_PIN    kOutput3_PinNumber
 
-#define HAS_TEMPERATURE_SENSOR_2  true
+#define HAS_TEMPERATURE_SENSOR_2  false
 #if HAS_TEMPERATURE_SENSOR_2
-#if 1 // 1 if a Thermistor, 0 if a PT100
-    #define TEMPERATURE_SENSOR_2_TYPE  Thermistor<kADC2_PinNumber>
+    #define TEMPERATURE_SENSOR_2_CIRCUIT_TYPE ADCCircuitSimplePullup
+    #define TEMPERATURE_SENSOR_2_CIRCUIT_INIT { /*pullup_resistance:*/ 4700 }
+    #define TEMPERATURE_SENSOR_2_TYPE  Thermistor<ADCPin<kADC2_PinNumber>>
     #define TEMPERATURE_SENSOR_2_INIT { \
-    /*T1:*/     20.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
-    /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 4700 \
+        /*T1:*/     20.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
+        /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, \
+        &temperature_sensor_2_circuit \
     }
-#else
-    #define TEMPERATURE_SENSOR_2_TYPE  PT100<kADC2_PinNumber>
-    #define TEMPERATURE_SENSOR_2_INIT {/*pullup_resistance:*/ 2325, /*inline_resistance*/0.75}
-#endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_2
 
 #define EXTRUDER_2_OUTPUT_PIN kOutput2_PinNumber
 
-#define HAS_TEMPERATURE_SENSOR_3  true
+#define HAS_TEMPERATURE_SENSOR_3  false
 #if HAS_TEMPERATURE_SENSOR_3
-#if 1 // 1 if a Thermistor, 0 if a PT100
-    #define TEMPERATURE_SENSOR_3_TYPE  Thermistor<kADC3_PinNumber>
+    #define TEMPERATURE_SENSOR_3_CIRCUIT_TYPE ADCCircuitSimplePullup
+    #define TEMPERATURE_SENSOR_3_CIRCUIT_INIT { /*pullup_resistance:*/ 4700 }
+    #define TEMPERATURE_SENSOR_3_TYPE  Thermistor<ADCPin<kADC3_PinNumber>>
     #define TEMPERATURE_SENSOR_3_INIT { \
-    /*T1:*/     20.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
-    /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 4700 \
+        /*T1:*/     20.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
+        /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, \
+        &temperature_sensor_3_circuit \
     }
-#else
-    #define TEMPERATURE_SENSOR_3_TYPE  PT100<kADC3_PinNumber>
-    #define TEMPERATURE_SENSOR_3_INIT {/*pullup_resistance:*/ 2325, /*inline_resistance*/0.75}
-#endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_3
 
 #define BED_OUTPUT_PIN kOutput11_PinNumber
