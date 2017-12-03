@@ -12,16 +12,19 @@ That said, Edge is for the adventurous. It is not guaranteed to be stable, but w
 ## Firmware Build 101 `{fb:101.xx}`
 ### Feature Enhancements
 
-The fb:101 release is a mostly internal change from the fb:100 branches. Here are the highlights, more detailed changelog below:
-- Updated JT (Junction integration Time, a.k.a. "cornering") handling to be more optimized, and to treat the last move as a corner to a move with no active axes. This allows a non-zero stopping velocity based on the allowed jerk and active JT value.
+The fb:101 release is a mostly internal change from the fb:100 branches. Here are the highlights, more detailed on each item are further below:
 - Updated motion execution at the segment (smallest) level to be linear velocity instead of constant velocity, resulting in notably smoother motion and more faithful execution of the jerk limitations. (Incidentally, the sound of the motors is also slightly quieter and more "natural.")
+- Updated JT (Junction integration Time, a.k.a. "cornering") handling to be more optimized, and to treat the last move as a corner to a move with no active axes. This allows a non-zero stopping velocity based on the allowed jerk and active JT value.
 - Probing enhancements.
 - Added support for gQuintic (rev B) and fixed issues with gQuadratic board support. (This mostly happened in Motate.)
-- Temperature control enhancements. (Ongoing.)
+- Temperature control enhancements
+  - Temperature inputs are configured differently at compile time. (Ongoing.)
+  - PID control has been adjusted to PID+FF (Proportional, Integral, and Derivative, with Feed Forward). In this case, the feed forward is a multiplier of the difference between the current temperature and the ambient temperature. Since there is no temperature sensor for ambient temperature at the moment, it uses an idealized room temperature of 21ºC.
 - More complete support for TMC2130 by adding more JSON controls for live feedback and configuration.
 - Initial support for Core XY kinematics.
 - Boards are in more control of the planner settings.
 - Experimental setting to have traverse (G0) use the 'high jerk' axis settings.
+- Outputs are now configured at board initialization (and later) to honor the settings more faithfully. This includes setting the pin high or low as soon as possible.
 
 ### Project Changes
 
@@ -55,16 +58,20 @@ This build is primarily focused on support for the new boards based on the Atmel
 <details><summary><strong>Temperature control enhancements</strong></summary>
 
   - Added the following settings defines:
-   - `HAS_TEMPERATURE_SENSOR_1`, `HAS_TEMPERATURE_SENSOR_2`, and `HAS_TEMPERATURE_SENSOR_3`
-   - `EXTRUDER_1_OUTPUT_PIN`, `EXTRUDER_2_OUTPUT_PIN`, and `BED_OUTPUT_PIN`
-   - Added `BED_OUTPUT_INIT` in order to control configuration of the Bed output pin settings.
-     - Defaults to `{kNormal, fet_pin3_freq}`.
-   - `EXTRUDER_1_FAN_PIN` for control of the temperature-enabled fan on extruder 1. (Only available on extruder 1 at the moment.)
+    - `HAS_TEMPERATURE_SENSOR_1`, `HAS_TEMPERATURE_SENSOR_2`, and `HAS_TEMPERATURE_SENSOR_3`
+    - `EXTRUDER_1_OUTPUT_PIN`, `EXTRUDER_2_OUTPUT_PIN`, and `BED_OUTPUT_PIN`
+    - Added `BED_OUTPUT_INIT` in order to control configuration of the Bed output pin settings.
+    - Defaults to `{kNormal, fet_pin3_freq}`.
+    - `EXTRUDER_1_FAN_PIN` for control of the temperature-enabled fan on extruder 1. (Only available on extruder 1 at the moment.)
   - (*Experimental*) Analog input is now interpreted through one of various `ADCCircuit` objects.
     - Three are provided currently: `ADCCircuitSimplePullup`, `ADCCircuitDifferentialPullup`, `ADCCircuitRawResistance`
     - `Thermistor` and `PT100` objects no longer take the pullup value in their constructor, but instead take a pointer to an `ADCCircuit` object.
   - `Thermistor` and `PT100` objects no longer assume an `ADCPin` is used, but now take the type that conforms to the `ADCPin` interface as a template argument.
   - **TODO:** Make more of these configurable at runtime. Separate the ADC input from the consumer, and allow other things than temperature to read it.
+  - PID+FF control adds feed-forward (FF) to adjust the output to a reasonable minimum based on heat loss dues to room temperature.
+    - This can be effectively disabled, making the controller a PID controller, by setting the F value to `0.0`.
+    - **Warning** setting this value too high can cause thermal runaway. Set this value conservatively (low), since there's currently no ambient temperature, and the actual heat loss may be less than computed. This will be magnified by another heater (such as that on a heat bed of a 3D printer) in close proximity.
+
 </details>
 
 <details><summary><strong>TMC2130 JSON controls</strong></summary>
@@ -121,4 +128,10 @@ This build is primarily focused on support for the new boards based on the Atmel
 
   - The new define `TRAVERSE_AT_HIGH_JERK` can be set to `true`, making traverse (`G0`) moves (including `E`-only moves in Marlin-flavored gcode mode) will use the jerk-high (`jh`) settings.
     - If set to `false` or undefined `G0` moves will continue to use the jerk-max (`jm`) settings that feed (`G1`) moves use.
+</details>
+
+<details><summary><strong>Output setting as soon as possible</strong></summary>
+
+  - At board initialization, the output value on each of the `out` objects is set to whatever the pin is configured to be "inactive." This is based on the settings file `DO`*n*`_MODE` setting.
+  - For example, if `DO10_MODE == IO_ACTIVE_LOW` then the pin at `DO10` is initialized as `HIGH` at board setup. This happen even before the `main()` function starts, shortly after the GPIO clocks are enabled for each port.
 </details>
