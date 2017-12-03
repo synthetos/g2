@@ -133,6 +133,7 @@ This build is primarily focused on support for the new boards based on the Atmel
 <details><summary><strong>PID+FF - added feed forward</strong></summary>
 
   - There is a new JSON value `f` in each `pid`*`n`* object (read-only, for reporting) as well as an `f` setting in the `he`*`n`* objects (for control).
+    - This is controlled in the settings file via `H`*`n`*`_DEFAULT_F`, such as `H1_DEFAULT_F`. Default value is `0.0`.
     - This is a value that is multiplied to by current temp - 21 and added to the current computed output.
     - **Warning!** Setting this value too high can result in thermal runaway. Set it conservatively (low) or disable it completely if in doubt.
     - Set the `he`*`n`*`f` value to `0.0` to effectively disable feed-forward.
