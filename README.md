@@ -130,6 +130,15 @@ This build is primarily focused on support for the new boards based on the Atmel
     - If set to `false` or undefined `G0` moves will continue to use the jerk-max (`jm`) settings that feed (`G1`) moves use.
 </details>
 
+<details><summary><strong>PID+FF - added feed forward</strong></summary>
+
+  - There is a new JSON value `f` in each `pid`*`n`* object (read-only, for reporting) as well as an `f` setting in the `he`*`n`* objects (for control).
+    - This is a value that is multiplied to by current temp - 21 and added to the current computed output.
+    - **Warning!** Setting this value too high can result in thermal runaway. Set it conservatively (low) or disable it completely if in doubt.
+    - Set the `he`*`n`*`f` value to `0.0` to effectively disable feed-forward.
+
+</details>
+
 <details><summary><strong>Output setting as soon as possible</strong></summary>
 
   - At board initialization, the output value on each of the `out` objects is set to whatever the pin is configured to be "inactive." This is based on the settings file `DO`*n*`_MODE` setting.
