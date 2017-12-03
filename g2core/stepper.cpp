@@ -709,15 +709,15 @@ stat_t st_prep_line(float start_velocity, float end_velocity, float travel_steps
         // 'Nudge' correction strategy. Inject a single, scaled correction value then hold off
         // NOTE: This clause can be commented out to test for numerical accuracy and accumulating errors
         if ((--st_pre.mot[motor].correction_holdoff < 0) &&
-            (fabs(following_error[motor]) > STEP_CORRECTION_THRESHOLD)) {
+            (std::abs(following_error[motor]) > STEP_CORRECTION_THRESHOLD)) {
 
             st_pre.mot[motor].correction_holdoff = STEP_CORRECTION_HOLDOFF;
             correction_steps = following_error[motor] * STEP_CORRECTION_FACTOR;
 
             if (correction_steps > 0) {
-                correction_steps = std::min(std::min(correction_steps, fabs(travel_steps[motor])), STEP_CORRECTION_MAX);
+                correction_steps = std::min(std::min(correction_steps, std::abs(travel_steps[motor])), STEP_CORRECTION_MAX);
             } else {
-                correction_steps = std::max(std::max(correction_steps, -fabs(travel_steps[motor])), -STEP_CORRECTION_MAX);
+                correction_steps = std::max(std::max(correction_steps, -std::abs(travel_steps[motor])), -STEP_CORRECTION_MAX);
             }
             st_pre.mot[motor].corrected_steps += correction_steps;
             travel_steps[motor] -= correction_steps;
@@ -726,7 +726,7 @@ stat_t st_prep_line(float start_velocity, float end_velocity, float travel_steps
         // Compute substeb increment. The accumulator must be *exactly* the incoming
         // fractional steps times the substep multiplier or positional drift will occur.
         // Rounding is performed to eliminate a negative bias in the uint32 conversion
-        // that results in long-term negative drift. (fabs/round order doesn't matter)
+        // that results in long-term negative drift. (std::abs/round order doesn't matter)
 
         //  t is ticks duration of the move
         //  T is time duration of the move in minutes
@@ -757,7 +757,7 @@ stat_t st_prep_line(float start_velocity, float end_velocity, float travel_steps
         // option 2:
         //  d = (b (v_1 - v_0))/((t-1) a)
 
-        double s_double = fabs(travel_steps[motor] * 2.0);
+        double s_double = std::abs(travel_steps[motor] * 2.0);
 
         // 1/m_0 = (2 s v_0)/(t (v_0 + v_1))
         st_pre.mot[motor].substep_increment = round(((s_double * start_velocity)/(t_v0_v1)) * (double)DDA_SUBSTEPS);

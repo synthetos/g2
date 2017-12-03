@@ -113,7 +113,7 @@ using std::max;
 template <typename T>
 inline T square(const T x) { return (x)*(x); }        /* UNSAFE */
 
-//inline float abs(const float a) { return fabs(a); }
+//inline float abs(const float a) { return std::abs(a); }
 
 #ifndef avg
 template <typename T>
@@ -129,19 +129,19 @@ inline T avg(const T a,const T b) {return (a+b)/2; }
 
 // These functions all require math.h to be included in each file that uses them
 #ifndef fp_EQ
-#define fp_EQ(a,b) (fabs(a-b) < EPSILON)
+#define fp_EQ(a,b) (std::abs(a-b) < EPSILON)
 #endif
 #ifndef fp_NE
-#define fp_NE(a,b) (fabs(a-b) > EPSILON)
+#define fp_NE(a,b) (std::abs(a-b) > EPSILON)
 #endif
 #ifndef fp_GE
-#define fp_GE(a,b) (fabs(a-b) < EPSILON || a-b > EPSILON)
+#define fp_GE(a,b) (std::abs(a-b) < EPSILON || a-b > EPSILON)
 #endif
 #ifndef fp_ZERO
-#define fp_ZERO(a) (fabs(a) < EPSILON)
+#define fp_ZERO(a) (std::abs(a) < EPSILON)
 #endif
 #ifndef fp_NOT_ZERO
-#define fp_NOT_ZERO(a) (fabs(a) > EPSILON)
+#define fp_NOT_ZERO(a) (std::abs(a) > EPSILON)
 #endif
 #ifndef fp_FALSE
 #define fp_FALSE(a) (a < EPSILON)

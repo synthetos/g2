@@ -283,13 +283,13 @@ typedef enum {
 //// RG: Simulation shows +-0.001 is about as much as we should allow.
 //      VELOCITY_EQ(v0,v1) reads: "True if v0 is within 0.0001 of v1"
 //      VELOCITY_LT(v0,v1) reads: "True if v0 is less than v1 by at least 0.0001"
-#define VELOCITY_EQ(v0,v1) ( fabs(v0-v1) < 0.0001 )
+#define VELOCITY_EQ(v0,v1) ( std::abs(v0-v1) < 0.0001 )
 #define VELOCITY_LT(v0,v1) ( (v1 - v0) > 0.0001 )
 
 #define Vthr2 300.0
 #define Veq2_hi 10.0
 #define Veq2_lo 1.0
-#define VELOCITY_ROUGHLY_EQ(v0,v1) ( (v0 > Vthr2) ? fabs(v0-v1) < Veq2_hi : fabs(v0-v1) < Veq2_lo )
+#define VELOCITY_ROUGHLY_EQ(v0,v1) ( (v0 > Vthr2) ? std::abs(v0-v1) < Veq2_hi : std::abs(v0-v1) < Veq2_lo )
 
 //#define ASCII_ART(s)            xio_writeline(s)
 #define ASCII_ART(s)
