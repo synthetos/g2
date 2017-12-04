@@ -21,7 +21,7 @@
 #ifndef G2CORE_INFO_H_ONCE
 #define G2CORE_INFO_H_ONCE
 
-#define G2CORE_FIRMWARE_BUILD			100.27  // Working on UVW
+#define G2CORE_FIRMWARE_BUILD			101.00  // Added UVW axes (9 axis control)
 #define G2CORE_FIRMWARE_VERSION         0.99
 
 #ifdef GIT_VERSION
