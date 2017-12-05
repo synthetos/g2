@@ -90,10 +90,10 @@ struct ioDigitalInputExt {
     ioDigitalInputExt(const ioDigitalInputExt&) = delete; // delete copy
     ioDigitalInputExt(ioDigitalInputExt&&) = delete;      // delete move
 
+    static constexpr d_in_t *in = &d_in[ext_pin_number-1];
+
     void reset() {
         if (D_IN_CHANNELS < ext_pin_number) { return; }
-
-        d_in_t *in = &d_in[ext_pin_number-1];
 
         if (in->mode == IO_MODE_DISABLED) {
             in->state = INPUT_DISABLED;
@@ -107,8 +107,6 @@ struct ioDigitalInputExt {
 
     void pin_changed() {
         if (D_IN_CHANNELS < ext_pin_number) { return; }
-
-        d_in_t *in = &d_in[ext_pin_number-1];
 
         // return if input is disabled (not supposed to happen)
         if (in->mode == IO_MODE_DISABLED) {
@@ -189,10 +187,9 @@ struct ioDigitalInputExt {
             if (in->action == INPUT_ACTION_RESET) {
                 hw_hard_reset();
             }
-        }
 
-        // these functions trigger on the leading edge
-        if (in->edge == INPUT_EDGE_LEADING) {
+            // these functions also trigger on the leading edge
+
             if (in->function == INPUT_FUNCTION_LIMIT) {
                 cm.limit_requested = ext_pin_number;
 
@@ -202,7 +199,7 @@ struct ioDigitalInputExt {
             } else if (in->function == INPUT_FUNCTION_INTERLOCK) {
                 cm.safety_interlock_disengaged = ext_pin_number;
             }
-        }
+        } // if (in->edge == INPUT_EDGE_LEADING)
 
         // trigger interlock release on trailing edge
         if (in->edge == INPUT_EDGE_TRAILING) {
