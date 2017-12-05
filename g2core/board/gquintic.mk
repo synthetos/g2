@@ -24,6 +24,12 @@ ifeq ("$(BOARD)","gquintic-c")
     DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
 endif
 
+ifeq ("$(BOARD)","gquintic-d")
+BASE_BOARD=gquintic
+DEVICE_DEFINES += MOTATE_BOARD="gquintic-d"
+DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
+endif
+
 
 ##########
 # The general gquintic BASE_BOARD.

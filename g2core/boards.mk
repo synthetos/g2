@@ -153,7 +153,7 @@ endif
 
 ifeq ("$(CONFIG)","Ultimaker2Plus")
     ifeq ("$(BOARD)","NONE")
-        BOARD=gquintic-c
+        BOARD=gquintic-d
     endif
     SETTINGS_FILE="settings_Ultimaker_2_Plus.h"
 endif
