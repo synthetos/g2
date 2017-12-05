@@ -1,6 +1,22 @@
 #!/bin/bash
-arduinoAppDir=/Applications
-PATH=$PATH:$arduinoAppDir/Arduino.app/Contents/Resources/Java/hardware/tools/g++_arm_none_eabi/bin/:$arduinoAppDir/Arduino.app/Contents/Resources/Java/hardware/tools/
+FLASH_TOOLS="arduino-flash-tools-master"
+BOSSAC=$FLASH_TOOLS"/tools_darwin/bossac/bin/bossac"
+OBJCOPY=$FLASH_TOOLS"/bins/arm-none-eabi-objcopy"
+
+
+#downloading arduino build tools
+if [ -d "arduino-flash-tools-master" ]; then
+  # Control will enter here if $DIRECTORY exists.
+  echo "We have the flashing tools.. moving on."
+else
+   echo "We do not have the flash tools.. Getting Them"
+   wget https://github.com/synthetos/arduino-flash-tools/archive/master.zip && unzip -x master.zip && rm -f master.zip
+
+fi
+
+quit
+
+
 
 function show_usage() {
 	cat <<END
@@ -56,7 +72,7 @@ if [[ ${port} == "" ]]; then
 fi
 
 
-arm-none-eabi-objcopy -O binary "${file}" "${file/.elf/.bin}" 
+$OBJCOPY -O binary "${file}" "${file/.elf/.bin}" 
 
 echo "Forcing reset using 1200bps open/close on port ${port}"
 # perl -e 'open(my $fh, ">", "${port}"); close($fh);'
@@ -70,7 +86,7 @@ sleep 0.5
 # stty -f "${port}" 115200
 
 echo "Starting programming of file ${file} -> ${file/.elf/.bin} on port ${port/\/dev\//}"
-$arduinoAppDir/Arduino.app/Contents/Resources/Java/hardware/tools/bossac -e -w -v -b "${file/.elf/.bin}"
+$BOSSAC -e -w -v -b "${file/.elf/.bin}"
 
 echo
 echo "WARNING: You may need to hit the RESET button on the device at this point."
