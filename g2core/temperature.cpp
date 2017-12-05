@@ -798,16 +798,6 @@ struct PID {
     bool atSetPoint() {
         return _at_set_point;
     }
-
-// //New-style JSON bindings. DISABLED FOR NOW.
-//    auto json_bindings(const char *object_name) {
-//        return JSON::bind_object(object_name,
-//                                 JSON::bind("set", _set_point,    /*print precision:*/2),
-//                                 JSON::bind("p",   _proportional, /*print precision:*/2),
-//                                 JSON::bind("i",   _integral,     /*print precision:*/5),
-//                                 JSON::bind("d",   _derivative,   /*print precision:*/5)
-//                                 );
-//    }
 };
 
 // NOTICE, the JSON alters incoming values for these!
