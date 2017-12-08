@@ -718,10 +718,6 @@ struct PID {
             }
         }
 
-        // Now tha we've done all the checks, square the error, maintaining the sign.
-        // The is because the energy required to heat an object is the number of degrees of change needed squared.
-        e = std::abs(e)*e;
-
         // P = Proportional
 
         float p = _p_factor * e;
@@ -755,8 +751,9 @@ struct PID {
         _derivative = (input - _previous_input)*(derivative_contribution) + (_derivative * (1.0-derivative_contribution));
         float d = _derivative * _d_factor;
 
+        // F = feed-forward
+
         _feed_forward = (_set_point-21); // 21 is for a roughly ideal room temperature
-        _feed_forward = std::abs(_feed_forward)*_feed_forward;
 
         float f = _f_factor * _feed_forward;
 

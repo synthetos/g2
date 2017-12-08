@@ -384,6 +384,9 @@ typedef struct cmAxis {
     float latch_velocity;                   // homing latch velocity
     float latch_backoff;                    // backoff sufficient to clear a switch
     float zero_backoff;                     // backoff from switches for machine zero
+
+    float spring_offset_factor;             // factor of feed offset (sof * velocity = spring_offset)
+    float spring_offset_max;                // max amount of spring offset compensation allowed
 } cfgAxis_t;
 
 typedef struct cmSingleton {                // struct to manage cm globals and cycles
@@ -704,6 +707,8 @@ stat_t cm_set_jh(nvObj_t *nv);          // set jerk high with 1,000,000 correcti
 stat_t cm_set_mfo(nvObj_t *nv);         // set manual feedrate override factor
 stat_t cm_set_mto(nvObj_t *nv);         // set manual traverse override factor
 
+stat_t cm_get_so(nvObj_t *nv);          // get spring factor offset
+
 stat_t cm_set_probe(nvObj_t *nv);       // store current position as the latest probe
 
 
@@ -773,6 +778,10 @@ stat_t cm_get_nxln(nvObj_t *nv);    // return what value we expect the next line
     void cm_print_jm(nvObj_t *nv);
     void cm_print_jh(nvObj_t *nv);
     void cm_print_ra(nvObj_t *nv);
+
+    void cm_print_sf(nvObj_t *nv);
+    void cm_print_sm(nvObj_t *nv);
+    void cm_print_so(nvObj_t *nv);
 
     void cm_print_hi(nvObj_t *nv);
     void cm_print_hd(nvObj_t *nv);
