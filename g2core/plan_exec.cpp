@@ -1081,28 +1081,31 @@ static stat_t _exec_aline_segment()
 #else
         // recompute the new spring offset
         if (a == AXIS_A) {
-            float axis_velocity = mr.target_velocity * mr.unit[a];
             float new_spring_offset = 0.0;
-            if (fabs(axis_velocity) < 0.00001) {
-                // this axis isn't moving, so execute retraction vibration
-                if (mr.spring_retraction_backward[a] && mr.spring_offset[a] > -cm.a[a].spring_retraction_factor) {
-                    // retract backward as fast as allowed, up to -cm.a[a].spring_retraction_factor
-                    new_spring_offset = mr.spring_offset[a]-(mr.segment_time * cm.a[a].velocity_max);
-                    if (new_spring_offset <= -cm.a[a].spring_retraction_factor) {
-                        new_spring_offset = -cm.a[a].spring_retraction_factor;
-                        mr.spring_retraction_backward[a] = false;
-                    }
-                } else {
-                    // undo retract at half velocity
-                    new_spring_offset = std::max(0.0, mr.spring_offset[a] + (mr.segment_time * cm.a[a].velocity_max)/2.0);
-                    mr.spring_retraction_backward[a] = false;
-                }
+
+            float avg_axis_velocity = (mr.segment_velocity+mr.target_velocity) * 0.5 * mr.unit[a];
+            float axis_travel = avg_axis_velocity * mr.segment_time;
+            float directional_velocity_max = (mr.unit[a] >= 0.0) ? cm.a[a].velocity_max : -cm.a[a].velocity_max;
+            float max_axis_travel = (mr.segment_velocity+directional_velocity_max) * 0.5 * mr.segment_time;
+
+            // if the A axis is still, OR is the only axis moving, kill the remaining spring offset
+            if ((mr.axis_flags[a] || !(mr.axis_flags[AXIS_X] || mr.axis_flags[AXIS_Y] || mr.axis_flags[AXIS_Z])) &&
+                mr.spring_offset[a] > 0.0001
+               )
+            {
+                // this axis isn't moving, so return offset to zero
+                // retract backward as fast as allowed, but don't go past 0.0 (positively or negatively)
+                new_spring_offset = mr.spring_offset[a] + (max_axis_travel - axis_travel);
+                new_spring_offset = (mr.unit[a] >=  0.0) ?
+                    std::max(0.0f, new_spring_offset) :
+                    std::min(0.0f, new_spring_offset);
             } else {
-                new_spring_offset = std::min(
-                    (double)cm.a[a].spring_offset_factor * axis_velocity, // new actual offset
-                    (double)mr.spring_offset[a]+((mr.segment_time * cm.a[a].velocity_max)-(mr.unit[a] * (mr.segment_velocity+mr.target_velocity) * 0.5 * mr.segment_time)) // offset at max speed
-                );
-                mr.spring_retraction_backward[a] = true; // next zero-velocity move should be a retraction
+                new_spring_offset = cm.a[a].spring_offset_factor * avg_axis_velocity;
+
+                if (std::abs(max_axis_travel) < std::abs(axis_travel+(new_spring_offset - mr.spring_offset[a]))) {
+                    // adjust new_spring_offset down to meet maximum velocity
+                    new_spring_offset = mr.spring_offset[a] + (max_axis_travel - axis_travel);
+                }
             }
             new_spring_offset = std::max(-cm.a[a].spring_offset_max, std::min(cm.a[a].spring_offset_max, new_spring_offset));
             mr.spring_offset[a] = new_spring_offset;

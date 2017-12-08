@@ -386,7 +386,6 @@ typedef struct cmAxis {
     float zero_backoff;                     // backoff from switches for machine zero
 
     float spring_offset_factor;             // factor of feed offset (sof * velocity = spring_offset)
-    float spring_retraction_factor;         // factor of the x/y velocity to reverse the axis during non-movement
     float spring_offset_max;                // max amount of spring offset compensation allowed
 } cfgAxis_t;
 

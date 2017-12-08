@@ -490,7 +490,6 @@ typedef struct mpMotionRuntimeSingleton {    // persistent runtime variables
 
     float unit[AXES];                   // unit vector for axis scaling & planning
     float spring_offset[AXES];          // amount of spring offset compensation in effect per axis
-    bool spring_retraction_backward[AXES]; // true if that axis is retracting
     bool axis_flags[AXES];              // set true for axes participating in the move
     float target[AXES];                 // final target for bf (used to correct rounding errors)
     float position[AXES];               // current move position

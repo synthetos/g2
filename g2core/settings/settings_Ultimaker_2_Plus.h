@@ -337,8 +337,7 @@
 // NYLON
 //#define A_JERK_HIGH_SPEED       35000.0 // ~30 million mm/min^3 {ajh:35000.0}
 #define A_SPRING_OFFSET_FACTOR    0
-#define A_SPRING_OFFSET_MAX       20
-#define A_SPRING_RETRACTION_FACTOR -0.001
+#define A_SPRING_OFFSET_MAX       100
 
 
 #define B_AXIS_MODE             AXIS_RADIUS

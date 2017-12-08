@@ -444,7 +444,6 @@ const cfgItem_t cfgArray[] = {
     { "a","ara",_fipc, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].radius,         A_RADIUS},
     { "a","asf",_fipc, 3, cm_print_sf, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].spring_offset_factor, A_SPRING_OFFSET_FACTOR},
     { "a","asm",_fipc, 3, cm_print_sm, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].spring_offset_max,    A_SPRING_OFFSET_MAX},
-    { "a","arf",_fipc, 3, cm_print_sf, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].spring_retraction_factor,A_SPRING_RETRACTION_FACTOR},
     { "a","aso", _f0,  3, cm_print_so, cm_get_so, set_ro,    (float *)&cs.null, 0 },
     { "a","ahi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_A].homing_input,   A_HOMING_INPUT },
     { "a","ahd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_A].homing_dir,     A_HOMING_DIRECTION },
