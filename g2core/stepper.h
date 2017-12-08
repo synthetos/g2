@@ -254,8 +254,6 @@
 #ifndef STEPPER_H_ONCE
 #define STEPPER_H_ONCE
 
-#define NEW_DDA 1
-
 #include "MotateUtilities.h" // for HOT_DATA and HOT_FUNC
 
 #include "planner.h"    // planner.h must precede stepper.h for moveType typedef
@@ -313,11 +311,7 @@ typedef enum {
  *  The ARM is roughly the same as the DDA clock rate is 4x higher but the segment time is ~1/5
  *  Decreasing the nominal segment time increases the number precision.
  */
-#if NEW_DDA == 1
 #define DDA_SUBSTEPS (INT64_MAX-100)
-#else
-#define DDA_SUBSTEPS ((MAX_LONG * 0.90) / (FREQUENCY_DDA * (NOM_SEGMENT_TIME * 60)))
-#endif
 
 /* Step correction settings
  *
@@ -384,10 +378,6 @@ typedef struct stRunSingleton {             // Stepper static values and axis pa
     magic_t magic_start;                    // magic number to test memory integrity
     uint32_t dda_ticks_downcount;           // dda tick down-counter (unscaled)
     uint32_t dwell_ticks_downcount;         // dwell tick down-counter (unscaled)
-#if NEW_DDA == 1
-#else
-    uint32_t dda_ticks_X_substeps;          // ticks multiplied by scaling factor
-#endif
     stRunMotor_t mot[MOTORS];               // runtime motor structures
     magic_t magic_end;
 } stRunSingleton_t;
@@ -424,10 +414,6 @@ typedef struct stPrepSingleton {
     uint32_t dda_ticks;                     // DDA ticks for the move
     float dda_ticks_holdover;               // partial DDA ticks from previous segment
     uint32_t dwell_ticks;                   // dwell ticks remaining
-#if NEW_DDA == 1
-#else
-    uint32_t dda_ticks_X_substeps;          // DDA ticks scaled by substep factor
-#endif
     stPrepMotor_t mot[MOTORS];              // prep time motor structs
     magic_t magic_end;
 } stPrepSingleton_t;
@@ -609,11 +595,7 @@ void st_prep_null(void);
 void st_prep_command(void *bf);        // use a void pointer since we don't know about mpBuf_t yet)
 void st_prep_dwell(float milliseconds);
 void st_request_out_of_band_dwell(float microseconds);
-#if !defined(NEW_FWD_DIFF) || (NEW_FWD_DIFF==0)
-stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time)  HOT_FUNC;
-#else
 stat_t st_prep_line(float start_velocity, float end_velocity, float travel_steps[], float following_error[], float segment_time)  HOT_FUNC;
-#endif
 
 stat_t st_set_ma(nvObj_t *nv);
 stat_t st_set_sa(nvObj_t *nv);

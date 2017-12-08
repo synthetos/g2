@@ -375,7 +375,7 @@ void mp_calculate_ramps(mpBlockRuntimeBuf_t* block, mpBuf_t* bf, const float ent
 float mp_get_target_length(const float v_0, const float v_1, const mpBuf_t* bf) 
 {
     const float q_recip_2_sqrt_j = bf->q_recip_2_sqrt_j;
-    return q_recip_2_sqrt_j * sqrt(fabs(v_1 - v_0)) * (v_1 + v_0);
+    return q_recip_2_sqrt_j * sqrt(std::abs(v_1 - v_0)) * (v_1 + v_0);
 }
 
 /*
@@ -417,7 +417,7 @@ float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t* bf)
     //          v_1 =    1/3 ((const1a v_0^2)/b  +  b const2a  -  v_0)
     const float v_1 = const3 * ((const1a * v_0_2) / b + b * const2a - v_0);
 
-    return fabs(v_1);
+    return std::abs(v_1);
 }
 
 
@@ -447,7 +447,7 @@ float mp_get_decel_velocity(const float v_0, const float L, const mpBuf_t* bf)
         const float sqrt_delta_v_0 = sqrt(v_0 - v_1);
         const float l_t            = q_recip_2_sqrt_j * (sqrt_delta_v_0 * (v_1 + v_0)) - L;
 
-        if (fabs(l_t) < 0.00001) {
+        if (std::abs(l_t) < 0.00001) {
             break;
         }
         // For the first pass, we tested velocity 0.
@@ -548,8 +548,8 @@ static float _get_meet_velocity(const float          v_0,
         }
 
         // Precompute some common chunks -- note that some attempts may have v_1 < v_0 or v_1 < v_2
-        const float sqrt_delta_v_0 = sqrt(fabs(v_1 - v_0));
-        const float sqrt_delta_v_2 = sqrt(fabs(v_1 - v_2));  // 849us
+        const float sqrt_delta_v_0 = sqrt(std::abs(v_1 - v_0));
+        const float sqrt_delta_v_2 = sqrt(std::abs(v_1 - v_2));  // 849us
 
         // l_c is our total-length calculation with the current v_1 estimate, minus the expected length.
         // This makes l_c == 0 when v_1 is the correct value.

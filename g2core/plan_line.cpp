@@ -531,10 +531,10 @@ static void _calculate_jerk(mpBuf_t* bf)
     float jerk = 0;
 
     for (uint8_t axis = 0; axis < AXES; axis++) {
-        if (fabs(bf->unit[axis]) > 0) {  // if this axis is participating in the move
+        if (std::abs(bf->unit[axis]) > 0) {  // if this axis is participating in the move
             float axis_jerk = _get_axis_jerk(bf, axis);
 
-            jerk = axis_jerk / fabs(bf->unit[axis]);
+            jerk = axis_jerk / std::abs(bf->unit[axis]);
             if (jerk < bf->jerk) {
                 bf->jerk = jerk;
                 //              bf->jerk_axis = axis;           // +++ diagnostic
@@ -637,9 +637,9 @@ static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const floa
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         if (bf->axis_flags[axis]) {
             if (bf->gm.motion_mode == MOTION_MODE_STRAIGHT_TRAVERSE) {
-                tmp_time = fabs(axis_length[axis]) / cm.a[axis].velocity_max;
+                tmp_time = std::abs(axis_length[axis]) / cm.a[axis].velocity_max;
             } else {  // gm.motion_mode == MOTION_MODE_STRAIGHT_FEED
-                tmp_time = fabs(axis_length[axis]) / cm.a[axis].feedrate_max;
+                tmp_time = std::abs(axis_length[axis]) / cm.a[axis].feedrate_max;
             }
             max_time = max(max_time, tmp_time);
 
@@ -734,11 +734,11 @@ static void _calculate_junction_vmax(mpBuf_t* bf)
 
     for (uint8_t axis = 0; axis < AXES; axis++) {
         if (bf->axis_flags[axis] || bf->nx->axis_flags[axis]) {       // (A) skip axes with no movement
-            float delta = fabs(bf->unit[axis] - bf->nx->unit[axis]);  // formula (1)
+            float delta = std::abs(bf->unit[axis] - bf->nx->unit[axis]);  // formula (1)
 
             if (using_junction_unit) { // (B) special case
                 // use the highest delta of the two
-                delta = std::max(delta, fabs(bf->junction_unit[axis] - bf->nx->unit[axis])); // formula (1)
+                delta = std::max(delta, std::abs(bf->junction_unit[axis] - bf->nx->unit[axis])); // formula (1)
 
                 // push the junction_unit for this axis into the next block, for future (B) cases
                 bf->nx->junction_unit[axis] = bf->junction_unit[axis];

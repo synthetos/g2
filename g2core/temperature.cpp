@@ -199,7 +199,7 @@ struct ValueHistory {
     float get_std_dev() {
         // Important note: this is a POPULATION standard deviation, not a population standard deviation
         float variance = (rolling_sum_sq/(float)sampled) - (rolling_mean*rolling_mean);
-        return sqrt(fabs(variance));
+        return sqrt(std::abs(variance));
     };
 
     float value() {
@@ -209,7 +209,7 @@ struct ValueHistory {
         float std_dev = get_std_dev();
 
         for (uint16_t i=0; i<sampled; i++) {
-            if (fabs(samples[i].value - rolling_mean) < (variance_max * std_dev)) {
+            if (std::abs(samples[i].value - rolling_mean) < (variance_max * std_dev)) {
                 temp += samples[i].value;
                 ++samples_kept;
             }
@@ -398,7 +398,7 @@ struct Thermistor {
     // Call back function from the ADC to tell it that the ADC has a new sample...
     void adc_has_new_value() {
         raw_adc_value = adc_pin.getRaw();
-        float v = fabs(adc_pin.getVoltage());
+        float v = std::abs(adc_pin.getVoltage());
         history.add_sample(v);
     };
 };
@@ -528,7 +528,7 @@ struct PT100 {
     // Call back function from the ADC to tell it that the ADC has a new sample...
     void adc_has_new_value(bool error = false) {
         raw_adc_value = adc_pin.getRaw();
-        float v = fabs(adc_pin.getVoltage());
+        float v = std::abs(adc_pin.getVoltage());
 //        if (v < 0) {
 //            char buffer[128];
 //            char *str = buffer;
@@ -684,7 +684,7 @@ struct PID {
         // Calculate the e (error)
         float e = _set_point - input;
 
-        if (fabs(e) < TEMP_SETPOINT_HYSTERESIS) {
+        if (std::abs(e) < TEMP_SETPOINT_HYSTERESIS) {
             if (!_set_point_timeout.isSet()) {
                 _set_point_timeout.set(TEMP_SETPOINT_HOLD_TIME);
             } else if (_set_point_timeout.isPast()) {
@@ -795,16 +795,6 @@ struct PID {
     bool atSetPoint() {
         return _at_set_point;
     }
-
-// //New-style JSON bindings. DISABLED FOR NOW.
-//    auto json_bindings(const char *object_name) {
-//        return JSON::bind_object(object_name,
-//                                 JSON::bind("set", _set_point,    /*print precision:*/2),
-//                                 JSON::bind("p",   _proportional, /*print precision:*/2),
-//                                 JSON::bind("i",   _integral,     /*print precision:*/5),
-//                                 JSON::bind("d",   _derivative,   /*print precision:*/5)
-//                                 );
-//    }
 };
 
 // NOTICE, the JSON alters incoming values for these!
@@ -923,7 +913,7 @@ stat_t temperature_callback()
             float out1 = pid1.getNewOutput(temp);
             fet_pin1.write(out1);
 
-            if (fabs(temp - last_reported_temp1) > kTempDiffSRTrigger) {
+            if (std::abs(temp - last_reported_temp1) > kTempDiffSRTrigger) {
                 last_reported_temp1 = temp;
                 sr_requested = true;
             }
@@ -935,7 +925,7 @@ stat_t temperature_callback()
             float out2 = pid2.getNewOutput(temp);
             fet_pin2.write(out2);
 
-            if (fabs(temp - last_reported_temp2) > kTempDiffSRTrigger) {
+            if (std::abs(temp - last_reported_temp2) > kTempDiffSRTrigger) {
                 last_reported_temp2 = temp;
                 sr_requested = true;
             }
@@ -949,7 +939,7 @@ stat_t temperature_callback()
             float out3 = pid3.getNewOutput(temp);
             fet_pin3.write(out3);
 
-            if (fabs(temp - last_reported_temp3) > kTempDiffSRTrigger) {
+            if (std::abs(temp - last_reported_temp3) > kTempDiffSRTrigger) {
                 last_reported_temp3 = temp;
                 sr_requested = true;
             }

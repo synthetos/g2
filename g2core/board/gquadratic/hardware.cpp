@@ -99,13 +99,13 @@ stat_t hardware_periodic()
 {
 #if EXPERIMENTAL_NEOPIXEL_SUPPORT == 1
     float x_pos = cm_get_work_position(ACTIVE_MODEL, AXIS_X);
-    if (fabs(LEDs::old_x_pos - x_pos) > 0.01) {
+    if (std::abs(LEDs::old_x_pos - x_pos) > 0.01) {
         LEDs::old_x_pos = x_pos;
 
         float led_pos = x_pos * ((float)(LEDs::rgbw_leds.count-1) / 40);
 
         for (uint8_t pixel = 0; pixel < LEDs::rgbw_leds.count; pixel++) {
-            float value = fabs(led_pos - (float)pixel);
+            float value = std::abs(led_pos - (float)pixel);
             if (value < 1.001) {
                 value = 1.0 - value;
                 if (LEDs::display_color[pixel].red < value) {

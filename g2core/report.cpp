@@ -388,7 +388,7 @@ static uint8_t _populate_filtered_status_report()
         nv_get_nvObj(nv);
 
         // report values that have changed by more than 0.0001, but always stops and ends
-        if ((fabs(nv->value - sr.status_report_value[i]) > EPSILON3) ||
+        if ((std::abs(nv->value - sr.status_report_value[i]) > EPSILON3) ||
             ((nv->index == sr.stat_index) && fp_EQ(nv->value, COMBINED_PROGRAM_STOP)) ||
             ((nv->index == sr.stat_index) && fp_EQ(nv->value, COMBINED_PROGRAM_END))) {
 

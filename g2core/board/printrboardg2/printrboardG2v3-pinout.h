@@ -121,7 +121,7 @@ _MAKE_MOTATE_PIN(kUnassigned2, 'A', 1);                    // nc
 _MAKE_MOTATE_PIN(kSocket4_VrefPinNumber, 'A', 2);          // M4_Vref
 _MAKE_MOTATE_PIN(kUnassigned3, 'A', 3);                    // nc
 _MAKE_MOTATE_PIN(kADC3_PinNumber, 'A', 4);                 // BED_ADC
-_MAKE_MOTATE_PIN(kOutput1_PinNumber, 'A', 5);              // DO_1 (Extruder1_PWM)
+_MAKE_MOTATE_PIN(kHeaterOutput1_PinNumber, 'A', 5);              // DO_1 (Extruder1_PWM)
 _MAKE_MOTATE_PIN(kOutput3_PinNumber, 'A', 6);              // DO_3 (Fan1B_PWM)
 _MAKE_MOTATE_PIN(kOutputSAFE_PinNumber, 'A', 7);           // DO_9 (SAFE_PULSES - output from MCU)
 _MAKE_MOTATE_PIN(kSerial_RXPinNumber, 'A', 8);                      // UART_RX
@@ -171,7 +171,7 @@ _MAKE_MOTATE_PIN(kSocket2_Microstep_2PinNumber, 'B', 20);  // M2_MS2
 _MAKE_MOTATE_PIN(kSocket2_Microstep_0PinNumber, 'B', 21);  // M2_MS0 (M2_MS1 is slaved to this signal also)
 _MAKE_MOTATE_PIN(kSocket4_EnablePinNumber, 'B', 22);       // M4_ENABLE
 _MAKE_MOTATE_PIN(kSocket4_DirPinNumber, 'B', 23);          // M4_DIR
-_MAKE_MOTATE_PIN(kOutput11_PinNumber, 'B', 24);            // DO_11 (Header Bed FET)
+_MAKE_MOTATE_PIN(kHeaterOutput11_PinNumber, 'B', 24);            // DO_11 (Header Bed FET)
 _MAKE_MOTATE_PIN(kOutput5_PinNumber, 'B', 25);             // DO_5 (Fan2A_PWM)
 _MAKE_MOTATE_PIN(kInput1_PinNumber, 'B', 26);              // DI_1 (XMin)
 _MAKE_MOTATE_PIN(kOutput4_PinNumber, 'B', 27);             // DO_4 (Fan1A_PWM)

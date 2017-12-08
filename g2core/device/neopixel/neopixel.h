@@ -72,7 +72,7 @@ struct HSI_Color_t : NeopixelColorTag {
         float h_2              = h * h;
 
         // to_hue needs to be the closest transition
-        if (fabs(hue - to_hue) > fabs(hue - (360.0 + to_hue))) {
+        if (std::abs(hue - to_hue) > std::abs(hue - (360.0 + to_hue))) {
             to_hue += 360.0;
         }
 

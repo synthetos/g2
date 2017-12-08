@@ -235,7 +235,7 @@ static stat_t _homing_axis_start(int8_t axis) {
     }
 
     // calculate and test travel distance
-    float travel_distance = fabs(cm.a[axis].travel_max - cm.a[axis].travel_min) + cm.a[axis].latch_backoff;
+    float travel_distance = std::abs(cm.a[axis].travel_max - cm.a[axis].travel_min) + cm.a[axis].latch_backoff;
     if (fp_ZERO(travel_distance)) {
         return (_homing_error_exit(axis, STAT_HOMING_ERROR_TRAVEL_MIN_MAX_IDENTICAL));
     }
@@ -245,22 +245,22 @@ static stat_t _homing_axis_start(int8_t axis) {
     hm.homing_input = cm.a[axis].homing_input;
     gpio_set_homing_mode(hm.homing_input, true);
     hm.axis            = axis;                              // persist the axis
-    hm.search_velocity = fabs(cm.a[axis].search_velocity);  // search velocity is always positive
-    hm.latch_velocity  = fabs(cm.a[axis].latch_velocity);   // latch velocity is always positive
+    hm.search_velocity = std::abs(cm.a[axis].search_velocity);  // search velocity is always positive
+    hm.latch_velocity  = std::abs(cm.a[axis].latch_velocity);   // latch velocity is always positive
 
     bool homing_to_max = cm.a[axis].homing_dir;
 
     // setup parameters for positive or negative travel (homing to the max or min switch)
     if (homing_to_max) {
         hm.search_travel = travel_distance;                      // search travels in positive direction
-        hm.latch_backoff = fabs(cm.a[axis].latch_backoff);       // latch travels in positive direction
+        hm.latch_backoff = std::abs(cm.a[axis].latch_backoff);       // latch travels in positive direction
         hm.zero_backoff  = -max(0.0f, cm.a[axis].zero_backoff);  // zero backoff is negative direction (or zero)
                                                                  // will set the maximum position
                                                                  //     (plus any negative backoff)
         hm.setpoint = cm.a[axis].travel_max + (max(0.0f, -cm.a[axis].zero_backoff));
     } else {
         hm.search_travel = -travel_distance;                    // search travels in negative direction
-        hm.latch_backoff = -fabs(cm.a[axis].latch_backoff);     // latch travels in negative direction
+        hm.latch_backoff = -std::abs(cm.a[axis].latch_backoff);     // latch travels in negative direction
         hm.zero_backoff  = max(0.0f, cm.a[axis].zero_backoff);  // zero backoff is positive direction (or zero)
                                                                 // will set the minimum position
                                                                 //     (minus any negative backoff)

@@ -202,12 +202,19 @@ pin_number kOutput14_PinNumber = -1;   // 143;
 pin_number kOutput15_PinNumber = -1;   // 144;
 pin_number kOutput16_PinNumber = -1;   // 145;
 
+// For rev-c where we use the differential
 pin_number kADC1_Pos_PinNumber  = 150;  // Extruder1_ADC
 pin_number kADC1_Neg_PinNumber  = 151;  // Extruder1_ADC
 pin_number kADC2_Pos_PinNumber  = 152;  // Extruder2_ADC
 pin_number kADC2_Neg_PinNumber  = 153;  // Extruder2_ADC
 pin_number kADC3_Pos_PinNumber  = 154;  // Heated bed thermistor ADC
 pin_number kADC3_Neg_PinNumber  = 155;  // Heated bed thermistor ADC
+
+// for rev-d where we don't
+pin_number kADC1_PinNumber  = 150;  // Extruder1_ADC
+pin_number kADC2_PinNumber  = 151;  // Extruder2_ADC
+pin_number kADC3_PinNumber  = 152;  // Heated bed thermistor ADC
+pin_number kADC4_PinNumber  = 153;  // unused ADC
 
 pin_number kExternalClock1_PinNumber = 170;  // External pins for exporting a clock signal (for Trinamics)
 
