@@ -49,8 +49,8 @@ decltype(usb.mixin<0>::Serial) &SerialUSB = usb.mixin<0>::Serial;
 decltype(usb.mixin<1>::Serial) &SerialUSB1 = usb.mixin<1>::Serial;
 #endif
 
-MOTATE_SET_USB_VENDOR_STRING( u"Synthetos" )
-MOTATE_SET_USB_PRODUCT_STRING( u"TinyG v2" )
+MOTATE_SET_USB_VENDOR_STRING( u"Geratech" )
+MOTATE_SET_USB_PRODUCT_STRING( u"controller" )
 MOTATE_SET_USB_SERIAL_NUMBER_STRING_FROM_CHIPID()
 #endif // XIO_HAS_USB
 
