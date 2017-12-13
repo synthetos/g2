@@ -496,7 +496,8 @@ struct gpioDigitalOutputPin : gpioDigitalOutput {
     bool setMode(const ioMode m) override
     {
         mode = m;
-        pin.setOptions((mode == IO_ACTIVE_LOW) ? kPullUp|kDebounce : kDebounce);
+        pin.setOptions((mode == IO_ACTIVE_LOW) ? kPullUp|kDebounce : kDebounce); // prepare the pin
+        pin = ((mode == IO_ACTIVE_LOW) ? true : false);                    // set the output to inactive
         return true;
     };
 

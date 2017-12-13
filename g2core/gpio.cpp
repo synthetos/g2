@@ -225,11 +225,11 @@ stat_t din_get_input(nvObj_t *nv)
 
 stat_t dout_get_mo(nvObj_t *nv)
 {
-    return _i(nv)->getMode(nv);
+    return _o(nv)->getMode(nv);
 }
 stat_t dout_set_mo(nvObj_t *nv)
 {
-    return _i(nv)->setMode(nv);
+    return _o(nv)->setMode(nv);
 }
 
 /*
