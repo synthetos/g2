@@ -677,6 +677,7 @@ nvObj_t *nv_add_float(const char *token, const float value)    // add a float ob
         }
         strncpy(nv->token, token, TOKEN_LEN);
         nv->value = value;
+        nv->precision = 7;           // Full precision of single float
         nv->valuetype = TYPE_FLOAT;
         return (nv);
     }
