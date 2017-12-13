@@ -245,18 +245,17 @@
  *  degrees of phase angle results in a step being generated.
  */
 
-// These includes must be BEFORE the STEPPER_H_ONCE is defined
-#include "g2core.h"
-#include "report.h"
-#include "board_stepper.h"  // include board specific stuff, in particular the Stepper objects
-
-// NOW we can do this:
 #ifndef STEPPER_H_ONCE
 #define STEPPER_H_ONCE
+
+#include "g2core.h"
+#include "report.h"
 
 #include "MotateUtilities.h" // for HOT_DATA and HOT_FUNC
 
 #include "planner.h"    // planner.h must precede stepper.h for moveType typedef
+
+// Note: "board_stepper.h" is inlcluded at the end of this file
 
 /*********************************
  * Stepper configs and constants *
@@ -467,7 +466,7 @@ struct Stepper {
         }
         if (_power_state == MOTOR_IDLE) {
             return (0.0);
-        }        
+        }
         return (st_cfg.mot[motor].power_level);
     };
 
@@ -475,7 +474,7 @@ struct Stepper {
 //    {
 //        return (_power_mode == MOTOR_DISABLED);
 //    };
-    
+
     // turn on motor in all cases unless it's disabled
     // this version is called from the loader, and explicitly does NOT have floating point computations
     // HOT - called from the DDA interrupt
@@ -519,7 +518,7 @@ struct Stepper {
         _motor_disable_timeout.clear();
         _power_state = MOTOR_IDLE; // or MOTOR_OFF
     };
-    
+
     // turn off motor is only powered when moving
     // HOT - called from the DDA interrupt
     void motionStopped() //HOT_FUNC
@@ -533,7 +532,7 @@ struct Stepper {
             }
         }
     };
-    
+
     virtual void periodicCheck(bool have_actually_stopped) // can be overridden
     {
         if (_was_enabled) {
@@ -643,5 +642,7 @@ stat_t st_set_me(nvObj_t *nv);
     #define st_print_md tx_print_stub
 
 #endif // __TEXT_MODE
+
+#include "board_stepper.h"  // include board specific stuff, in particular the Stepper objects
 
 #endif // End of include guard: STEPPER_H_ONCE

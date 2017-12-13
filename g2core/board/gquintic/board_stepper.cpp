@@ -52,7 +52,7 @@ HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
     motor_4 {spiBus, spiCSPinMux.getCS(0)};
 HOT_DATA StepDirHobbyServo<Motate::kServo1_PinNumber> motor_5;
 
-Stepper* Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5};
+Stepper* const Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5};
 #else
 HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
              Motate::kSocket1_StepPinNumber,
@@ -81,7 +81,7 @@ HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
     motor_5 {spiBus, spiCSPinMux.getCS(0)};
 HOT_DATA StepDirHobbyServo<Motate::kServo1_PinNumber> motor_6;
 
-Stepper* Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5, &motor_6};
+Stepper* const Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5, &motor_6};
 #endif
 
 void board_stepper_init() {

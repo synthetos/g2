@@ -84,7 +84,7 @@ extern Trinamic2130<SPIBus_used_t::SPIBusDevice,
 extern StepDirHobbyServo<Motate::kServo1_PinNumber> motor_6;
 #endif
 
-extern Stepper* Motors[MOTORS];
+extern Stepper* const Motors[MOTORS];
 
 void board_stepper_init();
 

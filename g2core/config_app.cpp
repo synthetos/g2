@@ -483,108 +483,109 @@ const cfgItem_t cfgArray[] = {
     { "c","czb",_fip,  3, cm_print_zb, get_flt,   set_flt,   (float *)&cm.a[AXIS_C].zero_backoff,   C_ZERO_BACKOFF },
 
     // Digital input configs
-    { "di1","di1mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[0].mode,     DI1_MODE },
-    { "di1","di1ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[0].action,   DI1_ACTION },
-    { "di1","di1fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[0].function, DI1_FUNCTION },
+    { "di1","di1mo",_fip,   0, din_print_mo, din_get_mo, din_set_mo, (float *)&din1,  DI1_MODE },
+    { "di1","di1ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, (float *)&din1,  DI1_ACTION },
+    { "di1","di1fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din1,  DI1_FUNCTION },
 
-    { "di2","di2mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[1].mode,     DI2_MODE },
-    { "di2","di2ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[1].action,   DI2_ACTION },
-    { "di2","di2fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[1].function, DI2_FUNCTION },
+    { "di2","di2mo",_fip,   0, din_print_mo, din_get_mo, din_set_mo, (float *)&din2,  DI2_MODE },
+    { "di2","di2ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, (float *)&din2,  DI2_ACTION },
+    { "di2","di2fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din2,  DI2_FUNCTION },
 
-    { "di3","di3mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[2].mode,     DI3_MODE },
-    { "di3","di3ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[2].action,   DI3_ACTION },
-    { "di3","di3fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[2].function, DI3_FUNCTION },
+    { "di3","di3mo",_fip,   0, din_print_mo, din_get_mo, din_set_mo, (float *)&din3,  DI3_MODE },
+    { "di3","di3ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, (float *)&din3,  DI3_ACTION },
+    { "di3","di3fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din3,  DI3_FUNCTION },
 
-    { "di4","di4mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[3].mode,     DI4_MODE },
-    { "di4","di4ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[3].action,   DI4_ACTION },
-    { "di4","di4fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[3].function, DI4_FUNCTION },
+    { "di4","di4mo",_fip,   0, din_print_mo, din_get_mo, din_set_mo, (float *)&din4,  DI4_MODE },
+    { "di4","di4ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, (float *)&din4,  DI4_ACTION },
+    { "di4","di4fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din4,  DI4_FUNCTION },
 
-    { "di5","di5mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[4].mode,     DI5_MODE },
-    { "di5","di5ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[4].action,   DI5_ACTION },
-    { "di5","di5fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[4].function, DI5_FUNCTION },
+    { "di5","di5mo",_fip,   0, din_print_mo, din_get_mo, din_set_mo, (float *)&din5,  DI5_MODE },
+    { "di5","di5ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, (float *)&din5,  DI5_ACTION },
+    { "di5","di5fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din5,  DI5_FUNCTION },
 
-    { "di6","di6mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[5].mode,     DI6_MODE },
-    { "di6","di6ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[5].action,   DI6_ACTION },
-    { "di6","di6fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[5].function, DI6_FUNCTION },
+    { "di6","di6mo",_fip,   0, din_print_mo, din_get_mo, din_set_mo, (float *)&din6,  DI6_MODE },
+    { "di6","di6ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, (float *)&din6,  DI6_ACTION },
+    { "di6","di6fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din6,  DI6_FUNCTION },
 
-    { "di7","di7mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[6].mode,     DI7_MODE },
-    { "di7","di7ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[6].action,   DI7_ACTION },
-    { "di7","di7fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[6].function, DI7_FUNCTION },
+    { "di7","di7mo",_fip,   0, din_print_mo, din_get_mo, din_set_mo, (float *)&din7,  DI7_MODE },
+    { "di7","di7ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, (float *)&din7,  DI7_ACTION },
+    { "di7","di7fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din7,  DI7_FUNCTION },
 
-    { "di8","di8mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[7].mode,     DI8_MODE },
-    { "di8","di8ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[7].action,   DI8_ACTION },
-    { "di8","di8fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[7].function, DI8_FUNCTION },
+    { "di8","di8mo",_fip,   0, din_print_mo, din_get_mo, din_set_mo, (float *)&din8,  DI8_MODE },
+    { "di8","di8ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, (float *)&din8,  DI8_ACTION },
+    { "di8","di8fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din8,  DI8_FUNCTION },
 #if (D_IN_CHANNELS >= 9)
-    { "di9","di9mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[8].mode,     DI9_MODE },
-    { "di9","di9ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[8].action,   DI9_ACTION },
-    { "di9","di9fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[8].function, DI9_FUNCTION },
+    { "di9","di9mo",_fip,   0, din_print_mo, din_get_mo, din_set_mo, (float *)&din9,  DI9_MODE },
+    { "di9","di9ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, (float *)&din9,  DI9_ACTION },
+    { "di9","di9fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din9,  DI9_FUNCTION },
 #endif
 #if (D_IN_CHANNELS >= 10)
-    { "di10","di10mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[9].mode,     DI10_MODE },
-    { "di10","di10ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[9].action,   DI10_ACTION },
-    { "di10","di10fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[9].function, DI10_FUNCTION },
+    { "di10","di10mo",_fip, 0, din_print_mo, din_get_mo, din_set_mo, (float *)&din10, DI10_MODE },
+    { "di10","di10ac",_fip, 0, din_print_ac, din_get_ac, din_set_ac, (float *)&din10, DI10_ACTION },
+    { "di10","di10fn",_fip, 0, din_print_fn, din_get_fn, din_set_fn, (float *)&din10, DI10_FUNCTION },
 #endif
 #if (D_IN_CHANNELS >= 11)
-    { "di11","di11mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[10].mode,     DI11_MODE },
-    { "di11","di11ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[10].action,   DI11_ACTION },
-    { "di11","di11fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[10].function, DI11_FUNCTION },
+    { "di11","di11mo",_fip, 0, din_print_mo, din_get_mo, din_set_mo, (float *)&din11, DI11_MODE },
+    { "di11","di11ac",_fip, 0, din_print_ac, din_get_ac, din_set_ac, (float *)&din11, DI11_ACTION },
+    { "di11","di11fn",_fip, 0, din_print_fn, din_get_fn, din_set_fn, (float *)&din11, DI11_FUNCTION },
 #endif
 #if (D_IN_CHANNELS >= 12)
-    { "di12","di12mo",_fip, 0, io_print_mo, get_int8,io_set_mo, (float *)&d_in[11].mode,     DI12_MODE },
-    { "di12","di12ac",_fip, 0, io_print_ac, get_ui8, io_set_ac, (float *)&d_in[11].action,   DI12_ACTION },
-    { "di12","di12fn",_fip, 0, io_print_fn, get_ui8, io_set_fn, (float *)&d_in[11].function, DI12_FUNCTION },
+    { "di12","di12mo",_fip, 0, din_print_mo, din_get_mo, din_set_mo, (float *)&din12, DI12_MODE },
+    { "di12","di12ac",_fip, 0, din_print_ac, din_get_ac, din_set_ac, (float *)&din12, DI12_ACTION },
+    { "di12","di12fn",_fip, 0, din_print_fn, din_get_fn, din_set_fn, (float *)&din12, DI12_FUNCTION },
 #endif
 
     // Digital input state readers
-    { "in","in1", _f0, 0, io_print_in, io_get_input, set_ro,  (float *)&cs.null, 0 },
-    { "in","in2", _f0, 0, io_print_in, io_get_input, set_ro,  (float *)&cs.null, 0 },
-    { "in","in3", _f0, 0, io_print_in, io_get_input, set_ro,  (float *)&cs.null, 0 },
-    { "in","in4", _f0, 0, io_print_in, io_get_input, set_ro,  (float *)&cs.null, 0 },
-    { "in","in5", _f0, 0, io_print_in, io_get_input, set_ro,  (float *)&cs.null, 0 },
-    { "in","in6", _f0, 0, io_print_in, io_get_input, set_ro,  (float *)&cs.null, 0 },
-    { "in","in7", _f0, 0, io_print_in, io_get_input, set_ro,  (float *)&cs.null, 0 },
-    { "in","in8", _f0, 0, io_print_in, io_get_input, set_ro,  (float *)&cs.null, 0 },
+    { "in","in1", _f0, 0,  din_print_in, din_get_input, set_ro,  (float *)&din1, 0 },
+    { "in","in2", _f0, 0,  din_print_in, din_get_input, set_ro,  (float *)&din2, 0 },
+    { "in","in3", _f0, 0,  din_print_in, din_get_input, set_ro,  (float *)&din3, 0 },
+    { "in","in4", _f0, 0,  din_print_in, din_get_input, set_ro,  (float *)&din4, 0 },
+    { "in","in5", _f0, 0,  din_print_in, din_get_input, set_ro,  (float *)&din5, 0 },
+    { "in","in6", _f0, 0,  din_print_in, din_get_input, set_ro,  (float *)&din6, 0 },
+    { "in","in7", _f0, 0,  din_print_in, din_get_input, set_ro,  (float *)&din7, 0 },
+    { "in","in8", _f0, 0,  din_print_in, din_get_input, set_ro,  (float *)&din8, 0 },
 #if (D_IN_CHANNELS >= 9)
-    { "in","in9", _f0, 0, io_print_in, io_get_input, set_ro,  (float *)&cs.null, 0 },
+    { "in","in9", _f0, 0,  din_print_in, din_get_input, set_ro,  (float *)&din9, 0 },
 #endif
 #if (D_IN_CHANNELS >= 10)
-    { "in","in10", _f0, 0, io_print_in, io_get_input, set_ro,  (float *)&cs.null, 0 },
+    { "in","in10", _f0, 0, din_print_in, din_get_input, set_ro,  (float *)&din10,0 },
 #endif
 #if (D_IN_CHANNELS >= 11)
-    { "in","in11", _f0, 0, io_print_in, io_get_input, set_ro,  (float *)&cs.null, 0 },
+    { "in","in11", _f0, 0, din_print_in, din_get_input, set_ro,  (float *)&din11,0 },
 #endif
 #if (D_IN_CHANNELS >= 12)
-    { "in","in12", _f0, 0, io_print_in, io_get_input, set_ro,  (float *)&cs.null, 0 },
+    { "in","in12", _f0, 0, din_print_in, din_get_input, set_ro,  (float *)&din12,0 },
 #endif
 
     // digital output configs
-    { "do1", "do1mo", _fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[0].mode,     DO1_MODE },
-    { "do2", "do2mo", _fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[1].mode,     DO2_MODE },
-    { "do3", "do3mo", _fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[2].mode,     DO3_MODE },
-    { "do4", "do4mo", _fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[3].mode,     DO4_MODE },
-    { "do5", "do5mo", _fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[4].mode,     DO5_MODE },
-    { "do6", "do6mo", _fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[5].mode,     DO6_MODE },
-    { "do7", "do7mo", _fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[6].mode,     DO7_MODE },
-    { "do8", "do8mo", _fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[7].mode,     DO8_MODE },
-    { "do9", "do9mo", _fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[8].mode,     DO9_MODE },
-    { "do10","do10mo",_fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[9].mode,     DO10_MODE },
-    { "do11","do11mo",_fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[10].mode,    DO11_MODE },
-    { "do12","do12mo",_fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[11].mode,    DO12_MODE },
-    { "do13","do13mo",_fip, 0, io_print_domode, get_int8, io_set_domode, (float *)&d_out[12].mode,    DO13_MODE },
+    { "do1", "do1mo", _fip, 0, dout_print_mo, dout_get_mo, dout_set_mo, (float *)&dout1,  DO1_MODE },
+    { "do2", "do2mo", _fip, 0, dout_print_mo, dout_get_mo, dout_set_mo, (float *)&dout2,  DO2_MODE },
+    { "do3", "do3mo", _fip, 0, dout_print_mo, dout_get_mo, dout_set_mo, (float *)&dout3,  DO3_MODE },
+    { "do4", "do4mo", _fip, 0, dout_print_mo, dout_get_mo, dout_set_mo, (float *)&dout4,  DO4_MODE },
+    { "do5", "do5mo", _fip, 0, dout_print_mo, dout_get_mo, dout_set_mo, (float *)&dout5,  DO5_MODE },
+    { "do6", "do6mo", _fip, 0, dout_print_mo, dout_get_mo, dout_set_mo, (float *)&dout6,  DO6_MODE },
+    { "do7", "do7mo", _fip, 0, dout_print_mo, dout_get_mo, dout_set_mo, (float *)&dout7,  DO7_MODE },
+    { "do8", "do8mo", _fip, 0, dout_print_mo, dout_get_mo, dout_set_mo, (float *)&dout8,  DO8_MODE },
+    { "do9", "do9mo", _fip, 0, dout_print_mo, dout_get_mo, dout_set_mo, (float *)&dout9,  DO9_MODE },
+    { "do10","do10mo",_fip, 0, dout_print_mo, dout_get_mo, dout_set_mo, (float *)&dout10, DO10_MODE },
+    { "do11","do11mo",_fip, 0, dout_print_mo, dout_get_mo, dout_set_mo, (float *)&dout11, DO11_MODE },
+    { "do12","do12mo",_fip, 0, dout_print_mo, dout_get_mo, dout_set_mo, (float *)&dout12, DO12_MODE },
+    { "do13","do13mo",_fip, 0, dout_print_mo, dout_get_mo, dout_set_mo, (float *)&dout13, DO13_MODE },
 
     // Digital output state readers (default to non-active)
-    { "out","out1",  _f0, 2, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
-    { "out","out2",  _f0, 2, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
-    { "out","out3",  _f0, 2, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
-    { "out","out4",  _f0, 2, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
-    { "out","out5",  _f0, 2, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
-    { "out","out6",  _f0, 2, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
-    { "out","out7",  _f0, 2, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
-    { "out","out8",  _f0, 2, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
-    { "out","out9",  _f0, 2, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
-    { "out","out10", _f0, 2, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
-    { "out","out11", _f0, 2, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
-    { "out","out12", _f0, 2, io_print_out, io_get_output, io_set_output, (float *)&cs.null, 0 },
+    { "out","out1",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&dout1,  0 },
+    { "out","out2",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&dout2,  0 },
+    { "out","out3",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&dout3,  0 },
+    { "out","out4",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&dout4,  0 },
+    { "out","out5",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&dout5,  0 },
+    { "out","out6",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&dout6,  0 },
+    { "out","out7",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&dout7,  0 },
+    { "out","out8",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&dout8,  0 },
+    { "out","out9",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&dout9,  0 },
+    { "out","out10", _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&dout10, 0 },
+    { "out","out11", _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&dout11, 0 },
+    { "out","out12", _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&dout12, 0 },
+    { "out","out13", _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&dout13, 0 },
 
     // PWM settings
     { "p1","p1frq",_fip, 0, pwm_print_p1frq, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].frequency,     P1_PWM_FREQUENCY },
@@ -983,8 +984,8 @@ const cfgItem_t cfgArray[] = {
     { "sys","mfo", _fipn,3, cm_print_mfo, get_flt,cm_set_mfo,(float *)&cm.gmx.mfo_factor,           FEED_OVERRIDE_FACTOR},
     { "sys","mtoe",_fipn,0, cm_print_mtoe,get_ui8, set_01,   (float *)&cm.gmx.mto_enable,           TRAVERSE_OVERRIDE_ENABLE},
     { "sys","mto", _fipn,3, cm_print_mto, get_flt,cm_set_mto,(float *)&cm.gmx.mto_factor,           TRAVERSE_OVERRIDE_FACTOR},
-	
-	// Power management 
+
+	// Power management
     { "sys","mt",  _fipn,2, st_print_mt,  get_flt, st_set_mt,  (float *)&st_cfg.motor_power_timeout,  MOTOR_POWER_TIMEOUT},
     { "",   "me",  _f0,  0, st_print_me,  st_set_me, st_set_me,(float *)&cs.null, 0 },    // SET to enable  motors (null value sets to maintain compatability)
     { "",   "md",  _f0,  0, st_print_md,  st_set_md, st_set_md,(float *)&cs.null, 0 },    // SET to disable motors (null value sets to maintain compatability)
