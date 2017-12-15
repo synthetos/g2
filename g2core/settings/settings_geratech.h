@@ -389,7 +389,7 @@
 #define X_TRAVEL_MAX                340.0                     // {xtm:  travel between switches or crashes
 #endif
 #ifndef X_JERK_MAX
-#define X_JERK_MAX                  30000.0                  // {xjm:
+#define X_JERK_MAX                  10000.0                  // {xjm:
 #endif
 #ifndef X_JERK_HIGH_SPEED
 #define X_JERK_HIGH_SPEED           50000.0                  // {xjh:
@@ -430,7 +430,7 @@
 #define Y_TRAVEL_MAX                286.0
 #endif
 #ifndef Y_JERK_MAX
-#define Y_JERK_MAX                  30000.0
+#define Y_JERK_MAX                  10000.0
 #endif
 #ifndef Y_JERK_HIGH_SPEED
 #define Y_JERK_HIGH_SPEED           50000.0
@@ -465,13 +465,13 @@
 #define Z_FEEDRATE_MAX              2000.0
 #endif
 #ifndef Z_TRAVEL_MAX
-#define Z_TRAVEL_MAX                410.0
+#define Z_TRAVEL_MAX                0.0
 #endif
 #ifndef Z_TRAVEL_MIN
-#define Z_TRAVEL_MIN                0.0
+#define Z_TRAVEL_MIN                -400.0
 #endif
 #ifndef Z_JERK_MAX
-#define Z_JERK_MAX                  10000.0
+#define Z_JERK_MAX                  5000.0
 #endif
 #ifndef Z_JERK_HIGH_SPEED
 #define Z_JERK_HIGH_SPEED           20000.0
