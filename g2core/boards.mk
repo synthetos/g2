@@ -192,4 +192,24 @@ ifeq ("$(CONFIG)","Quintic-Ender")
    SETTINGS_FILE="settings_ender.h"
 endif
 
+##########
+# SMW3D r7 config:
+# https://www.smw3d.com/r7-cnc-diy-kit/
+
+ifeq ("$(CONFIG)","r7")
+    ifeq ("$(BOARD)","NONE")
+        BOARD=gquintic-d
+    endif
+    SETTINGS_FILE="settings_smw3d_r7.h"
+endif
+
+##########
+# Synthetos Pendulum v2 config:
+
+ifeq ("$(CONFIG)","pendulum")
+    ifeq ("$(BOARD)","NONE")
+        BOARD=gquintic-d
+    endif
+    SETTINGS_FILE="settings_synthetos_pendulum_v2.h"
+endif
 include $(wildcard ./board/$(STAR).mk)
