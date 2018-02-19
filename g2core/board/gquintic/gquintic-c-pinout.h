@@ -111,6 +111,8 @@
 #define OUTPUT12_PWM 0  // Unused
 #define OUTPUT13_PWM 0  // Unused
 
+#define QUINTIC_REVISION 'C'
+
 namespace Motate {
 
 // Unused:

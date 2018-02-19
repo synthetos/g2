@@ -29,7 +29,7 @@
 #include "board_stepper.h"
 
 // These are identical to board_stepper.h, except for the word "extern" and the initialization
-#if defined(USING_A_MAX31865) && USING_A_MAX31865 == 1
+#if QUINTIC_REVISION == 'C'
 HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
              Motate::kSocket2_StepPinNumber,
              Motate::kSocket2_DirPinNumber,
@@ -53,7 +53,9 @@ HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
 HOT_DATA StepDirHobbyServo<Motate::kServo1_PinNumber> motor_5;
 
 Stepper* const Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5};
-#else
+#endif // 'C'
+
+#if QUINTIC_REVISION == 'D'
 HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
              Motate::kSocket1_StepPinNumber,
              Motate::kSocket1_DirPinNumber,
@@ -82,7 +84,7 @@ HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
 HOT_DATA StepDirHobbyServo<Motate::kServo1_PinNumber> motor_6;
 
 Stepper* const Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5, &motor_6};
-#endif
+#endif // 'D'
 
 void board_stepper_init() {
     for (uint8_t motor = 0; motor < MOTORS; motor++) { Motors[motor]->init(); }

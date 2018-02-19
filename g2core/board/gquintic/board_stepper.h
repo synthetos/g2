@@ -33,7 +33,7 @@
 #include "step_dir_hobbyservo.h"
 
 // These are identical to board_stepper.h, except for the word "extern" and the initialization
-#if defined(USING_A_MAX31865) && USING_A_MAX31865 == 1
+#if QUINTIC_REVISION == 'C'
 extern Trinamic2130<SPIBus_used_t::SPIBusDevice,
                     Motate::kSocket2_StepPinNumber,
                     Motate::kSocket2_DirPinNumber,
@@ -55,7 +55,9 @@ extern Trinamic2130<SPIBus_used_t::SPIBusDevice,
                     Motate::kSocket5_EnablePinNumber>
     motor_4;
 extern StepDirHobbyServo<Motate::kServo1_PinNumber> motor_5;
-#else
+#endif // 'C'
+
+#if QUINTIC_REVISION == 'D'
 extern Trinamic2130<SPIBus_used_t::SPIBusDevice,
                     Motate::kSocket1_StepPinNumber,
                     Motate::kSocket1_DirPinNumber,
@@ -82,7 +84,7 @@ extern Trinamic2130<SPIBus_used_t::SPIBusDevice,
                     Motate::kSocket5_EnablePinNumber>
     motor_5;
 extern StepDirHobbyServo<Motate::kServo1_PinNumber> motor_6;
-#endif
+#endif // 'D'
 
 extern Stepper* const Motors[MOTORS];
 
