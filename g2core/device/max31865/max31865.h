@@ -405,6 +405,13 @@ struct MAX31865 final {
         return _rtd_value;
     };
 
+    float getPullupResistance() {
+        return _pullup_resistance;
+    }
+    void setPullupResistance(const float r) {
+        _pullup_resistance = r;
+    }
+
     // getValue is supposed to request a new value, block, and then return the result
     // PUNT - return the same as getRaw()
     int32_t getValue() {
@@ -461,6 +468,103 @@ struct MAX31865 final {
         _interrupt_handler = handler;
     };
 
+};
+
+
+// A gpioAnalogInputPin subclass for the MAX31865
+
+template <typename device_t>
+struct gpioAnalogInputPin<MAX31865<device_t>> : gpioAnalogInput {
+protected: // so we know if anyone tries to reach in
+    AnalogInputType_t type;
+
+    uint8_t ext_pin_number;             // the number used externally for this pin ("in" + ext_pin_number)
+
+    using ADCPin_t = MAX31865<device_t>;
+
+    ADCPin_t pin;                        // the actual pin object itself
+
+public:
+    // In constructor, simply forward all values to the pin
+    // To get a different behavior, override this object.
+    template <typename... T>
+    gpioAnalogInputPin(const AnalogInputType_t _type, const uint8_t _ext_pin_number, T&&... additional_values) :
+    gpioAnalogInput{},
+    type{_type},
+    ext_pin_number{_ext_pin_number},
+    pin{Motate::kNormal, [&](bool e){this->adc_has_new_value(e);}, additional_values...}
+    {
+        // nothing to do here
+    };
+
+    // functions for use by other parts of the code, and are overridden
+
+    float getValue() override
+    {
+        if (type == AIN_TYPE_DISABLED) {
+            return 0;
+        }
+        return pin.getVoltage();
+    };
+    float getResistance() override
+    {
+        if (type == AIN_TYPE_DISABLED) {
+            return -1;
+        }
+        return pin.getResistance();
+    };
+
+    AnalogInputType_t getType() override
+    {
+        return type;
+    };
+    bool setType(const AnalogInputType_t t) override
+    {
+        // NOTE: Only AIN_TYPE_EXTERNAL and AIN_TYPE_DISABLED are handled here!
+        if (t == AIN_TYPE_INTERNAL) {
+            return false;
+        }
+        type = t;
+        return true;
+    };
+
+    AnalogCircuit_t getCircuit() override
+    {
+        return AIN_CIRCUIT_EXTERNAL;
+    };
+    bool setCircuit(const AnalogCircuit_t c) override
+    {
+        // prevent setting circuit - it's always AIN_CIRCUIT_EXTERNAL
+        return false;
+    };
+
+    float getParameter(const uint8_t p) override
+    {
+        if (p == 0) {
+            return pin.getPullupResistance();
+        }
+        return 0;
+    };
+    bool setParameter(const uint8_t p, const float v) override
+    {
+        if (p == 0) {
+            pin.setPullupResistance(v);
+            return true;
+        }
+        return false;
+    };
+
+
+    void startSampling() override {
+        pin.startSampling();
+    };
+
+    // support function for pin value update interrupt handling
+
+    void adc_has_new_value(bool err) {
+//        float raw_adc_value = pin.getRaw();
+//        history.add_sample(raw_adc_value);
+    };
 };
 
 #endif // max31865_h

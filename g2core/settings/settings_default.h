@@ -817,6 +817,12 @@
 #ifndef A_ZERO_BACKOFF
 #define A_ZERO_BACKOFF              2.0
 #endif
+#ifndef A_SPRING_OFFSET_FACTOR
+#define A_SPRING_OFFSET_FACTOR    0
+#endif
+#ifndef A_SPRING_OFFSET_MAX
+#define A_SPRING_OFFSET_MAX       0
+#endif
 
 // B AXIS
 #ifndef B_AXIS_MODE
@@ -934,8 +940,11 @@
 */
 
 // Xmin on v9 board
-#ifndef DI1_MODE
-#define DI1_MODE                    IO_ACTIVE_LOW     // Normally open
+#ifndef DI1_ENABLED
+#define DI1_ENABLED                 IO_ENABLED
+#endif
+#ifndef DI1_POLARITY
+#define DI1_POLARITY                IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI1_ACTION
 #define DI1_ACTION                  INPUT_ACTION_NONE
@@ -945,8 +954,11 @@
 #endif
 
 // Xmax
-#ifndef DI2_MODE
-#define DI2_MODE                    IO_ACTIVE_LOW     // Normally open
+#ifndef DI2_ENABLED
+#define DI2_ENABLED                 IO_ENABLED
+#endif
+#ifndef DI2_POLARITY
+#define DI2_POLARITY                IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI2_ACTION
 #define DI2_ACTION                  INPUT_ACTION_NONE
@@ -956,8 +968,11 @@
 #endif
 
 // Ymin
-#ifndef DI3_MODE
-#define DI3_MODE                    IO_ACTIVE_LOW     // Normally open
+#ifndef DI3_ENABLED
+#define DI3_ENABLED                 IO_ENABLED
+#endif
+#ifndef DI3_POLARITY
+#define DI3_POLARITY                IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI3_ACTION
 #define DI3_ACTION                  INPUT_ACTION_NONE
@@ -967,8 +982,11 @@
 #endif
 
 // Ymax
-#ifndef DI4_MODE
-#define DI4_MODE                    IO_ACTIVE_LOW     // Normally open
+#ifndef DI4_ENABLED
+#define DI4_ENABLED                 IO_ENABLED
+#endif
+#ifndef DI4_POLARITY
+#define DI4_POLARITY                IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI4_ACTION
 #define DI4_ACTION                  INPUT_ACTION_NONE
@@ -978,8 +996,11 @@
 #endif
 
 // Zmin
-#ifndef DI5_MODE
-#define DI5_MODE                    IO_ACTIVE_LOW     // Normally open
+#ifndef DI5_ENABLED
+#define DI5_ENABLED                 IO_ENABLED
+#endif
+#ifndef DI5_POLARITY
+#define DI5_POLARITY                IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI5_ACTION
 #define DI5_ACTION                  INPUT_ACTION_NONE
@@ -989,8 +1010,11 @@
 #endif
 
 // Zmax
-#ifndef DI6_MODE
-#define DI6_MODE                    IO_ACTIVE_LOW     // Normally open
+#ifndef DI6_ENABLED
+#define DI6_ENABLED                 IO_ENABLED
+#endif
+#ifndef DI6_POLARITY
+#define DI6_POLARITY                IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI6_ACTION
 #define DI6_ACTION                  INPUT_ACTION_NONE
@@ -1000,8 +1024,11 @@
 #endif
 
 // Amin
-#ifndef DI7_MODE
-#define DI7_MODE                    IO_ACTIVE_LOW     // Normally open
+#ifndef DI7_ENABLED
+#define DI7_ENABLED                 IO_ENABLED
+#endif
+#ifndef DI7_POLARITY
+#define DI7_POLARITY                IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI7_ACTION
 #define DI7_ACTION                  INPUT_ACTION_NONE
@@ -1011,8 +1038,11 @@
 #endif
 
 // Amax
-#ifndef DI8_MODE
-#define DI8_MODE                    IO_ACTIVE_LOW     // Normally open
+#ifndef DI8_ENABLED
+#define DI8_ENABLED                 IO_ENABLED
+#endif
+#ifndef DI8_POLARITY
+#define DI8_POLARITY                IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI8_ACTION
 #define DI8_ACTION                  INPUT_ACTION_NONE
@@ -1022,8 +1052,11 @@
 #endif
 
 // Safety line
-#ifndef DI9_MODE
-#define DI9_MODE                    IO_ACTIVE_HIGH     // Normally closed
+#ifndef DI9_ENABLED
+#define DI9_ENABLED                 IO_ENABLED
+#endif
+#ifndef DI9_POLARITY
+#define DI9_POLARITY                IO_ACTIVE_HIGH     // Normally closed
 #endif
 #ifndef DI9_ACTION
 #define DI9_ACTION                  INPUT_ACTION_NONE
@@ -1032,8 +1065,11 @@
 #define DI9_FUNCTION                INPUT_FUNCTION_NONE
 #endif
 
-#ifndef DI10_MODE
-#define DI10_MODE                   IO_ACTIVE_LOW     // Normally open
+#ifndef DI10_ENABLED
+#define DI10_ENABLED                IO_ENABLED
+#endif
+#ifndef DI10_POLARITY
+#define DI10_POLARITY               IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI10_ACTION
 #define DI10_ACTION                 INPUT_ACTION_NONE
@@ -1042,8 +1078,11 @@
 #define DI10_FUNCTION               INPUT_FUNCTION_NONE
 #endif
 
-#ifndef DI11_MODE
-#define DI11_MODE                   IO_ACTIVE_LOW     // Normally open
+#ifndef DI11_ENABLED
+#define DI11_ENABLED                IO_ENABLED
+#endif
+#ifndef DI11_POLARITY
+#define DI11_POLARITY               IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI11_ACTION
 #define DI11_ACTION                 INPUT_ACTION_NONE
@@ -1052,8 +1091,11 @@
 #define DI11_FUNCTION               INPUT_FUNCTION_NONE
 #endif
 
-#ifndef DI12_MODE
-#define DI12_MODE                   IO_ACTIVE_LOW     // Normally open
+#ifndef DI12_ENABLED
+#define DI12_ENABLED                IO_ENABLED
+#endif
+#ifndef DI12_POLARITY
+#define DI12_POLARITY               IO_ACTIVE_LOW     // Normally open
 #endif
 #ifndef DI12_ACTION
 #define DI12_ACTION                 INPUT_ACTION_NONE
@@ -1065,60 +1107,189 @@
 // DIGITAL OUTPUTS - Currently these are hard-wired to extruders
 
 //Extruder1_PWM
-#ifndef DO1_MODE
-#define DO1_MODE                    IO_ACTIVE_HIGH
+#ifndef DO1_ENABLED
+#define DO1_ENABLED                 IO_ENABLED
+#endif
+#ifndef DO1_POLARITY
+#define DO1_POLARITY                IO_ACTIVE_HIGH
 #endif
 
 //Extruder2_PWM
-#ifndef DO2_MODE
-#define DO2_MODE                    IO_ACTIVE_HIGH
+#ifndef DO2_ENABLED
+#define DO2_ENABLED                 IO_ENABLED
+#endif
+#ifndef DO2_POLARITY
+#define DO2_POLARITY                IO_ACTIVE_HIGH
 #endif
 
 //Fan1A_PWM
-#ifndef DO3_MODE
-#define DO3_MODE                    IO_ACTIVE_HIGH
+#ifndef DO3_ENABLED
+#define DO3_ENABLED                 IO_ENABLED
+#endif
+#ifndef DO3_POLARITY
+#define DO3_POLARITY                IO_ACTIVE_HIGH
 #endif
 
 //Fan1B_PWM
-#ifndef DO4_MODE
-#define DO4_MODE                    IO_ACTIVE_HIGH
+#ifndef DO4_ENABLED
+#define DO4_ENABLED                 IO_ENABLED
+#endif
+#ifndef DO4_POLARITY
+#define DO4_POLARITY                IO_ACTIVE_HIGH
 #endif
 
-#ifndef DO5_MODE
-#define DO5_MODE                    IO_ACTIVE_HIGH
+#ifndef DO5_ENABLED
+#define DO5_ENABLED                 IO_ENABLED
 #endif
-#ifndef DO6_MODE
-#define DO6_MODE                    IO_ACTIVE_HIGH
+#ifndef DO5_POLARITY
+#define DO5_POLARITY                IO_ACTIVE_HIGH
 #endif
-#ifndef DO7_MODE
-#define DO7_MODE                    IO_ACTIVE_HIGH
+#ifndef DO6_ENABLED
+#define DO6_ENABLED                 IO_ENABLED
 #endif
-#ifndef DO8_MODE
-#define DO8_MODE                    IO_ACTIVE_HIGH
+#ifndef DO6_POLARITY
+#define DO6_POLARITY                IO_ACTIVE_HIGH
+#endif
+#ifndef DO7_ENABLED
+#define DO7_ENABLED                 IO_ENABLED
+#endif
+#ifndef DO7_POLARITY
+#define DO7_POLARITY                IO_ACTIVE_HIGH
+#endif
+#ifndef DO8_ENABLED
+#define DO8_ENABLED                 IO_ENABLED
+#endif
+#ifndef DO8_POLARITY
+#define DO8_POLARITY                IO_ACTIVE_HIGH
 #endif
 
 //SAFEin (Output) signal
-#ifndef DO9_MODE
-#define DO9_MODE                    IO_ACTIVE_HIGH
+#ifndef DO9_ENABLED
+#define DO9_ENABLED                 IO_ENABLED
+#endif
+#ifndef DO9_POLARITY
+#define DO9_POLARITY                IO_ACTIVE_HIGH
 #endif
 
-#ifndef DO10_MODE
-#define DO10_MODE                   IO_ACTIVE_HIGH
+#ifndef DO10_ENABLED
+#define DO10_ENABLED                IO_ENABLED
+#endif
+#ifndef DO10_POLARITY
+#define DO10_POLARITY               IO_ACTIVE_HIGH
 #endif
 
 //Header Bed FET
-#ifndef DO11_MODE
-#define DO11_MODE                   IO_ACTIVE_HIGH
+#ifndef DO11_ENABLED
+#define DO11_ENABLED                IO_ENABLED
+#endif
+#ifndef DO11_POLARITY
+#define DO11_POLARITY               IO_ACTIVE_HIGH
 #endif
 
 //Indicator_LED
-#ifndef DO12_MODE
-#define DO12_MODE                   IO_ACTIVE_HIGH
+#ifndef DO12_ENABLED
+#define DO12_ENABLED                IO_ENABLED
+#endif
+#ifndef DO12_POLARITY
+#define DO12_POLARITY               IO_ACTIVE_HIGH
 #endif
 
-#ifndef DO13_MODE
-#define DO13_MODE                   IO_ACTIVE_HIGH
+#ifndef DO13_ENABLED
+#define DO13_ENABLED                IO_ENABLED
 #endif
+#ifndef DO13_POLARITY
+#define DO13_POLARITY               IO_ACTIVE_HIGH
+#endif
+
+// foind in gpio.h:
+// #ifndef AI1_TYPE
+// #define AI1_TYPE                    AIN_TYPE_DISABLED
+// #endif
+// #ifndef AI1_CIRCUIT
+// #define AI1_CIRCUIT                 AIN_CIRCUIT_DISABLED
+// #endif
+// #ifndef AI1_P1
+// #define AI1_P1                      0.0
+// #endif
+// #ifndef AI1_P2
+// #define AI1_P2                      0.0
+// #endif
+// #ifndef AI1_P3
+// #define AI1_P3                      0.0
+// #endif
+// #ifndef AI1_P4
+// #define AI1_P4                      0.0
+// #endif
+// #ifndef AI1_P5
+// #define AI1_P5                      0.0
+// #endif
+//
+//
+// #ifndef AI2_TYPE
+// #define AI2_TYPE                    AIN_TYPE_DISABLED
+// #endif
+// #ifndef AI2_CIRCUIT
+// #define AI2_CIRCUIT                 AIN_CIRCUIT_DISABLED
+// #endif
+// #ifndef AI2_P1
+// #define AI2_P1                      0.0
+// #endif
+// #ifndef AI2_P2
+// #define AI2_P2                      0.0
+// #endif
+// #ifndef AI2_P3
+// #define AI2_P3                      0.0
+// #endif
+// #ifndef AI2_P4
+// #define AI2_P4                      0.0
+// #endif
+// #ifndef AI2_P5
+// #define AI2_P5                      0.0
+// #endif
+//
+// #ifndef AI3_TYPE
+// #define AI3_TYPE                    AIN_TYPE_DISABLED
+// #endif
+// #ifndef AI3_CIRCUIT
+// #define AI3_CIRCUIT                 AIN_CIRCUIT_DISABLED
+// #endif
+// #ifndef AI3_P1
+// #define AI3_P1                      0.0
+// #endif
+// #ifndef AI3_P2
+// #define AI3_P2                      0.0
+// #endif
+// #ifndef AI3_P3
+// #define AI3_P3                      0.0
+// #endif
+// #ifndef AI3_P4
+// #define AI3_P4                      0.0
+// #endif
+// #ifndef AI3_P5
+// #define AI3_P5                      0.0
+// #endif
+//
+// #ifndef AI4_TYPE
+// #define AI4_TYPE                    AIN_TYPE_DISABLED
+// #endif
+// #ifndef AI4_CIRCUIT
+// #define AI4_CIRCUIT                 AIN_CIRCUIT_DISABLED
+// #endif
+// #ifndef AI4_P1
+// #define AI4_P1                      0.0
+// #endif
+// #ifndef AI4_P2
+// #define AI4_P2                      0.0
+// #endif
+// #ifndef AI4_P3
+// #define AI4_P3                      0.0
+// #endif
+// #ifndef AI4_P4
+// #define AI4_P4                      0.0
+// #endif
+// #ifndef AI4_P5
+// #define AI4_P5                      0.0
+// #endif
 
 // *** PWM Settings *** //
 

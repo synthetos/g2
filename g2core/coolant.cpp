@@ -30,6 +30,7 @@
 #include "canonical_machine.h"  // #3
 #include "text_parser.h"        // #4
 
+#include "gpio.h"
 #include "coolant.h"
 #include "planner.h"
 #include "hardware.h"
@@ -38,6 +39,17 @@
 /**** Allocate structures ****/
 
 cmCoolantSingleton_t coolant;
+
+gpioDigitalOutput *mist_enable_output = nullptr;
+gpioDigitalOutput *flood_enable_output = nullptr;
+
+#ifndef MIST_ENABLE_OUTPUT_NUMBER
+#define MIST_ENABLE_OUTPUT_NUMBER 6
+#endif
+
+#ifndef FLOOD_ENABLE_OUTPUT_NUMBER
+#define FLOOD_ENABLE_OUTPUT_NUMBER 7
+#endif
 
 /**** Static functions ****/
 
@@ -48,6 +60,17 @@ static void _exec_coolant_control(float* value, bool* flags);
  * coolant_reset()
  */
 void coolant_init() {
+    if (MIST_ENABLE_OUTPUT_NUMBER > 0) {
+        mist_enable_output = d_out[MIST_ENABLE_OUTPUT_NUMBER-1];
+        mist_enable_output->setEnabled(IO_ENABLED);
+        mist_enable_output->setPolarity((ioPolarity)COOLANT_MIST_POLARITY);
+    }
+    if (FLOOD_ENABLE_OUTPUT_NUMBER > 0) {
+        flood_enable_output = d_out[FLOOD_ENABLE_OUTPUT_NUMBER-1];
+        flood_enable_output->setEnabled(IO_ENABLED);
+        flood_enable_output->setPolarity((ioPolarity)COOLANT_FLOOD_POLARITY);
+    }
+
     coolant.mist_enable  = COOLANT_OFF;
     coolant.flood_enable = COOLANT_OFF;
 }
@@ -129,26 +152,32 @@ stat_t cm_mist_coolant_control(uint8_t mist_enable) {
 }
 
 // NOTE: flood and mist coolants are mapped to the same pin - see hardware.h
-#define _set_flood_enable_bit_hi() flood_enable_pin.set()
-#define _set_flood_enable_bit_lo() flood_enable_pin.clear()
-#define _set_mist_enable_bit_hi() mist_enable_pin.set()
-#define _set_mist_enable_bit_lo() mist_enable_pin.clear()
+//#define _set_flood_enable_bit_hi() flood_enable_pin.set()
+//#define _set_flood_enable_bit_lo() flood_enable_pin.clear()
+//#define _set_mist_enable_bit_hi() mist_enable_pin.set()
+//#define _set_mist_enable_bit_lo() mist_enable_pin.clear()
 
 static void _exec_coolant_control(float* value, bool* flags) {
     if (flags[COOLANT_FLOOD]) {
         coolant.flood_enable = (cmCoolantEnable)value[COOLANT_FLOOD];
-        if (!((coolant.flood_enable & 0x01) ^ coolant.flood_polarity)) {  // inverted XOR
-            _set_flood_enable_bit_hi();
-        } else {
-            _set_flood_enable_bit_lo();
+//        if (!((coolant.flood_enable & 0x01) ^ coolant.flood_polarity)) {  // inverted XOR
+//            _set_flood_enable_bit_hi();
+//        } else {
+//            _set_flood_enable_bit_lo();
+//        }
+        if (flood_enable_output != nullptr) {
+            flood_enable_output->setValue(coolant.flood_enable);
         }
     }
     if (flags[COOLANT_MIST]) {
         coolant.mist_enable = (cmCoolantEnable)value[COOLANT_MIST];
-        if (!((coolant.mist_enable & 0x01) ^ coolant.mist_polarity)) {
-            _set_mist_enable_bit_hi();
-        } else {
-            _set_mist_enable_bit_lo();
+//        if (!((coolant.mist_enable & 0x01) ^ coolant.mist_polarity)) {
+//            _set_mist_enable_bit_hi();
+//        } else {
+//            _set_mist_enable_bit_lo();
+//        }
+        if (mist_enable_output != nullptr) {
+            mist_enable_output->setValue(coolant.mist_enable);
         }
     }
 }

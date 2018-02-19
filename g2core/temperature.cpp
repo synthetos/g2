@@ -313,7 +313,7 @@ struct Thermistor {
     template <typename... Ts>
     Thermistor(const float temp_low, const float temp_med, const float temp_high, const float res_low, const float res_med, const float res_high, const ADCCircuit *_circuit, Ts&&... additional_values)
     : circuit{_circuit},
-      adc_pin{kNormal, [&]{this->adc_has_new_value();}, additional_values...}
+      adc_pin{kNormal, [&]{this->adc_has_new_value();}, std::forward<Ts>(additional_values)...}
     {
         setup(temp_low, temp_med, temp_high, res_low, res_med, res_high);
         adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);

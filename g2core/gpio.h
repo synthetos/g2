@@ -42,6 +42,7 @@
 #include "MotatePins.h"
 using Motate::kPullUp;
 using Motate::kDebounce;
+using Motate::kStartHigh;
 using Motate::kStartLow;
 using Motate::kPWMPinInverted;
 
@@ -54,13 +55,17 @@ using Motate::kPWMPinInverted;
 //--- do not change from here down ---//
 
 typedef enum {
-    IO_ACTIVE_LOW = 0,                  // input/output is active low (aka normally open)
-    IO_ACTIVE_HIGH = 1,                 // input/output is active high (aka normally closed)
-    IO_MODE_DISABLED = 2                // input/output is disabled
-} ioMode;
+    IO_UNAVAILABLE = -1,   // input/output is missing/used/unavailable
+    IO_DISABLED    =  0,   // input/output is disabled
+    IO_ENABLED     =  1    // input/output enabled
+} ioEnabled;
+
+typedef enum {
+    IO_ACTIVE_HIGH = 0,                 // input/output is active high (aka normally closed)
+    IO_ACTIVE_LOW = 1,                  // input/output is active low (aka normally open)
+} ioPolarity;
 #define NORMALLY_OPEN   IO_ACTIVE_LOW   // equivalent
 #define NORMALLY_CLOSED IO_ACTIVE_HIGH  // equivalent
-#define IO_MODE_MAX     IO_MODE_DISABLED // for range checking
 
 typedef enum {                          // actions are initiated from within the input's ISR
     INPUT_ACTION_NONE = 0,
@@ -97,10 +102,11 @@ typedef enum {
 } inputEdgeFlag;
 
 /*
- * GPIO structures
+ * gpioDigitalInput - digital input base class
  */
 struct gpioDigitalInput {
-    // this is the implementation for a non-existant pin - see gpioDigitalInputPin for a real pin
+    // this is the generic implementation for a "any"" digital input pin
+    // see gpioDigitalInputPin for a real pin
 
     // functions for use by other parts of the code
 
@@ -112,8 +118,11 @@ struct gpioDigitalInput {
     virtual inputAction getAction();
     virtual bool setAction(const inputAction);
 
-    virtual ioMode getMode();
-    virtual bool setMode(const ioMode);
+    virtual ioEnabled getEnabled();
+    virtual bool setEnabled(const ioEnabled);
+
+    virtual ioPolarity getPolarity();
+    virtual bool setPolarity(const ioPolarity);
 
     virtual void setExternalNumber(const uint8_t);
     virtual void setIsHoming(const bool);
@@ -124,8 +133,7 @@ struct gpioDigitalInput {
 
     stat_t getState(nvObj_t *nv)
     {
-        if (getMode() == IO_MODE_DISABLED) {
-            nv->value = IO_MODE_DISABLED; // historical consistency
+        if (getEnabled() <= IO_DISABLED) {
             nv->valuetype = TYPE_NULL;
             return (STAT_OK);
         }
@@ -135,18 +143,35 @@ struct gpioDigitalInput {
     };
     // no setState
 
-    stat_t getMode(nvObj_t *nv)
+    stat_t getEnabled(nvObj_t *nv)
     {
-        nv->value = getMode();
+        nv->value = getEnabled();
         nv->valuetype = TYPE_INT;
         return (STAT_OK);
     };
-    stat_t setMode(nvObj_t *nv)
+    stat_t setEnabled(nvObj_t *nv)
     {
-        if ((nv->value < IO_ACTIVE_LOW) || (nv->value >= IO_MODE_MAX)) {
+        if ((nv->value < IO_DISABLED) || (nv->value > IO_ENABLED)) {
             return (STAT_INPUT_VALUE_RANGE_ERROR);
         }
-        if (!setMode((ioMode)nv->value)) {
+        if (!setEnabled((ioEnabled)nv->value)) {
+            return STAT_PARAMETER_IS_READ_ONLY;
+        }
+        return (STAT_OK);
+    };
+
+    stat_t getPolarity(nvObj_t *nv)
+    {
+        nv->value = getPolarity();
+        nv->valuetype = TYPE_INT;
+        return (STAT_OK);
+    };
+    stat_t setPolarity(nvObj_t *nv)
+    {
+        if ((nv->value < IO_ACTIVE_HIGH) || (nv->value > IO_ACTIVE_LOW)) {
+            return (STAT_INPUT_VALUE_RANGE_ERROR);
+        }
+        if (!setPolarity((ioPolarity)nv->value)) {
             return STAT_PARAMETER_IS_READ_ONLY;
         }
         return (STAT_OK);
@@ -160,7 +185,7 @@ struct gpioDigitalInput {
     };
     stat_t setAction(nvObj_t *nv)
     {
-        if ((nv->value < INPUT_ACTION_NONE) || (nv->value >= INPUT_ACTION_MAX)) {
+        if ((nv->value < INPUT_ACTION_NONE) || (nv->value > INPUT_ACTION_MAX)) {
             return (STAT_INPUT_VALUE_RANGE_ERROR);
         }
         if (!setAction((inputAction)nv->value)) {
@@ -177,7 +202,7 @@ struct gpioDigitalInput {
     };
     stat_t setFunction(nvObj_t *nv)
     {
-        if ((nv->value < INPUT_FUNCTION_NONE) || (nv->value >= INPUT_FUNCTION_MAX)) {
+        if ((nv->value < INPUT_FUNCTION_NONE) || (nv->value > INPUT_FUNCTION_MAX)) {
             return (STAT_INPUT_VALUE_RANGE_ERROR);
         }
         if (!setFunction((inputFunc)nv->value)) {
@@ -187,12 +212,15 @@ struct gpioDigitalInput {
     };
 };
 
-template <typename pinType>
+/*
+ * gpioDigitalInputPin - concrete child of gpioDigitalInput
+ */
+template <typename Pin_t>
 struct gpioDigitalInputPin : gpioDigitalInput {
-protected: // so we know if anyone tries to reach in
-    ioMode mode;					    // 0=active low (NO), 1= active high (NC), 2=disabled
+    ioEnabled enabled;					// -1=unavailable, 0=disabled, 1=enabled
+    ioPolarity polarity;                // 0=normal/active high, 1=inverted/active low
     inputAction action;                 // 0=none, 1=stop, 2=halt, 3=stop_steps, 4=reset
-    inputFunc function;                 // function to perform when activated / deactivated
+    inputFunc input_function;                 // function to perform when activated / deactivated
 
     inputEdgeFlag edge;                 // keeps a transient record of edges for immediate inquiry
 
@@ -204,44 +232,41 @@ protected: // so we know if anyone tries to reach in
     uint16_t lockout_ms;                // number of milliseconds for debounce lockout
     Motate::Timeout lockout_timer;      // time to expire current debounce lockout, or 0 if no lockout
 
-    pinType pin;                        // the actual pin object itself
+    Pin_t pin;                        // the actual pin object itself
 
-public:
-    // In constructor, simply forward all values to the pinType
+    // In constructor, simply forward all values to the Pin_t
     // To get a different behavior, override this object.
     template <typename... T>
-    gpioDigitalInputPin(const ioMode _mode, const uint8_t _ext_pin_number, T&&... V) :
+    gpioDigitalInputPin(const ioEnabled _enabled, const ioPolarity _polarity, const uint8_t _ext_pin_number, T&&... V) :
         gpioDigitalInput{},
-        mode{_mode},
+        enabled{_enabled},
+        polarity{_polarity},
         ext_pin_number{_ext_pin_number},
-        pin{((mode == IO_ACTIVE_LOW) ? kPullUp|kDebounce : kDebounce), [&]{this->pin_changed();}, std::forward<T>(V)...}
-    {};
-
-    // gpioDigitalInputPin(const ioMode _mode, const uint8_t _ext_pin_number) :
-    //     gpioDigitalInput{},
-    //     mode{_mode},
-    //     ext_pin_number{_ext_pin_number},
-    //     pin{((mode == IO_ACTIVE_LOW) ? kPullUp|kDebounce : kDebounce), [&]{this->pin_changed();}}
-    // {};
+        pin{((polarity == IO_ACTIVE_LOW) ? kPullUp|kDebounce : kDebounce), [&]{this->pin_changed();}, std::forward<T>(V)...}
+    {
+        if (pin.isNull()) {
+            enabled = IO_UNAVAILABLE;
+        }
+    };
 
     // functions for use by other parts of the code, and are overridden
 
     bool getState() override
     {
-        if (mode == IO_MODE_DISABLED) {
+        if (enabled <= IO_DISABLED) {
             return false;
         }
         const bool v = (const bool)pin;
-        return (mode == IO_ACTIVE_HIGH) ? v : !v;
+        return (polarity == IO_ACTIVE_HIGH) ? v : !v;
     };
 
     inputFunc getFunction() override
     {
-        return function;
+        return input_function;
     }
     bool setFunction(const inputFunc f) override
     {
-        function = f;
+        input_function = f;
         return true;
     };
 
@@ -255,14 +280,27 @@ public:
         return true;
     };
 
-    ioMode getMode() override
+    ioEnabled getEnabled() override
     {
-        return mode;
+        return enabled;
     };
-    bool setMode(const ioMode m) override
+    bool setEnabled(const ioEnabled m) override
     {
-        mode = m;
-        pin.setOptions((mode == IO_ACTIVE_LOW) ? kPullUp|kDebounce : kDebounce);
+        if (enabled == IO_UNAVAILABLE) {
+            return false;
+        }
+        enabled = m;
+        return true;
+    };
+
+    ioPolarity getPolarity() override
+    {
+        return polarity;
+    };
+    bool setPolarity(const ioPolarity new_polarity) override
+    {
+        polarity = new_polarity;
+        pin.setOptions((polarity == IO_ACTIVE_LOW) ? kPullUp|kDebounce : kDebounce);
         return true;
     };
 
@@ -287,7 +325,7 @@ public:
     void pin_changed()
     {
         // return if input is disabled
-        if (mode == IO_MODE_DISABLED) {
+        if (enabled == IO_DISABLED) {
             return;
         }
 
@@ -297,7 +335,7 @@ public:
         }
 
         ioState pin_value = (ioState)(bool)pin;
-        ioState pin_value_corrected = (ioState)(pin_value ^ ((bool)mode ^ 1));    // correct for NO or NC mode
+        ioState pin_value_corrected = (ioState)(pin_value ^ ((bool)polarity));    // correct for NO or NC mode
 
         // This shouldn't be necessary - the processor shouldn't call without an edge
         // if (state == (ioState)pin_value_corrected) {
@@ -370,74 +408,89 @@ public:
 
             // these functions also trigger on the leading edge
 
-            if (function == INPUT_FUNCTION_LIMIT) {
+            if (input_function == INPUT_FUNCTION_LIMIT) {
                 cm.limit_requested = ext_pin_number;
 
-            } else if (function == INPUT_FUNCTION_SHUTDOWN) {
+            } else if (input_function == INPUT_FUNCTION_SHUTDOWN) {
                 cm.shutdown_requested = ext_pin_number;
 
-            } else if (function == INPUT_FUNCTION_INTERLOCK) {
+            } else if (input_function == INPUT_FUNCTION_INTERLOCK) {
                 cm.safety_interlock_disengaged = ext_pin_number;
             }
         } // if (edge == INPUT_EDGE_LEADING)
 
         // trigger interlock release on trailing edge
         if (edge == INPUT_EDGE_TRAILING) {
-            if (function == INPUT_FUNCTION_INTERLOCK) {
+            if (input_function == INPUT_FUNCTION_INTERLOCK) {
                 cm.safety_interlock_reengaged = ext_pin_number;
             }
         }
 
         sr_request_status_report(SR_REQUEST_TIMED);   //+++++ Put this one back in.
     };
-
 };
 
+/*
+ * gpioDigitalOutput - digital/PWM output base class
+ */
 struct gpioDigitalOutput {
+    // this is the generic implementation for a "any"" output pin (PWM or Digital)
+    // see gpioDigitalOutputPin for a real pin
 
     // functions for use by other parts of the code, and are what to override
-    virtual ioMode getMode()
-    {
-        return IO_MODE_DISABLED;
-    };
-    virtual bool setMode(const ioMode)
-    {
-        return false;
-    };
+    virtual ioEnabled getEnabled();
+    virtual bool setEnabled(const ioEnabled);
 
-    virtual float getValue()
-    {
-        return -1;
-    };
-    virtual bool setValue(const float)
-    {
-        return false;
-    };
+    virtual ioPolarity getPolarity();
+    virtual bool setPolarity(const ioPolarity);
+
+    virtual float getValue();
+    virtual bool setValue(const float);
+
+    virtual float getFrequency();
+    virtual bool setFrequency(const float);
 
 
     // functions that take nvObj_t* and return stat_t, NOT overridden
 
-    virtual stat_t getMode(nvObj_t *nv)
+    stat_t getEnabled(nvObj_t *nv)
     {
-        nv->value = getMode();
+        nv->value = getEnabled();
         nv->valuetype = TYPE_INT;
         return (STAT_OK);
     };
-    virtual stat_t setMode(nvObj_t *nv)
+    stat_t setEnabled(nvObj_t *nv)
     {
-        if ((nv->value < IO_ACTIVE_LOW) || (nv->value >= IO_MODE_MAX)) {
+        if ((nv->value < IO_DISABLED) || (nv->value > IO_ENABLED)) {
             return (STAT_INPUT_VALUE_RANGE_ERROR);
         }
-        if (!setMode((ioMode)nv->value)) {
-            return STAT_INPUT_VALUE_RANGE_ERROR;
+        if (!setEnabled((ioEnabled)nv->value)) {
+            return STAT_PARAMETER_IS_READ_ONLY;
+        }
+        return (STAT_OK);
+    };
+    
+    stat_t getPolarity(nvObj_t *nv)
+    {
+        nv->value = getPolarity();
+        nv->valuetype = TYPE_INT;
+        return (STAT_OK);
+    };
+    stat_t setPolarity(nvObj_t *nv)
+    {
+        if ((nv->value < IO_ACTIVE_HIGH) || (nv->value > IO_ACTIVE_LOW)) {
+            return (STAT_INPUT_VALUE_RANGE_ERROR);
+        }
+        if (!setPolarity((ioPolarity)nv->value)) {
+            return STAT_PARAMETER_IS_READ_ONLY;
         }
         return (STAT_OK);
     };
 
     virtual stat_t getValue(nvObj_t *nv)
     {
-        auto mode = getMode();
-        if (mode == IO_MODE_DISABLED) {
+        auto enabled = getEnabled();
+        if (enabled <= IO_DISABLED) {
             nv->value = 0;
             nv->valuetype = TYPE_NULL;   // reports back as NULL
         } else {
@@ -445,7 +498,7 @@ struct gpioDigitalOutput {
             nv->precision = 2;
             nv->value = getValue(); // read it as a float
 
-            bool invert = (mode == 0);
+            bool invert = (getPolarity() == IO_ACTIVE_LOW);
             if (invert) {
                 nv->value = 1.0 - nv->value;
             }
@@ -454,13 +507,13 @@ struct gpioDigitalOutput {
     };
     virtual stat_t setValue(nvObj_t *nv)
     {
-        auto mode = getMode();
-        if (mode == IO_MODE_DISABLED) {
+        auto enabled = getEnabled();
+        if (enabled <= IO_DISABLED) {
             nv->valuetype = TYPE_NULL;   // reports back as NULL
         } else {
             float value = nv->value; // read it as a float
 
-            bool invert = (mode == 0);
+            bool invert = (getPolarity() == IO_ACTIVE_LOW);
             if (invert) {
                 value = 1.0 - value;
             }
@@ -474,33 +527,53 @@ struct gpioDigitalOutput {
 
 };
 
-template <typename pinType>
+/*
+ * gpioDigitalOutputPin - concrete child of gpioDigitalOutput
+ */
+template <typename Pin_t>
 struct gpioDigitalOutputPin : gpioDigitalOutput {
-    ioMode mode;					    // 0=active low (NO), 1= active high (NC), 2=disabled
-    pinType pin;
+    ioEnabled enabled;                  // -1=unavailable, 0=disabled, 1=enabled
+    ioPolarity polarity;                // 0=normal/active high, 1=inverted/active low
+    Pin_t pin;
 
-    // In constructor, simply forward all values to the pinType
+    // In constructor, simply forward all values to the Pin_t
     template <typename... T>
-    gpioDigitalOutputPin(const ioMode _mode, T&&... V) :
+    gpioDigitalOutputPin(const ioEnabled _enabled, const ioPolarity _polarity, T&&... V) :
         gpioDigitalOutput{},
-        mode{ _mode },
-        pin{((mode == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow), std::forward<T>(V)...}
-    {};
+        enabled{ _enabled },
+        polarity{ _polarity },
+        pin{((polarity == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow), std::forward<T>(V)...}
+    {
+        if (pin.isNull()) {
+            enabled = IO_UNAVAILABLE;
+        }
+    };
 
     // functions for use by other parts of the code, and are overridden
 
-    ioMode getMode() override
+    ioEnabled getEnabled() override
     {
-        return mode;
+        return enabled;
     };
-    bool setMode(const ioMode m) override
+    bool setEnabled(const ioEnabled m) override
     {
-        mode = m;
-        pin.setOptions((mode == IO_ACTIVE_LOW) ? kPullUp|kDebounce : kDebounce); // prepare the pin
-        pin = ((mode == IO_ACTIVE_LOW) ? true : false);                    // set the output to inactive
+        if (enabled == IO_UNAVAILABLE) {
+            return false;
+        }
+        enabled = m;
         return true;
     };
 
+    ioPolarity getPolarity() override
+    {
+        return polarity;
+    };
+    bool setPolarity(const ioPolarity new_polarity) override
+    {
+        polarity = new_polarity;
+        pin.setOptions((polarity == IO_ACTIVE_LOW) ? kPullUp|kDebounce : kDebounce);
+        return true;
+    };
 
     float getValue() override
     {
@@ -515,14 +588,368 @@ struct gpioDigitalOutputPin : gpioDigitalOutput {
         return true;
     };
 
+    float _last_set_frequency = 0;
+    // it must be set through this interface at least once before it can be read back
+    float getFrequency() override
+    {
+        return _last_set_frequency;
+    };
+    bool setFrequency(const float freq) override
+    {
+        pin.setFrequency(freq);
+        _last_set_frequency = freq;
+        return true;
+    };
+
 };
 
-struct gpioAnalogInput {        // one struct per analog input
-    ioMode mode;
+/*
+ * gpioAnalogInput - analog (ADC) input base class
+ */
+struct gpioAnalogInput {
+    // type of analog input source - read only - defined by the board
+    enum AnalogInputType_t {
+        AIN_TYPE_DISABLED = 0, // the whole input is disabled
+        AIN_TYPE_INTERNAL = 1, // single-ended or differential
+        AIN_TYPE_EXTERNAL = 2, // for externally (SPI) connected inputs
+    };
+
+    // type of circuit connected - for use in determining the resistance
+    enum AnalogCircuit_t {
+        AIN_CIRCUIT_DISABLED     = 0, // there is no circuit, resistance will read -1
+                                      //  no additional configuration
+        AIN_CIRCUIT_PULLUP       = 1, // resistance being measured is pulling up to VCC
+                                      //  the pull-up resistance is measured (rt)
+                                      //  p1 is the set pull-down resistance (r1)
+        AIN_CIRCUIT_EXTERNAL     = 2, // for externally (SPI) connected inputs
+                                      //  no additional configuration
+        AIN_CIRCUIT_INV_OPAMP    = 3, // inverted op-amp connected
+                                      //  the pull-up resistance is measured (rt)
+                                      //  p1 is the set pull-down resistance of the bias(+) (r1)
+                                      //  p2 is the set pull-up resistance of the gain(-) (r2)
+                                      //  p3 is the set pull-down to output of the gain(-) (r3)
+        AIN_CIRCUIT_CC_INV_OPAMP = 4, // for externally (SPI) connected inputs
+                                      //  the pull-up resistance to the current source is measured (rt)
+                                      //  p4 is the set pull-up resistance of the bias(+) (r4)
+                                      //  p1 is the set pull-down resistance of the bias(+) (r1)
+                                      //  p2 is the set pull-up resistance of the gain(-) (r2)
+                                      //  p3 is the set pull-down to output of the gain(-) (r3)
+                                      //  p5 is the set constant current in millivolts (c1)
+    };
+    static const auto AIN_CIRCUIT_MAX = AIN_CIRCUIT_CC_INV_OPAMP;
+
+    // this is the generic implementation for a "any"" analog input pin
+    // see gpioAnalogInputPin for a real pin
+
+    // functions for use by other parts of the code
+
+    virtual float getValue();
+    virtual float getResistance();
+
+    virtual AnalogInputType_t getType();
+    virtual bool setType(const AnalogInputType_t);
+
+    virtual AnalogCircuit_t getCircuit();
+    virtual bool setCircuit(const AnalogCircuit_t);
+
+    virtual float getParameter(const uint8_t p);
+    virtual bool setParameter(const uint8_t p, const float v);
+
+    virtual void startSampling();
+
+    // functions that take nvObj_t* and return stat_t, NOT overridden
+
+    stat_t getValue(nvObj_t *nv)
+    {
+        if (getType() == AIN_TYPE_DISABLED) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_OK);
+        }
+        nv->value = getValue();
+        nv->valuetype = TYPE_FLOAT;
+        return (STAT_OK);
+    };
+    // no setValue
+
+    stat_t getResistance(nvObj_t *nv)
+    {
+        if (getType() == AIN_TYPE_DISABLED || getCircuit() == AIN_CIRCUIT_DISABLED) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_OK);
+        }
+        nv->value = getResistance();
+        nv->valuetype = TYPE_FLOAT;
+        return (STAT_OK);
+    };
+    // no setResistance
+
+    stat_t getType(nvObj_t *nv)
+    {
+        nv->value = getType();
+        nv->valuetype = TYPE_INT;
+        return (STAT_OK);
+    };
+    stat_t setType(nvObj_t *nv)
+    {
+        if ((nv->value < AIN_TYPE_DISABLED) || (nv->value > AIN_TYPE_EXTERNAL)) {
+            return (STAT_INPUT_VALUE_RANGE_ERROR);
+        }
+        if (!setType((AnalogInputType_t)nv->value)) {
+            return STAT_PARAMETER_IS_READ_ONLY;
+        }
+        return (STAT_OK);
+    };
+
+    stat_t getCircuit(nvObj_t *nv)
+    {
+        nv->value = getCircuit();
+        nv->valuetype = TYPE_INT;
+        return (STAT_OK);
+    };
+    stat_t setCircuit(nvObj_t *nv)
+    {
+        if ((nv->value < AIN_CIRCUIT_DISABLED) || (nv->value > AIN_CIRCUIT_MAX)) {
+            return (STAT_INPUT_VALUE_RANGE_ERROR);
+        }
+        if (!setCircuit((AnalogCircuit_t)nv->value)) {
+            return STAT_PARAMETER_IS_READ_ONLY;
+        }
+        return (STAT_OK);
+    };
+
+    stat_t getParameter(nvObj_t *nv, const uint8_t p)
+    {
+        nv->value = getParameter(p);
+        nv->valuetype = TYPE_FLOAT;
+        return (STAT_OK);
+    };
+    stat_t setParameter(nvObj_t *nv, const uint8_t p)
+    {
+        if (!setParameter(p, nv->value)) {
+            return STAT_PARAMETER_IS_READ_ONLY;
+        }
+        return (STAT_OK);
+    };
 };
 
-struct gpioAnalogOutput {       // one struct per analog output
-    ioMode mode;
+// statistical sampling utility class
+template<uint16_t sample_count>
+struct ValueHistory {
+
+    float variance_max = 2.0;
+    ValueHistory() {};
+    ValueHistory(float v_max) : variance_max{v_max} {};
+
+    struct sample_t {
+        float value;
+        float value_sq;
+        void set(float v) { value = v; value_sq = v*v; }
+    };
+    sample_t samples[sample_count];
+    uint16_t next_sample = 0;
+    void _bump_index(uint16_t &v) {
+        ++v;
+        if (v == sample_count) {
+            v = 0;
+        }
+    };
+    uint16_t sampled = 0;
+
+    float rolling_sum = 0;
+    float rolling_sum_sq = 0;
+    float rolling_mean = 0;
+    void add_sample(float t) {
+        rolling_sum -= samples[next_sample].value;
+        rolling_sum_sq -= samples[next_sample].value_sq;
+
+        samples[next_sample].set(t);
+
+        rolling_sum += samples[next_sample].value;
+        rolling_sum_sq += samples[next_sample].value_sq;
+
+        _bump_index(next_sample);
+        if (sampled < sample_count) { ++sampled; }
+
+        rolling_mean = rolling_sum/(float)sampled;
+    };
+
+    float get_std_dev() {
+        // Important note: this is a POPULATION standard deviation, not a population standard deviation
+        float variance = (rolling_sum_sq/(float)sampled) - (rolling_mean*rolling_mean);
+        return sqrt(std::abs(variance));
+    };
+
+    float value() {
+        // we'll shoot through the samples and ignore the outliers
+        uint16_t samples_kept = 0;
+        float temp = 0;
+        float std_dev = get_std_dev();
+
+        for (uint16_t i=0; i<sampled; i++) {
+            if (std::abs(samples[i].value - rolling_mean) < (variance_max * std_dev)) {
+                temp += samples[i].value;
+                ++samples_kept;
+            }
+        }
+
+        // fallback position
+        if (samples_kept == 0) {
+            return rolling_mean;
+        }
+
+        return (temp / (float)samples_kept);
+    };
+};
+
+template <typename ADCPin_t>
+struct gpioAnalogInputPin : gpioAnalogInput {
+protected: // so we know if anyone tries to reach in
+    AnalogInputType_t type;
+    AnalogCircuit_t circuit;
+    float parameters[6];
+
+    uint8_t ext_pin_number;             // the number used externally for this pin ("in" + ext_pin_number)
+
+    const float variance_max = 1.1;
+    ValueHistory<20> history {variance_max};
+
+    float last_raw_value;
+
+    ADCPin_t pin;                        // the actual pin object itself
+
+public:
+    // In constructor, simply forward all values to the pin
+    // To get a different behavior, override this object.
+    template <typename... T>
+    gpioAnalogInputPin(const AnalogInputType_t _type, const uint8_t _ext_pin_number, T&&... additional_values) :
+    gpioAnalogInput{},
+    type{_type},
+    ext_pin_number{_ext_pin_number},
+    pin{Motate::kNormal, [&]{this->adc_has_new_value();}, std::forward<T>(additional_values)...}
+    {
+        pin.setInterrupts(Motate::kPinInterruptOnChange|Motate::kInterruptPriorityLow);
+        pin.setVoltageRange(3.29, 0.0, 3.29, 1000000.0);
+    };
+
+    // functions for use by other parts of the code, and are overridden
+
+    float getValue() override
+    {
+        if (type == AIN_TYPE_DISABLED) {
+            return 0;
+        }
+        return history.value();
+    };
+    float getResistance() override
+    {
+        // NOTE: AIN_CIRCUIT_EXTERNAL is NOT handled here!
+        //       That needs to be handled in a separate override!
+        if (type == AIN_TYPE_DISABLED || circuit == AIN_CIRCUIT_DISABLED) {
+            return -1;
+        }
+        const float v = history.value();
+        const float s = pin.getTopVoltage();
+        switch (circuit) {
+
+            case AIN_CIRCUIT_PULLUP:
+            {
+                float r1 = parameters[0]; // pull-up
+
+                if (ADCPin_t::is_differential) {
+                    return (v * 2.0 * r1)/(s - v);
+                } else {
+                    return (v * r1)/(s - v);
+                }
+                break;
+            }
+
+            case AIN_CIRCUIT_INV_OPAMP:
+            {
+                float r1 = parameters[0]; // pull-down from bias(+) side of op-amp
+                float r2 = parameters[1]; // pull-up from gain(-) side of op-amp
+                float r3 = parameters[2]; // pull-to-output from gain(-) side of op-amp
+
+                return (r1 * r2 * (s - v))/(r2 * v + r3 * s);
+                break;
+            }
+
+            case AIN_CIRCUIT_CC_INV_OPAMP:
+            {
+                //  the pull-up resistance to the current source is measured (rt)
+                float r4 = parameters[3]; // pull-up resistance of the bias(+) side of op-amp
+                float r1 = parameters[0]; // pull-down from bias(+) side of op-amp
+                float r2 = parameters[1]; // pull-up from gain(-) side of op-amp
+                float r3 = parameters[2]; // pull-to-output from gain(-) side of op-amp
+                float c = parameters[4]; // constant current in volts (c1)
+
+                // r_0 = (r_1 (r_2 (s - v) + r_3 s) - v r_2 r_4)/(c r_3 (r_1 + r_4))
+                return (r1 * (r2 * (s - v) + r3 * s) - v * r2 * r4)/(c * r3 * (r1 + r4));
+                break;
+            }
+
+            // AIN_CIRCUIT_EXTERNAL is specifically missing!
+
+            default:
+                return -1;
+        }
+
+    };
+
+    AnalogInputType_t getType() override
+    {
+        return type;
+    };
+    bool setType(const AnalogInputType_t t) override
+    {
+        // NOTE: AIN_TYPE_EXTERNAL is NOT handled here!
+        //       That needs to be handled in a separate override!
+        if (t == AIN_TYPE_EXTERNAL) {
+            return false;
+        }
+        type = t;
+        return true;
+    };
+
+    AnalogCircuit_t getCircuit() override
+    {
+        return circuit;
+    };
+    bool setCircuit(const AnalogCircuit_t c) override
+    {
+        // prevent setting circuit to AIN_CIRCUIT_EXTERNAL
+        if (c == AIN_CIRCUIT_EXTERNAL) {
+            return false;
+        }
+        circuit = c;
+        return true;
+    };
+
+    float getParameter(const uint8_t p) override
+    {
+        if (p < 0 || p >= 6) {
+            return 0;
+        }
+        return parameters[p];
+    };
+    bool setParameter(const uint8_t p, const float v) override
+    {
+        if (p < 0 || p >= 6) {
+            return false;
+        }
+        parameters[p] = v;
+        return true;
+    };
+
+    void startSampling() override {
+        pin.startSampling();
+    };
+
+    // support function for pin value update interrupt handling
+
+    void adc_has_new_value() {
+        last_raw_value = pin.getRaw();
+        history.add_sample(pin.getVoltage());
+    };
 };
 
 /*
@@ -539,36 +966,167 @@ void gpio_set_homing_mode(const uint8_t input_num, const bool is_homing);
 void gpio_set_probing_mode(const uint8_t input_num, const bool is_probing);
 int8_t gpio_get_probing_input(void);
 
-stat_t din_get_mo(nvObj_t *nv);
-stat_t din_set_mo(nvObj_t *nv);
-stat_t din_get_ac(nvObj_t *nv);
+stat_t din_get_en(nvObj_t *nv);     // enabled
+stat_t din_set_en(nvObj_t *nv);
+stat_t din_get_po(nvObj_t *nv);     // input sense
+stat_t din_set_po(nvObj_t *nv);
+stat_t din_get_ac(nvObj_t *nv);     // input action
 stat_t din_set_ac(nvObj_t *nv);
-stat_t din_get_fn(nvObj_t *nv);
+stat_t din_get_fn(nvObj_t *nv);     // input function
 stat_t din_set_fn(nvObj_t *nv);
-
 stat_t din_get_input(nvObj_t *nv);
 
-stat_t dout_get_mo(nvObj_t *nv);			// output sense
-stat_t dout_set_mo(nvObj_t *nv);			// output sense
-stat_t dout_get_output(nvObj_t *nv);
+stat_t dout_get_en(nvObj_t *nv);     // enabled
+stat_t dout_set_en(nvObj_t *nv);
+stat_t dout_get_po(nvObj_t *nv);     // output sense
+stat_t dout_set_po(nvObj_t *nv);
+stat_t dout_get_output(nvObj_t *nv); // actual output value (float)
 stat_t dout_set_output(nvObj_t *nv);
 
+stat_t ain_get_value(nvObj_t *nv);      // get the voltage level
+// no ain_set_value
+stat_t ain_get_resistance(nvObj_t *nv); // get the resistance in ohms
+// no ain_set_resistance
+stat_t ain_get_type(nvObj_t *nv);       // get the ADC type (or disabled)
+stat_t ain_set_type(nvObj_t *nv);       // set the type (used to disable/enable)
+stat_t ain_get_circuit(nvObj_t *nv);    // get the circuit type
+stat_t ain_set_circuit(nvObj_t *nv);    // set the circuit type
+stat_t ain_get_parameter(nvObj_t *nv, const uint8_t p); // get the value of parameter p
+stat_t ain_set_parameter(nvObj_t *nv, const uint8_t p); // set the value of parameter p
+stat_t ain_get_p1(nvObj_t *nv);
+stat_t ain_set_p1(nvObj_t *nv);
+stat_t ain_get_p2(nvObj_t *nv);
+stat_t ain_set_p2(nvObj_t *nv);
+stat_t ain_get_p3(nvObj_t *nv);
+stat_t ain_set_p3(nvObj_t *nv);
+stat_t ain_get_p4(nvObj_t *nv);
+stat_t ain_set_p4(nvObj_t *nv);
+stat_t ain_get_p5(nvObj_t *nv);
+stat_t ain_set_p5(nvObj_t *nv);
+
 #ifdef __TEXT_MODE
-    void din_print_mo(nvObj_t *nv);
+    void din_print_en(nvObj_t *nv);
+    void din_print_po(nvObj_t *nv);
     void din_print_ac(nvObj_t *nv);
     void din_print_fn(nvObj_t *nv);
     void din_print_in(nvObj_t *nv);
-    void dout_print_mo(nvObj_t *nv);
+
+    void dout_print_en(nvObj_t *nv);
+    void dout_print_po(nvObj_t *nv);
     void dout_print_out(nvObj_t *nv);
+
+    void ain_print_value(nvObj_t *nv);
+    void ain_print_resistance(nvObj_t *nv);
+    void ain_print_type(nvObj_t *nv);
+    void ain_print_circuit(nvObj_t *nv);
+    void ain_print_p(nvObj_t *nv);
 #else
-    #define din_print_mo tx_print_stub
+    #define din_print_en tx_print_stub
+    #define din_print_po tx_print_stub
     #define din_print_ac tx_print_stub
     #define din_print_fn tx_print_stub
     #define din_print_in tx_print_stub
-    #define dout_print_mo tx_print_stub
+
+    #define dout_print_en tx_print_stub
+    #define dout_print_po tx_print_stub
     #define dout_print_out tx_print_stub
+
+    #define ain_print_value tx_print_stub
+    #define ain_print_resistance tx_print_stub
+    #define ain_print_type tx_print_stub
+    #define ain_print_circuit tx_print_stub
+    #define ain_print_p tx_print_stub
 #endif // __TEXT_MODE
 
 #include "board_gpio.h"
+
+#ifndef AI1_TYPE
+#define AI1_TYPE                    AIN_TYPE_DISABLED
+#endif
+#ifndef AI1_CIRCUIT
+#define AI1_CIRCUIT                 AIN_CIRCUIT_DISABLED
+#endif
+#ifndef AI1_P1
+#define AI1_P1                      0.0
+#endif
+#ifndef AI1_P2
+#define AI1_P2                      0.0
+#endif
+#ifndef AI1_P3
+#define AI1_P3                      0.0
+#endif
+#ifndef AI1_P4
+#define AI1_P4                      0.0
+#endif
+#ifndef AI1_P5
+#define AI1_P5                      0.0
+#endif
+
+
+#ifndef AI2_TYPE
+#define AI2_TYPE                    AIN_TYPE_DISABLED
+#endif
+#ifndef AI2_CIRCUIT
+#define AI2_CIRCUIT                 AIN_CIRCUIT_DISABLED
+#endif
+#ifndef AI2_P1
+#define AI2_P1                      0.0
+#endif
+#ifndef AI2_P2
+#define AI2_P2                      0.0
+#endif
+#ifndef AI2_P3
+#define AI2_P3                      0.0
+#endif
+#ifndef AI2_P4
+#define AI2_P4                      0.0
+#endif
+#ifndef AI2_P5
+#define AI2_P5                      0.0
+#endif
+
+#ifndef AI3_TYPE
+#define AI3_TYPE                    AIN_TYPE_DISABLED
+#endif
+#ifndef AI3_CIRCUIT
+#define AI3_CIRCUIT                 AIN_CIRCUIT_DISABLED
+#endif
+#ifndef AI3_P1
+#define AI3_P1                      0.0
+#endif
+#ifndef AI3_P2
+#define AI3_P2                      0.0
+#endif
+#ifndef AI3_P3
+#define AI3_P3                      0.0
+#endif
+#ifndef AI3_P4
+#define AI3_P4                      0.0
+#endif
+#ifndef AI3_P5
+#define AI3_P5                      0.0
+#endif
+
+#ifndef AI4_TYPE
+#define AI4_TYPE                    AIN_TYPE_DISABLED
+#endif
+#ifndef AI4_CIRCUIT
+#define AI4_CIRCUIT                 AIN_CIRCUIT_DISABLED
+#endif
+#ifndef AI4_P1
+#define AI4_P1                      0.0
+#endif
+#ifndef AI4_P2
+#define AI4_P2                      0.0
+#endif
+#ifndef AI4_P3
+#define AI4_P3                      0.0
+#endif
+#ifndef AI4_P4
+#define AI4_P4                      0.0
+#endif
+#ifndef AI4_P5
+#define AI4_P5                      0.0
+#endif
 
 #endif // End of include guard: GPIO_H_ONCE

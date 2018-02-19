@@ -118,7 +118,7 @@ void  gpio_set_probing_mode(const uint8_t input_num_ext, const bool is_probing)
 
 int8_t gpio_get_probing_input(void)
 {
-    for (uint8_t i = 0; i <= D_IN_CHANNELS; i++) {
+    for (uint8_t i = 1; i <= D_IN_CHANNELS; i++) {
         if (d_in[i-1]->getFunction() == INPUT_FUNCTION_PROBE) {
             return (i);
         }
@@ -151,42 +151,31 @@ type* _io(const nvObj_t *nv) {
 
 gpioDigitalInput* _i(const nvObj_t *nv) { return _io<gpioDigitalInput>(nv); }
 gpioDigitalOutput* _o(const nvObj_t *nv) { return _io<gpioDigitalOutput>(nv); }
+gpioAnalogInput* _ai(const nvObj_t *nv) { return _io<gpioAnalogInput>(nv); }
 
-
-// static stat_t _input_set_helper(nvObj_t *nv, const int8_t lower_bound, const int8_t upper_bound)
-// {
-//     if ((nv->value < lower_bound) || (nv->value >= upper_bound)) {
-//         return (STAT_INPUT_VALUE_RANGE_ERROR);
-//     }
-//     set_ui8(nv);        // will this work in -1 is a valid value?
-//     if (cm_get_machine_state() != MACHINE_INITIALIZING) {
-//         inputs_reset();
-//     }
-//     return (STAT_OK);
-// }
-//
-// static stat_t _output_set_helper(nvObj_t *nv, const int8_t lower_bound, const int8_t upper_bound)
-// {
-//     if ((nv->value < lower_bound) || (nv->value >= upper_bound)) {
-//         return (STAT_INPUT_VALUE_RANGE_ERROR);
-//     }
-//     set_ui8(nv);        // will this work in -1 is a valid value?
-//     if (cm_get_machine_state() != MACHINE_INITIALIZING) {
-//         outputs_reset();
-//     }
-//     return (STAT_OK);
-// }
 
 /*
- *  Get/set input mode
+ *  Get/set enabled
  */
-stat_t din_get_mo(nvObj_t *nv)
+stat_t din_get_en(nvObj_t *nv)
 {
-    return _i(nv)->getMode(nv);
+    return _i(nv)->getEnabled(nv);
 }
-stat_t din_set_mo(nvObj_t *nv)
+stat_t din_set_en(nvObj_t *nv)
 {
-    return _i(nv)->setMode(nv);
+    return _i(nv)->setEnabled(nv);
+}
+
+/*
+ *  Get/set input polarity
+ */
+stat_t din_get_po(nvObj_t *nv)
+{
+    return _i(nv)->getPolarity(nv);
+}
+stat_t din_set_po(nvObj_t *nv)
+{
+    return _i(nv)->setPolarity(nv);
 }
 
 /*
@@ -223,13 +212,28 @@ stat_t din_get_input(nvObj_t *nv)
 }
 
 
-stat_t dout_get_mo(nvObj_t *nv)
+/*
+ *  Get/set enabled
+ */
+stat_t dout_get_en(nvObj_t *nv)
 {
-    return _o(nv)->getMode(nv);
+    return _o(nv)->getEnabled(nv);
 }
-stat_t dout_set_mo(nvObj_t *nv)
+stat_t dout_set_en(nvObj_t *nv)
 {
-    return _o(nv)->setMode(nv);
+    return _o(nv)->setEnabled(nv);
+}
+
+/*
+ *  Get/set input polarity
+ */
+stat_t dout_get_po(nvObj_t *nv)
+{
+    return _o(nv)->getPolarity(nv);
+}
+stat_t dout_set_po(nvObj_t *nv)
+{
+    return _o(nv)->setPolarity(nv);
 }
 
 /*
@@ -244,6 +248,59 @@ stat_t dout_set_output(nvObj_t *nv)
     return _o(nv)->setValue(nv);
 }
 
+
+/*
+ *  ain_get_value() - get the measured voltage level of the analog input
+ */
+stat_t ain_get_value(nvObj_t *nv) {
+    return _ai(nv)->getValue(nv);
+}
+// no ain_set_value
+
+/*
+ *  ain_get_resistance() - get the measured resistance of the analog input
+ *  NOTE: Requires the circuit type to be configured and the relevant parameters set
+ */
+stat_t ain_get_resistance(nvObj_t *nv) {
+    return _ai(nv)->getResistance(nv);
+}
+// no ain_set_resistance
+
+/*
+ *  ain_get_type() - get the measured voltage level of the analog input
+ */
+stat_t ain_get_type(nvObj_t *nv) {
+    return _ai(nv)->getType(nv);
+}
+stat_t ain_set_type(nvObj_t *nv) {
+    return _ai(nv)->setType(nv);
+}
+
+stat_t ain_get_circuit(nvObj_t *nv) {
+    return _ai(nv)->getCircuit(nv);
+}
+stat_t ain_set_circuit(nvObj_t *nv) {
+    return _ai(nv)->setCircuit(nv);
+}
+
+stat_t ain_get_parameter(nvObj_t *nv, const uint8_t p) {
+    return _ai(nv)->getParameter(nv, p);
+}
+stat_t ain_set_parameter(nvObj_t *nv, const uint8_t p) {
+    return _ai(nv)->setParameter(nv, p);
+}
+
+stat_t ain_get_p1(nvObj_t *nv) { return ain_get_parameter(nv, 0); };
+stat_t ain_set_p1(nvObj_t *nv) { return ain_set_parameter(nv, 0); };
+stat_t ain_get_p2(nvObj_t *nv) { return ain_get_parameter(nv, 1); };
+stat_t ain_set_p2(nvObj_t *nv) { return ain_set_parameter(nv, 1); };
+stat_t ain_get_p3(nvObj_t *nv) { return ain_get_parameter(nv, 2); };
+stat_t ain_set_p3(nvObj_t *nv) { return ain_set_parameter(nv, 2); };
+stat_t ain_get_p4(nvObj_t *nv) { return ain_get_parameter(nv, 3); };
+stat_t ain_set_p4(nvObj_t *nv) { return ain_set_parameter(nv, 3); };
+stat_t ain_get_p5(nvObj_t *nv) { return ain_get_parameter(nv, 4); };
+stat_t ain_set_p5(nvObj_t *nv) { return ain_set_parameter(nv, 4); };
+
 /***********************************************************************************
  * TEXT MODE SUPPORT
  * Functions to print variables from the cfgArray table
@@ -251,20 +308,29 @@ stat_t dout_set_output(nvObj_t *nv)
 
 #ifdef __TEXT_MODE
 
-    static const char fmt_gpio_mo[] = "[%smo] input mode%17d [0=active-low,1=active-hi,2=disabled]\n";
+    static const char fmt_gpio_in_en[] = "[%smo] input enabled%13d [-1=unavailable,0=disabled,1=enabled]\n";
+    static const char fmt_gpio_in_po[] = "[%smo] input polarity%13d [0=normal/active-high,1=inverted/active-low]\n";
     static const char fmt_gpio_ac[] = "[%sac] input action%15d [0=none,1=stop,2=fast_stop,3=halt,4=alarm,5=shutdown,6=panic,7=reset]\n";
     static const char fmt_gpio_fn[] = "[%sfn] input function%13d [0=none,1=limit,2=interlock,3=shutdown,4=probe]\n";
     static const char fmt_gpio_in[] = "Input %s state: %5d\n";
 
-    static const char fmt_gpio_domode[] = "[%smo] output mode%16d [0=active low,1=active high,2=disabled]\n";
+    static const char fmt_gpio_out_en[] = "[%smo] output enabled%12d [-1=unavailable,0=disabled,1=enabled]\n";
+    static const char fmt_gpio_out_po[] = "[%smo] output polarity%12d [0=normal/active-high,1=inverted/active-low]\n";
     static const char fmt_gpio_out[] = "Output %s state: %5d\n";
+
+    static const char fmt_ain_value[] = "Analog input %s voltage: %5.2fV\n";
+    static const char fmt_ain_resistance[] = "Analog input %s resistance: %5.2fohm\n";
+    static const char fmt_ain_type[] = "[%s] input type%17d [0=disabled,1=internal,2=external]\n";
+    static const char fmt_ain_circuit[] = "[%s] analog circuit%13d [0=disabled,1=pull-up,2=external,3=inverted op-amp,4=constant current inverted op-amp]\n";
+    static const char fmt_ain_parameter[] = "[%s] circuit parameter%6.4f [usage varies by circuit type]\n";
 
     static void _print_di(nvObj_t *nv, const char *format)
     {
         sprintf(cs.out_buf, format, nv->group, (int)nv->value);
         xio_writeline(cs.out_buf);
     }
-    void din_print_mo(nvObj_t *nv) {_print_di(nv, fmt_gpio_mo);}
+    void din_print_en(nvObj_t *nv) {_print_di(nv, fmt_gpio_in_en);}
+    void din_print_po(nvObj_t *nv) {_print_di(nv, fmt_gpio_in_po);}
     void din_print_ac(nvObj_t *nv) {_print_di(nv, fmt_gpio_ac);}
     void din_print_fn(nvObj_t *nv) {_print_di(nv, fmt_gpio_fn);}
     void din_print_in(nvObj_t *nv) {
@@ -272,9 +338,39 @@ stat_t dout_set_output(nvObj_t *nv)
         xio_writeline(cs.out_buf);
     }
 
-    void dout_print_mo(nvObj_t *nv) {_print_di(nv, fmt_gpio_domode);}
+    void dout_print_en(nvObj_t *nv) {_print_di(nv, fmt_gpio_out_en);}
+    void dout_print_po(nvObj_t *nv) {_print_di(nv, fmt_gpio_out_po);}
     void dout_print_out(nvObj_t *nv) {
         sprintf(cs.out_buf, fmt_gpio_out, nv->token, (int)nv->value);
         xio_writeline(cs.out_buf);
     }
+
+    void ain_print_value(nvObj_t *nv)
+    {
+       sprintf(cs.out_buf, fmt_ain_value, nv->token, (float)nv->value);
+       xio_writeline(cs.out_buf);
+    }
+    void ain_print_resistance(nvObj_t *nv)
+    {
+       sprintf(cs.out_buf, fmt_ain_resistance, nv->token, (float)nv->value);
+       xio_writeline(cs.out_buf);
+    }
+    void ain_print_type(nvObj_t *nv)
+    {
+       sprintf(cs.out_buf, fmt_ain_type, nv->token, (int)nv->value);
+       xio_writeline(cs.out_buf);
+    }
+
+    void ain_print_circuit(nvObj_t *nv)
+    {
+       sprintf(cs.out_buf, fmt_ain_circuit, nv->token, (int)nv->value);
+       xio_writeline(cs.out_buf);
+    }
+
+    void ain_print_p(nvObj_t *nv)
+    {
+       sprintf(cs.out_buf, fmt_ain_parameter, nv->token, (float)nv->value);
+       xio_writeline(cs.out_buf);
+    }
+
 #endif

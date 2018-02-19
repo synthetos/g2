@@ -30,16 +30,12 @@
 
 // this file is included from the bottom of gpio.h, but we do this for completeness
 #include "../../gpio.h"
+#include "hardware.h"
 
 /*
  * GPIO defines
  */
 //--- change as required for board and switch hardware ---//
-
-#define D_IN_CHANNELS       9         // v9    // number of digital inputs supported
-#define D_OUT_CHANNELS     13         // number of digital outputs supported
-#define A_IN_CHANNELS	    0           // number of analog inputs supported
-#define A_OUT_CHANNELS	    0           // number of analog outputs supported
 
 #define INPUT_LOCKOUT_MS    10          // milliseconds to go dead after input firing
 
@@ -47,17 +43,16 @@
  * The GPIO objects themselves - this must match up with board_gpio.cpp!
  */
 
-extern gpioDigitalInput*   const d_in[D_IN_CHANNELS];
-extern gpioDigitalOutput*  const d_out[D_OUT_CHANNELS];
-// extern gpioAnalogInput*    a_in[A_IN_CHANNELS];
-// extern gpioAnalogOutput*   a_out[A_OUT_CHANNELS];
-
 // prepare the objects as externs (for config_app to not bloat)
 using Motate::IRQPin;
 using Motate::PWMOutputPin;
 using Motate::PWMLikeOutputPin;
+using Motate::ADCPin;
+using Motate::ADCDifferentialPair;
 template<bool can_pwm, pin_number... V>
 using OutputType = typename std::conditional<can_pwm, PWMOutputPin<V...>, PWMLikeOutputPin<V...>>::type;
+
+#define D_IN_CHANNELS       9           // number of digital inputs supported
 
 extern gpioDigitalInputPin<IRQPin<Motate::kInput1_PinNumber>>  din1;
 extern gpioDigitalInputPin<IRQPin<Motate::kInput2_PinNumber>>  din2;
@@ -71,6 +66,11 @@ extern gpioDigitalInputPin<IRQPin<Motate::kInput9_PinNumber>>  din9;
 // extern gpioDigitalInputPin<IRQPin<Motate::kInput10_PinNumber>> din10;
 // extern gpioDigitalInputPin<IRQPin<Motate::kInput11_PinNumber>> din11;
 // extern gpioDigitalInputPin<IRQPin<Motate::kInput12_PinNumber>> din12;
+
+extern gpioDigitalInput*   const d_in[D_IN_CHANNELS];
+
+
+#define D_OUT_CHANNELS     13           // number of digital outputs supported
 
 extern gpioDigitalOutputPin<OutputType<OUTPUT1_PWM,  Motate::kOutput1_PinNumber>>  dout1;
 extern gpioDigitalOutputPin<OutputType<OUTPUT2_PWM,  Motate::kOutput2_PinNumber>>  dout2;
@@ -86,5 +86,88 @@ extern gpioDigitalOutputPin<OutputType<OUTPUT11_PWM, Motate::kOutput11_PinNumber
 extern gpioDigitalOutputPin<OutputType<OUTPUT12_PWM, Motate::kOutput12_PinNumber>> dout12;
 extern gpioDigitalOutputPin<OutputType<OUTPUT13_PWM, Motate::kOutput13_PinNumber>> dout13;
 
+extern gpioDigitalOutput*  const d_out[D_OUT_CHANNELS];
+
+
+#if QUINTIC_REVISION == 'C'
+
+#define A_IN_CHANNELS	 4           // number of analog inputs supported
+
+#include "device/max31865/max31865.h"
+#define USING_A_MAX31865 1
+
+#ifndef AI1_TYPE
+#define AI1_TYPE gpioAnalogInput::AIN_TYPE_EXTERNAL
+#endif
+#ifndef AI1_CIRCUIT
+#define AI1_CIRCUIT gpioAnalogInput::AIN_CIRCUIT_EXTERNAL
+#endif
+extern gpioAnalogInputPin<MAX31865<SPIBus_used_t::SPIBusDevice>> ain1;
+
+#ifndef AI2_TYPE
+#define AI2_TYPE gpioAnalogInput::AIN_TYPE_EXTERNAL
+#endif
+#ifndef AI2_CIRCUIT
+#define AI2_CIRCUIT gpioAnalogInput::AIN_CIRCUIT_EXTERNAL
+#endif
+extern gpioAnalogInputPin<MAX31865<SPIBus_used_t::SPIBusDevice>> ain2;
+
+#ifndef AI3_TYPE
+#define AI3_TYPE gpioAnalogInput::AIN_TYPE_INTERNAL
+#endif
+#ifndef AI3_CIRCUIT
+#define AI3_CIRCUIT gpioAnalogInput::AIN_CIRCUIT_PULLUP
+#endif
+extern gpioAnalogInputPin<ADCDifferentialPair<Motate::kADC1_Neg_PinNumber, Motate::kADC1_Pos_PinNumber>> ain3;
+
+#ifndef AI4_TYPE
+#define AI4_TYPE gpioAnalogInput::AIN_TYPE_INTERNAL
+#endif
+#ifndef AI4_CIRCUIT
+#define AI4_CIRCUIT gpioAnalogInput::AIN_CIRCUIT_PULLUP
+#endif
+extern gpioAnalogInputPin<ADCDifferentialPair<Motate::kADC2_Neg_PinNumber, Motate::kADC2_Pos_PinNumber>> ain4;
+
+#endif // 'C'
+
+#if QUINTIC_REVISION == 'D'
+
+#define A_IN_CHANNELS	 4           // number of analog inputs supported
+
+#ifndef AI1_TYPE
+#define AI1_TYPE gpioAnalogInput::AIN_TYPE_INTERNAL
+#endif
+#ifndef AI1_CIRCUIT
+#define AI1_CIRCUIT gpioAnalogInput::AIN_CIRCUIT_CC_INV_OPAMP
+#endif
+extern gpioAnalogInputPin<ADCPin<Motate::kADC1_PinNumber>> ain1;
+
+#ifndef AI2_TYPE
+#define AI2_TYPE gpioAnalogInput::AIN_TYPE_INTERNAL
+#endif
+#ifndef AI2_CIRCUIT
+#define AI2_CIRCUIT gpioAnalogInput::AIN_CIRCUIT_CC_INV_OPAMP
+#endif
+extern gpioAnalogInputPin<ADCPin<Motate::kADC2_PinNumber>> ain2;
+
+#ifndef AI3_TYPE
+#define AI3_TYPE gpioAnalogInput::AIN_TYPE_INTERNAL
+#endif
+#ifndef AI3_CIRCUIT
+#define AI3_CIRCUIT gpioAnalogInput::AIN_CIRCUIT_INV_OPAMP
+#endif
+extern gpioAnalogInputPin<ADCPin<Motate::kADC3_PinNumber>> ain3;
+
+#ifndef AI4_TYPE
+#define AI4_TYPE gpioAnalogInput::AIN_TYPE_INTERNAL
+#endif
+#ifndef AI4_CIRCUIT
+#define AI4_CIRCUIT gpioAnalogInput::AIN_CIRCUIT_INV_OPAMP
+#endif
+extern gpioAnalogInputPin<ADCPin<Motate::kADC4_PinNumber>> ain4;
+
+#endif // 'D'
+
+extern gpioAnalogInput*    const a_in[A_IN_CHANNELS];
 
 #endif // End of include guard: BOARD_GPIO_H_ONCE

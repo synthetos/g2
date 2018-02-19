@@ -56,53 +56,88 @@
 
 /**** Setup Actual Objects ****/
 
-gpioDigitalInputPin<IRQPin<Motate::kInput1_PinNumber>>  din1  {DI1_MODE,  1};
-gpioDigitalInputPin<IRQPin<Motate::kInput2_PinNumber>>  din2  {DI2_MODE,  2};
-gpioDigitalInputPin<IRQPin<Motate::kInput3_PinNumber>>  din3  {DI3_MODE,  3};
-gpioDigitalInputPin<IRQPin<Motate::kInput4_PinNumber>>  din4  {DI4_MODE,  4};
-gpioDigitalInputPin<IRQPin<Motate::kInput5_PinNumber>>  din5  {DI5_MODE,  5};
-gpioDigitalInputPin<IRQPin<Motate::kInput6_PinNumber>>  din6  {DI6_MODE,  6};
-gpioDigitalInputPin<IRQPin<Motate::kInput7_PinNumber>>  din7  {DI7_MODE,  7};
-gpioDigitalInputPin<IRQPin<Motate::kInput8_PinNumber>>  din8  {DI8_MODE,  8};
-gpioDigitalInputPin<IRQPin<Motate::kInput9_PinNumber>>  din9  {DI9_MODE,  9};
-// gpioDigitalInputPin<IRQPin<Motate::kInput10_PinNumber>> din10 {DI10_MODE, 10};
-// gpioDigitalInputPin<IRQPin<Motate::kInput11_PinNumber>> din11 {DI11_MODE, 11};
-// gpioDigitalInputPin<IRQPin<Motate::kInput12_PinNumber>> din12 {DI12_MODE, 12};
-
-gpioDigitalOutputPin<OutputType<OUTPUT1_PWM,  Motate::kOutput1_PinNumber>>  dout1  { DO1_MODE,  (uint32_t)200000 };
-gpioDigitalOutputPin<OutputType<OUTPUT2_PWM,  Motate::kOutput2_PinNumber>>  dout2  { DO2_MODE,  (uint32_t)200000 };
-gpioDigitalOutputPin<OutputType<OUTPUT3_PWM,  Motate::kOutput3_PinNumber>>  dout3  { DO3_MODE,  (uint32_t)200000 };
-gpioDigitalOutputPin<OutputType<OUTPUT4_PWM,  Motate::kOutput4_PinNumber>>  dout4  { DO4_MODE,  (uint32_t)200000 };
-gpioDigitalOutputPin<OutputType<OUTPUT5_PWM,  Motate::kOutput5_PinNumber>>  dout5  { DO5_MODE,  (uint32_t)200000 };
-gpioDigitalOutputPin<OutputType<OUTPUT6_PWM,  Motate::kOutput6_PinNumber>>  dout6  { DO6_MODE,  (uint32_t)200000 };
-gpioDigitalOutputPin<OutputType<OUTPUT7_PWM,  Motate::kOutput7_PinNumber>>  dout7  { DO7_MODE,  (uint32_t)200000 };
-gpioDigitalOutputPin<OutputType<OUTPUT8_PWM,  Motate::kOutput8_PinNumber>>  dout8  { DO8_MODE,  (uint32_t)200000 };
-gpioDigitalOutputPin<OutputType<OUTPUT9_PWM,  Motate::kOutput9_PinNumber>>  dout9  { DO9_MODE,  (uint32_t)200000 };
-gpioDigitalOutputPin<OutputType<OUTPUT10_PWM, Motate::kOutput10_PinNumber>> dout10 { DO10_MODE, (uint32_t)200000 };
-gpioDigitalOutputPin<OutputType<OUTPUT11_PWM, Motate::kOutput11_PinNumber>> dout11 { DO11_MODE, (uint32_t)200000 };
-gpioDigitalOutputPin<OutputType<OUTPUT12_PWM, Motate::kOutput12_PinNumber>> dout12 { DO12_MODE, (uint32_t)200000 };
-gpioDigitalOutputPin<OutputType<OUTPUT13_PWM, Motate::kOutput13_PinNumber>> dout13 { DO13_MODE, (uint32_t)200000 };
-
-/**** Setup Arrays - these are extern and MUST match the board_gpio.h ****/
+gpioDigitalInputPin<IRQPin<Motate::kInput1_PinNumber>>  din1  {DI1_ENABLED,  DI1_POLARITY,  1};
+gpioDigitalInputPin<IRQPin<Motate::kInput2_PinNumber>>  din2  {DI2_ENABLED,  DI2_POLARITY,  2};
+gpioDigitalInputPin<IRQPin<Motate::kInput3_PinNumber>>  din3  {DI3_ENABLED,  DI3_POLARITY,  3};
+gpioDigitalInputPin<IRQPin<Motate::kInput4_PinNumber>>  din4  {DI4_ENABLED,  DI4_POLARITY,  4};
+gpioDigitalInputPin<IRQPin<Motate::kInput5_PinNumber>>  din5  {DI5_ENABLED,  DI5_POLARITY,  5};
+gpioDigitalInputPin<IRQPin<Motate::kInput6_PinNumber>>  din6  {DI6_ENABLED,  DI6_POLARITY,  6};
+gpioDigitalInputPin<IRQPin<Motate::kInput7_PinNumber>>  din7  {DI7_ENABLED,  DI7_POLARITY,  7};
+gpioDigitalInputPin<IRQPin<Motate::kInput8_PinNumber>>  din8  {DI8_ENABLED,  DI8_POLARITY,  8};
+gpioDigitalInputPin<IRQPin<Motate::kInput9_PinNumber>>  din9  {DI9_ENABLED,  DI9_POLARITY,  9};
+// gpioDigitalInputPin<IRQPin<Motate::kInput10_PinNumber>> din10 {DI10ENABLEDE, DI10_POLARITY, 10};
+// gpioDigitalInputPin<IRQPin<Motate::kInput11_PinNumber>> din11 {DI11ENABLEDE, DI11_POLARITY, 11};
+// gpioDigitalInputPin<IRQPin<Motate::kInput12_PinNumber>> din12 {DI12ENABLEDE, DI12_POLARITY, 12};
 
 gpioDigitalInput*  const d_in[] = {&din1, &din2, &din3, &din4, &din5, &din6, &din7, &din8, &din9};
+
+
+gpioDigitalOutputPin<OutputType<OUTPUT1_PWM,  Motate::kOutput1_PinNumber>>  dout1  { DO1_ENABLED,  DO1_POLARITY,  (uint32_t)200000 };
+gpioDigitalOutputPin<OutputType<OUTPUT2_PWM,  Motate::kOutput2_PinNumber>>  dout2  { DO2_ENABLED,  DO2_POLARITY,  (uint32_t)200000 };
+gpioDigitalOutputPin<OutputType<OUTPUT3_PWM,  Motate::kOutput3_PinNumber>>  dout3  { DO3_ENABLED,  DO3_POLARITY,  (uint32_t)200000 };
+gpioDigitalOutputPin<OutputType<OUTPUT4_PWM,  Motate::kOutput4_PinNumber>>  dout4  { DO4_ENABLED,  DO4_POLARITY,  (uint32_t)200000 };
+gpioDigitalOutputPin<OutputType<OUTPUT5_PWM,  Motate::kOutput5_PinNumber>>  dout5  { DO5_ENABLED,  DO5_POLARITY,  (uint32_t)200000 };
+gpioDigitalOutputPin<OutputType<OUTPUT6_PWM,  Motate::kOutput6_PinNumber>>  dout6  { DO6_ENABLED,  DO6_POLARITY,  (uint32_t)200000 };
+gpioDigitalOutputPin<OutputType<OUTPUT7_PWM,  Motate::kOutput7_PinNumber>>  dout7  { DO7_ENABLED,  DO7_POLARITY,  (uint32_t)200000 };
+gpioDigitalOutputPin<OutputType<OUTPUT8_PWM,  Motate::kOutput8_PinNumber>>  dout8  { DO8_ENABLED,  DO8_POLARITY,  (uint32_t)200000 };
+gpioDigitalOutputPin<OutputType<OUTPUT9_PWM,  Motate::kOutput9_PinNumber>>  dout9  { DO9_ENABLED,  DO9_POLARITY,  (uint32_t)200000 };
+gpioDigitalOutputPin<OutputType<OUTPUT10_PWM, Motate::kOutput10_PinNumber>> dout10 { DO10_ENABLED, DO10_POLARITY, (uint32_t)200000 };
+gpioDigitalOutputPin<OutputType<OUTPUT11_PWM, Motate::kOutput11_PinNumber>> dout11 { DO11_ENABLED, DO11_POLARITY, (uint32_t)200000 };
+gpioDigitalOutputPin<OutputType<OUTPUT12_PWM, Motate::kOutput12_PinNumber>> dout12 { DO12_ENABLED, DO12_POLARITY, (uint32_t)200000 };
+gpioDigitalOutputPin<OutputType<OUTPUT13_PWM, Motate::kOutput13_PinNumber>> dout13 { DO13_ENABLED, DO13_POLARITY, (uint32_t)200000 };
+
 gpioDigitalOutput* const d_out[] = {&dout1, &dout2, &dout3, &dout4, &dout5, &dout6, &dout7, &dout8, &dout9, &dout10, &dout11, &dout12, &dout13};
-// not yet used
-// gpioAnalogInput*    a_in[A_IN_CHANNELS];
-// gpioAnalogOutput*   a_out[A_OUT_CHANNELS];
+
+
+#if QUINTIC_REVISION == 'C'
+
+gpioAnalogInputPin<MAX31865<SPIBus_used_t::SPIBusDevice>> ain1 {gpioAnalogInput::AIN_TYPE_EXTERNAL, 1, spiBus, spiCSPinMux.getCS(5)};
+gpioAnalogInputPin<MAX31865<SPIBus_used_t::SPIBusDevice>> ain2 {gpioAnalogInput::AIN_TYPE_EXTERNAL, 2, spiBus, spiCSPinMux.getCS(6)};
+gpioAnalogInputPin<ADCDifferentialPair<Motate::kADC1_Neg_PinNumber, Motate::kADC1_Pos_PinNumber>> ain3 {gpioAnalogInput::AIN_TYPE_INTERNAL, 3};
+gpioAnalogInputPin<ADCDifferentialPair<Motate::kADC2_Neg_PinNumber, Motate::kADC2_Pos_PinNumber>> ain4 {gpioAnalogInput::AIN_TYPE_INTERNAL, 4};
+
+gpioAnalogInput*    const a_in[] = {&ain1, &ain2, &ain3, &ain4};
+
+#endif // 'C'
+
+#if QUINTIC_REVISION == 'D'
+
+gpioAnalogInputPin<ADCPin<Motate::kADC1_PinNumber>> ain1 {gpioAnalogInput::AIN_TYPE_INTERNAL, 1};
+gpioAnalogInputPin<ADCPin<Motate::kADC2_PinNumber>> ain2 {gpioAnalogInput::AIN_TYPE_INTERNAL, 2};
+gpioAnalogInputPin<ADCPin<Motate::kADC3_PinNumber>> ain3 {gpioAnalogInput::AIN_TYPE_INTERNAL, 3};
+gpioAnalogInputPin<ADCPin<Motate::kADC4_PinNumber>> ain4 {gpioAnalogInput::AIN_TYPE_INTERNAL, 4};
+
+gpioAnalogInput*    const a_in[] = {&ain1, &ain2, &ain3, &ain4};
+
+#endif // 'D'
+
 
 /************************************************************************************
  **** CODE **************************************************************************
  ************************************************************************************/
+
+
+ // Register a SysTick event to call start_sampling every temperature_sample_freq ms
+ const int16_t ain_sample_freq = 10;
+ int16_t ain_sample_counter = ain_sample_freq;
+ Motate::SysTickEvent ain_tick_event {[&] {
+     if (!--ain_sample_counter) {
+         ain1.startSampling();
+         ain2.startSampling();
+         ain3.startSampling();
+         ain4.startSampling();
+         ain_sample_counter = ain_sample_freq;
+     }
+ }, nullptr};
+
 /*
  * gpio_reset() - reset inputs and outputs (no initialization)
  */
-
 
 void outputs_reset(void) {
     // nothing to do
 }
 
 void inputs_reset(void) {
-    // nothing to do
+    SysTickTimer.registerEvent(&ain_tick_event);
 }
