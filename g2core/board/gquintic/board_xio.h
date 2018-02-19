@@ -36,11 +36,13 @@
 #include "MotateUSB.h"
 #include "MotateUSBCDC.h"
 
+typedef Motate::USBDeviceHardwareVBus<Motate::IRQPin<Motate::kUSBVBUS_PinNumber>> USBDeviceHardware_t;
+
 #if USB_SERIAL_PORTS_EXPOSED == 1
-typedef Motate::USBDevice< Motate::USBCDC > XIOUSBDevice_t;
+typedef Motate::USBDevice< USBDeviceHardware_t, Motate::USBCDC > XIOUSBDevice_t;
 #endif
 #if USB_SERIAL_PORTS_EXPOSED == 2
-typedef Motate::USBDevice<Motate::USBCDC, Motate::USBCDC> XIOUSBDevice_t;
+typedef Motate::USBDevice< USBDeviceHardware_t, Motate::USBCDC, Motate::USBCDC > XIOUSBDevice_t;
 #endif
 
 extern XIOUSBDevice_t usb;

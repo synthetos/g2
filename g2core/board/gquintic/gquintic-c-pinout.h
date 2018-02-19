@@ -171,7 +171,7 @@ _MAKE_MOTATE_PIN(kLED_USBRXPinNumber,              'B', 13); // LED_1 (Heartbeat
 _MAKE_MOTATE_PIN(kSocket4_SPISlaveSelectPinNumber, 'B', 14); // NOT CONNECTED
 
 
-//_MAKE_MOTATE_PIN(                                'D',  0); // USB_VBUS
+_MAKE_MOTATE_PIN(kUSBVBUS_PinNumber                'D',  0); // USB_VBUS
 _MAKE_MOTATE_PIN(kInput9_PinNumber,                'D',  1); //
 _MAKE_MOTATE_PIN(kInput10_PinNumber,               'D',  2); //
 _MAKE_MOTATE_PIN(kInput8_PinNumber,                'D',  3); //
