@@ -126,7 +126,7 @@
 #define M1_MICROSTEPS               128                     // 1mi        1,2,4,8,16,32
 #define M1_POLARITY                 0                       // 1po        0=normal, 1=reversed
 #define M1_POWER_MODE               MOTOR_POWERED_IN_CYCLE  // 1pm        standard
-#define M1_POWER_LEVEL              0.8                     // 1pl
+#define M1_POWER_LEVEL              0.65                    // 1pl
 #define M1_TMC2130_TPWMTHRS         1200                    // 1pth
 #define M1_TMC2130_TCOOLTHRS        1000                    // 1cth
 #define M1_TMC2130_THIGH            10                      // 1hth
@@ -149,7 +149,7 @@
 #define M2_MICROSTEPS               128
 #define M2_POLARITY                 1
 #define M2_POWER_MODE               MOTOR_POWERED_IN_CYCLE
-#define M2_POWER_LEVEL              0.8
+#define M2_POWER_LEVEL              0.65
 #define M2_TMC2130_TPWMTHRS         1200
 #define M2_TMC2130_TCOOLTHRS        1000
 #define M2_TMC2130_THIGH            10
@@ -192,7 +192,7 @@
 #define M4_MICROSTEPS               16
 #define M4_POLARITY                 0
 #define M4_POWER_MODE               MOTOR_POWER_MODE
-#define M4_POWER_LEVEL              0.8
+#define M4_POWER_LEVEL              0.7
 #define M4_TMC2130_TPWMTHRS         180000
 #define M4_TMC2130_TCOOLTHRS        100000
 #define M4_TMC2130_THIGH            10
@@ -360,7 +360,7 @@ M100.1 ({{avm:90000.0}})
 M100.1 ({{afr:1000}})
 M100.1 ({{ajm:25000.0}})
 M100.1 ({{ajh:144000.0}})
- 
+
  {ajh:50000.0}
  {ajh:60000.0}
 
@@ -375,11 +375,7 @@ M100.1 ({{ajh:144000.0}})
 
 //** Temperature Sensors **
 
-#include "device/max31865/max31865.h"
-
-#define USING_A_MAX31865 1
-
-#define HAS_TEMPERATURE_SENSOR_1  true
+#define HAS_TEMPERATURE_SENSOR_1  false
 #if HAS_TEMPERATURE_SENSOR_1
 //    #define TEMPERATURE_SENSOR_1_CIRCUIT_TYPE ADCCircuitDifferentialPullup
 //    #define TEMPERATURE_SENSOR_1_CIRCUIT_INIT { /*pullup_resistance:*/ 200 }
@@ -410,7 +406,7 @@ M100.1 ({{ajh:144000.0}})
 
 #define EXTRUDER_2_OUTPUT_PIN kHeaterOutput2_PinNumber
 
-#define HAS_TEMPERATURE_SENSOR_3  true
+#define HAS_TEMPERATURE_SENSOR_3  false
 #if HAS_TEMPERATURE_SENSOR_3
 //    #define TEMPERATURE_SENSOR_3_CIRCUIT_TYPE ADCCircuitDifferentialPullup
 //    #define TEMPERATURE_SENSOR_3_CIRCUIT_INIT { /*pullup_resistance:*/ 200 }
