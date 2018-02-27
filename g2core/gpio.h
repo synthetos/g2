@@ -101,6 +101,10 @@ typedef enum {
     INPUT_EDGE_TRAILING                 // flag is set when trailing edge is detected
 } inputEdgeFlag;
 
+// forward declare
+struct gpioDigitalInputReader;
+extern gpioDigitalInputReader* const in_r[14];
+
 /*
  * gpioDigitalInput - digital input base class
  */
@@ -124,7 +128,9 @@ struct gpioDigitalInput {
     virtual ioPolarity getPolarity();
     virtual bool setPolarity(const ioPolarity);
 
-    virtual void setExternalNumber(const uint8_t);
+    virtual bool setExternalNumber(const uint8_t);
+    virtual const uint8_t getExternalNumber();
+
     virtual void setIsHoming(const bool);
     virtual void setIsProbing(const bool);
 
@@ -210,7 +216,78 @@ struct gpioDigitalInput {
         }
         return (STAT_OK);
     };
+
+    stat_t getExternalNumber(nvObj_t *nv)
+    {
+        nv->value = getExternalNumber();
+        nv->valuetype = TYPE_INT;
+        return (STAT_OK);
+    };
+    stat_t setExternalNumber(nvObj_t *nv)
+    {
+        if ((nv->value < 0) || (nv->value > 14)) {
+            return (STAT_INPUT_VALUE_RANGE_ERROR);
+        }
+        if (!setExternalNumber(nv->value)) {
+            return STAT_PARAMETER_IS_READ_ONLY;
+        }
+        return (STAT_OK);
+    };
 };
+
+
+/*
+ * gpioDigitalInputReader - digital input reader class - the "in1" - "inX" objects
+ */
+
+struct gpioDigitalInputReader {
+    gpioDigitalInput* pin;
+
+    // functions for use by other parts of the code
+
+    bool setPin(gpioDigitalInput* new_pin) {
+        new_pin = pin; // might be null
+        return true;
+    };
+
+    gpioDigitalInput* getPin() {
+        return pin; // might be null
+    };
+
+    bool getState() {
+        if (!pin) { return false; }
+        return pin->getState();
+    };
+
+
+    // functions that take nvObj_t* and return stat_t, NOT overridden
+
+    stat_t getState(nvObj_t *nv)
+    {
+        if (!pin) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_OK);
+        }
+        return pin->getState(nv);
+    };
+};
+
+// setup the gpioDigitalInputReader objects as extern
+extern gpioDigitalInputReader in1;
+extern gpioDigitalInputReader in2;
+extern gpioDigitalInputReader in3;
+extern gpioDigitalInputReader in4;
+extern gpioDigitalInputReader in5;
+extern gpioDigitalInputReader in6;
+extern gpioDigitalInputReader in7;
+extern gpioDigitalInputReader in8;
+extern gpioDigitalInputReader in9;
+extern gpioDigitalInputReader in10;
+extern gpioDigitalInputReader in11;
+extern gpioDigitalInputReader in12;
+extern gpioDigitalInputReader in13;
+extern gpioDigitalInputReader in14;
+
 
 /*
  * gpioDigitalInputPin - concrete child of gpioDigitalInput
@@ -227,7 +304,8 @@ struct gpioDigitalInputPin : gpioDigitalInput {
     bool homing_mode;                   // set true when input is in homing mode.
     bool probing_mode;                  // set true when input is in probing mode.
 
-    uint8_t ext_pin_number;             // the number used externally for this pin ("in" + ext_pin_number)
+    const uint8_t ext_pin_number;             // the number used externally for this pin ("din" + ext_pin_number)
+    uint8_t proxy_pin_number;             // the number used externally for this pin ("in" + proxy_pin_number)
 
     uint16_t lockout_ms;                // number of milliseconds for debounce lockout
     Motate::Timeout lockout_timer;      // time to expire current debounce lockout, or 0 if no lockout
@@ -237,15 +315,19 @@ struct gpioDigitalInputPin : gpioDigitalInput {
     // In constructor, simply forward all values to the Pin_t
     // To get a different behavior, override this object.
     template <typename... T>
-    gpioDigitalInputPin(const ioEnabled _enabled, const ioPolarity _polarity, const uint8_t _ext_pin_number, T&&... V) :
+    gpioDigitalInputPin(const ioEnabled _enabled, const ioPolarity _polarity, const uint8_t _ext_pin_number, const uint8_t _proxy_pin_number, T&&... V) :
         gpioDigitalInput{},
         enabled{_enabled},
         polarity{_polarity},
         ext_pin_number{_ext_pin_number},
+        proxy_pin_number{_proxy_pin_number},
         pin{((polarity == IO_ACTIVE_LOW) ? kPullUp|kDebounce : kDebounce), [&]{this->pin_changed();}, std::forward<T>(V)...}
     {
         if (pin.isNull()) {
             enabled = IO_UNAVAILABLE;
+            proxy_pin_number = 0;
+        } else {
+            setExternalNumber(proxy_pin_number);
         }
     };
 
@@ -304,20 +386,36 @@ struct gpioDigitalInputPin : gpioDigitalInput {
         return true;
     };
 
-    void setExternalNumber(const uint8_t e) override
+    bool setExternalNumber(const uint8_t e) override
     {
-        ext_pin_number = e;
-    }
+        if (e == proxy_pin_number) { return true; }
+        if (proxy_pin_number > 0) {
+            // clear the old pin
+            in_r[proxy_pin_number-1]->setPin(nullptr);
+        }
+        proxy_pin_number = e;
+        if (proxy_pin_number > 0) {
+            // set the new pin
+            in_r[proxy_pin_number-1]->setPin(this);
+        }
+        return true;
+    };
 
-    virtual void setIsHoming(const bool m)
+    const uint8_t getExternalNumber() override
+    {
+        return proxy_pin_number;
+    };
+
+    void setIsHoming(const bool m) override
     {
         homing_mode = m;
-    }
+    };
 
-    virtual void setIsProbing(const bool m)
+    void setIsProbing(const bool m) override
     {
         probing_mode = m;
-    }
+    };
+
 
 
     // support function for pin change interrupt handling
@@ -430,6 +528,11 @@ struct gpioDigitalInputPin : gpioDigitalInput {
     };
 };
 
+
+// forward declare
+struct gpioDigitalOutputReader;
+extern gpioDigitalOutputReader* const out_r[14];
+
 /*
  * gpioDigitalOutput - digital/PWM output base class
  */
@@ -450,6 +553,8 @@ struct gpioDigitalOutput {
     virtual float getFrequency();
     virtual bool setFrequency(const float);
 
+    virtual bool setExternalNumber(const uint8_t);
+    virtual const uint8_t getExternalNumber();
 
     // functions that take nvObj_t* and return stat_t, NOT overridden
 
@@ -469,7 +574,7 @@ struct gpioDigitalOutput {
         }
         return (STAT_OK);
     };
-    
+
     stat_t getPolarity(nvObj_t *nv)
     {
         nv->value = getPolarity();
@@ -487,7 +592,7 @@ struct gpioDigitalOutput {
         return (STAT_OK);
     };
 
-    virtual stat_t getValue(nvObj_t *nv)
+    stat_t getValue(nvObj_t *nv)
     {
         auto enabled = getEnabled();
         if (enabled <= IO_DISABLED) {
@@ -505,7 +610,7 @@ struct gpioDigitalOutput {
         }
         return (STAT_OK);
     };
-    virtual stat_t setValue(nvObj_t *nv)
+    stat_t setValue(nvObj_t *nv)
     {
         auto enabled = getEnabled();
         if (enabled <= IO_DISABLED) {
@@ -525,7 +630,91 @@ struct gpioDigitalOutput {
         return (STAT_OK);
     };
 
+    stat_t getExternalNumber(nvObj_t *nv)
+    {
+        nv->value = getExternalNumber();
+        nv->valuetype = TYPE_INT;
+        return (STAT_OK);
+    };
+    stat_t setExternalNumber(nvObj_t *nv)
+    {
+        if ((nv->value < 0) || (nv->value > 14)) {
+            return (STAT_INPUT_VALUE_RANGE_ERROR);
+        }
+        if (!setExternalNumber(nv->value)) {
+            return STAT_PARAMETER_IS_READ_ONLY;
+        }
+        return (STAT_OK);
+    };
+
 };
+
+
+/*
+ * gpioDigitalOutputReader - digital output reader class - the "out1" - "outX" objects
+ */
+
+struct gpioDigitalOutputReader {
+    gpioDigitalOutput* pin;
+
+    // functions for use by other parts of the code
+
+    bool setPin(gpioDigitalOutput* new_pin) {
+        new_pin = pin; // might be null
+        return true;
+    };
+
+    gpioDigitalOutput* getPin() {
+        return pin; // might be null
+    };
+
+    float getValue() {
+        if (!pin) { return false; }
+        return pin->getValue();
+    };
+    bool setValue(const float v) {
+        if (!pin) { return false; }
+        return pin->setValue(v);
+    };
+
+
+    // functions that take nvObj_t* and return stat_t, NOT overridden
+
+    stat_t getValue(nvObj_t *nv)
+    {
+        if (!pin) {
+            nv->value = 0;
+            nv->valuetype = TYPE_NULL;   // reports back as NULL
+            return (STAT_OK);
+        }
+        return pin->getValue(nv);
+    };
+    stat_t setValue(nvObj_t *nv)
+    {
+        if (!pin) {
+            nv->valuetype = TYPE_NULL;   // reports back as NULL
+            return (STAT_OK);
+        }
+        return pin->setValue(nv);
+    };
+};
+
+// setup the gpioDigitalInputReader objects as extern
+extern gpioDigitalOutputReader out1;
+extern gpioDigitalOutputReader out2;
+extern gpioDigitalOutputReader out3;
+extern gpioDigitalOutputReader out4;
+extern gpioDigitalOutputReader out5;
+extern gpioDigitalOutputReader out6;
+extern gpioDigitalOutputReader out7;
+extern gpioDigitalOutputReader out8;
+extern gpioDigitalOutputReader out9;
+extern gpioDigitalOutputReader out10;
+extern gpioDigitalOutputReader out11;
+extern gpioDigitalOutputReader out12;
+extern gpioDigitalOutputReader out13;
+extern gpioDigitalOutputReader out14;
+
 
 /*
  * gpioDigitalOutputPin - concrete child of gpioDigitalOutput
@@ -534,18 +723,23 @@ template <typename Pin_t>
 struct gpioDigitalOutputPin : gpioDigitalOutput {
     ioEnabled enabled;                  // -1=unavailable, 0=disabled, 1=enabled
     ioPolarity polarity;                // 0=normal/active high, 1=inverted/active low
+    uint8_t proxy_pin_number;             // the number used externally for this pin ("in" + proxy_pin_number)
     Pin_t pin;
 
     // In constructor, simply forward all values to the Pin_t
     template <typename... T>
-    gpioDigitalOutputPin(const ioEnabled _enabled, const ioPolarity _polarity, T&&... V) :
+    gpioDigitalOutputPin(const ioEnabled _enabled, const ioPolarity _polarity, const uint8_t _proxy_pin_number, T&&... V) :
         gpioDigitalOutput{},
         enabled{ _enabled },
         polarity{ _polarity },
+        proxy_pin_number{ _proxy_pin_number },
         pin{((polarity == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow), std::forward<T>(V)...}
     {
         if (pin.isNull()) {
             enabled = IO_UNAVAILABLE;
+            proxy_pin_number = 0;
+        } else {
+            setExternalNumber(proxy_pin_number);
         }
     };
 
@@ -599,6 +793,26 @@ struct gpioDigitalOutputPin : gpioDigitalOutput {
         pin.setFrequency(freq);
         _last_set_frequency = freq;
         return true;
+    };
+
+    bool setExternalNumber(const uint8_t e) override
+    {
+        if (e == proxy_pin_number) { return true; }
+        if (proxy_pin_number > 0) {
+            // clear the old pin
+            out_r[proxy_pin_number-1]->setPin(nullptr);
+        }
+        proxy_pin_number = e;
+        if (proxy_pin_number > 0) {
+            // set the new pin
+            out_r[proxy_pin_number-1]->setPin(this);
+        }
+        return true;
+    };
+
+    const uint8_t getExternalNumber() override
+    {
+        return proxy_pin_number;
     };
 
 };
@@ -974,12 +1188,16 @@ stat_t din_get_ac(nvObj_t *nv);     // input action
 stat_t din_set_ac(nvObj_t *nv);
 stat_t din_get_fn(nvObj_t *nv);     // input function
 stat_t din_set_fn(nvObj_t *nv);
+stat_t din_get_in(nvObj_t *nv);     // input external number
+stat_t din_set_in(nvObj_t *nv);
 stat_t din_get_input(nvObj_t *nv);
 
 stat_t dout_get_en(nvObj_t *nv);     // enabled
 stat_t dout_set_en(nvObj_t *nv);
 stat_t dout_get_po(nvObj_t *nv);     // output sense
 stat_t dout_set_po(nvObj_t *nv);
+stat_t dout_get_out(nvObj_t *nv);    // external number
+stat_t dout_set_out(nvObj_t *nv);
 stat_t dout_get_output(nvObj_t *nv); // actual output value (float)
 stat_t dout_set_output(nvObj_t *nv);
 
@@ -1010,6 +1228,7 @@ stat_t ain_set_p5(nvObj_t *nv);
     void din_print_ac(nvObj_t *nv);
     void din_print_fn(nvObj_t *nv);
     void din_print_in(nvObj_t *nv);
+    void din_print_state(nvObj_t *nv);
 
     void dout_print_en(nvObj_t *nv);
     void dout_print_po(nvObj_t *nv);

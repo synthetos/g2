@@ -487,130 +487,188 @@ const cfgItem_t cfgArray[] = {
     { "di1","di1po",_fip,   0, din_print_po, din_get_po, din_set_po, (float *)&din1,  DI1_POLARITY },
     { "di1","di1ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, (float *)&din1,  DI1_ACTION },
     { "di1","di1fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din1,  DI1_FUNCTION },
+    { "di1","di1in",_fip,   0, din_print_in, din_get_in, din_set_in, (float *)&din1,  DI1_EXTERNAL_NUMBER },
 
     { "di2","di2en",_fip,   0, din_print_en, din_get_en, din_set_en, (float *)&din2,  DI2_ENABLED },
     { "di2","di2po",_fip,   0, din_print_po, din_get_po, din_set_po, (float *)&din2,  DI2_POLARITY },
     { "di2","di2ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, (float *)&din2,  DI2_ACTION },
     { "di2","di2fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din2,  DI2_FUNCTION },
+    { "di2","di2in",_fip,   0, din_print_in, din_get_in, din_set_in, (float *)&din2,  DI2_EXTERNAL_NUMBER },
 
+#if (D_IN_CHANNELS >= 3)
     { "di3","di3en",_fip,   0, din_print_en, din_get_en, din_set_en, (float *)&din3,  DI3_ENABLED },
     { "di3","di3po",_fip,   0, din_print_po, din_get_po, din_set_po, (float *)&din3,  DI3_POLARITY },
     { "di3","di3ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, (float *)&din3,  DI3_ACTION },
     { "di3","di3fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din3,  DI3_FUNCTION },
-
+    { "di3","di3in",_fip,   0, din_print_in, din_get_in, din_set_in, (float *)&din3,  DI3_EXTERNAL_NUMBER },
+#endif
+#if (D_IN_CHANNELS >= 4)
     { "di4","di4en",_fip,   0, din_print_en, din_get_en, din_set_en, (float *)&din4,  DI4_ENABLED },
     { "di4","di4po",_fip,   0, din_print_po, din_get_po, din_set_po, (float *)&din4,  DI4_POLARITY },
     { "di4","di4ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, (float *)&din4,  DI4_ACTION },
     { "di4","di4fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din4,  DI4_FUNCTION },
-
+    { "di4","di4in",_fip,   0, din_print_in, din_get_in, din_set_in, (float *)&din4,  DI4_EXTERNAL_NUMBER },
+#endif
+#if (D_IN_CHANNELS >= 5)
     { "di5","di5en",_fip,   0, din_print_en, din_get_en, din_set_en, (float *)&din5,  DI5_ENABLED },
     { "di5","di5po",_fip,   0, din_print_po, din_get_po, din_set_po, (float *)&din5,  DI5_POLARITY },
     { "di5","di5ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, (float *)&din5,  DI5_ACTION },
     { "di5","di5fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din5,  DI5_FUNCTION },
-
+    { "di5","di5in",_fip,   0, din_print_in, din_get_in, din_set_in, (float *)&din5,  DI5_EXTERNAL_NUMBER },
+#endif
+#if (D_IN_CHANNELS >= 6)
     { "di6","di6en",_fip,   0, din_print_en, din_get_en, din_set_en, (float *)&din6,  DI6_ENABLED },
     { "di6","di6po",_fip,   0, din_print_po, din_get_po, din_set_po, (float *)&din6,  DI6_POLARITY },
     { "di6","di6ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, (float *)&din6,  DI6_ACTION },
     { "di6","di6fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din6,  DI6_FUNCTION },
-
+    { "di6","di6in",_fip,   0, din_print_in, din_get_in, din_set_in, (float *)&din6,  DI6_EXTERNAL_NUMBER },
+#endif
+#if (D_IN_CHANNELS >= 7)
     { "di7","di7en",_fip,   0, din_print_en, din_get_en, din_set_en, (float *)&din7,  DI7_ENABLED },
     { "di7","di7po",_fip,   0, din_print_po, din_get_po, din_set_po, (float *)&din7,  DI7_POLARITY },
     { "di7","di7ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, (float *)&din7,  DI7_ACTION },
     { "di7","di7fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din7,  DI7_FUNCTION },
-
+    { "di7","di7in",_fip,   0, din_print_in, din_get_in, din_set_in, (float *)&din7,  DI7_EXTERNAL_NUMBER },
+#endif
+#if (D_IN_CHANNELS >= 8)
     { "di8","di8en",_fip,   0, din_print_en, din_get_en, din_set_en, (float *)&din8,  DI8_ENABLED },
     { "di3","di8po",_fip,   0, din_print_po, din_get_po, din_set_po, (float *)&din8,  DI8_POLARITY },
     { "di8","di8ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, (float *)&din8,  DI8_ACTION },
     { "di8","di8fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din8,  DI8_FUNCTION },
+    { "di8","di8in",_fip,   0, din_print_in, din_get_in, din_set_in, (float *)&din8,  DI8_EXTERNAL_NUMBER },
+#endif
 #if (D_IN_CHANNELS >= 9)
     { "di9","di9en",_fip,   0, din_print_en, din_get_en, din_set_en, (float *)&din9,  DI9_ENABLED },
     { "di9","di9po",_fip,   0, din_print_po, din_get_po, din_set_po, (float *)&din9,  DI9_POLARITY },
     { "di9","di9ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, (float *)&din9,  DI9_ACTION },
     { "di9","di9fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din9,  DI9_FUNCTION },
+    { "di9","di9in",_fip,   0, din_print_in, din_get_in, din_set_in, (float *)&din9,  DI9_EXTERNAL_NUMBER },
 #endif
 #if (D_IN_CHANNELS >= 10)
     { "di10","di10en",_fip, 0, din_print_en, din_get_en, din_set_en, (float *)&din10, DI10_ENABLED },
     { "di10","di10po",_fip, 0, din_print_po, din_get_po, din_set_po, (float *)&din10, DI10_POLARITY },
     { "di10","di10ac",_fip, 0, din_print_ac, din_get_ac, din_set_ac, (float *)&din10, DI10_ACTION },
     { "di10","di10fn",_fip, 0, din_print_fn, din_get_fn, din_set_fn, (float *)&din10, DI10_FUNCTION },
+    { "di10","di10in",_fip, 0, din_print_in, din_get_in, din_set_in, (float *)&din10, DI10_EXTERNAL_NUMBER },
 #endif
 #if (D_IN_CHANNELS >= 11)
     { "di11","di11en",_fip, 0, din_print_en, din_get_en, din_set_en, (float *)&din11, DI11_ENABLED },
     { "di11","di11po",_fip, 0, din_print_po, din_get_po, din_set_po, (float *)&din11, DI11_POLARITY },
     { "di11","di11ac",_fip, 0, din_print_ac, din_get_ac, din_set_ac, (float *)&din11, DI11_ACTION },
     { "di11","di11fn",_fip, 0, din_print_fn, din_get_fn, din_set_fn, (float *)&din11, DI11_FUNCTION },
+    { "di11","di11in",_fip, 0, din_print_in, din_get_in, din_set_in, (float *)&din11, DI11_EXTERNAL_NUMBER },
 #endif
 #if (D_IN_CHANNELS >= 12)
     { "di12","di12en",_fip, 0, din_print_en, din_get_en, din_set_en, (float *)&din12, DI12_ENABLED },
     { "di12","di12po",_fip, 0, din_print_po, din_get_po, din_set_po, (float *)&din12, DI12_POLARITY },
     { "di12","di12ac",_fip, 0, din_print_ac, din_get_ac, din_set_ac, (float *)&din12, DI12_ACTION },
     { "di12","di12fn",_fip, 0, din_print_fn, din_get_fn, din_set_fn, (float *)&din12, DI12_FUNCTION },
+    { "di12","di12in",_fip, 0, din_print_in, din_get_in, din_set_in, (float *)&din12, DI12_EXTERNAL_NUMBER },
 #endif
 
     // Digital input state readers
-    { "in","in1", _f0, 0,  din_print_in, din_get_input, set_ro,  (float *)&din1, 0 },
-    { "in","in2", _f0, 0,  din_print_in, din_get_input, set_ro,  (float *)&din2, 0 },
-    { "in","in3", _f0, 0,  din_print_in, din_get_input, set_ro,  (float *)&din3, 0 },
-    { "in","in4", _f0, 0,  din_print_in, din_get_input, set_ro,  (float *)&din4, 0 },
-    { "in","in5", _f0, 0,  din_print_in, din_get_input, set_ro,  (float *)&din5, 0 },
-    { "in","in6", _f0, 0,  din_print_in, din_get_input, set_ro,  (float *)&din6, 0 },
-    { "in","in7", _f0, 0,  din_print_in, din_get_input, set_ro,  (float *)&din7, 0 },
-    { "in","in8", _f0, 0,  din_print_in, din_get_input, set_ro,  (float *)&din8, 0 },
-#if (D_IN_CHANNELS >= 9)
-    { "in","in9", _f0, 0,  din_print_in, din_get_input, set_ro,  (float *)&din9, 0 },
-#endif
-#if (D_IN_CHANNELS >= 10)
-    { "in","in10", _f0, 0, din_print_in, din_get_input, set_ro,  (float *)&din10,0 },
-#endif
-#if (D_IN_CHANNELS >= 11)
-    { "in","in11", _f0, 0, din_print_in, din_get_input, set_ro,  (float *)&din11,0 },
-#endif
-#if (D_IN_CHANNELS >= 12)
-    { "in","in12", _f0, 0, din_print_in, din_get_input, set_ro,  (float *)&din12,0 },
-#endif
+    { "in","in1", _f0, 0,  din_print_state, din_get_input, set_ro,  (float *)&in1,  0 },
+    { "in","in2", _f0, 0,  din_print_state, din_get_input, set_ro,  (float *)&in2,  0 },
+    { "in","in3", _f0, 0,  din_print_state, din_get_input, set_ro,  (float *)&in3,  0 },
+    { "in","in4", _f0, 0,  din_print_state, din_get_input, set_ro,  (float *)&in4,  0 },
+    { "in","in5", _f0, 0,  din_print_state, din_get_input, set_ro,  (float *)&in5,  0 },
+    { "in","in6", _f0, 0,  din_print_state, din_get_input, set_ro,  (float *)&in6,  0 },
+    { "in","in7", _f0, 0,  din_print_state, din_get_input, set_ro,  (float *)&in7,  0 },
+    { "in","in8", _f0, 0,  din_print_state, din_get_input, set_ro,  (float *)&in8,  0 },
+    { "in","in9", _f0, 0,  din_print_state, din_get_input, set_ro,  (float *)&in9,  0 },
+    { "in","in10", _f0, 0, din_print_state, din_get_input, set_ro,  (float *)&in10, 0 },
+    { "in","in11", _f0, 0, din_print_state, din_get_input, set_ro,  (float *)&in11, 0 },
+    { "in","in12", _f0, 0, din_print_state, din_get_input, set_ro,  (float *)&in12, 0 },
+    { "in","in13", _f0, 0, din_print_state, din_get_input, set_ro,  (float *)&in13, 0 },
+    { "in","in14", _f0, 0, din_print_state, din_get_input, set_ro,  (float *)&in14, 0 },
 
     // digital output configs
-    { "do1", "do1en", _fip, 0, dout_print_en, dout_get_en, dout_set_en, (float *)&dout1,  DO1_ENABLED },
-    { "do1", "do1po", _fip, 0, dout_print_po, dout_get_po, dout_set_po, (float *)&dout1,  DO1_POLARITY },
-    { "do2", "do2en", _fip, 0, dout_print_en, dout_get_en, dout_set_en, (float *)&dout2,  DO2_ENABLED },
-    { "do2", "do2po", _fip, 0, dout_print_po, dout_get_po, dout_set_po, (float *)&dout2,  DO2_POLARITY },
-    { "do3", "do3en", _fip, 0, dout_print_en, dout_get_en, dout_set_en, (float *)&dout3,  DO3_ENABLED },
-    { "do3", "do3po", _fip, 0, dout_print_po, dout_get_po, dout_set_po, (float *)&dout3,  DO3_POLARITY },
-    { "do4", "do4en", _fip, 0, dout_print_en, dout_get_en, dout_set_en, (float *)&dout4,  DO4_ENABLED },
-    { "do5", "do5po", _fip, 0, dout_print_po, dout_get_po, dout_set_po, (float *)&dout5,  DO5_POLARITY },
-    { "do5", "do5en", _fip, 0, dout_print_en, dout_get_en, dout_set_en, (float *)&dout5,  DO5_ENABLED },
-    { "do6", "do6po", _fip, 0, dout_print_po, dout_get_po, dout_set_po, (float *)&dout6,  DO6_POLARITY },
-    { "do7", "do7en", _fip, 0, dout_print_en, dout_get_en, dout_set_en, (float *)&dout7,  DO7_ENABLED },
-    { "do7", "do7po", _fip, 0, dout_print_po, dout_get_po, dout_set_po, (float *)&dout7,  DO7_POLARITY },
-    { "do8", "do8en", _fip, 0, dout_print_en, dout_get_en, dout_set_en, (float *)&dout8,  DO8_ENABLED },
-    { "do8", "do8po", _fip, 0, dout_print_po, dout_get_po, dout_set_po, (float *)&dout8,  DO8_POLARITY },
-    { "do9", "do9en", _fip, 0, dout_print_en, dout_get_en, dout_set_en, (float *)&dout9,  DO9_ENABLED },
-    { "do9", "do9po", _fip, 0, dout_print_po, dout_get_po, dout_set_po, (float *)&dout9,  DO9_POLARITY },
-    { "do10","do10en",_fip, 0, dout_print_en, dout_get_en, dout_set_en, (float *)&dout10, DO10_ENABLED },
-    { "do10","do10po",_fip, 0, dout_print_po, dout_get_po, dout_set_po, (float *)&dout10, DO10_POLARITY },
-    { "do11","do11en",_fip, 0, dout_print_en, dout_get_en, dout_set_en, (float *)&dout11, DO11_ENABLED },
-    { "do11","do11po",_fip, 0, dout_print_po, dout_get_po, dout_set_po, (float *)&dout11, DO11_POLARITY },
-    { "do12","do12en",_fip, 0, dout_print_en, dout_get_en, dout_set_en, (float *)&dout12, DO12_ENABLED },
-    { "do12","do12po",_fip, 0, dout_print_po, dout_get_po, dout_set_po, (float *)&dout12, DO12_POLARITY },
-    { "do13","do13en",_fip, 0, dout_print_en, dout_get_en, dout_set_en, (float *)&dout13, DO13_ENABLED },
-    { "do13","do13po",_fip, 0, dout_print_po, dout_get_po, dout_set_po, (float *)&dout13, DO13_POLARITY },
-
+    { "do1", "do1en", _fip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  (float *)&dout1,  DO1_ENABLED },
+    { "do1", "do1po", _fip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  (float *)&dout1,  DO1_POLARITY },
+    { "do1", "do1out",_fip, 0,   dout_print_out, dout_get_out, dout_set_out, (float *)&dout1,  DO1_EXTERNAL_NUMBER },
+#if (D_OUT_CHANNELS >= 2)
+    { "do2", "do2en", _fip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  (float *)&dout2,  DO2_ENABLED },
+    { "do2", "do2po", _fip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  (float *)&dout2,  DO2_POLARITY },
+    { "do2", "do2out",_fip, 0,   dout_print_out, dout_get_out, dout_set_out, (float *)&dout2,  DO2_EXTERNAL_NUMBER },
+#endif
+#if (D_OUT_CHANNELS >= 3)
+    { "do3", "do3en", _fip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  (float *)&dout3,  DO3_ENABLED },
+    { "do3", "do3po", _fip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  (float *)&dout3,  DO3_POLARITY },
+    { "do3", "do3out",_fip, 0,   dout_print_out, dout_get_out, dout_set_out, (float *)&dout3,  DO3_EXTERNAL_NUMBER },
+#endif
+#if (D_OUT_CHANNELS >= 4)
+    { "do4", "do4en", _fip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  (float *)&dout4,  DO4_ENABLED },
+    { "do4", "do4po", _fip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  (float *)&dout4,  DO4_POLARITY },
+    { "do4", "do4out",_fip, 0,   dout_print_out, dout_get_out, dout_set_out, (float *)&dout4,  DO4_EXTERNAL_NUMBER },
+#endif
+#if (D_OUT_CHANNELS >= 5)
+    { "do5", "do5en", _fip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  (float *)&dout5,  DO5_ENABLED },
+    { "do5", "do5po", _fip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  (float *)&dout5,  DO5_POLARITY },
+    { "do5", "do5out",_fip, 0,   dout_print_out, dout_get_out, dout_set_out, (float *)&dout5,  DO5_EXTERNAL_NUMBER },
+#endif
+#if (D_OUT_CHANNELS >= 6)
+    { "do6", "do6en", _fip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  (float *)&dout6,  DO6_ENABLED },
+    { "do6", "do6po", _fip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  (float *)&dout6,  DO6_POLARITY },
+    { "do6", "do6out",_fip, 0,   dout_print_out, dout_get_out, dout_set_out, (float *)&dout6,  DO6_EXTERNAL_NUMBER },
+#endif
+#if (D_OUT_CHANNELS >= 7)
+    { "do7", "do7en", _fip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  (float *)&dout7,  DO7_ENABLED },
+    { "do7", "do7po", _fip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  (float *)&dout7,  DO7_POLARITY },
+    { "do7", "do7out",_fip, 0,   dout_print_out, dout_get_out, dout_set_out, (float *)&dout7,  DO7_EXTERNAL_NUMBER },
+#endif
+#if (D_OUT_CHANNELS >= 8)
+    { "do8", "do8en", _fip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  (float *)&dout8,  DO8_ENABLED },
+    { "do8", "do8po", _fip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  (float *)&dout8,  DO8_POLARITY },
+    { "do8", "do8out",_fip, 0,   dout_print_out, dout_get_out, dout_set_out, (float *)&dout8,  DO8_EXTERNAL_NUMBER },
+#endif
+#if (D_OUT_CHANNELS >= 9)
+    { "do9", "do9en", _fip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  (float *)&dout9,  DO9_ENABLED },
+    { "do9", "do9po", _fip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  (float *)&dout9,  DO9_POLARITY },
+    { "do9", "do9out",_fip, 0,   dout_print_out, dout_get_out, dout_set_out, (float *)&dout9,  DO9_EXTERNAL_NUMBER },
+#endif
+#if (D_OUT_CHANNELS >= 10)
+    { "do10", "do10en", _fip, 0, dout_print_en,  dout_get_en,  dout_set_en,  (float *)&dout10, DO10_ENABLED },
+    { "do10", "do10po", _fip, 0, dout_print_po,  dout_get_po,  dout_set_po,  (float *)&dout10, DO10_POLARITY },
+    { "do10", "do10out",_fip, 0, dout_print_out, dout_get_out, dout_set_out, (float *)&dout10, DO10_EXTERNAL_NUMBER },
+#endif
+#if (D_OUT_CHANNELS >= 11)
+    { "do11", "do11en", _fip, 0, dout_print_en,  dout_get_en,  dout_set_en,  (float *)&dout11, DO11_ENABLED },
+    { "do11", "do11po", _fip, 0, dout_print_po,  dout_get_po,  dout_set_po,  (float *)&dout11, DO11_POLARITY },
+    { "do11", "do11out",_fip, 0, dout_print_out, dout_get_out, dout_set_out, (float *)&dout11, DO11_EXTERNAL_NUMBER },
+#endif
+#if (D_OUT_CHANNELS >= 12)
+    { "do12", "do12en", _fip, 0, dout_print_en,  dout_get_en,  dout_set_en,  (float *)&dout12, DO12_ENABLED },
+    { "do12", "do12po", _fip, 0, dout_print_po,  dout_get_po,  dout_set_po,  (float *)&dout12, DO12_POLARITY },
+    { "do12", "do12out",_fip, 0, dout_print_out, dout_get_out, dout_set_out, (float *)&dout12, DO12_EXTERNAL_NUMBER },
+#endif
+#if (D_OUT_CHANNELS >= 13)
+    { "do13", "do13en", _fip, 0, dout_print_en,  dout_get_en,  dout_set_en,  (float *)&dout13, DO13_ENABLED },
+    { "do13", "do13po", _fip, 0, dout_print_po,  dout_get_po,  dout_set_po,  (float *)&dout13, DO13_POLARITY },
+    { "do13", "do13out",_fip, 0, dout_print_out, dout_get_out, dout_set_out, (float *)&dout13, DO13_EXTERNAL_NUMBER },
+#endif
+#if (D_OUT_CHANNELS >= 14)
+    { "do14", "do14en", _fip, 0, dout_print_en,  dout_get_en,  dout_set_en,  (float *)&dout14, DO14_ENABLED },
+    { "do14", "do14po", _fip, 0, dout_print_po,  dout_get_po,  dout_set_po,  (float *)&dout14, DO14_POLARITY },
+    { "do14", "do14out",_fip, 0, dout_print_out, dout_get_out, dout_set_out, (float *)&dout14, DO14_EXTERNAL_NUMBER },
+#endif
     // Digital output state readers (default to non-active)
-    { "out","out1",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&dout1,  0 },
-    { "out","out2",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&dout2,  0 },
-    { "out","out3",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&dout3,  0 },
-    { "out","out4",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&dout4,  0 },
-    { "out","out5",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&dout5,  0 },
-    { "out","out6",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&dout6,  0 },
-    { "out","out7",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&dout7,  0 },
-    { "out","out8",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&dout8,  0 },
-    { "out","out9",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&dout9,  0 },
-    { "out","out10", _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&dout10, 0 },
-    { "out","out11", _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&dout11, 0 },
-    { "out","out12", _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&dout12, 0 },
-    { "out","out13", _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&dout13, 0 },
+    { "out","out1",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&out1,  0 },
+    { "out","out2",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&out2,  0 },
+    { "out","out3",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&out3,  0 },
+    { "out","out4",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&out4,  0 },
+    { "out","out5",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&out5,  0 },
+    { "out","out6",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&out6,  0 },
+    { "out","out7",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&out7,  0 },
+    { "out","out8",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&out8,  0 },
+    { "out","out9",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&out9,  0 },
+    { "out","out10", _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&out10, 0 },
+    { "out","out11", _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&out11, 0 },
+    { "out","out12", _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&out12, 0 },
+    { "out","out13", _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&out13, 0 },
+    { "out","out14", _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&out14, 0 },
 
     // Analog input configs
+#if (A_IN_CHANNELS >= 1)
     { "ain1","ain1ty",_fip, 0, ain_print_type,       ain_get_type,       ain_set_type,    (float *)&ain1,  AI1_TYPE },
     { "ain1","ain1ct",_fip, 0, ain_print_circuit,    ain_get_circuit,    ain_set_circuit, (float *)&ain1,  AI1_CIRCUIT },
     { "ain1","ain1p1",_fip, 4, ain_print_p,          ain_get_p1,         ain_set_p1,      (float *)&ain1,  AI1_P1 },
@@ -620,7 +678,8 @@ const cfgItem_t cfgArray[] = {
     { "ain1","ain1p5",_fip, 4, ain_print_p,          ain_get_p5,         ain_set_p5,      (float *)&ain1,  AI1_P5 },
     { "ain1","ain1vv",_f0,  4, ain_print_value,      ain_get_value,      set_ro,          (float *)&ain1,  0 },
     { "ain1","ain1rv",_f0,  2, ain_print_resistance, ain_get_resistance, set_ro,          (float *)&ain1,  0 },
-
+#endif
+#if (A_IN_CHANNELS >= 2)
     { "ain2","ain2ty",_fip, 0, ain_print_type,       ain_get_type,       ain_set_type,    (float *)&ain2,  AI2_TYPE },
     { "ain2","ain2ct",_fip, 0, ain_print_circuit,    ain_get_circuit,    ain_set_circuit, (float *)&ain2,  AI2_CIRCUIT },
     { "ain2","ain2p1",_fip, 4, ain_print_p,          ain_get_p1,         ain_set_p1,      (float *)&ain2,  AI2_P1 },
@@ -630,7 +689,8 @@ const cfgItem_t cfgArray[] = {
     { "ain2","ain2p5",_fip, 4, ain_print_p,          ain_get_p5,         ain_set_p5,      (float *)&ain2,  AI2_P5 },
     { "ain2","ain2vv",_f0,  4, ain_print_value,      ain_get_value,      set_ro,          (float *)&ain2,  0 },
     { "ain2","ain2rv",_f0,  2, ain_print_resistance, ain_get_resistance, set_ro,          (float *)&ain2,  0 },
-
+#endif
+#if (A_IN_CHANNELS >= 3)
     { "ain3","ain3ty",_fip, 0, ain_print_type,       ain_get_type,       ain_set_type,    (float *)&ain3,  AI3_TYPE },
     { "ain3","ain3ct",_fip, 0, ain_print_circuit,    ain_get_circuit,    ain_set_circuit, (float *)&ain3,  AI3_CIRCUIT },
     { "ain3","ain3p1",_fip, 4, ain_print_p,          ain_get_p1,         ain_set_p1,      (float *)&ain3,  AI3_P1 },
@@ -640,7 +700,8 @@ const cfgItem_t cfgArray[] = {
     { "ain3","ain3p5",_fip, 4, ain_print_p,          ain_get_p5,         ain_set_p5,      (float *)&ain3,  AI3_P5 },
     { "ain3","ain3vv",_f0,  4, ain_print_value,      ain_get_value,      set_ro,          (float *)&ain3,  0 },
     { "ain3","ain3rv",_f0,  2, ain_print_resistance, ain_get_resistance, set_ro,          (float *)&ain3,  0 },
-
+#endif
+#if (A_IN_CHANNELS >= 4)
     { "ain4","ain4ty",_fip, 0, ain_print_type,       ain_get_type,       ain_set_type,    (float *)&ain4,  AI4_TYPE },
     { "ain4","ain4ct",_fip, 0, ain_print_circuit,    ain_get_circuit,    ain_set_circuit, (float *)&ain4,  AI4_CIRCUIT },
     { "ain4","ain4p1",_fip, 4, ain_print_p,          ain_get_p1,         ain_set_p1,      (float *)&ain4,  AI4_P1 },
@@ -650,6 +711,7 @@ const cfgItem_t cfgArray[] = {
     { "ain4","ain4p5",_fip, 4, ain_print_p,          ain_get_p5,         ain_set_p5,      (float *)&ain4,  AI4_P5 },
     { "ain4","ain4vv",_f0,  4, ain_print_value,      ain_get_value,      set_ro,          (float *)&ain4,  0 },
     { "ain4","ain4rv",_f0,  2, ain_print_resistance, ain_get_resistance, set_ro,          (float *)&ain4,  0 },
+#endif
 
     // PWM settings
     { "p1","p1frq",_fip, 0, pwm_print_p1frq, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].frequency,     P1_PWM_FREQUENCY },

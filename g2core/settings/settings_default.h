@@ -952,6 +952,9 @@
 #ifndef DI1_FUNCTION
 #define DI1_FUNCTION                INPUT_FUNCTION_NONE
 #endif
+#ifndef DI1_EXTERNAL_NUMBER
+#define DI1_EXTERNAL_NUMBER         1
+#endif
 
 // Xmax
 #ifndef DI2_ENABLED
@@ -965,6 +968,9 @@
 #endif
 #ifndef DI2_FUNCTION
 #define DI2_FUNCTION                INPUT_FUNCTION_NONE
+#endif
+#ifndef DI2_EXTERNAL_NUMBER
+#define DI2_EXTERNAL_NUMBER         2
 #endif
 
 // Ymin
@@ -980,6 +986,9 @@
 #ifndef DI3_FUNCTION
 #define DI3_FUNCTION                INPUT_FUNCTION_NONE
 #endif
+#ifndef DI3_EXTERNAL_NUMBER
+#define DI3_EXTERNAL_NUMBER         3
+#endif
 
 // Ymax
 #ifndef DI4_ENABLED
@@ -993,6 +1002,9 @@
 #endif
 #ifndef DI4_FUNCTION
 #define DI4_FUNCTION                INPUT_FUNCTION_NONE
+#endif
+#ifndef DI4_EXTERNAL_NUMBER
+#define DI4_EXTERNAL_NUMBER         4
 #endif
 
 // Zmin
@@ -1008,6 +1020,9 @@
 #ifndef DI5_FUNCTION
 #define DI5_FUNCTION                INPUT_FUNCTION_PROBE
 #endif
+#ifndef DI5_EXTERNAL_NUMBER
+#define DI5_EXTERNAL_NUMBER         5
+#endif
 
 // Zmax
 #ifndef DI6_ENABLED
@@ -1021,6 +1036,9 @@
 #endif
 #ifndef DI6_FUNCTION
 #define DI6_FUNCTION                INPUT_FUNCTION_NONE
+#endif
+#ifndef DI6_EXTERNAL_NUMBER
+#define DI6_EXTERNAL_NUMBER         6
 #endif
 
 // Amin
@@ -1036,6 +1054,9 @@
 #ifndef DI7_FUNCTION
 #define DI7_FUNCTION                INPUT_FUNCTION_NONE
 #endif
+#ifndef DI7_EXTERNAL_NUMBER
+#define DI7_EXTERNAL_NUMBER         7
+#endif
 
 // Amax
 #ifndef DI8_ENABLED
@@ -1049,6 +1070,9 @@
 #endif
 #ifndef DI8_FUNCTION
 #define DI8_FUNCTION                INPUT_FUNCTION_NONE
+#endif
+#ifndef DI8_EXTERNAL_NUMBER
+#define DI8_EXTERNAL_NUMBER         8
 #endif
 
 // Safety line
@@ -1064,6 +1088,9 @@
 #ifndef DI9_FUNCTION
 #define DI9_FUNCTION                INPUT_FUNCTION_NONE
 #endif
+#ifndef DI9_EXTERNAL_NUMBER
+#define DI9_EXTERNAL_NUMBER         9
+#endif
 
 #ifndef DI10_ENABLED
 #define DI10_ENABLED                IO_ENABLED
@@ -1076,6 +1103,9 @@
 #endif
 #ifndef DI10_FUNCTION
 #define DI10_FUNCTION               INPUT_FUNCTION_NONE
+#endif
+#ifndef DI10_EXTERNAL_NUMBER
+#define DI10_EXTERNAL_NUMBER         10
 #endif
 
 #ifndef DI11_ENABLED
@@ -1090,6 +1120,9 @@
 #ifndef DI11_FUNCTION
 #define DI11_FUNCTION               INPUT_FUNCTION_NONE
 #endif
+#ifndef DI11_EXTERNAL_NUMBER
+#define DI11_EXTERNAL_NUMBER         11
+#endif
 
 #ifndef DI12_ENABLED
 #define DI12_ENABLED                IO_ENABLED
@@ -1103,6 +1136,9 @@
 #ifndef DI12_FUNCTION
 #define DI12_FUNCTION               INPUT_FUNCTION_NONE
 #endif
+#ifndef DI12_EXTERNAL_NUMBER
+#define DI12_EXTERNAL_NUMBER         12
+#endif
 
 // DIGITAL OUTPUTS - Currently these are hard-wired to extruders
 
@@ -1113,6 +1149,9 @@
 #ifndef DO1_POLARITY
 #define DO1_POLARITY                IO_ACTIVE_HIGH
 #endif
+#ifndef DO1_EXTERNAL_NUMBER
+#define DO1_EXTERNAL_NUMBER         1
+#endif
 
 //Extruder2_PWM
 #ifndef DO2_ENABLED
@@ -1120,6 +1159,9 @@
 #endif
 #ifndef DO2_POLARITY
 #define DO2_POLARITY                IO_ACTIVE_HIGH
+#endif
+#ifndef DO2_EXTERNAL_NUMBER
+#define DO2_EXTERNAL_NUMBER         2
 #endif
 
 //Fan1A_PWM
@@ -1129,6 +1171,9 @@
 #ifndef DO3_POLARITY
 #define DO3_POLARITY                IO_ACTIVE_HIGH
 #endif
+#ifndef DO3_EXTERNAL_NUMBER
+#define DO3_EXTERNAL_NUMBER         3
+#endif
 
 //Fan1B_PWM
 #ifndef DO4_ENABLED
@@ -1137,6 +1182,9 @@
 #ifndef DO4_POLARITY
 #define DO4_POLARITY                IO_ACTIVE_HIGH
 #endif
+#ifndef DO4_EXTERNAL_NUMBER
+#define DO4_EXTERNAL_NUMBER         4
+#endif
 
 #ifndef DO5_ENABLED
 #define DO5_ENABLED                 IO_ENABLED
@@ -1144,23 +1192,38 @@
 #ifndef DO5_POLARITY
 #define DO5_POLARITY                IO_ACTIVE_HIGH
 #endif
+#ifndef DO5_EXTERNAL_NUMBER
+#define DO5_EXTERNAL_NUMBER         5
+#endif
+
 #ifndef DO6_ENABLED
 #define DO6_ENABLED                 IO_ENABLED
 #endif
 #ifndef DO6_POLARITY
 #define DO6_POLARITY                IO_ACTIVE_HIGH
 #endif
+#ifndef DO6_EXTERNAL_NUMBER
+#define DO6_EXTERNAL_NUMBER         6
+#endif
+
 #ifndef DO7_ENABLED
 #define DO7_ENABLED                 IO_ENABLED
 #endif
 #ifndef DO7_POLARITY
 #define DO7_POLARITY                IO_ACTIVE_HIGH
 #endif
+#ifndef DO7_EXTERNAL_NUMBER
+#define DO7_EXTERNAL_NUMBER         7
+#endif
+
 #ifndef DO8_ENABLED
 #define DO8_ENABLED                 IO_ENABLED
 #endif
 #ifndef DO8_POLARITY
 #define DO8_POLARITY                IO_ACTIVE_HIGH
+#endif
+#ifndef DO8_EXTERNAL_NUMBER
+#define DO8_EXTERNAL_NUMBER         8
 #endif
 
 //SAFEin (Output) signal
@@ -1170,12 +1233,18 @@
 #ifndef DO9_POLARITY
 #define DO9_POLARITY                IO_ACTIVE_HIGH
 #endif
+#ifndef DO9_EXTERNAL_NUMBER
+#define DO9_EXTERNAL_NUMBER         9
+#endif
 
 #ifndef DO10_ENABLED
 #define DO10_ENABLED                IO_ENABLED
 #endif
 #ifndef DO10_POLARITY
 #define DO10_POLARITY               IO_ACTIVE_HIGH
+#endif
+#ifndef DO10_EXTERNAL_NUMBER
+#define DO10_EXTERNAL_NUMBER         10
 #endif
 
 //Header Bed FET
@@ -1185,6 +1254,9 @@
 #ifndef DO11_POLARITY
 #define DO11_POLARITY               IO_ACTIVE_HIGH
 #endif
+#ifndef DO11_EXTERNAL_NUMBER
+#define DO11_EXTERNAL_NUMBER         11
+#endif
 
 //Indicator_LED
 #ifndef DO12_ENABLED
@@ -1193,12 +1265,18 @@
 #ifndef DO12_POLARITY
 #define DO12_POLARITY               IO_ACTIVE_HIGH
 #endif
+#ifndef DO12_EXTERNAL_NUMBER
+#define DO12_EXTERNAL_NUMBER         12
+#endif
 
 #ifndef DO13_ENABLED
 #define DO13_ENABLED                IO_ENABLED
 #endif
 #ifndef DO13_POLARITY
 #define DO13_POLARITY               IO_ACTIVE_HIGH
+#endif
+#ifndef DO13_EXTERNAL_NUMBER
+#define DO13_EXTERNAL_NUMBER         13
 #endif
 
 // foind in gpio.h:

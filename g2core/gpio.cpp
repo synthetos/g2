@@ -150,9 +150,44 @@ type* _io(const nvObj_t *nv) {
 };
 
 gpioDigitalInput* _i(const nvObj_t *nv) { return _io<gpioDigitalInput>(nv); }
+gpioDigitalInputReader* _ir(const nvObj_t *nv) { return _io<gpioDigitalInputReader>(nv); }
 gpioDigitalOutput* _o(const nvObj_t *nv) { return _io<gpioDigitalOutput>(nv); }
+gpioDigitalOutputReader* _or(const nvObj_t *nv) { return _io<gpioDigitalOutputReader>(nv); }
 gpioAnalogInput* _ai(const nvObj_t *nv) { return _io<gpioAnalogInput>(nv); }
 
+gpioDigitalInputReader in1;
+gpioDigitalInputReader in2;
+gpioDigitalInputReader in3;
+gpioDigitalInputReader in4;
+gpioDigitalInputReader in5;
+gpioDigitalInputReader in6;
+gpioDigitalInputReader in7;
+gpioDigitalInputReader in8;
+gpioDigitalInputReader in9;
+gpioDigitalInputReader in10;
+gpioDigitalInputReader in11;
+gpioDigitalInputReader in12;
+gpioDigitalInputReader in13;
+gpioDigitalInputReader in14;
+
+gpioDigitalInputReader* const in_r[14] = {&in1, &in2, &in3, &in4, &in5, &in6, &in7, &in8, &in9, &in10, &in11, &in12, &in13, &in14};
+
+gpioDigitalOutputReader out1;
+gpioDigitalOutputReader out2;
+gpioDigitalOutputReader out3;
+gpioDigitalOutputReader out4;
+gpioDigitalOutputReader out5;
+gpioDigitalOutputReader out6;
+gpioDigitalOutputReader out7;
+gpioDigitalOutputReader out8;
+gpioDigitalOutputReader out9;
+gpioDigitalOutputReader out10;
+gpioDigitalOutputReader out11;
+gpioDigitalOutputReader out12;
+gpioDigitalOutputReader out13;
+gpioDigitalOutputReader out14;
+
+gpioDigitalOutputReader* const out_r[14] = {&out1 ,&out2 ,&out3 ,&out4 ,&out5 ,&out6 ,&out7 ,&out8 ,&out9 ,&out10 ,&out11 ,&out12 ,&out13 ,&out14};
 
 /*
  *  Get/set enabled
@@ -203,12 +238,25 @@ stat_t din_set_fn(nvObj_t *nv)
 }
 
 /*
- *  io_get_input() - return input state given an nv object
- *  Note: if the input is disabled, it returns NULL.
+ *  Get/set input function
+ */
+stat_t din_get_in(nvObj_t *nv)
+{
+    return _i(nv)->getExternalNumber(nv);
+}
+stat_t din_set_in(nvObj_t *nv)
+{
+    return _i(nv)->setExternalNumber(nv);
+}
+
+/*
+ *  Get input state given an nv object
+ *  Note: if this is not forwarded to an input or the input is disabled,
+ *  it returns NULL.
  */
 stat_t din_get_input(nvObj_t *nv)
 {
-    return _i(nv)->getState(nv);
+    return _ir(nv)->getState(nv);
 }
 
 
@@ -237,15 +285,28 @@ stat_t dout_set_po(nvObj_t *nv)
 }
 
 /*
- *  io_get_output()/io_set_output() - get/set output state given an nv object
+ *  Get/set input polarity
+ */
+stat_t dout_get_out(nvObj_t *nv)
+{
+    return _o(nv)->getExternalNumber(nv);
+}
+stat_t dout_set_out(nvObj_t *nv)
+{
+    return _o(nv)->setExternalNumber(nv);
+}
+
+
+/*
+ *  Gget/set output state given an nv object
  */
 stat_t dout_get_output(nvObj_t *nv)
 {
-    return _o(nv)->getValue(nv);
+    return _or(nv)->getValue(nv);
 }
 stat_t dout_set_output(nvObj_t *nv)
 {
-    return _o(nv)->setValue(nv);
+    return _or(nv)->setValue(nv);
 }
 
 
@@ -312,11 +373,13 @@ stat_t ain_set_p5(nvObj_t *nv) { return ain_set_parameter(nv, 4); };
     static const char fmt_gpio_in_po[] = "[%smo] input polarity%13d [0=normal/active-high,1=inverted/active-low]\n";
     static const char fmt_gpio_ac[] = "[%sac] input action%15d [0=none,1=stop,2=fast_stop,3=halt,4=alarm,5=shutdown,6=panic,7=reset]\n";
     static const char fmt_gpio_fn[] = "[%sfn] input function%13d [0=none,1=limit,2=interlock,3=shutdown,4=probe]\n";
-    static const char fmt_gpio_in[] = "Input %s state: %5d\n";
+    static const char fmt_gpio_in[] = "[%sin] input external number%6d [0=none,1-12=inX shows the value of this din]\n";
+    static const char fmt_gpio_state[] = "Input %s state: %5d\n";
 
     static const char fmt_gpio_out_en[] = "[%smo] output enabled%12d [-1=unavailable,0=disabled,1=enabled]\n";
     static const char fmt_gpio_out_po[] = "[%smo] output polarity%12d [0=normal/active-high,1=inverted/active-low]\n";
-    static const char fmt_gpio_out[] = "Output %s state: %5d\n";
+    static const char fmt_gpio_out_out[] = "[%sout] output external number%5d [0=none,1-14=outX shows the value of this dout]\n";
+    static const char fmt_gpio_out_state[] = "Output %s state: %5d\n";
 
     static const char fmt_ain_value[] = "Analog input %s voltage: %5.2fV\n";
     static const char fmt_ain_resistance[] = "Analog input %s resistance: %5.2fohm\n";
@@ -333,15 +396,17 @@ stat_t ain_set_p5(nvObj_t *nv) { return ain_set_parameter(nv, 4); };
     void din_print_po(nvObj_t *nv) {_print_di(nv, fmt_gpio_in_po);}
     void din_print_ac(nvObj_t *nv) {_print_di(nv, fmt_gpio_ac);}
     void din_print_fn(nvObj_t *nv) {_print_di(nv, fmt_gpio_fn);}
-    void din_print_in(nvObj_t *nv) {
-        sprintf(cs.out_buf, fmt_gpio_in, nv->token, (int)nv->value);
+    void din_print_in(nvObj_t *nv) {_print_di(nv, fmt_gpio_in);}
+    void din_print_state(nvObj_t *nv) {
+        sprintf(cs.out_buf, fmt_gpio_state, nv->token, (int)nv->value);
         xio_writeline(cs.out_buf);
     }
 
     void dout_print_en(nvObj_t *nv) {_print_di(nv, fmt_gpio_out_en);}
     void dout_print_po(nvObj_t *nv) {_print_di(nv, fmt_gpio_out_po);}
-    void dout_print_out(nvObj_t *nv) {
-        sprintf(cs.out_buf, fmt_gpio_out, nv->token, (int)nv->value);
+    void dout_print_out(nvObj_t *nv) {_print_di(nv, fmt_gpio_out_out);}
+    void dout_print_out_state(nvObj_t *nv) {
+        sprintf(cs.out_buf, fmt_gpio_out_state, nv->token, (int)nv->value);
         xio_writeline(cs.out_buf);
     }
 
