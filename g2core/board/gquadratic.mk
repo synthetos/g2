@@ -18,6 +18,12 @@ ifeq ("$(BOARD)","gquadratic-b")
     DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
 endif
 
+ifeq ("$(BOARD)","gquadratic-c")
+    BASE_BOARD=gquadratic
+    DEVICE_DEFINES += MOTATE_BOARD="gquadratic-c"
+    DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
+endif
+
 
 ##########
 # The general gquadratic BASE_BOARD.

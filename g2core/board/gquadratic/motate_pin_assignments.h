@@ -157,13 +157,14 @@ pin_number kDebug3_PinNumber = -1;  // 116; //e Not the out-of-order numbering &
 pin_number kDebug4_PinNumber = -1;  // 114;
 // END DEBUG PINS
 
-pin_number kLED_USBRXPinNumber        = 117;
-pin_number kLED_USBTXPinNumber        = 118;
-pin_number kSD_CardDetectPinNumber    = 119;
-pin_number kSD_ChipSelectPinNumber    = 120;
-pin_number kInterlock_InPinNumber     = 121;
-pin_number kOutputSAFE_PinNumber      = 122;  // SAFE signal
-pin_number kLEDPWM_PinNumber          = 123;
+pin_number kLED_USBRXPinNumber     = 117;
+pin_number kLED_USBTXPinNumber     = 118;
+pin_number kSD_CardDetectPinNumber = -1;
+pin_number kSD_ChipSelectPinNumber = -1;
+pin_number kUSBVBUS_PinNumber      = 119;
+pin_number kInterlock_InPinNumber  = 121;
+pin_number kOutputSAFE_PinNumber   = 122;  // SAFE signal
+pin_number kLEDPWM_PinNumber       = 123;
 pin_number kOutputInterrupt_PinNumber = 124;  // to-host interrupt signal
 pin_number kLED_RGBWPixelPinNumber    = 125;  // 117;
 
