@@ -73,12 +73,20 @@ namespace LEDs {
 }
 #endif // EXPERIMENTAL_NEOPIXEL_SUPPORT
 
+#if QUADRATIC_REVISION == 'C'
+HOT_DATA SPIBus_used_t spiBus;
+#endif
+
 /*
  * hardware_init() - lowest level hardware init
  */
 
 void hardware_init()
 {
+#if QUADRATIC_REVISION == 'C'
+    spiBus.init();
+#endif
+
     board_hardware_init();
 //    external_clk_pin = 0; // Force external clock to 0 for now.
 

@@ -29,6 +29,7 @@
  */
 
 #include "config.h"
+#include "settings.h"
 #include "error.h"
 
 #ifndef HARDWARE_H_ONCE
@@ -70,6 +71,11 @@ enum hwPlatform {
 // ARM specific code start here
 
 #include "MotatePins.h"
+#if QUADRATIC_REVISION == 'C'
+#define MOTOR_1_IS_TRINAMIC
+#define MOTOR_2_IS_TRINAMIC
+#include "MotateSPI.h"
+#endif
 #include "MotateTimers.h"       // for TimerChanel<> and related...
 #include "MotateServiceCall.h"  // for ServiceCall<>
 
@@ -89,42 +95,15 @@ using Motate::OutputPin;
 #define SYS_ID_DIGITS 12         // actual digits in system ID (up to 16)
 #define SYS_ID_LEN 24            // total length including dashes and NUL
 
-/************************************************************************************
- **** ARM SAM3X8E SPECIFIC HARDWARE *************************************************
- ************************************************************************************/
-
-/**** Resource Assignment via Motate ****
- *
- * This section defines resource usage for pins, timers, PWM channels, communications
- * and other resources. Please refer to /motate/utility/SamPins.h, SamTimers.h and
- * other files for pinouts and other configuration details.
- *
- * Commenting out or #ifdef'ing out definitions below will cause the compiler to
- * drop references to these resources from the compiled code. This will reduce
- * compiled code size and runtime CPU cycles. E.g. if you are compiling for a 3 motor,
- * XYZ axis config commenting out the higher motors and axes here will remove them
- * from later code (using the motate .isNull() test).
- */
-
-/* Interrupt usage and priority
- *
- * The following interrupts are defined w/indicated priorities
- *
- *	 0	DDA_TIMER (9) for step pulse generation
- *	 1	DWELL_TIMER (10) for dwell timing
- *	 2	LOADER software generated interrupt (STIR / SGI)
- *	 3	Serial read character interrupt
- *	 4	EXEC software generated interrupt (STIR / SGI)
- *	 5	Serial write character interrupt
- */
-
 /**** Stepper DDA and dwell timer settings ****/
 
 //#define FREQUENCY_DDA		200000UL		// Hz step frequency. Interrupts actually fire at 2x (400 KHz)
-#define FREQUENCY_DDA 200000UL  // Hz step frequency. Interrupts actually fire at 2x (300 KHz)
+#define FREQUENCY_DDA 400000UL  // Hz step frequency. Interrupts actually fire at 2x (300 KHz)
 #define FREQUENCY_DWELL 1000UL
 
 #define MIN_SEGMENT_MS ((float)0.125)       // S70 can handle much much smaller segements
+
+#define PLANNER_BUFFER_POOL_SIZE (60)
 
 /**** Motate Definitions ****/
 
@@ -137,14 +116,17 @@ typedef TimerChannel<11, 0> fwd_plan_timer_type;   // request exec timer in step
 pin_number                              indicator_led_pin_num = Motate::kLEDPWM_PinNumber;
 static OutputPin<indicator_led_pin_num> IndicatorLed;
 
+/**** SPI Setup ****/
+#if QUADRATIC_REVISION == 'C'
+Motate::service_call_number kSPI_ServiceCallNumber = 3;
+
+typedef Motate::SPIBus<Motate::kSPI_MISOPinNumber, Motate::kSPI_MOSIPinNumber, Motate::kSPI_SCKPinNumber, kSPI_ServiceCallNumber> SPIBus_used_t;
+extern SPIBus_used_t spiBus;
+
+#endif
+
 /**** Motate Global Pin Allocations ****/
 
-// static OutputPin<kSocket1_SPISlaveSelectPinNumber> spi_ss1_pin;
-// static OutputPin<kSocket2_SPISlaveSelectPinNumber> spi_ss2_pin;
-// static OutputPin<kSocket3_SPISlaveSelectPinNumber> spi_ss3_pin;
-// static OutputPin<kSocket4_SPISlaveSelectPinNumber> spi_ss4_pin;
-// static OutputPin<kSocket5_SPISlaveSelectPinNumber> spi_ss5_pin;
-// static OutputPin<kSocket6_SPISlaveSelectPinNumber> spi_ss6_pin;
 static OutputPin<Motate::kKinen_SyncPinNumber> kinen_sync_pin;
 
 static OutputPin<Motate::kGRBL_ResetPinNumber>      grbl_reset_pin;
@@ -152,14 +134,12 @@ static OutputPin<Motate::kGRBL_FeedHoldPinNumber>   grbl_feedhold_pin;
 static OutputPin<Motate::kGRBL_CycleStartPinNumber> grbl_cycle_start_pin;
 
 static OutputPin<Motate::kGRBL_CommonEnablePinNumber> motor_common_enable_pin;
-static OutputPin<Motate::kSpindle_EnablePinNumber>    spindle_enable_pin;
-static OutputPin<Motate::kSpindle_DirPinNumber>       spindle_dir_pin;
 
-// NOTE: In the v9 and the Due the flood and mist coolants are mapped to a the same pin
-// static OutputPin<kCoolant_EnablePinNumber> coolant_enable_pin;
-static OutputPin<Motate::kCoolant_EnablePinNumber> flood_enable_pin;
-static OutputPin<Motate::kCoolant_EnablePinNumber> mist_enable_pin;
-
+#define SPINDLE_OUTPUT_NUMBER 1           // drive our primary output as a spindle
+#define SPINDLE_ENABLE_OUTPUT_NUMBER 2    // use output 2 as the enable line for the spindle
+#define SPINDLE_DIRECTION_OUTPUT_NUMBER 0 // no direction control
+#define MIST_ENABLE_OUTPUT_NUMBER 0 // no mist
+#define FLOOD_ENABLE_OUTPUT_NUMBER 0 // no flood
 // Input pins are defined in gpio.cpp
 
 /********************************

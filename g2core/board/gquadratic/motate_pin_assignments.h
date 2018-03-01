@@ -226,6 +226,8 @@ pin_number kServo3_PinNumber = 173;  //
 
 // blank spots for unassigned pins - all unassigned pins need a unique number (do not re-use numbers)
 
+pin_number kUnassigned40 = 215;
+pin_number kUnassigned39 = 216;
 pin_number kUnassigned38 = 217;
 pin_number kUnassigned37 = 218;
 pin_number kUnassigned36 = 219;

@@ -118,38 +118,38 @@ _MAKE_MOTATE_PIN(kOutput2_PinNumber,               'A',  1); // TC0.1 or PWM1
 _MAKE_MOTATE_PIN(kUnassigned1,                     'A',  2); // PWM1
 _MAKE_MOTATE_PIN(kI2C1_SDAPinNumber,               'A',  3); //
 _MAKE_MOTATE_PIN(kI2C1_SCLPinNumber,               'A',  4); //
-_MAKE_MOTATE_PIN(kUnassigned2,                     'A',  5); //
-_MAKE_MOTATE_PIN(kUnassigned3,                     'A',  6); // Missing in 100-pin package
-_MAKE_MOTATE_PIN(kUnassigned4,                     'A',  7); //
-_MAKE_MOTATE_PIN(kUnassigned5,                     'A',  8); //
+_MAKE_MOTATE_PIN(kSocket2_StepPinNumber,                     'A',  5); //
+_MAKE_MOTATE_PIN(kUnassigned2,                     'A',  6); // Missing in 100-pin package
+_MAKE_MOTATE_PIN(kUnassigned3,                     'A',  7); //
+_MAKE_MOTATE_PIN(kUnassigned4,                     'A',  8); //
 _MAKE_MOTATE_PIN(kSerial_RXPinNumber,              'A',  9); //
 _MAKE_MOTATE_PIN(kSerial_TXPinNumber,              'A', 10); //
 _MAKE_MOTATE_PIN(kSocket1_StepPinNumber,           'A', 11); //
-_MAKE_MOTATE_PIN(kUnassigned6,                     'A', 12); //
-_MAKE_MOTATE_PIN(kUnassigned7,                     'A', 13); //
-_MAKE_MOTATE_PIN(kUnassigned8,                     'A', 14); //
-_MAKE_MOTATE_PIN(kUnassigned9,                     'A', 15); //
-_MAKE_MOTATE_PIN(kUnassigned10,                    'A', 16); //
-_MAKE_MOTATE_PIN(kUnassigned11,                    'A', 17); //
-_MAKE_MOTATE_PIN(kUnassigned12,                    'A', 18); //
-_MAKE_MOTATE_PIN(kUnassigned13,                    'A', 19); //
-_MAKE_MOTATE_PIN(kUnassigned14,                    'A', 20); //
-_MAKE_MOTATE_PIN(kUnassigned15,                    'A', 21); //
-_MAKE_MOTATE_PIN(kUnassigned16,                    'A', 22); //
-_MAKE_MOTATE_PIN(kUnassigned17,                    'A', 23); //
-_MAKE_MOTATE_PIN(kUnassigned18,                    'A', 24); // DIAG0
-_MAKE_MOTATE_PIN(kUnassigned19,                    'A', 25); //
+_MAKE_MOTATE_PIN(kUnassigned5,                     'A', 12); //
+_MAKE_MOTATE_PIN(kUnassigned6,                     'A', 13); //
+_MAKE_MOTATE_PIN(kUnassigned7,                     'A', 14); //
+_MAKE_MOTATE_PIN(kUnassigned8,                     'A', 15); //
+_MAKE_MOTATE_PIN(kUnassigned9,                    'A', 16); //
+_MAKE_MOTATE_PIN(kUnassigned10,                    'A', 17); //
+_MAKE_MOTATE_PIN(kUnassigned11,                    'A', 18); //
+_MAKE_MOTATE_PIN(kUnassigned12,                    'A', 19); //
+_MAKE_MOTATE_PIN(kUnassigned13,                    'A', 20); //
+_MAKE_MOTATE_PIN(kUnassigned14,                    'A', 21); //
+_MAKE_MOTATE_PIN(kUnassigned15,                    'A', 22); //
+_MAKE_MOTATE_PIN(kUnassigned16,                    'A', 23); //
+_MAKE_MOTATE_PIN(kInput5_PinNumber,                'A', 24); // DIAG0
+_MAKE_MOTATE_PIN(kUnassigned17,                    'A', 25); //
 _MAKE_MOTATE_PIN(kSocket1_DirPinNumber,            'A', 26); //
-_MAKE_MOTATE_PIN(kUnassigned20,                    'A', 27); // TC2.1
+_MAKE_MOTATE_PIN(kSocket2_EnablePinNumber,         'A', 27); // TC2.1
 _MAKE_MOTATE_PIN(kSerial_CTSPinNumber,             'A', 28); //
-_MAKE_MOTATE_PIN(kUnassigned21,                    'A', 29); // Missing in 100-pin package
-_MAKE_MOTATE_PIN(kServo1_PinNumber,                'A', 30); // PWM2 - kOutput3_PinNumber
+_MAKE_MOTATE_PIN(kUnassigned18,                    'A', 29); // Missing in 100-pin package
+_MAKE_MOTATE_PIN(kServo1_PinNumber,                'A', 30); // PWM2 - kOutput4_PinNumber
 _MAKE_MOTATE_PIN(kInput4_PinNumber,                'A', 31); //
 
-_MAKE_MOTATE_PIN(kUnassigned22,                    'B',  0); //
-_MAKE_MOTATE_PIN(kUnassigned23,                    'B',  1); //
+_MAKE_MOTATE_PIN(kUnassigned19,                    'B',  0); //
+_MAKE_MOTATE_PIN(kUnassigned20,                    'B',  1); //
 _MAKE_MOTATE_PIN(kSocket3_SPISlaveSelectPinNumber, 'B',  2); //
-_MAKE_MOTATE_PIN(kUnassigned24,                    'B',  3); //
+_MAKE_MOTATE_PIN(kUnassigned21,                    'B',  3); //
 //_MAKE_MOTATE_PIN(                           ,    'B',  4); // TDI
 //_MAKE_MOTATE_PIN(                           ,    'B',  5); // TRACESDO
 //_MAKE_MOTATE_PIN(                           ,    'B',  6); // SWDIO
@@ -159,40 +159,40 @@ _MAKE_MOTATE_PIN(kUnassigned24,                    'B',  3); //
 //_MAKE_MOTATE_PIN(                           ,    'B', 10); // USB_D-
 //_MAKE_MOTATE_PIN(                           ,    'B', 11); // USB_D+
 //_MAKE_MOTATE_PIN(                           ,    'B', 12); // ERASE
-_MAKE_MOTATE_PIN(kUnassigned25,                    'B', 13); //
+_MAKE_MOTATE_PIN(kUnassigned22,                    'B', 13); //
 
 _MAKE_MOTATE_PIN(kUSBVBUS_PinNumber,               'D',  0); // USB_VBUS
 _MAKE_MOTATE_PIN(kInput1_PinNumber,                'D',  1); //
 _MAKE_MOTATE_PIN(kInput2_PinNumber,                'D',  2); //
-_MAKE_MOTATE_PIN(kUnassigned26,                    'D',  3); //
-_MAKE_MOTATE_PIN(kUnassigned27,                    'D',  4); //
-_MAKE_MOTATE_PIN(kUnassigned28,                    'D',  5); //
+_MAKE_MOTATE_PIN(kUnassigned23,                    'D',  3); //
+_MAKE_MOTATE_PIN(kUnassigned24,                    'D',  4); //
+_MAKE_MOTATE_PIN(kUnassigned25,                    'D',  5); //
 _MAKE_MOTATE_PIN(kInput3_PinNumber,                'D',  6); //
 _MAKE_MOTATE_PIN(kSerial_RTSPinNumber,             'D',  7); //
-_MAKE_MOTATE_PIN(kUnassigned29,                    'D',  8); // INTERRUPT_OUT
-_MAKE_MOTATE_PIN(kUnassigned30,                    'D',  9); //
-_MAKE_MOTATE_PIN(kUnassigned31,                    'D', 10); //
-_MAKE_MOTATE_PIN(kLED_RGBWPixelPinNumber,          'D', 11); // PWM0 - kOutput4_PinNumber
+_MAKE_MOTATE_PIN(kOutput5_PinNumber,               'D',  8); // INTERRUPT_OUT
+_MAKE_MOTATE_PIN(kUnassigned26,                    'D',  9); //
+_MAKE_MOTATE_PIN(kUnassigned27,                    'D', 10); //
+_MAKE_MOTATE_PIN(kLED_RGBWPixelPinNumber,          'D', 11); // PWM0 - kOutput3_PinNumber
 _MAKE_MOTATE_PIN(kSocket4_SPISlaveSelectPinNumber, 'D', 12); //
-_MAKE_MOTATE_PIN(kSocket2_EnablePinNumber,         'D', 13); //
-_MAKE_MOTATE_PIN(kSocket2_StepPinNumber,           'D', 14); //
+_MAKE_MOTATE_PIN(kUnassigned28,                    'D', 13); //
+_MAKE_MOTATE_PIN(kUnassigned29,                    'D', 14); //
 _MAKE_MOTATE_PIN(kOutputSAFE_PinNumber,            'D', 15); //
-_MAKE_MOTATE_PIN(kSocket2_DirPinNumber,            'D', 16); //
-_MAKE_MOTATE_PIN(kUnassigned32,                    'D', 17); //
-_MAKE_MOTATE_PIN(kUnassigned33,                    'D', 18); //
-_MAKE_MOTATE_PIN(kUnassigned34,                    'D', 19); //
+_MAKE_MOTATE_PIN(kUnassigned30,                    'D', 16); //
+_MAKE_MOTATE_PIN(kUnassigned31,                    'D', 17); //
+_MAKE_MOTATE_PIN(kUnassigned32,                    'D', 18); //
+_MAKE_MOTATE_PIN(kUnassigned33,                    'D', 19); //
 _MAKE_MOTATE_PIN(kSPI0_MISOPinNumber,              'D', 20); //
 _MAKE_MOTATE_PIN(kSPI0_MOSIPinNumber,              'D', 21); //
 _MAKE_MOTATE_PIN(kSPI0_SCKPinNumber,               'D', 22); //
-_MAKE_MOTATE_PIN(kUnassigned35,                    'D', 23); // Missing in 100-pin package
-_MAKE_MOTATE_PIN(kUnassigned36,                    'D', 24); // DIAG1
+_MAKE_MOTATE_PIN(kUnassigned34,                    'D', 23); // Missing in 100-pin package
+_MAKE_MOTATE_PIN(kInput6_PinNumber,                'D', 24); // DIAG1
 _MAKE_MOTATE_PIN(kSocket1_SPISlaveSelectPinNumber, 'D', 25); //
 _MAKE_MOTATE_PIN(kSocket1_EnablePinNumber,         'D', 26); //
 _MAKE_MOTATE_PIN(kSocket2_SPISlaveSelectPinNumber, 'D', 27); //
-_MAKE_MOTATE_PIN(kUnassigned37,                    'D', 28); //
-_MAKE_MOTATE_PIN(kUnassigned38,                    'D', 29); // Missing in 100-pin package
+_MAKE_MOTATE_PIN(kSocket2_DirPinNumber,            'D', 28); //
+_MAKE_MOTATE_PIN(kUnassigned35,                    'D', 29); // Missing in 100-pin package
 _MAKE_MOTATE_PIN(kLEDPWM_PinNumber,                'D', 30); //
-_MAKE_MOTATE_PIN(kUnassigned39,                    'D', 31); //
+_MAKE_MOTATE_PIN(kUnassigned36,                    'D', 31); //
 
 }  // namespace Motate
 

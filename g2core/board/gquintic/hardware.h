@@ -146,9 +146,8 @@ typedef TimerChannel<9, 0> dda_timer_type;    // stepper pulse generation in ste
 typedef TimerChannel<10, 0> exec_timer_type;       // request exec timer in stepper.cpp
 typedef TimerChannel<11, 0> fwd_plan_timer_type;   // request exec timer in stepper.cpp
 
-Motate::service_call_number kSPI_ServiceCallNumber = 3;
-
 /**** SPI Setup ****/
+Motate::service_call_number kSPI_ServiceCallNumber = 3;
 
 typedef Motate::SPIBus<Motate::kSPI_MISOPinNumber, Motate::kSPI_MOSIPinNumber, Motate::kSPI_SCKPinNumber, kSPI_ServiceCallNumber> SPIBus_used_t;
 extern SPIBus_used_t spiBus;

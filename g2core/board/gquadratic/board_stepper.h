@@ -29,9 +29,9 @@
 #define BOARD_STEPPER_H_ONCE
 
 #include "hardware.h"  // for MOTORS
-#include "step_dir_driver.h"
-#include "step_dir_hobbyservo.h"
 
+#if QUADRATIC_REVISION == 'B'
+#include "step_dir_driver.h"
 extern StepDirStepper<Motate::kSocket1_StepPinNumber,
                       Motate::kSocket1_DirPinNumber,
                       Motate::kSocket1_EnablePinNumber,
@@ -49,28 +49,26 @@ extern StepDirStepper<Motate::kSocket2_StepPinNumber,
                       Motate::kSocket2_Microstep_2PinNumber,
                       Motate::kSocket2_VrefPinNumber>
     motor_2;
+#endif // QUADRATIC_REVISION == 'B'
 
- extern StepDirHobbyServo<Motate::kServo1_PinNumber> motor_3;
+#if QUADRATIC_REVISION == 'C'
+#include "tmc2130.h"
+extern Trinamic2130<SPIBus_used_t::SPIBusDevice,
+                    Motate::kSocket1_StepPinNumber,
+                    Motate::kSocket1_DirPinNumber,
+                    Motate::kSocket1_EnablePinNumber>
+    motor_1;
+extern Trinamic2130<SPIBus_used_t::SPIBusDevice,
+                    Motate::kSocket2_StepPinNumber,
+                    Motate::kSocket2_DirPinNumber,
+                    Motate::kSocket2_EnablePinNumber>
+    motor_2;
+#endif // QUADRATIC_REVISION == 'C'
 
-// extern StepDirStepper<
-//    Motate::kSocket5_StepPinNumber,
-//    Motate::kSocket5_DirPinNumber,
-//    Motate::kSocket5_EnablePinNumber,
-//    Motate::kSocket5_Microstep_0PinNumber,
-//    Motate::kSocket5_Microstep_1PinNumber,
-//    Motate::kSocket5_Microstep_2PinNumber,
-//    Motate::kSocket5_VrefPinNumber> motor_5;
-//
-// extern StepDirStepper<
-//    Motate::kSocket6_StepPinNumber,
-//    Motate::kSocket6_DirPinNumber,
-//    Motate::kSocket6_EnablePinNumber,
-//    Motate::kSocket6_Microstep_0PinNumber,
-//    Motate::kSocket6_Microstep_1PinNumber,
-//    Motate::kSocket6_Microstep_2PinNumber,
-//    Motate::kSocket6_VrefPinNumber> motor_6 {};
+#include "step_dir_hobbyservo.h"
+extern StepDirHobbyServo<Motate::kServo1_PinNumber> motor_3;
 
-extern Stepper* Motors[MOTORS];
+extern Stepper* const Motors[MOTORS];
 
 void board_stepper_init();
 

@@ -91,18 +91,9 @@
 
 #define KINEMATICS KINE_CORE_XY                             // X and Y MUST use the same settings!
 
-#if MOTORS == 3
-// gQuadratic
-#define A_B_POWER_LEVEL 0.4
-#define A_B_MICROSTEPS 32
-#define JERK_MAX    2000
-#endif
-#if MOTORS == 6
-// gQuintic
 #define A_B_POWER_LEVEL 0.7
 #define A_B_MICROSTEPS 64
 #define JERK_MAX    3000
-#endif
 
 #define M1_MOTOR_MAP                AXIS_COREXY_A           // 1ma
 #define M1_STEP_ANGLE               1.8                     // 1sa
@@ -121,6 +112,8 @@
 #define M2_POWER_LEVEL              A_B_POWER_LEVEL
 
 #if MOTORS == 3
+// gQuadratic
+#warning Autodetected gQuadratic settings
 #define M3_MOTOR_MAP                AXIS_Z
                                                             // This "stepper" is a hobby servo. Note that all hobby
                                                             //   servo settings are per full servo range, instead of
@@ -135,6 +128,8 @@
 #endif
 
 #if MOTORS == 6
+// gQuintic
+#warning Autodetected gQuintic settings
 #define M6_MOTOR_MAP                AXIS_Z
 // This "stepper" is a hobby servo. Note that all hobby
 //   servo settings are per full servo range, instead of
