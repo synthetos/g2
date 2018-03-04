@@ -227,7 +227,10 @@
 #define M1_POLARITY                 0                       // {1po:  0=normal direction, 1=inverted direction
 #endif
 #ifndef M1_ENABLE_POLARITY
-#define M1_ENABLE_POLARITY          IO_ACTIVE_LOW           // {1ep:  0=active LOW, 1=active HIGH
+#define M1_ENABLE_POLARITY          IO_ACTIVE_LOW           // {1ep:  IO_ACTIVE_LOW or IO_ACTIVE_HIGH
+#endif
+#ifndef M1_STEP_POLARITY
+#define M1_STEP_POLARITY            IO_ACTIVE_HIGH          // {1ps:  IO_ACTIVE_LOW or IO_ACTIVE_HIGH
 #endif
 #ifndef M1_POWER_MODE
 #define M1_POWER_MODE               MOTOR_DISABLED          // {1pm:  MOTOR_DISABLED, MOTOR_ALWAYS_POWERED, MOTOR_POWERED_IN_CYCLE, MOTOR_POWERED_ONLY_WHEN_MOVING
@@ -258,6 +261,9 @@
 #ifndef M2_ENABLE_POLARITY
 #define M2_ENABLE_POLARITY          IO_ACTIVE_LOW
 #endif
+#ifndef M2_STEP_POLARITY
+#define M2_STEP_POLARITY            IO_ACTIVE_HIGH
+#endif
 #ifndef M2_POWER_MODE
 #define M2_POWER_MODE               MOTOR_DISABLED
 #endif
@@ -286,6 +292,9 @@
 #endif
 #ifndef M3_ENABLE_POLARITY
 #define M3_ENABLE_POLARITY          IO_ACTIVE_LOW
+#endif
+#ifndef M3_STEP_POLARITY
+#define M3_STEP_POLARITY            IO_ACTIVE_HIGH
 #endif
 #ifndef M3_POWER_MODE
 #define M3_POWER_MODE               MOTOR_DISABLED
@@ -316,6 +325,9 @@
 #ifndef M4_ENABLE_POLARITY
 #define M4_ENABLE_POLARITY          IO_ACTIVE_LOW
 #endif
+#ifndef M4_STEP_POLARITY
+#define M4_STEP_POLARITY            IO_ACTIVE_HIGH
+#endif
 #ifndef M4_POWER_MODE
 #define M4_POWER_MODE               MOTOR_DISABLED
 #endif
@@ -345,6 +357,9 @@
 #ifndef M5_ENABLE_POLARITY
 #define M5_ENABLE_POLARITY          IO_ACTIVE_LOW
 #endif
+#ifndef M5_STEP_POLARITY
+#define M5_STEP_POLARITY            IO_ACTIVE_HIGH
+#endif
 #ifndef M5_POWER_MODE
 #define M5_POWER_MODE               MOTOR_DISABLED
 #endif
@@ -373,6 +388,9 @@
 #endif
 #ifndef M6_ENABLE_POLARITY
 #define M6_ENABLE_POLARITY          IO_ACTIVE_LOW
+#endif
+#ifndef M6_STEP_POLARITY
+#define M6_STEP_POLARITY            IO_ACTIVE_HIGH
 #endif
 #ifndef M6_POWER_MODE
 #define M6_POWER_MODE               MOTOR_DISABLED

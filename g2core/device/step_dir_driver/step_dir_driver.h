@@ -147,9 +147,19 @@ struct StepDirStepper final : Stepper  {
     }
     };
 
-    void stepStart() override { _step.set(); };
+    void stepStart() override {
+	if (_invert_step)
+	    _step.clear();
+	else
+	    _step.set();
+    };
 
-    void stepEnd() override { _step.clear(); };
+    void stepEnd() override {
+	if (_invert_step)
+	    _step.set();
+	else
+	    _step.clear();
+    };
 
     void setDirection(uint8_t new_direction) override {
         if (!_dir.isNull()) {
