@@ -116,6 +116,91 @@
 
 cmSingleton_t cm;        // canonical machine controller singleton
 
+/*
+ * _hold_input_handler - a gpioDigitalInputHandler to capture pin change events
+ *   Will be registered at init
+ */
+gpioDigitalInputHandler _hold_input_handler {
+    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+        if (edge != INPUT_EDGE_LEADING) { return false; }
+
+        cm_start_hold();
+
+        return false; // allow others to see this notice
+    },
+    5,    // priority
+    nullptr // next - nullptr to start with
+};
+
+/*
+ * _halt_input_handler - a gpioDigitalInputHandler to capture pin change events
+ *   Will be registered at init
+ */
+gpioDigitalInputHandler _halt_input_handler {
+    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+        if (edge != INPUT_EDGE_LEADING) { return false; }
+
+        cm_halt_all();
+
+        return false; // allow others to see this notice
+    },
+    5,    // priority
+    nullptr // next - nullptr to start with
+};
+
+
+/*
+ * _alarm_input_handler - a gpioDigitalInputHandler to capture pin change events
+ *   Will be registered at init
+ */
+gpioDigitalInputHandler _alarm_input_handler {
+    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+        if (edge != INPUT_EDGE_LEADING) { return false; }
+
+        char msg[10];
+        sprintf(msg, "input %d", triggering_pin_number);
+        cm_alarm(STAT_ALARM, msg);
+
+        return false; // allow others to see this notice
+    },
+    5,    // priority
+    nullptr // next - nullptr to start with
+};
+
+/*
+ * _panic_input_handler - a gpioDigitalInputHandler to capture pin change events
+ *   Will be registered at init
+ */
+gpioDigitalInputHandler _panic_input_handler {
+    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+        if (edge != INPUT_EDGE_LEADING) { return false; }
+
+        char msg[10];
+        sprintf(msg, "input %d", triggering_pin_number);
+        cm_panic(STAT_PANIC, msg);
+
+        return false; // allow others to see this notice
+    },
+    5,    // priority
+    nullptr // next - nullptr to start with
+};
+
+/*
+ * _reset_input_handler - a gpioDigitalInputHandler to capture pin change events
+ *   Will be registered at init
+ */
+gpioDigitalInputHandler _reset_input_handler {
+    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+        if (edge != INPUT_EDGE_LEADING) { return false; }
+
+        hw_hard_reset();
+
+        return false; // this likely won't be seen, but just in case...
+    },
+    5,    // priority
+    nullptr // next - nullptr to start with
+};
+
 /***********************************************************************************
  **** GENERIC STATIC FUNCTIONS AND VARIABLES ***************************************
  ***********************************************************************************/
@@ -748,7 +833,7 @@ stat_t cm_test_soft_limits(const float target[])
  * canonical_machine_init()  - initialize cm struct
  * canonical_machine_reset() - apply startup settings or reset to startup
  *                             run profile initialization beforehand
- */
+*/
 
 void canonical_machine_init()
 {
@@ -761,12 +846,12 @@ void canonical_machine_init()
     ACTIVE_MODEL = MODEL;                       // setup initial Gcode model pointer
     cm_arc_init();                              // Note: spindle and coolant inits are independent
 
-    din_handlers[INPUT_ACTION_STOP].registerHandler(&_hold_handler);
-    din_handlers[INPUT_ACTION_FAST_STOP].registerHandler(&_hold_handler);
-    din_handlers[INPUT_ACTION_HALT].registerHandler(&_halt_handler);
-    din_handlers[INPUT_ACTION_ALARM].registerHandler(&_alarm_handler);
-    din_handlers[INPUT_ACTION_PANIC].registerHandler(&_panic_handler);
-    din_handlers[INPUT_ACTION_RESET].registerHandler(&_reset_handler);
+    din_handlers[INPUT_ACTION_STOP].registerHandler(&_hold_input_handler);
+    din_handlers[INPUT_ACTION_FAST_STOP].registerHandler(&_hold_input_handler);
+    din_handlers[INPUT_ACTION_HALT].registerHandler(&_halt_input_handler);
+    din_handlers[INPUT_ACTION_ALARM].registerHandler(&_alarm_input_handler);
+    din_handlers[INPUT_ACTION_PANIC].registerHandler(&_panic_input_handler);
+    din_handlers[INPUT_ACTION_RESET].registerHandler(&_reset_input_handler);
 }
 
 void canonical_machine_reset_rotation() {
@@ -880,24 +965,6 @@ stat_t cm_clr(nvObj_t *nv)                // clear alarm or shutdown from comman
 }
 
 /*
- * _alarm_handler - a gpioDigitalInputHandler to capture pin change events
- *   Will be registered at init
- */
-gpioDigitalInputHandler _alarm_handler {
-    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
-        if (edge != INPUT_EDGE_LEADING) { return false; }
-
-        char msg[10];
-        sprintf(msg, "input %d", triggering_pin_number);
-        cm_alarm(STAT_ALARM, msg);
-
-        return false; // allow others to see this notice
-    },
-    5,    // priority
-    nullptr // next - nullptr to start with
-};
-
-/*
  * cm_clear() - clear ALARM and SHUTDOWN states
  * cm_parse_clear() - parse incoming gcode for M30 or M2 clears if in ALARM state
  *
@@ -963,21 +1030,6 @@ void cm_halt_motion(void)
     cm.hold_state = FEEDHOLD_OFF;
 }
 
-/*
- * _hold_handler - a gpioDigitalInputHandler to capture pin change events
- *   Will be registered at init
- */
-gpioDigitalInputHandler _halt_handler {
-    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
-        if (edge != INPUT_EDGE_LEADING) { return false; }
-
-        cm_halt_all();
-
-        return false; // allow others to see this notice
-    },
-    5,    // priority
-    nullptr // next - nullptr to start with
-};
 
 /*
  * cm_alarm() - enter ALARM state
@@ -1088,40 +1140,6 @@ stat_t cm_panic(const stat_t status, const char *msg)
     rpt_exception(status, msg);                 // send panic report
     return (status);
 }
-
-/*
- * _panic_handler - a gpioDigitalInputHandler to capture pin change events
- *   Will be registered at init
- */
-gpioDigitalInputHandler _panic_handler {
-    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
-        if (edge != INPUT_EDGE_LEADING) { return false; }
-
-        char msg[10];
-        sprintf(msg, "input %d", triggering_pin_number);
-        cm_panic(STAT_PANIC, msg);
-
-        return false; // allow others to see this notice
-    },
-    5,    // priority
-    nullptr // next - nullptr to start with
-};
-
-/*
- * _reset_handler - a gpioDigitalInputHandler to capture pin change events
- *   Will be registered at init
- */
-gpioDigitalInputHandler _reset_handler {
-    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
-        if (edge != INPUT_EDGE_LEADING) { return false; }
-
-        hw_hard_reset();
-
-        return false; // this likely won't be seen, but just in case...
-    },
-    5,    // priority
-    nullptr // next - nullptr to start with
-};
 
 /**************************
  * Representation (4.3.3) *
@@ -2004,6 +2022,7 @@ void cm_end_hold()
         }
     }
 }
+
 void cm_queue_flush()
 {
     if (mp_runtime_is_idle()) {                     // can't flush planner during movement
@@ -2019,23 +2038,6 @@ void cm_queue_flush()
         qr_request_queue_report(0);                 // request a queue report, since we've changed the number of buffers available
     }
 }
-
-/*
- * _hold_handler - a gpioDigitalInputHandler to capture pin change events
- *   Will be registered at init
- */
-gpioDigitalInputHandler _hold_handler {
-    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
-        if (edge != INPUT_EDGE_LEADING) { return false; }
-
-        cm_start_hold();
-
-        return false; // allow others to see this notice
-    },
-    5,    // priority
-    nullptr // next - nullptr to start with
-};
-
 
 /******************************
  * Program Functions (4.3.10) *
