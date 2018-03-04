@@ -354,6 +354,7 @@ typedef struct cfgMotor {                   // per-motor configs
     uint8_t motor_map;                      // map motor to axis
     uint8_t microsteps;                     // microsteps to apply for each axis (ex: 8)
     uint8_t polarity;                       // 0=normal polarity, 1=reverse motor direction
+    uint8_t step_polarity;                  // 0=normal polarity (normally low, step pulse high), 1=reverse polarity
     float power_level;                      // set 0.000 to 1.000 for PMW vref setting
     float step_angle;                       // degrees per whole step (ex: 1.8)
     float travel_rev;                       // mm or deg of travel per motor revolution
@@ -434,13 +435,16 @@ struct Stepper {
     uint32_t _motor_disable_timeout_ms;     // the number of ms that the timeout is reset to
     stPowerState _power_state;              // state machine for managing motor power
     stPowerMode _power_mode;                // See stPowerMode for values
+	bool _invert_step;                  // Invert the step output (where applicable)
 
     /* stepper default values */
 
     // sets default pwm freq for all motor vrefs (commented line below also sets HiZ)
-    Stepper(const uint32_t frequency = 500000)
+    Stepper(const uint32_t frequency = 500000) : _invert_step(false)
     {
     };
+
+    void set_step_polarity(bool invert_step) { _invert_step = invert_step; }
 
     /* Functions that handle all motor functions (calls virtuals if needed) */
 
@@ -471,7 +475,7 @@ struct Stepper {
         }
         if (_power_state == MOTOR_IDLE) {
             return (0.0);
-        }        
+        }
         return (st_cfg.mot[motor].power_level);
     };
 
@@ -479,7 +483,7 @@ struct Stepper {
 //    {
 //        return (_power_mode == MOTOR_DISABLED);
 //    };
-    
+
     // turn on motor in all cases unless it's disabled
     // NOTE: in the future the default assigned timeout will be the motor's default value
     void enable(float timeout = st_cfg.motor_power_timeout)
@@ -506,7 +510,7 @@ struct Stepper {
         _motor_disable_timeout.clear();
         _power_state = MOTOR_IDLE; // or MOTOR_OFF
     };
-    
+
     // turn off motor is only powered when moving
     void motionStopped() {
         if (_power_mode == MOTOR_POWERED_IN_CYCLE) {
@@ -518,7 +522,7 @@ struct Stepper {
             }
         }
     };
-    
+
     virtual void periodicCheck(bool have_actually_stopped) // can be overridden
     {
         if (have_actually_stopped && _power_state == MOTOR_RUNNING) {
@@ -602,6 +606,7 @@ stat_t st_set_me(nvObj_t *nv);
     void st_print_mi(nvObj_t *nv);
     void st_print_su(nvObj_t *nv);
     void st_print_po(nvObj_t *nv);
+    void st_print_ps(nvObj_t *nv);
     void st_print_pm(nvObj_t *nv);
     void st_print_pl(nvObj_t *nv);
     void st_print_pwr(nvObj_t *nv);
