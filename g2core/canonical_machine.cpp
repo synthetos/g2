@@ -765,8 +765,8 @@ void canonical_machine_init()
     din_listeners[INPUT_ACTION_FAST_STOP].registerListener(&_hold_listener);
     din_listeners[INPUT_ACTION_HALT].registerListener(&_halt_listener);
     din_listeners[INPUT_ACTION_ALARM].registerListener(&_alarm_listener);
-    din_listeners[INPUT_ACTION_SHUTDOWN].registerListener(&_shutdown_listener);
     din_listeners[INPUT_ACTION_PANIC].registerListener(&_panic_listener);
+    din_listeners[INPUT_ACTION_RESET].registerListener(&_reset_listener);
 }
 
 void canonical_machine_reset_rotation() {
@@ -1062,24 +1062,6 @@ stat_t cm_shutdown(const stat_t status, const char *msg)
 }
 
 /*
- * _shutdown_listener - a gpioDigitalInputListener to capture pin change events
- *   Will be registered at init
- */
-gpioDigitalInputListener _shutdown_listener {
-    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
-        if (edge != INPUT_EDGE_LEADING) { return false; }
-
-        char msg[10];
-        sprintf(msg, "input %d", triggering_pin_number);
-        cm_shutdown(STAT_SHUTDOWN, msg);
-
-        return false; // allow others to see this notice
-    },
-    5,    // priority
-    nullptr // next - nullptr to start with
-};
-
-/*
  * cm_panic() - enter panic state
  *
  * PANIC occurs if the firmware has detected an unrecoverable internal error
@@ -1120,6 +1102,22 @@ gpioDigitalInputListener _panic_listener {
         cm_panic(STAT_PANIC, msg);
 
         return false; // allow others to see this notice
+    },
+    5,    // priority
+    nullptr // next - nullptr to start with
+};
+
+/*
+ * _reset_listener - a gpioDigitalInputListener to capture pin change events
+ *   Will be registered at init
+ */
+gpioDigitalInputListener _reset_listener {
+    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+        if (edge != INPUT_EDGE_LEADING) { return false; }
+
+        hw_hard_reset();
+
+        return false; // this likely won't be seen, but just in case...
     },
     5,    // priority
     nullptr // next - nullptr to start with
