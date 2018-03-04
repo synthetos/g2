@@ -106,9 +106,9 @@ void controller_init()
     }
 //  IndicatorLed.setFrequency(100000);
 
-    din_listeners[INPUT_ACTION_SHUTDOWN].registerListener(&_shutdown_listener);
-    din_listeners[INPUT_ACTION_LIMIT].registerListener(&_limit_listener);
-    din_listeners[INPUT_ACTION_INTERLOCK].registerListener(&_interlock_listener);
+    din_handlers[INPUT_ACTION_SHUTDOWN].registerHandler(&_shutdown_handler);
+    din_handlers[INPUT_ACTION_LIMIT].registerHandler(&_limit_handler);
+    din_handlers[INPUT_ACTION_INTERLOCK].registerHandler(&_interlock_handler);
 }
 
 void controller_request_enquiry()
@@ -466,11 +466,11 @@ static stat_t _sync_to_planner()
 /* ALARM STATE HANDLERS
  *
  * _shutdown_handler() - put system into shutdown state
- * _shutdown_listener - a gpioDigitalInputListener to capture pin change events
+ * _shutdown_handler - a gpioDigitalInputHandler to capture pin change events
  * _limit_switch_handler() - shut down system if limit switch fired
- * _limit_listener - a gpioDigitalInputListener to capture pin change events
+ * _limit_handler - a gpioDigitalInputHandler to capture pin change events
  * _interlock_handler() - feedhold and resume depending on edge
- * _interlock_listener - a gpioDigitalInputListener to capture pin change events
+ * _interlock_handler - a gpioDigitalInputHandler to capture pin change events
  *
  *    Some handlers return EAGAIN causing the control loop to never advance beyond that point.
  *
@@ -480,7 +480,7 @@ static stat_t _sync_to_planner()
  *   - safety_interlock_requested == INPUT_EDGE_TRAILING is interlock offset
  */
 
-gpioDigitalInputListener _shutdown_listener {
+gpioDigitalInputHandler _shutdown_handler {
     [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
         if (edge != INPUT_EDGE_LEADING) { return false; }
 
@@ -503,7 +503,7 @@ static stat_t _shutdown_handler(void)
     return(STAT_OK);
 }
 
-gpioDigitalInputListener _limit_listener {
+gpioDigitalInputHandler _limit_handler {
     [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
         if (edge != INPUT_EDGE_LEADING) { return false; }
 
@@ -533,7 +533,7 @@ static stat_t _limit_switch_handler(void)
     return (STAT_OK);
 }
 
-gpioDigitalInputListener _interlock_listener {
+gpioDigitalInputHandler _interlock_handler {
     [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
         if (edge == INPUT_EDGE_LEADING) {
             cm.safety_interlock_disengaged = triggering_pin_number;

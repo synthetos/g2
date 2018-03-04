@@ -124,10 +124,10 @@ static void _motion_end_callback(float* vect, bool* flag)
 }
 
 /*
- * _probing_listener - a gpioDigitalInputListener to capture pin change events
+ * _probing_handler - a gpioDigitalInputHandler to capture pin change events
  *   Will be registered only during homing mode - see gpio.h for more info
  */
-gpioDigitalInputListener _probing_listener {
+gpioDigitalInputHandler _probing_handler {
     [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
         if (cm.cycle_state != CYCLE_PROBE) { return false; }
         if (triggering_pin_number != pb.probe_input) { return false; }
@@ -289,7 +289,7 @@ static uint8_t _probing_start()
         return(_probing_exception_exit(STAT_PROBE_TRAVEL_TOO_SMALL));
     }
 
-    din_listeners[INPUT_ACTION_INTERNAL].registerListener(&_probing_listener);
+    din_handlers[INPUT_ACTION_INTERNAL].registerHandler(&_probing_handler);
 
     // Get initial probe state, and don't probe if we're already tripped.
     // If the initial input is the same as the trip_sense it's an error.
@@ -351,7 +351,7 @@ static stat_t _probe_move(const float target[], const bool flags[])
 
 static void _probe_restore_settings()
 {
-    din_listeners[INPUT_ACTION_INTERNAL].deregisterListener(&_probing_listener);
+    din_handlers[INPUT_ACTION_INTERNAL].deregisterHandler(&_probing_handler);
 
     for (uint8_t axis = 0; axis < AXES; axis++) {       // restore axis jerks
         cm.a[axis].jerk_max = pb.saved_jerk[axis];

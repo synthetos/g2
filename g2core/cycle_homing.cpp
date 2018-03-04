@@ -97,10 +97,10 @@ static stat_t _set_homing_func(stat_t (*func)(int8_t axis)) {
 }
 
 /*
- * _homing_listener - a gpioDigitalInputListener to capture pin change events
+ * _homing_handler - a gpioDigitalInputHandler to capture pin change events
  *   Will be registered only during homing mode - see gpio.h for more info
  */
-gpioDigitalInputListener _homing_listener {
+gpioDigitalInputHandler _homing_handler {
     [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
         if (cm.cycle_state != CYCLE_HOMING) { return false; }
         if (triggering_pin_number != hm.homing_input) { return false; }
@@ -263,7 +263,7 @@ static stat_t _homing_axis_start(int8_t axis) {
     // Nothing to do about direction now that direction is explicit
     // However, here's a good place to stash the homing_switch:
     hm.homing_input = cm.a[axis].homing_input;
-    din_listeners[INPUT_ACTION_INTERNAL].registerListener(&_homing_listener);
+    din_handlers[INPUT_ACTION_INTERNAL].registerHandler(&_homing_handler);
 
     hm.axis            = axis;                              // persist the axis
     hm.search_velocity = std::abs(cm.a[axis].search_velocity);  // search velocity is always positive
@@ -349,7 +349,7 @@ static stat_t _homing_axis_set_position(int8_t axis)  // set axis zero / max and
     }
     cm_set_axis_jerk(axis, hm.saved_jerk);  // restore the max jerk value
 
-    din_listeners[INPUT_ACTION_INTERNAL].deregisterListener(&_homing_listener);  // end homing mode
+    din_handlers[INPUT_ACTION_INTERNAL].deregisterHandler(&_homing_handler);  // end homing mode
     return (_set_homing_func(_homing_axis_start));
 }
 

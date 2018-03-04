@@ -103,7 +103,7 @@ struct gpioDigitalInputReader;
 extern gpioDigitalInputReader* const in_r[14];
 
 /*
- * gpioDigitalInputListener - superclass of objects that wish to be informed of
+ * gpioDigitalInputHandler - superclass of objects that wish to be informed of
  *                            digital input changes
  *
  * Notes about the callback function:
@@ -111,12 +111,12 @@ extern gpioDigitalInputReader* const in_r[14];
  *   The second parameter is the inputEdgeFlag value
  *   The third parameter is the external number (N in `diN`) of the pin that changed
  *   The return value indicates if it has been "handled" - return true and no other
- *     gpioDigitalInputListener callbacks will be triggered *for this event*
+ *     gpioDigitalInputHandler callbacks will be triggered *for this event*
  *   Generally, return false unless there is a good reason to stop propagation.
  *
- * Example gpioDigitalInputListener object creation:
+ * Example gpioDigitalInputHandler object creation:
 
-    gpioDigitalInputListener limitListener {
+    gpioDigitalInputHandler limitHandler {
         [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
             if (edge != INPUT_EDGE_LEADING) { return; }
             limit_requested = true; // record that a limit was requested for later processing
@@ -127,79 +127,79 @@ extern gpioDigitalInputReader* const in_r[14];
     };
 
     // register this listener for limit events:
-    din_listeners[INPUT_ACTION_LIMIT].registerListener(limitListener);
+    din_handlers[INPUT_ACTION_LIMIT].registerHandler(limitHandler);
  */
 
-struct gpioDigitalInputListener {
+struct gpioDigitalInputHandler {
     // const means it must be provided at compile time
     const std::function<bool(const bool, const inputEdgeFlag, const uint8_t)> callback;  // the function to call
     const int8_t priority;                                    // higher is higher
 
-    gpioDigitalInputListener *next;                           // form a simple linked list
+    gpioDigitalInputHandler *next;                           // form a simple linked list
 };
 
 
-struct gpioDigitalInputListenerList {
-    gpioDigitalInputListener * _first_listener;
+struct gpioDigitalInputHandlerList {
+    gpioDigitalInputHandler * _first_handler;
 
-    void registerListener(gpioDigitalInputListener * const new_listener) {
-        if (!_first_listener) {
+    void registerHandler(gpioDigitalInputHandler * const new_handler) {
+        if (!_first_handler) {
             // there is only one - now
-            _first_listener = new_listener;
+            _first_handler = new_handler;
             return;
-        } else if (new_listener->priority > _first_listener->priority) {
+        } else if (new_handler->priority > _first_handler->priority) {
             // this is the new first one
-            new_listener->next = _first_listener;
-            _first_listener = new_listener;
+            new_handler->next = _first_handler;
+            _first_handler = new_handler;
             return;
         }
 
-        gpioDigitalInputListener * current_listener = _first_listener;
+        gpioDigitalInputHandler * current_handler = _first_handler;
 
-        while (current_listener != nullptr) {
-            if (new_listener->priority <= current_listener->priority) {
-                // new_listener will be immediately after current_listener
-                new_listener->next = current_listener->next;
-                current_listener->next = new_listener;
+        while (current_handler != nullptr) {
+            if (new_handler->priority <= current_handler->priority) {
+                // new_handler will be immediately after current_handler
+                new_handler->next = current_handler->next;
+                current_handler->next = new_handler;
                 return;
             }
-            current_listener = current_listener->next;
+            current_handler = current_handler->next;
         }
     };
 
-    void deregisterListener(gpioDigitalInputListener * const old_listener) {
-        if (!_first_listener) {
+    void deregisterHandler(gpioDigitalInputHandler * const old_handler) {
+        if (!_first_handler) {
             return;
-        } else if (_first_listener == old_listener) {
-            _first_listener = _first_listener->next;
+        } else if (_first_handler == old_handler) {
+            _first_handler = _first_handler->next;
             return;
         }
 
-        gpioDigitalInputListener * current_listener = _first_listener;
+        gpioDigitalInputHandler * current_handler = _first_handler;
 
-        while (current_listener->next != nullptr) {
-            if (current_listener->next == old_listener) {
-                current_listener->next = old_listener->next;
+        while (current_handler->next != nullptr) {
+            if (current_handler->next == old_handler) {
+                current_handler->next = old_handler->next;
                 return;
             }
-            current_listener = current_listener->next;
+            current_handler = current_handler->next;
         }
     };
 
     bool call(const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
-        gpioDigitalInputListener * current_listener = _first_listener;
-        while (current_listener != nullptr) {
-            if (current_listener->callback(state, edge, triggering_pin_number)) {
+        gpioDigitalInputHandler * current_handler = _first_handler;
+        while (current_handler != nullptr) {
+            if (current_handler->callback(state, edge, triggering_pin_number)) {
                 return true;
             }
-            current_listener = current_listener->next;
+            current_handler = current_handler->next;
         }
         return false;
     }
 };
 
 // lists for the various inputAction events
-extern gpioDigitalInputListenerList din_listeners[INPUT_ACTION_ACTUAL_MAX+1];
+extern gpioDigitalInputHandlerList din_handlers[INPUT_ACTION_ACTUAL_MAX+1];
 
 /*
  * gpioDigitalInput - digital input base class
@@ -507,8 +507,8 @@ struct gpioDigitalInputPin final : gpioDigitalInput {
         }
 
         // start with INPUT_ACTION_INTERNAL for transient event processing like homing and probing
-        if (!din_listeners[INPUT_ACTION_INTERNAL].call(pin_value_corrected, edge, ext_pin_number)) {
-            din_listeners[action].call(pin_value_corrected, edge, ext_pin_number);
+        if (!din_handlers[INPUT_ACTION_INTERNAL].call(pin_value_corrected, edge, ext_pin_number)) {
+            din_handlers[action].call(pin_value_corrected, edge, ext_pin_number);
         }
 #if 0
         // TODO - refactor homing_mode and probing_mode out to use a dynamically
@@ -570,7 +570,7 @@ struct gpioDigitalInputPin final : gpioDigitalInput {
             if (input_function == INPUT_ACTION_LIMIT) {
                 cm.limit_requested = ext_pin_number;
 
-            } else if (input_function == INPUT_FUNCTION_SHUTDOWN) {
+            } else if (input_function == INPUT_ACTION_SHUTDOWN) {
                 cm.shutdown_requested = ext_pin_number;
 
             } else if (input_function == INPUT_FUNCTION_INTERLOCK) {

@@ -761,12 +761,12 @@ void canonical_machine_init()
     ACTIVE_MODEL = MODEL;                       // setup initial Gcode model pointer
     cm_arc_init();                              // Note: spindle and coolant inits are independent
 
-    din_listeners[INPUT_ACTION_STOP].registerListener(&_hold_listener);
-    din_listeners[INPUT_ACTION_FAST_STOP].registerListener(&_hold_listener);
-    din_listeners[INPUT_ACTION_HALT].registerListener(&_halt_listener);
-    din_listeners[INPUT_ACTION_ALARM].registerListener(&_alarm_listener);
-    din_listeners[INPUT_ACTION_PANIC].registerListener(&_panic_listener);
-    din_listeners[INPUT_ACTION_RESET].registerListener(&_reset_listener);
+    din_handlers[INPUT_ACTION_STOP].registerHandler(&_hold_handler);
+    din_handlers[INPUT_ACTION_FAST_STOP].registerHandler(&_hold_handler);
+    din_handlers[INPUT_ACTION_HALT].registerHandler(&_halt_handler);
+    din_handlers[INPUT_ACTION_ALARM].registerHandler(&_alarm_handler);
+    din_handlers[INPUT_ACTION_PANIC].registerHandler(&_panic_handler);
+    din_handlers[INPUT_ACTION_RESET].registerHandler(&_reset_handler);
 }
 
 void canonical_machine_reset_rotation() {
@@ -880,10 +880,10 @@ stat_t cm_clr(nvObj_t *nv)                // clear alarm or shutdown from comman
 }
 
 /*
- * _alarm_listener - a gpioDigitalInputListener to capture pin change events
+ * _alarm_handler - a gpioDigitalInputHandler to capture pin change events
  *   Will be registered at init
  */
-gpioDigitalInputListener _alarm_listener {
+gpioDigitalInputHandler _alarm_handler {
     [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
         if (edge != INPUT_EDGE_LEADING) { return false; }
 
@@ -964,10 +964,10 @@ void cm_halt_motion(void)
 }
 
 /*
- * _hold_listener - a gpioDigitalInputListener to capture pin change events
+ * _hold_handler - a gpioDigitalInputHandler to capture pin change events
  *   Will be registered at init
  */
-gpioDigitalInputListener _halt_listener {
+gpioDigitalInputHandler _halt_handler {
     [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
         if (edge != INPUT_EDGE_LEADING) { return false; }
 
@@ -1090,10 +1090,10 @@ stat_t cm_panic(const stat_t status, const char *msg)
 }
 
 /*
- * _panic_listener - a gpioDigitalInputListener to capture pin change events
+ * _panic_handler - a gpioDigitalInputHandler to capture pin change events
  *   Will be registered at init
  */
-gpioDigitalInputListener _panic_listener {
+gpioDigitalInputHandler _panic_handler {
     [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
         if (edge != INPUT_EDGE_LEADING) { return false; }
 
@@ -1108,10 +1108,10 @@ gpioDigitalInputListener _panic_listener {
 };
 
 /*
- * _reset_listener - a gpioDigitalInputListener to capture pin change events
+ * _reset_handler - a gpioDigitalInputHandler to capture pin change events
  *   Will be registered at init
  */
-gpioDigitalInputListener _reset_listener {
+gpioDigitalInputHandler _reset_handler {
     [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
         if (edge != INPUT_EDGE_LEADING) { return false; }
 
@@ -2021,10 +2021,10 @@ void cm_queue_flush()
 }
 
 /*
- * _hold_listener - a gpioDigitalInputListener to capture pin change events
+ * _hold_handler - a gpioDigitalInputHandler to capture pin change events
  *   Will be registered at init
  */
-gpioDigitalInputListener _hold_listener {
+gpioDigitalInputHandler _hold_handler {
     [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
         if (edge != INPUT_EDGE_LEADING) { return false; }
 

@@ -168,7 +168,7 @@ gpioDigitalOutputReader out14;
 gpioDigitalOutputReader* const out_r[14] = {&out1 ,&out2 ,&out3 ,&out4 ,&out5 ,&out6 ,&out7 ,&out8 ,&out9 ,&out10 ,&out11 ,&out12 ,&out13 ,&out14};
 
 // lists for the various inputAction events
-gpioDigitalInputListenerList din_listeners[INPUT_ACTION_ACTUAL_MAX+1];
+gpioDigitalInputHandlerList din_handlers[INPUT_ACTION_ACTUAL_MAX+1];
 
 
 /*
