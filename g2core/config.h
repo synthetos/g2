@@ -280,7 +280,7 @@ typedef struct cfgItem {
     fptrPrint print;                    // print binding: aka void (*print)(nvObj_t *nv);
     fptrCmd get;                        // GET binding aka uint8_t (*get)(nvObj_t *nv)
     fptrCmd set;                        // SET binding aka uint8_t (*set)(nvObj_t *nv)
-    float *target;                      // target for writing config value
+    void *target;                       // target for writing config value
     float def_value;                    // default value for config item
 } cfgItem_t;
 
