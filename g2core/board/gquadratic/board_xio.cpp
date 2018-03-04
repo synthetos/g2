@@ -71,7 +71,7 @@ void board_hardware_init(void) // called 1st
 #if XIO_HAS_USB
     // Init USB
     usb.attach();
-    usb.handleVbusChange(true);
+    usb.handleVbusChange(/*force:*/ true);
 #endif // XIO_HAS_USB
 }
 

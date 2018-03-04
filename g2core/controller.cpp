@@ -297,7 +297,7 @@ static void _dispatch_kernel(const devflags_t flags)
         nv_copy_string(nv, cs.bufp);                        // copy the Gcode line
         nv->valuetype = TYPE_STRING;
         status = gcode_parser(cs.bufp);
-        
+
 #if MARLIN_COMPAT_ENABLED == true
         if (js.json_mode == MARLIN_COMM_MODE) {             // in case a marlin-specific M-code was found
             cs.comm_request_mode = MARLIN_COMM_MODE;        // mode of this command
@@ -340,7 +340,7 @@ static stat_t _controller_state()
 {
     if (cs.controller_state == CONTROLLER_CONNECTED) {        // first time through after reset
         cs.controller_state = CONTROLLER_STARTUP;
-        
+
         // This is here just to put a small delay in before the startup message.
 #if MARLIN_COMPAT_ENABLED == true
         // For Marlin compatibility, we need this to be long enough for the UI to say something and reveal
@@ -349,7 +349,7 @@ static stat_t _controller_state()
             // xio_connected will only return true for USB and other non-permanent connections
             _connection_timeout.set(2000);
         } else {
-            _connection_timeout.set(1);
+            _connection_timeout.set(10);
         }
 #else
         _connection_timeout.set(10);
@@ -558,5 +558,3 @@ stat_t _test_system_assertions()
     xio_test_assertions();
     return (STAT_OK);
 }
-
-    
