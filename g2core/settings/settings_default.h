@@ -933,7 +933,7 @@
     INPUT_ACTION_RESET
 
     INPUT_FUNCTION_NONE
-    INPUT_FUNCTION_LIMIT
+    INPUT_ACTION_LIMIT
     INPUT_FUNCTION_INTERLOCK
     INPUT_FUNCTION_SHUTDOWN
     INPUT_FUNCTION_PANIC
@@ -949,9 +949,6 @@
 #ifndef DI1_ACTION
 #define DI1_ACTION                  INPUT_ACTION_NONE
 #endif
-#ifndef DI1_FUNCTION
-#define DI1_FUNCTION                INPUT_FUNCTION_NONE
-#endif
 #ifndef DI1_EXTERNAL_NUMBER
 #define DI1_EXTERNAL_NUMBER         1
 #endif
@@ -965,9 +962,6 @@
 #endif
 #ifndef DI2_ACTION
 #define DI2_ACTION                  INPUT_ACTION_NONE
-#endif
-#ifndef DI2_FUNCTION
-#define DI2_FUNCTION                INPUT_FUNCTION_NONE
 #endif
 #ifndef DI2_EXTERNAL_NUMBER
 #define DI2_EXTERNAL_NUMBER         2
@@ -983,9 +977,6 @@
 #ifndef DI3_ACTION
 #define DI3_ACTION                  INPUT_ACTION_NONE
 #endif
-#ifndef DI3_FUNCTION
-#define DI3_FUNCTION                INPUT_FUNCTION_NONE
-#endif
 #ifndef DI3_EXTERNAL_NUMBER
 #define DI3_EXTERNAL_NUMBER         3
 #endif
@@ -999,9 +990,6 @@
 #endif
 #ifndef DI4_ACTION
 #define DI4_ACTION                  INPUT_ACTION_NONE
-#endif
-#ifndef DI4_FUNCTION
-#define DI4_FUNCTION                INPUT_FUNCTION_NONE
 #endif
 #ifndef DI4_EXTERNAL_NUMBER
 #define DI4_EXTERNAL_NUMBER         4
@@ -1017,9 +1005,6 @@
 #ifndef DI5_ACTION
 #define DI5_ACTION                  INPUT_ACTION_NONE
 #endif
-#ifndef DI5_FUNCTION
-#define DI5_FUNCTION                INPUT_FUNCTION_PROBE
-#endif
 #ifndef DI5_EXTERNAL_NUMBER
 #define DI5_EXTERNAL_NUMBER         5
 #endif
@@ -1033,9 +1018,6 @@
 #endif
 #ifndef DI6_ACTION
 #define DI6_ACTION                  INPUT_ACTION_NONE
-#endif
-#ifndef DI6_FUNCTION
-#define DI6_FUNCTION                INPUT_FUNCTION_NONE
 #endif
 #ifndef DI6_EXTERNAL_NUMBER
 #define DI6_EXTERNAL_NUMBER         6
@@ -1051,9 +1033,6 @@
 #ifndef DI7_ACTION
 #define DI7_ACTION                  INPUT_ACTION_NONE
 #endif
-#ifndef DI7_FUNCTION
-#define DI7_FUNCTION                INPUT_FUNCTION_NONE
-#endif
 #ifndef DI7_EXTERNAL_NUMBER
 #define DI7_EXTERNAL_NUMBER         7
 #endif
@@ -1067,9 +1046,6 @@
 #endif
 #ifndef DI8_ACTION
 #define DI8_ACTION                  INPUT_ACTION_NONE
-#endif
-#ifndef DI8_FUNCTION
-#define DI8_FUNCTION                INPUT_FUNCTION_NONE
 #endif
 #ifndef DI8_EXTERNAL_NUMBER
 #define DI8_EXTERNAL_NUMBER         8
@@ -1085,9 +1061,6 @@
 #ifndef DI9_ACTION
 #define DI9_ACTION                  INPUT_ACTION_NONE
 #endif
-#ifndef DI9_FUNCTION
-#define DI9_FUNCTION                INPUT_FUNCTION_NONE
-#endif
 #ifndef DI9_EXTERNAL_NUMBER
 #define DI9_EXTERNAL_NUMBER         9
 #endif
@@ -1100,9 +1073,6 @@
 #endif
 #ifndef DI10_ACTION
 #define DI10_ACTION                 INPUT_ACTION_NONE
-#endif
-#ifndef DI10_FUNCTION
-#define DI10_FUNCTION               INPUT_FUNCTION_NONE
 #endif
 #ifndef DI10_EXTERNAL_NUMBER
 #define DI10_EXTERNAL_NUMBER         10
@@ -1117,9 +1087,6 @@
 #ifndef DI11_ACTION
 #define DI11_ACTION                 INPUT_ACTION_NONE
 #endif
-#ifndef DI11_FUNCTION
-#define DI11_FUNCTION               INPUT_FUNCTION_NONE
-#endif
 #ifndef DI11_EXTERNAL_NUMBER
 #define DI11_EXTERNAL_NUMBER         11
 #endif
@@ -1133,11 +1100,13 @@
 #ifndef DI12_ACTION
 #define DI12_ACTION                 INPUT_ACTION_NONE
 #endif
-#ifndef DI12_FUNCTION
-#define DI12_FUNCTION               INPUT_FUNCTION_NONE
-#endif
 #ifndef DI12_EXTERNAL_NUMBER
 #define DI12_EXTERNAL_NUMBER         12
+#endif
+
+
+#ifndef PROBING_INPUT
+#define PROBING_INPUT                Z_HOMING_INPUT // default to the z homing input
 #endif
 
 // DIGITAL OUTPUTS - Currently these are hard-wired to extruders
