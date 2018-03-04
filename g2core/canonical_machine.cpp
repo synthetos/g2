@@ -760,6 +760,13 @@ void canonical_machine_init()
     canonical_machine_init_assertions();        // establish assertions
     ACTIVE_MODEL = MODEL;                       // setup initial Gcode model pointer
     cm_arc_init();                              // Note: spindle and coolant inits are independent
+
+    din_listeners[INPUT_ACTION_STOP].registerListener(&_hold_listener);
+    din_listeners[INPUT_ACTION_FAST_STOP].registerListener(&_hold_listener);
+    din_listeners[INPUT_ACTION_HALT].registerListener(&_halt_listener);
+    din_listeners[INPUT_ACTION_ALARM].registerListener(&_alarm_listener);
+    din_listeners[INPUT_ACTION_SHUTDOWN].registerListener(&_shutdown_listener);
+    din_listeners[INPUT_ACTION_PANIC].registerListener(&_panic_listener);
 }
 
 void canonical_machine_reset_rotation() {
@@ -785,7 +792,7 @@ void canonical_machine_reset()
 
     // NOTE: Should unhome axes here
 
-    // reset requests and flags 
+    // reset requests and flags
     cm.queue_flush_state = FLUSH_OFF;
     cm.end_hold_requested = false;
     cm.limit_requested = 0;                     // resets switch closures that occurred during initialization
@@ -873,6 +880,24 @@ stat_t cm_clr(nvObj_t *nv)                // clear alarm or shutdown from comman
 }
 
 /*
+ * _alarm_listener - a gpioDigitalInputListener to capture pin change events
+ *   Will be registered at init
+ */
+gpioDigitalInputListener _alarm_listener {
+    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+        if (edge != INPUT_EDGE_LEADING) { return false; }
+
+        char msg[10];
+        sprintf(msg, "input %d", triggering_pin_number);
+        cm_alarm(STAT_ALARM, msg);
+
+        return false; // allow others to see this notice
+    },
+    5,    // priority
+    nullptr // next - nullptr to start with
+};
+
+/*
  * cm_clear() - clear ALARM and SHUTDOWN states
  * cm_parse_clear() - parse incoming gcode for M30 or M2 clears if in ALARM state
  *
@@ -937,6 +962,22 @@ void cm_halt_motion(void)
     cm.motion_state = MOTION_STOP;
     cm.hold_state = FEEDHOLD_OFF;
 }
+
+/*
+ * _hold_listener - a gpioDigitalInputListener to capture pin change events
+ *   Will be registered at init
+ */
+gpioDigitalInputListener _halt_listener {
+    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+        if (edge != INPUT_EDGE_LEADING) { return false; }
+
+        cm_halt_all();
+
+        return false; // allow others to see this notice
+    },
+    5,    // priority
+    nullptr // next - nullptr to start with
+};
 
 /*
  * cm_alarm() - enter ALARM state
@@ -1021,6 +1062,24 @@ stat_t cm_shutdown(const stat_t status, const char *msg)
 }
 
 /*
+ * _shutdown_listener - a gpioDigitalInputListener to capture pin change events
+ *   Will be registered at init
+ */
+gpioDigitalInputListener _shutdown_listener {
+    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+        if (edge != INPUT_EDGE_LEADING) { return false; }
+
+        char msg[10];
+        sprintf(msg, "input %d", triggering_pin_number);
+        cm_shutdown(STAT_SHUTDOWN, msg);
+
+        return false; // allow others to see this notice
+    },
+    5,    // priority
+    nullptr // next - nullptr to start with
+};
+
+/*
  * cm_panic() - enter panic state
  *
  * PANIC occurs if the firmware has detected an unrecoverable internal error
@@ -1047,6 +1106,24 @@ stat_t cm_panic(const stat_t status, const char *msg)
     rpt_exception(status, msg);                 // send panic report
     return (status);
 }
+
+/*
+ * _panic_listener - a gpioDigitalInputListener to capture pin change events
+ *   Will be registered at init
+ */
+gpioDigitalInputListener _panic_listener {
+    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+        if (edge != INPUT_EDGE_LEADING) { return false; }
+
+        char msg[10];
+        sprintf(msg, "input %d", triggering_pin_number);
+        cm_panic(STAT_PANIC, msg);
+
+        return false; // allow others to see this notice
+    },
+    5,    // priority
+    nullptr // next - nullptr to start with
+};
 
 /**************************
  * Representation (4.3.3) *
@@ -1119,7 +1196,7 @@ stat_t cm_set_g10_data(const uint8_t P_word, const bool P_flag,
                     cm.offset[P_word][axis] = _to_millimeters(offset[axis]);
                 } else {
                     // Should L20 take into account G92 offsets?
-                    cm.offset[P_word][axis] = 
+                    cm.offset[P_word][axis] =
                         cm.gmx.position[axis] -
                         _to_millimeters(offset[axis]) -
                         cm.tl_offset[axis];
@@ -1223,7 +1300,7 @@ static void _exec_offset(float *value, bool *flag)
     float offsets[AXES];
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
 
-        offsets[axis] = cm.offset[coord_system][axis] + cm.tl_offset[axis] + 
+        offsets[axis] = cm.offset[coord_system][axis] + cm.tl_offset[axis] +
                         (cm.gmx.origin_offset[axis] * cm.gmx.origin_offset_enable);
     }
     mp_set_runtime_work_offset(offsets);
@@ -1318,7 +1395,7 @@ stat_t cm_set_origin_offsets(const float offset[], const bool flag[])
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         if (flag[axis]) {
             cm.gmx.origin_offset[axis] = cm.gmx.position[axis] -
-                                         cm.offset[cm.gm.coord_system][axis] - 
+                                         cm.offset[cm.gm.coord_system][axis] -
                                          cm.tl_offset[axis] -
                                          _to_millimeters(offset[axis]);
         }
@@ -1382,7 +1459,7 @@ stat_t cm_straight_traverse(const float target[], const bool flags[])
     cm_cycle_start();                               // required for homing & other cycles
     stat_t status = mp_aline(&cm.gm);               // send the move to the planner
     cm_finalize_move();
-    
+
     if (status == STAT_MINIMUM_LENGTH_MOVE) {
         if (!mp_has_runnable_buffer()) {            // handle condition where zero-length move is last or only move
             cm_cycle_end();                         // ...otherwise cycle will not end properly
@@ -1416,7 +1493,7 @@ stat_t _goto_stored_position(const float stored_position[],     // always in mm
             target[i] *= INCHES_PER_MM;
         }
     }
-    
+
     // Run the stored position move
     while (mp_planner_is_full());                           // Make sure you have available buffers
 
@@ -1905,7 +1982,6 @@ void cm_start_hold()
         cm.hold_state = FEEDHOLD_SYNC;                      // invokes hold from aline execution
     }
 }
-
 void cm_end_hold()
 {
     if (cm.hold_state == FEEDHOLD_HOLD) {
@@ -1930,7 +2006,6 @@ void cm_end_hold()
         }
     }
 }
-
 void cm_queue_flush()
 {
     if (mp_runtime_is_idle()) {                     // can't flush planner during movement
@@ -1946,6 +2021,23 @@ void cm_queue_flush()
         qr_request_queue_report(0);                 // request a queue report, since we've changed the number of buffers available
     }
 }
+
+/*
+ * _hold_listener - a gpioDigitalInputListener to capture pin change events
+ *   Will be registered at init
+ */
+gpioDigitalInputListener _hold_listener {
+    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+        if (edge != INPUT_EDGE_LEADING) { return false; }
+
+        cm_start_hold();
+
+        return false; // allow others to see this notice
+    },
+    5,    // priority
+    nullptr // next - nullptr to start with
+};
+
 
 /******************************
  * Program Functions (4.3.10) *
@@ -2283,7 +2375,7 @@ static const char *const msg_frmo[] = { msg_g93, msg_g94, msg_g95 };
 
 static int8_t _get_axis(const index_t index)
 {
-    // test if this is a SYS parameter (global), in which case there will be no axis    
+    // test if this is a SYS parameter (global), in which case there will be no axis
     if (strcmp("sys", cfgArray[index].group) == 0) {
         return (AXIS_TYPE_SYSTEM);
     }
@@ -2293,7 +2385,7 @@ static int8_t _get_axis(const index_t index)
     if (isdigit(cfgArray[index].token[0])) {
         return(st_cfg.mot[c-0x31].motor_map);
     }
-        
+
     // otherwise it's an axis. Or undefined, which is usually a global.
     char *ptr;
     char axes[] = {"xyzabc"};
@@ -2487,12 +2579,12 @@ stat_t cm_get_am(nvObj_t *nv)
 stat_t cm_set_am(nvObj_t *nv)        // axis mode
 {
     if (cm_get_axis_type(nv->index) == 0) {    // linear
-        if (nv->value > AXIS_MODE_MAX_LINEAR) { 
+        if (nv->value > AXIS_MODE_MAX_LINEAR) {
             nv->valuetype = TYPE_NULL;
             return (STAT_INPUT_EXCEEDS_MAX_VALUE);
         }
     } else {
-        if (nv->value > AXIS_MODE_MAX_ROTARY) { 
+        if (nv->value > AXIS_MODE_MAX_ROTARY) {
             nv->valuetype = TYPE_NULL;
             return (STAT_INPUT_EXCEEDS_MAX_VALUE);
         }

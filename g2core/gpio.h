@@ -69,25 +69,22 @@ typedef enum {
 
 typedef enum {                          // actions are initiated from within the input's ISR
     INPUT_ACTION_NONE = 0,
-    INPUT_ACTION_STOP,                  // stop at normal jerk - preserves positional accuracy
-    INPUT_ACTION_FAST_STOP,             // stop at high jerk - preserves positional accuracy
-    INPUT_ACTION_HALT,                  // stop immediately - not guaranteed to preserve position
-    INPUT_ACTION_CYCLE_START,           // start / restart cycle after feedhold (RESERVED)
-    INPUT_ACTION_ALARM,                 // initiate an alarm. stops everything immediately - preserves position
-    INPUT_ACTION_SHUTDOWN,              // initiate a shutdown. stops everything immediately - does not preserve position
-    INPUT_ACTION_PANIC,                 // initiate a panic. stops everything immediately - does not preserve position
-    INPUT_ACTION_RESET,                 // reset system
-} inputAction;
-#define INPUT_ACTION_MAX INPUT_ACTION_RESET // for range checking
+    INPUT_ACTION_STOP,                  //  1 - stop at normal jerk - preserves positional accuracy
+    INPUT_ACTION_FAST_STOP,             //  2 - stop at high jerk - preserves positional accuracy
+    INPUT_ACTION_HALT,                  //  3 - stop immediately - not guaranteed to preserve position
+    INPUT_ACTION_CYCLE_START,           //  4 - start / restart cycle after feedhold (RESERVED)
+    INPUT_ACTION_ALARM,                 //  5 - initiate an alarm. stops everything immediately - preserves position
+    INPUT_ACTION_SHUTDOWN,              //  6 - initiate a shutdown. stops everything immediately - does not preserve position
+    INPUT_ACTION_PANIC,                 //  7 - initiate a panic. stops everything immediately - does not preserve position
+    INPUT_ACTION_RESET,                 //  8 - reset system
 
-typedef enum {                          // functions are requested from the ISR, run from the main loop
-    INPUT_FUNCTION_NONE = 0,
-    INPUT_FUNCTION_LIMIT = 1,           // limit switch processing
-    INPUT_FUNCTION_INTERLOCK = 2,       // interlock processing
-    INPUT_FUNCTION_SHUTDOWN = 3,        // shutdown in support of external emergency stop
-    INPUT_FUNCTION_PROBE = 4,           // assign input as probe input
-} inputFunc;
-#define INPUT_FUNCTION_MAX INPUT_FUNCTION_PROBE
+    INPUT_ACTION_LIMIT,                 //  9 - limit switch processing
+    INPUT_ACTION_INTERLOCK,             // 10 - interlock processing
+
+    INPUT_ACTION_INTERNAL,              // 11 - homing/probing processing (internal only)
+} inputAction;
+#define INPUT_ACTION_MAX INPUT_ACTION_INTERLOCK // for range checking
+#define INPUT_ACTION_ACTUAL_MAX INPUT_ACTION_INTERNAL // for internal checking and resource allocation
 
 typedef enum {
     INPUT_INACTIVE = 0,                 // aka switch open, also read as 'false'
@@ -106,6 +103,105 @@ struct gpioDigitalInputReader;
 extern gpioDigitalInputReader* const in_r[14];
 
 /*
+ * gpioDigitalInputListener - superclass of objects that wish to be informed of
+ *                            digital input changes
+ *
+ * Notes about the callback function:
+ *   The first parameter is the current state (honoring polarity) - true = ACTIVE
+ *   The second parameter is the inputEdgeFlag value
+ *   The third parameter is the external number (N in `diN`) of the pin that changed
+ *   The return value indicates if it has been "handled" - return true and no other
+ *     gpioDigitalInputListener callbacks will be triggered *for this event*
+ *   Generally, return false unless there is a good reason to stop propagation.
+ *
+ * Example gpioDigitalInputListener object creation:
+
+    gpioDigitalInputListener limitListener {
+        [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+            if (edge != INPUT_EDGE_LEADING) { return; }
+            limit_requested = true; // record that a limit was requested for later processing
+            return false; // allow others to see this notice
+        },
+        5,      // priority
+        nullptr // next - nullptr to start with
+    };
+
+    // register this listener for limit events:
+    din_listeners[INPUT_ACTION_LIMIT].registerListener(limitListener);
+ */
+
+struct gpioDigitalInputListener {
+    // const means it must be provided at compile time
+    const std::function<bool(const bool, const inputEdgeFlag, const uint8_t)> callback;  // the function to call
+    const int8_t priority;                                    // higher is higher
+
+    gpioDigitalInputListener *next;                           // form a simple linked list
+};
+
+
+struct gpioDigitalInputListenerList {
+    gpioDigitalInputListener * _first_listener;
+
+    void registerListener(gpioDigitalInputListener * const new_listener) {
+        if (!_first_listener) {
+            // there is only one - now
+            _first_listener = new_listener;
+            return;
+        } else if (new_listener->priority > _first_listener->priority) {
+            // this is the new first one
+            new_listener->next = _first_listener;
+            _first_listener = new_listener;
+            return;
+        }
+
+        gpioDigitalInputListener * current_listener = _first_listener;
+
+        while (current_listener != nullptr) {
+            if (new_listener->priority <= current_listener->priority) {
+                // new_listener will be immediately after current_listener
+                new_listener->next = current_listener->next;
+                current_listener->next = new_listener;
+                return;
+            }
+            current_listener = current_listener->next;
+        }
+    };
+
+    void deregisterListener(gpioDigitalInputListener * const old_listener) {
+        if (!_first_listener) {
+            return;
+        } else if (_first_listener == old_listener) {
+            _first_listener = _first_listener->next;
+            return;
+        }
+
+        gpioDigitalInputListener * current_listener = _first_listener;
+
+        while (current_listener->next != nullptr) {
+            if (current_listener->next == old_listener) {
+                current_listener->next = old_listener->next;
+                return;
+            }
+            current_listener = current_listener->next;
+        }
+    };
+
+    bool call(const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+        gpioDigitalInputListener * current_listener = _first_listener;
+        while (current_listener != nullptr) {
+            if (current_listener->callback(state, edge, triggering_pin_number)) {
+                return true;
+            }
+            current_listener = current_listener->next;
+        }
+        return false;
+    }
+};
+
+// lists for the various inputAction events
+extern gpioDigitalInputListenerList din_listeners[INPUT_ACTION_ACTUAL_MAX+1];
+
+/*
  * gpioDigitalInput - digital input base class
  */
 struct gpioDigitalInput {
@@ -116,8 +212,6 @@ struct gpioDigitalInput {
 
     virtual bool getState();
 
-    virtual inputFunc getFunction();
-    virtual bool setFunction(const inputFunc);
 
     virtual inputAction getAction();
     virtual bool setAction(const inputAction);
@@ -131,8 +225,6 @@ struct gpioDigitalInput {
     virtual bool setExternalNumber(const uint8_t);
     virtual const uint8_t getExternalNumber();
 
-    virtual void setIsHoming(const bool);
-    virtual void setIsProbing(const bool);
 
 
     // functions that take nvObj_t* and return stat_t, NOT overridden
@@ -200,22 +292,6 @@ struct gpioDigitalInput {
         return (STAT_OK);
     };
 
-    stat_t getFunction(nvObj_t *nv)
-    {
-        nv->value = getFunction();
-        nv->valuetype = TYPE_INT;
-        return (STAT_OK);
-    };
-    stat_t setFunction(nvObj_t *nv)
-    {
-        if ((nv->value < INPUT_FUNCTION_NONE) || (nv->value > INPUT_FUNCTION_MAX)) {
-            return (STAT_INPUT_VALUE_RANGE_ERROR);
-        }
-        if (!setFunction((inputFunc)nv->value)) {
-            return STAT_PARAMETER_IS_READ_ONLY;
-        }
-        return (STAT_OK);
-    };
 
     stat_t getExternalNumber(nvObj_t *nv)
     {
@@ -240,7 +316,7 @@ struct gpioDigitalInput {
  * gpioDigitalInputReader - digital input reader class - the "in1" - "inX" objects
  */
 
-struct gpioDigitalInputReader {
+struct gpioDigitalInputReader final {
     gpioDigitalInput* pin;
 
     // functions for use by other parts of the code
@@ -293,11 +369,11 @@ extern gpioDigitalInputReader in14;
  * gpioDigitalInputPin - concrete child of gpioDigitalInput
  */
 template <typename Pin_t>
-struct gpioDigitalInputPin : gpioDigitalInput {
+struct gpioDigitalInputPin final : gpioDigitalInput {
     ioEnabled enabled;					// -1=unavailable, 0=disabled, 1=enabled
     ioPolarity polarity;                // 0=normal/active high, 1=inverted/active low
     inputAction action;                 // 0=none, 1=stop, 2=halt, 3=stop_steps, 4=reset
-    inputFunc input_function;                 // function to perform when activated / deactivated
+    // inputFunc input_function;                 // function to perform when activated / deactivated
 
     inputEdgeFlag edge;                 // keeps a transient record of edges for immediate inquiry
 
@@ -342,15 +418,6 @@ struct gpioDigitalInputPin : gpioDigitalInput {
         return (polarity == IO_ACTIVE_HIGH) ? v : !v;
     };
 
-    inputFunc getFunction() override
-    {
-        return input_function;
-    }
-    bool setFunction(const inputFunc f) override
-    {
-        input_function = f;
-        return true;
-    };
 
     inputAction getAction() override
     {
@@ -406,17 +473,6 @@ struct gpioDigitalInputPin : gpioDigitalInput {
         return proxy_pin_number;
     };
 
-    void setIsHoming(const bool m) override
-    {
-        homing_mode = m;
-    };
-
-    void setIsProbing(const bool m) override
-    {
-        probing_mode = m;
-    };
-
-
 
     // support function for pin change interrupt handling
 
@@ -450,6 +506,11 @@ struct gpioDigitalInputPin : gpioDigitalInput {
             edge = INPUT_EDGE_TRAILING;
         }
 
+        // start with INPUT_ACTION_INTERNAL for transient event processing like homing and probing
+        if (!din_listeners[INPUT_ACTION_INTERNAL].call(pin_value_corrected, edge, ext_pin_number)) {
+            din_listeners[action].call(pin_value_corrected, edge, ext_pin_number);
+        }
+#if 0
         // TODO - refactor homing_mode and probing_mode out to use a dynamically
         //        configured linked list of functions
 
@@ -506,7 +567,7 @@ struct gpioDigitalInputPin : gpioDigitalInput {
 
             // these functions also trigger on the leading edge
 
-            if (input_function == INPUT_FUNCTION_LIMIT) {
+            if (input_function == INPUT_ACTION_LIMIT) {
                 cm.limit_requested = ext_pin_number;
 
             } else if (input_function == INPUT_FUNCTION_SHUTDOWN) {
@@ -523,6 +584,7 @@ struct gpioDigitalInputPin : gpioDigitalInput {
                 cm.safety_interlock_reengaged = ext_pin_number;
             }
         }
+#endif
 
         sr_request_status_report(SR_REQUEST_TIMED);   //+++++ Put this one back in.
     };
@@ -654,7 +716,7 @@ struct gpioDigitalOutput {
  * gpioDigitalOutputReader - digital output reader class - the "out1" - "outX" objects
  */
 
-struct gpioDigitalOutputReader {
+struct gpioDigitalOutputReader final {
     gpioDigitalOutput* pin;
 
     // functions for use by other parts of the code
@@ -720,7 +782,7 @@ extern gpioDigitalOutputReader out14;
  * gpioDigitalOutputPin - concrete child of gpioDigitalOutput
  */
 template <typename Pin_t>
-struct gpioDigitalOutputPin : gpioDigitalOutput {
+struct gpioDigitalOutputPin final : gpioDigitalOutput {
     ioEnabled enabled;                  // -1=unavailable, 0=disabled, 1=enabled
     ioPolarity polarity;                // 0=normal/active high, 1=inverted/active low
     uint8_t proxy_pin_number;             // the number used externally for this pin ("in" + proxy_pin_number)
@@ -1176,8 +1238,6 @@ void inputs_reset(void);
 void outputs_reset(void);
 
 bool gpio_read_input(const uint8_t input_num);
-void gpio_set_homing_mode(const uint8_t input_num, const bool is_homing);
-void gpio_set_probing_mode(const uint8_t input_num, const bool is_probing);
 int8_t gpio_get_probing_input(void);
 
 stat_t din_get_en(nvObj_t *nv);     // enabled
@@ -1186,8 +1246,6 @@ stat_t din_get_po(nvObj_t *nv);     // input sense
 stat_t din_set_po(nvObj_t *nv);
 stat_t din_get_ac(nvObj_t *nv);     // input action
 stat_t din_set_ac(nvObj_t *nv);
-stat_t din_get_fn(nvObj_t *nv);     // input function
-stat_t din_set_fn(nvObj_t *nv);
 stat_t din_get_in(nvObj_t *nv);     // input external number
 stat_t din_set_in(nvObj_t *nv);
 stat_t din_get_input(nvObj_t *nv);

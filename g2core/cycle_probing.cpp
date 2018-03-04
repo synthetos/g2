@@ -123,6 +123,24 @@ static void _motion_end_callback(float* vect, bool* flag)
     pb.wait_for_motion_end = false;
 }
 
+/*
+ * _probing_listener - a gpioDigitalInputListener to capture pin change events
+ *   Will be registered only during homing mode - see gpio.h for more info
+ */
+gpioDigitalInputListener _probing_listener {
+    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+        if (cm.cycle_state != CYCLE_PROBE) { return false; }
+        if (triggering_pin_number != pb.probe_input) { return false; }
+
+        en_take_encoder_snapshot();
+        cm_start_hold();
+
+        return false; // allow others to see this notice
+    },
+    100,    // priority
+    nullptr // next - nullptr to start with
+};
+
 /***********************************************************************************
  **** G38.x Probing Cycle **********************************************************
  ***********************************************************************************/
@@ -130,8 +148,8 @@ static void _motion_end_callback(float* vect, bool* flag)
 /***********************************************************************************
  * cm_probing_cycle_start()    - G38.x probing cycle using contact (digital input)
  *
- *  cm_probe_cycle_start() is the entry point for a probe cycle. It checks for 
- *  some errors, sets up the cycle, then prevents any new commands from queuing 
+ *  cm_probe_cycle_start() is the entry point for a probe cycle. It checks for
+ *  some errors, sets up the cycle, then prevents any new commands from queuing
  *  to the planner so that the planner can move to a stop and report motion stopped.
  *
  *  --- Some further details ---
@@ -154,12 +172,12 @@ static void _motion_end_callback(float* vect, bool* flag)
  *  PROBE_SUCCEEDED, then we roll 0 to 1, and 1 to 2, up to PROBES_STORED-1.
  *  The oldest probe is "lost."
  *
- *  Alarms and exceptions: It is *not* necessarily an error condition for the 
- *  probe not to trigger, depending on the G38.x command received. It is an error 
+ *  Alarms and exceptions: It is *not* necessarily an error condition for the
+ *  probe not to trigger, depending on the G38.x command received. It is an error
  *  for the limit or homing switches to fire, or for some other configuration error.
  *  These are trapped and cause Alarms.
- *  
- *  Note: Spindle and coolant are not affected during probing. Some probes require 
+ *
+ *  Note: Spindle and coolant are not affected during probing. Some probes require
  *  the spindle to be turned on.
  *
  *  Note: When coding a cycle (like this one) you get to perform one queued
@@ -168,15 +186,15 @@ static void _motion_end_callback(float* vect, bool* flag)
  *  sets a flag in the probing object (pb.waiting_for_motion_end) to tell us that
  *  the move has finished. The runtime has a special exception for probing and
  *  homing where if a move is interrupted it clears it out of the queue.
- * 
- *  You must also wait until the last move has actually completed before declaring 
- *  the cycle to be done. Otherwise there is a nasty race condition in the 
- *  _controller_HSM() that may accept the next command before the position of the 
- *  final move has been recorded in the Gcode model. That's part of what what the 
+ *
+ *  You must also wait until the last move has actually completed before declaring
+ *  the cycle to be done. Otherwise there is a nasty race condition in the
+ *  _controller_HSM() that may accept the next command before the position of the
+ *  final move has been recorded in the Gcode model. That's part of what what the
  *  wait_for_motion_end callback is about.
  */
 
-uint8_t cm_straight_probe(float target[], bool flags[], bool trip_sense, bool alarm_flag) 
+uint8_t cm_straight_probe(float target[], bool flags[], bool trip_sense, bool alarm_flag)
 {
     // error if zero feed rate
     if (fp_ZERO(cm.gm.feed_rate)) {
@@ -213,19 +231,19 @@ uint8_t cm_straight_probe(float target[], bool flags[], bool trip_sense, bool al
     pb.wait_for_motion_end = true;
     mp_queue_command(_motion_end_callback, nullptr, nullptr);  // note: these args are ignored
     return (STAT_OK);
-} 
+}
 
 /***********************************************************************************
  *  cm_probing_cycle_callback() - handle probing progress
  *
- *  This is called regularly from the controller. If we report NOOP, the controller 
- *  will continue with other tasks. Otherwise the controller will not execute any 
+ *  This is called regularly from the controller. If we report NOOP, the controller
+ *  will continue with other tasks. Otherwise the controller will not execute any
  *  later tasks, including read any more "data".
  */
 
-uint8_t cm_probing_cycle_callback(void) 
+uint8_t cm_probing_cycle_callback(void)
 {
-    if ((cm.cycle_state != CYCLE_PROBE) && (cm.probe_state[0] != PROBE_WAITING)) { 
+    if ((cm.cycle_state != CYCLE_PROBE) && (cm.probe_state[0] != PROBE_WAITING)) {
         return (STAT_NOOP);         // exit if not in a probing cycle
     }
     if (pb.wait_for_motion_end) {   // sync to planner move ends (using callback)
@@ -238,14 +256,14 @@ uint8_t cm_probing_cycle_callback(void)
  * _probing_start() - start the probe or skip it if contact is already active
  */
 
-static uint8_t _probing_start() 
+static uint8_t _probing_start()
 {
     // so optimistic... ;)
     // These initializations are required before starting the probing cycle but must
-    // be done after the planner has exhausted all current moves as they affect the 
-    // runtime (specifically the digital input modes). Side effects would include 
+    // be done after the planner has exhausted all current moves as they affect the
+    // runtime (specifically the digital input modes). Side effects would include
     // limit switches initiating probe actions instead of just killing movement
-    
+
     cm.probe_state[0] = PROBE_FAILED;
     cm.machine_state = MACHINE_CYCLE;
     cm.cycle_state = CYCLE_PROBE;
@@ -255,7 +273,7 @@ static uint8_t _probing_start()
     pb.saved_units_mode = (cmUnitsMode)cm_get_units_mode(ACTIVE_MODEL);
     pb.saved_soft_limits = cm_get_soft_limits();
     cm_set_soft_limits(false);
-    
+
     // set working values
     cm_set_distance_mode(ABSOLUTE_DISTANCE_MODE);
     cm_set_units_mode(MILLIMETERS);
@@ -271,7 +289,7 @@ static uint8_t _probing_start()
         return(_probing_exception_exit(STAT_PROBE_TRAVEL_TOO_SMALL));
     }
 
-    gpio_set_probing_mode(pb.probe_input, true);
+    din_listeners[INPUT_ACTION_INTERNAL].registerListener(&_probing_listener);
 
     // Get initial probe state, and don't probe if we're already tripped.
     // If the initial input is the same as the trip_sense it's an error.
@@ -279,7 +297,7 @@ static uint8_t _probing_start()
         return(_probing_exception_exit(STAT_PROBE_IS_ALREADY_TRIPPED));
     }
 
-    // Everything checks out. Run the probe move    
+    // Everything checks out. Run the probe move
     _probe_move(pb.target, pb.flags);
     pb.func = _probing_backoff;
     return (STAT_EAGAIN);
@@ -291,10 +309,10 @@ static uint8_t _probing_start()
  * Back off to the measured touch position captured by encoder snapshot
  */
 
-static stat_t _probing_backoff() 
+static stat_t _probing_backoff()
 {
-    // Test if we've contacted. If so, do the backoff. Convert the contact position 
-    // captured from the encoder in step space to steps to mm. The encoder snapshot 
+    // Test if we've contacted. If so, do the backoff. Convert the contact position
+    // captured from the encoder in step space to steps to mm. The encoder snapshot
     // was taken by input interrupt at the time of closure.
 
     if (pb.trip_sense == gpio_read_input(pb.probe_input)) {  // exclusive or for booleans
@@ -318,7 +336,7 @@ static stat_t _probing_backoff()
 
 static stat_t _probe_move(const float target[], const bool flags[])
 {
-    cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_ON);  
+    cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_ON);
     pb.wait_for_motion_end = true;          // set this BEFORE the motion starts
     cm_straight_feed(target, flags);
     mp_queue_command(_motion_end_callback, nullptr, nullptr);      // the last two arguments are ignored anyway
@@ -331,12 +349,12 @@ static stat_t _probe_move(const float target[], const bool flags[])
  * _probing_finish()         - exit for successful and non-contacted (failed) probes
  */
 
-static void _probe_restore_settings() 
+static void _probe_restore_settings()
 {
-    gpio_set_probing_mode(pb.probe_input, false);       // set input back to normal operation
+    din_listeners[INPUT_ACTION_INTERNAL].deregisterListener(&_probing_listener);
 
     for (uint8_t axis = 0; axis < AXES; axis++) {       // restore axis jerks
-        cm.a[axis].jerk_max = pb.saved_jerk[axis]; 
+        cm.a[axis].jerk_max = pb.saved_jerk[axis];
     }
     cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_OFF); // release abs override and restore work offsets
     cm_set_distance_mode(pb.saved_distance_mode);

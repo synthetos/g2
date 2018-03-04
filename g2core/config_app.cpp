@@ -174,6 +174,7 @@ const cfgItem_t cfgArray[] = {
     { "prb","prbc",_f0, 3, tx_print_nul, get_flt, set_ro, (float *)&cm.probe_results[0][AXIS_C], 0 },
     { "prb","prbs",_f0, 0, tx_print_nul, get_nul, cm_set_probe, (float *)&cs.null,               0 },    // store probe
     { "prb","prbr",_f0, 0, tx_print_nul, cm_get_prbr, cm_set_prbr, nullptr,                      0 },    // enable probe report. Init in cm_init
+    { "prb","prbin",_f0, 0, tx_print_nul, get_ui8, cm_set_hi, (float *)&cm.probe_input, PROBING_INPUT },     // probing state
 
     { "jog","jogx",_f0, 0, tx_print_nul, get_nul, cm_run_jogx, (float *)&cm.jogging_dest, 0},
     { "jog","jogy",_f0, 0, tx_print_nul, get_nul, cm_run_jogy, (float *)&cm.jogging_dest, 0},
@@ -486,83 +487,83 @@ const cfgItem_t cfgArray[] = {
     { "di1","di1en",_fip,   0, din_print_en, din_get_en, din_set_en, (float *)&din1,  DI1_ENABLED },
     { "di1","di1po",_fip,   0, din_print_po, din_get_po, din_set_po, (float *)&din1,  DI1_POLARITY },
     { "di1","di1ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, (float *)&din1,  DI1_ACTION },
-    { "di1","di1fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din1,  DI1_FUNCTION },
+    // { "di1","di1fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din1,  DI1_FUNCTION },
     { "di1","di1in",_fip,   0, din_print_in, din_get_in, din_set_in, (float *)&din1,  DI1_EXTERNAL_NUMBER },
 
     { "di2","di2en",_fip,   0, din_print_en, din_get_en, din_set_en, (float *)&din2,  DI2_ENABLED },
     { "di2","di2po",_fip,   0, din_print_po, din_get_po, din_set_po, (float *)&din2,  DI2_POLARITY },
     { "di2","di2ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, (float *)&din2,  DI2_ACTION },
-    { "di2","di2fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din2,  DI2_FUNCTION },
+    // { "di2","di2fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din2,  DI2_FUNCTION },
     { "di2","di2in",_fip,   0, din_print_in, din_get_in, din_set_in, (float *)&din2,  DI2_EXTERNAL_NUMBER },
 
 #if (D_IN_CHANNELS >= 3)
     { "di3","di3en",_fip,   0, din_print_en, din_get_en, din_set_en, (float *)&din3,  DI3_ENABLED },
     { "di3","di3po",_fip,   0, din_print_po, din_get_po, din_set_po, (float *)&din3,  DI3_POLARITY },
     { "di3","di3ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, (float *)&din3,  DI3_ACTION },
-    { "di3","di3fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din3,  DI3_FUNCTION },
+    // { "di3","di3fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din3,  DI3_FUNCTION },
     { "di3","di3in",_fip,   0, din_print_in, din_get_in, din_set_in, (float *)&din3,  DI3_EXTERNAL_NUMBER },
 #endif
 #if (D_IN_CHANNELS >= 4)
     { "di4","di4en",_fip,   0, din_print_en, din_get_en, din_set_en, (float *)&din4,  DI4_ENABLED },
     { "di4","di4po",_fip,   0, din_print_po, din_get_po, din_set_po, (float *)&din4,  DI4_POLARITY },
     { "di4","di4ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, (float *)&din4,  DI4_ACTION },
-    { "di4","di4fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din4,  DI4_FUNCTION },
+    // { "di4","di4fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din4,  DI4_FUNCTION },
     { "di4","di4in",_fip,   0, din_print_in, din_get_in, din_set_in, (float *)&din4,  DI4_EXTERNAL_NUMBER },
 #endif
 #if (D_IN_CHANNELS >= 5)
     { "di5","di5en",_fip,   0, din_print_en, din_get_en, din_set_en, (float *)&din5,  DI5_ENABLED },
     { "di5","di5po",_fip,   0, din_print_po, din_get_po, din_set_po, (float *)&din5,  DI5_POLARITY },
     { "di5","di5ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, (float *)&din5,  DI5_ACTION },
-    { "di5","di5fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din5,  DI5_FUNCTION },
+    // { "di5","di5fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din5,  DI5_FUNCTION },
     { "di5","di5in",_fip,   0, din_print_in, din_get_in, din_set_in, (float *)&din5,  DI5_EXTERNAL_NUMBER },
 #endif
 #if (D_IN_CHANNELS >= 6)
     { "di6","di6en",_fip,   0, din_print_en, din_get_en, din_set_en, (float *)&din6,  DI6_ENABLED },
     { "di6","di6po",_fip,   0, din_print_po, din_get_po, din_set_po, (float *)&din6,  DI6_POLARITY },
     { "di6","di6ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, (float *)&din6,  DI6_ACTION },
-    { "di6","di6fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din6,  DI6_FUNCTION },
+    // { "di6","di6fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din6,  DI6_FUNCTION },
     { "di6","di6in",_fip,   0, din_print_in, din_get_in, din_set_in, (float *)&din6,  DI6_EXTERNAL_NUMBER },
 #endif
 #if (D_IN_CHANNELS >= 7)
     { "di7","di7en",_fip,   0, din_print_en, din_get_en, din_set_en, (float *)&din7,  DI7_ENABLED },
     { "di7","di7po",_fip,   0, din_print_po, din_get_po, din_set_po, (float *)&din7,  DI7_POLARITY },
     { "di7","di7ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, (float *)&din7,  DI7_ACTION },
-    { "di7","di7fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din7,  DI7_FUNCTION },
+    // { "di7","di7fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din7,  DI7_FUNCTION },
     { "di7","di7in",_fip,   0, din_print_in, din_get_in, din_set_in, (float *)&din7,  DI7_EXTERNAL_NUMBER },
 #endif
 #if (D_IN_CHANNELS >= 8)
     { "di8","di8en",_fip,   0, din_print_en, din_get_en, din_set_en, (float *)&din8,  DI8_ENABLED },
     { "di3","di8po",_fip,   0, din_print_po, din_get_po, din_set_po, (float *)&din8,  DI8_POLARITY },
     { "di8","di8ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, (float *)&din8,  DI8_ACTION },
-    { "di8","di8fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din8,  DI8_FUNCTION },
+    // { "di8","di8fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din8,  DI8_FUNCTION },
     { "di8","di8in",_fip,   0, din_print_in, din_get_in, din_set_in, (float *)&din8,  DI8_EXTERNAL_NUMBER },
 #endif
 #if (D_IN_CHANNELS >= 9)
     { "di9","di9en",_fip,   0, din_print_en, din_get_en, din_set_en, (float *)&din9,  DI9_ENABLED },
     { "di9","di9po",_fip,   0, din_print_po, din_get_po, din_set_po, (float *)&din9,  DI9_POLARITY },
     { "di9","di9ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, (float *)&din9,  DI9_ACTION },
-    { "di9","di9fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din9,  DI9_FUNCTION },
+    // { "di9","di9fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, (float *)&din9,  DI9_FUNCTION },
     { "di9","di9in",_fip,   0, din_print_in, din_get_in, din_set_in, (float *)&din9,  DI9_EXTERNAL_NUMBER },
 #endif
 #if (D_IN_CHANNELS >= 10)
     { "di10","di10en",_fip, 0, din_print_en, din_get_en, din_set_en, (float *)&din10, DI10_ENABLED },
     { "di10","di10po",_fip, 0, din_print_po, din_get_po, din_set_po, (float *)&din10, DI10_POLARITY },
     { "di10","di10ac",_fip, 0, din_print_ac, din_get_ac, din_set_ac, (float *)&din10, DI10_ACTION },
-    { "di10","di10fn",_fip, 0, din_print_fn, din_get_fn, din_set_fn, (float *)&din10, DI10_FUNCTION },
+    // { "di10","di10fn",_fip, 0, din_print_fn, din_get_fn, din_set_fn, (float *)&din10, DI10_FUNCTION },
     { "di10","di10in",_fip, 0, din_print_in, din_get_in, din_set_in, (float *)&din10, DI10_EXTERNAL_NUMBER },
 #endif
 #if (D_IN_CHANNELS >= 11)
     { "di11","di11en",_fip, 0, din_print_en, din_get_en, din_set_en, (float *)&din11, DI11_ENABLED },
     { "di11","di11po",_fip, 0, din_print_po, din_get_po, din_set_po, (float *)&din11, DI11_POLARITY },
     { "di11","di11ac",_fip, 0, din_print_ac, din_get_ac, din_set_ac, (float *)&din11, DI11_ACTION },
-    { "di11","di11fn",_fip, 0, din_print_fn, din_get_fn, din_set_fn, (float *)&din11, DI11_FUNCTION },
+    // { "di11","di11fn",_fip, 0, din_print_fn, din_get_fn, din_set_fn, (float *)&din11, DI11_FUNCTION },
     { "di11","di11in",_fip, 0, din_print_in, din_get_in, din_set_in, (float *)&din11, DI11_EXTERNAL_NUMBER },
 #endif
 #if (D_IN_CHANNELS >= 12)
     { "di12","di12en",_fip, 0, din_print_en, din_get_en, din_set_en, (float *)&din12, DI12_ENABLED },
     { "di12","di12po",_fip, 0, din_print_po, din_get_po, din_set_po, (float *)&din12, DI12_POLARITY },
     { "di12","di12ac",_fip, 0, din_print_ac, din_get_ac, din_set_ac, (float *)&din12, DI12_ACTION },
-    { "di12","di12fn",_fip, 0, din_print_fn, din_get_fn, din_set_fn, (float *)&din12, DI12_FUNCTION },
+    // { "di12","di12fn",_fip, 0, din_print_fn, din_get_fn, din_set_fn, (float *)&din12, DI12_FUNCTION },
     { "di12","di12in",_fip, 0, din_print_in, din_get_in, din_set_in, (float *)&din12, DI12_EXTERNAL_NUMBER },
 #endif
 

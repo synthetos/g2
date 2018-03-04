@@ -100,30 +100,8 @@ void gpio_reset(void)
  * Note: input_num_ext means EXTERNAL input number -- 1-based
  * TODO: lookup the external number to find the internal input, don't assume
  */
-void  gpio_set_homing_mode(const uint8_t input_num_ext, const bool is_homing)
-{
-    if (input_num_ext == 0) {
-        return;
-    }
-    d_in[input_num_ext-1]->setIsHoming(is_homing);
-}
-
-void  gpio_set_probing_mode(const uint8_t input_num_ext, const bool is_probing)
-{
-    if (input_num_ext == 0) {
-        return;
-    }
-    d_in[input_num_ext-1]->setIsProbing(is_probing);
-}
-
 int8_t gpio_get_probing_input(void)
 {
-    for (uint8_t i = 1; i <= D_IN_CHANNELS; i++) {
-        if (d_in[i-1]->getFunction() == INPUT_FUNCTION_PROBE) {
-            return (i);
-        }
-    }
-    return (-1);
 }
 
 bool gpio_read_input(const uint8_t input_num_ext)
@@ -146,7 +124,7 @@ bool gpio_read_input(const uint8_t input_num_ext)
 
 template <typename type>
 type* _io(const nvObj_t *nv) {
- return reinterpret_cast<type*>(cfgArray[nv->index].target);
+    return reinterpret_cast<type*>(cfgArray[nv->index].target);
 };
 
 gpioDigitalInput* _i(const nvObj_t *nv) { return _io<gpioDigitalInput>(nv); }
@@ -189,6 +167,10 @@ gpioDigitalOutputReader out14;
 
 gpioDigitalOutputReader* const out_r[14] = {&out1 ,&out2 ,&out3 ,&out4 ,&out5 ,&out6 ,&out7 ,&out8 ,&out9 ,&out10 ,&out11 ,&out12 ,&out13 ,&out14};
 
+// lists for the various inputAction events
+gpioDigitalInputListenerList din_listeners[INPUT_ACTION_ACTUAL_MAX+1];
+
+
 /*
  *  Get/set enabled
  */
@@ -228,14 +210,6 @@ stat_t din_set_ac(nvObj_t *nv)
 /*
  *  Get/set input function
  */
-stat_t din_get_fn(nvObj_t *nv)
-{
-    return _i(nv)->getFunction(nv);
-}
-stat_t din_set_fn(nvObj_t *nv)
-{
-    return _i(nv)->setFunction(nv);
-}
 
 /*
  *  Get/set input function

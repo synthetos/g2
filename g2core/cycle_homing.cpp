@@ -96,6 +96,26 @@ static stat_t _set_homing_func(stat_t (*func)(int8_t axis)) {
     return (STAT_EAGAIN);
 }
 
+/*
+ * _homing_listener - a gpioDigitalInputListener to capture pin change events
+ *   Will be registered only during homing mode - see gpio.h for more info
+ */
+gpioDigitalInputListener _homing_listener {
+    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+        if (cm.cycle_state != CYCLE_HOMING) { return false; }
+        if (triggering_pin_number != hm.homing_input) { return false; }
+        if (edge != INPUT_EDGE_LEADING) { return false; }
+
+        en_take_encoder_snapshot();
+        cm_start_hold();
+
+        return false; // allow others to see this notice
+    },
+    100,    // priority
+    nullptr // next - nullptr to start with
+};
+
+
 /***********************************************************************************
  **** G28.2 Homing Cycle ***********************************************************
  ***********************************************************************************/
@@ -224,7 +244,7 @@ static stat_t _homing_axis_start(int8_t axis) {
     cm.homed[axis] = false;
 
     // trap axis mis-configurations
-    if (fp_ZERO(cm.a[axis].homing_input)) {
+    if (cm.a[axis].homing_input) {
         return (_homing_error_exit(axis, STAT_HOMING_ERROR_HOMING_INPUT_MISCONFIGURED));
     }
     if (fp_ZERO(cm.a[axis].search_velocity)) {
@@ -243,7 +263,8 @@ static stat_t _homing_axis_start(int8_t axis) {
     // Nothing to do about direction now that direction is explicit
     // However, here's a good place to stash the homing_switch:
     hm.homing_input = cm.a[axis].homing_input;
-    gpio_set_homing_mode(hm.homing_input, true);
+    din_listeners[INPUT_ACTION_INTERNAL].registerListener(&_homing_listener);
+
     hm.axis            = axis;                              // persist the axis
     hm.search_velocity = std::abs(cm.a[axis].search_velocity);  // search velocity is always positive
     hm.latch_velocity  = std::abs(cm.a[axis].latch_velocity);   // latch velocity is always positive
@@ -328,7 +349,7 @@ static stat_t _homing_axis_set_position(int8_t axis)  // set axis zero / max and
     }
     cm_set_axis_jerk(axis, hm.saved_jerk);  // restore the max jerk value
 
-    gpio_set_homing_mode(hm.homing_input, false);  // end homing mode
+    din_listeners[INPUT_ACTION_INTERNAL].deregisterListener(&_homing_listener);  // end homing mode
     return (_set_homing_func(_homing_axis_start));
 }
 
