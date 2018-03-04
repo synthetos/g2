@@ -113,7 +113,7 @@
 
 #if MOTORS == 3
 // gQuadratic
-#warning Autodetected gQuadratic settings
+// #warning Autodetected gQuadratic settings
 #define M3_MOTOR_MAP                AXIS_Z
                                                             // This "stepper" is a hobby servo. Note that all hobby
                                                             //   servo settings are per full servo range, instead of
@@ -189,153 +189,19 @@
 #define Z_ZERO_BACKOFF              2
 
 //*** Input / output settings ***
-/*
-    IO_MODE_DISABLED
-    IO_ACTIVE_LOW    aka NORMALLY_OPEN
-    IO_ACTIVE_HIGH   aka NORMALLY_CLOSED
+#define DI1_POLARITY                IO_ACTIVE_HIGH
+#define DI1_ACTION                  INPUT_ACTION_STOP
 
-    INPUT_ACTION_NONE
-    INPUT_ACTION_STOP
-    INPUT_ACTION_FAST_STOP
-    INPUT_ACTION_HALT
-    INPUT_ACTION_RESET
-
-    INPUT_FUNCTION_NONE
-    INPUT_FUNCTION_LIMIT
-    INPUT_FUNCTION_INTERLOCK
-    INPUT_FUNCTION_SHUTDOWN
-    INPUT_FUNCTION_PANIC
-*/
-// Inputs are defined for the g2ref(a) board
-// Xmn (board label)
-#define DI1_MODE                    IO_ACTIVE_HIGH
-#define DI1_ACTION                  INPUT_ACTION_NONE
-#define DI1_FUNCTION                INPUT_FUNCTION_NONE
-
-// Xmax
-#define DI2_MODE                    IO_MODE_DISABLED
+#define DI2_POLARITY                IO_ACTIVE_HIGH
 #define DI2_ACTION                  INPUT_ACTION_NONE
-#define DI2_FUNCTION                INPUT_FUNCTION_NONE
 
-// Ymin
-#define DI3_MODE                    IO_MODE_DISABLED
+#define DI3_POLARITY                IO_ACTIVE_HIGH
 #define DI3_ACTION                  INPUT_ACTION_NONE
-#define DI3_FUNCTION                INPUT_FUNCTION_NONE
 
-// Ymax
 #define DI4_MODE                    IO_ACTIVE_HIGH
 #define DI4_ACTION                  INPUT_ACTION_NONE
-#define DI4_FUNCTION                INPUT_FUNCTION_NONE
 
-// Zmin
-#define DI5_MODE                    IO_ACTIVE_LOW   // Z probe
-#define DI5_ACTION                  INPUT_ACTION_NONE
-#define DI5_FUNCTION                INPUT_FUNCTION_NONE
-
-// Zmax
-#define DI6_MODE                    IO_MODE_DISABLED
-#define DI6_ACTION                  INPUT_ACTION_STOP
-#define DI6_FUNCTION                INPUT_FUNCTION_NONE
-
-// Shutdown (Amin on v9 board)
-#define DI7_MODE                    IO_MODE_DISABLED
-#define DI7_ACTION                  INPUT_ACTION_NONE
-#define DI7_FUNCTION                INPUT_FUNCTION_NONE
-
-// High Voltage Z Probe In (Amax on v9 board)
-#define DI8_MODE                    IO_ACTIVE_LOW
-#define DI8_ACTION                  INPUT_ACTION_NONE
-#define DI8_FUNCTION                INPUT_FUNCTION_NONE
-
-// Hardware interlock input
-#define DI9_MODE                    IO_MODE_DISABLED
-#define DI9_ACTION                  INPUT_ACTION_NONE
-#define DI9_FUNCTION                INPUT_FUNCTION_NONE
-
-//Extruder1_PWM
 #define DO1_MODE                    IO_ACTIVE_HIGH
-
-//Extruder2_PWM
 #define DO2_MODE                    IO_ACTIVE_HIGH
-
-//Fan1A_PWM
 #define DO3_MODE                    IO_ACTIVE_HIGH
-
-//Fan1B_PWM
 #define DO4_MODE                    IO_ACTIVE_HIGH
-
-#define DO5_MODE                    IO_ACTIVE_HIGH
-#define DO6_MODE                    IO_ACTIVE_HIGH
-#define DO7_MODE                    IO_ACTIVE_HIGH
-#define DO8_MODE                    IO_ACTIVE_HIGH
-
-//SAFEin (Output) signal
-#define DO9_MODE                    IO_ACTIVE_HIGH
-
-#define DO10_MODE                   IO_ACTIVE_HIGH
-
-//Header Bed FET
-#define DO11_MODE                   IO_ACTIVE_HIGH
-
-//Indicator_LED
-#define DO12_MODE                   IO_ACTIVE_HIGH
-
-#define DO13_MODE                   IO_ACTIVE_HIGH
-
-
-// *** PWM SPINDLE CONTROL ***
-
-#define P1_PWM_FREQUENCY            100             // in Hz
-#define P1_CW_SPEED_LO              1000            // in RPM (arbitrary units)
-#define P1_CW_SPEED_HI              2000
-#define P1_CW_PHASE_LO              0.125           // phase [0..1]
-#define P1_CW_PHASE_HI              0.2
-#define P1_CCW_SPEED_LO             1000
-#define P1_CCW_SPEED_HI             2000
-#define P1_CCW_PHASE_LO             0.125
-#define P1_CCW_PHASE_HI             0.2
-#define P1_PWM_PHASE_OFF            0.1
-
-// *** DEFAULT COORDINATE SYSTEM OFFSETS ***
-
-#define G54_X_OFFSET 0            // G54 is traditionally set to all zeros
-#define G54_Y_OFFSET 0
-#define G54_Z_OFFSET 0
-#define G54_A_OFFSET 0
-#define G54_B_OFFSET 0
-#define G54_C_OFFSET 0
-
-#define G55_X_OFFSET (X_TRAVEL_MAX/2)    // set to middle of table
-#define G55_Y_OFFSET (Y_TRAVEL_MAX/2)
-#define G55_Z_OFFSET 0
-#define G55_A_OFFSET 0
-#define G55_B_OFFSET 0
-#define G55_C_OFFSET 0
-
-#define G56_X_OFFSET 0
-#define G56_Y_OFFSET 0
-#define G56_Z_OFFSET 0
-#define G56_A_OFFSET 0
-#define G56_B_OFFSET 0
-#define G56_C_OFFSET 0
-
-#define G57_X_OFFSET 0
-#define G57_Y_OFFSET 0
-#define G57_Z_OFFSET 0
-#define G57_A_OFFSET 0
-#define G57_B_OFFSET 0
-#define G57_C_OFFSET 0
-
-#define G58_X_OFFSET 0
-#define G58_Y_OFFSET 0
-#define G58_Z_OFFSET 0
-#define G58_A_OFFSET 0
-#define G58_B_OFFSET 0
-#define G58_C_OFFSET 0
-
-#define G59_X_OFFSET 0
-#define G59_Y_OFFSET 0
-#define G59_Z_OFFSET 0
-#define G59_A_OFFSET 0
-#define G59_B_OFFSET 0
-#define G59_C_OFFSET 0
