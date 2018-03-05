@@ -336,7 +336,7 @@ void dda_timer_type::interrupt()
         }
 #endif
 
-    // Process end of segment. 
+    // Process end of segment.
     // One more interrupt will occur to turn of any pulses set in this pass.
     if (--st_run.dda_ticks_downcount == 0) {
         _load_move();       // load the next move at the current interrupt level
@@ -451,7 +451,7 @@ static void _load_move()
 
 	// ...start motor power timeouts
 	//	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
-	//		Motors[motor]->motionStopped();    
+	//		Motors[motor]->motionStopped();
 	//  }
 	// loop unrolled version
         motor_1.motionStopped();    // ...start motor power timeouts
@@ -626,7 +626,7 @@ static void _load_move()
         // handle synchronous commands
     } else if (st_pre.block_type == BLOCK_TYPE_COMMAND) {
         mp_runtime_command(st_pre.bf);
-        
+
     } // else null - which is okay in many cases
 
     // all other cases drop to here (e.g. Null moves after Mcodes skip to here)
@@ -926,7 +926,7 @@ stat_t st_set_su(nvObj_t *nv)			// motor steps per unit (direct)
         if (cm_get_axis_type(nv->index) == AXIS_TYPE_LINEAR) {
             nv->value *= INCHES_PER_MM;
         }
-    } 
+    }
     set_flt(nv);
     st_cfg.mot[m].units_per_step = 1.0/st_cfg.mot[m].steps_per_unit;
 
@@ -944,7 +944,7 @@ stat_t st_set_ep(nvObj_t *nv)            // set motor enable polarity
     uint8_t motor = _get_motor(nv->index);
     if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
 
-    Motors[motor]->setMotorPolarity((ioMode)nv->value);
+    Motors[motor]->setEnablePolarity((ioMode)nv->value);
     return (STAT_OK);
 }
 
@@ -956,7 +956,7 @@ stat_t st_get_ep(nvObj_t *nv)            // get motor enable polarity
     uint8_t motor = _get_motor(nv->index);
     if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
 
-    nv->value = (float)Motors[motor]->getMotorPolarity();
+    nv->value = (float)Motors[motor]->getEnablePolarity();
     nv->valuetype = TYPE_INT;
     return (STAT_OK);
 }
@@ -967,14 +967,14 @@ stat_t st_set_pm(nvObj_t *nv)            // set motor power mode
         nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_LESS_THAN_MIN_VALUE);
     }
-    if (nv->value >= MOTOR_POWER_MODE_MAX_VALUE) { 
+    if (nv->value >= MOTOR_POWER_MODE_MAX_VALUE) {
         nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_EXCEEDS_MAX_VALUE); 
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
     uint8_t motor = _get_motor(nv->index);
     if (motor > MOTORS) {
         nv->valuetype = TYPE_NULL;
-        return STAT_INPUT_VALUE_RANGE_ERROR; 
+        return STAT_INPUT_VALUE_RANGE_ERROR;
     };
 
     // We do this *here* in order for this to take effect immediately.
@@ -988,7 +988,7 @@ stat_t st_get_pm(nvObj_t *nv)            // get motor power mode
     uint8_t motor = _get_motor(nv->index);
     if (motor > MOTORS) {
         nv->valuetype = TYPE_NULL;
-        return STAT_INPUT_VALUE_RANGE_ERROR; 
+        return STAT_INPUT_VALUE_RANGE_ERROR;
     };
 
     nv->value = (float)Motors[motor]->getPowerMode();
@@ -1007,7 +1007,7 @@ stat_t st_set_pl(nvObj_t *nv)    // motor power level
 {
     if (nv->value < (float)0.0) {
         nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_LESS_THAN_MIN_VALUE); 
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
     }
     if (nv->value > (float)1.0) {
         nv->valuetype = TYPE_NULL;
@@ -1069,7 +1069,7 @@ stat_t st_set_mt(nvObj_t *nv)
 
 // Make sure this function is not part of initialization --> f00
 // nv->value is seconds of timeout
-stat_t st_set_me(nvObj_t *nv)    
+stat_t st_set_me(nvObj_t *nv)
 {
     for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
         Motors[motor]->enable(nv->value);   // nv->value is the timeout or 0 for default
@@ -1079,7 +1079,7 @@ stat_t st_set_me(nvObj_t *nv)
 
 // Make sure this function is not part of initialization --> f00
 // nv-value is motor to disable, or 0 for all motors
-stat_t st_set_md(nvObj_t *nv)    
+stat_t st_set_md(nvObj_t *nv)
 {
     if (nv->value < 0) {
         nv->valuetype = TYPE_NULL;
@@ -1088,7 +1088,7 @@ stat_t st_set_md(nvObj_t *nv)
     if (nv->value > MOTORS) {
         nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_EXCEEDS_MAX_VALUE);
-    }    
+    }
     // de-energize all motors
     if ((uint8_t)nv->value == 0) {      // 0 means all motors
         for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {

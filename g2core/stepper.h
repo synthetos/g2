@@ -434,16 +434,12 @@ struct Stepper {
 protected:
     Timeout _motor_disable_timeout;         // this is the timeout object that will let us know when time is u
     uint32_t _motor_disable_timeout_ms;     // the number of ms that the timeout is reset to
-    ioMode _motor_enable_polarity;         // 0=active HIGH, 1=active LOW
     stPowerState _power_state;              // state machine for managing motor power
     stPowerMode _power_mode;                // See stPowerMode for values
 
     /* stepper default values */
 public:
-    // sets default pwm freq for all motor vrefs (commented line below also sets HiZ)
-    Stepper(ioMode enable_polarity = IO_ACTIVE_LOW) : _motor_enable_polarity{enable_polarity}
-    {
-    };
+    Stepper(ioMode enable_polarity = IO_ACTIVE_LOW) {};
 
     /* Functions that handle all motor functions (calls virtuals if needed) */
 
@@ -462,16 +458,14 @@ public:
         }
     };
 
-    virtual ioMode getMotorPolarity()
+    virtual ioMode getEnablePolarity()
     {
-        return _motor_enable_polarity;
+        return IO_ACTIVE_LOW; // we have to say something here
     };
 
-    virtual void setMotorPolarity(ioMode new_mp)
+    virtual void setEnablePolarity(ioMode new_mp)
     {
-        _motor_enable_polarity = new_mp;
-        // this is a misnomer, but handles the logic we need for asserting the newly adjusted enable line correctly
-        motionStopped();
+        // do nothing
     };
 
     virtual stPowerMode getPowerMode()
@@ -486,7 +480,7 @@ public:
         }
         if (_power_state == MOTOR_IDLE) {
             return (0.0);
-        }        
+        }
         return (st_cfg.mot[motor].power_level);
     };
 
@@ -494,7 +488,7 @@ public:
 //    {
 //        return (_power_mode == MOTOR_DISABLED);
 //    };
-    
+
     // turn on motor in all cases unless it's disabled
     // NOTE: in the future the default assigned timeout will be the motor's default value
     void enable(float timeout = st_cfg.motor_power_timeout)
@@ -521,7 +515,7 @@ public:
         _motor_disable_timeout.clear();
         _power_state = MOTOR_IDLE; // or MOTOR_OFF
     };
-    
+
     // turn off motor is only powered when moving
     void motionStopped() {
         if (_power_mode == MOTOR_POWERED_IN_CYCLE) {
@@ -533,7 +527,7 @@ public:
             }
         }
     };
-    
+
     virtual void periodicCheck(bool have_actually_stopped) // can be overridden
     {
         if (have_actually_stopped && _power_state == MOTOR_RUNNING) {

@@ -62,8 +62,15 @@ struct StepDirStepper final : Stepper  {
     OutputPin<ms2_num>     _ms2;
     PWMOutputPin<vref_num> _vref;
 
+    ioMode _enable_polarity;                 // 0=active HIGH, 1=active LOW
+
     // sets default pwm freq for all motor vrefs (commented line below also sets HiZ)
-    StepDirStepper(ioMode enable_polarity = IO_ACTIVE_LOW, const uint32_t frequency = 250000) : Stepper{enable_polarity}, _enable{enable_polarity==IO_ACTIVE_LOW?kStartHigh:kStartLow}, _vref{kNormal, frequency} {};
+    StepDirStepper(ioMode enable_polarity = IO_ACTIVE_LOW, const uint32_t frequency = 250000) :
+        Stepper{enable_polarity},
+        _enable{enable_polarity==IO_ACTIVE_LOW?kStartHigh:kStartLow},
+        _vref{kNormal, frequency},
+        _enable_polarity{enable_polarity}
+    {};
 
     /* Optional override of init */
 
@@ -119,7 +126,7 @@ struct StepDirStepper final : Stepper  {
 //            _enable.clear();
 //        }
         if (!_enable.isNull()) {
-            if (_motor_enable_polarity == IO_ACTIVE_HIGH) {
+            if (_enable_polarity == IO_ACTIVE_HIGH) {
                 _enable.set();
             } else {
                 _enable.clear();
@@ -132,7 +139,7 @@ struct StepDirStepper final : Stepper  {
 //            _enable.set();
 //        }
         if (!_enable.isNull()) {
-            if (_motor_enable_polarity == IO_ACTIVE_HIGH) {
+            if (_enable_polarity == IO_ACTIVE_HIGH) {
             _enable.clear();
         } else {
             _enable.set();
@@ -159,6 +166,19 @@ struct StepDirStepper final : Stepper  {
             _vref = new_pl;
         }
     };
+
+    ioMode getEnablePolarity() override
+    {
+        return _enable_polarity;
+    };
+
+    void setEnablePolarity(ioMode new_mp) override
+    {
+        _enable_polarity = new_mp;
+        // this is a misnomer, but handles the logic we need for asserting the newly adjusted enable line correctly
+        motionStopped();
+    };
+
 };
 
 #endif  // STEPP_DIR_DRIVER_H_ONCE
