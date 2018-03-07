@@ -227,7 +227,7 @@
 #define M1_POLARITY                 0                       // {1po:  0=normal direction, 1=inverted direction
 #endif
 #ifndef M1_STEP_POLARITY
-#define M1_STEP_POLARITY            0                       // {1ps:  0=pulse high, 1=pulse low
+#define M1_STEP_POLARITY            0	                    // {1sp:  0=pulse high, 1=pulse low
 #endif
 #ifndef M1_POWER_MODE
 #define M1_POWER_MODE               MOTOR_DISABLED          // {1pm:  MOTOR_DISABLED, MOTOR_ALWAYS_POWERED, MOTOR_POWERED_IN_CYCLE, MOTOR_POWERED_ONLY_WHEN_MOVING

@@ -691,9 +691,6 @@ stat_t st_prep_line(float travel_steps[], float following_error[], float segment
             continue;
         }
 
-	// Set step polarity
-	Motors[motor]->set_step_polarity(st_cfg.mot[motor].step_polarity);
-
         // Setup the direction, compensating for polarity.
         // Set the step_sign which is used by the stepper ISR to accumulate step position
 
@@ -1020,6 +1017,31 @@ stat_t st_get_pwr(nvObj_t *nv)
 	return (STAT_OK);
 }
 
+stat_t st_set_sp(nvObj_t *nv)            // set motor step polarity
+{
+    if (nv->value < 0) { return (STAT_INPUT_LESS_THAN_MIN_VALUE); }
+    if (nv->value > 1) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
+
+    uint8_t motor = _get_motor(nv->index);
+    if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
+
+    Motors[motor]->setStepPolarity((int)nv->value);
+    return (STAT_OK);
+}
+
+stat_t st_get_sp(nvObj_t *nv)            // get motor step polarity
+{
+    if (nv->value < 0) { return (STAT_INPUT_LESS_THAN_MIN_VALUE); }
+    if (nv->value > 1) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
+
+    uint8_t motor = _get_motor(nv->index);
+    if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
+
+    nv->value = (float)Motors[motor]->getStepPolarity();
+    nv->valuetype = TYPE_INT;
+    return (STAT_OK);
+}
+
 /* GLOBAL FUNCTIONS (SYSTEM LEVEL)
  *
  * st_set_mt() - set global motor timeout in seconds
@@ -1139,7 +1161,7 @@ void st_print_tr(nvObj_t *nv) { _print_motor_flt_units(nv, fmt_0tr, cm_get_units
 void st_print_mi(nvObj_t *nv) { _print_motor_int(nv, fmt_0mi);}
 void st_print_su(nvObj_t *nv) { _print_motor_flt_units(nv, fmt_0su, cm_get_units_mode(MODEL));}
 void st_print_po(nvObj_t *nv) { _print_motor_int(nv, fmt_0po);}
-void st_print_ps(nvObj_t *nv) { _print_motor_int(nv, fmt_0ps);}
+void st_print_sp(nvObj_t *nv) { _print_motor_int(nv, fmt_0ps);}
 void st_print_pm(nvObj_t *nv) { _print_motor_int(nv, fmt_0pm);}
 void st_print_pl(nvObj_t *nv) { _print_motor_flt(nv, fmt_0pl);}
 void st_print_pwr(nvObj_t *nv){ _print_motor_pwr(nv, fmt_pwr);}

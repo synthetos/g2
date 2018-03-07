@@ -62,7 +62,7 @@ struct StepDirStepper final : Stepper  {
     PWMOutputPin<vref_num> _vref;
 
     // sets default pwm freq for all motor vrefs (commented line below also sets HiZ)
-    StepDirStepper(const uint32_t frequency = 250000) : Stepper{}, _vref{kNormal, frequency} {};
+    StepDirStepper(bool invert_step, const uint32_t frequency = 250000) : Stepper{invert_step}, _vref{kNormal, frequency} {};
 
     /* Optional override of init */
 
