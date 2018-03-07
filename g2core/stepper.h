@@ -606,8 +606,8 @@ stat_t st_get_su(nvObj_t *nv);
 stat_t st_set_su(nvObj_t *nv);
 stat_t st_set_ep(nvObj_t *nv);
 stat_t st_get_ep(nvObj_t *nv);
-stat_t st_set_ps(nvObj_t *nv);
-stat_t st_get_ps(nvObj_t *nv);
+stat_t st_set_sp(nvObj_t *nv);
+stat_t st_get_sp(nvObj_t *nv);
 stat_t st_set_pm(nvObj_t *nv);
 stat_t st_get_pm(nvObj_t *nv);
 stat_t st_set_pl(nvObj_t *nv);
@@ -626,7 +626,7 @@ stat_t st_set_me(nvObj_t *nv);
     void st_print_su(nvObj_t *nv);
     void st_print_po(nvObj_t *nv);
     void st_print_ep(nvObj_t *nv);
-    void st_print_ps(nvObj_t *nv);
+    void st_print_sp(nvObj_t *nv);
     void st_print_pm(nvObj_t *nv);
     void st_print_pl(nvObj_t *nv);
     void st_print_pwr(nvObj_t *nv);
@@ -643,7 +643,7 @@ stat_t st_set_me(nvObj_t *nv);
     #define st_print_su tx_print_stub
     #define st_print_po tx_print_stub
     #define st_print_ep tx_print_stub
-    #define st_print_ps tx_print_stub
+    #define st_print_sp tx_print_stub
     #define st_print_pm tx_print_stub
     #define st_print_pl tx_print_stub
     #define st_print_pwr tx_print_stub
