@@ -37,7 +37,6 @@ using Motate::pin_number;
 using Motate::OutputPin;
 using Motate::PWMOutputPin;
 using Motate::kStartHigh;
-using Motate::kStartLow;
 using Motate::kNormal;
 using Motate::Timeout;
 
@@ -122,22 +121,16 @@ struct StepDirStepper final : Stepper  {
     };
 
     void _enableImpl() override {
-//        if (!_enable.isNull()) {
-//            _enable.clear();
-//        }
         if (!_enable.isNull()) {
             if (_enable_polarity == IO_ACTIVE_HIGH) {
                 _enable.set();
             } else {
-                _enable.clear();
-            }
+            _enable.clear();
+        }
         }
     };
 
     void _disableImpl() override {
-//        if (!_enable.isNull()) {
-//            _enable.set();
-//        }
         if (!_enable.isNull()) {
             if (_enable_polarity == IO_ACTIVE_HIGH) {
             _enable.clear();
