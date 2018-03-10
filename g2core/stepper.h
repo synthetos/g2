@@ -471,7 +471,7 @@ struct Stepper {
         }
         if (_power_state == MOTOR_IDLE) {
             return (0.0);
-        }        
+        }
         return (st_cfg.mot[motor].power_level);
     };
 
@@ -479,7 +479,7 @@ struct Stepper {
 //    {
 //        return (_power_mode == MOTOR_DISABLED);
 //    };
-    
+
     // turn on motor in all cases unless it's disabled
     // NOTE: in the future the default assigned timeout will be the motor's default value
     void enable(float timeout = st_cfg.motor_power_timeout)
@@ -506,7 +506,7 @@ struct Stepper {
         _motor_disable_timeout.clear();
         _power_state = MOTOR_IDLE; // or MOTOR_OFF
     };
-    
+
     // turn off motor is only powered when moving
     void motionStopped() {
         if (_power_mode == MOTOR_POWERED_IN_CYCLE) {
@@ -518,7 +518,7 @@ struct Stepper {
             }
         }
     };
-    
+
     virtual void periodicCheck(bool have_actually_stopped) // can be overridden
     {
         if (have_actually_stopped && _power_state == MOTOR_RUNNING) {
@@ -543,6 +543,9 @@ struct Stepper {
             }
         }
     };
+
+    virtual bool getStepPolarity() const { return false; }
+    virtual void setStepPolarity(bool invert_step) {}
 
     /* Functions that must be implemented in subclasses */
 
@@ -589,6 +592,8 @@ stat_t st_set_pm(nvObj_t *nv);
 stat_t st_get_pm(nvObj_t *nv);
 stat_t st_set_pl(nvObj_t *nv);
 stat_t st_get_pwr(nvObj_t *nv);
+stat_t st_set_sp(nvObj_t *nv);
+stat_t st_get_sp(nvObj_t *nv);
 
 stat_t st_set_mt(nvObj_t *nv);
 stat_t st_set_md(nvObj_t *nv);
@@ -602,6 +607,7 @@ stat_t st_set_me(nvObj_t *nv);
     void st_print_mi(nvObj_t *nv);
     void st_print_su(nvObj_t *nv);
     void st_print_po(nvObj_t *nv);
+    void st_print_sp(nvObj_t *nv);
     void st_print_pm(nvObj_t *nv);
     void st_print_pl(nvObj_t *nv);
     void st_print_pwr(nvObj_t *nv);

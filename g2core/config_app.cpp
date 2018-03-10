@@ -205,6 +205,7 @@ const cfgItem_t cfgArray[] = {
     { "1","1po",_fip, 0, st_print_po, get_ui8, set_01,     &st_cfg.mot[MOTOR_1].polarity,       M1_POLARITY },
     { "1","1pm",_fip, 0, st_print_pm, st_get_pm,st_set_pm, &cs.null,                            M1_POWER_MODE },
     { "1","1pl",_fip, 3, st_print_pl, get_flt, st_set_pl,  &st_cfg.mot[MOTOR_1].power_level,    M1_POWER_LEVEL },
+    { "1","1sp",_fip, 0, st_print_sp, st_get_sp, st_set_sp,&cs.null,                            M1_STEP_POLARITY },
 //  { "1","1pi",_fip, 3, st_print_pi, get_flt, st_set_pi,  &st_cfg.mot[MOTOR_1].power_idle,     M1_POWER_IDLE },
 //  { "1","1mt",_fip, 2, st_print_mt, get_flt, st_set_mt,  &st_cfg.mot[MOTOR_1].motor_timeout,  M1_MOTOR_TIMEOUT },
 #if (MOTORS >= 2)
@@ -216,6 +217,7 @@ const cfgItem_t cfgArray[] = {
     { "2","2po",_fip, 0, st_print_po, get_ui8, set_01,     &st_cfg.mot[MOTOR_2].polarity,       M2_POLARITY },
     { "2","2pm",_fip, 0, st_print_pm, st_get_pm,st_set_pm, &cs.null,                            M2_POWER_MODE },
     { "2","2pl",_fip, 3, st_print_pl, get_flt, st_set_pl,  &st_cfg.mot[MOTOR_2].power_level,    M2_POWER_LEVEL},
+    { "2","2sp",_fip, 0, st_print_sp, st_get_sp, st_set_sp,&cs.null,                            M2_STEP_POLARITY },
 //  { "2","2pi",_fip, 3, st_print_pi, get_flt, st_set_pi,  &st_cfg.mot[MOTOR_2].power_idle,     M2_POWER_IDLE },
 //  { "2","2mt",_fip, 2, st_print_mt, get_flt, st_set_mt,  &st_cfg.mot[MOTOR_2].motor_timeout,  M2_MOTOR_TIMEOUT },
 #endif
@@ -228,6 +230,7 @@ const cfgItem_t cfgArray[] = {
     { "3","3po",_fip, 0, st_print_po, get_ui8, set_01,     &st_cfg.mot[MOTOR_3].polarity,       M3_POLARITY },
     { "3","3pm",_fip, 0, st_print_pm, st_get_pm,st_set_pm, &cs.null,                            M3_POWER_MODE },
     { "3","3pl",_fip, 3, st_print_pl, get_flt, st_set_pl,  &st_cfg.mot[MOTOR_3].power_level,    M3_POWER_LEVEL },
+    { "3","3sp",_fip, 0, st_print_sp, st_get_sp, st_set_sp,&cs.null,                            M3_STEP_POLARITY },
 //  { "3","3pi",_fip, 3, st_print_pi, get_flt, st_set_pi,  &st_cfg.mot[MOTOR_3].power_idle,     M3_POWER_IDLE },
 //  { "3","3mt",_fip, 2, st_print_mt, get_flt, st_set_mt,  &st_cfg.mot[MOTOR_3].motor_timeout,  M3_MOTOR_TIMEOUT },
 #endif
@@ -240,6 +243,7 @@ const cfgItem_t cfgArray[] = {
     { "4","4po",_fip, 0, st_print_po, get_ui8, set_01,     &st_cfg.mot[MOTOR_4].polarity,       M4_POLARITY },
     { "4","4pm",_fip, 0, st_print_pm, st_get_pm,st_set_pm, &cs.null,                            M4_POWER_MODE },
     { "4","4pl",_fip, 3, st_print_pl, get_flt, st_set_pl,  &st_cfg.mot[MOTOR_4].power_level,    M4_POWER_LEVEL },
+    { "4","4sp",_fip, 0, st_print_sp, st_get_sp, st_set_sp,&cs.null,                            M4_STEP_POLARITY },
 //  { "4","4pi",_fip, 3, st_print_pi, get_flt, st_set_pi,  &st_cfg.mot[MOTOR_4].power_idle,     M4_POWER_IDLE },
 //  { "4","4mt",_fip, 2, st_print_mt, get_flt, st_set_mt,  &st_cfg.mot[MOTOR_4].motor_timeout,  M4_MOTOR_TIMEOUT },
 #endif
@@ -252,6 +256,7 @@ const cfgItem_t cfgArray[] = {
     { "5","5po",_fip, 0, st_print_po, get_ui8, set_01,     &st_cfg.mot[MOTOR_5].polarity,       M5_POLARITY },
     { "5","5pm",_fip, 0, st_print_pm, st_get_pm,st_set_pm, &cs.null,                            M5_POWER_MODE },
     { "5","5pl",_fip, 3, st_print_pl, get_flt, st_set_pl,  &st_cfg.mot[MOTOR_5].power_level,    M5_POWER_LEVEL },
+    { "5","5sp",_fip, 0, st_print_sp, st_get_sp, st_set_sp,&cs.null,                            M5_STEP_POLARITY },
 //  { "5","5pi",_fip, 3, st_print_pi, get_flt, st_set_pi,  &st_cfg.mot[MOTOR_5].power_idle,     M5_POWER_IDLE },
 //  { "5","5mt",_fip, 2, st_print_mt, get_flt, st_set_mt,  &st_cfg.mot[MOTOR_5].motor_timeout,  M5_MOTOR_TIMEOUT },
 #endif
@@ -264,6 +269,7 @@ const cfgItem_t cfgArray[] = {
     { "6","6po",_fip, 0, st_print_po, get_ui8, set_01,     &st_cfg.mot[MOTOR_6].polarity,       M6_POLARITY },
     { "6","6pm",_fip, 0, st_print_pm, st_get_pm,st_set_pm, &cs.null,                            M6_POWER_MODE },
     { "6","6pl",_fip, 3, st_print_pl, get_flt, st_set_pl,  &st_cfg.mot[MOTOR_6].power_level,    M6_POWER_LEVEL },
+    { "6","6sp",_fip, 0, st_print_sp, st_get_sp, st_set_sp,&cs.null,                            M6_STEP_POLARITY },
 //  { "6","6pi",_fip, 3, st_print_pi, get_flt, st_set_pi,  &st_cfg.mot[MOTOR_6].power_idle,     M6_POWER_IDLE },
 //  { "6","6mt",_fip, 2, st_print_mt, get_flt, st_set_mt,  &st_cfg.mot[MOTOR_6].motor_timeout,  M6_MOTOR_TIMEOUT },
 #endif
