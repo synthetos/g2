@@ -434,25 +434,13 @@ struct Stepper {
     uint32_t _motor_disable_timeout_ms;     // the number of ms that the timeout is reset to
     stPowerState _power_state;              // state machine for managing motor power
     stPowerMode _power_mode;                // See stPowerMode for values
-    bool _invert_step;                      // Invert the step output (where applicable)
 
     /* stepper default values */
 
     // sets default pwm freq for all motor vrefs (commented line below also sets HiZ)
-    Stepper(bool invert_step, const uint32_t frequency = 500000) : _invert_step(invert_step)
+    Stepper(const uint32_t frequency = 500000)
     {
     };
-
-    void setStepPolarity(bool invert_step)
-    {
-	_invert_step = invert_step;
-	stepEnd();
-    }
-
-    bool getStepPolarity() const
-    {
-	return _invert_step;
-    }
 
     /* Functions that handle all motor functions (calls virtuals if needed) */
 
@@ -555,6 +543,9 @@ struct Stepper {
             }
         }
     };
+
+    virtual bool getStepPolarity() const { return false; }
+    virtual void setStepPolarity(bool invert_step) {}
 
     /* Functions that must be implemented in subclasses */
 
