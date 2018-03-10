@@ -125,19 +125,19 @@ struct StepDirStepper final : Stepper  {
             if (_enable_polarity == IO_ACTIVE_HIGH) {
                 _enable.set();
             } else {
-            _enable.clear();
-        }
+                _enable.clear();
+            }
         }
     };
 
     void _disableImpl() override {
         if (!_enable.isNull()) {
             if (_enable_polarity == IO_ACTIVE_HIGH) {
-            _enable.clear();
-        } else {
-            _enable.set();
+                _enable.clear();
+            } else {
+                _enable.set();
+            }
         }
-    }
     };
 
     void stepStart() override {
