@@ -39,7 +39,66 @@ Alternatively, you can use the top-level Makefile shim:
 make fw
 ```
 
-This will build the `G2v9i` version of firmware.
+This command build the `G2v9i` version of firmware, which is targeted for boards in V2 machines.
+
+### Firmware Binaries
+
+Firmware binaries can be found in the `TinyG2/bin` folder. Output is organized by `PLATFORM`.
+
+The build puts both an ELF and a binary. ELF is the executable linker format and has symbols for debugging. The .bin is the binary image that we supply to BOSSA.
+
+## Flashing the TinyG2
+
+When in SAM-BA mode, we update firmware with the open source utility BOSSA (the SAM-BA version of avrdude).  Our branch of it is [here](https://github.com/omco/bossa/tree/arduino), though the open-source version can be used for standalone flashing.
+
+To flash the program using BOSSA, use the following command template:
+
+```
+bossac -p tty.usbserialXX -e -w -v -b -R path/to/firmware.bin
+```
+
+* `-p` specifies the serial port.  It is likely to be `/dev/tty.usbserialXX`.
+	* Important: `-p` prepends "`/dev/`", so if you supply the `/dev/`, it won't find the serial port.
+* `-e` is erase
+* `-w` is write,
+* `-v` is verify (aka read back and check that it's valid).
+* `-b` sets the machine to boot into firmware next time it reboots
+* `-R` tells it to reboot.
+* The last argument is the filename of the firmware, in .bin format.
+
+## Debugging
+
+You can debug the TinyG through JTAG using a SAMA-ICE adapter and the JLink tools.
+
+### Installing JLink Tools
+
+You will need to download and install the JLink software package [from here](https://www.segger.com/downloads/jlink/). This will provide `JLinkGDBServer`, which we use for talking to the SAMA-ICE adapter.
+
+### Starting the JLinkGDBServer
+
+You can start the JLinkGDBServer from the command line:
+
+```
+JLinkGDBServer -USB -device ATSAM3X8C -endian little -if JTAG -speed auto -noir
+```
+
+### Connecting to the Device
+
+Once the server is running, you can connect to the device using `arm-none-eabi-gdb`.
+
+In the `TinyG/` directory, run `arm-none-eabi-gdb`. `gdb` will mention that it connected to JLinkGDBServer.
+
+We recommend running `arm-none-eabi-gdb` inside of the `TinyG/` folder so that the `.gdbinit` file is detected.
+
+### Make Debug Command
+
+You can build the code and open a debug terminal by adding `debug` to the build command:
+
+```
+make PLATFORM=OthermillPro debug
+```
+
+This will automatically connect to `gdb`. The `JLinkGDBServer` needs to be running.
 
 ## Further Reading
 
