@@ -47,6 +47,17 @@ Firmware binaries can be found in the `TinyG2/bin` folder. Output is organized b
 
 The build puts both an ELF and a binary. ELF is the executable linker format and has symbols for debugging. The .bin is the binary image that we supply to BOSSA.
 
+### Clean Build
+
+To clean, run `make clean` at the top-level. By default, this will run a clean build for the `G2v9i` platform.
+
+If you need to clean another platform, specify it as you would during compilation:
+
+```
+cd TinyG2 && make PLATFORM=OthermillPro clean
+cd TinyG2 && make PLATFORM=G2v9i clean
+```
+
 ## Flashing the TinyG2
 
 When in SAM-BA mode, we update firmware with the open source utility BOSSA (the SAM-BA version of avrdude).  Our branch of it is [here](https://github.com/omco/bossa/tree/arduino), though the open-source version can be used for standalone flashing.
