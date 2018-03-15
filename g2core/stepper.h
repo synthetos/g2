@@ -458,7 +458,7 @@ public:
         }
     };
 
-    virtual ioMode getEnablePolarity()
+    virtual ioMode getEnablePolarity() const
     {
         return IO_ACTIVE_LOW; // we have to say something here
     };
@@ -467,12 +467,12 @@ public:
     {
         // do nothing
     };
-    
-    virtual ioMode getStepPolarity()
+
+    virtual ioMode getStepPolarity() const
     {
         return IO_ACTIVE_LOW; // we have to say something here
     };
-    
+
     virtual void setStepPolarity(ioMode new_mp)
     {
         // do nothing

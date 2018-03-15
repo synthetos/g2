@@ -37,6 +37,7 @@ using Motate::pin_number;
 using Motate::OutputPin;
 using Motate::PWMOutputPin;
 using Motate::kStartHigh;
+using Motate::kStartLow;
 using Motate::kNormal;
 using Motate::Timeout;
 
@@ -61,13 +62,16 @@ struct StepDirStepper final : Stepper  {
     OutputPin<ms2_num>     _ms2;
     PWMOutputPin<vref_num> _vref;
 
-    ioMode _enable_polarity;                 // 0=active HIGH, 1=active LOW
+    ioMode _step_polarity;                   // IO_ACTIVE_LOW or IO_ACTIVE_HIGH
+    ioMode _enable_polarity;                 // IO_ACTIVE_LOW or IO_ACTIVE_HIGH
 
     // sets default pwm freq for all motor vrefs (commented line below also sets HiZ)
-    StepDirStepper(ioMode enable_polarity = IO_ACTIVE_LOW, const uint32_t frequency = 250000) :
-        Stepper{enable_polarity},
+    StepDirStepper(ioMode step_polarity, ioMode enable_polarity, const uint32_t frequency = 250000) :
+        Stepper{},
+        _step{step_polarity==IO_ACTIVE_LOW?kStartHigh:kStartLow},
         _enable{enable_polarity==IO_ACTIVE_LOW?kStartHigh:kStartLow},
         _vref{kNormal, frequency},
+        _step_polarity{step_polarity},
         _enable_polarity{enable_polarity}
     {};
 
@@ -141,17 +145,17 @@ struct StepDirStepper final : Stepper  {
     };
 
     void stepStart() override {
-	if (_invert_step)
-	    _step.clear();
-	else
-	    _step.set();
+    	if (_step_polarity == IO_ACTIVE_LOW)
+    	    _step.clear();
+    	else
+    	    _step.set();
     };
 
     void stepEnd() override {
-	if (_invert_step)
-	    _step.set();
-	else
-	    _step.clear();
+    	if (_step_polarity == IO_ACTIVE_LOW)
+    	    _step.set();
+    	else
+    	    _step.clear();
     };
 
     void setDirection(uint8_t new_direction) override {
@@ -170,7 +174,18 @@ struct StepDirStepper final : Stepper  {
         }
     };
 
-    ioMode getEnablePolarity() override
+    ioMode getStepPolarity() const override
+    {
+    	return _step_polarity;
+    };
+
+    void setStepPolarity(ioMode new_sp) override
+    {
+    	_step_polarity = new_sp;
+    	stepEnd();
+    };
+
+    ioMode getEnablePolarity() const override
     {
         return _enable_polarity;
     };
