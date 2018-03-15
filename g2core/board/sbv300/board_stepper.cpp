@@ -36,7 +36,7 @@ StepDirStepper<Motate::kSocket1_StepPinNumber,
                Motate::kSocket1_Microstep_1PinNumber,
                Motate::kSocket1_Microstep_2PinNumber,
                Motate::kSocket1_VrefPinNumber>
-    motor_1{M1_ENABLE_POLARITY};
+    motor_1{M1_STEP_POLARITY, M1_ENABLE_POLARITY};
 
 StepDirStepper<Motate::kSocket2_StepPinNumber,
                Motate::kSocket2_DirPinNumber,
@@ -45,7 +45,7 @@ StepDirStepper<Motate::kSocket2_StepPinNumber,
                Motate::kSocket2_Microstep_1PinNumber,
                Motate::kSocket2_Microstep_2PinNumber,
                Motate::kSocket2_VrefPinNumber>
-    motor_2{M2_ENABLE_POLARITY};
+    motor_2{M2_STEP_POLARITY, M2_ENABLE_POLARITY};
 
 StepDirStepper<Motate::kSocket3_StepPinNumber,
                Motate::kSocket3_DirPinNumber,
@@ -54,7 +54,7 @@ StepDirStepper<Motate::kSocket3_StepPinNumber,
                Motate::kSocket3_Microstep_1PinNumber,
                Motate::kSocket3_Microstep_2PinNumber,
                Motate::kSocket3_VrefPinNumber>
-    motor_3{M3_ENABLE_POLARITY};
+    motor_3{M3_STEP_POLARITY, M3_ENABLE_POLARITY};
 
 StepDirStepper<Motate::kSocket4_StepPinNumber,
                Motate::kSocket4_DirPinNumber,
@@ -63,7 +63,7 @@ StepDirStepper<Motate::kSocket4_StepPinNumber,
                Motate::kSocket4_Microstep_1PinNumber,
                Motate::kSocket4_Microstep_2PinNumber,
                Motate::kSocket4_VrefPinNumber>
-    motor_4{M4_ENABLE_POLARITY};
+    motor_4{M4_STEP_POLARITY, M4_ENABLE_POLARITY};
 
 // StepDirStepper<
 //    Motate::kSocket5_StepPinNumber,
@@ -73,7 +73,7 @@ StepDirStepper<Motate::kSocket4_StepPinNumber,
 //    Motate::kSocket5_Microstep_1PinNumber,
 //    Motate::kSocket5_Microstep_2PinNumber,
 //    Motate::kSocket5_VrefPinNumber>
-//  motor_5 {M5_ENABLE_POLARITY};
+//  motor_5 {M5_STEP_POLARITY, M5_ENABLE_POLARITY};
 
 // StepDirStepper<
 //    Motate::kSocket6_StepPinNumber,
@@ -83,7 +83,7 @@ StepDirStepper<Motate::kSocket4_StepPinNumber,
 //    Motate::kSocket6_Microstep_1PinNumber,
 //    Motate::kSocket6_Microstep_2PinNumber,
 //    Motate::kSocket6_VrefPinNumber>
-//  motor_6 {M6_ENABLE_POLARITY};
+//  motor_6 {M6_STEP_POLARITY, M6_ENABLE_POLARITY};
 
 Stepper* Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4};
 
