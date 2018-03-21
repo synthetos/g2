@@ -14,5 +14,5 @@ clean:
 
 .PHONY: purify
 purify:
-	@rm -rf g2/bin
-	@rm -rf g2/build
+	@rm -rf TinyG2/bin
+	@rm -rf TinyG2/build
