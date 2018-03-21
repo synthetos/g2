@@ -68,6 +68,12 @@ To flash the program using BOSSA, use the following command template:
 bossac -p tty.usbserialXX -e -w -v -b -R path/to/firmware.bin
 ```
 
+Example:
+
+```
+bossac -p tty.usbmodem1411 -e -w -v -b -R g2/TinyG2/bin/G2v9i/G2v9i.bin
+```
+
 * `-p` specifies the serial port.  It is likely to be `/dev/tty.usbserialXX`.
 	* Important: `-p` prepends "`/dev/`", so if you supply the `/dev/`, it won't find the serial port.
 * `-e` is erase
