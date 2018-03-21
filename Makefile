@@ -11,3 +11,8 @@ fw:
 .PHONY: clean
 clean:
 	@make -C TinyG2 clean PLATFORM=G2v9i
+
+.PHONY: purify
+purify:
+	@rm -rf g2/bin
+	@rm -rf g2/build
