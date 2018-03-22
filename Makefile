@@ -8,6 +8,10 @@ toolchain:
 fw:
 	@make -C TinyG2 PLATFORM=G2v9i
 
+.PHONY: debug
+debug:
+	@make -C TinyG2 PLATFORM=G2v9i debug
+
 .PHONY: clean
 clean:
 	@make -C TinyG2 clean PLATFORM=G2v9i
