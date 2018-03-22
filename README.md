@@ -60,6 +60,8 @@ cd TinyG2 && make PLATFORM=G2v9i clean
 
 ## Flashing the TinyG2
 
+To get TinyG2 to reboot into SAM-BA mode, you can issue the json command {"boot":1}.  You can also open & close the serial port at 1200 baud.  The easiest way to do the latter is with the command stty -f /dev/tty.usbserial* 1200.
+
 When in SAM-BA mode, we update firmware with the open source utility BOSSA (the SAM-BA version of avrdude).  Our branch of it is [here](https://github.com/omco/bossa/tree/arduino), though the open-source version can be used for standalone flashing.
 
 To flash the program using BOSSA, use the following command template:
