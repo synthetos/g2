@@ -817,12 +817,6 @@
 #ifndef A_ZERO_BACKOFF
 #define A_ZERO_BACKOFF              2.0
 #endif
-#ifndef A_SPRING_OFFSET_FACTOR
-#define A_SPRING_OFFSET_FACTOR    0
-#endif
-#ifndef A_SPRING_OFFSET_MAX
-#define A_SPRING_OFFSET_MAX       0
-#endif
 
 // B AXIS
 #ifndef B_AXIS_MODE

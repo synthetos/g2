@@ -77,7 +77,6 @@ void  mp_zero_segment_velocity() { mr.segment_velocity = 0; }
 float mp_get_runtime_velocity(void) { return (mr.segment_velocity); }
 float mp_get_runtime_absolute_position(uint8_t axis) { return (mr.position[axis]); }
 void mp_set_runtime_work_offset(float offset[]) { copy_vector(mr.gm.work_offset, offset); }
-float mp_get_runtime_spring_value(uint8_t axis) { return (mr.spring_offset[axis]); }
 
 // We have to handle rotation - "rotate" by the transverse of the matrix to got "normal" coordinates
 float mp_get_runtime_work_position(uint8_t axis) {
@@ -108,7 +107,7 @@ float mp_get_runtime_work_position(uint8_t axis) {
  *  Use mp_get_runtime_busy() to sync to the queue. If you wait until it returns
  *  FALSE you know the queue is empty and the motors have stopped.
  */
-bool mp_get_runtime_busy() 
+bool mp_get_runtime_busy()
 {
     if (cm.cycle_state == CYCLE_OFF) {
         return (false);
@@ -137,7 +136,7 @@ bool mp_runtime_is_idle() { return (!st_runtime_isbusy()); }
  *        exceeds the minimums.
  */
 
-stat_t mp_aline(GCodeState_t* gm_in) 
+stat_t mp_aline(GCodeState_t* gm_in)
 {
     mpBuf_t* bf;  // current move pointer
     float target_rotated[AXES] = {0, 0, 0, 0, 0, 0};
@@ -166,17 +165,17 @@ stat_t mp_aline(GCodeState_t* gm_in)
     //  c being target[2],
     //  x_1 being cm.rotation_matrix[1][0]
 
-    target_rotated[0] = gm_in->target[0] * cm.rotation_matrix[0][0] + 
+    target_rotated[0] = gm_in->target[0] * cm.rotation_matrix[0][0] +
                         gm_in->target[1] * cm.rotation_matrix[0][1] +
                         gm_in->target[2] * cm.rotation_matrix[0][2];
 
-    target_rotated[1] = gm_in->target[0] * cm.rotation_matrix[1][0] + 
+    target_rotated[1] = gm_in->target[0] * cm.rotation_matrix[1][0] +
                         gm_in->target[1] * cm.rotation_matrix[1][1] +
                         gm_in->target[2] * cm.rotation_matrix[1][2];
 
-    target_rotated[2] = gm_in->target[0] * cm.rotation_matrix[2][0] + 
+    target_rotated[2] = gm_in->target[0] * cm.rotation_matrix[2][0] +
                         gm_in->target[1] * cm.rotation_matrix[2][1] +
-                        gm_in->target[2] * cm.rotation_matrix[2][2] + 
+                        gm_in->target[2] * cm.rotation_matrix[2][2] +
                         cm.rotation_z_offset;
 
     // copy rotation axes ABC
@@ -240,7 +239,7 @@ stat_t mp_aline(GCodeState_t* gm_in)
  *  a replan, which is useful for feedholds and feed overrides.
  */
 
-void mp_plan_block_list() 
+void mp_plan_block_list()
 {
     mpBuf_t* bf                = mp.p;
     bool     planned_something = false;
@@ -274,7 +273,7 @@ void mp_plan_block_list()
  * _plan_block() - the block chain using pessimistic assumptions
  */
 
-static mpBuf_t* _plan_block(mpBuf_t* bf) 
+static mpBuf_t* _plan_block(mpBuf_t* bf)
 {
     // First time blocks - set vmaxes for as many blocks as possible (forward loading of priming blocks)
     // Note: cruise_vmax was computed in _calculate_vmaxes() in aline()
@@ -610,7 +609,7 @@ static void _calculate_jerk(mpBuf_t* bf)
  *       so that the elapsed time from the start to the end of the motion is T plus
  *       any time required for acceleration or deceleration.
  */
-static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const float axis_square[]) 
+static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const float axis_square[])
 {
     float feed_time = 0;        // one of: XYZ time, ABC time or inverse time. Mutually exclusive
     float max_time  = 0;        // time required for the rate-limiting axis
@@ -695,7 +694,7 @@ static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const floa
  *    C) The last move (there is not "next move" yet) will have to compate to a unit vector of zero.
  */
 
-static void _calculate_junction_vmax(mpBuf_t* bf) 
+static void _calculate_junction_vmax(mpBuf_t* bf)
 {
     // (C) special case for planning the last block
     if (bf->nx->buffer_state == MP_BUFFER_EMPTY) {

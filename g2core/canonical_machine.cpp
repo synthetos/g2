@@ -2758,26 +2758,6 @@ stat_t cm_set_mto(nvObj_t *nv)
 }
 
 /*
- * cm_get_so() - get spring factor offset
- *
- */
-
-stat_t cm_get_so(nvObj_t *nv)
-{
-    if (cm_get_motion_state() == MOTION_STOP) {
-        nv->value = 0;
-    } else {
-        nv->value = mp_get_runtime_spring_value(_get_axis(nv->index));
-        if (cm_get_units_mode(RUNTIME) == INCHES) {
-            nv->value *= INCHES_PER_MM;
-        }
-    }
-    nv->precision = GET_TABLE_WORD(precision);
-    nv->valuetype = TYPE_FLOAT;
-    return (STAT_OK);
-}
-
-/*
  * Commands
  *
  * cm_run_qf() - flush planner queue
@@ -2992,9 +2972,6 @@ static const char fmt_Xtn[] = "[%s%s] %s travel minimum%17.3f%s\n";
 static const char fmt_Xjm[] = "[%s%s] %s jerk maximum%15.0f%s/min^3 * 1 million\n";
 static const char fmt_Xjh[] = "[%s%s] %s jerk homing%16.0f%s/min^3 * 1 million\n";
 static const char fmt_Xra[] = "[%s%s] %s radius value%20.4f%s\n";
-static const char fmt_Xsf[] = "[%s%s] %s spring offset factor%20.4f%s\n";
-static const char fmt_Xsm[] = "[%s%s] %s spring offset max%20.4f%s\n";
-static const char fmt_Xso[] = "[%s%s] %s spring offset%20.4f%s\n";
 static const char fmt_Xhi[] = "[%s%s] %s homing input%15d [input 1-N or 0 to disable homing this axis]\n";
 static const char fmt_Xhd[] = "[%s%s] %s homing direction%11d [0=search-to-negative, 1=search-to-positive]\n";
 static const char fmt_Xsv[] = "[%s%s] %s search velocity%12.0f%s/min\n";
@@ -3071,10 +3048,6 @@ void cm_print_tn(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xtn);}
 void cm_print_jm(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xjm);}
 void cm_print_jh(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xjh);}
 void cm_print_ra(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xra);}
-
-void cm_print_sf(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xsf);}
-void cm_print_sm(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xsm);}
-void cm_print_so(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xso);}
 
 void cm_print_hi(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xhi);}
 void cm_print_hd(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xhd);}
