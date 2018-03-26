@@ -2,8 +2,8 @@
  * step_dir_driver.cpp - control over a Step/Direction/Enable stepper motor driver
  * This file is part of G2 project
  *
- * Copyright (c) 2016 - 2017 Alden S. Hart, Jr.
- * Copyright (c) 2016 - 2017 Robert Giseburt
+ * Copyright (c) 2016 - 2018 Alden S. Hart, Jr.
+ * Copyright (c) 2016 - 2018 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the

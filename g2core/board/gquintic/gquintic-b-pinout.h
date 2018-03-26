@@ -3,8 +3,8 @@
  * For: /board/gQuintic
  * This file is part of the g2core project
  *
- * Copyright (c) 2016 - 2017 Robert Giseburt
- * Copyright (c) 2016 - 2017 Alden S. Hart Jr.
+ * Copyright (c) 2016 - 2018 Robert Giseburt
+ * Copyright (c) 2016 - 2018 Alden S. Hart Jr.
  *
  * This file is part of the Motate Library.
  *

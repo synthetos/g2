@@ -2,7 +2,7 @@
  * settings_probotix.h - Probotix Fireball V90 machine profile
  * This file is part the g2core project
  *
- * Copyright (c) 2011 - 2017 Alden S. Hart, Jr.
+ * Copyright (c) 2011 - 2018 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the

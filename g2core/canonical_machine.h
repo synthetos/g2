@@ -2,8 +2,8 @@
  * canonical_machine.h - rs274/ngc canonical machining functions
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2017 Alden S. Hart Jr.
- * Copyright (c) 2016 - 2017 Rob Giseburt
+ * Copyright (c) 2010 - 2018 Alden S. Hart Jr.
+ * Copyright (c) 2016 - 2018 Rob Giseburt
  *
  * This code is a loose implementation of Kramer, Proctor and Messina's
  * canonical machining functions as described in the NIST RS274/NGC v3
