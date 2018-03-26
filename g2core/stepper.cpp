@@ -341,7 +341,7 @@ void dda_timer_type::interrupt()
     }
 #endif
 
-    // Process end of segment. 
+    // Process end of segment.
     // One more interrupt will occur to turn of any pulses set in this pass.
     if (--st_run.dda_ticks_downcount == 0) {
         _load_move();       // load the next move at the current interrupt level
@@ -441,8 +441,17 @@ static void _load_move()
         return;                     // exit if the runtime is busy
     }
 
+// <<<<<<< HEAD
     // If there are no moves to load start motor power timeouts
     if (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_LOADER) {
+/* =======
+	// ...start motor power timeouts
+	//	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
+	//		Motors[motor]->motionStopped();
+	//  }
+	// loop unrolled version
+>>>>>>> refs/heads/edge
+*/
         motor_1.motionStopped();    // ...start motor power timeouts
         motor_2.motionStopped();
 #if (MOTORS > 2)
@@ -611,7 +620,7 @@ static void _load_move()
     // handle synchronous commands
     } else if (st_pre.block_type == BLOCK_TYPE_COMMAND) {
         mp_runtime_command(st_pre.bf);
-        
+
     } // else null - which is okay in many cases
 
     // all other cases drop to here (e.g. Null moves after Mcodes skip to here)
@@ -935,9 +944,15 @@ stat_t st_set_su(nvObj_t *nv)
         if (cm_get_axis_type(nv) == AXIS_TYPE_LINEAR) {
             nv->value_flt *= INCHES_PER_MM;
         }
+// <<<<<<< HEAD
     }    
     uint8_t m = _motor(nv->index);
     st_cfg.mot[m].steps_per_unit = nv->value_flt;
+/* =======
+    }
+    set_flt(nv);
+>>>>>>> refs/heads/edge
+*/
     st_cfg.mot[m].units_per_step = 1.0/st_cfg.mot[m].steps_per_unit;
 
     // Scale TR so all the other values make sense
@@ -947,9 +962,53 @@ stat_t st_set_su(nvObj_t *nv)
     return(STAT_OK);
 }
 
+// <<<<<<< HEAD
 // polarity
 stat_t st_get_po(nvObj_t *nv) { return(get_integer(nv, st_cfg.mot[_motor(nv->index)].polarity)); }
 stat_t st_set_po(nvObj_t *nv) { return(set_integer(nv, st_cfg.mot[_motor(nv->index)].polarity, 0, 1)); }
+/* =======
+stat_t st_set_ep(nvObj_t *nv)            // set motor enable polarity
+{
+    if (nv->value < IO_ACTIVE_LOW) { return (STAT_INPUT_LESS_THAN_MIN_VALUE); }
+    if (nv->value > IO_ACTIVE_HIGH) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
+
+    uint8_t motor = _get_motor(nv->index);
+    if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
+
+    Motors[motor]->setEnablePolarity((ioMode)nv->value);
+    return (STAT_OK);
+}
+
+stat_t st_get_ep(nvObj_t *nv)            // get motor enable polarity
+{
+    if (nv->value < IO_ACTIVE_LOW) { return (STAT_INPUT_LESS_THAN_MIN_VALUE); }
+    if (nv->value > IO_ACTIVE_HIGH) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
+
+    uint8_t motor = _get_motor(nv->index);
+    if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
+
+    nv->value = (float)Motors[motor]->getEnablePolarity();
+    nv->valuetype = TYPE_INT;
+    return (STAT_OK);
+}
+
+stat_t st_set_pm(nvObj_t *nv)            // set motor power mode
+{
+    if (nv->value < 0) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    if (nv->value >= MOTOR_POWER_MODE_MAX_VALUE) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+    }
+    uint8_t motor = _get_motor(nv->index);
+    if (motor > MOTORS) {
+        nv->valuetype = TYPE_NULL;
+        return STAT_INPUT_VALUE_RANGE_ERROR;
+    };
+>>>>>>> refs/heads/edge
+*/
 
 // power management mode
 stat_t st_get_pm(nvObj_t *nv)
@@ -961,10 +1020,22 @@ stat_t st_get_pm(nvObj_t *nv)
 
 stat_t st_set_pm(nvObj_t *nv)
 {
+// <<<<<<< HEAD
     // Test the value without setting it, then setPowerMode() now
     // to both set and take effect immediately.
     ritorno(set_integer(nv, (uint8_t &)cs.null, 0, MOTOR_POWER_MODE_MAX_VALUE ));
     Motors[_motor(nv->index)]->setPowerMode((stPowerMode)nv->value_int);
+/* =======
+    uint8_t motor = _get_motor(nv->index);
+    if (motor > MOTORS) {
+        nv->valuetype = TYPE_NULL;
+        return STAT_INPUT_VALUE_RANGE_ERROR;
+    };
+
+    nv->value = (float)Motors[motor]->getPowerMode();
+    nv->valuetype = TYPE_INT;
+>>>>>>> refs/heads/edge
+*/
     return (STAT_OK);
 }
 
@@ -979,11 +1050,30 @@ stat_t st_set_pm(nvObj_t *nv)
 stat_t st_get_pl(nvObj_t *nv) { return(get_float(nv, st_cfg.mot[_motor(nv->index)].power_level)); }
 stat_t st_set_pl(nvObj_t *nv)
 {
+// <<<<<<< HEAD
     uint8_t m = _motor(nv->index);
     ritorno(set_float_range(nv, st_cfg.mot[m].power_level, 0.0, 1.0));
     st_cfg.mot[m].power_level_scaled = (nv->value_flt * POWER_LEVEL_SCALE_FACTOR);
     st_run.mot[m].power_level_dynamic = (st_cfg.mot[m].power_level_scaled);
     Motors[m]->setPowerLevel(st_cfg.mot[m].power_level_scaled);
+/* =======
+    if (nv->value < (float)0.0) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+    }
+    if (nv->value > (float)1.0) {
+        nv->valuetype = TYPE_NULL;
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+    }
+    set_flt(nv);    // set power_setting value in the motor config struct (st)
+
+    uint8_t motor = _get_motor(nv->index);
+    st_cfg.mot[motor].power_level_scaled = (nv->value * POWER_LEVEL_SCALE_FACTOR);
+    st_run.mot[motor].power_level_dynamic = (st_cfg.mot[motor].power_level_scaled);
+    Motors[motor]->setPowerLevel(st_cfg.mot[motor].power_level_scaled);
+
+>>>>>>> refs/heads/edge
+*/
     return(STAT_OK);
 }
 
@@ -1027,7 +1117,7 @@ stat_t st_set_mt(nvObj_t *nv) { return(set_float_range(nv, st_cfg.motor_power_ti
 
 // Make sure this function is not part of initialization --> f00
 // nv->value is seconds of timeout
-stat_t st_set_me(nvObj_t *nv)    
+stat_t st_set_me(nvObj_t *nv)
 {
     for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
         Motors[motor]->enable(nv->value_int);   // nv->value is the timeout or 0 for default
@@ -1037,7 +1127,7 @@ stat_t st_set_me(nvObj_t *nv)
 
 // Make sure this function is not part of initialization --> f00
 // nv-value is motor to disable, or 0 for all motors
-stat_t st_set_md(nvObj_t *nv)    
+stat_t st_set_md(nvObj_t *nv)
 {
     if (nv->value_int < 0) {
         nv->valuetype = TYPE_NULL;
@@ -1046,7 +1136,7 @@ stat_t st_set_md(nvObj_t *nv)
     if (nv->value_int > MOTORS) {
         nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_EXCEEDS_MAX_VALUE);
-    }    
+    }
     // de-energize all motors
     if ((uint8_t)nv->value_int == 0) {      // 0 means all motors
         for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
@@ -1087,6 +1177,7 @@ static const char fmt_0tr[] = "[%s%s] m%s travel per revolution%10.4f%s\n";
 static const char fmt_0mi[] = "[%s%s] m%s microsteps%16d [1,2,4,8,16,32]\n";
 static const char fmt_0su[] = "[%s%s] m%s steps per unit %17.5f steps per%s\n";
 static const char fmt_0po[] = "[%s%s] m%s polarity%18d [0=normal,1=reverse]\n";
+static const char fmt_0ep[] = "[%s%s] m%s enable polarity%11d [0=active HIGH,1=ractive LOW]\n";
 static const char fmt_0pm[] = "[%s%s] m%s power management%10d [0=disabled,1=always on,2=in cycle,3=when moving]\n";
 static const char fmt_0pl[] = "[%s%s] m%s motor power level%13.3f [0.000=minimum, 1.000=maximum]\n";
 static const char fmt_pwr[] = "[%s%s] Motor %c power level:%12.3f\n";
@@ -1125,6 +1216,7 @@ void st_print_tr(nvObj_t *nv) { _print_motor_flt_units(nv, fmt_0tr, cm_get_units
 void st_print_mi(nvObj_t *nv) { _print_motor_int(nv, fmt_0mi);}
 void st_print_su(nvObj_t *nv) { _print_motor_flt_units(nv, fmt_0su, cm_get_units_mode(MODEL));}
 void st_print_po(nvObj_t *nv) { _print_motor_int(nv, fmt_0po);}
+void st_print_ep(nvObj_t *nv) { _print_motor_int(nv, fmt_0ep);}
 void st_print_pm(nvObj_t *nv) { _print_motor_int(nv, fmt_0pm);}
 void st_print_pl(nvObj_t *nv) { _print_motor_flt(nv, fmt_0pl);}
 void st_print_pwr(nvObj_t *nv){ _print_motor_pwr(nv, fmt_pwr);}
