@@ -190,7 +190,7 @@ stat_t mp_aline(GCodeState_t* _gm)
     // copy rotation axes for ABC (no changes)
     target_rotated[AXIS_A] = _gm->target[AXIS_A];
     target_rotated[AXIS_B] = _gm->target[AXIS_B];
-    target_rotated[AXIS_B] = _gm->target[AXIS_C];
+    target_rotated[AXIS_C] = _gm->target[AXIS_C];
 
     for (uint8_t axis = 0; axis < AXES; axis++) {
         axis_length[axis] = target_rotated[axis] - mp->position[axis];

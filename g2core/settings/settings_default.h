@@ -582,7 +582,7 @@
 #define V_LATCH_BACKOFF             4.0
 #endif
 #ifndef V_ZERO_BACKOFF
-#define Y_ZERO_BACKOFF              2.0
+#define V_ZERO_BACKOFF              2.0
 #endif
 
 // W AXIS
