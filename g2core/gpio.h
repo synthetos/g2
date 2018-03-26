@@ -1035,6 +1035,8 @@ struct ValueHistory {
     float rolling_sum_sq = 0;
     float rolling_mean = 0;
     void add_sample(float t) {
+        last_value_valid = false;
+
         rolling_sum -= samples[next_sample].value;
         rolling_sum_sq -= samples[next_sample].value_sq;
 
@@ -1052,10 +1054,13 @@ struct ValueHistory {
     float get_std_dev() {
         // Important note: this is a POPULATION standard deviation, not a population standard deviation
         float variance = (rolling_sum_sq/(float)sampled) - (rolling_mean*rolling_mean);
-        return sqrt(std::abs(variance));
+        return std::sqrt(std::abs(variance));
     };
 
+    float last_value = 0;
+    bool last_value_valid = false;
     float value() {
+        if (last_value_valid) { return last_value; }
         // we'll shoot through the samples and ignore the outliers
         uint16_t samples_kept = 0;
         float temp = 0;
@@ -1073,7 +1078,10 @@ struct ValueHistory {
             return rolling_mean;
         }
 
-        return (temp / (float)samples_kept);
+        last_value = (temp / (float)samples_kept);
+        last_value_valid = true;
+
+        return last_value;
     };
 };
 
@@ -1087,7 +1095,7 @@ protected: // so we know if anyone tries to reach in
     uint8_t ext_pin_number;             // the number used externally for this pin ("in" + ext_pin_number)
 
     const float variance_max = 1.1;
-    ValueHistory<20> history {variance_max};
+    ValueHistory<40> history {variance_max};
 
     float last_raw_value;
 
@@ -1104,7 +1112,7 @@ public:
     pin{Motate::kNormal, [&]{this->adc_has_new_value();}, std::forward<T>(additional_values)...}
     {
         pin.setInterrupts(Motate::kPinInterruptOnChange|Motate::kInterruptPriorityLow);
-        pin.setVoltageRange(3.29, 0.0, 3.29, 1000000.0);
+        pin.setVoltageRange(3.29, 0.0, 3.29, 100.0);
     };
 
     // functions for use by other parts of the code, and are overridden
