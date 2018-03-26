@@ -212,4 +212,16 @@ ifeq ("$(CONFIG)","pendulum")
     endif
     SETTINGS_FILE="settings_synthetos_pendulum_v2.h"
 endif
+
+##########
+# Synthetos  config:
+
+ifeq ("$(CONFIG)","fourcable")
+    ifeq ("$(BOARD)","NONE")
+        BOARD=gquintic-d
+    endif
+    SETTINGS_FILE="settings_fourcable.h"
+endif
+
 include $(wildcard ./board/$(STAR).mk)
+

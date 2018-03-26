@@ -47,6 +47,7 @@
 #include "util.h"
 #include "help.h"
 #include "xio.h"
+#include "kinematics.h"
 
 /*** structures ***/
 
@@ -443,9 +444,6 @@ const cfgItem_t cfgArray[] = {
     { "a","ajm",_fip,  0, cm_print_jm, get_flt,   cm_set_jm, (float *)&cm.a[AXIS_A].jerk_max,       A_JERK_MAX },
     { "a","ajh",_fip,  0, cm_print_jh, get_flt,   cm_set_jh, (float *)&cm.a[AXIS_A].jerk_high,      A_JERK_HIGH_SPEED },
     { "a","ara",_fipc, 3, cm_print_ra, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].radius,         A_RADIUS},
-    { "a","asf",_fipc, 3, cm_print_sf, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].spring_offset_factor, A_SPRING_OFFSET_FACTOR},
-    { "a","asm",_fipc, 3, cm_print_sm, get_flt,   set_flt,   (float *)&cm.a[AXIS_A].spring_offset_max,    A_SPRING_OFFSET_MAX},
-    { "a","aso", _f0,  3, cm_print_so, cm_get_so, set_ro,    (float *)&cs.null, 0 },
     { "a","ahi",_fip,  0, cm_print_hi, get_ui8,   cm_set_hi, (float *)&cm.a[AXIS_A].homing_input,   A_HOMING_INPUT },
     { "a","ahd",_fip,  0, cm_print_hd, get_ui8,   set_01,    (float *)&cm.a[AXIS_A].homing_dir,     A_HOMING_DIRECTION },
     { "a","asv",_fip,  0, cm_print_sv, get_flt,   set_fltp,  (float *)&cm.a[AXIS_A].search_velocity,A_SEARCH_VELOCITY },
@@ -582,6 +580,8 @@ const cfgItem_t cfgArray[] = {
     { "in","in12", _f0, 0, din_print_state, din_get_input, set_ro,  (float *)&in12, 0 },
     { "in","in13", _f0, 0, din_print_state, din_get_input, set_ro,  (float *)&in13, 0 },
     { "in","in14", _f0, 0, din_print_state, din_get_input, set_ro,  (float *)&in14, 0 },
+    { "in","in15", _f0, 0, din_print_state, din_get_input, set_ro,  (float *)&in15, 0 },
+    { "in","in16", _f0, 0, din_print_state, din_get_input, set_ro,  (float *)&in16, 0 },
 
     // digital output configs
     { "do1", "do1en", _fip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  (float *)&dout1,  DO1_ENABLED },
@@ -667,52 +667,71 @@ const cfgItem_t cfgArray[] = {
     { "out","out12", _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&out12, 0 },
     { "out","out13", _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&out13, 0 },
     { "out","out14", _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&out14, 0 },
+    { "out","out15", _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&out15, 0 },
+    { "out","out16", _f0, 2, dout_print_out, dout_get_output, dout_set_output, (float *)&out16, 0 },
 
     // Analog input configs
 #if (A_IN_CHANNELS >= 1)
-    { "ain1","ain1ty",_fip, 0, ain_print_type,       ain_get_type,       ain_set_type,    (float *)&ain1,  AI1_TYPE },
-    { "ain1","ain1ct",_fip, 0, ain_print_circuit,    ain_get_circuit,    ain_set_circuit, (float *)&ain1,  AI1_CIRCUIT },
-    { "ain1","ain1p1",_fip, 4, ain_print_p,          ain_get_p1,         ain_set_p1,      (float *)&ain1,  AI1_P1 },
-    { "ain1","ain1p2",_fip, 4, ain_print_p,          ain_get_p2,         ain_set_p2,      (float *)&ain1,  AI1_P2 },
-    { "ain1","ain1p3",_fip, 4, ain_print_p,          ain_get_p3,         ain_set_p3,      (float *)&ain1,  AI1_P3 },
-    { "ain1","ain1p4",_fip, 4, ain_print_p,          ain_get_p4,         ain_set_p4,      (float *)&ain1,  AI1_P4 },
-    { "ain1","ain1p5",_fip, 4, ain_print_p,          ain_get_p5,         ain_set_p5,      (float *)&ain1,  AI1_P5 },
-    { "ain1","ain1vv",_f0,  4, ain_print_value,      ain_get_value,      set_ro,          (float *)&ain1,  0 },
-    { "ain1","ain1rv",_f0,  2, ain_print_resistance, ain_get_resistance, set_ro,          (float *)&ain1,  0 },
+    { "ai1","ai1en",_fip, 0, ai_print_en,         ai_get_en,         ai_set_en,      (float *)&ai1,  AI1_ENABLED },
+    { "ai1","ai1ain",_fip,0, ai_print_ain,        ai_get_ain,        ai_set_ain,     (float *)&ai1,  AI1_EXTERNAL_NUMBER },
+    { "ai1","ai1ty",_fip, 0, ai_print_type,       ai_get_type,       ai_set_type,    (float *)&ai1,  AI1_TYPE },
+    { "ai1","ai1ct",_fip, 0, ai_print_circuit,    ai_get_circuit,    ai_set_circuit, (float *)&ai1,  AI1_CIRCUIT },
+    { "ai1","ai1p1",_fip, 4, ai_print_p,          ai_get_p1,         ai_set_p1,      (float *)&ai1,  AI1_P1 },
+    { "ai1","ai1p2",_fip, 4, ai_print_p,          ai_get_p2,         ai_set_p2,      (float *)&ai1,  AI1_P2 },
+    { "ai1","ai1p3",_fip, 4, ai_print_p,          ai_get_p3,         ai_set_p3,      (float *)&ai1,  AI1_P3 },
+    { "ai1","ai1p4",_fip, 4, ai_print_p,          ai_get_p4,         ai_set_p4,      (float *)&ai1,  AI1_P4 },
+    { "ai1","ai1p5",_fip, 4, ai_print_p,          ai_get_p5,         ai_set_p5,      (float *)&ai1,  AI1_P5 },
 #endif
 #if (A_IN_CHANNELS >= 2)
-    { "ain2","ain2ty",_fip, 0, ain_print_type,       ain_get_type,       ain_set_type,    (float *)&ain2,  AI2_TYPE },
-    { "ain2","ain2ct",_fip, 0, ain_print_circuit,    ain_get_circuit,    ain_set_circuit, (float *)&ain2,  AI2_CIRCUIT },
-    { "ain2","ain2p1",_fip, 4, ain_print_p,          ain_get_p1,         ain_set_p1,      (float *)&ain2,  AI2_P1 },
-    { "ain2","ain2p2",_fip, 4, ain_print_p,          ain_get_p2,         ain_set_p2,      (float *)&ain2,  AI2_P2 },
-    { "ain2","ain2p3",_fip, 4, ain_print_p,          ain_get_p3,         ain_set_p3,      (float *)&ain2,  AI2_P3 },
-    { "ain2","ain2p4",_fip, 4, ain_print_p,          ain_get_p4,         ain_set_p4,      (float *)&ain2,  AI2_P4 },
-    { "ain2","ain2p5",_fip, 4, ain_print_p,          ain_get_p5,         ain_set_p5,      (float *)&ain2,  AI2_P5 },
-    { "ain2","ain2vv",_f0,  4, ain_print_value,      ain_get_value,      set_ro,          (float *)&ain2,  0 },
-    { "ain2","ain2rv",_f0,  2, ain_print_resistance, ain_get_resistance, set_ro,          (float *)&ain2,  0 },
+    { "ai2","ai2en",_fip, 0, ai_print_en,         ai_get_en,         ai_set_en,      (float *)&ai2,  AI2_ENABLED },
+    { "ai2","ai2ain",_fip,0, ai_print_ain,        ai_get_ain,        ai_set_ain,     (float *)&ai2,  AI2_EXTERNAL_NUMBER },
+    { "ai2","ai2ty",_fip, 0, ai_print_type,       ai_get_type,       ai_set_type,    (float *)&ai2,  AI2_TYPE },
+    { "ai2","ai2ct",_fip, 0, ai_print_circuit,    ai_get_circuit,    ai_set_circuit, (float *)&ai2,  AI2_CIRCUIT },
+    { "ai2","ai2p1",_fip, 4, ai_print_p,          ai_get_p1,         ai_set_p1,      (float *)&ai2,  AI2_P1 },
+    { "ai2","ai2p2",_fip, 4, ai_print_p,          ai_get_p2,         ai_set_p2,      (float *)&ai2,  AI2_P2 },
+    { "ai2","ai2p3",_fip, 4, ai_print_p,          ai_get_p3,         ai_set_p3,      (float *)&ai2,  AI2_P3 },
+    { "ai2","ai2p4",_fip, 4, ai_print_p,          ai_get_p4,         ai_set_p4,      (float *)&ai2,  AI2_P4 },
+    { "ai2","ai2p5",_fip, 4, ai_print_p,          ai_get_p5,         ai_set_p5,      (float *)&ai2,  AI2_P5 },
 #endif
 #if (A_IN_CHANNELS >= 3)
-    { "ain3","ain3ty",_fip, 0, ain_print_type,       ain_get_type,       ain_set_type,    (float *)&ain3,  AI3_TYPE },
-    { "ain3","ain3ct",_fip, 0, ain_print_circuit,    ain_get_circuit,    ain_set_circuit, (float *)&ain3,  AI3_CIRCUIT },
-    { "ain3","ain3p1",_fip, 4, ain_print_p,          ain_get_p1,         ain_set_p1,      (float *)&ain3,  AI3_P1 },
-    { "ain3","ain3p2",_fip, 4, ain_print_p,          ain_get_p2,         ain_set_p2,      (float *)&ain3,  AI3_P2 },
-    { "ain3","ain3p3",_fip, 4, ain_print_p,          ain_get_p3,         ain_set_p3,      (float *)&ain3,  AI3_P3 },
-    { "ain3","ain3p4",_fip, 4, ain_print_p,          ain_get_p4,         ain_set_p4,      (float *)&ain3,  AI3_P4 },
-    { "ain3","ain3p5",_fip, 4, ain_print_p,          ain_get_p5,         ain_set_p5,      (float *)&ain3,  AI3_P5 },
-    { "ain3","ain3vv",_f0,  4, ain_print_value,      ain_get_value,      set_ro,          (float *)&ain3,  0 },
-    { "ain3","ain3rv",_f0,  2, ain_print_resistance, ain_get_resistance, set_ro,          (float *)&ain3,  0 },
+    { "ai3","ai3en",_fip, 0, ai_print_en,         ai_get_en,         ai_set_en,      (float *)&ai3,  AI3_ENABLED },
+    { "ai3","ai3ain",_fip,0, ai_print_ain,        ai_get_ain,        ai_set_ain,     (float *)&ai3,  AI3_EXTERNAL_NUMBER },
+    { "ai3","ai3ty",_fip, 0, ai_print_type,       ai_get_type,       ai_set_type,    (float *)&ai3,  AI3_TYPE },
+    { "ai3","ai3ct",_fip, 0, ai_print_circuit,    ai_get_circuit,    ai_set_circuit, (float *)&ai3,  AI3_CIRCUIT },
+    { "ai3","ai3p1",_fip, 4, ai_print_p,          ai_get_p1,         ai_set_p1,      (float *)&ai3,  AI3_P1 },
+    { "ai3","ai3p2",_fip, 4, ai_print_p,          ai_get_p2,         ai_set_p2,      (float *)&ai3,  AI3_P2 },
+    { "ai3","ai3p3",_fip, 4, ai_print_p,          ai_get_p3,         ai_set_p3,      (float *)&ai3,  AI3_P3 },
+    { "ai3","ai3p4",_fip, 4, ai_print_p,          ai_get_p4,         ai_set_p4,      (float *)&ai3,  AI3_P4 },
+    { "ai3","ai3p5",_fip, 4, ai_print_p,          ai_get_p5,         ai_set_p5,      (float *)&ai3,  AI3_P5 },
 #endif
 #if (A_IN_CHANNELS >= 4)
-    { "ain4","ain4ty",_fip, 0, ain_print_type,       ain_get_type,       ain_set_type,    (float *)&ain4,  AI4_TYPE },
-    { "ain4","ain4ct",_fip, 0, ain_print_circuit,    ain_get_circuit,    ain_set_circuit, (float *)&ain4,  AI4_CIRCUIT },
-    { "ain4","ain4p1",_fip, 4, ain_print_p,          ain_get_p1,         ain_set_p1,      (float *)&ain4,  AI4_P1 },
-    { "ain4","ain4p2",_fip, 4, ain_print_p,          ain_get_p2,         ain_set_p2,      (float *)&ain4,  AI4_P2 },
-    { "ain4","ain4p3",_fip, 4, ain_print_p,          ain_get_p3,         ain_set_p3,      (float *)&ain4,  AI4_P3 },
-    { "ain4","ain4p4",_fip, 4, ain_print_p,          ain_get_p4,         ain_set_p4,      (float *)&ain4,  AI4_P4 },
-    { "ain4","ain4p5",_fip, 4, ain_print_p,          ain_get_p5,         ain_set_p5,      (float *)&ain4,  AI4_P5 },
-    { "ain4","ain4vv",_f0,  4, ain_print_value,      ain_get_value,      set_ro,          (float *)&ain4,  0 },
-    { "ain4","ain4rv",_f0,  2, ain_print_resistance, ain_get_resistance, set_ro,          (float *)&ain4,  0 },
+    { "ai4","ai4en",_fip, 0, ai_print_en,         ai_get_en,         ai_set_en,      (float *)&ai4,  AI4_ENABLED },
+    { "ai4","ai4ain",_fip,0, ai_print_ain,        ai_get_ain,        ai_set_ain,     (float *)&ai4,  AI4_EXTERNAL_NUMBER },
+    { "ai4","ai4ty",_fip, 0, ai_print_type,       ai_get_type,       ai_set_type,    (float *)&ai4,  AI4_TYPE },
+    { "ai4","ai4ct",_fip, 0, ai_print_circuit,    ai_get_circuit,    ai_set_circuit, (float *)&ai4,  AI4_CIRCUIT },
+    { "ai4","ai4p1",_fip, 4, ai_print_p,          ai_get_p1,         ai_set_p1,      (float *)&ai4,  AI4_P1 },
+    { "ai4","ai4p2",_fip, 4, ai_print_p,          ai_get_p2,         ai_set_p2,      (float *)&ai4,  AI4_P2 },
+    { "ai4","ai4p3",_fip, 4, ai_print_p,          ai_get_p3,         ai_set_p3,      (float *)&ai4,  AI4_P3 },
+    { "ai4","ai4p4",_fip, 4, ai_print_p,          ai_get_p4,         ai_set_p4,      (float *)&ai4,  AI4_P4 },
+    { "ai4","ai4p5",_fip, 4, ai_print_p,          ai_get_p5,         ai_set_p5,      (float *)&ai4,  AI4_P5 },
 #endif
+
+    { "ain1","ain1vv",_f0,  4, ain_print_value,      ain_get_value,      set_ro,         (float *)&ain1,  0 },
+    { "ain1","ain1rv",_f0,  2, ain_print_resistance, ain_get_resistance, set_ro,         (float *)&ain1,  0 },
+    { "ain2","ain2vv",_f0,  4, ain_print_value,      ain_get_value,      set_ro,         (float *)&ain2,  0 },
+    { "ain2","ain2rv",_f0,  2, ain_print_resistance, ain_get_resistance, set_ro,         (float *)&ain2,  0 },
+    { "ain3","ain3vv",_f0,  4, ain_print_value,      ain_get_value,      set_ro,         (float *)&ain3,  0 },
+    { "ain3","ain3rv",_f0,  2, ain_print_resistance, ain_get_resistance, set_ro,         (float *)&ain3,  0 },
+    { "ain4","ain4vv",_f0,  4, ain_print_value,      ain_get_value,      set_ro,         (float *)&ain4,  0 },
+    { "ain4","ain4rv",_f0,  2, ain_print_resistance, ain_get_resistance, set_ro,         (float *)&ain4,  0 },
+    { "ain5","ain5vv",_f0,  4, ain_print_value,      ain_get_value,      set_ro,         (float *)&ain5,  0 },
+    { "ain5","ain5rv",_f0,  2, ain_print_resistance, ain_get_resistance, set_ro,         (float *)&ain5,  0 },
+    { "ain6","ain6vv",_f0,  4, ain_print_value,      ain_get_value,      set_ro,         (float *)&ain6,  0 },
+    { "ain6","ain6rv",_f0,  2, ain_print_resistance, ain_get_resistance, set_ro,         (float *)&ain6,  0 },
+    { "ain7","ain7vv",_f0,  4, ain_print_value,      ain_get_value,      set_ro,         (float *)&ain7,  0 },
+    { "ain7","ain7rv",_f0,  2, ain_print_resistance, ain_get_resistance, set_ro,         (float *)&ain7,  0 },
+    { "ain8","ain8vv",_f0,  4, ain_print_value,      ain_get_value,      set_ro,         (float *)&ain8,  0 },
+    { "ain8","ain8rv",_f0,  2, ain_print_resistance, ain_get_resistance, set_ro,         (float *)&ain8,  0 },
 
     // PWM settings
     { "p1","p1frq",_fip, 0, pwm_print_p1frq, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].frequency,     P1_PWM_FREQUENCY },
@@ -1135,6 +1154,16 @@ const cfgItem_t cfgArray[] = {
     { "",   "com", _f0,  0, cm_print_com, get_ui8, set_nul,  (float *)&coolant.mist_enable, 0 },    // get mist coolant enable
     { "",   "cof", _f0,  0, cm_print_cof, get_ui8, set_nul,  (float *)&coolant.flood_enable, 0 },   // get flood coolant enable
 
+    // kinematics controls
+#if KINEMATICS==KINE_FOUR_CABLE
+    { "sys","knfc", _f0, 4, tx_print_nul, kn_get_force,    kn_set_force,    (float *)&cs.null,       0 },
+    { "sys","knan", _f0, 0, tx_print_nul, kn_get_anchored, kn_set_anchored, (float *)&cs.null,       0 },
+    { "sys","knpa", _f0, 4, tx_print_nul, kn_get_pos_a,    set_nul,         (float *)&cs.null,       0 },
+    { "sys","knpb", _f0, 4, tx_print_nul, kn_get_pos_b,    set_nul,         (float *)&cs.null,       0 },
+    { "sys","knpc", _f0, 4, tx_print_nul, kn_get_pos_c,    set_nul,         (float *)&cs.null,       0 },
+    { "sys","knpd", _f0, 4, tx_print_nul, kn_get_pos_d,    set_nul,         (float *)&cs.null,       0 },
+#endif
+
     // Communications and reporting parameters
 #ifdef __TEXT_MODE
     { "sys","tv", _fipn, 0, tx_print_tv,  get_ui8, set_01,     (float *)&txt.text_verbosity,        TEXT_VERBOSITY },
@@ -1371,11 +1400,15 @@ const cfgItem_t cfgArray[] = {
     { "","do12", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
     { "","do13", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
     // +14 = 36
+    { "","ai1", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // analog input configs
+    { "","ai2", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+    { "","ai3", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
+    { "","ai4", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
     { "","ain1", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // analog input configs
     { "","ain2", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
     { "","ain3", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
     { "","ain4", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
-    // +4 = 40
+    // +8 = 44
     { "","g54",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // coord offset groups
     { "","g55",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
     { "","g56",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },
@@ -1385,7 +1418,7 @@ const cfgItem_t cfgArray[] = {
     { "","g92",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // origin offsets
     { "","g28",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // g28 home position
     { "","g30",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // g30 home position
-    // +9 = 49
+    // +9 = 53
     { "","tof",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tool offsets
     { "","tt1",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
     { "","tt2",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // tt offsets
@@ -1403,7 +1436,7 @@ const cfgItem_t cfgArray[] = {
     { "","tt14",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // tt offsets
     { "","tt15",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // tt offsets
     { "","tt16",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // tt offsets
-    // +17 = 66
+    // +17 = 70
     { "","mpo",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // machine position group
     { "","pos",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // work position group
     { "","ofs",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // work offset group
@@ -1412,14 +1445,14 @@ const cfgItem_t cfgArray[] = {
     { "","pwr",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // motor power enagled group
     { "","jog",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // axis jogging state group
     { "","jid",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },    // job ID group
-    // +8 = 74
+    // +8 = 78
     { "","he1", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // heater 1 group
     { "","he2", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // heater 2 group
     { "","he3", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // heater 3 group
     { "","pid1",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // PID 1 group
     { "","pid2",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // PID 2 group
     { "","pid3",_f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },   // PID 3 group
-    // +6 = 80
+    // +6 = 84
 
 #ifdef __USER_DATA
     { "","uda", _f0, 0, tx_print_nul, get_grp, set_grp,(float *)&cs.null,0 },  // user data group

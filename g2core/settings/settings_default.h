@@ -210,6 +210,7 @@
 // KINEMATICS (which may later change the following values)
 #define KINE_CARTESIAN 0
 #define KINE_CORE_XY 1
+#define KINE_FOUR_CABLE 2
 
 #ifndef KINEMATICS
 #define KINEMATICS KINE_CARTESIAN
@@ -816,12 +817,6 @@
 #endif
 #ifndef A_ZERO_BACKOFF
 #define A_ZERO_BACKOFF              2.0
-#endif
-#ifndef A_SPRING_OFFSET_FACTOR
-#define A_SPRING_OFFSET_FACTOR    0
-#endif
-#ifndef A_SPRING_OFFSET_MAX
-#define A_SPRING_OFFSET_MAX       0
 #endif
 
 // B AXIS

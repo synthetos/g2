@@ -238,7 +238,7 @@ void mp_set_runtime_position(uint8_t axis, const float position) { mr.position[a
 void mp_set_steps_to_runtime_position()
 {
     float step_position[MOTORS];
-    kn_inverse_kinematics(mr.position, step_position);      // convert lengths to steps in floating point
+    //kn_inverse_kinematics(mr.position, step_position);      // convert lengths to steps in floating point
     for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
         mr.target_steps[motor] = step_position[motor];
         mr.position_steps[motor] = step_position[motor];
@@ -250,7 +250,62 @@ void mp_set_steps_to_runtime_position()
         mr.following_error[motor] = 0;
         st_pre.mot[motor].corrected_steps = 0;
     }
+    kn->sync_encoders();
 }
+
+
+/***********************************************************************************
+ * mp_set_target_steps() - set target steps and prep the steppers
+ *
+ *  This function used to be a portion of _exec_aline_segment().
+ *  It handles the step-count bucket brigade, and the call to st_prep_line.
+ *  Note that one of the goals is that stepper code and code that wants to set
+ * the stpeer count (i.e. kinematics idle) doesn't know or care about about mr.
+ */
+
+// global, for use locally in various functions
+float mp_travel_steps[MOTORS];
+
+stat_t mp_set_target_steps(const float target_steps[MOTORS])
+{
+    // Bucket-brigade the old target down the chain before getting the new target from kinematics
+    //
+    // NB: The direct manipulation of steps to compute travel_steps only works for Cartesian kinematics.
+    //       Other kinematics may require transforming travel distance as opposed to simply subtracting steps.
+
+    for (uint8_t m=0; m<MOTORS; m++) {
+        mr.commanded_steps[m] = mr.position_steps[m];       // previous segment's position, delayed by 1 segment
+        mr.position_steps[m] = mr.target_steps[m];          // previous segment's target becomes position
+        mr.target_steps[m] = target_steps[m];               // set the new target
+        mp_travel_steps[m] = mr.target_steps[m] - mr.position_steps[m];
+        mr.encoder_steps[m] = en_read_encoder(m);           // get current encoder position (time aligns to commanded_steps)
+        mr.following_error[m] = mr.encoder_steps[m] - mr.commanded_steps[m];
+    }
+
+    return st_prep_line(mr.segment_velocity, mr.target_velocity, mp_travel_steps, mr.following_error, mr.segment_time);
+}
+
+stat_t mp_set_target_steps(const float target_steps[MOTORS], const float start_velocities[MOTORS], const float end_velocities[MOTORS], const float segment_time)
+{
+    mr.segment_time = segment_time;
+
+    // Bucket-brigade the old target down the chain before getting the new target from kinematics
+    //
+    // NB: The direct manipulation of steps to compute travel_steps only works for Cartesian kinematics.
+    //       Other kinematics may require transforming travel distance as opposed to simply subtracting steps.
+
+    for (uint8_t m=0; m<MOTORS; m++) {
+        mr.commanded_steps[m] = mr.position_steps[m];       // previous segment's position, delayed by 1 segment
+        mr.position_steps[m] = mr.target_steps[m];          // previous segment's target becomes position
+        mr.target_steps[m] = target_steps[m];               // set the new target
+        mp_travel_steps[m] = mr.target_steps[m] - mr.position_steps[m];
+        mr.encoder_steps[m] = en_read_encoder(m);           // get current encoder position (time aligns to commanded_steps)
+        mr.following_error[m] = mr.encoder_steps[m] - mr.commanded_steps[m];
+    }
+
+    return st_prep_line(start_velocities, end_velocities, mp_travel_steps, mr.following_error, mr.segment_time);
+}
+
 
 /************************************************************************************
  * mp_queue_command() - queue a synchronous Mcode, program control, or other command
@@ -513,6 +568,10 @@ stat_t mp_planner_callback()
         (cm.motion_state == MOTION_STOP) &&
         (cm.hold_state == FEEDHOLD_OFF)) {
         mp.planner_state = PLANNER_IDLE;
+
+        // request an empty exec - in case the kinemtics have an idle exec cycle
+        st_request_exec_move();
+
         return (STAT_OK);
     }
 

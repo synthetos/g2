@@ -28,7 +28,7 @@
 /*x
  * --- Planner Background ---
  *
- *  The planner is a complicated beast that takes a lot of things into account. 
+ *  The planner is a complicated beast that takes a lot of things into account.
  *  Planner documentation is scattered about and co-located with the functions
  *  that perform the actions. Key files are:
  *
@@ -42,31 +42,31 @@
  *
  * --- Planner Overview ---
  *
- * At high level the planner's job is to reconstruct smooth motion from a set of linear 
- * approximations while observing and operating within the physical constraints of the 
- * machine and the physics of motion. Gcode - which consists of a series of into linear 
- * motion segments - is interpreted, queued to the planner, and joined together to produce 
- * continuous, synchronized motion. Non-motion commands such as pauses (dwells) and 
- * peripheral controls such as spindles can also be synchronized in the queue. Arcs are 
+ * At high level the planner's job is to reconstruct smooth motion from a set of linear
+ * approximations while observing and operating within the physical constraints of the
+ * machine and the physics of motion. Gcode - which consists of a series of into linear
+ * motion segments - is interpreted, queued to the planner, and joined together to produce
+ * continuous, synchronized motion. Non-motion commands such as pauses (dwells) and
+ * peripheral controls such as spindles can also be synchronized in the queue. Arcs are
  * just a special case consisting of many linear moves. Arcs are not interpreted directly.
  *
- * The planner sits in the middle of three system layers: 
+ * The planner sits in the middle of three system layers:
  *  - The Gcode interpreter and canonical machine (the 'model'), which feeds...
  *  - The planner - taking generic commands from the model and queuing them for...
  *  - The runtime layer - pulling from the planner and driving stepper motors or other devices
- * 
+ *
  * The planner queue is the heart of the planner. It's a circular list of ~48 complex structures
  * that carry the state of the system needs to execute a linear motion, run a pre-planned command,
  * like turning on a spindle, or executing an arbitrary JSON command such as an active comment.
  *
  * The queue can be viewed as a list of instructions that will execute in exact sequence.
- * Some instructions control motion and need to be joined to their forward and backwards 
- * neighbors so that position, velocity, acceleration, and jerk constraints are not 
- * violated when moving from one motion to the next. 
+ * Some instructions control motion and need to be joined to their forward and backwards
+ * neighbors so that position, velocity, acceleration, and jerk constraints are not
+ * violated when moving from one motion to the next.
  *
  * Others are "commands" that are actually just function callbacks that happen to execute
  * at a particular point in time (synchronized with motion commands). Commands can control
- * anything you can reasonably program, such as digital IO, serial communications, or 
+ * anything you can reasonably program, such as digital IO, serial communications, or
  * interpreted commands encoded in JSON.
  *
  * The buffers in the planner queue are treated as a 'closure' - with all state needed for
@@ -79,56 +79,56 @@
  *  - mp_aline()         - plan and queue a move with acceleration management
  *  - mp_dwell()         - plan and queue a pause (dwell) to the planner queue
  *  - mp_queue_command() - queue a canned command
- *  - mp_json_command()  - queue a JSON command for run-time interpretation and execution (M100)  
+ *  - mp_json_command()  - queue a JSON command for run-time interpretation and execution (M100)
  *  - mp_json_wait()     - queue a JSON wait for run-time interpretation and execution (M101)
- *  - 
- * In addition, cm_arc_feed() valaidates and sets up a arc paramewters and calls mp_aline() 
+ *  -
+ * In addition, cm_arc_feed() valaidates and sets up a arc paramewters and calls mp_aline()
  * repeatedly to spool out the arc segments into the planner queue.
  *
  * All the above queueing commands other than mp_aline() are relatively trivial; they just
- * post callbacks into the next available planner buffer. Command functions are in 2 parts: 
- * the part that posts to the queue, and the callback that is executed when the command is 
+ * post callbacks into the next available planner buffer. Command functions are in 2 parts:
+ * the part that posts to the queue, and the callback that is executed when the command is
  * finally reached in the queue - the _exec().
  *
- * All mp_aline() does is some preliminary math and then posts an initialized buffer to 
+ * All mp_aline() does is some preliminary math and then posts an initialized buffer to
  * the planner queue. The rest of the move planning operations takes place in background;
- * via mp_planner_callback() called from the main loop, and as 'pulls' from the runtime 
+ * via mp_planner_callback() called from the main loop, and as 'pulls' from the runtime
  * stepper operations.
  *
- * Motion planning is separated into backward planning and forward planning stages. 
- * Backward planning is initiated by mp_planner_callback() which is called repeatedly 
- * from the main loop. Backwards planning is performed by mp_plan_block_list() and 
- * _plan_block(). It starts at the most recently arrived Gcode block. Backward 
- * planning can occur multiple times for a given buffer, as new moves arriving 
+ * Motion planning is separated into backward planning and forward planning stages.
+ * Backward planning is initiated by mp_planner_callback() which is called repeatedly
+ * from the main loop. Backwards planning is performed by mp_plan_block_list() and
+ * _plan_block(). It starts at the most recently arrived Gcode block. Backward
+ * planning can occur multiple times for a given buffer, as new moves arriving
  * can make the motion profile more optimal.
  *
  * Backward planning uses velocity and jerk constraints to set maximum entry,
- * travel (cruise) and exit velocities for the moves in the queue. In addition, 
- * it observes the maximum cornering velocities that adjoining moves can sustain 
- * in a corner or a 'kink' to ensure that the jerk limit of any axis participating 
+ * travel (cruise) and exit velocities for the moves in the queue. In addition,
+ * it observes the maximum cornering velocities that adjoining moves can sustain
+ * in a corner or a 'kink' to ensure that the jerk limit of any axis participating
  * in the move is not violated. See mp_planner_callback() header comments for more detail.
  *
- * Forward planning is performed just-in-time and only once, right before the 
+ * Forward planning is performed just-in-time and only once, right before the
  * planner runtime needs the next buffer. Forward planning provides the final
- * contouring of the move. It is invoked by mp_forward_plan() and executed by 
+ * contouring of the move. It is invoked by mp_forward_plan() and executed by
  * mp_calculate_ramps() in plan_zoid.cpp.
  *
  * Planner timing operates at a few different levels:
  *
- *  - New lines of ASCII containing commands and moves arriving from the USB are 
+ *  - New lines of ASCII containing commands and moves arriving from the USB are
  *    parsed and executed as the lowest priority background task from the main loop.
  *
- *  - Backward planning is invoked by a main loop callback, so it also executes as 
+ *  - Backward planning is invoked by a main loop callback, so it also executes as
  *    a background task, albeit a higher priority one.
  *
- *  - Forward planning and the ultimate preparation of the move for the runtime runs 
- *    as an interrupt as a 'pull' from the planner queue that uses a series of 
- *    interrupts at progressively lower priorities to ensure that the next planner 
+ *  - Forward planning and the ultimate preparation of the move for the runtime runs
+ *    as an interrupt as a 'pull' from the planner queue that uses a series of
+ *    interrupts at progressively lower priorities to ensure that the next planner
  *    buffer is ready before the runtime runs out of forward-planned moves and starves.
  *
  * Some other functions performed by the planner include:
  *
- *  - Velocity throttling to ensure that very short moves do not execute faster 
+ *  - Velocity throttling to ensure that very short moves do not execute faster
  *    than the serial interface can deliver them
  *
  *  - Feed hold and cycle start (resume) operations
@@ -364,7 +364,7 @@ struct mpBuffer_to_clear {
 
     void reset() {
         //memset((void *)(this), 0, sizeof(mpBuffer_to_clear));
-        
+
         bf_func = nullptr;
         cm_func = nullptr;
 
@@ -487,7 +487,6 @@ typedef struct mpMotionRuntimeSingleton {    // persistent runtime variables
     sectionState section_state;         // state within a move section
 
     float unit[AXES];                   // unit vector for axis scaling & planning
-    float spring_offset[AXES];          // amount of spring offset compensation in effect per axis
     bool axis_flags[AXES];              // set true for axes participating in the move
     float target[AXES];                 // final target for bf (used to correct rounding errors)
     float position[AXES];               // current move position
@@ -543,6 +542,8 @@ void mp_flush_planner(void);
 void mp_set_planner_position(uint8_t axis, const float position);
 void mp_set_runtime_position(uint8_t axis, const float position);
 void mp_set_steps_to_runtime_position(void);
+stat_t mp_set_target_steps(const float target_steps[]) HOT_FUNC;
+stat_t mp_set_target_steps(const float target_steps[MOTORS], const float start_velocities[MOTORS], const float end_velocities[MOTORS], const float segment_time) HOT_FUNC;
 
 void mp_queue_command(void(*cm_exec_t)(float[], bool[]), float *value, bool *flag);
 stat_t mp_runtime_command(mpBuf_t *bf);
@@ -591,7 +592,6 @@ float mp_get_runtime_work_position(uint8_t axis);
 void mp_set_runtime_work_offset(float offset[]);
 bool mp_get_runtime_busy(void) HOT_FUNC;
 bool mp_runtime_is_idle(void) HOT_FUNC;
-float mp_get_runtime_spring_value(uint8_t axis);
 
 stat_t mp_aline(GCodeState_t *gm_in) HOT_FUNC;                   // line planning...
 void mp_plan_block_list(void) HOT_FUNC;

@@ -39,6 +39,7 @@
 #include "util.h"
 #include "controller.h"
 #include "xio.h"
+#include "kinematics.h"
 
 /**** Debugging output with semihosting ****/
 
@@ -347,7 +348,7 @@ void dda_timer_type::interrupt()
     st_run.mot[MOTOR_6].substep_increment += st_run.mot[MOTOR_6].substep_increment_increment;
 #endif
 
-    // Process end of segment. 
+    // Process end of segment.
     // One more interrupt will occur to turn of any pulses set in this pass.
     if (--st_run.dda_ticks_downcount == 0) {
         _load_move();       // load the next move at the current interrupt level
@@ -468,7 +469,7 @@ static void _load_move()
 
 	// ...start motor power timeouts
 	//	for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
-	//		Motors[motor]->motionStopped();    
+	//		Motors[motor]->motionStopped();
 	//  }
 	// loop unrolled version
         motor_1.motionStopped();    // ...start motor power timeouts
@@ -628,7 +629,7 @@ static void _load_move()
         // handle synchronous commands
     } else if (st_pre.block_type == BLOCK_TYPE_COMMAND) {
         mp_runtime_command(st_pre.bf);
-        
+
     } // else null - which is okay in many cases
 
     // all other cases drop to here (e.g. Null moves after Mcodes skip to here)
@@ -661,7 +662,7 @@ static void _load_move()
  *          dda_ticks_X_substeps = (int32_t)((microseconds/1000000) * f_dda * dda_substeps);
  */
 
-stat_t st_prep_line(float start_velocity, float end_velocity, float travel_steps[], float following_error[], float segment_time)
+stat_t st_prep_line(const float start_velocity, const float end_velocity, const float travel_steps[], const float following_error[], const float segment_time)
 {
     stepper_debug("😶");
     // trap assertion failures and other conditions that would prevent queuing the line
@@ -687,9 +688,10 @@ stat_t st_prep_line(float start_velocity, float end_velocity, float travel_steps
 
     float correction_steps;
     for (uint8_t motor=0; motor<MOTORS; motor++) {          // remind us that this is motors, not axes
+        float steps = travel_steps[motor];
 
         // Skip this motor if there are no new steps. Leave all other values intact.
-        if (fp_ZERO(travel_steps[motor])) {
+        if (fp_ZERO(steps)) {
             st_pre.mot[motor].substep_increment = 0;        // substep increment also acts as a motor flag
             continue;
         }
@@ -697,7 +699,7 @@ stat_t st_prep_line(float start_velocity, float end_velocity, float travel_steps
         // Setup the direction, compensating for polarity.
         // Set the step_sign which is used by the stepper ISR to accumulate step position
 
-        if (travel_steps[motor] >= 0) {                    // positive direction
+        if (steps >= 0) {                    // positive direction
             st_pre.mot[motor].direction = DIRECTION_CW ^ st_cfg.mot[motor].polarity;
             st_pre.mot[motor].step_sign = 1;
         } else {
@@ -715,12 +717,12 @@ stat_t st_prep_line(float start_velocity, float end_velocity, float travel_steps
             correction_steps = following_error[motor] * STEP_CORRECTION_FACTOR;
 
             if (correction_steps > 0) {
-                correction_steps = std::min(std::min(correction_steps, std::abs(travel_steps[motor])), STEP_CORRECTION_MAX);
+                correction_steps = std::min(std::min(correction_steps, std::abs(steps)), STEP_CORRECTION_MAX);
             } else {
-                correction_steps = std::max(std::max(correction_steps, -std::abs(travel_steps[motor])), -STEP_CORRECTION_MAX);
+                correction_steps = std::max(std::max(correction_steps, -std::abs(steps)), -STEP_CORRECTION_MAX);
             }
             st_pre.mot[motor].corrected_steps += correction_steps;
-            travel_steps[motor] -= correction_steps;
+            steps -= correction_steps;
         }
 
         // Compute substeb increment. The accumulator must be *exactly* the incoming
@@ -757,7 +759,7 @@ stat_t st_prep_line(float start_velocity, float end_velocity, float travel_steps
         // option 2:
         //  d = (b (v_1 - v_0))/((t-1) a)
 
-        double s_double = std::abs(travel_steps[motor] * 2.0);
+        double s_double = std::abs(steps * 2.0);
 
         // 1/m_0 = (2 s v_0)/(t (v_0 + v_1))
         st_pre.mot[motor].substep_increment = round(((s_double * start_velocity)/(t_v0_v1)) * (double)DDA_SUBSTEPS);
@@ -773,6 +775,81 @@ stat_t st_prep_line(float start_velocity, float end_velocity, float travel_steps
     return (STAT_OK);
 }
 
+// same as previous function, except it takes a different start and end velocity per motor
+stat_t st_prep_line(const float start_velocities[], const float end_velocities[], const float travel_steps[], const float following_error[], const float segment_time)
+{
+    // TODO refactor out common parts of the two st_prep_line functions
+
+    // trap assertion failures and other conditions that would prevent queuing the line
+    if (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_EXEC) {     // never supposed to happen
+        return (cm_panic(STAT_INTERNAL_ERROR, "st_prep_line() prep sync error"));
+    } else if (isinf(segment_time)) {                           // never supposed to happen
+        return (cm_panic(STAT_PREP_LINE_MOVE_TIME_IS_INFINITE, "st_prep_line()"));
+    } else if (isnan(segment_time)) {                           // never supposed to happen
+        return (cm_panic(STAT_PREP_LINE_MOVE_TIME_IS_NAN, "st_prep_line()"));
+//    } else if (segment_time < EPSILON) {
+//        return (STAT_MINIMUM_TIME_MOVE);
+    }
+    // setup segment parameters
+    // - dda_ticks is the integer number of DDA clock ticks needed to play out the segment
+    // - ticks_X_substeps is the maximum depth of the DDA accumulator (as a negative number)
+
+    //st_pre.dda_period = _f_to_period(FREQUENCY_DDA);                // FYI: this is a constant
+    st_pre.dda_ticks = (int32_t)(segment_time * 60 * FREQUENCY_DDA);// NB: converts minutes to seconds
+
+    float correction_steps;
+    for (uint8_t motor=0; motor<MOTORS; motor++) {          // remind us that this is motors, not axes
+        float steps = travel_steps[motor];
+
+        // setup motor parameters
+        double t_v0_v1 = (double)st_pre.dda_ticks * (start_velocities[motor] + end_velocities[motor]);
+
+        // Skip this motor if there are no new steps. Leave all other values intact.
+        if (fp_ZERO(steps)) {
+            st_pre.mot[motor].substep_increment = 0;        // substep increment also acts as a motor flag
+            continue;
+        }
+
+        // Setup the direction, compensating for polarity.
+        // Set the step_sign which is used by the stepper ISR to accumulate step position
+
+        if (steps >= 0) {                    // positive direction
+            st_pre.mot[motor].direction = DIRECTION_CW ^ st_cfg.mot[motor].polarity;
+            st_pre.mot[motor].step_sign = 1;
+        } else {
+            st_pre.mot[motor].direction = DIRECTION_CCW ^ st_cfg.mot[motor].polarity;
+            st_pre.mot[motor].step_sign = -1;
+        }
+
+
+        // 'Nudge' correction strategy. Inject a single, scaled correction value then hold off
+        // NOTE: This clause can be commented out to test for numerical accuracy and accumulating errors
+        if ((--st_pre.mot[motor].correction_holdoff < 0) &&
+            (std::abs(following_error[motor]) > STEP_CORRECTION_THRESHOLD)) {
+
+            st_pre.mot[motor].correction_holdoff = STEP_CORRECTION_HOLDOFF;
+            correction_steps = following_error[motor] * STEP_CORRECTION_FACTOR;
+
+            if (correction_steps > 0) {
+                correction_steps = std::min(std::min(correction_steps, std::abs(steps)), STEP_CORRECTION_MAX);
+            } else {
+                correction_steps = std::max(std::max(correction_steps, -std::abs(steps)), -STEP_CORRECTION_MAX);
+            }
+            st_pre.mot[motor].corrected_steps += correction_steps;
+            steps -= correction_steps;
+        }
+
+        // All math is explained in the previous function
+
+        double s_double = std::abs(steps * 2.0);
+        st_pre.mot[motor].substep_increment = round(((s_double * start_velocities[motor])/(t_v0_v1)) * (double)DDA_SUBSTEPS);
+        st_pre.mot[motor].substep_increment_increment = round(((s_double*(end_velocities[motor]-start_velocities[motor]))/(((double)st_pre.dda_ticks-1.0)*t_v0_v1)) * (double)DDA_SUBSTEPS);
+    }
+    st_pre.block_type = BLOCK_TYPE_ALINE;
+    st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;    // signal that prep buffer is ready
+    stepper_debug("👍🏻");
+    return (STAT_OK);
+}
 /*
  * st_prep_null() - Keeps the loader happy. Otherwise performs no action
  */
@@ -861,6 +938,8 @@ static void _set_motor_steps_per_unit(nvObj_t *nv)
     uint8_t m = _get_motor(nv->index);
     st_cfg.mot[m].units_per_step = (st_cfg.mot[m].travel_rev * st_cfg.mot[m].step_angle) / (360 * st_cfg.mot[m].microsteps);
     st_cfg.mot[m].steps_per_unit = 1/st_cfg.mot[m].units_per_step;
+
+    kn_config_changed();
 }
 
 /* PER-MOTOR FUNCTIONS
@@ -884,6 +963,9 @@ stat_t st_set_ma(nvObj_t *nv)            // map motor to axis
         return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
     set_ui8(nv);
+
+    kn_config_changed();
+
     return(STAT_OK);
 }
 
@@ -955,7 +1037,7 @@ stat_t st_set_su(nvObj_t *nv)			// motor steps per unit (direct)
         if (cm_get_axis_type(nv->index) == AXIS_TYPE_LINEAR) {
             nv->value *= INCHES_PER_MM;
         }
-    } 
+    }
     set_flt(nv);
     st_cfg.mot[m].units_per_step = 1.0/st_cfg.mot[m].steps_per_unit;
 
@@ -971,14 +1053,14 @@ stat_t st_set_pm(nvObj_t *nv)            // set motor power mode
         nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_LESS_THAN_MIN_VALUE);
     }
-    if (nv->value >= MOTOR_POWER_MODE_MAX_VALUE) { 
+    if (nv->value >= MOTOR_POWER_MODE_MAX_VALUE) {
         nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_EXCEEDS_MAX_VALUE); 
+        return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
     uint8_t motor = _get_motor(nv->index);
     if (motor > MOTORS) {
         nv->valuetype = TYPE_NULL;
-        return STAT_INPUT_VALUE_RANGE_ERROR; 
+        return STAT_INPUT_VALUE_RANGE_ERROR;
     };
 
     // We do this *here* in order for this to take effect immediately.
@@ -992,7 +1074,7 @@ stat_t st_get_pm(nvObj_t *nv)            // get motor power mode
     uint8_t motor = _get_motor(nv->index);
     if (motor > MOTORS) {
         nv->valuetype = TYPE_NULL;
-        return STAT_INPUT_VALUE_RANGE_ERROR; 
+        return STAT_INPUT_VALUE_RANGE_ERROR;
     };
 
     nv->value = (float)Motors[motor]->getPowerMode();
@@ -1011,7 +1093,7 @@ stat_t st_set_pl(nvObj_t *nv)    // motor power level
 {
     if (nv->value < (float)0.0) {
         nv->valuetype = TYPE_NULL;
-        return (STAT_INPUT_LESS_THAN_MIN_VALUE); 
+        return (STAT_INPUT_LESS_THAN_MIN_VALUE);
     }
     if (nv->value > (float)1.0) {
         nv->valuetype = TYPE_NULL;
@@ -1073,7 +1155,7 @@ stat_t st_set_mt(nvObj_t *nv)
 
 // Make sure this function is not part of initialization --> f00
 // nv->value is seconds of timeout
-stat_t st_set_me(nvObj_t *nv)    
+stat_t st_set_me(nvObj_t *nv)
 {
     for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
         Motors[motor]->enable(nv->value);   // nv->value is the timeout or 0 for default
@@ -1083,7 +1165,7 @@ stat_t st_set_me(nvObj_t *nv)
 
 // Make sure this function is not part of initialization --> f00
 // nv-value is motor to disable, or 0 for all motors
-stat_t st_set_md(nvObj_t *nv)    
+stat_t st_set_md(nvObj_t *nv)
 {
     if (nv->value < 0) {
         nv->valuetype = TYPE_NULL;
@@ -1092,7 +1174,7 @@ stat_t st_set_md(nvObj_t *nv)
     if (nv->value > MOTORS) {
         nv->valuetype = TYPE_NULL;
         return (STAT_INPUT_EXCEEDS_MAX_VALUE);
-    }    
+    }
     // de-energize all motors
     if ((uint8_t)nv->value == 0) {      // 0 means all motors
         for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {

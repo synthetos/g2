@@ -244,7 +244,7 @@ static stat_t _homing_axis_start(int8_t axis) {
     cm.homed[axis] = false;
 
     // trap axis mis-configurations
-    if (cm.a[axis].homing_input) {
+    if (!cm.a[axis].homing_input) {
         return (_homing_error_exit(axis, STAT_HOMING_ERROR_HOMING_INPUT_MISCONFIGURED));
     }
     if (fp_ZERO(cm.a[axis].search_velocity)) {

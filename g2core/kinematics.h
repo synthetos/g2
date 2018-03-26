@@ -28,10 +28,77 @@
 #ifndef KINEMATICS_H_ONCE
 #define KINEMATICS_H_ONCE
 
-/*
- * Global Scope Functions
+#include "util.h"
+
+/* Generic Functions
+ *
+ * In this first section we want to write the kinematic functions that DO NOT reach out of this file.
+ * IOW, these classes have *no knowledge* of globals such as cm, st_cfg, etc.
+ *
+ * This will facilitate decoupling and later move to full dependency-injection.
+ *
  */
 
+template <uint8_t axes, uint8_t motors>
+struct KinematicsBase {
+    // configure each joint (steps-per-unit, joint mapping)
+    virtual void configure(const float steps_per_unit[motors], const int8_t motor_map[]);
+
+    // take the target (in cartesian coordinates in mm), and convert them to steps for each joints
+    // taking the joint_map into consideration, and returning the values in the provided array steps[]
+    // must be as fast as possible while retaining precision
+    virtual void inverse_kinematics(const float target[axes], float steps[motors]);
+
+    // this version is the same as above, but is provided more information for the sake of tracking
+    // the derivatives (acceleration, jerk) or other considerations
+    virtual void inverse_kinematics(const float target[axes], const float position[axes], const float start_velocity, const float end_velocity, const float segment_time, float steps[motors]) {
+        inverse_kinematics(target, steps);
+    }
+
+    // if the planner buffer is empty, the idel_task will be given the opportunity to drive the runtime
+    // if motion was requested, return true.
+    // the default action is to do nothing, and return false
+    virtual bool idle_task() {
+        return false;
+    }
+
+    // take the position (in steps) of each joint and convert them to cartesian coordinates
+    // taking the joint_map into consideration, and returning the values in the provided array position[]
+    // can be relatively slow, must be precise
+    virtual void forward_kinematics(const float steps[motors], float position[axes]);
+
+
+    // take the position of each joint at idle time and convert them to cartesian coordinates
+    // taking the joint_map into consideration, and returning the values in the provided array position[]
+    // can be relatively slow, must be precise
+    virtual void get_position(float position[axes]);
+
+    // sync any external sensors with the current step position
+    virtual void sync_encoders();
+};
+
+extern KinematicsBase<AXES, MOTORS> *kn;
+
+/*
+ * Old-style Global Scope Functions (depricated)
+ */
+#if KINEMATICS==KINE_FOUR_CABLE
+// force
+stat_t kn_get_force(nvObj_t *nv);
+stat_t kn_set_force(nvObj_t *nv);
+
+// anchored
+stat_t kn_get_anchored(nvObj_t *nv);
+stat_t kn_set_anchored(nvObj_t *nv);
+
+// joint positions
+stat_t kn_get_pos_a(nvObj_t *nv);
+stat_t kn_get_pos_b(nvObj_t *nv);
+stat_t kn_get_pos_c(nvObj_t *nv);
+stat_t kn_get_pos_d(nvObj_t *nv);
+#endif
+
+void kn_config_changed();
 void kn_inverse_kinematics(const float travel[], float steps[]);
 void kn_forward_kinematics(const float steps[], float travel[]);
 

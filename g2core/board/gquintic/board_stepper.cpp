@@ -28,6 +28,8 @@
 
 #include "board_stepper.h"
 
+#include "MotateTimers.h"
+
 // These are identical to board_stepper.h, except for the word "extern" and the initialization
 #if QUINTIC_REVISION == 'C'
 HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
@@ -86,6 +88,26 @@ HOT_DATA StepDirHobbyServo<Motate::kServo1_PinNumber> motor_6;
 Stepper* const Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5, &motor_6};
 #endif // 'D'
 
+HOT_DATA encoder_0_t encoder_0{plex0, M1_ENCODER_INPUT_A, M1_ENCODER_INPUT_B, 1 << 0};
+HOT_DATA encoder_1_t encoder_1{plex0, M2_ENCODER_INPUT_A, M2_ENCODER_INPUT_B, 1 << 1};
+HOT_DATA encoder_2_t encoder_2{plex0, M3_ENCODER_INPUT_A, M3_ENCODER_INPUT_B, 1 << 2};
+HOT_DATA encoder_3_t encoder_3{plex0, M4_ENCODER_INPUT_A, M4_ENCODER_INPUT_B, 1 << 3};
+
+ExternalEncoder* const ExternalEncoders[4] = {&encoder_0, &encoder_1, &encoder_2, &encoder_3};
+
+int8_t ee_sample_counter_ = 100;
+Motate::SysTickEvent external_encoders_tick_event {[&] {
+    if (!--ee_sample_counter_) {
+
+        encoder_0.requestAngleFraction();
+        encoder_1.requestAngleFraction();
+        encoder_2.requestAngleFraction();
+        encoder_3.requestAngleFraction();
+        ee_sample_counter_ = 1;
+    }
+}, nullptr};
+
 void board_stepper_init() {
     for (uint8_t motor = 0; motor < MOTORS; motor++) { Motors[motor]->init(); }
+    // Motate::SysTickTimer.registerEvent(&external_encoders_tick_event);
 }

@@ -31,6 +31,7 @@
 #include "controller.h"
 #include "text_parser.h"
 #include "board_xio.h"
+#include "board_gpio.h"
 
 #include "MotateUtilities.h"
 #include "MotateUniqueID.h"
@@ -41,6 +42,15 @@ Motate::OutputPin<Motate::kExternalClock1_PinNumber> external_clk_pin {Motate::k
 
 HOT_DATA SPI_CS_PinMux_used_t spiCSPinMux;
 HOT_DATA SPIBus_used_t spiBus;
+HOT_DATA TWIBus_used_t twiBus;
+
+HOT_DATA plex0_t plex0{twiBus, 0x0070L};
+HOT_DATA plex1_t plex1{twiBus, 0x0071L};
+
+// HOT_DATA I2C_EEPROM eeprom{twiBus, 0b01010000};
+
+// alignas(4) uint8_t eeprom_buffer[128] HOT_DATA = "TestinglyABCDEFGHIJKLmnop";
+// alignas(4) uint8_t eeprom_in_buffer[128] HOT_DATA = "";
 
 /*
  * hardware_init() - lowest level hardware init
@@ -49,6 +59,7 @@ HOT_DATA SPIBus_used_t spiBus;
 void hardware_init()
 {
     spiBus.init();
+    twiBus.init();
     board_hardware_init();
     external_clk_pin = 0; // Force external clock to 0 for now.
 }
@@ -57,10 +68,87 @@ void hardware_init()
  * hardware_periodic() - callback from the controller loop - TIME CRITICAL.
  */
 
+// previous values of analog voltages
+float ai_vv[A_IN_CHANNELS];
+const float analog_change_threshold = 0.01;
+
+float angle_0 = 0.0;
+float angle_1 = 0.0;
+
+// void read_encoder_0(bool worked /* = false*/, float angle /* = 0.0*/) {
+//     if (worked) {
+//         angle_0 = angle;
+//     }
+//     encoder_0.getAngleFraction();
+// }
+
+// void read_encoder_1(bool worked /* = false*/, float angle /* = 0.0*/) {
+//     if (worked) {
+//         angle_1 = angle;
+//     }
+//     encoder_1.getAngleFraction();
+// }
+
+// void first_part(bool worked = false);
+// void second_part(bool worked = false);
+// void third_part(bool worked = false);
+
+// void first_part (bool worked /* = false*/ ) {
+//     if (!worked) {
+//         eeprom.store(0, eeprom_buffer, 4, first_part);
+//     } else {
+//         second_part();
+//     }
+// }
+
+// void second_part (bool worked /* = false*/ ) {
+//     if (!worked) {
+//         eeprom.store(4, eeprom_buffer + 4, 5, second_part);
+//     } else {
+//         third_part();
+//     }
+// }
+
+// void third_part(bool worked /* = false*/ ) {
+//     if (!worked) {
+//         eeprom.load(0, eeprom_in_buffer, 9, third_part);
+//     } else {
+//         // read_encoder_0();
+//     }
+// }
+
+
 stat_t hardware_periodic()
 {
+    // for all of the analog inputs that are enabled, request status reports
+    // when they change beyond the threshold
+    for (uint8_t a = 0; a < A_IN_CHANNELS; a++) {
+        if (a_in[a]->getEnabled() == IO_ENABLED) {
+            float new_vv = a_in[a]->getValue();
+            if (std::abs(ai_vv[a] - new_vv) >= analog_change_threshold) {
+                ai_vv[a] = new_vv; // only record if goes past threshold!
+                sr_request_status_report(SR_REQUEST_TIMED);
+            }
+        }
+    }
+
+    // static uint8_t sent = false;
+    // if (!sent) {
+    //     sent = 2;
+    //     encoder_0.getAngleFraction(read_encoder_0);
+    //     encoder_1.getAngleFraction(read_encoder_1);
+    // } else if (sent > 1 && sent < 80) {
+    //     sent++;
+    // }
+
+    // if (sent == 3) {
+    //     first_part(false);
+    // }
+
     return STAT_OK;
 }
+
+
 
 /*
  * hw_hard_reset() - reset system now

@@ -33,7 +33,7 @@
 #include "json_parser.h"            // so we can switch js.comm_mode on a marlin M-code
 #endif
 
-// Helpers 
+// Helpers
 
 static stat_t _execute_gcode_block_marlin(void);
 
@@ -624,7 +624,7 @@ stat_t _get_next_gcode_word(char **pstr, char *letter, float *value)
 
 uint8_t _point(const float value)
 {
-    return((uint8_t)(value*10 - trunc(value)*10));    // isolate the decimal point as an int
+    return((uint8_t)(std::round(value*10.0) - std::trunc(value)*10.0));    // isolate the decimal point as an int
 }
 
 /*
@@ -880,7 +880,7 @@ stat_t _parse_gcode_block(char *buf, char *active_comment)
             case 'L': SET_NON_MODAL (L_word, value);
             case 'R': SET_NON_MODAL (arc_radius, value);
             case 'N': SET_NON_MODAL (linenum,(uint32_t)value);      // line number
-            
+
 #if MARLIN_COMPAT_ENABLED == true
             case 'E': SET_NON_MODAL (E_word, value);                // extruder value
 #endif
@@ -1111,7 +1111,7 @@ static stat_t _execute_gcode_block_marlin()
     // Deal with E
     if (gf.marlin_relative_extruder_mode) {                 // M82, M83
         marlin_set_extruder_mode(gv.marlin_relative_extruder_mode);
-    }    
+    }
     if (gf.E_word) {
         // Ennn T0 -> Annn
         if (cm.gm.tool_select == 1) {

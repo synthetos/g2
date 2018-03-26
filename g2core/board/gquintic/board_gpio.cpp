@@ -56,18 +56,18 @@
 
 /**** Setup Actual Objects ****/
 
-gpioDigitalInputPin<IRQPin<Motate::kInput1_PinNumber>>  din1  {DI1_ENABLED,  DI1_POLARITY,  1, DI1_EXTERNAL_NUMBER};
-gpioDigitalInputPin<IRQPin<Motate::kInput2_PinNumber>>  din2  {DI2_ENABLED,  DI2_POLARITY,  2, DI2_EXTERNAL_NUMBER};
-gpioDigitalInputPin<IRQPin<Motate::kInput3_PinNumber>>  din3  {DI3_ENABLED,  DI3_POLARITY,  3, DI3_EXTERNAL_NUMBER};
-gpioDigitalInputPin<IRQPin<Motate::kInput4_PinNumber>>  din4  {DI4_ENABLED,  DI4_POLARITY,  4, DI4_EXTERNAL_NUMBER};
-gpioDigitalInputPin<IRQPin<Motate::kInput5_PinNumber>>  din5  {DI5_ENABLED,  DI5_POLARITY,  5, DI5_EXTERNAL_NUMBER};
-gpioDigitalInputPin<IRQPin<Motate::kInput6_PinNumber>>  din6  {DI6_ENABLED,  DI6_POLARITY,  6, DI6_EXTERNAL_NUMBER};
-gpioDigitalInputPin<IRQPin<Motate::kInput7_PinNumber>>  din7  {DI7_ENABLED,  DI7_POLARITY,  7, DI7_EXTERNAL_NUMBER};
-gpioDigitalInputPin<IRQPin<Motate::kInput8_PinNumber>>  din8  {DI8_ENABLED,  DI8_POLARITY,  8, DI8_EXTERNAL_NUMBER};
-gpioDigitalInputPin<IRQPin<Motate::kInput9_PinNumber>>  din9  {DI9_ENABLED,  DI9_POLARITY,  9, DI9_EXTERNAL_NUMBER};
-// gpioDigitalInputPin<IRQPin<Motate::kInput10_PinNumber>> din10 {DI10ENABLEDE, DI10_POLARITY, 10, DI10_EXTERNAL_NUMBER};
-// gpioDigitalInputPin<IRQPin<Motate::kInput11_PinNumber>> din11 {DI11ENABLEDE, DI11_POLARITY, 11, DI11_EXTERNAL_NUMBER};
-// gpioDigitalInputPin<IRQPin<Motate::kInput12_PinNumber>> din12 {DI12ENABLEDE, DI12_POLARITY, 12, DI12_EXTERNAL_NUMBER};
+gpioDigitalInputPin<IRQPin<Motate::kInput1_PinNumber>>  din1  {DI1_ENABLED,  DI1_POLARITY,  1, DI1_EXTERNAL_NUMBER, Motate::kPinInterruptOnChange|Motate::kPinInterruptPriorityHigh};
+gpioDigitalInputPin<IRQPin<Motate::kInput2_PinNumber>>  din2  {DI2_ENABLED,  DI2_POLARITY,  2, DI2_EXTERNAL_NUMBER, Motate::kPinInterruptOnChange|Motate::kPinInterruptPriorityHigh};
+gpioDigitalInputPin<IRQPin<Motate::kInput3_PinNumber>>  din3  {DI3_ENABLED,  DI3_POLARITY,  3, DI3_EXTERNAL_NUMBER, Motate::kPinInterruptOnChange|Motate::kPinInterruptPriorityHigh};
+gpioDigitalInputPin<IRQPin<Motate::kInput4_PinNumber>>  din4  {DI4_ENABLED,  DI4_POLARITY,  4, DI4_EXTERNAL_NUMBER, Motate::kPinInterruptOnChange|Motate::kPinInterruptPriorityHigh};
+gpioDigitalInputPin<IRQPin<Motate::kInput5_PinNumber>>  din5  {DI5_ENABLED,  DI5_POLARITY,  5, DI5_EXTERNAL_NUMBER, Motate::kPinInterruptOnChange|Motate::kPinInterruptPriorityHigh};
+gpioDigitalInputPin<IRQPin<Motate::kInput6_PinNumber>>  din6  {DI6_ENABLED,  DI6_POLARITY,  6, DI6_EXTERNAL_NUMBER, Motate::kPinInterruptOnChange|Motate::kPinInterruptPriorityHigh};
+gpioDigitalInputPin<IRQPin<Motate::kInput7_PinNumber>>  din7  {DI7_ENABLED,  DI7_POLARITY,  7, DI7_EXTERNAL_NUMBER, Motate::kPinInterruptOnChange|Motate::kPinInterruptPriorityHigh};
+gpioDigitalInputPin<IRQPin<Motate::kInput8_PinNumber>>  din8  {DI8_ENABLED,  DI8_POLARITY,  8, DI8_EXTERNAL_NUMBER, Motate::kPinInterruptOnChange|Motate::kPinInterruptPriorityHigh};
+gpioDigitalInputPin<IRQPin<Motate::kInput9_PinNumber>>  din9  {DI9_ENABLED,  DI9_POLARITY,  9, DI9_EXTERNAL_NUMBER, Motate::kPinInterruptOnChange|Motate::kPinInterruptPriorityHigh};
+// gpioDigitalInputPin<IRQPin<Motate::kInput10_PinNumber>> din10 {DI10_ENABLED, DI10_POLARITY, 10, DI10_EXTERNAL_NUMBER, Motate::kPinInterruptOnChange|Motate::kPinInterruptPriorityHigh};
+// gpioDigitalInputPin<IRQPin<Motate::kInput11_PinNumber>> din11 {DI11_ENABLED, DI11_POLARITY, 11, DI11_EXTERNAL_NUMBER, Motate::kPinInterruptOnChange|Motate::kPinInterruptPriorityHigh};
+// gpioDigitalInputPin<IRQPin<Motate::kInput12_PinNumber>> din12 {DI12_ENABLED, DI12_POLARITY, 12, DI12_EXTERNAL_NUMBER, Motate::kPinInterruptOnChange|Motate::kPinInterruptPriorityHigh};
 
 gpioDigitalInput*  const d_in[] = {&din1, &din2, &din3, &din4, &din5, &din6, &din7, &din8, &din9};
 
@@ -91,10 +91,10 @@ gpioDigitalOutput* const d_out[] = {&dout1, &dout2, &dout3, &dout4, &dout5, &dou
 
 #if QUINTIC_REVISION == 'C'
 
-gpioAnalogInputPin<MAX31865<SPIBus_used_t::SPIBusDevice>> ain1 {gpioAnalogInput::AIN_TYPE_EXTERNAL, 1, spiBus, spiCSPinMux.getCS(5)};
-gpioAnalogInputPin<MAX31865<SPIBus_used_t::SPIBusDevice>> ain2 {gpioAnalogInput::AIN_TYPE_EXTERNAL, 2, spiBus, spiCSPinMux.getCS(6)};
-gpioAnalogInputPin<ADCDifferentialPair<Motate::kADC1_Neg_PinNumber, Motate::kADC1_Pos_PinNumber>> ain3 {gpioAnalogInput::AIN_TYPE_INTERNAL, 3};
-gpioAnalogInputPin<ADCDifferentialPair<Motate::kADC2_Neg_PinNumber, Motate::kADC2_Pos_PinNumber>> ain4 {gpioAnalogInput::AIN_TYPE_INTERNAL, 4};
+gpioAnalogInputPin<MAX31865<SPIBus_used_t::SPIBusDevice>> ai1 {AI1_ENABLED, gpioAnalogInput::AIN_TYPE_EXTERNAL, 1, AI1_EXTERNAL_NUMBER, spiBus, spiCSPinMux.getCS(5)};
+gpioAnalogInputPin<MAX31865<SPIBus_used_t::SPIBusDevice>> ai2 {AI2_ENABLED, gpioAnalogInput::AIN_TYPE_EXTERNAL, 2, AI2_EXTERNAL_NUMBER, spiBus, spiCSPinMux.getCS(6)};
+gpioAnalogInputPin<ADCDifferentialPair<Motate::kADC1_Neg_PinNumber, Motate::kADC1_Pos_PinNumber>> ai3 {AI3_ENABLED, gpioAnalogInput::AIN_TYPE_INTERNAL, 3, AI3_EXTERNAL_NUMBER};
+gpioAnalogInputPin<ADCDifferentialPair<Motate::kADC2_Neg_PinNumber, Motate::kADC2_Pos_PinNumber>> ai4 {AI4_ENABLED, gpioAnalogInput::AIN_TYPE_INTERNAL, 4, AI4_EXTERNAL_NUMBER};
 
 gpioAnalogInput*    const a_in[] = {&ain1, &ain2, &ain3, &ain4};
 
@@ -102,12 +102,12 @@ gpioAnalogInput*    const a_in[] = {&ain1, &ain2, &ain3, &ain4};
 
 #if QUINTIC_REVISION == 'D'
 
-gpioAnalogInputPin<ADCPin<Motate::kADC1_PinNumber>> ain1 {gpioAnalogInput::AIN_TYPE_INTERNAL, 1};
-gpioAnalogInputPin<ADCPin<Motate::kADC2_PinNumber>> ain2 {gpioAnalogInput::AIN_TYPE_INTERNAL, 2};
-gpioAnalogInputPin<ADCPin<Motate::kADC3_PinNumber>> ain3 {gpioAnalogInput::AIN_TYPE_INTERNAL, 3};
-gpioAnalogInputPin<ADCPin<Motate::kADC4_PinNumber>> ain4 {gpioAnalogInput::AIN_TYPE_INTERNAL, 4};
+gpioAnalogInputPin<ADCPin<Motate::kADC1_PinNumber>> ai1 {AI1_ENABLED, gpioAnalogInput::AIN_TYPE_INTERNAL, 1, AI1_EXTERNAL_NUMBER};
+gpioAnalogInputPin<ADCPin<Motate::kADC2_PinNumber>> ai2 {AI2_ENABLED, gpioAnalogInput::AIN_TYPE_INTERNAL, 2, AI2_EXTERNAL_NUMBER};
+gpioAnalogInputPin<ADCPin<Motate::kADC3_PinNumber>> ai3 {AI3_ENABLED, gpioAnalogInput::AIN_TYPE_INTERNAL, 3, AI3_EXTERNAL_NUMBER};
+gpioAnalogInputPin<ADCPin<Motate::kADC4_PinNumber>> ai4 {AI4_ENABLED, gpioAnalogInput::AIN_TYPE_INTERNAL, 4, AI4_EXTERNAL_NUMBER};
 
-gpioAnalogInput*    const a_in[] = {&ain1, &ain2, &ain3, &ain4};
+gpioAnalogInput*    const a_in[] = {&ai1, &ai2, &ai3, &ai4};
 
 #endif // 'D'
 
@@ -118,14 +118,14 @@ gpioAnalogInput*    const a_in[] = {&ain1, &ain2, &ain3, &ain4};
 
 
  // Register a SysTick event to call start_sampling every temperature_sample_freq ms
- const int16_t ain_sample_freq = 10;
+ const int16_t ain_sample_freq = 1;
  int16_t ain_sample_counter = ain_sample_freq;
  Motate::SysTickEvent ain_tick_event {[&] {
      if (!--ain_sample_counter) {
-         ain1.startSampling();
-         ain2.startSampling();
-         ain3.startSampling();
-         ain4.startSampling();
+         ai1.startSampling();
+         ai2.startSampling();
+         ai3.startSampling();
+         ai4.startSampling();
          ain_sample_counter = ain_sample_freq;
      }
  }, nullptr};

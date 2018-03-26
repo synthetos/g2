@@ -72,6 +72,11 @@ typedef enum {
     AXIS_W,     // reserved
     AXIS_COREXY_A = AXIS_X, // CoreXY uses A and B
     AXIS_COREXY_B = AXIS_Y,
+    AXIS_4WIRE_A = AXIS_X, // 4Wire uses A, B, C, D
+    AXIS_4WIRE_B = AXIS_Y, // 4Wire uses A, B, C, D
+    AXIS_4WIRE_C = AXIS_Z, // 4Wire uses A, B, C, D
+    AXIS_4WIRE_D = AXIS_A, // 4Wire uses A, B, C, D
+    AXIS_4WIRE_Z = AXIS_B, // 4Wire uses A, B, C, D
 } cmAxes;
 
 typedef enum {
@@ -100,7 +105,7 @@ typedef enum {
 /**********************************************************************************
  * AVR/ARM Compatibility
  *
- * This is a holdover from AVR/ARM compatibility work in earlier builds 
+ * This is a holdover from AVR/ARM compatibility work in earlier builds
  * and may be removed at some later time.
  */                                                 // gets rely on nv->index having been set
 #define GET_TABLE_WORD(a)  cfgArray[nv->index].a	// get word value from cfgArray

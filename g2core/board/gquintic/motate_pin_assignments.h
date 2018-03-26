@@ -259,7 +259,7 @@ pin_number kUnassigned1  = 254;  // 254 is the max.. Do not exceed this number
 #endif
 
 #ifdef MOTATE_BOARD
-#define MOTATE_BOARD_PINOUT < MOTATE_BOARD-pinout.h >
+#define MOTATE_BOARD_PINOUT <MOTATE_BOARD-pinout.h>
 #include MOTATE_BOARD_PINOUT
 #else
 #error Unknown board layout $(MOTATE_BOARD)

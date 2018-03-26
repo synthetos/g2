@@ -49,7 +49,7 @@ using Motate::PWMOutputPin;
 using Motate::PWMLikeOutputPin;
 using Motate::ADCPin;
 using Motate::ADCDifferentialPair;
-template<bool can_pwm, pin_number... V>
+template<bool can_pwm, Motate::pin_number... V>
 using OutputType = typename std::conditional<can_pwm, PWMOutputPin<V...>, PWMLikeOutputPin<V...>>::type;
 
 #define D_IN_CHANNELS       9           // number of digital inputs supported
@@ -96,6 +96,9 @@ extern gpioDigitalOutput*  const d_out[D_OUT_CHANNELS];
 #include "device/max31865/max31865.h"
 #define USING_A_MAX31865 1
 
+#ifndef AI1_ENABLED
+#define AI1_ENABLED IO_ENABLED
+#endif
 #ifndef AI1_TYPE
 #define AI1_TYPE gpioAnalogInput::AIN_TYPE_EXTERNAL
 #endif
@@ -104,6 +107,9 @@ extern gpioDigitalOutput*  const d_out[D_OUT_CHANNELS];
 #endif
 extern gpioAnalogInputPin<MAX31865<SPIBus_used_t::SPIBusDevice>> ain1;
 
+#ifndef AI2_ENABLED
+#define AI2_ENABLED IO_ENABLED
+#endif
 #ifndef AI2_TYPE
 #define AI2_TYPE gpioAnalogInput::AIN_TYPE_EXTERNAL
 #endif
@@ -112,6 +118,9 @@ extern gpioAnalogInputPin<MAX31865<SPIBus_used_t::SPIBusDevice>> ain1;
 #endif
 extern gpioAnalogInputPin<MAX31865<SPIBus_used_t::SPIBusDevice>> ain2;
 
+#ifndef AI3_ENABLED
+#define AI3_ENABLED IO_ENABLED
+#endif
 #ifndef AI3_TYPE
 #define AI3_TYPE gpioAnalogInput::AIN_TYPE_INTERNAL
 #endif
@@ -120,6 +129,9 @@ extern gpioAnalogInputPin<MAX31865<SPIBus_used_t::SPIBusDevice>> ain2;
 #endif
 extern gpioAnalogInputPin<ADCDifferentialPair<Motate::kADC1_Neg_PinNumber, Motate::kADC1_Pos_PinNumber>> ain3;
 
+#ifndef AI4_ENABLED
+#define AI4_ENABLED IO_ENABLED
+#endif
 #ifndef AI4_TYPE
 #define AI4_TYPE gpioAnalogInput::AIN_TYPE_INTERNAL
 #endif
@@ -134,37 +146,49 @@ extern gpioAnalogInputPin<ADCDifferentialPair<Motate::kADC2_Neg_PinNumber, Motat
 
 #define A_IN_CHANNELS	 4           // number of analog inputs supported
 
+#ifndef AI1_ENABLED
+#define AI1_ENABLED IO_ENABLED
+#endif
 #ifndef AI1_TYPE
 #define AI1_TYPE gpioAnalogInput::AIN_TYPE_INTERNAL
 #endif
 #ifndef AI1_CIRCUIT
 #define AI1_CIRCUIT gpioAnalogInput::AIN_CIRCUIT_CC_INV_OPAMP
 #endif
-extern gpioAnalogInputPin<ADCPin<Motate::kADC1_PinNumber>> ain1;
+extern gpioAnalogInputPin<ADCPin<Motate::kADC1_PinNumber>> ai1;
 
+#ifndef AI2_ENABLED
+#define AI2_ENABLED IO_ENABLED
+#endif
 #ifndef AI2_TYPE
 #define AI2_TYPE gpioAnalogInput::AIN_TYPE_INTERNAL
 #endif
 #ifndef AI2_CIRCUIT
 #define AI2_CIRCUIT gpioAnalogInput::AIN_CIRCUIT_CC_INV_OPAMP
 #endif
-extern gpioAnalogInputPin<ADCPin<Motate::kADC2_PinNumber>> ain2;
+extern gpioAnalogInputPin<ADCPin<Motate::kADC2_PinNumber>> ai2;
 
+#ifndef AI3_ENABLED
+#define AI3_ENABLED IO_ENABLED
+#endif
 #ifndef AI3_TYPE
 #define AI3_TYPE gpioAnalogInput::AIN_TYPE_INTERNAL
 #endif
 #ifndef AI3_CIRCUIT
 #define AI3_CIRCUIT gpioAnalogInput::AIN_CIRCUIT_INV_OPAMP
 #endif
-extern gpioAnalogInputPin<ADCPin<Motate::kADC3_PinNumber>> ain3;
+extern gpioAnalogInputPin<ADCPin<Motate::kADC3_PinNumber>> ai3;
 
+#ifndef AI4_ENABLED
+#define AI4_ENABLED IO_ENABLED
+#endif
 #ifndef AI4_TYPE
 #define AI4_TYPE gpioAnalogInput::AIN_TYPE_INTERNAL
 #endif
 #ifndef AI4_CIRCUIT
 #define AI4_CIRCUIT gpioAnalogInput::AIN_CIRCUIT_INV_OPAMP
 #endif
-extern gpioAnalogInputPin<ADCPin<Motate::kADC4_PinNumber>> ain4;
+extern gpioAnalogInputPin<ADCPin<Motate::kADC4_PinNumber>> ai4;
 
 #endif // 'D'
 

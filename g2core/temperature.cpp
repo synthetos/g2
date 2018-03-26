@@ -156,73 +156,73 @@ struct TemperatureSensor {
     };
 };
 
-template<uint16_t sample_count>
-struct ValueHistory {
+// template<uint16_t sample_count>
+// struct ValueHistory {
 
-    float variance_max = 2.0;
-    ValueHistory() {};
-    ValueHistory(float v_max) : variance_max{v_max} {};
+//     float variance_max = 2.0;
+//     ValueHistory() {};
+//     ValueHistory(float v_max) : variance_max{v_max} {};
 
-    struct sample_t {
-        float value;
-        float value_sq;
-        void set(float v) { value = v; value_sq = v*v; }
-    };
-    sample_t samples[sample_count];
-    uint16_t next_sample = 0;
-    void _bump_index(uint16_t &v) {
-        ++v;
-        if (v == sample_count) {
-            v = 0;
-        }
-    };
-    uint16_t sampled = 0;
+//     struct sample_t {
+//         float value;
+//         float value_sq;
+//         void set(float v) { value = v; value_sq = v*v; }
+//     };
+//     sample_t samples[sample_count];
+//     uint16_t next_sample = 0;
+//     void _bump_index(uint16_t &v) {
+//         ++v;
+//         if (v == sample_count) {
+//             v = 0;
+//         }
+//     };
+//     uint16_t sampled = 0;
 
-    float rolling_sum = 0;
-    float rolling_sum_sq = 0;
-    float rolling_mean = 0;
-    void add_sample(float t) {
-        rolling_sum -= samples[next_sample].value;
-        rolling_sum_sq -= samples[next_sample].value_sq;
+//     float rolling_sum = 0;
+//     float rolling_sum_sq = 0;
+//     float rolling_mean = 0;
+//     void add_sample(float t) {
+//         rolling_sum -= samples[next_sample].value;
+//         rolling_sum_sq -= samples[next_sample].value_sq;
 
-        samples[next_sample].set(t);
+//         samples[next_sample].set(t);
 
-        rolling_sum += samples[next_sample].value;
-        rolling_sum_sq += samples[next_sample].value_sq;
+//         rolling_sum += samples[next_sample].value;
+//         rolling_sum_sq += samples[next_sample].value_sq;
 
-        _bump_index(next_sample);
-        if (sampled < sample_count) { ++sampled; }
+//         _bump_index(next_sample);
+//         if (sampled < sample_count) { ++sampled; }
 
-        rolling_mean = rolling_sum/(float)sampled;
-    };
+//         rolling_mean = rolling_sum/(float)sampled;
+//     };
 
-    float get_std_dev() {
-        // Important note: this is a POPULATION standard deviation, not a population standard deviation
-        float variance = (rolling_sum_sq/(float)sampled) - (rolling_mean*rolling_mean);
-        return sqrt(std::abs(variance));
-    };
+//     float get_std_dev() {
+//         // Important note: this is a POPULATION standard deviation, not a population standard deviation
+//         float variance = (rolling_sum_sq/(float)sampled) - (rolling_mean*rolling_mean);
+//         return sqrt(std::abs(variance));
+//     };
 
-    float value() {
-        // we'll shoot through the samples and ignore the outliers
-        uint16_t samples_kept = 0;
-        float temp = 0;
-        float std_dev = get_std_dev();
+//     float value() {
+//         // we'll shoot through the samples and ignore the outliers
+//         uint16_t samples_kept = 0;
+//         float temp = 0;
+//         float std_dev = get_std_dev();
 
-        for (uint16_t i=0; i<sampled; i++) {
-            if (std::abs(samples[i].value - rolling_mean) < (variance_max * std_dev)) {
-                temp += samples[i].value;
-                ++samples_kept;
-            }
-        }
+//         for (uint16_t i=0; i<sampled; i++) {
+//             if (std::abs(samples[i].value - rolling_mean) < (variance_max * std_dev)) {
+//                 temp += samples[i].value;
+//                 ++samples_kept;
+//             }
+//         }
 
-        // fallback position
-        if (samples_kept == 0) {
-            return rolling_mean;
-        }
+//         // fallback position
+//         if (samples_kept == 0) {
+//             return rolling_mean;
+//         }
 
-        return (temp / (float)samples_kept);
-    };
-};
+//         return (temp / (float)samples_kept);
+//     };
+// };
 
 
 struct ADCCircuit
@@ -910,8 +910,8 @@ stat_t temperature_callback()
 
         if (pid1._enable) {
             temp = temperature_sensor_1.temperature_exact();
-            float out1 = pid1.getNewOutput(temp);
-            fet_pin1.write(out1);
+            float out1_value = pid1.getNewOutput(temp);
+            fet_pin1.write(out1_value);
 
             if (std::abs(temp - last_reported_temp1) > kTempDiffSRTrigger) {
                 last_reported_temp1 = temp;
@@ -922,8 +922,8 @@ stat_t temperature_callback()
 
         if (pid2._enable) {
             temp = temperature_sensor_2.temperature_exact();
-            float out2 = pid2.getNewOutput(temp);
-            fet_pin2.write(out2);
+            float out2_value = pid2.getNewOutput(temp);
+            fet_pin2.write(out2_value);
 
             if (std::abs(temp - last_reported_temp2) > kTempDiffSRTrigger) {
                 last_reported_temp2 = temp;
@@ -936,8 +936,8 @@ stat_t temperature_callback()
 
         if (pid3._enable) {
             temp = temperature_sensor_3.temperature_exact();
-            float out3 = pid3.getNewOutput(temp);
-            fet_pin3.write(out3);
+            float out3_value = pid3.getNewOutput(temp);
+            fet_pin3.write(out3_value);
 
             if (std::abs(temp - last_reported_temp3) > kTempDiffSRTrigger) {
                 last_reported_temp3 = temp;

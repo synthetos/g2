@@ -594,7 +594,9 @@ void st_prep_null(void);
 void st_prep_command(void *bf);        // use a void pointer since we don't know about mpBuf_t yet)
 void st_prep_dwell(float milliseconds);
 void st_request_out_of_band_dwell(float microseconds);
-stat_t st_prep_line(float start_velocity, float end_velocity, float travel_steps[], float following_error[], float segment_time)  HOT_FUNC;
+stat_t st_prep_line(const float start_velocity, const float end_velocity, const float travel_steps[], const float following_error[], const float segment_time)  HOT_FUNC;
+// NOTE: this version is the same, except it's passed an array of start/end velocities, one pair per motor
+stat_t st_prep_line(const float start_velocities[], const float end_velocities[], const float travel_steps[], const float following_error[], const float segment_time)  HOT_FUNC;
 
 stat_t st_set_ma(nvObj_t *nv);
 stat_t st_set_sa(nvObj_t *nv);

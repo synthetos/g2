@@ -88,6 +88,17 @@ extern StepDirHobbyServo<Motate::kServo1_PinNumber> motor_6;
 
 extern Stepper* const Motors[MOTORS];
 
+using encoder_0_t = decltype(I2C_AS5601{plex0, M1_ENCODER_INPUT_A, M1_ENCODER_INPUT_B, 1 << 0});
+extern HOT_DATA encoder_0_t encoder_0;
+using encoder_1_t = decltype(I2C_AS5601{plex0, M2_ENCODER_INPUT_A, M2_ENCODER_INPUT_B, 1 << 1});
+extern HOT_DATA encoder_1_t encoder_1;
+using encoder_2_t = decltype(I2C_AS5601{plex0, M3_ENCODER_INPUT_A, M3_ENCODER_INPUT_B, 1 << 2});
+extern HOT_DATA encoder_2_t encoder_2;
+using encoder_3_t = decltype(I2C_AS5601{plex0, M4_ENCODER_INPUT_A, M4_ENCODER_INPUT_B, 1 << 3});
+extern HOT_DATA encoder_3_t encoder_3;
+
+extern ExternalEncoder* const ExternalEncoders[4];
+
 void board_stepper_init();
 
 #endif  // BOARD_STEPPER_H_ONCE

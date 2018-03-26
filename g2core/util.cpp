@@ -548,16 +548,16 @@ static const char *const itoa_str[] = {
 
 static int _i2a(char *s, int n)
 {
-    div_t qr;
+    div_t qr_v;
     int pos;
 
     if (n == 0) {
         return 0;
     }
 
-    qr = div(n, 10);
-    pos = _i2a(s, qr.quot);
-    s[pos] = qr.rem + '0';
+    qr_v = div(n, 10);
+    pos = _i2a(s, qr_v.quot);
+    s[pos] = qr_v.rem + '0';
     return (pos + 1);
 }
 

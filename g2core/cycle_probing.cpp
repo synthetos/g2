@@ -208,7 +208,7 @@ uint8_t cm_straight_probe(float target[], bool flags[], bool trip_sense, bool al
     }
 
     // initialize the probe input; error if no probe input specified
-    if ((pb.probe_input = gpio_get_probing_input()) == -1) {
+    if ((pb.probe_input = cm.probe_input) == -1) {
         return(cm_alarm(STAT_NO_PROBE_INPUT_CONFIGURED, "No probe input"));
     }
 

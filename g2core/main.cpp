@@ -156,7 +156,34 @@ void loop() {
  * Traps for debugging. These must be in main.cpp for proper linker ordering
  */
 
-void MemManage_Handler  ( void ) { __asm__("BKPT"); }
-void BusFault_Handler   ( void ) { __asm__("BKPT"); }
-void UsageFault_Handler ( void ) { __asm__("BKPT"); }
-void HardFault_Handler  ( void ) { __asm__("BKPT"); }
+// void MemManage_Handler  ( void ) { __asm__("BKPT"); }
+__attribute((naked)) void MemManage_Handler(void){
+__asm volatile (
+ " bkpt 10 \n"
+ " bx lr \n"
+);
+}
+
+// void BusFault_Handler   ( void ) { __asm__("BKPT"); }
+__attribute((naked)) void BusFault_Handler(void){
+__asm volatile (
+ " bkpt 10 \n"
+ " bx lr \n"
+);
+}
+
+// void UsageFault_Handler ( void ) { __asm__("BKPT"); }
+__attribute((naked)) void UsageFault_Handler(void){
+__asm volatile (
+ " bkpt 10 \n"
+ " bx lr \n"
+);
+}
+
+// void HardFault_Handler  ( void ) { __asm__("BKPT"); }
+__attribute((naked)) void HardFault_Handler(void){
+__asm volatile (
+ " bkpt 10 \n"
+ " bx lr \n"
+);
+}

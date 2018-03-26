@@ -81,8 +81,13 @@ enum hwPlatform {
 
 #include "MotatePins.h"
 #include "MotateSPI.h"
+#include "MotateTWI.h"
 #include "MotateTimers.h" // for TimerChanel<> and related...
 #include "MotateServiceCall.h" // for ServiceCall<>
+
+#include "i2c_eeprom.h"
+#include "i2c_multiplexer.h"
+#include "i2c_as5601.h" // For AS5601
 
 using Motate::TimerChannel;
 using Motate::ServiceCall;
@@ -135,7 +140,8 @@ using Motate::OutputPin;
 #define FREQUENCY_DDA  400000UL  // Hz step frequency. Interrupts actually fire at 2x (300 KHz)
 #define FREQUENCY_DWELL  1000UL
 
-#define MIN_SEGMENT_MS ((float)0.125)       // S70 can handle much much smaller segements
+// #define MIN_SEGMENT_MS ((float)0.125)       // S70 can handle much much smaller segements
+#define MIN_SEGMENT_MS ((float)0.5)       // S70 can handle much much smaller segements
 
 #define PLANNER_BUFFER_POOL_SIZE (60)
 
@@ -154,6 +160,19 @@ extern SPIBus_used_t spiBus;
 
 typedef Motate::SPIChipSelectPinMux<Motate::kSocket1_SPISlaveSelectPinNumber, Motate::kSocket2_SPISlaveSelectPinNumber, Motate::kSocket3_SPISlaveSelectPinNumber, Motate::kSocket4_SPISlaveSelectPinNumber> SPI_CS_PinMux_used_t;
 extern SPI_CS_PinMux_used_t spiCSPinMux;
+
+/**** TWI Setup ****/
+Motate::service_call_number kTWI_ServiceCallNumber = 4;
+
+typedef Motate::TWIBus<Motate::kI2C_SCLPinNumber, Motate::kI2C_SDAPinNumber, kTWI_ServiceCallNumber> TWIBus_used_t;
+extern TWIBus_used_t twiBus;
+
+using plex0_t = decltype(I2C_Multiplexer{twiBus, 0x0070L});
+extern HOT_DATA plex0_t plex0;
+using plex1_t = decltype(I2C_Multiplexer{twiBus, 0x0071L});
+extern HOT_DATA plex1_t plex1;
+
+// extern HOT_DATA I2C_EEPROM eeprom;
 
 /**** Motate Global Pin Allocations ****/
 

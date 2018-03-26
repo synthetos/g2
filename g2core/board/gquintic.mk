@@ -47,7 +47,7 @@ ifeq ("$(BASE_BOARD)","gquintic")
     CHIP_LOWERCASE = sams70n19
 
     BOARD_PATH = ./board/gquintic
-    SOURCE_DIRS += ${BOARD_PATH} device/trinamic device/step_dir_hobbyservo device/max31865
+    SOURCE_DIRS += ${BOARD_PATH} device/trinamic device/step_dir_hobbyservo device/max31865 device/i2c_eeprom device/i2c_multiplexer device/i2c_as5601
 
     PLATFORM_BASE = ${MOTATE_PATH}/platform/atmel_sam
     include $(PLATFORM_BASE).mk

@@ -476,6 +476,7 @@ struct MAX31865 final {
 template <typename device_t>
 struct gpioAnalogInputPin<MAX31865<device_t>> : gpioAnalogInput {
 protected: // so we know if anyone tries to reach in
+    ioEnabled enabled;                  // -1=unavailable, 0=disabled, 1=enabled
     AnalogInputType_t type;
 
     uint8_t ext_pin_number;             // the number used externally for this pin ("in" + ext_pin_number)
@@ -488,8 +489,9 @@ public:
     // In constructor, simply forward all values to the pin
     // To get a different behavior, override this object.
     template <typename... T>
-    gpioAnalogInputPin(const AnalogInputType_t _type, const uint8_t _ext_pin_number, T&&... additional_values) :
+    gpioAnalogInputPin(const ioEnabled _enabled, const AnalogInputType_t _type, const uint8_t _ext_pin_number, T&&... additional_values) :
     gpioAnalogInput{},
+    enabled{_enabled},
     type{_type},
     ext_pin_number{_ext_pin_number},
     pin{Motate::kNormal, [&](bool e){this->adc_has_new_value(e);}, additional_values...}
@@ -499,16 +501,29 @@ public:
 
     // functions for use by other parts of the code, and are overridden
 
+    ioEnabled getEnabled() override
+    {
+        return enabled;
+    };
+    bool setEnabled(const ioEnabled m) override
+    {
+        if (enabled == IO_UNAVAILABLE) {
+            return false;
+        }
+        enabled = m;
+        return true;
+    };
+
     float getValue() override
     {
-        if (type == AIN_TYPE_DISABLED) {
+        if (enabled != IO_ENABLED) {
             return 0;
         }
         return pin.getVoltage();
     };
     float getResistance() override
     {
-        if (type == AIN_TYPE_DISABLED) {
+        if (enabled != IO_ENABLED) {
             return -1;
         }
         return pin.getResistance();
@@ -520,7 +535,7 @@ public:
     };
     bool setType(const AnalogInputType_t t) override
     {
-        // NOTE: Only AIN_TYPE_EXTERNAL and AIN_TYPE_DISABLED are handled here!
+        // NOTE: Allow setting type to AIN_TYPE_EXTERNAL
         if (t == AIN_TYPE_INTERNAL) {
             return false;
         }
@@ -534,7 +549,10 @@ public:
     };
     bool setCircuit(const AnalogCircuit_t c) override
     {
-        // prevent setting circuit - it's always AIN_CIRCUIT_EXTERNAL
+        // prevent setting circuit to anything but AIN_CIRCUIT_EXTERNAL
+        if (c == AIN_CIRCUIT_EXTERNAL) {
+            return true;
+        }
         return false;
     };
 
