@@ -1017,8 +1017,6 @@ static stat_t _exec_aline_segment()
     float adjusted_target[AXES];
 
     for (uint8_t a=0; a<AXES; a++) {
-#if !defined(NEW_FWD_DIFF) || (NEW_FWD_DIFF==0)
-#else
         // recompute the new spring offset
         if (a == AXIS_A) {
             float new_spring_offset = 0.0;
@@ -1050,7 +1048,6 @@ static stat_t _exec_aline_segment()
             new_spring_offset = std::max(-cm.a[a].spring_offset_max, std::min(cm.a[a].spring_offset_max, new_spring_offset));
             mr.spring_offset[a] = new_spring_offset;
         } else
-#endif
         {
             mr.spring_offset[a] = 0;
         }
