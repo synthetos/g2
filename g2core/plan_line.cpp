@@ -143,8 +143,8 @@ bool mp_runtime_is_idle() { return (!st_runtime_isbusy()); }
 
 stat_t mp_aline(GCodeState_t* _gm)
 {
-    float target_rotated[AXES] = { 0,0,0,0,0,0,0,0,0 };
-    float axis_square[AXES]    = { 0,0,0,0,0,0,0,0,0 };
+    float target_rotated[AXES];     // all these arrays initialize to all zeroes by compiler settings
+    float axis_square[AXES];
     float axis_length[AXES];
     bool  flags[AXES];
     float length_square = 0;
