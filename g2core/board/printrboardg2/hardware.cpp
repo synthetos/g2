@@ -3,8 +3,8 @@
  * For: /board/printrboardg2
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2016 Robert Giseburt
+ * Copyright (c) 2010 - 2018 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2018 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -255,7 +255,7 @@ stat_t hw_flash(nvObj_t *nv)
 
 stat_t _get_leds(nvObj_t *nv)
 {
-    nv->valuetype = TYPE_INT;
+    nv->valuetype = TYPE_INTEGER;
 
     float red, green, blue;
 
@@ -263,34 +263,34 @@ stat_t _get_leds(nvObj_t *nv)
 
     // black
     if (fp_EQ(red, 0.0) && fp_EQ(green, 0.0) && fp_EQ(blue, 0.0)) {
-        nv->value = 0;
+        nv->value_int = 0;
     // white
     } else if (fp_EQ(red, 1.0) && fp_EQ(green, 1.0) && fp_EQ(blue, 1.0)) {
-        nv->value = 1;
+        nv->value_int = 1;
     // red
     } else if (fp_EQ(red, 1.0) && fp_EQ(green, 0.0) && fp_EQ(blue, 0.0)) {
-        nv->value = 2;
+        nv->value_int = 2;
     // green
     } else if (fp_EQ(red, 0.0) && fp_EQ(green, 1.0) && fp_EQ(blue, 0.0)) {
-        nv->value = 3;
+        nv->value_int = 3;
     // blue
     } else if (fp_EQ(red, 0.0) && fp_EQ(green, 0.0) && fp_EQ(blue, 1.0)) {
-        nv->value = 4;
+        nv->value_int = 4;
     // orange
     } else if (fp_EQ(red, 1.0) && fp_EQ(green, 0.5) && fp_EQ(blue, 0.0)) {
-        nv->value = 5;
+        nv->value_int = 5;
     // yellow
     } else if (fp_EQ(red, 1.0) && fp_EQ(green, 1.0) && fp_EQ(blue, 0.0)) {
-        nv->value = 6;
+        nv->value_int = 6;
     }
-
     return (STAT_OK);
 }
 
 stat_t _set_leds(nvObj_t *nv)
 {
-    uint32_t value = nv->value;
-    if ((nv->value < 0) || (nv->value > 6)) {
+    uint32_t value = nv->value_int;
+//    if ((nv->value_int < 0) || (nv->value_int > 6)) {
+    if ((value < 0) || (value > 6)) {
         return (STAT_INPUT_VALUE_RANGE_ERROR);
     }
 
@@ -330,7 +330,6 @@ stat_t _set_leds(nvObj_t *nv)
             LEDs::display_color[pixel].startTransition(100, 1.0, 1.0, 0.0);
         }
     }
-
     return (STAT_OK);
 }
 

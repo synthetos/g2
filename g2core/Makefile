@@ -1,8 +1,8 @@
 #
 # Makefile
 #
-# Copyright (c) 2012 - 2016 Robert Giseburt
-# Copyright (c) 2013 - 2016 Alden S. Hart Jr.
+# Copyright (c) 2012 - 2018 Robert Giseburt
+# Copyright (c) 2013 - 2018 Alden S. Hart Jr.
 #
 # This file is part of the g2core project.
 #

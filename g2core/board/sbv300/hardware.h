@@ -5,8 +5,8 @@
  *
  * This file is part of the g2core project
  *
- * Copyright (c) 2013 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2016 Robert Giseburt
+ * Copyright (c) 2013 - 2018 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2018 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -44,7 +44,7 @@
 // Axes, motors & PWM channels must be defines (not enums) so expressions like this:
 //  #if (MOTORS >= 6)  will work
 
-#define AXES 6         // number of axes supported in this version
+#define AXES 9         // number of axes supported in this version
 #define HOMING_AXES 4  // number of axes that can be homed (assumes Zxyabc sequence)
 #define MOTORS 4       // number of motors on the board
 #define COORDS 6       // number of supported coordinate systems (1-6)
