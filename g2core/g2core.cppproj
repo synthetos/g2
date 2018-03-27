@@ -1701,13 +1701,10 @@
     <Compile Include="device\neopixel\neopixel.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="device\step_dir_driver\step_dir_driver.cpp">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="device\step_dir_driver\step_dir_driver.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="device\trinamic\tmc2130.cpp">
+    <Compile Include="device\step_dir_hobbyservo\step_dir_hobbyservo.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="device\trinamic\tmc2130.h">
@@ -1725,6 +1722,9 @@
     <Compile Include="marlin_compatibility.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="settings\settings_eggbot.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="settings\settings_makeblock.h">
       <SubType>compile</SubType>
     </Compile>
@@ -1738,6 +1738,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings\settings_Printrbot_Simple_1608.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_shapeoko2dualY.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_shapeoko375_Dual.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings\settings_ultimaker.h">
@@ -1890,6 +1896,9 @@
     <Compile Include="settings\settings_test.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="settings\settings_watercolorbot_v2.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="settings\settings_zen7x12.h">
       <SubType>compile</SubType>
     </Compile>
@@ -1941,6 +1950,7 @@
     <Folder Include="board\sbv300\" />
     <Folder Include="device\" />
     <Folder Include="device\neopixel" />
+    <Folder Include="device\step_dir_hobbyservo" />
     <Folder Include="device\step_dir_driver\" />
     <Folder Include="device\trinamic\" />
     <Folder Include="settings" />
