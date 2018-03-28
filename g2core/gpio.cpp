@@ -130,7 +130,7 @@ type* _io(const nvObj_t *nv) {
 gpioDigitalInput* _i(const nvObj_t *nv) { return _io<gpioDigitalInput>(nv); }
 gpioDigitalInputReader* _ir(const nvObj_t *nv) { return _io<gpioDigitalInputReader>(nv); }
 gpioDigitalOutput* _o(const nvObj_t *nv) { return _io<gpioDigitalOutput>(nv); }
-gpioDigitalOutputReader* _or(const nvObj_t *nv) { return _io<gpioDigitalOutputReader>(nv); }
+gpioDigitalOutputWriter* _ow(const nvObj_t *nv) { return _io<gpioDigitalOutputWriter>(nv); }
 gpioAnalogInput* _ai(const nvObj_t *nv) { return _io<gpioAnalogInput>(nv); }
 
 gpioDigitalInputReader in1;
@@ -147,25 +147,29 @@ gpioDigitalInputReader in11;
 gpioDigitalInputReader in12;
 gpioDigitalInputReader in13;
 gpioDigitalInputReader in14;
+gpioDigitalInputReader in15;
+gpioDigitalInputReader in16;
 
-gpioDigitalInputReader* const in_r[14] = {&in1, &in2, &in3, &in4, &in5, &in6, &in7, &in8, &in9, &in10, &in11, &in12, &in13, &in14};
+gpioDigitalInputReader* const in_r[16] = {&in1, &in2, &in3, &in4, &in5, &in6, &in7, &in8, &in9, &in10, &in11, &in12, &in13, &in14, &in15, &in16};
 
-gpioDigitalOutputReader out1;
-gpioDigitalOutputReader out2;
-gpioDigitalOutputReader out3;
-gpioDigitalOutputReader out4;
-gpioDigitalOutputReader out5;
-gpioDigitalOutputReader out6;
-gpioDigitalOutputReader out7;
-gpioDigitalOutputReader out8;
-gpioDigitalOutputReader out9;
-gpioDigitalOutputReader out10;
-gpioDigitalOutputReader out11;
-gpioDigitalOutputReader out12;
-gpioDigitalOutputReader out13;
-gpioDigitalOutputReader out14;
+gpioDigitalOutputWriter out1;
+gpioDigitalOutputWriter out2;
+gpioDigitalOutputWriter out3;
+gpioDigitalOutputWriter out4;
+gpioDigitalOutputWriter out5;
+gpioDigitalOutputWriter out6;
+gpioDigitalOutputWriter out7;
+gpioDigitalOutputWriter out8;
+gpioDigitalOutputWriter out9;
+gpioDigitalOutputWriter out10;
+gpioDigitalOutputWriter out11;
+gpioDigitalOutputWriter out12;
+gpioDigitalOutputWriter out13;
+gpioDigitalOutputWriter out14;
+gpioDigitalOutputWriter out15;
+gpioDigitalOutputWriter out16;
 
-gpioDigitalOutputReader* const out_r[14] = {&out1 ,&out2 ,&out3 ,&out4 ,&out5 ,&out6 ,&out7 ,&out8 ,&out9 ,&out10 ,&out11 ,&out12 ,&out13 ,&out14};
+gpioDigitalOutputWriter* const out_w[14] = {&out1, &out2, &out3, &out4, &out5, &out6, &out7, &out8, &out9, &out10, &out11, &out12, &out13, &out14, &out15, &out16};
 
 // lists for the various inputAction events
 gpioDigitalInputHandlerList din_handlers[INPUT_ACTION_ACTUAL_MAX+1];
@@ -247,7 +251,7 @@ stat_t dout_set_en(nvObj_t *nv)
 }
 
 /*
- *  Get/set input polarity
+ *  Get/set output polarity
  */
 stat_t dout_get_po(nvObj_t *nv)
 {
@@ -259,7 +263,7 @@ stat_t dout_set_po(nvObj_t *nv)
 }
 
 /*
- *  Get/set input polarity
+ *  Get/set output external number
  */
 stat_t dout_get_out(nvObj_t *nv)
 {
@@ -272,15 +276,15 @@ stat_t dout_set_out(nvObj_t *nv)
 
 
 /*
- *  Gget/set output state given an nv object
+ *  Get/set output state given an nv object
  */
 stat_t dout_get_output(nvObj_t *nv)
 {
-    return _or(nv)->getValue(nv);
+    return _ow(nv)->getValue(nv);
 }
 stat_t dout_set_output(nvObj_t *nv)
 {
-    return _or(nv)->setValue(nv);
+    return _ow(nv)->setValue(nv);
 }
 
 

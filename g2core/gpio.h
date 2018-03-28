@@ -592,8 +592,8 @@ struct gpioDigitalInputPin final : gpioDigitalInput {
 
 
 // forward declare
-struct gpioDigitalOutputReader;
-extern gpioDigitalOutputReader* const out_r[14];
+struct gpioDigitalOutputWriter;
+extern gpioDigitalOutputWriter* const out_w[16];
 
 /*
  * gpioDigitalOutput - digital/PWM output base class
@@ -713,10 +713,10 @@ struct gpioDigitalOutput {
 
 
 /*
- * gpioDigitalOutputReader - digital output reader class - the "out1" - "outX" objects
+ * gpioDigitalOutputWriter - digital output reader class - the "out1" - "outX" objects
  */
 
-struct gpioDigitalOutputReader final {
+struct gpioDigitalOutputWriter final {
     gpioDigitalOutput* pin;
 
     // functions for use by other parts of the code
@@ -762,20 +762,20 @@ struct gpioDigitalOutputReader final {
 };
 
 // setup the gpioDigitalInputReader objects as extern
-extern gpioDigitalOutputReader out1;
-extern gpioDigitalOutputReader out2;
-extern gpioDigitalOutputReader out3;
-extern gpioDigitalOutputReader out4;
-extern gpioDigitalOutputReader out5;
-extern gpioDigitalOutputReader out6;
-extern gpioDigitalOutputReader out7;
-extern gpioDigitalOutputReader out8;
-extern gpioDigitalOutputReader out9;
-extern gpioDigitalOutputReader out10;
-extern gpioDigitalOutputReader out11;
-extern gpioDigitalOutputReader out12;
-extern gpioDigitalOutputReader out13;
-extern gpioDigitalOutputReader out14;
+extern gpioDigitalOutputWriter out1;
+extern gpioDigitalOutputWriter out2;
+extern gpioDigitalOutputWriter out3;
+extern gpioDigitalOutputWriter out4;
+extern gpioDigitalOutputWriter out5;
+extern gpioDigitalOutputWriter out6;
+extern gpioDigitalOutputWriter out7;
+extern gpioDigitalOutputWriter out8;
+extern gpioDigitalOutputWriter out9;
+extern gpioDigitalOutputWriter out10;
+extern gpioDigitalOutputWriter out11;
+extern gpioDigitalOutputWriter out12;
+extern gpioDigitalOutputWriter out13;
+extern gpioDigitalOutputWriter out14;
 
 
 /*
@@ -862,12 +862,12 @@ struct gpioDigitalOutputPin final : gpioDigitalOutput {
         if (e == proxy_pin_number) { return true; }
         if (proxy_pin_number > 0) {
             // clear the old pin
-            out_r[proxy_pin_number-1]->setPin(nullptr);
+            out_w[proxy_pin_number-1]->setPin(nullptr);
         }
         proxy_pin_number = e;
         if (proxy_pin_number > 0) {
             // set the new pin
-            out_r[proxy_pin_number-1]->setPin(this);
+            out_w[proxy_pin_number-1]->setPin(this);
         }
         return true;
     };
