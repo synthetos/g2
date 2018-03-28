@@ -380,13 +380,13 @@ struct gpioDigitalInputPin final : gpioDigitalInput {
     bool homing_mode;                   // set true when input is in homing mode.
     bool probing_mode;                  // set true when input is in probing mode.
 
-    const uint8_t ext_pin_number;             // the number used externally for this pin ("din" + ext_pin_number)
-    uint8_t proxy_pin_number;             // the number used externally for this pin ("in" + proxy_pin_number)
+    const uint8_t ext_pin_number;       // the number used externally for this pin ("din" + ext_pin_number)
+    uint8_t proxy_pin_number;           // the number used externally for this pin ("in" + proxy_pin_number)
 
     uint16_t lockout_ms;                // number of milliseconds for debounce lockout
     Motate::Timeout lockout_timer;      // time to expire current debounce lockout, or 0 if no lockout
 
-    Pin_t pin;                        // the actual pin object itself
+    Pin_t pin;                          // the actual pin object itself
 
     // In constructor, simply forward all values to the Pin_t
     // To get a different behavior, override this object.
@@ -827,7 +827,7 @@ struct gpioDigitalOutputPin final : gpioDigitalOutput {
     bool setPolarity(const ioPolarity new_polarity) override
     {
         polarity = new_polarity;
-        pin.setOptions((polarity == IO_ACTIVE_LOW) ? kPullUp|kDebounce : kDebounce);
+        pin.setOptions((polarity == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow);
         return true;
     };
 
