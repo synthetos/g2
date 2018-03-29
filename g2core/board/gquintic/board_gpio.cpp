@@ -91,10 +91,10 @@ gpioDigitalOutput* const d_out[] = {&dout1, &dout2, &dout3, &dout4, &dout5, &dou
 
 #if QUINTIC_REVISION == 'C'
 
-gpioAnalogInputPin<MAX31865<SPIBus_used_t::SPIBusDevice>> ain1 {gpioAnalogInput::AIN_TYPE_EXTERNAL, 1, spiBus, spiCSPinMux.getCS(5)};
-gpioAnalogInputPin<MAX31865<SPIBus_used_t::SPIBusDevice>> ain2 {gpioAnalogInput::AIN_TYPE_EXTERNAL, 2, spiBus, spiCSPinMux.getCS(6)};
-gpioAnalogInputPin<ADCDifferentialPair<Motate::kADC1_Neg_PinNumber, Motate::kADC1_Pos_PinNumber>> ain3 {gpioAnalogInput::AIN_TYPE_INTERNAL, 3};
-gpioAnalogInputPin<ADCDifferentialPair<Motate::kADC2_Neg_PinNumber, Motate::kADC2_Pos_PinNumber>> ain4 {gpioAnalogInput::AIN_TYPE_INTERNAL, 4};
+gpioAnalogInputPin<MAX31865<SPIBus_used_t::SPIBusDevice>> ai1 {AI1_ENABLED, gpioAnalogInput::AIN_TYPE_EXTERNAL, 1, AI1_EXTERNAL_NUMBER, spiBus, spiCSPinMux.getCS(5)};
+gpioAnalogInputPin<MAX31865<SPIBus_used_t::SPIBusDevice>> ai2 {AI2_ENABLED, gpioAnalogInput::AIN_TYPE_EXTERNAL, 2, AI2_EXTERNAL_NUMBER, spiBus, spiCSPinMux.getCS(6)};
+gpioAnalogInputPin<ADCDifferentialPair<Motate::kADC1_Neg_PinNumber, Motate::kADC1_Pos_PinNumber>> ai3 {AI3_ENABLED, gpioAnalogInput::AIN_TYPE_INTERNAL, 3, AI3_EXTERNAL_NUMBER};
+gpioAnalogInputPin<ADCDifferentialPair<Motate::kADC2_Neg_PinNumber, Motate::kADC2_Pos_PinNumber>> ai4 {AI4_ENABLED, gpioAnalogInput::AIN_TYPE_INTERNAL, 4, AI4_EXTERNAL_NUMBER};
 
 gpioAnalogInput*    const a_in[] = {&ain1, &ain2, &ain3, &ain4};
 
@@ -102,12 +102,12 @@ gpioAnalogInput*    const a_in[] = {&ain1, &ain2, &ain3, &ain4};
 
 #if QUINTIC_REVISION == 'D'
 
-gpioAnalogInputPin<ADCPin<Motate::kADC1_PinNumber>> ain1 {gpioAnalogInput::AIN_TYPE_INTERNAL, 1};
-gpioAnalogInputPin<ADCPin<Motate::kADC2_PinNumber>> ain2 {gpioAnalogInput::AIN_TYPE_INTERNAL, 2};
-gpioAnalogInputPin<ADCPin<Motate::kADC3_PinNumber>> ain3 {gpioAnalogInput::AIN_TYPE_INTERNAL, 3};
-gpioAnalogInputPin<ADCPin<Motate::kADC4_PinNumber>> ain4 {gpioAnalogInput::AIN_TYPE_INTERNAL, 4};
+gpioAnalogInputPin<ADCPin<Motate::kADC1_PinNumber>> ai1 {AI1_ENABLED, gpioAnalogInput::AIN_TYPE_INTERNAL, 1, AI1_EXTERNAL_NUMBER};
+gpioAnalogInputPin<ADCPin<Motate::kADC2_PinNumber>> ai2 {AI2_ENABLED, gpioAnalogInput::AIN_TYPE_INTERNAL, 2, AI2_EXTERNAL_NUMBER};
+gpioAnalogInputPin<ADCPin<Motate::kADC3_PinNumber>> ai3 {AI3_ENABLED, gpioAnalogInput::AIN_TYPE_INTERNAL, 3, AI3_EXTERNAL_NUMBER};
+gpioAnalogInputPin<ADCPin<Motate::kADC4_PinNumber>> ai4 {AI4_ENABLED, gpioAnalogInput::AIN_TYPE_INTERNAL, 4, AI4_EXTERNAL_NUMBER};
 
-gpioAnalogInput*    const a_in[] = {&ain1, &ain2, &ain3, &ain4};
+gpioAnalogInput*    const a_in[] = {&ai1, &ai2, &ai3, &ai4};
 
 #endif // 'D'
 
@@ -122,10 +122,10 @@ gpioAnalogInput*    const a_in[] = {&ain1, &ain2, &ain3, &ain4};
  int16_t ain_sample_counter = ain_sample_freq;
  Motate::SysTickEvent ain_tick_event {[&] {
      if (!--ain_sample_counter) {
-         ain1.startSampling();
-         ain2.startSampling();
-         ain3.startSampling();
-         ain4.startSampling();
+         ai1.startSampling();
+         ai2.startSampling();
+         ai3.startSampling();
+         ai4.startSampling();
          ain_sample_counter = ain_sample_freq;
      }
  }, nullptr};

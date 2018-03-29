@@ -143,7 +143,7 @@ endif
 
 ifeq ("$(CONFIG)","PrintrbotPlayQuintic")
     ifeq ("$(BOARD)","NONE")
-        BOARD=gquintic-c
+        BOARD=gquintic-d
     endif
     SETTINGS_FILE="settings_Printrbot_Play.h"
 endif
