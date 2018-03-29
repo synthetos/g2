@@ -1426,6 +1426,8 @@ stat_t ain_get_resistance(nvObj_t *nv); // get the resistance in ohms
 // no ain_set_resistance
 stat_t ai_get_en(nvObj_t *nv);         // enabled
 stat_t ai_set_en(nvObj_t *nv);         // enabled
+stat_t ai_get_ain(nvObj_t *nv);        // external number
+stat_t ai_set_ain(nvObj_t *nv);
 stat_t ai_get_type(nvObj_t *nv);       // get the ADC type (or disabled)
 stat_t ai_set_type(nvObj_t *nv);       // set the type (used to disable/enable)
 stat_t ai_get_circuit(nvObj_t *nv);    // get the circuit type
@@ -1457,6 +1459,7 @@ stat_t ai_set_p5(nvObj_t *nv);
 
     void ain_print_value(nvObj_t *nv);
     void ain_print_resistance(nvObj_t *nv);
+    void ai_print_ain(nvObj_t *nv);
     void ai_print_en(nvObj_t *nv);
     void ai_print_type(nvObj_t *nv);
     void ai_print_circuit(nvObj_t *nv);
@@ -1475,6 +1478,7 @@ stat_t ai_set_p5(nvObj_t *nv);
     #define ain_print_value tx_print_stub
     #define ain_print_resistance tx_print_stub
     #define ai_print_en tx_print_stub
+    #define ai_print_ain tx_print_stub
     #define ai_print_type tx_print_stub
     #define ai_print_circuit tx_print_stub
     #define ai_print_p tx_print_stub

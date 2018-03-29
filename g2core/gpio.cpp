@@ -305,6 +305,18 @@ stat_t ai_set_en(nvObj_t *nv)
 }
 
 /*
+ *  Get/set output external number
+ */
+stat_t ai_get_ain(nvObj_t *nv)
+{
+    return _ai(nv)->getExternalNumber(nv);
+}
+stat_t ai_set_ain(nvObj_t *nv)
+{
+    return _ai(nv)->setExternalNumber(nv);
+}
+
+/*
  *  ain_get_value() - get the measured voltage level of the analog input
  */
 stat_t ain_get_value(nvObj_t *nv) {
@@ -367,17 +379,18 @@ stat_t ai_set_p5(nvObj_t *nv) { return ai_set_parameter(nv, 4); };
     static const char fmt_gpio_in_po[] = "[%smo] input polarity%13d [0=normal/active-high,1=inverted/active-low]\n";
     static const char fmt_gpio_ac[] = "[%sac] input action%15d [0=none,1=stop,2=fast_stop,3=halt,4=alarm,5=shutdown,6=panic,7=reset]\n";
     static const char fmt_gpio_fn[] = "[%sfn] input function%13d [0=none,1=limit,2=interlock,3=shutdown,4=probe]\n";
-    static const char fmt_gpio_in[] = "[%sin] input external number%6d [0=none,1-12=inX shows the value of this din]\n";
+    static const char fmt_gpio_in[] = "[%sin] input external number%6d [0=none,1-16=inX shows the value of this din]\n";
     static const char fmt_gpio_state[] = "Input %s state: %5d\n";
 
     static const char fmt_gpio_out_en[] = "[%smo] output enabled%12d [-1=unavailable,0=disabled,1=enabled]\n";
     static const char fmt_gpio_out_po[] = "[%smo] output polarity%12d [0=normal/active-high,1=inverted/active-low]\n";
-    static const char fmt_gpio_out_out[] = "[%sout] output external number%5d [0=none,1-14=outX shows the value of this dout]\n";
+    static const char fmt_gpio_out_out[] = "[%sout] output external number%5d [0=none,1-16=outX shows the value of this dout]\n";
     static const char fmt_gpio_out_state[] = "Output %s state: %5d\n";
 
     static const char fmt_ain_value[] = "Analog input %s voltage: %5.2fV\n";
     static const char fmt_ain_resistance[] = "Analog input %s resistance: %5.2fohm\n";
     static const char fmt_gpio_ai_en[] = "[%smo] analog input enabled%12d [-1=unavailable,0=disabled,1=enabled]\n";
+    static const char fmt_gpio_ai_ain[] = "[%sout] analog input external number%5d [0=none,1-8=ainX shows the value of this ai]\n";
     static const char fmt_ai_type[] = "[%s] input type%17d [0=disabled,1=internal,2=external]\n";
     static const char fmt_ai_circuit[] = "[%s] analog circuit%13d [0=disabled,1=pull-up,2=external,3=inverted op-amp,4=constant current inverted op-amp]\n";
     static const char fmt_ai_parameter[] = "[%s] circuit parameter%6.4f [usage varies by circuit type]\n";
@@ -416,6 +429,7 @@ stat_t ai_set_p5(nvObj_t *nv) { return ai_set_parameter(nv, 4); };
        xio_writeline(cs.out_buf);
     }
     void ai_print_en(nvObj_t *nv) {_print_di(nv, fmt_gpio_ai_en);}
+    void ai_print_ain(nvObj_t *nv) {_print_di(nv, fmt_gpio_ai_ain);}
     void ai_print_type(nvObj_t *nv)
     {
        sprintf(cs.out_buf, fmt_ai_type, nv->token, (int)nv->value);

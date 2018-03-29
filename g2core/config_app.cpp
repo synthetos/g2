@@ -672,6 +672,7 @@ const cfgItem_t cfgArray[] = {
     // Analog input configs
 #if (A_IN_CHANNELS >= 1)
     { "ai1","ai1en",_fip, 0, ai_print_en,         ai_get_en,         ai_set_en,      (float *)&ai1,  AI1_ENABLED },
+    { "ai1","ai1ain",_fip,0, ai_print_ain,        ai_get_ain,        ai_set_ain,     (float *)&ai1,  AI1_EXTERNAL_NUMBER },
     { "ai1","ai1ty",_fip, 0, ai_print_type,       ai_get_type,       ai_set_type,    (float *)&ai1,  AI1_TYPE },
     { "ai1","ai1ct",_fip, 0, ai_print_circuit,    ai_get_circuit,    ai_set_circuit, (float *)&ai1,  AI1_CIRCUIT },
     { "ai1","ai1p1",_fip, 4, ai_print_p,          ai_get_p1,         ai_set_p1,      (float *)&ai1,  AI1_P1 },
@@ -682,6 +683,7 @@ const cfgItem_t cfgArray[] = {
 #endif
 #if (A_IN_CHANNELS >= 2)
     { "ai2","ai2en",_fip, 0, ai_print_en,         ai_get_en,         ai_set_en,      (float *)&ai2,  AI2_ENABLED },
+    { "ai2","ai2ain",_fip,0, ai_print_ain,        ai_get_ain,        ai_set_ain,     (float *)&ai2,  AI2_EXTERNAL_NUMBER },
     { "ai2","ai2ty",_fip, 0, ai_print_type,       ai_get_type,       ai_set_type,    (float *)&ai2,  AI2_TYPE },
     { "ai2","ai2ct",_fip, 0, ai_print_circuit,    ai_get_circuit,    ai_set_circuit, (float *)&ai2,  AI2_CIRCUIT },
     { "ai2","ai2p1",_fip, 4, ai_print_p,          ai_get_p1,         ai_set_p1,      (float *)&ai2,  AI2_P1 },
@@ -692,6 +694,7 @@ const cfgItem_t cfgArray[] = {
 #endif
 #if (A_IN_CHANNELS >= 3)
     { "ai3","ai3en",_fip, 0, ai_print_en,         ai_get_en,         ai_set_en,      (float *)&ai3,  AI3_ENABLED },
+    { "ai3","ai3ain",_fip,0, ai_print_ain,        ai_get_ain,        ai_set_ain,     (float *)&ai3,  AI3_EXTERNAL_NUMBER },
     { "ai3","ai3ty",_fip, 0, ai_print_type,       ai_get_type,       ai_set_type,    (float *)&ai3,  AI3_TYPE },
     { "ai3","ai3ct",_fip, 0, ai_print_circuit,    ai_get_circuit,    ai_set_circuit, (float *)&ai3,  AI3_CIRCUIT },
     { "ai3","ai3p1",_fip, 4, ai_print_p,          ai_get_p1,         ai_set_p1,      (float *)&ai3,  AI3_P1 },
@@ -702,6 +705,7 @@ const cfgItem_t cfgArray[] = {
 #endif
 #if (A_IN_CHANNELS >= 4)
     { "ai4","ai4en",_fip, 0, ai_print_en,         ai_get_en,         ai_set_en,      (float *)&ai4,  AI4_ENABLED },
+    { "ai4","ai4ain",_fip,0, ai_print_ain,        ai_get_ain,        ai_set_ain,     (float *)&ai4,  AI4_EXTERNAL_NUMBER },
     { "ai4","ai4ty",_fip, 0, ai_print_type,       ai_get_type,       ai_set_type,    (float *)&ai4,  AI4_TYPE },
     { "ai4","ai4ct",_fip, 0, ai_print_circuit,    ai_get_circuit,    ai_set_circuit, (float *)&ai4,  AI4_CIRCUIT },
     { "ai4","ai4p1",_fip, 4, ai_print_p,          ai_get_p1,         ai_set_p1,      (float *)&ai4,  AI4_P1 },
