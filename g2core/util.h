@@ -32,13 +32,10 @@
  *  - support for debugging routines
  */
 
-#include "hardware.h" // for AXES
-
 #ifndef UTIL_H_ONCE
 #define UTIL_H_ONCE
 
 #include <stdint.h>
-//#include "sam.h"
 #include "MotateTimers.h"
 using Motate::delay;
 using Motate::SysTickTimer;
@@ -78,8 +75,9 @@ float *set_vector_by_axis(float value, uint8_t axis);
 
 #if (AXES == 9)
 #define INIT_AXES_ZEROES {0,0,0,0,0,0,0,0,0}
-#define INIT_AXES_TRUE   {1,1,1,1,1,1,1,1,1}
+#define INIT_AXES_ONES   {1,1,1,1,1,1,1,1,1}
 #define INIT_AXES_FALSE  INIT_AXES_ZEROES
+#define INIT_AXES_TRUE   INIT_AXES_ONES
 #else
 #warning UNSUPPORTED AXES SETTING!
 #endif

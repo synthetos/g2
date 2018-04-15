@@ -1061,8 +1061,7 @@ stat_t cm_set_absolute_origin(const float origin[], bool flag[])
 
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         if (flag[axis]) {
-// REMOVED  value[axis] = cm->offset[cm->gm.coord_system][axis] + _to_millimeters(origin[axis]);    // G2 Issue #26
-            value[axis] = _to_millimeters(origin[axis]);    // replaced the above
+            value[axis] = _to_millimeters(origin[axis]);
             cm->gmx.position[axis] = value[axis];           // set model position
             cm->gm.target[axis] = value[axis];              // reset model target
             mp_set_planner_position(axis, value[axis]);     // set mm position
@@ -1197,7 +1196,7 @@ stat_t _goto_stored_position(const float stored_position[],     // always in mm
     cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_ON_DISPLAY_WITH_OFFSETS);  // Position stored in abs coords
     cm_set_distance_mode(ABSOLUTE_DISTANCE_MODE);           // Must run in absolute distance mode
 
-    bool flags2[] = { 1,1,1,1,1,1 };
+    bool flags2[] = INIT_AXES_TRUE;
     stat_t status = cm_straight_traverse(target, flags2, PROFILE_NORMAL);   // Go to stored position
     cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_OFF);
     cm_set_distance_mode(saved_distance_mode);              // Restore distance mode
@@ -1697,8 +1696,8 @@ stat_t cm_json_wait(char *json_string)
 stat_t cm_run_home(nvObj_t *nv)
 {
     if (nv->value_int) {    // if true
-        float axes[] = { 1,1,1,1,1,1 };
-        bool flags[] = { 1,1,1,1,1,1 };
+        float axes[] = INIT_AXES_ONES;
+        bool flags[] = INIT_AXES_TRUE;
         cm_homing_cycle_start(axes, flags);
     }
     return (STAT_OK);
@@ -1738,7 +1737,7 @@ stat_t cm_run_jog(nvObj_t *nv)
  * _coord()           - return coordinate system number (53=0...59=6) or -1 if error
  * _axis()            - return axis # or -1 if not an axis (works for mapped motors as well)
  * cm_get_axis_type() - return linear axis (0), rotary axis (1) or error (-1)
- * cm_get_axis_char() - return ASCII char for axis number provided
+ * cm_get_axis_char() - return ASCII char for internal axis number provided 
  */
 
 static int8_t _coord(nvObj_t *nv)   // extract coordinate system from 3rd character
@@ -1803,9 +1802,9 @@ cmAxisType cm_get_axis_type(const nvObj_t *nv)
     return (AXIS_TYPE_LINEAR);
 }
 
-char cm_get_axis_char(const int8_t axis)
+char cm_get_axis_char(const int8_t axis)    // Uses internal axis numbering
 {
-    char axis_char[] = "XYZABC";
+    char axis_char[] = "XYZUVWABC";
     if ((axis < 0) || (axis > AXES)) return (' ');
     return (axis_char[axis]);
 }
