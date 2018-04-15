@@ -35,30 +35,33 @@
 #ifndef HARDWARE_H_ONCE
 #define HARDWARE_H_ONCE
 
-
 /*--- Hardware platform enumerations ---*/
 
 #define G2CORE_HARDWARE_PLATFORM    "gQuintic"
 #define G2CORE_HARDWARE_VERSION     "b"
 
-/***** Axes, motors & PWM channels used by the application *****/
-// Axes, motors & PWM channels must be defines (not enums) so expressions like this:
+/***** Motors & PWM channels supported by this hardware *****/
+// These must be defines (not enums) so expressions like this:
 //  #if (MOTORS >= 6)  will work
 
-#define AXES        9           // number of axes supported in this version
-#define HOMING_AXES 4           // number of axes that can be homed (assumes Zxyabc sequence)
-#define MOTORS      5           // number of motors on the board
-#define COORDS      6           // number of supported coordinate systems (index starts at 1)
-#define PWMS        2           // number of supported PWM channels
-#define TOOLS       32          // number of entries in tool table (index starts at 1)
+#define MOTORS 4                    // number of motors supported the hardware
+#define PWMS 2                      // number of PWM channels supported the hardware
+
+/*************************
+ * Global System Defines *
+ *************************/
+
+#define MILLISECONDS_PER_TICK 1     // MS for system tick (systick * N)
+#define SYS_ID_DIGITS 16            // actual digits in system ID (up to 16)
+#define SYS_ID_LEN 24               // total length including dashes and NUL
 
 /*************************
  * Motate Setup          *
  *************************/
 
 #include "MotatePins.h"
-#include "MotateTimers.h" // for TimerChanel<> and related...
-#include "MotateServiceCall.h" // for ServiceCall<>
+#include "MotateTimers.h"           // for TimerChanel<> and related...
+#include "MotateServiceCall.h"      // for ServiceCall<>
 
 using Motate::TimerChannel;
 using Motate::ServiceCall;
@@ -67,14 +70,6 @@ using Motate::pin_number;
 using Motate::Pin;
 using Motate::PWMOutputPin;
 using Motate::OutputPin;
-
-/*************************
- * Global System Defines *
- *************************/
-
-#define MILLISECONDS_PER_TICK 1  // MS for system tick (systick * N)
-#define SYS_ID_DIGITS 16         // actual digits in system ID (up to 16)
-#define SYS_ID_LEN 24            // total length including dashes and NUL
 
 /************************************************************************************
  **** ARM SAM3X8E SPECIFIC HARDWARE *************************************************
