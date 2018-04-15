@@ -74,6 +74,16 @@ uint8_t vector_equal(const float a[], const float b[]);
 float *set_vector(float x, float y, float z, float a, float b, float c);
 float *set_vector_by_axis(float value, uint8_t axis);
 
+// *** canned initializers ***
+
+#if (AXES == 9)
+#define INIT_AXES_ZEROES {0,0,0,0,0,0,0,0,0}
+#define INIT_AXES_TRUE   {1,1,1,1,1,1,1,1,1}
+#define INIT_AXES_FALSE  INIT_AXES_ZEROES
+#else
+#warning UNSUPPORTED AXES SETTING!
+#endif
+
 //*** math utilities ***
 
 float min3(float x1, float x2, float x3);

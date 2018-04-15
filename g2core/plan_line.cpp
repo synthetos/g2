@@ -143,10 +143,11 @@ bool mp_runtime_is_idle() { return (!st_runtime_isbusy()); }
 
 stat_t mp_aline(GCodeState_t* _gm)
 {
-    float target_rotated[AXES];     // all these arrays initialize to all zeroes by compiler settings
-    float axis_square[AXES];
-    float axis_length[AXES];
-    bool  flags[AXES];
+    float target_rotated[]  = INIT_AXES_ZEROES;
+    float axis_square[]     = INIT_AXES_ZEROES;
+    float axis_length[]     = INIT_AXES_ZEROES;
+    bool  flags[]           = INIT_AXES_FALSE;
+
     float length_square = 0;
     float length;
 
@@ -199,6 +200,7 @@ stat_t mp_aline(GCodeState_t* _gm)
             length_square += axis_square[axis];
         } else {
             axis_length[axis] = 0;  // make it truly zero if it was tiny
+            axis_square[axis] = 0;  // Fix bug that can kill feedholds by corrupting block_time in _calculate_times 
         }
     }
     length = sqrt(length_square);
@@ -650,7 +652,7 @@ static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const floa
         if (bf->axis_flags[axis]) {
             if (bf->gm.motion_mode == MOTION_MODE_STRAIGHT_TRAVERSE) {
                 tmp_time = fabs(axis_length[axis]) / cm->a[axis].velocity_max;
-            } else {            // gm.motion_mode == MOTION_MODE_STRAIGHT_FEED
+            } else {// gm.motion_mode == MOTION_MODE_STRAIGHT_FEED
                 tmp_time = fabs(axis_length[axis]) / cm->a[axis].feedrate_max;
             }
             max_time = max(max_time, tmp_time);

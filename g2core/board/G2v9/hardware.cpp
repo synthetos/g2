@@ -64,12 +64,12 @@ stat_t hardware_periodic()
 
 void hw_hard_reset(void)
 {
-    Motate::System::reset(/*boootloader: */ false); // arg=0 resets the system
+    Motate::System::reset(/*bootloader: */ false); // arg=0 resets the system
 }
 
 void hw_flash_loader(void)
 {
-    Motate::System::reset(/*boootloader: */ true);  // arg=1 erases FLASH and enters FLASH loader
+    Motate::System::reset(/*bootloader: */ true);  // arg=1 erases FLASH and enters FLASH loader
 }
 
 /*

@@ -54,9 +54,9 @@
 #define FEEDHOLD_Z_LIFT             3       // mm to lift Z on feedhold
 #define PROBE_REPORT_ENABLE         true
 
-// WARNING: Older Othermill machines use a 15deg can stack for their Z axis.
-// new machines use a stepper which has the same config as the other axis.
-#define HAS_CANSTACK_Z_AXIS 0
+// WARNING: Very old, pre-release Othermills may have a 15deg can stack for their Z axis.
+//          All other machines use a stepper which has the same config as the other axis.
+#define HAS_CANSTACK_Z_AXIS         false
 /*
 // Switch definitions for interlock & E-stop
 #define ENABLE_INTERLOCK_AND_ESTOP
@@ -218,61 +218,6 @@
 #define Z_LATCH_BACKOFF             2
 #define Z_ZERO_BACKOFF              0.4
 
-
-/*
-#define JERK_MAX 500          // 500 million mm/(min^3)
-#define JERK_HIGH_SPEED 1000  // 1000 million mm/(min^3)        // Jerk during homing needs to stop *fast*
-#define VELOCITY_MAX 1500
-#define SEARCH_VELOCITY (VELOCITY_MAX / 3)
-#define LATCH_VELOCITY 25  // reeeeally slow for accuracy
-
-#define X_AXIS_MODE AXIS_STANDARD                   // xam  see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX VELOCITY_MAX                 // xvm  G0 max velocity in mm/min
-#define X_FEEDRATE_MAX X_VELOCITY_MAX               // xfr  G1 max feed rate in mm/min
-#define X_TRAVEL_MIN 0                              // xtn  minimum travel for soft limits
-#define X_TRAVEL_MAX 145.6                          // xtr  travel between switches or crashes
-#define X_JERK_MAX JERK_MAX                         // xjm
-#define X_JERK_HIGH_SPEED JERK_HIGH_SPEED           // xjh
-#define X_HOMING_INPUT 1                            // xhi  input used for homing or 0 to disable
-#define X_HOMING_DIRECTION 0                        // xhd  0=search moves negative, 1= search moves positive
-#define X_SEARCH_VELOCITY SEARCH_VELOCITY           // xsv
-#define X_LATCH_VELOCITY LATCH_VELOCITY             // xlv  mm/min
-#define X_LATCH_BACKOFF 1                           // xlb  mm
-#define X_ZERO_BACKOFF 0.4                          // xzb  mm
-
-#define Y_AXIS_MODE AXIS_STANDARD
-#define Y_VELOCITY_MAX VELOCITY_MAX
-#define Y_FEEDRATE_MAX Y_VELOCITY_MAX
-#define Y_TRAVEL_MIN 0
-#define Y_TRAVEL_MAX 119.1
-#define Y_JERK_MAX JERK_MAX
-#define Y_JERK_HIGH_SPEED JERK_HIGH_SPEED
-#define Y_HOMING_INPUT 3
-#define Y_HOMING_DIRECTION 0
-#define Y_SEARCH_VELOCITY SEARCH_VELOCITY
-#define Y_LATCH_VELOCITY LATCH_VELOCITY
-#define Y_LATCH_BACKOFF 1
-#define Y_ZERO_BACKOFF 0.4
-
-#define Z_AXIS_MODE AXIS_STANDARD
-#if HAS_CANSTACK_Z_AXIS
-#define Z_VELOCITY_MAX 1000
-#else
-#define Z_VELOCITY_MAX VELOCITY_MAX
-#endif
-#define Z_FEEDRATE_MAX Z_VELOCITY_MAX
-#define Z_TRAVEL_MIN -60.1
-#define Z_TRAVEL_MAX 0
-#define Z_JERK_MAX JERK_MAX
-#define Z_JERK_HIGH_SPEED JERK_HIGH_SPEED
-#define Z_HOMING_INPUT 6
-#define Z_HOMING_DIRECTION 1
-#define Z_SEARCH_VELOCITY SEARCH_VELOCITY
-#define Z_LATCH_VELOCITY LATCH_VELOCITY
-#define Z_LATCH_BACKOFF 1
-#define Z_ZERO_BACKOFF 0.4
-*/
-
 //*** Input / output settings ***
 /*
     See gpio.h GPIO defines for options
@@ -356,10 +301,3 @@
 #define P1_CCW_PHASE_HI             0.1
 #define P1_PWM_PHASE_OFF            0.1
 
-/*
-#define P1_USE_MAPPING_CUBIC
-#define P1_MAPPING_CUBIC_X3 2.1225328766717546e-013
-#define P1_MAPPING_CUBIC_X2 -7.2900167282605129e-009
-#define P1_MAPPING_CUBIC_X1 8.5854646785876479e-005
-#define P1_MAPPING_CUBIC_X0 -2.1301489219406905e-001
-*/

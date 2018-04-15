@@ -127,7 +127,7 @@ stat_t mp_calculate_ramps(mpBlockRuntimeBuf_t* block, mpBuf_t* bf, const float e
     }
     debug_trap_if_zero(bf->length, "mp_calculate_ramps() - got L=0");
     debug_trap_if_zero(bf->cruise_velocity, "mp_calculate_ramps() - got Vc=0");
-
+ 
     // Timings from *here*
 
     // initialize parameters to know values

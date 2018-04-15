@@ -362,8 +362,8 @@ static void _motion_end_callback(float* vect, bool* flag)
 }
 
 static stat_t _homing_axis_move(int8_t axis, float target, float velocity) {
-    float vect[]  = {0,0,0,0,0,0};
-    bool  flags[] = {0,0,0,0,0,0};
+    float vect[]  = INIT_AXES_ZEROES;
+    bool  flags[] = INIT_AXES_ZEROES;
 
     hm.waiting_for_motion_end = true;
 
