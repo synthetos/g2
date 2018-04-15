@@ -103,6 +103,7 @@ struct ioDigitalInputExt {
         bool pin_value = (bool)input_pin;
         int8_t pin_value_corrected = (pin_value ^ ((int)in->mode ^ 1));    // correct for NO or NC mode
         in->state = (ioState)pin_value_corrected;
+        in->ext_pin_number = ext_pin_number;    // diagnostic only. Not used by code
     }
 
     void pin_changed() {
@@ -131,7 +132,7 @@ struct ioDigitalInputExt {
         // lockout the pin for lockout_ms
         in->lockout_timer.set(in->lockout_ms);
 
-        // record the changed state
+        // record the changed state (we know it changed or we would have exited beforehand)
         in->state = (ioState)pin_value_corrected;
         if (pin_value_corrected == INPUT_ACTIVE) {
             in->edge = INPUT_EDGE_LEADING;
@@ -143,7 +144,8 @@ struct ioDigitalInputExt {
         if (in->homing_mode) {
             if (in->edge == INPUT_EDGE_LEADING) {   // we only want the leading edge to fire
                 en_take_encoder_snapshot();
-                cm_request_feedhold(FEEDHOLD_TYPE_SKIP, FEEDHOLD_EXIT_STOP);
+//                cm_request_feedhold(FEEDHOLD_TYPE_SKIP, FEEDHOLD_EXIT_STOP);
+                cm_request_feedhold(FEEDHOLD_TYPE_SKIP, FEEDHOLD_EXIT_RESET_POSITION);
             }
             return;
         }

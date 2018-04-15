@@ -49,8 +49,8 @@ typedef enum {
     IO_MODE_DISABLED = 2                // input is disabled
 } ioMode;
 #define IO_MODE_MAX     IO_MODE_DISABLED
-#define NORMALLY_OPEN   IO_ACTIVE_LOW   // equivalent
-#define NORMALLY_CLOSED IO_ACTIVE_HIGH  // equivalent
+//#define NORMALLY_OPEN   IO_ACTIVE_LOW   // equivalent
+//#define NORMALLY_CLOSED IO_ACTIVE_HIGH  // equivalent
 
 // *** NOTE: The active hi/low values currently agree with spindle and coolant values
 // The above will all need to be changed to ACTIVE_HIGH = 0, ACTIVE_LOW = 1
@@ -108,6 +108,7 @@ typedef enum {
  * GPIO structures
  */
 typedef struct ioDigitalInput {		    // one struct per digital input
+    int8_t ext_pin_number;              // for easier debugging - not actually used
     ioMode mode;					    // -1=disabled, 0=active low (NO), 1= active high (NC)
     inputAction action;                 // 0=none, 1=stop, 2=halt, 3=stop_steps, 4=reset
     inputFunc function;                 // function to perform when activated / deactivated

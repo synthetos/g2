@@ -1061,7 +1061,8 @@ stat_t cm_set_absolute_origin(const float origin[], bool flag[])
 
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         if (flag[axis]) {
-            value[axis] = _to_millimeters(origin[axis]);
+// REMOVED  value[axis] = cm->offset[cm->gm.coord_system][axis] + _to_millimeters(origin[axis]);    // G2 Issue #26
+            value[axis] = _to_millimeters(origin[axis]);    // replaced the above
             cm->gmx.position[axis] = value[axis];           // set model position
             cm->gm.target[axis] = value[axis];              // reset model target
             mp_set_planner_position(axis, value[axis]);     // set mm position

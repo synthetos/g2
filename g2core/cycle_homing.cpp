@@ -49,7 +49,6 @@ struct hmHomingSingleton {          // persistent homing runtime variables
     bool   set_coordinates;         // G28.4 flag. true = set coords to zero at the end of homing cycle
     stat_t (*func)(int8_t axis);    // binding for callback function state machine
 
-//    float axes[AXES];             // local storage for axis words and associated flags
     bool axis_flags[AXES];          // local storage for axis flags
 
     // per-axis parameters

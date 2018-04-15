@@ -243,7 +243,7 @@
 */
 
 // Xmin on v9 board                 // X homing - see X axis setup
-#define DI1_MODE                    NORMALLY_CLOSED
+#define DI1_MODE                    IO_ACTIVE_HIGH      // Normally Closed
 #define DI1_ACTION                  INPUT_ACTION_NONE
 #define DI1_FUNCTION                INPUT_FUNCTION_NONE
 
@@ -253,22 +253,22 @@
 #define DI2_FUNCTION                INPUT_FUNCTION_SHUTDOWN
 
 // Ymin                             // Y homing - see Y axis setup
-#define DI3_MODE                    NORMALLY_CLOSED
+#define DI3_MODE                    IO_ACTIVE_HIGH
 #define DI3_ACTION                  INPUT_ACTION_NONE
 #define DI3_FUNCTION                INPUT_FUNCTION_NONE
 
 // Ymax                             // Safety interlock
 #define DI4_MODE                    IO_ACTIVE_HIGH
-#define DI4_ACTION                  INPUT_ACTION_NONE  // (hold is performed by Interlock function)
+#define DI4_ACTION                  INPUT_ACTION_NONE   // (hold is performed by Interlock function)
 #define DI4_FUNCTION                INPUT_FUNCTION_INTERLOCK
 
 // Zmin                             // Z probe
-#define DI5_MODE                    IO_ACTIVE_LOW
+#define DI5_MODE                    IO_ACTIVE_LOW       // Normally Open
 #define DI5_ACTION                  INPUT_ACTION_NONE
 #define DI5_FUNCTION                INPUT_FUNCTION_PROBE
 
 // Zmax                             // Z homing - see Z axis for setup
-#define DI6_MODE                    NORMALLY_CLOSED
+#define DI6_MODE                    IO_ACTIVE_HIGH
 #define DI6_ACTION                  INPUT_ACTION_NONE
 #define DI6_FUNCTION                INPUT_FUNCTION_NONE
 

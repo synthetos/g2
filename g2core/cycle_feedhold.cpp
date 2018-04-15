@@ -58,6 +58,7 @@ static stat_t _run_program_end(void);
 static stat_t _run_alarm(void);
 static stat_t _run_shutdown(void);
 static stat_t _run_interlock(void);
+static stat_t _run_reset_position(void);
  
 /****************************************************************************************
  * OPERATIONS AND ACTIONS
@@ -314,6 +315,12 @@ static stat_t _run_program_end()
     return (STAT_OK);
 }
 
+static stat_t _run_reset_position()
+{
+    cm_reset_position_to_absolute_position(cm);
+    return (STAT_OK);
+}
+
 static stat_t _run_alarm() { return (STAT_OK); }
 static stat_t _run_shutdown() { return (STAT_OK); }
 static stat_t _run_interlock() { return (STAT_OK); }
@@ -530,6 +537,7 @@ void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit)
             case FEEDHOLD_EXIT_ALARM:     { op.add_action(_run_alarm); break; }
             case FEEDHOLD_EXIT_SHUTDOWN:  { op.add_action(_run_shutdown); break; }
             case FEEDHOLD_EXIT_INTERLOCK: { op.add_action(_run_interlock); break; }
+            case FEEDHOLD_EXIT_RESET_POSITION: { op.add_action(_run_reset_position); break; }
             default: {}
         }
         return;
@@ -638,7 +646,6 @@ static stat_t _feedhold_skip()
 {
     if (cm1.hold_state == FEEDHOLD_OFF) {       // if entered while OFF start a feedhold
         cm1.hold_type = FEEDHOLD_TYPE_SKIP;
-//        cm1.hold_exit = FEEDHOLD_EXIT_FLUSH;    // default exit for SKIP is FLUSH...
         cm1.hold_state = FEEDHOLD_SYNC;         // ...FLUSH can be overridden by setting hold_exit after this function
     }
     if (cm1.hold_state < FEEDHOLD_MOTION_STOPPED) {

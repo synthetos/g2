@@ -127,7 +127,8 @@ typedef enum {                      // feedhold final operation
     FEEDHOLD_EXIT_END,              // perform program end
     FEEDHOLD_EXIT_ALARM,            // perform alarm
     FEEDHOLD_EXIT_SHUTDOWN,         // perform shutdown
-    FEEDHOLD_EXIT_INTERLOCK         // report as interlock
+    FEEDHOLD_EXIT_INTERLOCK,        // report as interlock
+    FEEDHOLD_EXIT_RESET_POSITION    // reset machine positions to hold point
 } cmFeedholdExit;
 
 typedef enum {                      // feedhold state machine
@@ -318,7 +319,7 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     cmProbeState probe_state[PROBES_STORED];  // probing state machine (simple)
     float probe_results[PROBES_STORED][AXES]; // probing results
 
-    float rotation_matrix[3][3];            // three-by-three rotation matrix. We ignore UVW and ABC rotary axes
+    float rotation_matrix[3][3];            // three-by-three rotation matrix. We ignore UVW and ABC axes
     float rotation_z_offset;                // separately handle a z-offset to maintain consistent distance to bed
 
     float jogging_dest;                     // jogging destination as a relative move from current position
