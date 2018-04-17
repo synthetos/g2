@@ -2,7 +2,7 @@
  * settings_zen7x12.h - Zen Toolworks 7x12 machine profile
  * This file is part of the g2core project
  *
- * Copyright (c) 2011 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2011 - 2018 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -46,7 +46,7 @@
 
 // *** motor settings ***
 
-#define M1_MOTOR_MAP            AXIS_X                  // 1ma
+#define M1_MOTOR_MAP            AXIS_X_EXTERNAL         // 1ma
 #define M1_STEP_ANGLE           1.8                     // 1sa
 #define M1_TRAVEL_PER_REV       1.25                    // 1tr
 #define M1_MICROSTEPS           8                       // 1mi        1,2,4,8
@@ -54,7 +54,7 @@
 #define M1_POWER_MODE           MOTOR_POWERED_IN_CYCLE  // 1pm        standard
 #define M1_POWER_LEVEL          0.5                     // 1pl:   0.0=no power, 1.0=max power
 
-#define M2_MOTOR_MAP            AXIS_Y
+#define M2_MOTOR_MAP            AXIS_Y_EXTERNAL
 #define M2_STEP_ANGLE           1.8
 #define M2_TRAVEL_PER_REV       1.25
 #define M2_MICROSTEPS           8
@@ -62,7 +62,7 @@
 #define M2_POWER_MODE           MOTOR_POWERED_IN_CYCLE
 #define M2_POWER_LEVEL          0.5
 
-#define M3_MOTOR_MAP            AXIS_Z
+#define M3_MOTOR_MAP            AXIS_Z_EXTERNAL
 #define M3_STEP_ANGLE           1.8
 #define M3_TRAVEL_PER_REV       1.25
 #define M3_MICROSTEPS           8

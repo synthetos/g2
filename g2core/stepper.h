@@ -2,8 +2,8 @@
  * stepper.h - stepper motor interface
  * This file is part of g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2016 Robert Giseburt
+ * Copyright (c) 2010 - 2018 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2018 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -279,9 +279,9 @@ typedef enum {
     MOTOR_DISABLED = 0,                 // motor enable is deactivated
     MOTOR_ALWAYS_POWERED,               // motor is always powered while machine is ON
     MOTOR_POWERED_IN_CYCLE,             // motor fully powered during cycles, de-powered out of cycle
-    MOTOR_POWERED_ONLY_WHEN_MOVING,     // motor only powered while moving - idles shortly after it's stopped - even in cycle
-    MOTOR_POWER_MODE_MAX_VALUE          // for input range checking
+    MOTOR_POWERED_ONLY_WHEN_MOVING      // motor only powered while moving - idles shortly after it's stopped - even in cycle
 } stPowerMode;
+#define MOTOR_POWER_MODE_MAX_VALUE    MOTOR_POWERED_ONLY_WHEN_MOVING
 
 // Stepper power management settings
 #define Vcc         3.3                 // volts
@@ -584,26 +584,33 @@ void st_request_load_move(void);
 void st_prep_null(void);
 void st_prep_command(void *bf);        // use a void pointer since we don't know about mpBuf_t yet)
 void st_prep_dwell(float microseconds);
-void st_request_out_of_band_dwell(float microseconds);
-//stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time);
+void st_prep_out_of_band_dwell(float microseconds);
 stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time);
 
+stat_t st_get_ma(nvObj_t *nv);
 stat_t st_set_ma(nvObj_t *nv);
+stat_t st_get_sa(nvObj_t *nv);
 stat_t st_set_sa(nvObj_t *nv);
+stat_t st_get_tr(nvObj_t *nv);
 stat_t st_set_tr(nvObj_t *nv);
+stat_t st_get_mi(nvObj_t *nv);
 stat_t st_set_mi(nvObj_t *nv);
 stat_t st_get_su(nvObj_t *nv);
 stat_t st_set_su(nvObj_t *nv);
-stat_t st_set_ep(nvObj_t *nv);
-stat_t st_get_ep(nvObj_t *nv);
-stat_t st_set_pm(nvObj_t *nv);
+stat_t st_get_po(nvObj_t *nv);
+stat_t st_set_po(nvObj_t *nv);
 stat_t st_get_pm(nvObj_t *nv);
+stat_t st_set_pm(nvObj_t *nv);
+stat_t st_get_pl(nvObj_t *nv);
 stat_t st_set_pl(nvObj_t *nv);
+
 stat_t st_get_pwr(nvObj_t *nv);
 
+stat_t st_get_mt(nvObj_t *nv);
 stat_t st_set_mt(nvObj_t *nv);
 stat_t st_set_md(nvObj_t *nv);
 stat_t st_set_me(nvObj_t *nv);
+stat_t st_get_dw(nvObj_t *nv);
 
 #ifdef __TEXT_MODE
 

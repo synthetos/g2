@@ -2,7 +2,7 @@
  * text_parser.cpp - text parser
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2018 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -121,9 +121,10 @@ static stat_t _text_parser_kernal(char *str, nvObj_t *nv)
         *rd = NUL;                              // terminate at end of name
         strncpy(nv->token, str, TOKEN_LEN);
         str = ++rd;
-        nv->value = strtof(str, &rd);           // rd used as end pointer
+        nv->value_int = atol(str);              // collect the number as an integer
+        nv->value_flt = strtof(str, &rd);       // collect the number as a float - rd used as end pointer
         if (rd != str) {
-            nv->valuetype = TYPE_FLOAT;
+            nv->valuetype = TYPE_FLOAT;         // provisionally set it as a float
         }
     }
 
@@ -132,7 +133,8 @@ static stat_t _text_parser_kernal(char *str, nvObj_t *nv)
         return (STAT_UNRECOGNIZED_NAME);
     }
     strcpy(nv->group, cfgArray[nv->index].group); // capture the group string if there is one
-
+    nv_coerce_types(nv);                        // adjust types based on type fields in configApp table
+        
     // see if you need to strip the token - but only if in text mode
     if ((cs.comm_request_mode == TEXT_MODE) && (nv_group_is_prefixed(nv->group))) {
         wr = nv->token;
@@ -196,7 +198,7 @@ void text_print_multiline_formatted(nvObj_t *nv)
 {
     for (uint8_t i=0; i<NV_BODY_LEN-1; i++) {
         if (nv->valuetype != TYPE_PARENT) {
-            preprocess_float(nv);
+            convert_outgoing_float(nv);
             nv_print(nv);
         }
         if ((nv = nv->nx) == NULL) return;
@@ -218,9 +220,9 @@ void tx_print_flt(nvObj_t *nv) { text_print_flt(nv, fmt_flt);}
 
 void tx_print(nvObj_t *nv) {
     switch ((int8_t)nv->valuetype) {
-        case TYPE_FLOAT: { text_print_flt(nv, fmt_flt); break;}
-        case TYPE_INT:   { text_print_int(nv, fmt_int); break;}
-        case TYPE_STRING:{ text_print_str(nv, fmt_str); break;}
+        case TYPE_FLOAT:   { text_print_flt(nv, fmt_flt); break;}
+        case TYPE_INTEGER: { text_print_int(nv, fmt_int); break;}
+        case TYPE_STRING:  { text_print_str(nv, fmt_str); break;}
         //   TYPE_NULL is not needed in this list as it does nothing
     }
 }
@@ -244,35 +246,36 @@ void text_print_str(nvObj_t *nv, const char *format)
 
 void text_print_int(nvObj_t *nv, const char *format)
 {
-    sprintf(cs.out_buf, format, (uint32_t)nv->value);
+    sprintf(cs.out_buf, format, nv->value_int);
     xio_writeline(cs.out_buf);
 }
 
 void text_print_flt(nvObj_t *nv, const char *format)
 {
-    sprintf(cs.out_buf, format, nv->value);
+    sprintf(cs.out_buf, format, nv->value_flt);
     xio_writeline(cs.out_buf);
 }
 
 void text_print_flt_units(nvObj_t *nv, const char *format, const char *units)
 {
-    sprintf(cs.out_buf, format, nv->value, units);
+    sprintf(cs.out_buf, format, nv->value_flt, units);
     xio_writeline(cs.out_buf);
 }
 
 void text_print_bool(nvObj_t *nv, const char *format)
 {
-    sprintf(cs.out_buf, format, !!((uint32_t)nv->value)?"True":"False");
+//    sprintf(cs.out_buf, format, !!((uint32_t)nv->value)?"True":"False");
+    sprintf(cs.out_buf, format, (nv->value_int ? "True" : "False"));
     xio_writeline(cs.out_buf);
 }
 
 void text_print(nvObj_t *nv, const char *format) {
     switch ((int8_t)nv->valuetype) {
-        case TYPE_NULL:  { text_print_nul(nv, format); break;}
-        case TYPE_FLOAT: { text_print_flt(nv, format); break;}
-        case TYPE_INT:   { text_print_int(nv, format); break;}
-        case TYPE_STRING:{ text_print_str(nv, format); break;}
-        case TYPE_BOOL:  { text_print_bool(nv, format); break;}
+        case TYPE_NULL:     { text_print_nul(nv, format); break;}
+        case TYPE_FLOAT:    { text_print_flt(nv, format); break;}
+        case TYPE_INTEGER:  { text_print_int(nv, format); break;}
+        case TYPE_STRING:   { text_print_str(nv, format); break;}
+        case TYPE_BOOLEAN:  { text_print_bool(nv, format); break;}
     }
 }
 
@@ -281,5 +284,19 @@ void text_print(nvObj_t *nv, const char *format) {
  */
 static const char fmt_tv[] = "[tv]  text verbosity%15d [0=silent,1=verbose]\n";
 void tx_print_tv(nvObj_t *nv) { text_print(nv, fmt_tv);}    // TYPE_INT
+
+
+/***********************************************************************************
+ * CONFIGURATION AND INTERFACE FUNCTIONS
+ * Functions to get and set variables from the cfgArray table
+ ***********************************************************************************/
+
+/*
+ * txt_get_tv() - get text verbosity setting
+ * txt_set_tv() - set text verbosity
+ */
+
+stat_t txt_get_tv(nvObj_t *nv) { return (get_integer(nv, txt.text_verbosity)); }
+stat_t txt_set_tv(nvObj_t *nv) { return (set_integer(nv, txt.text_verbosity, TV_SILENT, TV_VERBOSE)); }
 
 #endif // __TEXT_MODE

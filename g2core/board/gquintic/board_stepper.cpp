@@ -1,5 +1,6 @@
 /*
  * board_stepper.cpp - board-specific code for stepper.cpp
+ * For: /board/gQuintic
  * This file is part of the g2core project
  *
  * Copyright (c) 2016 Alden S. Hart, Jr.

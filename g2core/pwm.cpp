@@ -2,7 +2,7 @@
  * pwm.cpp - pulse width modulation drivers
  * This file is part of the g2core project
  *
- * Copyright (c) 2012 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2012 - 2018 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -36,7 +36,7 @@
 
 /***** PWM defines, structures and memory allocation *****/
 
-pwmSingleton_t pwm;
+pwmControl_t pwm;
 
 
 // Setup motate PWM pins
@@ -100,12 +100,12 @@ stat_t pwm_set_duty(uint8_t chan, float duty)
 
     if (chan == PWM_1) {
 //        if (spindle_pwm_pin.isNull()) {
-//            cm_alarm(STAT_ALARM, "attempt to turn on a non-existant spindle");
+//            cm_alarm(STAT_ALARM, "attempt to turn on a non-existent spindle");
 //        }
         spindle_pwm_pin = duty;
     } else if (chan == PWM_2) {
 //        if (secondary_pwm_pin.isNull()) {
-//            cm_alarm(STAT_ALARM, "attempt to turn on a non-existant spindle");
+//            cm_alarm(STAT_ALARM, "attempt to turn on a non-existent spindle");
 //        }
         secondary_pwm_pin = duty;
     }

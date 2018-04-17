@@ -2,8 +2,8 @@
  * controller.cpp - g2core controller and top level parser
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2016 Robert Giseburt
+ * Copyright (c) 2010 - 2018 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2018 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -31,7 +31,7 @@
 #include "controller.h"
 #include "json_parser.h"
 #include "text_parser.h"
-#include "gcode_parser.h"
+#include "gcode.h"
 #include "canonical_machine.h"
 #include "plan_arc.h"
 #include "planner.h"
@@ -52,15 +52,15 @@
 #include "marlin_compatibility.h"
 #endif
 
-/***********************************************************************************
- **** STRUCTURE ALLOCATIONS *********************************************************
- ***********************************************************************************/
+/****************************************************************************************
+ **** STRUCTURE ALLOCATIONS *************************************************************
+ ****************************************************************************************/
 
 controller_t cs;        // controller state structure
 
-/***********************************************************************************
- **** STATICS AND LOCALS ***********************************************************
- ***********************************************************************************/
+/****************************************************************************************
+ **** STATICS AND LOCALS ****************************************************************
+ ****************************************************************************************/
 
 static void _controller_HSM(void);
 static stat_t _led_indicator(void);             // twiddle the LED indicator
@@ -81,9 +81,9 @@ static stat_t _controller_state(void);          // manage controller state trans
 
 static Motate::OutputPin<Motate::kOutputSAFE_PinNumber> safe_pin;
 
-/***********************************************************************************
- **** CODE *************************************************************************
- ***********************************************************************************/
+/****************************************************************************************
+ **** CODE ******************************************************************************
+ ****************************************************************************************/
 /*
  * controller_init() - controller init
  */
@@ -99,7 +99,7 @@ void controller_init()
     cs.comm_mode = comm_mode;                       // restore parameters
     cs.fw_build = G2CORE_FIRMWARE_BUILD;            // set up identification
     cs.fw_version = G2CORE_FIRMWARE_VERSION;
-    cs.hw_platform = G2CORE_HARDWARE_PLATFORM;      // NB: HW version is set from EEPROM
+
     cs.controller_state = CONTROLLER_STARTUP;       // ready to run startup lines
     if (xio_connected()) {
         cs.controller_state = CONTROLLER_CONNECTED;
@@ -146,7 +146,9 @@ static void _controller_HSM()
 //      See hardware.h for a list of ISRs and their priorities.
 //
 //----- kernel level ISR handlers ----(flags are set in ISRs)------------------------//
-                                                // Order is important:
+
+    // Order is important, and line breaks indicate dependency groups
+
     DISPATCH(hardware_periodic());              // give the hardware a chance to do stuff
     DISPATCH(_led_indicator());                 // blink LEDs at the current rate
     DISPATCH(_shutdown_handler());              // invoke shutdown
@@ -163,14 +165,17 @@ static void _controller_HSM()
     DISPATCH(sr_status_report_callback());      // conditionally send status report
     DISPATCH(qr_queue_report_callback());       // conditionally send queue report
 
-    DISPATCH(cm_feedhold_sequencing_callback());// feedhold state machine runner
+    // these 3 must be in this exact order:
     DISPATCH(mp_planner_callback());            // motion planner
-    DISPATCH(cm_arc_callback());                // arc generation runs as a cycle above lines
+    DISPATCH(cm_operation_runner_callback());   // operation action runner
+    DISPATCH(cm_arc_callback(cm));              // arc generation runs as a cycle above lines
+
     DISPATCH(cm_homing_cycle_callback());       // homing cycle operation (G28.2)
     DISPATCH(cm_probing_cycle_callback());      // probing cycle operation (G38.2)
     DISPATCH(cm_jogging_cycle_callback());      // jog cycle operation
     DISPATCH(cm_deferred_write_callback());     // persist G10 changes when not in machining cycle
 
+    DISPATCH(cm_feedhold_command_blocker());    // blocks new Gcode from arriving while in feedhold
 #if MARLIN_COMPAT_ENABLED == true
     DISPATCH(marlin_callback());                // handle Marlin stuff - may return EAGAIN, must be after planner_callback!
 #endif
@@ -182,7 +187,7 @@ static void _controller_HSM()
     DISPATCH(_dispatch_command());              // MUST BE LAST - read and execute next command
 }
 
-/*****************************************************************************
+/****************************************************************************************
  * command dispatchers
  * _dispatch_control - entry point for control-only dispatches
  * _dispatch_command - entry point for control and data dispatches
@@ -209,7 +214,7 @@ static stat_t _dispatch_command()
 {
     if (cs.controller_state != CONTROLLER_PAUSED) {
         devflags_t flags = DEV_IS_BOTH | DEV_IS_MUTED; // expressly state we'll handle muted devices
-        if ((!mp_planner_is_full()) && (cs.bufp = xio_readline(flags, cs.linelen)) != NULL) {
+        if ((!mp_planner_is_full(mp)) && (cs.bufp = xio_readline(flags, cs.linelen)) != NULL) {
             _dispatch_kernel(flags);
         }
     }
@@ -253,10 +258,10 @@ static void _dispatch_kernel(const devflags_t flags)
     }
 
     // trap single character commands
-    if      (*cs.bufp == '!') { cm_request_feedhold(); }
+    if      (*cs.bufp == '!') { cm_request_feedhold(FEEDHOLD_TYPE_ACTIONS, FEEDHOLD_EXIT_CYCLE); }
+    else if (*cs.bufp == '~') { cm_request_cycle_start(); }
     else if (*cs.bufp == '%') { cm_request_queue_flush(); xio_flush_to_command(); }
-    else if (*cs.bufp == '~') { cm_request_end_hold(); }
-    else if (*cs.bufp == EOT) { cm_alarm(STAT_KILL_JOB, "EOT Received"); }
+    else if (*cs.bufp == EOT) { cm_request_job_kill(); xio_flush_to_command(); }
     else if (*cs.bufp == ENQ) { controller_request_enquiry(); }
     else if (*cs.bufp == CAN) { hw_hard_reset(); }          // reset immediately
 
@@ -283,8 +288,8 @@ static void _dispatch_kernel(const devflags_t flags)
 #endif
 
 #if MARLIN_COMPAT_ENABLED == true
-    else if (js.json_mode == MARLIN_COMM_MODE) {                   // handle marlin-specific protocol gcode
-        cs.comm_request_mode = MARLIN_COMM_MODE;                   // mode of this command
+    else if (js.json_mode == MARLIN_COMM_MODE) {            // handle marlin-specific protocol gcode
+        cs.comm_request_mode = MARLIN_COMM_MODE;            // mode of this command
         marlin_response(gcode_parser(cs.bufp), cs.saved_buf);
     }
 #endif
@@ -314,8 +319,7 @@ static void _dispatch_kernel(const devflags_t flags)
     }
 }
 
-/**** Local Functions ********************************************************/
-
+/**** Local Functions ******************************************************************/
 
 /*
  * _reset_comms_mode() - reset the communications mode (and other effected settings) after connection or disconnection
@@ -450,13 +454,14 @@ static stat_t _sync_to_tx_buffer()
 
 static stat_t _sync_to_planner()
 {
-    if (mp_planner_is_full()) {   // allow up to N planner buffers for this line
+    if (mp_planner_is_full(mp)) {   // allow up to N planner buffers for this line
         return (STAT_EAGAIN);
     }
     return (STAT_OK);
 }
 
-/* ALARM STATE HANDLERS
+/****************************************************************************************
+ * ALARM STATE HANDLERS
  *
  * _shutdown_handler() - put system into shutdown state
  * _limit_switch_handler() - shut down system if limit switch fired
@@ -471,10 +476,10 @@ static stat_t _sync_to_planner()
  */
 static stat_t _shutdown_handler(void)
 {
-    if (cm.shutdown_requested != 0) {  // request may contain the (non-zero) input number
+    if (cm->shutdown_requested != 0) {  // request may contain the (non-zero) input number
         char msg[10];
-        sprintf(msg, "input %d", (int)cm.shutdown_requested);
-        cm.shutdown_requested = false; // clear limit request used here ^
+        sprintf(msg, "input %d", (int)cm->shutdown_requested);
+        cm->shutdown_requested = false; // clear limit request used here ^
         cm_shutdown(STAT_SHUTDOWN, msg);
     }
     return(STAT_OK);
@@ -483,16 +488,15 @@ static stat_t _shutdown_handler(void)
 static stat_t _limit_switch_handler(void)
 {
     auto machine_state = cm_get_machine_state();
-    if ((machine_state != MACHINE_ALARM) && (machine_state != MACHINE_PANIC) && (machine_state != MACHINE_SHUTDOWN)) {
+    if ((machine_state != MACHINE_ALARM) && 
+        (machine_state != MACHINE_PANIC) && 
+        (machine_state != MACHINE_SHUTDOWN)) {
         safe_pin.toggle();
     }
-
-//    safe_pin = 1;
-
-    if ((cm.limit_enable == true) && (cm.limit_requested != 0)) {
+    if ((cm->limit_enable == true) && (cm->limit_requested != 0)) {
         char msg[10];
-        sprintf(msg, "input %d", (int)cm.limit_requested);
-        cm.limit_requested = false; // clear limit request used here ^
+        sprintf(msg, "input %d", (int)cm->limit_requested);
+        cm->limit_requested = false; // clear limit request used here ^
         cm_alarm(STAT_LIMIT_SWITCH_HIT, msg);
     }
     return (STAT_OK);
@@ -500,30 +504,29 @@ static stat_t _limit_switch_handler(void)
 
 static stat_t _interlock_handler(void)
 {
-    if (cm.safety_interlock_enable) {
+    if (cm->safety_interlock_enable) {
     // interlock broken
-        if (cm.safety_interlock_disengaged != 0) {
-            cm.safety_interlock_disengaged = 0;
-            cm.safety_interlock_state = SAFETY_INTERLOCK_DISENGAGED;
-            cm_request_feedhold();                                  // may have already requested STOP as INPUT_ACTION
+        if (cm->safety_interlock_disengaged != 0) {
+            cm->safety_interlock_disengaged = 0;
+            cm->safety_interlock_state = SAFETY_INTERLOCK_DISENGAGED;
+            cm_request_feedhold(FEEDHOLD_TYPE_ACTIONS, FEEDHOLD_EXIT_INTERLOCK);  // may have already requested STOP as INPUT_ACTION
             // feedhold was initiated by input action in gpio
             // pause spindle
             // pause coolant
         }
 
         // interlock restored
-        if ((cm.safety_interlock_reengaged != 0) && (mp_runtime_is_idle())) {
-            cm.safety_interlock_reengaged = 0;
-            cm.safety_interlock_state = SAFETY_INTERLOCK_ENGAGED;   // interlock restored
-            // restart spindle with dwell
-            cm_request_end_hold();                                // use cm_request_end_hold() instead of just ending
-            // restart coolant
+        if ((cm->safety_interlock_reengaged != 0) && (mp_runtime_is_idle())) {
+            cm->safety_interlock_reengaged = 0;
+            cm->safety_interlock_state = SAFETY_INTERLOCK_ENGAGED;  // interlock restored
+//            cm_request_exit_hold();                                 // use cm_request_exit_hold() instead of just ending +++++
+            cm_request_cycle_start();                               // proper way to restart the cycle
         }
     }
     return(STAT_OK);
 }
 
-/*
+/****************************************************************************************
  * _init_assertions() - initialize controller memory integrity assertions
  * _test_assertions() - check controller memory integrity assertions
  * _test_system_assertions() - check assertions for entire system
@@ -546,10 +549,12 @@ static stat_t _test_assertions()
 stat_t _test_system_assertions()
 {
     // these functions will panic if an assertion fails
-    _test_assertions();                     // controller assertions (local)
+    _test_assertions();         // controller assertions (local)
     config_test_assertions();
-    canonical_machine_test_assertions();
-    planner_test_assertions();
+    canonical_machine_test_assertions(&cm1);
+    canonical_machine_test_assertions(&cm2);
+    planner_assert(&mp1);
+    planner_assert(&mp2);
     stepper_test_assertions();
     encoder_test_assertions();
     xio_test_assertions();

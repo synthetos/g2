@@ -2,7 +2,7 @@
  * config.h - configuration sub-system generic part (see config_app for application part)
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2018 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -69,20 +69,22 @@
  *   - axis tokens start with the axis letter and are typically 3 characters including the axis letter
  *   - motor tokens start with the motor digit and are typically 3 characters including the motor digit
  *   - non-axis or non-motor tokens are 2-6 characters and by convention generally should not start
- *      with: xyzabcuvw0123456789 (but there can be exceptions)
+ *      with: xyzuvwabc0123456789 (but there can be exceptions)
  *
  *  "Groups" are collections of values that mimic REST resources. Groups include:
- *   - axis groups prefixed by "xyzabc"     ("uvw" are reserved)
+ *   - axis groups prefixed by "xyzuvwabc"
  *   - motor groups prefixed by "123456"    ("789" are reserved)
  *   - PWM groups prefixed by p1, p2         (p3 - p9 are reserved)
  *   - coordinate system groups prefixed by g54, g55, g56, g57, g59, g28, g30, g92
  *   - a system group is identified by "sys" and contains a collection of otherwise unrelated values
  *
  *  "Uber-groups" are groups of groups that are only used for text-mode printing - e.g.
- *   - group of all axes groups
- *   - group of all motor groups
- *   - group of all offset groups
- *   - group of all groups
+ *   - group of all motor groups            (m)
+ *   - group of all axes groups             (q)
+ *   - group of all offset groups           (o)
+ *   - group of all digital input groups    (di)
+ *   - group of all digital output groups   (do)
+ *   - group of all groups                  ($)
  */
 /*  --- Making changes and adding new values
  *
@@ -169,7 +171,6 @@
  ***********************************************************************************/
 
 // Sizing and footprints                // chose one based on # of elements in cfgArray
-//typedef uint8_t index_t;              // use this if there are < 256 indexed objects
 typedef uint16_t index_t;               // use this if there are > 255 indexed objects
 
                                         // defines allocated from stack (not-pre-allocated)
@@ -205,37 +206,80 @@ typedef enum {
     FLOW_CONTROL_RTS                    // flow control uses RTS/CTS
 } flowControl;
 
-typedef enum {                          // value typing for config and JSON
-    TYPE_EMPTY = -1,                    // value struct is empty (which is not the same as "NULL")
-    TYPE_NULL = 0,                      // value is 'null' (meaning the JSON null value)
-    TYPE_PARENT,                        // object is a parent to a sub-object
-    TYPE_FLOAT,                         // value is a floating point number
-    TYPE_INT,                           // value is a signed or unsigned integer or any size
-    TYPE_STRING,                        // value is in string field
-    TYPE_BOOL,                          // value is "true" (1) or "false"(0)
-    TYPE_DATA,                          // value is blind cast to uint32_t
-    TYPE_ARRAY                          // value is array element count, values are CSV ASCII in string field
+typedef enum {                      // value typing for config and JSON
+    // exception types
+    TYPE_SKIP = -2,                 // do not serialize this object (used for filtering)
+    TYPE_EMPTY = -1,                // value struct is empty (which is not the same as "NULL")
+
+    // fundamental JSON types       // must be 0-3. Do not change. Used by F_'s and JSON decoding
+    TYPE_NULL = 0,                  // value is 'null' (meaning the JSON null value)
+    TYPE_BOOLEAN = 1,               // value is "true" (1) or "false"(0)
+    TYPE_INTEGER = 2,               // value is an 8 or 32 bit signed integer
+    TYPE_STRING = 3,                // value is in string field
+
+    // derived data types           // must be 4-7. Do not change.
+    TYPE_FLOAT = 4,                 // value is a floating point number
+    TYPE_UINT32 = 5,                // unsigned 32 bit integer (unused)
+    TYPE_ARRAY = 6,                 // value is array element count, values are CSV ASCII in string field
+    TYPE_DATA = 7,                  // value is blind cast to uint32_t (willbe removed)
+
+    // transient types and types used during JSON processing
+    TYPE_PARENT                     // object is a parent to a sub-object
+//    TYPE_NULL_STRING,               // empty string - treated as null
+//    TYPE_TYPE_ERROR                 // none of the above
 } valueType;
 
 /**** operations flags and shorthand ****/
 
-#define F_INITIALIZE    0x01            // initialize this item (run set during initialization)
-#define F_PERSIST       0x02            // persist this item when set is run
-#define F_NOSTRIP       0x04            // do not strip the group prefix from the token
-#define F_CONVERT       0x08            // set if unit conversion is required
-#define F_ICONVERT      0x10            // set if unit conversion is required AND value is an inverse quantity
+#define F_TYPE_MASK     0x00000007  // 3 LSB's used for data type
 
-#define _f0             0x00
-#define _fi             (F_INITIALIZE)
-#define _fp             (F_PERSIST)
-#define _fn             (F_NOSTRIP)
-#define _fc             (F_CONVERT)
-#define _fic            (F_INITIALIZE | F_CONVERT)
-#define _fip            (F_INITIALIZE | F_PERSIST)
-#define _fipc           (F_INITIALIZE | F_PERSIST | F_CONVERT)
-#define _fipn           (F_INITIALIZE | F_PERSIST | F_NOSTRIP)
-#define _fipi           (F_INITIALIZE | F_PERSIST | F_ICONVERT)
-#define _fipnc          (F_INITIALIZE | F_PERSIST | F_NOSTRIP | F_CONVERT)
+#define F_INITIALIZE    0x08        // initialize this item (run set during initialization)
+#define F_PERSIST       0x10        // persist this item when set is run
+#define F_NOSTRIP       0x20        // do not strip the group prefix from the token
+#define F_CONVERT       0x40        // set if unit conversion is required
+#define F_ICONVERT      0x80        // set if unit conversion is required AND value is an inverse quantity
+
+// Shorthand
+// _n(ull) (used by commands or other case where there is no target data)
+// _b(oolean)
+// _s(tring)
+// _i(nteger)
+// _f(loat)
+// _t(ext container)
+// _d(ata)
+
+#define _n0	    (TYPE_NULL)
+#define _nn     (TYPE_NULL | F_NOSTRIP)
+
+#define _s0     (TYPE_STRING)
+#define _sn     (TYPE_STRING | F_NOSTRIP)
+
+#define _d0	    (TYPE_DATA)
+#define _dip    (TYPE_DATA | F_INITIALIZE | F_PERSIST)
+
+#define _b0     (TYPE_BOOLEAN)      // boolean data types (only listing the ones we use)
+#define _bip    (TYPE_BOOLEAN | F_INITIALIZE | F_PERSIST)
+#define _bin    (TYPE_BOOLEAN | F_INITIALIZE | F_NOSTRIP)
+#define _bipn   (TYPE_BOOLEAN | F_INITIALIZE | F_PERSIST | F_NOSTRIP)
+
+#define _i0     (TYPE_INTEGER)      // integer data types (only listing the ones we use)
+#define _ii     (TYPE_INTEGER | F_INITIALIZE)
+#define _ip     (TYPE_INTEGER | F_PERSIST)
+#define _in     (TYPE_INTEGER | F_NOSTRIP)
+#define _iip    (TYPE_INTEGER | F_INITIALIZE | F_PERSIST)
+#define _iipn   (TYPE_INTEGER | F_INITIALIZE | F_PERSIST | F_NOSTRIP)
+
+#define _f0	    (TYPE_FLOAT)    // floating point data types (only listing the ones we use)
+#define _fi     (TYPE_FLOAT | F_INITIALIZE)
+#define _fp     (TYPE_FLOAT | F_PERSIST)
+#define _fn     (TYPE_FLOAT | F_NOSTRIP)
+#define _fip    (TYPE_FLOAT | F_INITIALIZE | F_PERSIST)
+#define _fic    (TYPE_FLOAT | F_INITIALIZE | F_CONVERT)
+#define _fin    (TYPE_FLOAT | F_INITIALIZE | F_NOSTRIP)
+#define _fipc   (TYPE_FLOAT | F_INITIALIZE | F_PERSIST | F_CONVERT)
+#define _fipn   (TYPE_FLOAT | F_INITIALIZE | F_PERSIST | F_NOSTRIP)
+#define _fipi   (TYPE_FLOAT | F_INITIALIZE | F_PERSIST | F_ICONVERT)
+#define _fipnc  (TYPE_FLOAT | F_INITIALIZE | F_PERSIST | F_NOSTRIP | F_CONVERT)
 
 /**** Structures ****/
 
@@ -253,14 +297,15 @@ typedef struct nvString {               // shared string object
 typedef struct nvObject {               // depending on use, not all elements may be populated
     struct nvObject *pv;                // pointer to previous object or NULL if first object
     struct nvObject *nx;                // pointer to next object or NULL if last object
-    index_t index;                      // index of tokenized name, or -1 if no token (optional)
     int8_t depth;                       // depth of object in the tree. 0 is root (-1 is invalid)
-    valueType valuetype;                // see valueType enum
-    int8_t precision;                   // decimal precision for reporting (JSON)
-    float value;                        // numeric value
     char group[GROUP_LEN+1];            // group prefix or NUL if not in a group
     char token[TOKEN_LEN+1];            // full mnemonic token for lookup
-    char (*stringp)[];                  // pointer to array of characters from shared character array
+    index_t index;                      // index of tokenized name, or -1 if no token (optional)
+    valueType valuetype;                // type of value that follows: see valueType enum
+    int8_t precision;                   // decimal precision for reporting floating point numbers (JSON only)
+    float value_flt;                    // floating point values
+    int32_t value_int;                  // signed integer values and booleans
+    char (*stringp)[];                  // string value: pointer to array of characters from shared character array
 } nvObj_t;                              // OK, so it's not REALLY an object
 
 typedef uint8_t (*fptrCmd)(nvObj_t *nv);// required for cfg table access
@@ -310,6 +355,7 @@ stat_t nv_persist(nvObj_t *nv);         // main entry point for persistence
 
 // helpers
 uint8_t nv_get_type(nvObj_t *nv);
+void nv_coerce_types(nvObj_t *nv);
 index_t nv_get_index(const char *group, const char *token);
 index_t nv_index_max(void);             // (see config_app.c)
 bool nv_index_is_single(index_t index); // (see config_app.c)
@@ -318,25 +364,17 @@ bool nv_index_lt_groups(index_t index); // (see config_app.c)
 bool nv_group_is_prefixed(char *group);
 
 // generic internal functions and accessors
-stat_t set_noop(nvObj_t *nv);           // set nothing and return OK
-stat_t set_nul(nvObj_t *nv);            // set nothing, return OK
-stat_t set_ro(nvObj_t *nv);             // set nothing, return read-only error
-stat_t set_ui8(nvObj_t *nv);            // set uint8_t value
-stat_t set_int8(nvObj_t *nv);           // set signed 8 bit integer
-stat_t set_01(nvObj_t *nv);             // set a 0 or 1 value with validation
-stat_t set_012(nvObj_t *nv);            // set a 0, 1 or 2 value with validation
-stat_t set_0123(nvObj_t *nv);           // set a 0, 1, 2 or 3 value with validation
-stat_t set_int(nvObj_t *nv);            // set uint32_t integer value
-stat_t set_data(nvObj_t *nv);           // set uint32_t integer value blind cast
-stat_t set_flt(nvObj_t *nv);            // set floating point value
-
 stat_t get_nul(nvObj_t *nv);            // get null value type
-stat_t get_bool(nvObj_t *nv);           // get boolean value
-stat_t get_ui8(nvObj_t *nv);            // get uint8_t value
-stat_t get_int8(nvObj_t *nv);           // get signed 8 bit integer
-stat_t get_int(nvObj_t *nv);            // get uint32_t integer value
-stat_t get_data(nvObj_t *nv);           // get uint32_t integer value blind cast
+stat_t get_int32(nvObj_t *nv);          // get int32_t integer value
 stat_t get_flt(nvObj_t *nv);            // get floating point value
+stat_t get_data(nvObj_t *nv);           // get uint32_t integer value blind cast
+
+stat_t set_noop(nvObj_t *nv);           // set nothing and return OK
+stat_t set_nul(nvObj_t *nv);            // set nothing and return READ_ONLY error
+stat_t set_ro(nvObj_t *nv);             // set nothing, return read-only error
+stat_t set_int32(nvObj_t *nv);          // set int32_t integer value
+stat_t set_flt(nvObj_t *nv);            // set floating point value
+stat_t set_data(nvObj_t *nv);           // set uint32_t integer value blind cast
 
 stat_t set_grp(nvObj_t *nv);            // set data for a group
 stat_t get_grp(nvObj_t *nv);            // get data for a group
@@ -355,10 +393,19 @@ nvObj_t *nv_add_conditional_message(const char *string);
 void nv_print_list(stat_t status, uint8_t text_flags, uint8_t json_flags);
 
 // application specific helpers and functions (config_app.c)
-stat_t set_flu(nvObj_t *nv);            // set floating point number with G20/G21 units conversion
-stat_t set_flup(nvObj_t *nv);           // set positive floating point number with G20/G21 units conversion
-stat_t set_fltp(nvObj_t *nv);           // set positive floating point number with no units conversion
-void preprocess_float(nvObj_t *nv);     // pre-process float values for units and illegal values
+
+void convert_incoming_float(nvObj_t *nv);           // pre-process outgoing float values for units and illegal values
+void convert_outgoing_float(nvObj_t *nv);           // pre-process incoming float values for canonical units
+
+stat_t get_float(nvObj_t *nv, const float value);   // boilerplate for retrieving raw floating point value
+stat_t set_float(nvObj_t *nv, float &value);        // boilerplate for setting a floating point value w/conversion
+stat_t set_float_range(nvObj_t *nv, float &value, float low, float high);
+
+stat_t get_integer(nvObj_t *nv, const int32_t value);   // boilerplate for retrieving 8 bit integer value
+stat_t set_integer(nvObj_t *nv, uint8_t &value, uint8_t low, uint8_t high);
+stat_t set_int32(nvObj_t *nv, int32_t &value, int32_t low, int32_t high);
+
+stat_t get_string(nvObj_t *nv, const char *str);
 
 // diagnostics
 void nv_dump_nv(nvObj_t *nv);

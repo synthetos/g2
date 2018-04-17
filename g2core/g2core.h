@@ -2,8 +2,8 @@
  * g2core.h - g2core main header file
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
- * Copyright (c) 2010 - 2017 Robert Giseburt
+ * Copyright (c) 2010 - 2018 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2018 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -60,17 +60,34 @@ typedef uint16_t magic_t;		        // magic number size
 
 // Note: If you change COORDS you must adjust the entries in cfgArray table in config.c
 
+#define AXES 9          // number of axes supported in this version
+#define HOMING_AXES 4   // number of axes that can be homed (assumes Zxyabc sequence)
+#define COORDS 6        // number of supported coordinate systems (index starts at 1)
+#define TOOLS 32        // number of entries in tool table (index starts at 1)
+
 typedef enum {
     AXIS_X = 0,
     AXIS_Y,
     AXIS_Z,
+    AXIS_U,
+    AXIS_V,
+    AXIS_W,
     AXIS_A,
     AXIS_B,
-    AXIS_C,
-    AXIS_U,     // reserved
-    AXIS_V,     // reserved
-    AXIS_W      // reserved
+    AXIS_C
 } cmAxes;
+
+typedef enum {  // external representation of axes (used in initialization)
+    AXIS_X_EXTERNAL = 0,
+    AXIS_Y_EXTERNAL,
+    AXIS_Z_EXTERNAL,
+    AXIS_A_EXTERNAL,
+    AXIS_B_EXTERNAL,
+    AXIS_C_EXTERNAL,
+    AXIS_U_EXTERNAL,
+    AXIS_V_EXTERNAL,
+    AXIS_W_EXTERNAL
+} cmAxesExternal;
 
 typedef enum {
     OFS_I = 0,

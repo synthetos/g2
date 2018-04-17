@@ -2,7 +2,7 @@
  * settings_probotix.h - Probotix Fireball V90 machine profile
  * This file is part the g2core project
  *
- * Copyright (c) 2011 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2011 - 2018 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -83,7 +83,7 @@
 #define MOTOR_POWER_MODE            MOTOR_POWERED_IN_CYCLE  // default motor power mode (see cmMotorPowerMode in stepper.h)
 #define MOTOR_POWER_TIMEOUT         2.00                    // motor power timeout in seconds
 
-#define M1_MOTOR_MAP                AXIS_X                  // 1ma
+#define M1_MOTOR_MAP                AXIS_X_EXTERNAL         // 1ma
 #define M1_STEP_ANGLE               1.8                     // 1sa
 #define M1_TRAVEL_PER_REV           5.08                    // 1tr
 #define M1_MICROSTEPS               8                       // 1mi        1,2,4,8
@@ -91,7 +91,7 @@
 #define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm        standard
 #define M1_POWER_LEVEL              0.75
 
-#define M2_MOTOR_MAP                AXIS_Y
+#define M2_MOTOR_MAP                AXIS_Y_EXTERNAL
 #define M2_STEP_ANGLE               1.8
 #define M2_TRAVEL_PER_REV           5.08
 #define M2_MICROSTEPS               8
@@ -99,7 +99,7 @@
 #define M2_POWER_MODE               MOTOR_POWER_MODE
 #define M2_POWER_LEVEL              0.75
 
-#define M3_MOTOR_MAP                AXIS_Z
+#define M3_MOTOR_MAP                AXIS_Z_EXTERNAL
 #define M3_STEP_ANGLE               1.8
 #define M3_TRAVEL_PER_REV           2.1166666
 #define M3_MICROSTEPS               8

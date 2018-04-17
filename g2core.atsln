@@ -18,6 +18,7 @@ Global
 		sbv300|ARM = sbv300|ARM
 		Shapeoko2|ARM = Shapeoko2|ARM
 		shopbotShield|ARM = shopbotShield|ARM
+		ShopbotTestV9|ARM = ShopbotTestV9|ARM
 		Stub|ARM = Stub|ARM
 		TestQuadratic|ARM = TestQuadratic|ARM
 		TestQuintic|ARM = TestQuintic|ARM
@@ -46,6 +47,8 @@ Global
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Shapeoko2|ARM.Build.0 = Shapeoko2|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.shopbotShield|ARM.ActiveCfg = shopbotShield|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.shopbotShield|ARM.Build.0 = shopbotShield|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.ShopbotTestV9|ARM.ActiveCfg = G2v9k|ARM
+		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.ShopbotTestV9|ARM.Build.0 = G2v9k|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.Stub|ARM.ActiveCfg = Shapeoko2|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.TestQuadratic|ARM.ActiveCfg = TestQuadratic|ARM
 		{44EA8FEC-55D7-4149-8A78-A574FC26BF51}.TestQuadratic|ARM.Build.0 = TestQuadratic|ARM
@@ -67,6 +70,7 @@ Global
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.sbv300|ARM.ActiveCfg = Stub|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.Shapeoko2|ARM.ActiveCfg = Stub|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.shopbotShield|ARM.ActiveCfg = Stub|ARM
+		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.ShopbotTestV9|ARM.ActiveCfg = Stub|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.Stub|ARM.ActiveCfg = Stub|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.TestQuadratic|ARM.ActiveCfg = Stub|ARM
 		{D7779B24-5CD6-4A1B-893C-2CAE8CF7A3A0}.TestQuintic|ARM.ActiveCfg = Stub|ARM

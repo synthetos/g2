@@ -24,6 +24,7 @@ xcuserdata
 *.elf
 *.hex
 *.eep
+*.log
 *.lss
 *.map
 *.srec

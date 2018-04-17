@@ -2,7 +2,8 @@
  * util.cpp - a random assortment of useful functions
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2018 Alden S. Hart, Jr.
+ * Copyright (c) 2016 - 2018 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -32,12 +33,13 @@
 
 #include "g2core.h"
 #include "util.h"
+#include "canonical_machine.h"  // for LAGERs
+#include "xio.h"                // for LAGERs
+
 
 bool FLAGS_NONE[AXES] = { false, false, false, false, false, false };
 bool FLAGS_ONE[AXES]  = { true, false, false, false, false, false };
 bool FLAGS_ALL[AXES]  = { true, true, true, true, true, true };
-
-//*** debug utilities ***
 
 /**** Vector utilities ****
  * copy_vector()            - copy vector of arbitrary length
@@ -196,33 +198,6 @@ char *escape_string(char *dst, char *src)
 }
 
 /*
- * fntoa() - return ASCII string given a float and a decimal precision value
- *
- *    Like sprintf, fntoa returns length of string, less the terminating NUL character
- */
-char fntoa(char *str, float n, uint8_t precision)
-{
-    // handle special cases
-    if (isnan(n)) {
-        strcpy(str, "nan");
-        return (3);
-
-    } else if (isinf(n)) {
-        strcpy(str, "inf");
-        return (3);
-
-    } else if (precision == 0 ) { return(sprintf(str, "%0.0f", (double) n));
-    } else if (precision == 1 ) { return(sprintf(str, "%0.1f", (double) n));
-    } else if (precision == 2 ) { return(sprintf(str, "%0.2f", (double) n));
-    } else if (precision == 3 ) { return(sprintf(str, "%0.3f", (double) n));
-    } else if (precision == 4 ) { return(sprintf(str, "%0.4f", (double) n));
-    } else if (precision == 5 ) { return(sprintf(str, "%0.5f", (double) n));
-    } else if (precision == 6 ) { return(sprintf(str, "%0.6f", (double) n));
-    } else if (precision == 7 ) { return(sprintf(str, "%0.7f", (double) n));
-    } else                        { return(sprintf(str, "%f", (double) n)); }
-}
-
-/*
  * compute_checksum() - calculate the checksum for a string
  *
  *  Stops calculation on null termination or length value if non-zero.
@@ -252,10 +227,146 @@ uint32_t SysTickTimer_getValue()
     return (SysTickTimer.getValue());
 }
 
-/***********************************************
- **** Very Fast Number to ASCII Conversions ****
- ***********************************************/
-/*
+/******************************************
+ **** Fast Number to ASCII Conversions ****
+ ******************************************/
+
+/***********************************************************************************
+ * floattoa() - integer to float
+ *
+ *  Floattoa() is a slightly smarter, much faster version of snprintf()
+ *  It suppresses trailing zeros and decimal points, 20.100 --> 20.1, 20.000 --> 20
+ *  Like sprintf, floattoa returns length of string, less the terminating NUL character 
+ *
+ *  !!! Precision cannot be greater than 10 !!!
+ */
+
+#if 0 // olde version using sprintf. Does not do trailing zero suppression
+
+static const char _fp0[] = "%1.0f";
+static const char _fp1[] = "%1.1f";
+static const char _fp2[] = "%1.2f";
+static const char _fp3[] = "%1.3f";
+static const char _fp4[] = "%1.4f";
+static const char _fp5[] = "%1.5f";
+static const char _fp6[] = "%1.6f";
+static const char _fp7[] = "%1.7f";
+static const char *const _fmt_precision[] = { _fp0, _fp1, _fp2, _fp3, _fp4, _fp5, _fp6, _fp7 };
+
+char floattoa(char *str, float n, int precision, int maxlen /*= 16*/)
+{
+    // handle special cases
+    if (isnan(n)) {
+        strcpy(str, "nan");
+        return (3);
+    }    
+    else if (isinf(n)) {
+        strcpy(str, "inf");
+        return (3);
+    }    
+    return(snprintf(str, maxlen, _fmt_precision[precision], (double) n));
+}
+#endif
+
+// *** floattoa() starts here ***
+
+constexpr float round_lookup_[] = {
+    0.5,          // precision 0
+    0.05,         // precision 1
+    0.005,        // precision 2
+    0.0005,       // precision 3
+    0.00005,      // precision 4
+    0.000005,     // precision 5
+    0.0000005,    // precision 6
+    0.00000005,   // precision 7
+    0.000000005,  // precision 8
+    0.0000000005, // precision 9
+    0.00000000005 // precision 10
+};
+
+// It's assumed that the string buffer contains at least count_ non-\0 chars
+int c_strreverse(char * const t, const int count_, char hold = 0) {
+    return count_>1
+    // Note: It always returns the count_, for a consistent interface.
+    ? (hold=*t, *t=*(t+(count_-1)), *(t+(count_-1))=hold), c_strreverse(t+1, count_-2), count_
+    : count_;
+}
+
+char floattoa(char *str, float n, int precision, int maxlen /*= 16*/) // maxlen = 16
+{
+    // handle special cases
+    if (isnan(n)) {
+        strcpy(str, "nan");
+        return (3);
+    }
+    else if (isinf(n)) {
+        strcpy(str, "inf");
+        return (3);
+    }
+
+    int length_ = 0;
+    char *b_ = str;
+
+    if (n < 0.0) {
+        *b_++ = '-';
+        return floattoa(b_, -n, precision, maxlen-1) + 1;
+    }
+
+    n += round_lookup_[precision];
+    int int_length_ = 0;
+    int integer_part_ = (int)n;
+
+    // do integer part
+    while (integer_part_ > 0) {
+        if (length_++ > maxlen) {
+            *str = 0;
+            return 0;
+        }
+        int t_ = integer_part_ / 10;
+        *b_++ = '0' + (integer_part_ - (t_*10));
+        integer_part_ = t_;
+        int_length_++;
+    }
+    if (length_ > 0) {
+        c_strreverse(str, int_length_);
+    } else {
+        *b_++ = '0';
+        int_length_++;
+    }
+
+    // do fractional part
+    *b_++ = '.';
+    length_ = int_length_+1;
+
+    float frac_part_ = n;
+    frac_part_ -= (int)frac_part_;
+    while (precision-- > 0) {
+        if (length_++ > maxlen) {
+            *str = 0;
+            return 0;
+        }
+        frac_part_ *= 10.0;
+        // if (precision==0) {
+        //     t_ += 0.5;
+        // }
+        *b_++ = ('0' + (int)frac_part_);
+        frac_part_ -= (int)frac_part_;
+    }
+
+    // right strip trailing zeroes (OPTIONAL)
+    while (*(b_-1) == '0' && length_>1) {
+        *(b_--) = 0;
+        length_--;
+    }
+
+    if (*(b_-1) == '.') {
+        *(b_--) = 0;
+        length_--;
+    }
+    return length_;
+}
+
+/***********************************************************************************
  * inttoa() - integer to ASCII
  *
  *  Taking advantage of the fact that most ints we display are 8 bit quantities,
@@ -587,89 +698,22 @@ char inttoa(char *str, int n)
     return (strlen(str));
 }
 
-constexpr float round_lookup_[] = {
-    0.5,          // precision 0
-    0.05,         // precision 1
-    0.005,        // precision 2
-    0.0005,       // precision 3
-    0.00005,      // precision 4
-    0.000005,     // precision 5
-    0.0000005,    // precision 6
-    0.00000005,   // precision 7
-    0.000000005,  // precision 8
-    0.0000000005, // precision 9
-    0.00000000005 // precision 10
-};
+//*** debug utilities ***
 
-// It's assumed that the string buffer contains at lest count_ non-\0 chars
-int c_strreverse(char * const t, const int count_, char hold = 0) {
-    return count_>1
-    // Note: It always returns the count_, for a consistent interface.
-    ? (hold=*t, *t=*(t+(count_-1)), *(t+(count_-1))=hold), c_strreverse(t+1, count_-2), count_
-    : count_;
+void LAGER(const char * msg)
+{
+    char message[64];
+    sprintf(message, "%lu: %s\n", SysTickTimer_getValue(), msg);
+    xio_writeline(message);
 }
 
-char floattoa(char *buffer, float in, int precision, int maxlen /*= 16*/) {
-    int length_ = 0;
-    char *b_ = buffer;
-
-    if (in < 0.0) {
-        *b_++ = '-';
-        return floattoa(b_, -in, precision, maxlen-1) + 1;
-    }
-
-    in += round_lookup_[precision];
-    int int_length_ = 0;
-    int integer_part_ = (int)in;
-
-    // do integer part
-    while (integer_part_ > 0) {
-        if (length_++ > maxlen) {
-            *buffer = 0;
-            return 0;
-        }
-        int t_ = integer_part_ / 10;
-        *b_++ = '0' + (integer_part_ - (t_*10));
-        integer_part_ = t_;
-        int_length_++;
-    }
-    if (length_ > 0) {
-        c_strreverse(buffer, int_length_);
+void LAGER_cm(const char * msg)
+{
+    char message[64];
+    if (cm == &cm1) {
+        sprintf(message, "%lu: p1 %s\n", SysTickTimer_getValue(), msg);
     } else {
-        *b_++ = '0';
-        int_length_++;
+        sprintf(message, "%lu: p2 %s\n", SysTickTimer_getValue(), msg);
     }
-
-    // do fractional part
-    *b_++ = '.';
-    length_ = int_length_+1;
-
-    float frac_part_ = in;
-    frac_part_ -= (int)frac_part_;
-    while (precision-- > 0) {
-        if (length_++ > maxlen) {
-            *buffer = 0;
-            return 0;
-        }
-        frac_part_ *= 10.0;
-        // if (precision==0) {
-        //     t_ += 0.5;
-        // }
-        *b_++ = ('0' + (int)frac_part_);
-        frac_part_ -= (int)frac_part_;
-    }
-
-    // right strip trailing zeroes (OPTIONAL)
-#if 1
-    while (*(b_-1) == '0' && length_>1) {
-        *(b_--) = 0;
-        length_--;
-    }
-
-    if (*(b_-1) == '.') {
-        *(b_--) = 0;
-        length_--;
-    }
-#endif
-    return length_;
+    xio_writeline(message);
 }

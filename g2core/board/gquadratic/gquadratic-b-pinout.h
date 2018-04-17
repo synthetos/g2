@@ -1,5 +1,6 @@
 /*
  * gquadratic-b-pinout.h - board pinout specification
+ * For: /board/gQuadratic
  * This file is part of the g2core project
  *
  * Copyright (c) 2016 Robert Giseburt
