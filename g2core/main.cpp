@@ -30,6 +30,7 @@
 #include "report.h"
 #include "planner.h"
 #include "stepper.h"
+#include "coolant.h"
 #include "encoder.h"
 #include "spindle.h"
 #include "temperature.h"
@@ -121,6 +122,8 @@ void application_init_startup(void)
     gcode_parser_init();                // baseline Gcode parser
     spindle_init();                     // should be after PWM and canonical machine inits and config_init()
     spindle_reset();
+    coolant_init();
+    coolant_reset();
     temperature_init();
     gpio_reset();
 }
