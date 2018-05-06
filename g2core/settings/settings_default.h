@@ -660,7 +660,7 @@
  * Note that you need floating point values to always have a .0 at the end!
 
 #define A_AXIS_MODE                 AXIS_RADIUS
-#define A_RADIUS                    (M1_TRAVEL_PER_REV/(2*3.14159628))
+#define A_RADIUS                    (M4_TRAVEL_PER_REV/(2*3.14159628))
 #define A_VELOCITY_MAX              ((X_VELOCITY_MAX/M1_TRAVEL_PER_REV)*360) // set to the same speed as X axis
 #define A_FEEDRATE_MAX              A_VELOCITY_MAX
 #define A_TRAVEL_MIN                -1.0                                     // min/max the same means infinite, no limit
@@ -681,7 +681,7 @@
 #define A_AXIS_MODE                 AXIS_DISABLED
 #endif
 #ifndef A_RADIUS
-#define A_RADIUS                    (M1_TRAVEL_PER_REV/(2*3.14159628))
+#define A_RADIUS                    (M4_TRAVEL_PER_REV/(2*3.14159628))
 #endif
 #ifndef A_VELOCITY_MAX
 #define A_VELOCITY_MAX              ((X_VELOCITY_MAX/M1_TRAVEL_PER_REV)*360) // set to the same speed as X axis
@@ -725,7 +725,7 @@
 #define B_AXIS_MODE                 AXIS_DISABLED
 #endif
 #ifndef B_RADIUS
-#define B_RADIUS                    (M1_TRAVEL_PER_REV/(2*3.14159628))
+#define B_RADIUS                    (M5_TRAVEL_PER_REV/(2*3.14159628))
 #endif
 #ifndef B_VELOCITY_MAX
 #define B_VELOCITY_MAX              ((X_VELOCITY_MAX/M1_TRAVEL_PER_REV)*360)
@@ -752,10 +752,10 @@
 #define B_HOMING_DIRECTION          0
 #endif
 #ifndef B_SEARCH_VELOCITY
-#define B_SEARCH_VELOCITY           (A_VELOCITY_MAX * 0.500)
+#define B_SEARCH_VELOCITY           (B_VELOCITY_MAX * 0.500)
 #endif
 #ifndef B_LATCH_VELOCITY
-#define B_LATCH_VELOCITY            (A_VELOCITY_MAX * 0.100)
+#define B_LATCH_VELOCITY            (B_VELOCITY_MAX * 0.100)
 #endif
 #ifndef B_LATCH_BACKOFF
 #define B_LATCH_BACKOFF             5.0
@@ -769,7 +769,7 @@
 #define C_AXIS_MODE                 AXIS_DISABLED
 #endif
 #ifndef C_RADIUS
-#define C_RADIUS                    (M1_TRAVEL_PER_REV/(2*3.14159628))
+#define C_RADIUS                    (M6_TRAVEL_PER_REV/(2*3.14159628))
 #endif
 #ifndef C_VELOCITY_MAX
 #define C_VELOCITY_MAX              ((X_VELOCITY_MAX/M1_TRAVEL_PER_REV)*360)
@@ -796,10 +796,10 @@
 #define C_HOMING_DIRECTION          0
 #endif
 #ifndef C_SEARCH_VELOCITY
-#define C_SEARCH_VELOCITY           (A_VELOCITY_MAX * 0.500)
+#define C_SEARCH_VELOCITY           (C_VELOCITY_MAX * 0.500)
 #endif
 #ifndef C_LATCH_VELOCITY
-#define C_LATCH_VELOCITY            (A_VELOCITY_MAX * 0.100)
+#define C_LATCH_VELOCITY            (C_VELOCITY_MAX * 0.100)
 #endif
 #ifndef C_LATCH_BACKOFF
 #define C_LATCH_BACKOFF             5.0
