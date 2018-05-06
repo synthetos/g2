@@ -321,8 +321,8 @@ struct gpioDigitalInputReader final {
 
     // functions for use by other parts of the code
 
-    bool setPin(gpioDigitalInput* new_pin) {
-        new_pin = pin; // might be null
+    bool setPin(gpioDigitalInput * const new_pin) {
+        pin = new_pin; // might be null
         return true;
     };
 
@@ -397,15 +397,15 @@ struct gpioDigitalInputPin final : gpioDigitalInput {
         gpioDigitalInput{},
         enabled{_enabled},
         polarity{_polarity},
-        ext_pin_number{_ext_pin_number},
-        proxy_pin_number{_proxy_pin_number},
+        ext_pin_number{ _ext_pin_number },
+        proxy_pin_number{ 0 },
         pin{((polarity == IO_ACTIVE_LOW) ? kPullUp|kDebounce : kDebounce), [&]{this->pin_changed();}, std::forward<T>(V)...}
     {
         if (pin.isNull()) {
             enabled = IO_UNAVAILABLE;
             proxy_pin_number = 0;
         } else {
-            setExternalNumber(proxy_pin_number);
+            setExternalNumber(_proxy_pin_number);
         }
     };
 
@@ -723,8 +723,8 @@ struct gpioDigitalOutputWriter final {
 
     // functions for use by other parts of the code
 
-    bool setPin(gpioDigitalOutput* new_pin) {
-        new_pin = pin; // might be null
+    bool setPin(gpioDigitalOutput * const new_pin) {
+        pin = new_pin; // might be null
         return true;
     };
 
@@ -798,14 +798,14 @@ struct gpioDigitalOutputPin final : gpioDigitalOutput {
         gpioDigitalOutput{},
         enabled{ _enabled },
         polarity{ _polarity },
-        proxy_pin_number{ _proxy_pin_number },
+        proxy_pin_number{ 0 },
         pin{((polarity == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow), std::forward<T>(V)...}
     {
         if (pin.isNull()) {
             enabled = IO_UNAVAILABLE;
             proxy_pin_number = 0;
         } else {
-            setExternalNumber(proxy_pin_number);
+            setExternalNumber(_proxy_pin_number);
         }
     };
 
@@ -920,8 +920,6 @@ struct gpioAnalogInput {
                                       //  p5 is the set constant current in millivolts (c1)
     };
     static const auto AIN_CIRCUIT_MAX = AIN_CIRCUIT_CC_INV_OPAMP;
-
-    uint8_t proxy_pin_number;             // the number used externally for this pin ("ain" + proxy_pin_number)
 
     // this is the generic implementation for a "any"" analog input pin
     // see gpioAnalogInputPin for a real pin
@@ -1070,8 +1068,8 @@ struct gpioAnalogInputReader final {
 
     // functions for use by other parts of the code
 
-    bool setPin(gpioAnalogInput* new_pin) {
-        new_pin = pin; // might be null
+    bool setPin(gpioAnalogInput * const new_pin) {
+        pin = new_pin; // might be null
         return true;
     };
 
@@ -1208,7 +1206,7 @@ protected: // so we know if anyone tries to reach in
     uint8_t proxy_pin_number;           // the number used externally for this pin ("in" + proxy_pin_number)
 
     const float variance_max = 1.1;
-    ValueHistory<40> history {variance_max};
+    ValueHistory<20> history {variance_max};
 
     float last_raw_value;
 
@@ -1222,8 +1220,8 @@ public:
     gpioAnalogInput{},
     enabled{_enabled},
     type{_type},
-    ext_pin_number{_ext_pin_number},
-    proxy_pin_number{_proxy_pin_number},
+    ext_pin_number{ _ext_pin_number },
+    proxy_pin_number{ 0 },
     pin{Motate::kNormal, [&]{this->adc_has_new_value();}, std::forward<T>(additional_values)...}
     {
         if (pin.isNull()) {
@@ -1232,7 +1230,7 @@ public:
         } else {
             pin.setInterrupts(Motate::kPinInterruptOnChange|Motate::kInterruptPriorityLow);
             pin.setVoltageRange(3.29, 0.0, 3.29, 100.0);
-            setExternalNumber(proxy_pin_number);
+            setExternalNumber(_proxy_pin_number);
         }
     };
 
