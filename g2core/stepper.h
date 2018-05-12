@@ -2,8 +2,8 @@
  * stepper.h - stepper motor interface
  * This file is part of g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2016 Robert Giseburt
+ * Copyright (c) 2010 - 2018 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2018 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -255,6 +255,7 @@
 #define STEPPER_H_ONCE
 
 #include "planner.h"    // planner.h must precede stepper.h for moveType typedef
+#include "gpio.h"       // for IO_ACTIVE_HIGH/IO_ACTIVE_LOW
 
 /*********************************
  * Stepper configs and constants *
@@ -278,9 +279,9 @@ typedef enum {
     MOTOR_DISABLED = 0,                 // motor enable is deactivated
     MOTOR_ALWAYS_POWERED,               // motor is always powered while machine is ON
     MOTOR_POWERED_IN_CYCLE,             // motor fully powered during cycles, de-powered out of cycle
-    MOTOR_POWERED_ONLY_WHEN_MOVING,     // motor only powered while moving - idles shortly after it's stopped - even in cycle
-    MOTOR_POWER_MODE_MAX_VALUE          // for input range checking
+    MOTOR_POWERED_ONLY_WHEN_MOVING      // motor only powered while moving - idles shortly after it's stopped - even in cycle
 } stPowerMode;
+#define MOTOR_POWER_MODE_MAX_VALUE    MOTOR_POWERED_ONLY_WHEN_MOVING
 
 // Stepper power management settings
 #define Vcc         3.3                 // volts
@@ -336,7 +337,7 @@ typedef enum {
  *  There are 5 main structures involved in stepper operations;
  *
  *  data structure:                   found in:      runs primarily at:
- *    mpBuffer planning buffers (bf)    planner.c       main loop
+ *    mpBuffer planning buffers (bf)    planner.c      main loop
  *    mrRuntimeSingleton (mr)           planner.c      MED ISR
  *    stConfig (st_cfg)                 stepper.c      write=bkgd, read=ISRs
  *    stPrepSingleton (st_pre)          stepper.c      MED ISR
@@ -430,17 +431,15 @@ extern stPrepSingleton_t st_pre;            // only used by config_app diagnosti
 /**** Stepper (base object) ****/
 
 struct Stepper {
+protected:
     Timeout _motor_disable_timeout;         // this is the timeout object that will let us know when time is u
     uint32_t _motor_disable_timeout_ms;     // the number of ms that the timeout is reset to
     stPowerState _power_state;              // state machine for managing motor power
     stPowerMode _power_mode;                // See stPowerMode for values
 
     /* stepper default values */
-
-    // sets default pwm freq for all motor vrefs (commented line below also sets HiZ)
-    Stepper(const uint32_t frequency = 500000)
-    {
-    };
+public:
+    Stepper(ioMode enable_polarity = IO_ACTIVE_LOW) {};
 
     /* Functions that handle all motor functions (calls virtuals if needed) */
 
@@ -459,6 +458,16 @@ struct Stepper {
         }
     };
 
+    virtual ioMode getEnablePolarity()
+    {
+        return IO_ACTIVE_LOW; // we have to say something here
+    };
+
+    virtual void setEnablePolarity(ioMode new_mp)
+    {
+        // do nothing
+    };
+
     virtual stPowerMode getPowerMode()
     {
          return _power_mode;
@@ -471,7 +480,7 @@ struct Stepper {
         }
         if (_power_state == MOTOR_IDLE) {
             return (0.0);
-        }        
+        }
         return (st_cfg.mot[motor].power_level);
     };
 
@@ -479,7 +488,7 @@ struct Stepper {
 //    {
 //        return (_power_mode == MOTOR_DISABLED);
 //    };
-    
+
     // turn on motor in all cases unless it's disabled
     // NOTE: in the future the default assigned timeout will be the motor's default value
     void enable(float timeout = st_cfg.motor_power_timeout)
@@ -506,7 +515,7 @@ struct Stepper {
         _motor_disable_timeout.clear();
         _power_state = MOTOR_IDLE; // or MOTOR_OFF
     };
-    
+
     // turn off motor is only powered when moving
     void motionStopped() {
         if (_power_mode == MOTOR_POWERED_IN_CYCLE) {
@@ -518,7 +527,7 @@ struct Stepper {
             }
         }
     };
-    
+
     virtual void periodicCheck(bool have_actually_stopped) // can be overridden
     {
         if (have_actually_stopped && _power_state == MOTOR_RUNNING) {
@@ -575,24 +584,33 @@ void st_request_load_move(void);
 void st_prep_null(void);
 void st_prep_command(void *bf);        // use a void pointer since we don't know about mpBuf_t yet)
 void st_prep_dwell(float microseconds);
-void st_request_out_of_band_dwell(float microseconds);
-//stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time);
+void st_prep_out_of_band_dwell(float microseconds);
 stat_t st_prep_line(float travel_steps[], float following_error[], float segment_time);
 
+stat_t st_get_ma(nvObj_t *nv);
 stat_t st_set_ma(nvObj_t *nv);
+stat_t st_get_sa(nvObj_t *nv);
 stat_t st_set_sa(nvObj_t *nv);
+stat_t st_get_tr(nvObj_t *nv);
 stat_t st_set_tr(nvObj_t *nv);
+stat_t st_get_mi(nvObj_t *nv);
 stat_t st_set_mi(nvObj_t *nv);
 stat_t st_get_su(nvObj_t *nv);
 stat_t st_set_su(nvObj_t *nv);
-stat_t st_set_pm(nvObj_t *nv);
+stat_t st_get_po(nvObj_t *nv);
+stat_t st_set_po(nvObj_t *nv);
 stat_t st_get_pm(nvObj_t *nv);
+stat_t st_set_pm(nvObj_t *nv);
+stat_t st_get_pl(nvObj_t *nv);
 stat_t st_set_pl(nvObj_t *nv);
+
 stat_t st_get_pwr(nvObj_t *nv);
 
+stat_t st_get_mt(nvObj_t *nv);
 stat_t st_set_mt(nvObj_t *nv);
 stat_t st_set_md(nvObj_t *nv);
 stat_t st_set_me(nvObj_t *nv);
+stat_t st_get_dw(nvObj_t *nv);
 
 #ifdef __TEXT_MODE
 
@@ -602,6 +620,7 @@ stat_t st_set_me(nvObj_t *nv);
     void st_print_mi(nvObj_t *nv);
     void st_print_su(nvObj_t *nv);
     void st_print_po(nvObj_t *nv);
+    void st_print_ep(nvObj_t *nv);
     void st_print_pm(nvObj_t *nv);
     void st_print_pl(nvObj_t *nv);
     void st_print_pwr(nvObj_t *nv);
@@ -617,6 +636,7 @@ stat_t st_set_me(nvObj_t *nv);
     #define st_print_mi tx_print_stub
     #define st_print_su tx_print_stub
     #define st_print_po tx_print_stub
+    #define st_print_ep tx_print_stub
     #define st_print_pm tx_print_stub
     #define st_print_pl tx_print_stub
     #define st_print_pwr tx_print_stub

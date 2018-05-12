@@ -2,7 +2,7 @@
  * pwm.h - pulse width modulation drivers
  * This file is part of the g2core project
  *
- * Copyright (c) 2012 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2012 - 2018 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -45,12 +45,12 @@ typedef struct pwmChannel {
     // no data required in ARM
 } pwmChannel_t;
 
-typedef struct pwmSingleton {
+typedef struct pwmControl {
     pwmConfigChannel_t  c[PWMS];    // array of channel configs
     pwmChannel_t        p[PWMS];    // array of PWM channels
-} pwmSingleton_t;
+} pwmControl_t;
 
-extern pwmSingleton_t pwm;
+extern pwmControl_t pwm;
 
 /*** function prototypes ***/
 

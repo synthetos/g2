@@ -2,8 +2,8 @@
  * xio.h - extended IO functions
  * This file is part of the g2core project
  *
- * Copyright (c) 2013 - 2017 Alden S. Hart Jr.
- * Copyright (c) 2013 - 2017 Robert Giseburt
+ * Copyright (c) 2013 - 2018 Alden S. Hart Jr.
+ * Copyright (c) 2013 - 2018 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -48,7 +48,7 @@
 #ifndef XIO_H_ONCE
 #define XIO_H_ONCE
 
-//#include "g2core.h"             // not required if used in g2core project
+//#include "g2core.h"           // not required if used in g2core project
 #include "config.h"             // required for nvObj typedef
 #include "canonical_machine.h"  // needed for cm_has_hold()
 #include "settings.h"           // needed for MARLIN_COMPAT_ENABLED
@@ -158,13 +158,11 @@ extern "C" {
 
 /* Signal character mappings */
 
-#define CHAR_RESET CAN
-#define CHAR_ALARM EOT
-#define CHAR_FEEDHOLD (char)'!'
-#define CHAR_CYCLE_START (char)'~'
-#define CHAR_QUEUE_FLUSH (char)'%'
-//#define CHAR_BOOTLOADER ESC
-
+#define CHAR_RESET CAN              // Control X - Reset Board
+#define CHAR_ALARM EOT              // Control D - Kill Job
+#define CHAR_FEEDHOLD (char)'!'     // Feedhold
+#define CHAR_CYCLE_START (char)'~'  // Feedhold Exit and Resume
+#define CHAR_QUEUE_FLUSH (char)'%'  // Feedhold Exit and Flush  
 
 /**** xio_flash_file - object to hold in-flash (compiled-in) "files" to run ****/
 

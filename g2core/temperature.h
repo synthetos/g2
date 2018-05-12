@@ -37,8 +37,8 @@ void   temperature_init();
 void   temperature_reset();
 stat_t temperature_callback();
 
-stat_t cm_get_heater_enable(nvObj_t* nv);
-stat_t cm_set_heater_enable(nvObj_t* nv);
+stat_t cm_get_heater_enable(nvObj_t *nv);
+stat_t cm_set_heater_enable(nvObj_t *nv);
 
 stat_t cm_get_heater_p(nvObj_t* nv);
 stat_t cm_set_heater_p(nvObj_t* nv);
@@ -51,7 +51,7 @@ stat_t cm_get_pid_i(nvObj_t* nv);
 stat_t cm_get_pid_d(nvObj_t* nv);
 
 float cm_get_set_temperature(const uint8_t heater);
-stat_t cm_get_set_temperature(nvObj_t* nv);
+stat_t cm_get_set_temperature(nvObj_t *nv);
 
 void cm_set_set_temperature(const uint8_t heater, const float value);
 stat_t cm_set_set_temperature(nvObj_t* nv);

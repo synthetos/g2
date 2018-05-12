@@ -2,7 +2,7 @@
  * plan_arc.c - arc planning and motion execution
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2018 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -24,10 +24,6 @@
 #include "planner.h"
 #include "util.h"
 
-// Allocate arc planner singleton structure
-
-arc_t arc;
-
 // Local functions
 
 static stat_t _compute_arc(const bool radius_f);
@@ -47,10 +43,10 @@ static stat_t _test_arc_soft_limits(void);
 /*
  * cm_arc_init() - initialize arc structures
  */
-void cm_arc_init()
+void cm_arc_init(cmMachine_t *_cm)
 {
-    arc.magic_start = MAGICNUM;
-    arc.magic_end = MAGICNUM;
+    _cm->arc.magic_start = MAGICNUM;
+    _cm->arc.magic_end = MAGICNUM;
 }
 
 /*
@@ -59,9 +55,9 @@ void cm_arc_init()
  *  OK to call if no arc is running
  */
 
-void cm_abort_arc()
+void cm_abort_arc(cmMachine_t *_cm)
 {
-    arc.run_state = BLOCK_INACTIVE;
+    _cm->arc.run_state = BLOCK_INACTIVE;
 }
 
 /*
@@ -69,30 +65,28 @@ void cm_abort_arc()
  *
  *  cm_arc_cycle_callback() is called from the controller main loop. Each time it's called
  *  it queues as many arc segments (lines) as it can before it blocks, then returns.
- *
- *  Parts of this routine were informed by the grbl project.
  */
 
-stat_t cm_arc_callback()
+stat_t cm_arc_callback(cmMachine_t *_cm)
 {
-    if (arc.run_state == BLOCK_INACTIVE) {
+    if (_cm->arc.run_state == BLOCK_INACTIVE) {
         return (STAT_NOOP);
     }
-    if (mp_planner_is_full()) {
+    if (mp_planner_is_full(mp)) {
         return (STAT_EAGAIN);
     }
-    arc.theta += arc.segment_theta;
-    arc.gm.target[arc.plane_axis_0] = arc.center_0 + sin(arc.theta) * arc.radius;
-    arc.gm.target[arc.plane_axis_1] = arc.center_1 + cos(arc.theta) * arc.radius;
-    arc.gm.target[arc.linear_axis] += arc.segment_linear_travel;
+    _cm->arc.theta += _cm->arc.segment_theta;
+    _cm->arc.gm.target[_cm->arc.plane_axis_0] = _cm->arc.center_0 + sin(_cm->arc.theta) * _cm->arc.radius;
+    _cm->arc.gm.target[_cm->arc.plane_axis_1] = _cm->arc.center_1 + cos(_cm->arc.theta) * _cm->arc.radius;
+    _cm->arc.gm.target[_cm->arc.linear_axis] += _cm->arc.segment_linear_travel;
 
-    mp_aline(&arc.gm);                              // run the line
-    copy_vector(arc.position, arc.gm.target);       // update arc current position
+    mp_aline(&(_cm->arc.gm));                            // run the line
+    copy_vector(_cm->arc.position, _cm->arc.gm.target);   // update arc current position
 
-    if (--arc.segment_count > 0) {
+    if (--(_cm->arc.segment_count) > 0) {
         return (STAT_EAGAIN);
     }
-    arc.run_state = BLOCK_INACTIVE;
+    _cm->arc.run_state = BLOCK_INACTIVE;
     return (STAT_OK);
 }
 
@@ -111,7 +105,7 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
                    const cmMotionMode motion_mode)                  // defined motion mode
 {
     // Start setting up the arc and trapping arc specification errors
-
+    
     // Trap some precursor cases. Since motion mode (MODAL_GROUP_G1) persists from the
     // previous move it's possible for non-modal commands such as F or P to arrive here
     // when no motion has actually been specified. It's also possible to run an arc as
@@ -144,48 +138,48 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
     }
 
     // trap missing feed rate
-    if (fp_ZERO(cm.gm.feed_rate)) {
-        return (STAT_GCODE_FEEDRATE_NOT_SPECIFIED);
+    if (fp_ZERO(cm->gm.feed_rate)) {
+        return (STAT_FEEDRATE_NOT_SPECIFIED);
     }
 
     // Set the arc plane for the current G17/G18/G19 setting and test arc specification
     // Plane axis 0 and 1 are the arc plane, the linear axis is normal to the arc plane.
-    if (cm.gm.select_plane == CANON_PLANE_XY) {         // G17 - the vast majority of arcs are in the G17 (XY) plane
-        arc.plane_axis_0 = AXIS_X;
-        arc.plane_axis_1 = AXIS_Y;
-        arc.linear_axis  = AXIS_Z;
-    } else if (cm.gm.select_plane == CANON_PLANE_XZ) {  // G18
-        arc.plane_axis_0 = AXIS_X;
-        arc.plane_axis_1 = AXIS_Z;
-        arc.linear_axis  = AXIS_Y;
-    } else if (cm.gm.select_plane == CANON_PLANE_YZ) {  // G19
-        arc.plane_axis_0 = AXIS_Y;
-        arc.plane_axis_1 = AXIS_Z;
-        arc.linear_axis  = AXIS_X;
+    if (cm->gm.select_plane == CANON_PLANE_XY) {         // G17 - the vast majority of arcs are in the G17 (XY) plane
+        cm->arc.plane_axis_0 = AXIS_X;
+        cm->arc.plane_axis_1 = AXIS_Y;
+        cm->arc.linear_axis  = AXIS_Z;
+    } else if (cm->gm.select_plane == CANON_PLANE_XZ) {  // G18
+        cm->arc.plane_axis_0 = AXIS_X;
+        cm->arc.plane_axis_1 = AXIS_Z;
+        cm->arc.linear_axis  = AXIS_Y;
+    } else if (cm->gm.select_plane == CANON_PLANE_YZ) {  // G19
+        cm->arc.plane_axis_0 = AXIS_Y;
+        cm->arc.plane_axis_1 = AXIS_Z;
+        cm->arc.linear_axis  = AXIS_X;
     } else {
-        return(cm_panic(STAT_GCODE_ACTIVE_PLANE_IS_MISSING, "cm_arc_feed() impossible value")); // plane axis has impossible value
+        return(cm_panic(STAT_ACTIVE_PLANE_IS_MISSING, "cm_arc_feed() impossible value")); // plane axis has impossible value
     }
 
     // test if no endpoints are specified in the selected plane
-    arc.full_circle = false;        // initial condition
-    if (!(target_f[arc.plane_axis_0] || target_f[arc.plane_axis_1])) {
+    cm->arc.full_circle = false;        // initial condition
+    if (!(target_f[cm->arc.plane_axis_0] || target_f[cm->arc.plane_axis_1])) {
         if (radius_f) {             // in radius mode arcs missing both endpoints is an error
             return (STAT_ARC_AXIS_MISSING_FOR_SELECTED_PLANE);
         } else {
-            arc.full_circle = true; // in center format arc this specifies a full circle
+            cm->arc.full_circle = true; // in center format arc this specifies a full circle
         }
     }
 
     // test radius arcs for radius tolerance
     if (radius_f) {
-        arc.radius = _to_millimeters(radius);           // set radius to internal format (mm)
-        if (fabs(arc.radius) < MIN_ARC_RADIUS) {        // radius value must be > minimum radius
+        cm->arc.radius = _to_millimeters(radius);           // set radius to internal format (mm)
+        if (fabs(cm->arc.radius) < MIN_ARC_RADIUS) {        // radius value must be > minimum radius
             return (STAT_ARC_RADIUS_OUT_OF_TOLERANCE);
         }
     }
     else {  // test that center format absolute distance mode arcs have both offsets specified
-        if (cm.gm.arc_distance_mode == ABSOLUTE_DISTANCE_MODE) {
-            if (!(offset_f[arc.plane_axis_0] && offset_f[arc.plane_axis_1])) {  // if one or both offsets are missing
+        if (cm->gm.arc_distance_mode == ABSOLUTE_DISTANCE_MODE) {
+            if (!(offset_f[cm->arc.plane_axis_0] && offset_f[cm->arc.plane_axis_1])) {  // if one or both offsets are missing
                 return (STAT_ARC_OFFSETS_MISSING_FOR_SELECTED_PLANE);
             }
         }
@@ -199,12 +193,12 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
         if (floor(P_word) - (P_word) > 0) {
             return (STAT_P_WORD_IS_NOT_AN_INTEGER);
         }
-        arc.rotations = P_word;
+        cm->arc.rotations = P_word;
     } else {
-        if (arc.full_circle) {      // arc rotations default to 1 for full circles
-            arc.rotations = 1;
+        if (cm->arc.full_circle) {      // arc rotations default to 1 for full circles
+            cm->arc.rotations = 1;
         } else {
-            arc.rotations = 0;      // no rotations
+            cm->arc.rotations = 0;      // no rotations
         }
     }
 
@@ -213,34 +207,34 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
 
     // in radius mode it's an error for start == end
     if (radius_f) {
-        if ((fp_EQ(cm.gmx.position[AXIS_X], cm.gm.target[AXIS_X])) &&
-            (fp_EQ(cm.gmx.position[AXIS_Y], cm.gm.target[AXIS_Y])) &&
-            (fp_EQ(cm.gmx.position[AXIS_Z], cm.gm.target[AXIS_Z]))) {
+        if ((fp_EQ(cm->gmx.position[AXIS_X], cm->gm.target[AXIS_X])) &&
+            (fp_EQ(cm->gmx.position[AXIS_Y], cm->gm.target[AXIS_Y])) &&
+            (fp_EQ(cm->gmx.position[AXIS_Z], cm->gm.target[AXIS_Z]))) {
             return (STAT_ARC_ENDPOINT_IS_STARTING_POINT);
         }
     }
 
     // *** now get down to the rest of the work setting up the arc for execution ***
-    cm.gm.motion_mode = motion_mode;
-    cm_set_work_offsets(&cm.gm);                        // capture the fully resolved offsets to gm
-    memcpy(&arc.gm, &cm.gm, sizeof(GCodeState_t));      // copy GCode context to arc singleton - some will be overwritten to run segments
-    copy_vector(arc.position, cm.gmx.position);         // set initial arc position from gcode model
+    cm->gm.motion_mode = motion_mode;
+    cm_set_display_offsets(&cm->gm);                        // capture the fully resolved offsets to gm
+    memcpy(&(cm->arc.gm), &cm->gm, sizeof(GCodeState_t));   // copy GCode context to arc singleton - some will be overwritten to run segments
+    copy_vector(cm->arc.position, cm->gmx.position);        // set initial arc position from gcode model
 
     // setup offsets if in center format mode
     if (!radius_f) {
-        arc.offset[OFS_I] = _to_millimeters(offset[OFS_I]); // copy offsets with conversion to canonical form (mm)
-        arc.offset[OFS_J] = _to_millimeters(offset[OFS_J]);
-        arc.offset[OFS_K] = _to_millimeters(offset[OFS_K]);
+        cm->arc.ijk_offset[OFS_I] = _to_millimeters(offset[OFS_I]); // copy offsets with conversion to canonical form (mm)
+        cm->arc.ijk_offset[OFS_J] = _to_millimeters(offset[OFS_J]);
+        cm->arc.ijk_offset[OFS_K] = _to_millimeters(offset[OFS_K]);
 
-        if (arc.gm.arc_distance_mode == ABSOLUTE_DISTANCE_MODE) {   // adjust offsets if in absolute mode
-             arc.offset[OFS_I] -= arc.position[AXIS_X];
-             arc.offset[OFS_J] -= arc.position[AXIS_Y];
-             arc.offset[OFS_K] -= arc.position[AXIS_Z];
+        if (cm->arc.gm.arc_distance_mode == ABSOLUTE_DISTANCE_MODE) {   // adjust offsets if in absolute mode
+             cm->arc.ijk_offset[OFS_I] -= cm->arc.position[AXIS_X];
+             cm->arc.ijk_offset[OFS_J] -= cm->arc.position[AXIS_Y];
+             cm->arc.ijk_offset[OFS_K] -= cm->arc.position[AXIS_Z];
         }
 
-        if ((fp_ZERO(arc.offset[OFS_I])) &&                 // error if no offsets provided in center format mode
-            (fp_ZERO(arc.offset[OFS_J])) &&
-            (fp_ZERO(arc.offset[OFS_K]))) {
+        if ((fp_ZERO(cm->arc.ijk_offset[OFS_I])) &&                 // error if no offsets provided in center format mode
+            (fp_ZERO(cm->arc.ijk_offset[OFS_J])) &&
+            (fp_ZERO(cm->arc.ijk_offset[OFS_K]))) {
             return (cm_alarm(STAT_ARC_OFFSETS_MISSING_FOR_SELECTED_PLANE, "arc offsets missing or zero"));
         }
     }
@@ -251,14 +245,14 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
     // test arc soft limits
     stat_t status = _test_arc_soft_limits();
     if (status != STAT_OK) {
-        cm.gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;
-        copy_vector(cm.gm.target, arc.position);        // reset model position
-        return (cm_alarm(status, "arc soft_limits"));   // throw an alarm
+        cm->gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;
+        copy_vector(cm->gm.target, cm->arc.position);       // reset model position
+        return (cm_alarm(status, "arc soft_limits"));       // throw an alarm
     }
 
-    cm_cycle_start();                                   // if not already started
-    arc.run_state = BLOCK_ACTIVE;                       // enable arc to be run from the callback
-    cm_finalize_move();
+    cm_cycle_start();                                       // if not already started
+    cm->arc.run_state = BLOCK_ACTIVE;                       // enable arc to be run from the callback
+    cm_update_model_position();
     return (STAT_OK);
 }
 
@@ -286,7 +280,7 @@ static stat_t _compute_arc(const bool radius_f)
     if (radius_f) {                         // indicates a radius arc
         _compute_arc_offsets_from_radius();
     } else {                                // compute start radius
-        arc.radius = hypotf(-arc.offset[arc.plane_axis_0], -arc.offset[arc.plane_axis_1]);
+        cm->arc.radius = hypotf(-cm->arc.ijk_offset[cm->arc.plane_axis_0], -cm->arc.ijk_offset[cm->arc.plane_axis_1]);
     }
 
     // Test arc specification for correctness according to:
@@ -296,68 +290,74 @@ static stat_t _compute_arc(const bool radius_f)
     //  center by more than (.05 inch/.5 mm) OR ((.0005 inch/.005mm) AND .1% of radius)."
 
     // Compute end radius from the center of circle (offsets) to target endpoint
-    float end_0 = arc.gm.target[arc.plane_axis_0] - arc.position[arc.plane_axis_0] - arc.offset[arc.plane_axis_0];
-    float end_1 = arc.gm.target[arc.plane_axis_1] - arc.position[arc.plane_axis_1] - arc.offset[arc.plane_axis_1];
-    float err = fabs(hypotf(end_0, end_1) - arc.radius);   // end radius - start radius
+    float end_0 = cm->arc.gm.target[cm->arc.plane_axis_0] - 
+                  cm->arc.position[cm->arc.plane_axis_0] - 
+                  cm->arc.ijk_offset[cm->arc.plane_axis_0];
+                  
+    float end_1 = cm->arc.gm.target[cm->arc.plane_axis_1] - 
+                  cm->arc.position[cm->arc.plane_axis_1] - 
+                  cm->arc.ijk_offset[cm->arc.plane_axis_1];
+                  
+    float err = fabs(hypotf(end_0, end_1) - cm->arc.radius);   // end radius - start radius
     if ((err > ARC_RADIUS_ERROR_MAX) ||
-       ((err > ARC_RADIUS_ERROR_MIN) && (err > arc.radius * ARC_RADIUS_TOLERANCE))) {
+       ((err > ARC_RADIUS_ERROR_MIN) && (err > cm->arc.radius * ARC_RADIUS_TOLERANCE))) {
         return (STAT_ARC_HAS_IMPOSSIBLE_CENTER_POINT);
     }
 
     // Compute the angular travel
     // Calculate the theta angle of the current position (theta is also needed for calculating center point)
     // Note: gcc atan2 reverses args, i.e.: atan2(Y,X)
-    arc.theta = atan2(-arc.offset[arc.plane_axis_0], -arc.offset[arc.plane_axis_1]);
+    cm->arc.theta = atan2(-cm->arc.ijk_offset[cm->arc.plane_axis_0], -cm->arc.ijk_offset[cm->arc.plane_axis_1]);
 
     // Compute angular travel if not a full circle arc
-    if (!arc.full_circle) {
-        arc.angular_travel = atan2(end_0, end_1) - arc.theta; // travel = theta_end - theta_start
+    if (!cm->arc.full_circle) {
+        cm->arc.angular_travel = atan2(end_0, end_1) - cm->arc.theta; // travel = theta_end - theta_start
 
         // correct for atan2 output quadrants
-        if (arc.gm.motion_mode == MOTION_MODE_CW_ARC) {
-            if (arc.angular_travel <= 0) { arc.angular_travel += 2*M_PI; }
+        if (cm->arc.gm.motion_mode == MOTION_MODE_CW_ARC) {
+            if (cm->arc.angular_travel <= 0) { cm->arc.angular_travel += 2*M_PI; }
         } else {
-            if (arc.angular_travel > 0)  { arc.angular_travel -= 2*M_PI; }
+            if (cm->arc.angular_travel > 0)  { cm->arc.angular_travel -= 2*M_PI; }
         }
         // add in travel for rotations
-        if (arc.angular_travel >= 0) { arc.angular_travel += 2*M_PI * arc.rotations; }
-        else                         { arc.angular_travel -= 2*M_PI * arc.rotations; }
+        if (cm->arc.angular_travel >= 0) { cm->arc.angular_travel += 2*M_PI * cm->arc.rotations; }
+        else                             { cm->arc.angular_travel -= 2*M_PI * cm->arc.rotations; }
     } 
     // Compute full-circle arcs
     else {
-        if (arc.gm.motion_mode == MOTION_MODE_CCW_ARC) { arc.rotations *= -1; }
-        arc.angular_travel = 2 * M_PI * arc.rotations;
+        if (cm->arc.gm.motion_mode == MOTION_MODE_CCW_ARC) { cm->arc.rotations *= -1; }
+        cm->arc.angular_travel = 2 * M_PI * cm->arc.rotations;
     }
 
     // Trap zero movement arcs
-    if (fp_ZERO(arc.angular_travel)) {
+    if (fp_ZERO(cm->arc.angular_travel)) {
         return (STAT_ARC_ENDPOINT_IS_STARTING_POINT);
     }
 
     // Calculate travel in the plane and the depth axis of the helix
     // Length is the total mm of travel of the helix (or just the planar arc)
-    arc.linear_travel = arc.gm.target[arc.linear_axis] - arc.position[arc.linear_axis];
-    arc.planar_travel = arc.angular_travel * arc.radius;
-    arc.length = hypotf(arc.planar_travel, fabs(arc.linear_travel));
+    cm->arc.linear_travel = cm->arc.gm.target[cm->arc.linear_axis] - cm->arc.position[cm->arc.linear_axis];
+    cm->arc.planar_travel = cm->arc.angular_travel * cm->arc.radius;
+    cm->arc.length = hypotf(cm->arc.planar_travel, fabs(cm->arc.linear_travel));
 
     // Find the minimum number of segments that meet accuracy and time constraints...
     // Note: removed segment_length test as segment_time accounts for this (build 083.37)
     float arc_time;
     float segments_for_minimum_time = _estimate_arc_time(arc_time) * (MICROSECONDS_PER_MINUTE / MIN_ARC_SEGMENT_USEC);
-    float segments_for_chordal_accuracy = arc.length / sqrt(4*cm.chordal_tolerance * (2 * arc.radius - cm.chordal_tolerance));
-    arc.segments = floor(min(segments_for_chordal_accuracy, segments_for_minimum_time));
-    arc.segments = max(arc.segments, (float)1.0);        //...but is at least 1 segment
+    float segments_for_chordal_accuracy = cm->arc.length / sqrt(4*cm->chordal_tolerance * (2 * cm->arc.radius - cm->chordal_tolerance));
+    cm->arc.segments = floor(min(segments_for_chordal_accuracy, segments_for_minimum_time));
+    cm->arc.segments = max(cm->arc.segments, (float)1.0);        //...but is at least 1 segment
 
-    if (arc.gm.feed_rate_mode == INVERSE_TIME_MODE) {
-        arc.gm.feed_rate /= arc.segments;
+    if (cm->arc.gm.feed_rate_mode == INVERSE_TIME_MODE) {
+        cm->arc.gm.feed_rate /= cm->arc.segments;
     }
     // setup the rest of the arc parameters
-    arc.segment_count = (int32_t)arc.segments;
-    arc.segment_theta = arc.angular_travel / arc.segments;
-    arc.segment_linear_travel = arc.linear_travel / arc.segments;
-    arc.center_0 = arc.position[arc.plane_axis_0] - sin(arc.theta) * arc.radius;
-    arc.center_1 = arc.position[arc.plane_axis_1] - cos(arc.theta) * arc.radius;
-    arc.gm.target[arc.linear_axis] = arc.position[arc.linear_axis];    // initialize the linear target
+    cm->arc.segment_count = (int32_t)cm->arc.segments;
+    cm->arc.segment_theta = cm->arc.angular_travel / cm->arc.segments;
+    cm->arc.segment_linear_travel = cm->arc.linear_travel / cm->arc.segments;
+    cm->arc.center_0 = cm->arc.position[cm->arc.plane_axis_0] - sin(cm->arc.theta) * cm->arc.radius;
+    cm->arc.center_1 = cm->arc.position[cm->arc.plane_axis_1] - cos(cm->arc.theta) * cm->arc.radius;
+    cm->arc.gm.target[cm->arc.linear_axis] = cm->arc.position[cm->arc.linear_axis];    // initialize the linear target
     return (STAT_OK);
 }
 
@@ -439,8 +439,8 @@ static stat_t _compute_arc(const bool radius_f)
 static void _compute_arc_offsets_from_radius()
 {
     // Calculate the change in position along each selected axis
-    float x = arc.gm.target[arc.plane_axis_0] - arc.position[arc.plane_axis_0];
-    float y = arc.gm.target[arc.plane_axis_1] - arc.position[arc.plane_axis_1];
+    float x = cm->arc.gm.target[cm->arc.plane_axis_0] - cm->arc.position[cm->arc.plane_axis_0];
+    float y = cm->arc.gm.target[cm->arc.plane_axis_1] - cm->arc.position[cm->arc.plane_axis_1];
 
     // *** From Forrest Green - Other Machine Co, 3/27/14
     // If the distance between endpoints is greater than the arc diameter, disc will be
@@ -451,13 +451,13 @@ static void _compute_arc_offsets_from_radius()
     // risks obscuring g-code errors where the radius is actually too small (they will be
     // treated as half circles), but ensures that all valid arcs end up reasonably close
     // to their intended paths regardless of any numerical issues.
-    float disc = 4 * square(arc.radius) - (square(x) + square(y));
+    float disc = 4 * square(cm->arc.radius) - (square(x) + square(y));
 
     // h_x2_div_d == -(h * 2 / d)
     float h_x2_div_d = (disc > 0) ? -sqrt(disc) / hypotf(x,y) : 0;
 
     // Invert the sign of h_x2_div_d if circle is counter clockwise (see header notes)
-    if (arc.gm.motion_mode == MOTION_MODE_CCW_ARC) {
+    if (cm->arc.gm.motion_mode == MOTION_MODE_CCW_ARC) {
         h_x2_div_d = -h_x2_div_d;
     }
 
@@ -466,15 +466,15 @@ static void _compute_arc_offsets_from_radius()
     // single Gcode block. By inverting the sign of h_x2_div_d the center of the circles is
     // placed on the opposite side of the line of travel and thus we get the inadvisably
     // long arcs as prescribed.
-    if (arc.radius < 0) {
+    if (cm->arc.radius < 0) {
         h_x2_div_d = -h_x2_div_d;
-        arc.radius *= -1;           // and flip the radius sign while you are at it
+        cm->arc.radius *= -1;           // and flip the radius sign while you are at it
     }
 
     // Complete the operation by calculating the actual center of the arc
-    arc.offset[arc.plane_axis_0] = (x-(y*h_x2_div_d))/2;
-    arc.offset[arc.plane_axis_1] = (y+(x*h_x2_div_d))/2;
-    arc.offset[arc.linear_axis] = 0;
+    cm->arc.ijk_offset[cm->arc.plane_axis_0] = (x-(y*h_x2_div_d))/2;
+    cm->arc.ijk_offset[cm->arc.plane_axis_1] = (y+(x*h_x2_div_d))/2;
+    cm->arc.ijk_offset[cm->arc.linear_axis] = 0;
 }
 
 /*
@@ -490,17 +490,17 @@ static void _compute_arc_offsets_from_radius()
 static float _estimate_arc_time (float arc_time)
 {
     // Determine move time at requested feed rate
-    if (arc.gm.feed_rate_mode == INVERSE_TIME_MODE) {
-        arc_time = arc.gm.feed_rate;    // inverse feed rate has been normalized to minutes
+    if (cm->arc.gm.feed_rate_mode == INVERSE_TIME_MODE) {
+        arc_time = cm->arc.gm.feed_rate;    // inverse feed rate has been normalized to minutes
     } else {
-        arc_time = arc.length / cm.gm.feed_rate;
+        arc_time = cm->arc.length / cm->gm.feed_rate;
     }
 
     // Downgrade the time if there is a rate-limiting axis
-    arc_time = max(arc_time, (float)fabs(arc.planar_travel/cm.a[arc.plane_axis_0].feedrate_max));
-    arc_time = max(arc_time, (float)fabs(arc.planar_travel/cm.a[arc.plane_axis_1].feedrate_max));
-    if (fabs(arc.linear_travel) > 0) {
-        arc_time = max(arc_time, (float)fabs(arc.linear_travel/cm.a[arc.linear_axis].feedrate_max));
+    arc_time = max(arc_time, (float)fabs(cm->arc.planar_travel/cm->a[cm->arc.plane_axis_0].feedrate_max));
+    arc_time = max(arc_time, (float)fabs(cm->arc.planar_travel/cm->a[cm->arc.plane_axis_1].feedrate_max));
+    if (fabs(cm->arc.linear_travel) > 0) {
+        arc_time = max(arc_time, (float)fabs(cm->arc.linear_travel/cm->a[cm->arc.linear_axis].feedrate_max));
     }
     return (arc_time);
 }
@@ -566,11 +566,11 @@ static stat_t _test_arc_soft_limit_plane_axis(float center, uint8_t plane_axis)
         if (arc.angular_travel < M_PI) {                            // case (1)
             return (STAT_OK);
         }
-        if ((center - arc.radius) < cm.a[plane_axis].travel_min) {    // case (2)
+        if ((center - arc.radius) < cm->a[plane_axis].travel_min) {    // case (2)
             return (STAT_SOFT_LIMIT_EXCEEDED);
         }
     }
-    if ((center + arc.radius) > cm.a[plane_axis].travel_max) {        // cases (3) and (4)
+    if ((center + arc.radius) > cm->a[plane_axis].travel_max) {        // cases (3) and (4)
         return (STAT_SOFT_LIMIT_EXCEEDED);
     }
     return(STAT_OK);
@@ -579,7 +579,7 @@ static stat_t _test_arc_soft_limit_plane_axis(float center, uint8_t plane_axis)
 static stat_t _test_arc_soft_limits()
 {
 /*
-    if (cm.soft_limit_enable == true) {
+    if (cm->soft_limit_enable == true) {
 
         // Test if target falls outside boundaries. This is a 3 dimensional test
         // so it also checks the linear axis of the arc (helix axis)

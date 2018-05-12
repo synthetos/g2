@@ -2,8 +2,8 @@
  * step_dir_driver.cpp - control over a Step/Direction/Enable stepper motor driver
  * This file is part of G2 project
  *
- * Copyright (c) 2016 Alden S. Hart, Jr.
- * Copyright (c) 2016 Robert Giseburt
+ * Copyright (c) 2016 - 2018 Alden S. Hart, Jr.
+ * Copyright (c) 2016 - 2018 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -25,8 +25,8 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef STEPP_DIR_DRIVER_H_ONCE
-#define STEPP_DIR_DRIVER_H_ONCE
+#ifndef STEP_DIR_DRIVER_H_ONCE
+#define STEP_DIR_DRIVER_H_ONCE
 
 #include "MotatePins.h"
 #include "MotateTimers.h"
@@ -37,6 +37,7 @@ using Motate::pin_number;
 using Motate::OutputPin;
 using Motate::PWMOutputPin;
 using Motate::kStartHigh;
+using Motate::kStartLow;
 using Motate::kNormal;
 using Motate::Timeout;
 
@@ -55,14 +56,21 @@ struct StepDirStepper final : Stepper  {
     OutputPin<step_num>    _step;
     uint8_t                _step_downcount;
     OutputPin<dir_num>     _dir;
-    OutputPin<enable_num>  _enable{kStartHigh};
+    OutputPin<enable_num>  _enable;
     OutputPin<ms0_num>     _ms0;
     OutputPin<ms1_num>     _ms1;
     OutputPin<ms2_num>     _ms2;
     PWMOutputPin<vref_num> _vref;
 
+    ioMode _enable_polarity;                 // 0=active HIGH, 1=active LOW
+
     // sets default pwm freq for all motor vrefs (commented line below also sets HiZ)
-    StepDirStepper(const uint32_t frequency = 250000) : Stepper{}, _vref{kNormal, frequency} {};
+    StepDirStepper(ioMode enable_polarity = IO_ACTIVE_LOW, const uint32_t frequency = 250000) :
+        Stepper{enable_polarity},
+        _enable{enable_polarity==IO_ACTIVE_LOW?kStartHigh:kStartLow},
+        _vref{kNormal, frequency},
+        _enable_polarity{enable_polarity}
+    {};
 
     /* Optional override of init */
 
@@ -114,15 +122,29 @@ struct StepDirStepper final : Stepper  {
     };
 
     void _enableImpl() override {
+//        if (!_enable.isNull()) {
+//            _enable.clear();
+//        }
         if (!_enable.isNull()) {
-            _enable.clear();
+            if (_enable_polarity == IO_ACTIVE_HIGH) {
+                _enable.set();
+            } else {
+                _enable.clear();
+            }
         }
     };
 
     void _disableImpl() override {
+//        if (!_enable.isNull()) {
+//            _enable.set();
+//        }
         if (!_enable.isNull()) {
+            if (_enable_polarity == IO_ACTIVE_HIGH) {
+            _enable.clear();
+        } else {
             _enable.set();
         }
+    }
     };
 
     void stepStart() override { _step.set(); };
@@ -144,6 +166,19 @@ struct StepDirStepper final : Stepper  {
             _vref = new_pl;
         }
     };
+
+    ioMode getEnablePolarity() override
+    {
+        return _enable_polarity;
+    };
+
+    void setEnablePolarity(ioMode new_mp) override
+    {
+        _enable_polarity = new_mp;
+        // this is a misnomer, but handles the logic we need for asserting the newly adjusted enable line correctly
+        motionStopped();
+    };
+
 };
 
-#endif  // STEPP_DIR_DRIVER_H_ONCE
+#endif  // STEP_DIR_DRIVER_H_ONCE

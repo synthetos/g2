@@ -2,8 +2,8 @@
  * settings_Printrbot_play.h
  * This file is part of the the g2core project
  *
- * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
- * Copyright (c) 2010 - 2017 Robert Giseburt
+ * Copyright (c) 2010 - 2018 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2018 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -101,7 +101,7 @@
 
 #define MOTOR_POWER_MODE                  MOTOR_POWERED_IN_CYCLE  // default motor power mode (see cmMotorPowerMode in stepper.h)
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
-#define M1_MOTOR_MAP                      AXIS_X                  // 1ma
+#define M1_MOTOR_MAP                      AXIS_X_EXTERNAL         // 1ma
 #define M1_STEP_ANGLE                     1.8                     // 1sa
 #define M1_TRAVEL_PER_REV                 40.64                   // 1tr
 #define M1_MICROSTEPS                     32                      // 1mi		1,2,4,8,16,32
@@ -110,7 +110,7 @@
 #define M1_POWER_LEVEL                    0.4                     // 1pl:   0.0=no power, 1.0=max power
 
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
-#define M3_MOTOR_MAP                      AXIS_Y
+#define M3_MOTOR_MAP                      AXIS_Y_EXTERNAL
 #define M3_STEP_ANGLE                     1.8
 #define M3_TRAVEL_PER_REV                 40.64
 #define M3_MICROSTEPS                     32
@@ -118,7 +118,7 @@
 #define M3_POWER_MODE                     MOTOR_POWER_MODE
 #define M3_POWER_LEVEL                    0.4
 
-#define M2_MOTOR_MAP                      AXIS_Z
+#define M2_MOTOR_MAP                      AXIS_Z_EXTERNAL
 #define M2_STEP_ANGLE                     1.8
 #define M2_TRAVEL_PER_REV                 1.5875
 #define M2_MICROSTEPS                     32
@@ -127,7 +127,7 @@
 #define M2_POWER_LEVEL                    0.4
 
 // 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
-#define M4_MOTOR_MAP                      AXIS_A
+#define M4_MOTOR_MAP                      AXIS_A_EXTERNAL
 #define M4_STEP_ANGLE                     1.8
 #define M4_TRAVEL_PER_REV                 360                     // degrees moved per motor rev
 #define M4_MICROSTEPS                     32
@@ -136,7 +136,7 @@
 #define M4_POWER_LEVEL                    0.4
 
 // 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
-#define M5_MOTOR_MAP                      AXIS_B
+#define M5_MOTOR_MAP                      AXIS_B_EXTERNAL
 #define M5_STEP_ANGLE                     1.8
 #define M5_TRAVEL_PER_REV                 360                     // degrees moved per motor rev
 #define M5_MICROSTEPS                     32

@@ -2,7 +2,8 @@
  * util.h - a random assortment of useful functions
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2018 Alden S. Hart, Jr.
+ * Copyright (c) 2016 - 2018 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -24,21 +25,17 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/* util.c/.h contains a dog's breakfast of supporting functions that are
- * not specific to g2core: including:
- *
+/* util.c/.h contains a dog's breakfast of supporting functions that are not specific 
+ *  to g2core: including:
  *  - math and min/max utilities and extensions
  *  - vector manipulation utilities
  *  - support for debugging routines
  */
 
-#include "hardware.h" // for AXES
-
 #ifndef UTIL_H_ONCE
 #define UTIL_H_ONCE
 
 #include <stdint.h>
-//#include "sam.h"
 #include "MotateTimers.h"
 using Motate::delay;
 using Motate::SysTickTimer;
@@ -48,20 +45,19 @@ using Motate::SysTickTimer;
 #include <cmath> // isnan, isinf
 
 /****** Global Scope Variables and Functions ******/
-
-//*** debug utilities ***
-
+/*
+// +++++ DIAGNOSTIC +++++
 #pragma GCC push_options
 #pragma GCC optimize ("O0")
-inline void _debug_trap(const char *reason) {
-    // We might be able to put a print here, but it MIGHT interrupt other output
-    // and might be deep in an ISR, so we had better just _NOP() and hope for the best.
-    __NOP();
-#if IN_DEBUGGER == 1
-    __asm__("BKPT");
-#endif
+// insert function here
+static void _hold_everything (uint32_t n1, uint32_t n2) // example of function
+{
+    if (n1 == n2) {
+        cm1.gm.linenum +=1;
+    }
 }
 #pragma GCC reset_options
+*/
 
 //*** vector utilities ***
 
@@ -75,6 +71,17 @@ uint8_t vector_equal(const float a[], const float b[]);
 float *set_vector(float x, float y, float z, float a, float b, float c);
 float *set_vector_by_axis(float value, uint8_t axis);
 
+// *** canned initializers ***
+
+#if (AXES == 9)
+#define INIT_AXES_ZEROES {0,0,0,0,0,0,0,0,0}
+#define INIT_AXES_ONES   {1,1,1,1,1,1,1,1,1}
+#define INIT_AXES_FALSE  INIT_AXES_ZEROES
+#define INIT_AXES_TRUE   INIT_AXES_ONES
+#else
+#warning UNSUPPORTED AXES SETTING!
+#endif
+
 //*** math utilities ***
 
 float min3(float x1, float x2, float x3);
@@ -85,17 +92,11 @@ float max4(float x1, float x2, float x3, float x4);
 
 //*** string utilities ***
 
-//#ifdef __ARM
-//uint8_t * strcpy_U( uint8_t * dst, const uint8_t * src );
-//#endif
-
 uint8_t isnumber(char c);
 char *escape_string(char *dst, char *src);
-char inttoa(char *str, int n);
-char floattoa(char *buffer, float in, int precision, int maxlen = 16);
-//char fntoa(char *str, float n, uint8_t precision);
-
 uint16_t compute_checksum(char const *string, const uint16_t length);
+char floattoa(char *buffer, float in, int precision, int maxlen = 16);
+char inttoa(char *str, int n);
 
 //*** other utilities ***
 
@@ -153,6 +154,7 @@ inline T avg(const T a,const T b) {return (a+b)/2; }
 // Constants
 #define MAX_LONG (2147483647)
 #define MAX_ULONG (4294967295)
+#define MAX_FP_INTEGER (8388608)  // maximum integer 32 bit FP will represent exactly (23 bits)
 #define MM_PER_INCH (25.4)
 #define INCHES_PER_MM (1/25.4)
 #define MICROSECONDS_PER_MINUTE ((float)60000000)
@@ -193,6 +195,80 @@ constexpr float c_atof(char *&p_) { return (*p_ == '-') ? (c_atof_int_(++p_, 0) 
 //constexpr int c_strreverse(char * const t, const int count_, char hold = 0) {
 //    return count_>1 ? (hold=*t, *t=*(t+(count_-1)), *(t+(count_-1))=hold), c_strreverse(t+1, count_-2), count_ : count_;
 //}
+
+/*** Debug and DIAGNOSTICS  ***
+ *
+ *  This section collects debug and DIAGNOSTIC functions used by the project. 
+ *
+ *  The debug levels are set in the build line and may be one of:
+ *    <omitted>  - debug is off, IN_DEBUGGER == 0 (See Makefile for the logic)
+ *     DEBUG=0   - debug is off, IN_DEBUGGER == 0
+ *     DEBUG=1   - debug is on,  IN_DEBUGGER == 0
+ *     DEBUG=2   - debug is on,  IN_DEBUGGER == 1. Requires HW debugger to be connected
+ *     DEBUG=3   - debug is on,  IN_DEBUGGER == 1. Requires HW debugger and Semihosting to be enabled and running in the debugger
+ *   
+ *  These settings are applied in the Makefile.
+ *  In addition, MotateDebug.h contains the bulk of the Semihosting definitions
+ *
+ *  The *reason value is provided as it will be shown in the __asm__("BKPT") backtrace, 
+ *  or on the __NOP() if a breakpoint is set
+ *
+ *  Try to use the functions provided below for debug statements to keep the code clean. If these 
+ *  are insufficient you can bracket diagnostics like so to enable then for any non-zero debug level:
+ *
+ #if IN_DEBUGGER == 1
+     if (block->exit_velocity > block->cruise_velocity)  {
+         __asm__("BKPT");   // exit > cruise after calculate_block
+     }
+ #endif
+ * 
+ * ...or add a new debug functions to the ones below
+ */
+
+/*
+ * debug_trap() - trap unconditionally
+ * debug_trap_if_zero() - trap if floating point value is zero
+ * debug_trap_if_true() - trap if condition is true
+ *
+ *  The 'reason' value will display in GDB (but maybe not in AS7), and can also be passed
+ *  to a downstream logger if these are introduced into the function.
+ *
+ *  Note that it may be possible to print or generate exceptions in debug_trap(), but  
+ *  it MIGHT interrupt other output, or might have been called deep in an ISR, 
+ *  so we had better just _NOP() and hope for the best.
+ */
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
+
+inline void debug_trap(const char *reason) {
+#if IN_DEBUGGER == 1
+    __NOP();
+    __asm__("BKPT");
+#endif
+}
+
+inline void debug_trap_if_zero(float value, const char *reason) {
+#if IN_DEBUGGER == 1
+    if (fp_ZERO(value)) {
+        __NOP();
+        __asm__("BKPT");
+    }
+#endif
+}
+
+inline void debug_trap_if_true(bool condition, const char *reason) {
+#if IN_DEBUGGER == 1
+    if (condition) {
+        __NOP();
+        __asm__("BKPT");
+    }    
+#endif
+}
+
+#pragma GCC reset_options
+
+void LAGER(const char * msg);
+void LAGER_cm(const char * msg);
 
 template <int32_t length>
 void str_concat(char *&dest, const char (&data)[length]) {

@@ -2,8 +2,8 @@
  * plan_line.c - acceleration managed line planning and motion execution
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
- * Copyright (c) 2012 - 2017 Rob Giseburt
+ * Copyright (c) 2010 - 2018 Alden S. Hart, Jr.
+ * Copyright (c) 2012 - 2018 Rob Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -36,7 +36,6 @@
 #include "util.h"
 #include "spindle.h"
 #include "settings.h"
-
 #include "xio.h"
 
 // using Motate::Timeout;
@@ -55,65 +54,70 @@ static void _calculate_jerk(mpBuf_t* bf);
 static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const float axis_square[]);
 static void _calculate_junction_vmax(mpBuf_t* bf);
 
-//+++++DIAGNOSTICS
+
+#ifdef __PLANNER_DIAGNOSTICS
+#pragma GCC push_options
 #pragma GCC optimize("O0")  // this pragma is required to force the planner to actually set these unused values
-//#pragma GCC reset_options
 static void _set_bf_diagnostics(mpBuf_t* bf) {
-    bf->linenum = bf->gm.linenum;
-//  UPDATE_BF_DIAGNOSTICS(bf);   //+++++
+    UPDATE_BF_DIAGNOSTICS(bf);
 }
 #pragma GCC reset_options
+#else
+static void _set_bf_diagnostics(mpBuf_t* bf) {}
+#endif
 
 /* Runtime-specific setters and getters
  *
  * mp_zero_segment_velocity()         - correct velocity in last segment for reporting purposes
  * mp_get_runtime_velocity()          - returns current velocity (aggregate)
  * mp_get_runtime_machine_position()  - returns current axis position in machine coordinates
- * mp_set_runtime_work_offset()       - set offsets in the MR struct
- * mp_get_runtime_work_position()     - returns current axis position in work coordinates
+ * mp_set_runtime_display_offset()    - set combined display offsets in the MR struct
+ * mp_get_runtime_display_position()  - returns current axis position in work display coordinates
  *                                      that were in effect at move planning time
  */
 
-void  mp_zero_segment_velocity() { mr.segment_velocity = 0; }
-float mp_get_runtime_velocity(void) { return (mr.segment_velocity); }
-float mp_get_runtime_absolute_position(uint8_t axis) { return (mr.position[axis]); }
-void mp_set_runtime_work_offset(float offset[]) { copy_vector(mr.gm.work_offset, offset); }
+void  mp_zero_segment_velocity() { mr->segment_velocity = 0; }
+float mp_get_runtime_velocity(void) { return (mr->segment_velocity); }
+float mp_get_runtime_absolute_position(mpPlannerRuntime_t *_mr, uint8_t axis) { return (_mr->position[axis]); }
+void mp_set_runtime_display_offset(float offset[]) { copy_vector(mr->gm.display_offset, offset); }
 
 // We have to handle rotation - "rotate" by the transverse of the matrix to got "normal" coordinates
-float mp_get_runtime_work_position(uint8_t axis) {
+float mp_get_runtime_display_position(uint8_t axis) {
     // Shorthand:
     // target_rotated[0] = a x_1 + b x_2 + c x_3
     // target_rotated[1] = a y_1 + b y_2 + c y_3
     // target_rotated[2] = a z_1 + b z_2 + c z_3 + z_offset
 
     if (axis == AXIS_X) {
-        return mr.position[0] * cm.rotation_matrix[0][0] + mr.position[1] * cm.rotation_matrix[1][0] +
-               mr.position[2] * cm.rotation_matrix[2][0] - mr.gm.work_offset[0];
+        return mr->position[0] * cm->rotation_matrix[0][0] + mr->position[1] * cm->rotation_matrix[1][0] +
+               mr->position[2] * cm->rotation_matrix[2][0] - mr->gm.display_offset[0];
     } else if (axis == AXIS_Y) {
-        return mr.position[0] * cm.rotation_matrix[0][1] + mr.position[1] * cm.rotation_matrix[1][1] +
-               mr.position[2] * cm.rotation_matrix[2][1] - mr.gm.work_offset[1];
+        return mr->position[0] * cm->rotation_matrix[0][1] + mr->position[1] * cm->rotation_matrix[1][1] +
+               mr->position[2] * cm->rotation_matrix[2][1] - mr->gm.display_offset[1];
     } else if (axis == AXIS_Z) {
-        return mr.position[0] * cm.rotation_matrix[0][2] + mr.position[1] * cm.rotation_matrix[1][2] +
-               mr.position[2] * cm.rotation_matrix[2][2] - cm.rotation_z_offset - mr.gm.work_offset[2];
+        return mr->position[0] * cm->rotation_matrix[0][2] + mr->position[1] * cm->rotation_matrix[1][2] +
+               mr->position[2] * cm->rotation_matrix[2][2] - cm->rotation_z_offset - mr->gm.display_offset[2];
     } else {
         // ABC, UVW, we don't rotate them
-        return (mr.position[axis] - mr.gm.work_offset[axis]);
+        return (mr->position[axis] - mr->gm.display_offset[axis]);
     }
 }
 
-/*
+/****************************************************************************************
  * mp_get_runtime_busy() - returns TRUE if motion control busy (i.e. robot is moving)
- * mp_runtime_is_idle()  - returns TRUE is steppers are not actively moving
+ * mp_runtime_is_idle()  - returns TRUE if steppers are not actively moving
  *
  *  Use mp_get_runtime_busy() to sync to the queue. If you wait until it returns
  *  FALSE you know the queue is empty and the motors have stopped.
  */
 bool mp_get_runtime_busy() 
 {
-    if (cm.cycle_state == CYCLE_OFF) {
+    if (cm->cycle_type == CYCLE_NONE) {
         return (false);
     }
-    if ((st_runtime_isbusy() == true) || (mr.block_state == BLOCK_ACTIVE) || (mb.r->buffer_state > MP_BUFFER_EMPTY)) {
+    if ((st_runtime_isbusy() == true) || 
+        (mr->block_state == BLOCK_ACTIVE) || 
+        (mp_get_r()->buffer_state > MP_BUFFER_EMPTY)) {
         return (true);
     }
     return (false);
@@ -130,26 +134,26 @@ bool mp_runtime_is_idle() { return (!st_runtime_isbusy()); }
  *  Controlling jerk smooths transitions between moves and allows for faster feeds while
  *  controlling machine oscillations and other undesirable side-effects.
  *
- *  Note All math is done in absolute coordinates using single precision floating point (float).
+ *  Note: All math is done in absolute coordinates using single precision floating point (float).
  *
  *  Note: Returning a status that is not STAT_OK means the endpoint is NOT advanced. So lines
  *        that are too short to move will accumulate and get executed once the accumulated error
  *        exceeds the minimums.
  */
 
-stat_t mp_aline(GCodeState_t* gm_in) 
+stat_t mp_aline(GCodeState_t* _gm)
 {
-    mpBuf_t* bf;  // current move pointer
-    float target_rotated[AXES] = {0, 0, 0, 0, 0, 0};
-    float axis_square[AXES]    = {0, 0, 0, 0, 0, 0};
-    float axis_length[AXES];
-    bool  flags[AXES];
+    float target_rotated[]  = INIT_AXES_ZEROES;
+    float axis_square[]     = INIT_AXES_ZEROES;
+    float axis_length[]     = INIT_AXES_ZEROES;
+    bool  flags[]           = INIT_AXES_FALSE;
+
     float length_square = 0;
     float length;
 
     // A few notes about the rotated coordinate space:
     // These are positions PRE-rotation:
-    //  gm_in.* (anything in gm_in)
+    //  _gm.* (anything in _gm)
     //
     // These are positions POST-rotation:
     //  target_rotated (after the rotation here, of course)
@@ -164,70 +168,78 @@ stat_t mp_aline(GCodeState_t* gm_in)
     //  a being target[0],
     //  b being target[1],
     //  c being target[2],
-    //  x_1 being cm.rotation_matrix[1][0]
+    //  x_1 being cm->rotation_matrix[1][0]
 
-    target_rotated[0] = gm_in->target[0] * cm.rotation_matrix[0][0] + 
-                        gm_in->target[1] * cm.rotation_matrix[0][1] +
-                        gm_in->target[2] * cm.rotation_matrix[0][2];
+    target_rotated[AXIS_X] = _gm->target[AXIS_X] * cm->rotation_matrix[0][0] + 
+                             _gm->target[AXIS_Y] * cm->rotation_matrix[0][1] +
+                             _gm->target[AXIS_Z] * cm->rotation_matrix[0][2];
 
-    target_rotated[1] = gm_in->target[0] * cm.rotation_matrix[1][0] + 
-                        gm_in->target[1] * cm.rotation_matrix[1][1] +
-                        gm_in->target[2] * cm.rotation_matrix[1][2];
+    target_rotated[AXIS_Y] = _gm->target[AXIS_X] * cm->rotation_matrix[1][0] + 
+                             _gm->target[AXIS_Y] * cm->rotation_matrix[1][1] +
+                             _gm->target[AXIS_Z] * cm->rotation_matrix[1][2];
 
-    target_rotated[2] = gm_in->target[0] * cm.rotation_matrix[2][0] + 
-                        gm_in->target[1] * cm.rotation_matrix[2][1] +
-                        gm_in->target[2] * cm.rotation_matrix[2][2] + 
-                        cm.rotation_z_offset;
+    target_rotated[AXIS_Z] = _gm->target[AXIS_X] * cm->rotation_matrix[2][0] + 
+                             _gm->target[AXIS_Y] * cm->rotation_matrix[2][1] +
+                             _gm->target[AXIS_Z] * cm->rotation_matrix[2][2] + 
+                             cm->rotation_z_offset;
 
-    // copy rotation axes ABC
-    target_rotated[3] = gm_in->target[3];
-    target_rotated[4] = gm_in->target[4];
-    target_rotated[5] = gm_in->target[5];
+    // copy rotation axes for UVW (no changes)
+    target_rotated[AXIS_U] = _gm->target[AXIS_U];
+    target_rotated[AXIS_V] = _gm->target[AXIS_V];
+    target_rotated[AXIS_W] = _gm->target[AXIS_W];
+
+    // copy rotation axes for ABC (no changes)
+    target_rotated[AXIS_A] = _gm->target[AXIS_A];
+    target_rotated[AXIS_B] = _gm->target[AXIS_B];
+    target_rotated[AXIS_C] = _gm->target[AXIS_C];
 
     for (uint8_t axis = 0; axis < AXES; axis++) {
-        axis_length[axis] = target_rotated[axis] - mp.position[axis];
+        axis_length[axis] = target_rotated[axis] - mp->position[axis];
         if ((flags[axis] = fp_NOT_ZERO(axis_length[axis]))) {  // yes, this supposed to be = not ==
             axis_square[axis] = square(axis_length[axis]);
             length_square += axis_square[axis];
         } else {
             axis_length[axis] = 0;  // make it truly zero if it was tiny
+            axis_square[axis] = 0;  // Fix bug that can kill feedholds by corrupting block_time in _calculate_times 
         }
     }
     length = sqrt(length_square);
 
     // exit if the move has zero movement. At all.
-    if (fp_ZERO(length)) {
-        sr_request_status_report(SR_REQUEST_TIMED_FULL);// Was SR_REQUEST_IMMEDIATE_FULL
-        return (STAT_MINIMUM_LENGTH_MOVE);              // STAT_MINIMUM_LENGTH_MOVE needed to end cycle
+//    if (length < 0.00002) {  // this value is 2x EPSILON and prevents trap failures in _plan_aline()
+    if (length < 0.0001) {      // this value is 0.1 microns. Prevents planner trap failures
+        sr_request_status_report(SR_REQUEST_TIMED_FULL);  // Was SR_REQUEST_IMMEDIATE_FULL
+        return (STAT_MINIMUM_LENGTH_MOVE);                // STAT_MINIMUM_LENGTH_MOVE needed to end cycle
     }
 
     // get a cleared buffer and copy in the Gcode model state
-    if ((bf = mp_get_write_buffer()) == NULL) {         // never supposed to fail
+    mpBuf_t* bf = mp_get_write_buffer(); 
+    
+    if (bf == NULL) {                                   // never supposed to fail
         return (cm_panic(STAT_FAILED_GET_PLANNER_BUFFER, "aline()"));
     }
-    memcpy(&bf->gm, gm_in, sizeof(GCodeState_t));
-    // Since bf->gm.target is being used all over the place, we'll make it the rotated target
-    copy_vector(bf->gm.target, target_rotated);  // copy the rotated taget in place
+    memcpy(&bf->gm, _gm, sizeof(GCodeState_t));
+    copy_vector(bf->gm.target, target_rotated);         // copy the rotated target in place
 
     // setup the buffer
     bf->bf_func = mp_exec_aline;                        // register the callback to the exec function
-    bf->length  = length;                               // record the length
+    bf->length = length;                                // record the length
     for (uint8_t axis = 0; axis < AXES; axis++) {       // compute the unit vector and set flags
         if ((bf->axis_flags[axis] = flags[axis])) {     // yes, this is supposed to be = and not ==
             bf->unit[axis] = axis_length[axis] / length;// nb: bf-> unit was cleared by mp_get_write_buffer()
         }
     }
-    _calculate_jerk(bf);                              // compute bf->jerk values
-    _calculate_vmaxes(bf, axis_length, axis_square);  // compute cruise_vmax and absolute_vmax
-    _set_bf_diagnostics(bf);                          //+++++DIAGNOSTIC
+    _calculate_jerk(bf);                                // compute bf->jerk values
+    _calculate_vmaxes(bf, axis_length, axis_square);    // compute cruise_vmax and absolute_vmax
+    _set_bf_diagnostics(bf);                            // DIAGNOSTIC
 
     // Note: these next lines must remain in exact order. Position must update before committing the buffer.
-    copy_vector(mp.position, bf->gm.target);   // set the planner position
-    mp_commit_write_buffer(BLOCK_TYPE_ALINE);  // commit current block (must follow the position update)
+    copy_vector(mp->position, bf->gm.target);           // update the planner position for the next move
+    mp_commit_write_buffer(BLOCK_TYPE_ALINE);           // commit current block (must follow the position update)
     return (STAT_OK);
 }
 
-/*
+/****************************************************************************************
  * mp_plan_block_list() - plan all the blocks in the list
  *
  *  This parent function is just a dispatcher that reads forward in the list
@@ -242,8 +254,8 @@ stat_t mp_aline(GCodeState_t* gm_in)
 
 void mp_plan_block_list() 
 {
-    mpBuf_t* bf                = mp.p;
-    bool     planned_something = false;
+    mpBuf_t* bf = mp->p;
+    bool planned_something = false;
 
     while (true) {
         // unconditional exit condition
@@ -252,33 +264,31 @@ void mp_plan_block_list()
         }
 
         // OK to replan running buffer during feedhold, but no other times (not supposed to happen)
-        if ((cm.hold_state == FEEDHOLD_OFF) && (bf->buffer_state == MP_BUFFER_RUNNING)) {
-            mp.p = mp.p->nx;
+        if ((cm->hold_state == FEEDHOLD_OFF) && (bf->buffer_state == MP_BUFFER_RUNNING)) {
+            mp->p = mp->p->nx;
             return;
         }
-
-        bf = _plan_block(bf);  // returns next block to plan
-
+        bf = _plan_block(bf);       // returns next block to plan
         planned_something = true;
-        mp.p              = bf;  //+++++ DIAGNOSTIC - this is not needed but is set here for debugging purposes
+        mp->p = bf;                 // DIAGNOSTIC - this is not needed but is set here for debugging purposes
     }
-    if (mp.planner_state > PLANNER_STARTUP) {
-        if (planned_something && (cm.hold_state != FEEDHOLD_HOLD)) {
+    if (mp->planner_state > PLANNER_STARTUP) {
+        if (planned_something && (cm->hold_state != FEEDHOLD_HOLD)) {
             st_request_forward_plan();  // start motion if runtime is not already busy
         }
     }
-    mp.p = bf;  // update planner pointer
+    mp->p = bf;  // update planner pointer
 }
 
-/*
- * _plan_block() - the block chain using pessimistic assumptions
+/****************************************************************************************
+ * _plan_block() - stitch and backplan a new block to the planner queue
  */
 
 static mpBuf_t* _plan_block(mpBuf_t* bf) 
 {
     // First time blocks - set vmaxes for as many blocks as possible (forward loading of priming blocks)
     // Note: cruise_vmax was computed in _calculate_vmaxes() in aline()
-    if (mp.planner_state == PLANNER_PRIMING) {
+    if (mp->planner_state == PLANNER_PRIMING) {
         // Timings from *here*
 
         if (bf->pv->plannable) {
@@ -289,20 +299,17 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
                 bf->pv->exit_vmax = min3(bf->pv->junction_vmax, bf->pv->cruise_vmax, bf->cruise_vmax);
             }
         }
-        _calculate_override(bf);  // adjust cruise_vmax for feed/traverse override
+        _calculate_override(bf);                        // adjust cruise_vmax for feed/traverse override
  //     bf->plannable_time = bf->pv->plannable_time;    // set plannable time - excluding current move
-        bf->buffer_state = MP_BUFFER_IN_PROCESS;
-
-        // +++++ Why do we have to do this here?
-        // bf->pv_group = bf->pv;
-
-        bf->hint = NO_HINT;     // ensure we've cleared the hints
+        bf->buffer_state = MP_BUFFER_NOT_PLANNED;
+        bf->hint = NO_HINT;                             // ensure we've cleared the hints
+        
         // Time: 12us-41us
-        if (bf->nx->plannable) {  // read in new buffers until EMPTY
+        if (bf->nx->plannable) {                        // read in new buffers until EMPTY
             return (bf->nx);
         }
-        mp.planning_return = bf->nx;                 // where to return after planning is complete
-        mp.planner_state   = PLANNER_BACK_PLANNING;  // start backplanning
+        mp->planning_return = bf->nx;                   // where to return after planning is complete
+        mp->planner_state   = PLANNER_BACK_PLANNING;    // start backplanning
     }
 
     // Backward Planning Pass
@@ -311,7 +318,7 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
     // Note: Vmax's are already set by the time you get here
     // Hint options from back-planning: COMMAND_BLOCK, PERFECT_DECELERATION, PERFECT_CRUISE, MIXED_DECELERATION
 
-    if (mp.planner_state == PLANNER_BACK_PLANNING) {
+    if (mp->planner_state == PLANNER_BACK_PLANNING) {
         // NOTE: We stop when the previous block is no longer plannable.
         // We will alter the previous block's exit_velocity.
         float braking_velocity = 0;  // we use this to stre the previous entry velocity, start at 0
@@ -321,7 +328,7 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
         for (; bf->plannable || (braking_velocity < bf->exit_velocity); bf = bf->pv) {
             // Timings from *here*
 
-            bf->iterations++;
+            INC_PLANNER_ITERATIONS    // DIAGNOSTIC
             bf->plannable = bf->plannable && !optimal;  // Don't accidentally enable plannable!
 
             // Let's be mindful that forward planning may change exit_vmax, and our exit velocity may be lowered
@@ -415,24 +422,24 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
                 optimal = true;   // We can't improve this entry more
             }
 
-            // +++++
+            // Exit the loop if we've hit and passed the running buffer. It can happen.
             if (bf->buffer_state == MP_BUFFER_EMPTY) {
-            //     _debug_trap("Exec apparently cleared this block while we were planning it.");
-                break;  // exit the loop, we've hit and passed the running buffer
+                break;  
             }
-            // if (fp_ZERO(bf->exit_velocity) && !fp_ZERO(bf->exit_vmax)) {
-            //     _debug_trap(); // why zero?
+            
+            // if (fp_ZERO(bf->exit_velocity) && !fp_ZERO(bf->exit_vmax)) { // DIAGNOSTIC
+            //     debug_trap("_plan_block(): Why is exit velocity zero?");
             // }
 
             // We might back plan into the running or planned buffer, so we have to check.
-            if (bf->buffer_state < MP_BUFFER_PREPPED) {
-                bf->buffer_state = MP_BUFFER_PREPPED;
+            if (bf->buffer_state < MP_BUFFER_BACK_PLANNED) {
+                bf->buffer_state = MP_BUFFER_BACK_PLANNED;
             }
         }  // for loop
     }      // exits with bf pointing to a locked or EMPTY block
 
-    mp.planner_state = PLANNER_PRIMING;  // revert to initial state
-    return (mp.planning_return);
+    mp->planner_state = PLANNER_PRIMING;  // revert to initial state
+    return (mp->planning_return);
 }
 
 /***** ALINE HELPERS *****
@@ -448,30 +455,30 @@ static void _calculate_override(mpBuf_t* bf)  // execute ramp to adjust cruise v
     // TODO: Account for rapid overrides as well as feed overrides
 
     // pull in override factor from previous block or seed initial value from the system setting
-    bf->override_factor = fp_ZERO(bf->pv->override_factor) ? cm.gmx.mfo_factor : bf->pv->override_factor;
+    bf->override_factor = fp_ZERO(bf->pv->override_factor) ? cm->gmx.mfo_factor : bf->pv->override_factor;
     bf->cruise_vmax     = bf->override_factor * bf->cruise_vset;
 
     // generate ramp term is a ramp is active
-    if (mp.ramp_active) {
-        bf->override_factor += mp.ramp_dvdt * bf->block_time;
-        if (mp.ramp_dvdt > 0) {  // positive is an acceleration ramp
-            if (bf->override_factor > mp.ramp_target) {
-                bf->override_factor = mp.ramp_target;
-                mp.ramp_active      = false;  // detect end of ramp
+    if (mp->ramp_active) {
+        bf->override_factor += mp->ramp_dvdt * bf->block_time;
+        if (mp->ramp_dvdt > 0) {                            // positive is an acceleration ramp
+            if (bf->override_factor > mp->ramp_target) {
+                bf->override_factor = mp->ramp_target;
+                mp->ramp_active = false;                    // detect end of ramp
             }
             bf->cruise_velocity *= bf->override_factor;
             if (bf->cruise_velocity > bf->absolute_vmax) {  // test max cruise_velocity
                 bf->cruise_velocity = bf->absolute_vmax;
-                mp.ramp_active      = false;  // don't allow exceeding absolute_vmax
+                mp->ramp_active = false;                    // don't allow exceeding absolute_vmax
             }
         } else {  // negative is deceleration ramp
-            if (bf->override_factor < mp.ramp_target) {
-                bf->override_factor = mp.ramp_target;
-                mp.ramp_active      = false;
+            if (bf->override_factor < mp->ramp_target) {
+                bf->override_factor = mp->ramp_target;
+                mp->ramp_active      = false;
             }
-            bf->cruise_velocity *= bf->override_factor;  // +++++ this is probably wrong
+            bf->cruise_velocity *= bf->override_factor;     // +++++ this is probably wrong
             //  bf->exit_velocity *= bf->mfo_factor;        //...but I'm not sure this is right,
-            //  bf->cruise_velocity = bf->pv->exit_velocity;   //...either
+            //  bf->cruise_velocity = bf->pv->exit_velocity;//...either
         }
     } else {
         bf->cruise_velocity *= bf->override_factor;  // apply original or changed factor
@@ -490,7 +497,7 @@ static void _calculate_override(mpBuf_t* bf)  // execute ramp to adjust cruise v
     // }
 }
 
-/*
+/****************************************************************************************
  * _calculate_jerk() - calculate jerk given the dynamic state
  *
  *  Set the jerk scaling to the lowest axis with a non-zero unit vector.
@@ -514,13 +521,13 @@ static void _calculate_jerk(mpBuf_t* bf)
             switch (bf->gm.motion_mode) {
                 case MOTION_MODE_STRAIGHT_TRAVERSE:
                 //case MOTION_MODE_STRAIGHT_PROBE: // <-- not sure on this one
-                    axis_jerk = cm.a[axis].jerk_high;
+                    axis_jerk = cm->a[axis].jerk_high;
                     break;
                 default:
-                    axis_jerk = cm.a[axis].jerk_max;
+                    axis_jerk = cm->a[axis].jerk_max;
             }
 #else
-            axis_jerk = cm.a[axis].jerk_max;
+            axis_jerk = cm->a[axis].jerk_max;
 #endif
 
             jerk = axis_jerk / fabs(bf->unit[axis]);
@@ -540,7 +547,7 @@ static void _calculate_jerk(mpBuf_t* bf)
     bf->q_recip_2_sqrt_j = q / (2 * sqrt_j);
 }
 
-/*
+/****************************************************************************************
  * _calculate_vmaxes() - compute cruise_vmax and absolute_vmax based on velocity constraints
  *
  *  The following feeds and times are compared and the longest (slowest velocity) is returned:
@@ -599,6 +606,24 @@ static void _calculate_jerk(mpBuf_t* bf)
  *       so that the elapsed time from the start to the end of the motion is T plus
  *       any time required for acceleration or deceleration.
  */
+/*
+ *  Axis Decoupling Notes
+ *
+ *  Use cases:
+ *    - 3D mode   (Machining)   - All XYZABC axes must obey full jerk constraints
+ *    - 2.5d mode (Contouring)  - Treat as 3D mode (at least for now)
+ *    - 2D mode   (Routing)     - Routing moves: XY obey jerk, Z movement does not affect move time
+ *
+ *    - Case 1 - Z tab move w/XY movement - Z movement below 'delta' threshold
+ *               Z is allowed to move at indicated velocity without slowing down XY (decoupled)
+ *
+ *    - Case 2 - Z climb or plunge w/XY movement - Z movement above 'delta' threshold
+ *    - Case 3 - Z climb or plunge w/o X or Y movement - Z must obey velocity/jerk constraints
+ *
+ *  Z side loading factor - what's the maximum lateral force that be applied to the cutter?
+ *      F = ma
+ *      S(z) / V(xy)
+ */
 static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const float axis_square[]) 
 {
     float feed_time = 0;        // one of: XYZ time, ABC time or inverse time. Mutually exclusive
@@ -610,13 +635,13 @@ static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const floa
     // compute feed time for feeds and probe motion
     if (bf->gm.motion_mode != MOTION_MODE_STRAIGHT_TRAVERSE) {
         if (bf->gm.feed_rate_mode == INVERSE_TIME_MODE) {
-            feed_time             = bf->gm.feed_rate;  // NB: feed rate was un-inverted to minutes by cm_set_feed_rate()
+            feed_time = bf->gm.feed_rate;  // NB: feed rate was un-inverted to minutes by cm_set_feed_rate()
             bf->gm.feed_rate_mode = UNITS_PER_MINUTE_MODE;
         } else {
             // compute length of linear move in millimeters. Feed rate is provided as mm/min
             feed_time = sqrt(axis_square[AXIS_X] + axis_square[AXIS_Y] + axis_square[AXIS_Z]) / bf->gm.feed_rate;
-            // if no linear axes, compute length of multi-axis rotary move in degrees. Feed rate is provided as
-            // degrees/min
+            // if no linear axes, compute length of multi-axis rotary move in degrees. 
+            // Feed rate is provided as degrees/min
             if (fp_ZERO(feed_time)) {
                 feed_time = sqrt(axis_square[AXIS_A] + axis_square[AXIS_B] + axis_square[AXIS_C]) / bf->gm.feed_rate;
             }
@@ -626,9 +651,9 @@ static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const floa
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         if (bf->axis_flags[axis]) {
             if (bf->gm.motion_mode == MOTION_MODE_STRAIGHT_TRAVERSE) {
-                tmp_time = fabs(axis_length[axis]) / cm.a[axis].velocity_max;
-            } else {  // gm.motion_mode == MOTION_MODE_STRAIGHT_FEED
-                tmp_time = fabs(axis_length[axis]) / cm.a[axis].feedrate_max;
+                tmp_time = fabs(axis_length[axis]) / cm->a[axis].velocity_max;
+            } else {// gm.motion_mode == MOTION_MODE_STRAIGHT_FEED
+                tmp_time = fabs(axis_length[axis]) / cm->a[axis].feedrate_max;
             }
             max_time = max(max_time, tmp_time);
 
@@ -645,10 +670,10 @@ static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const floa
     bf->block_time    = block_time;               // initial estimate - used for ramp computations
 }
 
-/*
+/****************************************************************************************
  * _calculate_junction_vmax() - Giseburt's Algorithm ;-)
  *
- *  WARNING: This description is out of date and needs updated.
+ *  WARNING: This description is out of date and needs to be updated.
  *
  *  Computes the maximum allowable junction speed by finding the velocity that will not
  *  violate the jerk value of any axis.
@@ -657,14 +682,14 @@ static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const floa
  *  of the corner, at the point from vector a to vector b. The unit vectors of those two
  *  moves are provided as the current block (a_unit) and previous block (b_unit).
  *
- *      Delta[i]       = (b_unit[i] - a_unit[i])                   (1)
+ *      Delta[i] = (b_unit[i] - a_unit[i])                  (1)
  *
  *  We take, axis by axis, the difference in "unit velocity" to get a vector that
  *  represents the direction of acceleration - which may be the opposite direction
  *  as that of the "a" vector to achieve deceleration. To get the actual acceleration,
  *  we use the corner velocity (what we intend to calculate) as the magnitude.
  *
- *      Acceleration[i] = UnitAccel[i] * Velocity[i]               (2)
+ *      Acceleration[i] = UnitAccel[i] * Velocity[i]        (2)
  *
  *  Since we need the jerk value, which is defined as the "rate of change of acceleration,
  *  that is, the derivative of acceleration with respect to time" (Wikipedia), we need to
@@ -672,14 +697,14 @@ static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const floa
  *  physics. That will give us the time over which to "apply" the change of acceleration
  *  in order to get a physically realistic jerk. The yields a fairly simple formula:
  *
- *      Jerk[i] = Acceleration[i] / Time                           (3)
+ *      Jerk[i] = Acceleration[i] / Time                    (3)
  *
  *  Now that we can compute the jerk for a given corner, we need to know the maximum
  *  velocity that we can take the corner without violating that jerk for any axis.
  *  Let's incorporate formula (2) into formula (3), and solve for Velocity, using
  *  the known max Jerk and UnitAccel for this corner:
  *
- *      Velocity[i] = (Jerk[i] * Time) / UnitAccel[i]              (4)
+ *      Velocity[i] = (Jerk[i] * Time) / UnitAccel[i]       (4)
  *
  *  We then compute (4) for each axis, and use the smallest (most limited) result or
  *  vmax, whichever is smaller.
@@ -696,11 +721,11 @@ static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const floa
 
 static void _calculate_junction_vmax(mpBuf_t* bf) 
 {
-    // ++++ RG If we change cruise_vmax, we'll need to recompute junction_vmax, if we do this:
-    float velocity = min(bf->cruise_vmax, bf->nx->cruise_vmax);  // start with our maximum possible velocity
+    // If we change cruise_vmax, we'll need to recompute junction_vmax, if we do this:
+//    float velocity = min(bf->cruise_vmax, bf->nx->cruise_vmax);  // start with our maximum possible velocity
+    float velocity = 8675309;
 
-    // uint8_t jerk_axis = AXIS_X;
-    // cmAxes jerk_axis = AXIS_X;
+    // cmAxes jerk_axis = AXIS_X;   // a diagnostic in case you want to find the limiting axis
 
     for (uint8_t axis = 0; axis < AXES; axis++) {
         if (bf->axis_flags[axis] || bf->nx->axis_flags[axis]) {       // skip axes with no movement
@@ -712,9 +737,9 @@ static void _calculate_junction_vmax(mpBuf_t* bf)
             if (delta > EPSILON) {
                 // formula (4): (See Note 1, above)
 
-                // velocity = min(velocity, (cm.a[axis].max_junction_accel / delta));
-                if ((cm.a[axis].max_junction_accel / delta) < velocity) {
-                    velocity = (cm.a[axis].max_junction_accel / delta);
+                // velocity = min(velocity, (cm->a[axis].max_junction_accel / delta));
+                if ((cm->a[axis].max_junction_accel / delta) < velocity) {
+                    velocity = (cm->a[axis].max_junction_accel / delta);
                     // bf->jerk_axis = axis;
                 }
             }

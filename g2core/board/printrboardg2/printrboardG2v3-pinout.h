@@ -1,9 +1,10 @@
 /*
  * printrbaordG2v3-pinout.h - board pinout specification
+ * For: /board/printrboardg2
  * This file is part of the g2core project
  *
- * Copyright (c) 2013 - 2016 Robert Giseburt
- * Copyright (c) 2013 - 2016 Alden S. Hart Jr.
+ * Copyright (c) 2013 - 2018 Robert Giseburt
+ * Copyright (c) 2013 - 2018 Alden S. Hart Jr.
  *
  * This file is part of the Motate Library.
  *
