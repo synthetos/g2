@@ -49,8 +49,8 @@ typedef enum {
     IO_MODE_DISABLED = 2                // input is disabled
 } ioMode;
 #define IO_MODE_MAX     IO_MODE_DISABLED
-//#define NORMALLY_OPEN   IO_ACTIVE_LOW   // equivalent
-//#define NORMALLY_CLOSED IO_ACTIVE_HIGH  // equivalent
+#define NORMALLY_OPEN   IO_ACTIVE_LOW   // equivalent
+#define NORMALLY_CLOSED IO_ACTIVE_HIGH  // equivalent
 
 // *** NOTE: The active hi/low values currently agree with spindle and coolant values
 // The above will all need to be changed to ACTIVE_HIGH = 0, ACTIVE_LOW = 1

@@ -88,13 +88,13 @@
 
 // *** motor settings ************************************************************************************
 
+#define MOTOR_POWER_LEVEL       0.2                     // power level: 0.0=no power, 1.0=max power
 #define MOTOR_POWER_MODE        MOTOR_POWERED_IN_CYCLE  // default motor power mode (see stPowerMode in stepper.h)
                                                         // 0=MOTOR_DISABLED, 
                                                         // 1=MOTOR_ALWAYS_POWERED, 
                                                         // 2=MOTOR_POWERED_IN_CYCLE, 
                                                         // 3=MOTOR_POWERED_ONLY_WHEN_MOVING
-#define M1_POWER_LEVEL          0.4                     // 1pl:   0.0=no power, 1.0=max power
-#define MOTOR_POWER_TIMEOUT     10.00                   // motor power timeout in seconds
+#define MOTOR_POWER_TIMEOUT     5.00                    // motor power timeout in seconds
 
 #define M1_MOTOR_MAP            AXIS_X_EXTERNAL         // 1ma
 #define M1_STEP_ANGLE           1.8                     // 1sa
@@ -102,7 +102,7 @@
 #define M1_MICROSTEPS           8                       // 1mi  1,2,4,8,16,32
 #define M1_POLARITY             0                       // 1po  0=normal, 1=reversed
 #define M1_POWER_MODE           MOTOR_POWER_MODE        // 1pm  0=MOTOR_DISABLED, 1=MOTOR_ALWAYS_POWERED, 2=MOTOR_POWERED_IN_CYCLE, 3=MOTOR_POWERED_ONLY_WHEN_MOVING
-#define M1_POWER_LEVEL          0.4
+#define M1_POWER_LEVEL          MOTOR_POWER_LEVEL       // 1pl:   0.0=no power, 1.0=max power
 
 #define M2_MOTOR_MAP            AXIS_Y_EXTERNAL
 #define M2_STEP_ANGLE           1.8
@@ -110,7 +110,7 @@
 #define M2_MICROSTEPS           8
 #define M2_POLARITY             0
 #define M2_POWER_MODE           MOTOR_POWER_MODE
-#define M2_POWER_LEVEL          0.4
+#define M2_POWER_LEVEL          MOTOR_POWER_LEVEL
 
 #define M3_MOTOR_MAP            AXIS_Z_EXTERNAL  // Imaginary Z axis. For testing
 #define M3_STEP_ANGLE           1.8
@@ -118,7 +118,7 @@
 #define M3_MICROSTEPS           8
 #define M3_POLARITY             0
 #define M3_POWER_MODE           MOTOR_POWER_MODE
-#define M3_POWER_LEVEL          0.4
+#define M3_POWER_LEVEL          MOTOR_POWER_LEVEL
 
 #define M4_MOTOR_MAP            AXIS_W_EXTERNAL  // Imaginary W axis. For testing
 #define M4_STEP_ANGLE           1.8
@@ -126,7 +126,7 @@
 #define M4_MICROSTEPS           8
 #define M4_POLARITY             1
 #define M4_POWER_MODE           MOTOR_POWER_MODE
-#define M4_POWER_LEVEL          0.4
+#define M4_POWER_LEVEL          MOTOR_POWER_LEVEL
 
 // *** axis settings **********************************************************************************
 
