@@ -16,6 +16,7 @@ New features added. See linked issues and pull requests for details
 - Added explicit [Job Kill  ^d](https://github.com/synthetos/g2/wiki/Feedhold,-Resume,-and-Other-Simple-Commands#job-kill) - has the effect of an M30 (program end)
 - Documented [Communications Startup Tests](https://github.com/synthetos/g2/wiki/g2core-Communications#enqack---checking-for-clean-startup)
 
+
 ### Internal Changes and Bug Fixes
 Many things have changed in the internals for this very large pull request. The following list highlights some of these changes but is not meant to be comprehensive.
 - Added explicit typing and type testing to JSON variables.
@@ -23,7 +24,9 @@ Many things have changed in the internals for this very large pull request. The 
 - Movement towards getters and setters as initial stage of refactoring the Big Table :)
 - Bugfix: Fixed root finding problem in feedhold exit velocity calculation
 - Bugfix: fixed bug in B and C axis assignment in coordinate rotation code
-
+- PR #334 A, B, C axes radius defaults to use motors 4, 5, & 6
+- PR #336, Issue #336 partial solution to coolant initialization
+- PR #299, Issue #298 fix for reading nested JSON value errors
 
 ## Firmware Build 100 `{fb:100.xx}`
 ### Feature Enhancements
