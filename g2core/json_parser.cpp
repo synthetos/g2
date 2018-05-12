@@ -115,7 +115,9 @@ void json_parse_for_exec(char *str, bool execute)
 static stat_t _json_parser_execute(nvObj_t *nv) {
 
     do {
-        if (nv->valuetype == TYPE_NULL) {           // means GET the value
+        if (nv->valuetype == TYPE_PARENT) {
+            // anything?
+        } else if (nv->valuetype == TYPE_NULL) {           // means GET the value
             ritorno(nv_get(nv));                    // ritorno returns w/status on any errors
             if (nv->valuetype == TYPE_PARENT) {     // This will be true if you read a group. Exit now
                 return (STAT_OK);
