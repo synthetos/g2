@@ -2,7 +2,7 @@
  * persistence.cpp - persistence functions
  * This file is part of the g2core project
  *
- * Copyright (c) 2013 - 2017 Alden S. Hart Jr.
+ * Copyright (c) 2013 - 2018 Alden S. Hart Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -47,7 +47,7 @@ nvmSingleton_t nvm;
 
 void persistence_init()
 {
-	return;
+    return;
 }
 
 /*
@@ -58,8 +58,8 @@ void persistence_init()
 
 stat_t read_persistent_value(nvObj_t *nv)
 {
-	nv->value = 0;
-	return (STAT_OK);
+    nv->value_flt = 0;
+    return (STAT_OK);
 }
 
 /*
@@ -71,8 +71,8 @@ stat_t read_persistent_value(nvObj_t *nv)
 
 stat_t write_persistent_value(nvObj_t *nv)
 {
-//    if (cm.cycle_state != CYCLE_OFF) { // can't write when machine is moving
+//    if (cm->cycle_state != CYCLE_OFF) { // can't write when machine is moving
 //        return(rpt_exception(STAT_FILE_NOT_OPEN, "write_persistent_value() can't write when machine is in cycle"));
 //    }
-	return (STAT_OK);
+    return (STAT_OK);
 }

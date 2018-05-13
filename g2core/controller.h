@@ -2,8 +2,8 @@
  * controller.h - g2core controller and main dispatch loop
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2016 Robert Giseburt
+ * Copyright (c) 2010 - 2018 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2018 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -55,8 +55,6 @@ typedef struct controllerSingleton {    // main TG controller struct
     // system identification values
     float fw_build;                     // firmware build number
     float fw_version;                   // firmware version number
-    float hw_platform;                  // hardware compatibility - platform type
-    float hw_version;                   // hardware compatibility - platform revision
 
     // system state variables
     csControllerState controller_state;
@@ -64,11 +62,11 @@ typedef struct controllerSingleton {    // main TG controller struct
     uint32_t led_blink_rate;            // used to flash indicator LED
 
     // communications state variables
-    // cs.comm_mode is the setting for the communications mode
-    // js.json_mode is the actual current mode (see also js.json_now)
+    // useful to know: 
+    //      cs.comm_mode is the setting for the communications mode
+    //      js.json_mode is the actual current mode (see also js.json_now)
     commMode comm_mode;                 // ej: 0=text mode sticky, 1=JSON mode sticky, 2=auto mode
-    commMode comm_request_mode;         // mode of request (may be different thatn the setting)
-
+    commMode comm_request_mode;         // mode of request (may be different than the setting)
     bool responses_suppressed;          // if true, responses are to be suppressed (for internal-file delivery)
     
     // controller serial buffers
@@ -76,6 +74,9 @@ typedef struct controllerSingleton {    // main TG controller struct
     uint16_t linelen;                   // length of currently processing line
     char out_buf[OUTPUT_BUFFER_LEN];    // output buffer
     char saved_buf[SAVED_BUFFER_LEN];   // save the input buffer
+
+    // Exceptions - some exceptions cannot be notified by an ER because they are in interrupts 
+    bool exec_aline_assertion_failure;  // record an exception deep inside mp_exec_aline()
 
     magic_t magic_end;
 } controller_t;

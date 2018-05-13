@@ -2,8 +2,8 @@
  * json_parser.h - JSON parser and JSON support
  * This file is part of the g2core project
  *
- * Copyright (c) 2011 - 2017 Alden S. Hart, Jr.
- * Copyright (c) 2016 - 2017 Rob Giseburt
+ * Copyright (c) 2011 - 2018 Alden S. Hart, Jr.
+ * Copyright (c) 2016 - 2018 Rob Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -50,9 +50,9 @@ typedef enum {
     JV_VERBOSE,                     // [5] returns footer, messages, config commands, gcode blocks
     JV_EXCEPTIONS,                  // [6] returns only on messages, configs, and non-zero status
     JV_STATUS,                      // [7] returns status and any messages in abbreviated format
-    JV_STATUS_COUNT,                // [8] returns status, count and messages in abbreviated format
-    JV_MAX_VALUE
+    JV_STATUS_COUNT                 // [8] returns status, count and messages in abbreviated format
 } jsonVerbosity;
+#define JV_MAX_VALUE JV_STATUS_COUNT
 
 typedef enum {                      // json output print modes
     JSON_NO_PRINT = 0,              // don't print anything if you find yourself in JSON mode
@@ -89,8 +89,10 @@ void json_print_object(nvObj_t *nv);
 void json_print_response(uint8_t status, const bool only_to_muted = false);
 void json_print_list(stat_t status, uint8_t flags);
 
-stat_t json_set_jv(nvObj_t *nv);
-stat_t json_set_ej(nvObj_t *nv);
+stat_t js_get_ej(nvObj_t *nv);
+stat_t js_set_ej(nvObj_t *nv);
+stat_t js_get_jv(nvObj_t *nv);
+stat_t js_set_jv(nvObj_t *nv);
 
 #ifdef __TEXT_MODE
 

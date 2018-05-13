@@ -1,5 +1,6 @@
 /*
  * board_xio.cpp - extended IO functions that are board-specific
+ * For: /board/ArduinoDue
  * This file is part of the g2core project
  *
  * Copyright (c) 2016 Alden S. Hart Jr.

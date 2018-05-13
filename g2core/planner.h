@@ -2,8 +2,8 @@
  * planner.h - cartesian trajectory planning and motion execution
  * This file is part of the g2core project
  *
- * Copyright (c) 2013 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2016 Robert Giseburt
+ * Copyright (c) 2013 - 2018 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2018 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -155,8 +155,7 @@ using Motate::Timeout;
 
 /*
  * Enums and other type definitions
- *
- * All the enums that equal zero must be zero. Don't change them
+ * All the enums that equal some starting value must be that value. Don't change them
  */
 
 typedef void (*cm_exec_t)(float[], bool[]); // callback to canonical_machine execution function
@@ -165,15 +164,15 @@ typedef enum {                      // planner operating state
     PLANNER_IDLE = 0,               // planner and movement are idle
     PLANNER_STARTUP,                // ingesting blocks before movement is started
     PLANNER_PRIMING,                // preparing new moves for planning ("stitching")
-    PLANNER_BACK_PLANNING           // plan by planning all blocks, from the newest added to the running block
+    PLANNER_BACK_PLANNING           // actively backplanning all blocks, from the newest added to the running block
 } plannerState;
 
 typedef enum {                      // bf->buffer_state values in incresing order so > and < can be used
     MP_BUFFER_EMPTY = 0,            // buffer is available for use (MUST BE 0)
     MP_BUFFER_INITIALIZING,         // buffer has been checked out and is being initialzed by aline() or a command
-    MP_BUFFER_IN_PROCESS,           // planning is in progress - at least vmaxes have been set
-    MP_BUFFER_PREPPED,              // buffer ready for final planning; velocities have been set
-    MP_BUFFER_PLANNED,              // buffer fully planned. May still be replanned
+    MP_BUFFER_NOT_PLANNED,          // planning is in progress - at least vmaxes have been set
+    MP_BUFFER_BACK_PLANNED,         // buffer ready for final planning; velocities have been set
+    MP_BUFFER_FULLY_PLANNED,        // buffer fully planned. May still be replanned
     MP_BUFFER_RUNNING,              // current running buffer
     MP_BUFFER_POLAND,               // Hitler used Poland as a buffer state
     MP_BUFFER_UKRAINE               // Later Stalin did the same to Ukraine
@@ -183,6 +182,7 @@ typedef enum {                      // bf->block_type values
     BLOCK_TYPE_NULL = 0,            // MUST=0  null move - does a no-op
     BLOCK_TYPE_ALINE = 1,           // MUST=1  acceleration planned line
     BLOCK_TYPE_COMMAND = 2,         // MUST=2  general command
+                                    // All other non-move commands are > BLOCK_TYPE_COMMAND
     BLOCK_TYPE_DWELL,               // Gcode dwell
     BLOCK_TYPE_JSON_WAIT,           // JSON wait command
     BLOCK_TYPE_TOOL,                // T command (T, not M6 tool change)
@@ -226,33 +226,22 @@ typedef enum {                      // code blocks for planning and trapezoid ge
     ASYMMETRIC_BUMP,                // (Ve != Vx) < Vc
 } blockHint;
 
-typedef enum {
-    ZOID_EXIT_NULL = 0,
-    ZOID_EXIT_1a,
-    ZOID_EXIT_1c,
-    ZOID_EXIT_1d,
-    ZOID_EXIT_2a,
-    ZOID_EXIT_2c,
-    ZOID_EXIT_2d,
-    ZOID_EXIT_3c,
-    ZOID_EXIT_3s,
-    ZOID_EXIT_3s2,
-    ZOID_EXIT_3d2,
-    ZOID_EXIT_3a2
-} zoidExitPoint;
-
 /*** Most of these factors are the result of a lot of tweaking. Change with caution.***/
 
-#define PLANNER_BUFFER_POOL_SIZE    (48)                // Suggest 12 min. Limit is 255
-#define PLANNER_BUFFER_HEADROOM     (4)                 // Buffers to reserve in planner before processing new input line
+#define PLANNER_QUEUE_SIZE          ((uint8_t)48)       // Suggest 12 min. Limit is 255
+#define SECONDARY_QUEUE_SIZE        ((uint8_t)12)       // Secondary planner queue for feedhold operations
+#define PLANNER_BUFFER_HEADROOM     ((uint8_t)4)        // Buffers to reserve in planner before processing new input line
 #define JERK_MULTIPLIER             ((float)1000000)    // DO NOT CHANGE - must always be 1 million
 
-#define JUNCTION_INTEGRATION_MIN    (0.05)              // minimum allowable setting
-#define JUNCTION_INTEGRATION_MAX    (5.00)              // maximum allowable setting
+#define JUNCTION_INTEGRATION_MIN    (0.05)              // JT minimum allowable setting
+#define JUNCTION_INTEGRATION_MAX    (5.00)              // JT maximum allowable setting
 
+#ifndef MIN_SEGMENT_MS                                  // boards can override this value in hardware.h
 #define MIN_SEGMENT_MS              ((float)0.75)       // minimum segment milliseconds
-#define NOM_SEGMENT_MS              ((float)1.5)        // nominal segment ms (at LEAST MIN_SEGMENT_MS * 2)
-#define MIN_BLOCK_MS                ((float)1.5)        // minimum block (whole move) milliseconds
+#endif
+#define NOM_SEGMENT_MS              ((float)MIN_SEGMENT_MS * 2) // nominal segment ms (at LEAST MIN_SEGMENT_MS * 2)
+#define MIN_BLOCK_MS                ((float)MIN_SEGMENT_MS * 2) // minimum block (whole move) milliseconds
+
 #define BLOCK_TIMEOUT_MS            ((float)30.0)       // MS before deciding there are no new blocks arriving
 #define PHAT_CITY_MS                ((float)100.0)      // if you have at least this much time in the planner
 
@@ -286,87 +275,115 @@ typedef enum {
 #define Veq2_lo 1.0
 #define VELOCITY_ROUGHLY_EQ(v0,v1) ( (v0 > Vthr2) ? fabs(v0-v1) < Veq2_hi : fabs(v0-v1) < Veq2_lo )
 
-//#define ASCII_ART(s)            xio_writeline(s)
+/* Planner Diagnostics */
+
+//#define __PLANNER_DIAGNOSTICS   // comment this out to drop diagnostics
+
+#ifdef __PLANNER_DIAGNOSTICS
+#define ASCII_ART(s) xio_writeline(s)
+
+#define UPDATE_BF_DIAGNOSTICS(bf)   { bf->linenum = bf->gm.linenum; \
+                                      bf->block_time_ms = bf->block_time*60000; \
+                                      bf->plannable_time_ms = bf->plannable_time*60000; }
+                                    
+#define UPDATE_MP_DIAGNOSTICS       { mp->plannable_time_ms = mp->plannable_time*60000; }
+#define SET_PLANNER_ITERATIONS(i)   { bf->iterations = i; }
+#define INC_PLANNER_ITERATIONS      { bf->iterations++; }
+#define SET_MEET_ITERATIONS(i)      { bf->meet_iterations = i; }
+#define INC_MEET_ITERATIONS         { bf->meet_iterations++; }
+
+#else
 #define ASCII_ART(s)
-//#define UPDATE_BF_DIAGNOSTICS(bf) { bf->block_time_ms = bf->block_time*60000; bf->plannable_time_ms = bf->plannable_time*60000; }
-#define UPDATE_MP_DIAGNOSTICS     { mp.plannable_time_ms = mp.plannable_time*60000; }
+#define UPDATE_BF_DIAGNOSTICS
+#define UPDATE_MP_DIAGNOSTICS
+#define SET_PLANNER_ITERATIONS(i)
+#define INC_PLANNER_ITERATIONS
+#define SET_MEET_ITERATIONS(i)
+#define INC_MEET_ITERATIONS
+#endif
 
 /*
  *  Planner structures
  *
- *  You should be aware of the distinction between 'buffers' and 'blocks'
+ *  Be aware of the distinction between 'buffers' and 'blocks'
  *  Please refer to header comments in for important details on buffers and blocks
  *    - plan_zoid.cpp / mp_calculate_ramps()
  *    - plan_exec.cpp / mp_exec_aline()
  */
 
-struct mpBuffer_to_clear {
-    // Note: _clear_buffer() zeros all data from this point down
-    stat_t (*bf_func)(struct mpBuffer *bf); // callback to buffer exec function
-    cm_exec_t cm_func;              // callback to canonical machine execution function
+//**** Planner Queue Structures ****
 
-    //+++++ DIAGNOSTICS for easier debugging
-    uint32_t linenum;               // mirror of bf->gm.linenum
+typedef struct mpBuffer {
+
+    // *** CAUTION *** These two pointers are not reset by _clear_buffer()
+    struct mpBuffer *pv;                // static pointer to previous buffer
+    struct mpBuffer *nx;                // static pointer to next buffer
+    uint8_t buffer_number;              // DIAGNOSTIC for easier debugging
+
+    stat_t (*bf_func)(struct mpBuffer *bf); // callback to buffer exec function
+    cm_exec_t cm_func;                  // callback to canonical machine execution function
+
+#ifdef __PLANNER_DIAGNOSTICS
+    uint32_t linenum;                   // mirror of bf->gm.linenum
     int iterations;
     float block_time_ms;
-    float plannable_time_ms;        // time in planner
-    float plannable_length;         // length in planner
-    int8_t meet_iterations;         // iterations needed in _get_meet_velocity
-    //+++++ to here
+    float plannable_time_ms;            // time in planner
+    float plannable_length;             // length in planner
+    uint8_t meet_iterations;            // iterations needed in _get_meet_velocity
+#endif
 
-    bufferState buffer_state;       // used to manage queuing/dequeuing
-    blockType block_type;           // used to dispatch to run routine
-    blockState block_state;         // move state machine sequence
-    blockHint hint;                 // hint the block for zoid and other planning operations. Must be accurate or NO_HINT
+    bufferState buffer_state;           // used to manage queuing/dequeuing
+    blockType block_type;               // used to dispatch to run routine
+    blockState block_state;             // move state machine sequence
+    blockHint hint;                     // hint the block for zoid and other planning operations. Must be accurate or NO_HINT
 
     // block parameters
-    float unit[AXES];               // unit vector for axis scaling & planning
-    bool axis_flags[AXES];          // set true for axes participating in the move & for command parameters
+    float unit[AXES];                   // unit vector for axis scaling & planning
+    bool axis_flags[AXES];              // set true for axes participating in the move & for command parameters
 
-    bool plannable;                 // set true when this block can be used for planning
+    bool plannable;                     // set true when this block can be used for planning
 
-    float length;                   // total length of line or helix in mm
-    float block_time;               // computed move time for entire block (move)
-    float override_factor;          // feed rate or rapid override factor for this block ("override" is a reserved word)
-
-    // We are removing all entry_* values.
-    // To get the entry_* values, look at pv->exit_* or mr.exit_*
+    float length;                       // total length of line or helix in mm
+    float block_time;                   // computed move time for entire block (move)
+    float override_factor;              // feed rate or rapid override factor for this block ("override" is a reserved word)
 
     // *** SEE NOTES ON THESE VARIABLES, in aline() ***
-    float cruise_velocity;          // cruise velocity requested & achieved
-    float exit_velocity;            // exit velocity requested for the move
-                                    // is also the entry velocity of the *next* move
+    // We removed all entry_* values.
+    // To get the entry_* values, look at pv->exit_* or mr->exit_*
+    float cruise_velocity;              // cruise velocity requested & achieved
+    float exit_velocity;                // exit velocity requested for the move
+    // is also the entry velocity of the *next* move
 
-    float cruise_vset;              // cruise velocity requested for move - prior to overrides
-    float cruise_vmax;              // cruise max velocity adjusted for overrides
-    float exit_vmax;                // max exit velocity possible for this move
-                                    // is also the maximum entry velocity of the next move
+    float cruise_vset;                  // cruise velocity requested for move - prior to overrides
+    float cruise_vmax;                  // cruise max velocity adjusted for overrides
+    float exit_vmax;                    // max exit velocity possible for this move
+    // is also the maximum entry velocity of the next move
 
-    float absolute_vmax;            // fastest this block can move w/o exceeding constraints
-    float junction_vmax;            // maximum the exit velocity can be to go through the junction
-                                    // between the NEXT BLOCK AND THIS ONE
+    float absolute_vmax;                // fastest this block can move w/o exceeding constraints
+    float junction_vmax;                // maximum the exit velocity can be to go through the junction
+    // between the NEXT BLOCK AND THIS ONE
 
-    float jerk;                     // maximum linear jerk term for this move
-    float jerk_sq;                  // Jm^2 is used for planning (computed and cached)
-    float recip_jerk;               // 1/Jm used for planning (computed and cached)
-    float sqrt_j;                   // sqrt(jM) used for planning (computed and cached)
-    float q_recip_2_sqrt_j;         // (q/(2 sqrt(jM))) where q = (sqrt(10)/(3^(1/4))), used in length computations (computed and cached)
+    float jerk;                         // maximum linear jerk term for this move
+    float jerk_sq;                      // Jm^2 is used for planning (computed and cached)
+    float recip_jerk;                   // 1/Jm used for planning (computed and cached)
+    float sqrt_j;                       // sqrt(jM) used for planning (computed and cached)
+    float q_recip_2_sqrt_j;             // (q/(2 sqrt(jM))) where q = (sqrt(10)/(3^(1/4))), used in length computations (computed and cached)
 
-    GCodeState_t gm;                // Gcode model state - passed from model, used by planner and runtime
+    GCodeState_t gm;                    // Gcode model state - passed from model, used by planner and runtime
 
+    // clears the above structure
     void reset() {
-        //memset((void *)(this), 0, sizeof(mpBuffer_to_clear));
-        
         bf_func = nullptr;
         cm_func = nullptr;
 
+#ifdef __PLANNER_DIAGNOSTICS
         linenum = 0;
         iterations = 0;
         block_time_ms = 0;
         plannable_time_ms = 0;
         plannable_length = 0;
         meet_iterations = 0;
-
+#endif
         buffer_state = MP_BUFFER_EMPTY;
         block_type = BLOCK_TYPE_NULL;
         block_state = BLOCK_INACTIVE;
@@ -376,9 +393,8 @@ struct mpBuffer_to_clear {
             unit[i] = 0;
             axis_flags[i] = 0;
         }
-
         plannable = false;
-        length  = 0.0;
+        length = 0.0;
         block_time = 0.0;
         override_factor = 0.0;
         cruise_velocity = 0.0;
@@ -395,86 +411,44 @@ struct mpBuffer_to_clear {
         q_recip_2_sqrt_j = 0.0;
         gm.reset();
     }
-};
-
-typedef struct mpBuffer : mpBuffer_to_clear { // See Planning Velocity Notes for variable usage
-
-    // *** CAUTION *** These two pointers are not reset by _clear_buffer()
-    struct mpBuffer *pv;            // static pointer to previous buffer
-    struct mpBuffer *nx;            // static pointer to next buffer
-    uint8_t buffer_number;          //+++++ DIAGNOSTIC for easier debugging
 } mpBuf_t;
 
-typedef struct mpBufferPool {       // ring buffer for sub-moves
-    magic_t magic_start;            // magic number to test memory integrity
-
-    mpBuf_t *r;                     // run buffer pointer
-    mpBuf_t *w;                     // write buffer pointer
-    uint8_t buffers_available;      // running count of available buffers
-    mpBuf_t bf[PLANNER_BUFFER_POOL_SIZE];// buffer storage
-
+typedef struct mpPlannerQueue {         // control structure for queue
+    magic_t magic_start;                // magic number to test memory integrity
+    mpBuf_t *r;                         // run buffer pointer
+    mpBuf_t *w;                         // write buffer pointer
+    uint8_t queue_size;                 // total number of buffers, one-based (e.g. 48 not 47)
+    uint8_t buffers_available;          // running count of available buffers in queue
+    mpBuf_t *bf;                        // pointer to buffer pool (storage array)
     magic_t magic_end;
-} mpBufferPool_t;
+} mpPlannerQueue_t;
 
-typedef struct mpMotionPlannerSingleton {  // common variables for planning (move master)
-    magic_t magic_start;            // magic number to test memory integrity
+//**** Planner Runtime structures ****
 
-    //+++++ DIAGNOSTICS
-    float run_time_remaining_ms;
-    float plannable_time_ms;
+typedef struct mpBlockRuntimeBuf {      // Data structure for just the parts of RunTime that we need to plan a BLOCK
+    struct mpBlockRuntimeBuf *nx;       // singly-linked-list
 
-    // planner position
-    float position[AXES];           // final move position for planning purposes
-
-    // timing variables
-    float run_time_remaining;       // time left in runtime (including running block)
-    float plannable_time;           // time in planner that can actually be planned
-
-    // planner state variables
-    plannerState planner_state;     // current state of planner
-    bool request_planning;          // set true to request backplanning
-    bool backplanning;              // true if planner is in a back-planning pass
-    bool mfo_active;                // true if mfo override is in effect
-    bool ramp_active;               // true when a ramp is occurring
-    bool entry_changed;             // mark if exit_velocity changed to invalidate next block's hint
-
-    // feed overrides and ramp variables (these extend the variables in cm.gmx)
-    float mfo_factor;               // runtime override factor
-    float ramp_target;
-    float ramp_dvdt;
-
-    // objects
-    Timeout block_timeout;          // Timeout object for block planning
-
-    // planner pointers
-    mpBuf_t *p;                     // planner buffer pointer
-    mpBuf_t *c;                     // pointer to buffer immediately following critical region
-    mpBuf_t *planning_return;       // buffer to return to once back-planning is complete
-
-    magic_t magic_end;
-} mpMotionPlannerSingleton_t;
-
-typedef struct mpBlockRuntimeBuf {  // Data structure for just the parts of RunTime that we need to plan a BLOCK
-    struct mpBlockRuntimeBuf *nx;   // singly-linked-list
-
-    float head_length;              // copies of bf variables of same name
+    float head_length;                  // copies of bf variables of same name
     float body_length;
     float tail_length;
 
-    float head_time;                // copies of bf variables of same name
+    float head_time;                    // copies of bf variables of same name
     float body_time;
     float tail_time;
 
-    float cruise_velocity;          // velocity at the end of the head and the beginning of the tail
-    float exit_velocity;            // velocity at the end of the move
+    float cruise_velocity;              // velocity at the end of the head and the beginning of the tail
+    float exit_velocity;                // velocity at the end of the move
 } mpBlockRuntimeBuf_t;
 
-typedef struct mpMotionRuntimeSingleton {    // persistent runtime variables
-//  uint8_t (*run_move)(struct mpMoveRuntimeSingleton *m); // currently running move - left in for reference
+typedef struct mpPlannerRuntime {       // persistent runtime variables
+    //  uint8_t (*run_move)(struct mpMoveRuntimeSingleton *m); // currently running move - left in for reference
     magic_t magic_start;                // magic number to test memory integrity
     blockState block_state;             // state of the overall move
     moveSection section;                // what section is the move in?
     sectionState section_state;         // state within a move section
+
+    bool out_of_band_dwell_flag;        // set true to conditionally execute out-of-band dwell
+    float out_of_band_dwell_seconds;    // time for out-of-band dwell
 
     float unit[AXES];                   // unit vector for axis scaling & planning
     bool axis_flags[AXES];              // set true for axes participating in the move
@@ -490,7 +464,10 @@ typedef struct mpMotionRuntimeSingleton {    // persistent runtime variables
 
     mpBlockRuntimeBuf_t *r;             // block that is running
     mpBlockRuntimeBuf_t *p;             // block that is being planned, p might == r
-    mpBlockRuntimeBuf_t bf[2];          // buffer holding the two blocks
+    mpBlockRuntimeBuf_t block[2];       // buffer holding the two blocks
+
+    mpBuf_t *plan_bf;                   // DIAGNOSTIC - pointer to next buffer to plan
+    mpBuf_t *run_bf;                    // DIAGNOSTIC - pointer to currently running buffer
 
     float entry_velocity;               // entry values for the currently running block
 
@@ -508,46 +485,118 @@ typedef struct mpMotionRuntimeSingleton {    // persistent runtime variables
     GCodeState_t gm;                    // gcode model state currently executing
 
     magic_t magic_end;
-} mpMotionRuntimeSingleton_t;
+
+   // resets mpPlannerRuntime structure without actually wiping it
+    void reset() {
+        block_state = BLOCK_INACTIVE;
+        section = SECTION_HEAD;
+        section_state = SECTION_OFF;
+        entry_velocity = 0;             // needed to ensure next block in forward planning starts from 0 velocity
+        r->exit_velocity = 0;           // ditto
+        segment_velocity = 0;
+    }
+
+} mpPlannerRuntime_t;
+
+//**** Master Planner Structure ***
+
+typedef struct mpPlanner {              // common variables for a planner context
+    magic_t magic_start;                // magic number to test memory integrity
+
+    // DIAGNOSTICS
+    float run_time_remaining_ms;
+    float plannable_time_ms;
+
+    // planner position
+    float position[AXES];               // final move position for planning purposes
+
+    // timing variables
+    float run_time_remaining;           // time left in runtime (including running block)
+    float plannable_time;               // time in planner that can actually be planned
+
+    // planner state variables
+    plannerState planner_state;         // current state of planner
+    bool request_planning;              // set true to request backplanning
+    bool backplanning;                  // true if planner is in a back-planning pass
+    bool mfo_active;                    // true if mfo override is in effect
+    bool ramp_active;                   // true when a ramp is occurring
+    bool entry_changed;                 // mark if exit_velocity changed to invalidate next block's hint
+
+    // feed overrides and ramp variables (these extend the variables in cm->gmx)
+    float mfo_factor;                   // runtime override factor
+    float ramp_target;
+    float ramp_dvdt;
+
+    // objects
+    Timeout block_timeout;              // Timeout object for block planning
+
+    // planner pointers
+    mpBuf_t *p;                         // planner buffer pointer
+    mpBuf_t *c;                         // pointer to buffer immediately following critical region
+    mpBuf_t *planning_return;           // buffer to return to once back-planning is complete
+    mpPlannerRuntime_t *mr;             // bind to mr associated with this planner
+    mpPlannerQueue_t q;                 // embed a planner buffer queue manager
+    
+    magic_t magic_end;
+    
+    // clears mpPlanner structure but leaves position alone
+    void reset() {
+        run_time_remaining = 0;
+        plannable_time = 0;
+        planner_state = PLANNER_IDLE;
+        request_planning = false;
+        backplanning = false;
+        mfo_active = false;
+        ramp_active = false;
+        entry_changed = false;
+        block_timeout.clear();
+    }
+} mpPlanner_t;
 
 // Reference global scope structures
-extern mpBufferPool_t mb;               // buffer pool management
-extern mpMotionPlannerSingleton_t mp;   // context for block planning
-extern mpMotionRuntimeSingleton_t mr;   // context for block runtime
+
+extern mpPlanner_t *mp;                 // currently active planner (global variable)
+extern mpPlanner_t mp1;                 // primary planning context
+extern mpPlanner_t mp2;                 // secondary planning context
+
+extern mpPlannerRuntime_t *mr;          // context for block runtime
+extern mpPlannerRuntime_t mr1;          // primary planner runtime context
+extern mpPlannerRuntime_t mr2;          // secondary planner runtime context
+
+extern mpBuf_t mp1_queue[PLANNER_QUEUE_SIZE];   // storage allocation for primary planner queue buffers
+extern mpBuf_t mp2_queue[SECONDARY_QUEUE_SIZE]; // storage allocation for secondary planner queue buffers
 
 /*
  * Global Scope Functions
  */
 
-//planner.cpp functions
+//**** planner.cpp functions
 
-void planner_init(void);
-void planner_reset(void);
-void planner_init_assertions(void);
-stat_t planner_test_assertions(void);
+void planner_init(mpPlanner_t *_mp, mpPlannerRuntime_t *_mr, mpBuf_t *queue, uint8_t queue_size);
+void planner_reset(mpPlanner_t *_mp);
+stat_t planner_assert(const mpPlanner_t *_mp);
 
 void mp_halt_runtime(void);
-void mp_flush_planner(void);
+
 void mp_set_planner_position(uint8_t axis, const float position);
 void mp_set_runtime_position(uint8_t axis, const float position);
 void mp_set_steps_to_runtime_position(void);
 
-void mp_queue_command(void(*cm_exec_t)(float[], bool[]), float *value, bool *flag);
+void mp_queue_command(void(*cm_exec)(float *, bool *), float *value, bool *flag);
 stat_t mp_runtime_command(mpBuf_t *bf);
 
 stat_t mp_json_command(char *json_string);
-stat_t mp_json_wait(char *json_string);
 stat_t mp_json_command_immediate(char *json_string);
+stat_t mp_json_wait(char *json_string);
 
 stat_t mp_dwell(const float seconds);
 void mp_end_dwell(void);
 void mp_request_out_of_band_dwell(float seconds);
-stat_t mp_exec_out_of_band_dwell(void);
 
-// planner functions and helpers
-uint8_t mp_get_planner_buffers(void);
-bool mp_planner_is_full(void);
-bool mp_has_runnable_buffer(void);
+//**** planner functions and helpers
+uint8_t mp_get_planner_buffers(const mpPlanner_t *_mp);
+bool mp_planner_is_full(const mpPlanner_t *_mp);
+bool mp_has_runnable_buffer(const mpPlanner_t *_mp);
 bool mp_is_phat_city_time(void);
 
 stat_t mp_planner_callback();
@@ -558,8 +607,12 @@ void mp_start_traverse_override(const float ramp_time, const float override);
 void mp_end_traverse_override(const float ramp_time);
 void mp_planner_time_accounting(void);
 
-// planner buffer primitives
-void mp_init_buffers(void);
+//**** planner buffer primitives
+//void mp_init_planner_buffers(void);
+//mpBuf_t * mp_get_w(int8_t q);
+//mpBuf_t * mp_get_r(int8_t q);
+mpBuf_t * mp_get_w(void);
+mpBuf_t * mp_get_r(void);
 
 //mpBuf_t * mp_get_prev_buffer(const mpBuf_t *bf);      // Use the following macro instead
 //mpBuf_t * mp_get_next_buffer(const mpBuf_t *bf);      // Use the following macro instead
@@ -571,21 +624,21 @@ void mp_commit_write_buffer(const blockType block_type);
 mpBuf_t * mp_get_run_buffer(void);
 bool mp_free_run_buffer(void);
 
-// plan_line.c functions
+//**** plan_line.c functions
 void mp_zero_segment_velocity(void);                    // getters and setters...
 float mp_get_runtime_velocity(void);
-float mp_get_runtime_absolute_position(uint8_t axis);
-float mp_get_runtime_work_position(uint8_t axis);
-void mp_set_runtime_work_offset(float offset[]);
+float mp_get_runtime_absolute_position(mpPlannerRuntime_t *_mr, uint8_t axis);
+float mp_get_runtime_display_position(uint8_t axis);
+void mp_set_runtime_display_offset(float offset[]);
 bool mp_get_runtime_busy(void);
 bool mp_runtime_is_idle(void);
 
-stat_t mp_aline(GCodeState_t *gm_in);                   // line planning...
+stat_t mp_aline(GCodeState_t *_gm);                   // line planning...
 void mp_plan_block_list(void);
 void mp_plan_block_forward(mpBuf_t *bf);
 
-// plan_zoid.c functions
-void mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float entry_velocity);
+//**** plan_zoid.c functions
+stat_t mp_calculate_ramps(mpBlockRuntimeBuf_t *block, mpBuf_t *bf, const float entry_velocity);
 float mp_get_target_length(const float v_0, const float v_1, const mpBuf_t *bf);
 float mp_get_target_velocity(const float v_0, const float L, const mpBuf_t *bf); // acceleration ONLY
 float mp_get_decel_velocity(const float v_0, const float L, const mpBuf_t *bf);  // deceleration ONLY
@@ -596,7 +649,7 @@ float mp_calc_a(const float t, const float v_0, const float v_1, const float T);
 float mp_calc_j(const float t, const float v_0, const float v_1, const float T); // compute jerk over curve accelerating from v_0 to v_1, at position t=[0,1], total time T
 //float mp_calc_l(const float t, const float v_0, const float v_1, const float T); // compute length over curve accelerating from v_0 to v_1, at position t=[0,1], total time T
 
-// plan_exec.c functions
+//**** plan_exec.c functions
 stat_t mp_forward_plan(void);
 stat_t mp_exec_move(void);
 stat_t mp_exec_aline(mpBuf_t *bf);

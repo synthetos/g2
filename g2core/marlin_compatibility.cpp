@@ -2,8 +2,8 @@
  * marlin_compatibility.cpp - support for marlin protocol and gcode
  * This file is part of the g2core project
  *
- * Copyright (c) 2017 Alden S. Hart, Jr.
- * Copyright (c) 2017 Rob Giseburt
+ * Copyright (c) 2017 - 2018 Alden S. Hart, Jr.
+ * Copyright (c) 2017 - 2018 Rob Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -16,6 +16,15 @@
  * SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+/*
+ * This file contains most of the code needed to support marlin compatibility mode.
+ * Other files that are affected include:
+ *  - gcode_parser.cpp/.h           big additions for handling Marlin gcode and other functions
+ *  - canonical_machine.cpp/.h      setting targets for relative_extruder_mode coordinates
+ *  - controller.cpp                main-loop callback, fake_stk500, specialized dispatching
+ *  - report.cpp                    system ready message suppressed for Marlin
+ *  - xio.cpp/.h                    Marlin protocol support
  */
 #include "g2core.h"  // #1
 #include "config.h"  // #2
@@ -102,7 +111,7 @@ nvObj_t *_get_specific_nv(const char *key) {
  */
 void _report_temperatures(char *(&str)) {
     // Tool 0 is extruder 1
-    uint8_t tool = cm.gm.tool;
+    uint8_t tool = cm->gm.tool;
 
     str_concat(str, " T:");
     str += floattoa(str, cm_get_temperature(tool), 2);
@@ -126,16 +135,16 @@ void _report_temperatures(char *(&str)) {
  */
 void _report_position(char *(&str)) {
     str_concat(str, " X:");
-    str += floattoa(str, cm_get_work_position(ACTIVE_MODEL, 0), 2);
+    str += floattoa(str, cm_get_display_position(ACTIVE_MODEL, 0), 2);
     str_concat(str, " Y:");
-    str += floattoa(str, cm_get_work_position(ACTIVE_MODEL, 1), 2);
+    str += floattoa(str, cm_get_display_position(ACTIVE_MODEL, 1), 2);
     str_concat(str, " Z:");
-    str += floattoa(str, cm_get_work_position(ACTIVE_MODEL, 2), 2);
+    str += floattoa(str, cm_get_display_position(ACTIVE_MODEL, 2), 2);
 
-    uint8_t tool = cm.gm.tool;
+    uint8_t tool = cm->gm.tool;
     if ((tool > 0) && (tool < 3)) {
         str_concat(str, " E:");
-        str += floattoa(str, cm_get_work_position(ACTIVE_MODEL, 2), tool + 2); // A or B, depending on tool
+        str += floattoa(str, cm_get_display_position(ACTIVE_MODEL, 2), tool + 2); // A or B, depending on tool
     }
 }
 
@@ -267,7 +276,7 @@ void _marlin_end_temperature_updates(float* vect, bool* flag) {
 bool _queue_next_temperature_commands()
 {
     if (MarlinSetTempState::Idle != set_temp_state) {
-        if (mp_planner_is_full()) {
+        if (mp_planner_is_full(mp)) {
             return false;
         }
 
@@ -290,7 +299,7 @@ bool _queue_next_temperature_commands()
             }
 
             set_temp_state = MarlinSetTempState::StartingUpdates;
-            if (mp_planner_is_full()) {
+            if (mp_planner_is_full(mp)) {
                 return false;
             }
         }
@@ -299,7 +308,7 @@ bool _queue_next_temperature_commands()
             mp_queue_command(_marlin_start_temperature_updates, nullptr, nullptr);
 
             set_temp_state = MarlinSetTempState::StartingWait;
-            if (mp_planner_is_full()) {
+            if (mp_planner_is_full(mp)) {
                 return false;
             }
         }
@@ -312,7 +321,7 @@ bool _queue_next_temperature_commands()
             cm_json_wait(buffer);
 
             set_temp_state = MarlinSetTempState::StoppingUpdates;
-            if (mp_planner_is_full()) {
+            if (mp_planner_is_full(mp)) {
                 return false;
             }
         }
@@ -348,7 +357,7 @@ stat_t marlin_set_temperature(uint8_t tool, float temperature, bool wait) {
  */
 stat_t marlin_request_temperature_report() // M105
 {
-    uint8_t tool = cm.gm.tool;
+    uint8_t tool = cm->gm.tool;
     if ((tool < 1) || (tool > 2)) {
         return STAT_INPUT_VALUE_RANGE_ERROR;
     }
@@ -512,12 +521,12 @@ void marlin_response(const stat_t status, char *buf)
     }
     else if (status == STAT_CHECKSUM_MATCH_FAILED) {
         str_concat(str, "Error:checksum mismatch, Last Line: ");
-        str += inttoa(str, cm.gmx.last_line_number);
+        str += inttoa(str, cm->gmx.last_line_number);
         request_resend = true;
     }
     else if (status == STAT_LINE_NUMBER_OUT_OF_SEQUENCE) {
         str_concat(str, "Error:Line Number is not Last Line Number+1, Last Line: ");
-        str += inttoa(str, cm.gmx.last_line_number);
+        str += inttoa(str, cm->gmx.last_line_number);
         request_resend = true;
     }
     else {
@@ -537,7 +546,7 @@ void marlin_response(const stat_t status, char *buf)
     if (request_resend) {
         str = buffer;
         str_concat(str, "Resend: ");
-        str += inttoa(str, cm.gmx.last_line_number+1);
+        str += inttoa(str, cm->gmx.last_line_number+1);
         *str++ = '\n';
         *str++ = 0;
         xio_writeline(buffer);

@@ -2,7 +2,7 @@
  * plan_arc.h - arc planning and motion execution
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2018 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -30,48 +30,12 @@
 #define ARC_RADIUS_ERROR_MIN ((float)0.005)     // min mm where 1% rule applies
 #define ARC_RADIUS_TOLERANCE ((float)0.001)     // 0.1% radius variance test
 
-typedef struct arArcSingleton {                 // persistent planner and runtime variables
-    magic_t magic_start;
-    uint8_t run_state;              // runtime state machine sequence
-
-    float position[AXES];           // accumulating runtime position
-    float offset[3];                // arc IJK offsets
-
-    float length;                   // length of line or helix in mm
-    float radius;                   // Raw R value, or computed via offsets
-    float theta;                    // starting angle of arc
-    float angular_travel;           // travel along the arc in radians
-    float planar_travel;            // travel in arc plane in mm
-    float linear_travel;            // travel along linear axis of arc in mm
-    bool  full_circle;              // True if full circle arcs specified
-    float rotations;                // number of full rotations to add (P value + sign)
-
-    cmAxes plane_axis_0;            // arc plane axis 0 - e.g. X for G17
-    cmAxes plane_axis_1;            // arc plane axis 1 - e.g. Y for G17
-    cmAxes linear_axis;             // linear axis (normal to plane)
-
-    float   segments;               // number of segments in arc or blend
-    int32_t segment_count;          // count of running segments
-    float   segment_theta;          // angular motion per segment
-    float   segment_linear_travel;  // linear motion per segment
-    float   center_0;               // center of circle at plane axis 0 (e.g. X for G17)
-    float   center_1;               // center of circle at plane axis 1 (e.g. Y for G17)
-
-    GCodeState_t gm;                // Gcode state struct is passed for each arc segment.
-                                    //    Usage:
-                                    //    uint32_t linenum;            // line number of the arc feed move - same for each segment
-                                    //    float target[AXES];            // arc segment target
-//  float work_offset[AXES];        // offset from machine coord system for reporting (same for each segment)
-//  float block_time;               // segment_time: constant time per aline segment
-
-    magic_t magic_end;
-} arc_t;
-extern arc_t arc;
+#define CHORDAL_TOLERANCE_MIN (0.001)           // values below this are not accepted
 
 /* arc function prototypes */
 
-void   cm_arc_init(void);
-void   cm_abort_arc(void);
-stat_t cm_arc_callback(void);
+void   cm_arc_init(cmMachine_t *_cm);
+void   cm_abort_arc(cmMachine_t *_cm);
+stat_t cm_arc_callback(cmMachine_t *_cm);
 
 #endif  // End of include guard: PLAN_ARC_H_ONCE

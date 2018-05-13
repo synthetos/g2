@@ -2,8 +2,8 @@
  * xio.cpp - extended IO functions
  * This file is part of the g2core project
  *
- * Copyright (c) 2013 - 2017 Alden S. Hart Jr.
- * Copyright (c) 2013 - 2017 Robert Giseburt
+ * Copyright (c) 2013 - 2018 Alden S. Hart Jr.
+ * Copyright (c) 2013 - 2018 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -411,8 +411,8 @@ extern xio_t xio;
 // See here for a discussion of what this means if you are not familiar with C++
 // https://github.com/synthetos/g2/wiki/Dual-Endpoint-USB-Internals#c-classes-virtual-functions-and-inheritance
 
-// LineRXBuffer takes the Motate RXBuffer (which handles "transfers", usually DMA), and adds G2 line-reading
-// semantics to it.
+// LineRXBuffer takes the Motate RXBuffer (which handles "transfers", usually DMA), 
+// and adds G2 line-reading semantics to it.
 template <uint16_t _size, typename owner_type, uint8_t _header_count = 8, uint16_t _line_buffer_size = RX_BUFFER_SIZE>
 struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
     typedef RXBuffer<_size, owner_type, char> parent_type;
@@ -438,15 +438,15 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
     // * "index" indicates it's in to _headers array
     // * "offset" means it's a character in the _data array
 
-    uint16_t _scan_offset;          // offset into data of the last character scanned
-    uint16_t _line_start_offset;    // offset into first character of the line, or the first char to ignore (too-long lines)
-    uint16_t _last_line_length;     // used for ensuring lines aren't too long
-    bool     _ignore_until_next_line; // if we get a too-long-line, we ignore the rest by setting this flag
-    bool     _at_start_of_line;     // true if the last character scanned was the end of a line
+    uint16_t _scan_offset;              // offset into data of the last character scanned
+    uint16_t _line_start_offset;        // offset into first character of the line, or the first char to ignore (too-long lines)
+    uint16_t _last_line_length;         // used for ensuring lines aren't too long
+    bool     _ignore_until_next_line;   // if we get a too-long-line, we ignore the rest by setting this flag
+    bool     _at_start_of_line;         // true if the last character scanned was the end of a line
 
-    uint16_t _lines_found;          // count of complete non-control lines that were found during scanning.
+    uint16_t _lines_found;              // count of complete non-control lines that were found during scanning.
 
-    volatile uint16_t _last_scan_offset;  // DEBUGGING
+    volatile uint16_t _last_scan_offset;  // DIAGNOSTIC
 
     bool _last_returned_a_control = false;
 
@@ -486,15 +486,15 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 
     struct SkipSections {
         struct SkipSection {
-            uint16_t start_offset; // the offset of the first character to skip
-            uint16_t end_offset;   // the offset of the next character to read after skipping
+            uint16_t start_offset;  // the offset of the first character to skip
+            uint16_t end_offset;    // the offset of the next character to read after skipping
         };
 
         static constexpr uint16_t _section_count = 16;
         SkipSection _sections[_section_count];
 
-        uint8_t read_section_idx; // index of the first skip section to skip
-        uint8_t write_section_idx; // index of the next skip section to populate
+        uint8_t read_section_idx;   // index of the first skip section to skip
+        uint8_t write_section_idx;  // index of the next skip section to populate
 
         bool isFull() {
             return ((write_section_idx+1)&(_section_count-1)) == read_section_idx;
@@ -637,7 +637,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             // See https://github.com/synthetos/g2/wiki/Marlin-Compatibility#stk500v2
 
             if ((_stk_parser_state == STK500V2_State::Done) && (c == 0)) {
-                _debug_trap("scan ran into NULL (Marlin-mode)");
+                debug_trap("scan ran into NULL (Marlin-mode)");
                 flush(); // consider the connection and all data trashed
                 return false;
             }
@@ -699,7 +699,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 #else   // not MARLIN_COMPAT_ENABLED
 
             if (c == 0) {
-                _debug_trap("scan ran into NULL");
+                debug_trap("_scanBuffer() scan ran into NULL");
                 flush(); // consider the connection and all data trashed
                 return false;
             }
@@ -844,14 +844,14 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             // Either way, _scan_offset is one past the end, so we don't care which.
 
             if (_data[_line_start_offset] == 0) {
-                _debug_trap("read ran into NULL");
+                debug_trap("readline() read ran into NULL");
             }
 
             // scan past any leftover CR or LF from the previous line
             while ((_data[_line_start_offset] == '\n') || (_data[_line_start_offset] == '\r')) {
                 _line_start_offset = (_line_start_offset+1)&(_size-1);
                 if (_scan_offset == _line_start_offset) {
-                    _debug_trap("read ran into scan (1)");
+                    debug_trap("readline() read ran into scan (1)");
                 }
             }
 
@@ -899,7 +899,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
 
 
         if (_data[_read_offset] == 0) {
-            _debug_trap("read ran into NULL");
+            debug_trap("readline() read ran into NULL");
         }
 
         // scan past any leftover CR or LF from the previous line
@@ -907,7 +907,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
         while ((c == '\n') || (c == '\r')) {
             _read_offset = (_read_offset+1)&(_size-1);
             if (_scan_offset == _read_offset) {
-                _debug_trap("read ran into scan (2)");
+                debug_trap("readline() read ran into scan (2)");
             }
             // this also counts as the beginning of a line
             _skip_sections.skip(_read_offset);

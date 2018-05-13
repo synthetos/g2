@@ -2,7 +2,7 @@
  * report.cpp - Status reports and other reporting functions
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2018 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -61,7 +61,7 @@ stat_t rpt_exception(stat_t status, const char *msg)
         if (cs.controller_state >= CONTROLLER_READY) {
             char buffer[128];
             sprintf(buffer, "{\"er\":{\"fb\":%0.2f,\"st\":%d,\"msg\":\"%s - %s\"}}\n",
-                                        G2CORE_FIRMWARE_BUILD, status, get_status_message(status), msg);
+                             G2CORE_FIRMWARE_BUILD, status, get_status_message(status), msg);
             xio_writeline(buffer);
         }
     }
@@ -112,6 +112,7 @@ void rpt_print_loading_configs_message(void)
 
 void rpt_print_system_ready_message(void)
 {
+    // If in Marlin mode and connected as Marlin do not send a startup message
 #if MARLIN_COMPAT_ENABLED == true
     if (MARLIN_COMM_MODE != js.json_mode) {
         _startup_helper(STAT_OK, "SYSTEM READY");
@@ -169,10 +170,10 @@ static uint8_t _populate_filtered_status_report(void);
 
 uint8_t _is_stat(nvObj_t *nv)
 {
-    char tok[TOKEN_LEN+1];
+    char token[TOKEN_LEN+1];
 
-    GET_TOKEN_STRING(nv->value, tok);
-    if (strcmp(tok, "stat") == 0) { return (true);}
+    GET_TOKEN_STRING(nv->value_int, token);   // pass in index, get back token
+    if (strcmp(token, "stat") == 0) { return (true);}
     return (false);
 }
 
@@ -189,13 +190,16 @@ void sr_init_status_report()
     sr.status_report_request = SR_OFF;
     char sr_defaults[NV_STATUS_REPORT_LEN][TOKEN_LEN+1] = { STATUS_REPORT_DEFAULTS };
     nv->index = nv_get_index((const char *)"", (char *)"se00");    // set first SR persistence index
+
+    // record the index of the "stat" variable so we can use it during reporting
     sr.stat_index = nv_get_index((const char *)"", (const char *)"stat");
 
+    // setup the status report array 
     for (uint8_t i=0; i < NV_STATUS_REPORT_LEN ; i++) {
         if (sr_defaults[i][0] == NUL) break;                    // quit on first blank array entry
         sr.status_report_value[i] = -1234567;                   // pre-load values with an unlikely number
-        nv->value = nv_get_index((const char *)"", sr_defaults[i]);// load the index for the SR element
-        if (fp_EQ(nv->value, NO_MATCH)) {
+        nv->value_int = nv_get_index((const char *)"", sr_defaults[i]);// load the index for the SR element
+        if (nv->value_int == NO_MATCH) {
             rpt_exception(STAT_BAD_STATUS_REPORT_SETTING, "sr_init_status_report() encountered bad SR setting"); // trap mis-configured profile settings
             return;
         }
@@ -203,12 +207,10 @@ void sr_init_status_report()
         nv_persist(nv);                                         // conditionally persist - automatic by nv_persist()
         nv->index++;                                            // increment SR NVM index
     }
-    // record the index of the "stat" variable so we can use it during reporting
-    sr.index_of_stat_variable = nv_get_index((const char *)"", (const char *)"stat");
 }
 
 /*
- * sr_set_status_report() - interpret an SR setup string and return current report
+ * sr_set_status_report() - read a list of NV pairs to set up SRs and return a report
  *
  *  Note: By the time this function is called any unrecognized tokens have been detected and
  *  rejected by the JSON or text parser. In other words, it should never get to here if
@@ -226,9 +228,10 @@ stat_t sr_set_status_report(nvObj_t *nv)
         if (((nv = nv->nx) == NULL) || (nv->valuetype == TYPE_EMPTY)) {
             break;
         }
-        if ((nv->valuetype == TYPE_BOOL) && (fp_TRUE(nv->value))) {
+        // Note: valuetype may have been coerced from boolean to something else, so just treat value_int as a bool
+        if (nv->value_int) {
             status_report_list[i] = nv->index;
-            nv->value = nv->index;                          // persist the index as the value
+            nv->value_int = nv->index;                      // persist the index as the value
             nv->index = sr_start + i;                       // index of the SR persistence location
             nv_persist(nv);
             elements++;
@@ -374,7 +377,12 @@ static uint8_t _populate_filtered_status_report()
     const char sr_str[] = "sr";
     bool has_data = false;
     char tmp[TOKEN_LEN+1];
+    float current_value;
     nvObj_t *nv = nv_reset_nv_list();           // sets nv to the start of the body
+    
+    // Set thresholds to detect value changes based on precision for the value. 
+    // Allow for floating point roundoffs, i.e. precision = 2 is 0.01 becomes --> 0.009
+    float precision[8] = { 0.9, 0.09, 0.009, 0.0009, 0.00009, 0.000009, 0.0000009, 0.00000009 };
 
     nv->valuetype = TYPE_PARENT;                // setup the parent object (no need to length check the copy)
     strcpy(nv->token, sr_str);
@@ -387,20 +395,30 @@ static uint8_t _populate_filtered_status_report()
         }
         nv_get_nvObj(nv);
 
-        // report values that have changed by more than 0.0001, but always stops and ends
-        if ((fabs(nv->value - sr.status_report_value[i]) > EPSILON3) ||
-            ((nv->index == sr.stat_index) && fp_EQ(nv->value, COMBINED_PROGRAM_STOP)) ||
-            ((nv->index == sr.stat_index) && fp_EQ(nv->value, COMBINED_PROGRAM_END))) {
+        // extract the value and cast into a float, regardless of value type 
+        if ((valueType)(cfgArray[nv->index].flags & F_TYPE_MASK) == TYPE_FLOAT) {
+            current_value = nv->value_flt;
+        } else {
+            current_value = (float)nv->value_int;
+        }
+
+        // report values that have changed by more than the indicated precision, but always stops and ends
+        if ((fabs(current_value - sr.status_report_value[i]) > precision[cfgArray[nv->index].precision]) ||
+//            ((nv->index == sr.stat_index) && fp_EQ(nv->value_int, COMBINED_PROGRAM_STOP)) ||
+//            ((nv->index == sr.stat_index) && fp_EQ(nv->value_int, COMBINED_PROGRAM_END))) {
+            ((nv->index == sr.stat_index) && (nv->value_int == COMBINED_PROGRAM_STOP)) ||
+            ((nv->index == sr.stat_index) && (nv->value_int == COMBINED_PROGRAM_END))) {
 
             strcpy(tmp, nv->group);            // flatten out groups - WARNING - you cannot use strncpy here...
             strcat(tmp, nv->token);
             strcpy(nv->token, tmp);            //...or here.
-            sr.status_report_value[i] = nv->value;
-            if ((nv = nv->nx) == NULL) return (false);    // should never be NULL unless SR length exceeds available buffer array
+            sr.status_report_value[i] = current_value;
+            if ((nv = nv->nx) == NULL) {        // should never be NULL unless SR length exceeds available buffer array
+                return (false); 
+            }
             has_data = true;
-
         } else {
-            nv->valuetype = TYPE_EMPTY;     // filter this value out of the report
+            nv->valuetype = TYPE_EMPTY;         // filter this value out of the report
         }
     }
     return (has_data);
@@ -419,42 +437,33 @@ static uint8_t _populate_filtered_status_report()
 /*
  * Wrappers and Setters - for calling from nvArray table
  *
- * sr_get()        - run status report
- * sr_set()        - set status report elements
- * sr_set_si()    - set status report interval
+ * sr_get()    - run status report
+ * sr_set()    - set status report elements
+ * sr_get_sv() - get status report verbosity
+ * sr_set_sv() - set status report verbosity
+ * sr_get_si() - get status report interval
+ * sr_set_si() - set status report interval
  */
 
-stat_t sr_get(nvObj_t *nv)
-{
-    return (_populate_unfiltered_status_report());
-}
+stat_t sr_get(nvObj_t *nv) { return (_populate_unfiltered_status_report()); }
+stat_t sr_set(nvObj_t *nv) { return (sr_set_status_report(nv)); }
 
-stat_t sr_set(nvObj_t *nv)
-{
-    return (sr_set_status_report(nv));
-}
-
-stat_t sr_set_si(nvObj_t *nv)
-{
-    if (nv->value < STATUS_REPORT_MIN_MS) {
-        nv->valuetype = TYPE_NULL;
-        return(STAT_INPUT_LESS_THAN_MIN_VALUE);
-    }
-    set_int(nv);
-    return(STAT_OK);
-}
+stat_t sr_get_sv(nvObj_t *nv) { return(get_integer(nv, (uint8_t &)sr.status_report_verbosity)); }
+stat_t sr_set_sv(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)sr.status_report_verbosity, SR_OFF, SR_VERBOSE)); }
+stat_t sr_get_si(nvObj_t *nv) { return(get_integer(nv, sr.status_report_interval)); }
+stat_t sr_set_si(nvObj_t *nv) { return(set_int32(nv, sr.status_report_interval, STATUS_REPORT_MIN_MS, STATUS_REPORT_MAX_MS)); }
 
 /*********************
  * TEXT MODE SUPPORT *
  *********************/
 #ifdef __TEXT_MODE
 
-static const char fmt_si[] = "[si]  status interval%14d ms\n";
 static const char fmt_sv[] = "[sv]  status report verbosity%6d [0=off,1=filtered,2=verbose]\n";
+static const char fmt_si[] = "[si]  status interval%14d ms\n";
 
 void sr_print_sr(nvObj_t *nv) { _populate_unfiltered_status_report();}
-void sr_print_si(nvObj_t *nv) { text_print(nv, fmt_si);}
 void sr_print_sv(nvObj_t *nv) { text_print(nv, fmt_sv);}
+void sr_print_si(nvObj_t *nv) { text_print(nv, fmt_si);}
 
 #endif // __TEXT_MODE
 
@@ -499,7 +508,7 @@ void qr_init_queue_report()
 void qr_request_queue_report(int8_t buffers)
 {
     // get buffer depth and added/removed count
-    qr.buffers_available = mp_get_planner_buffers();
+    qr.buffers_available = mp_get_planner_buffers(mp);
     if (buffers > 0) {
         qr.buffers_added += buffers;
     } else {
@@ -508,7 +517,7 @@ void qr_request_queue_report(int8_t buffers)
 
     // time-throttle requests while generating arcs
 //    qr.motion_mode = cm_get_motion_mode(ACTIVE_MODEL);
-    qr.motion_mode = cm_get_motion_mode((GCodeState_t *)&cm.gm);
+    qr.motion_mode = cm_get_motion_mode((GCodeState_t *)&(cm->gm));
     if ((qr.motion_mode == MOTION_MODE_CW_ARC) || (qr.motion_mode == MOTION_MODE_CCW_ARC)) {
         uint32_t tick = SysTickTimer_getValue();
         if (tick - qr.init_tick < MIN_ARC_QR_INTERVAL) {
@@ -583,26 +592,29 @@ stat_t qr_queue_report_callback()         // called by controller dispatcher
  */
 stat_t qr_get(nvObj_t *nv)
 {
-    nv->value = (float)mp_get_planner_buffers(); // ensure that manually requested QR count is always up to date
-    nv->valuetype = TYPE_INT;
+    nv->value_int = mp_get_planner_buffers(mp);  // ensure that manually requested QR count is always up to date
+    nv->valuetype = TYPE_INTEGER;
     return (STAT_OK);
 }
 
 stat_t qi_get(nvObj_t *nv)
 {
-    nv->value = (float)qr.buffers_added;
-    nv->valuetype = TYPE_INT;
+    nv->value_int = qr.buffers_added;
+    nv->valuetype = TYPE_INTEGER;
     qr.buffers_added = 0;                // reset it
     return (STAT_OK);
 }
 
 stat_t qo_get(nvObj_t *nv)
 {
-    nv->value = (float)qr.buffers_removed;
-    nv->valuetype = TYPE_INT;
+    nv->value_int = qr.buffers_removed;
+    nv->valuetype = TYPE_INTEGER;
     qr.buffers_removed = 0;                // reset it
     return (STAT_OK);
 }
+
+stat_t qr_get_qv(nvObj_t *nv) { return(get_integer(nv, (uint8_t &)qr.queue_report_verbosity)); }
+stat_t qr_set_qv(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)qr.queue_report_verbosity, QR_OFF, QR_TRIPLE)); }
 
 /*****************************************************************************
  * JOB ID REPORTS
@@ -648,8 +660,8 @@ stat_t job_set_job_report(nvObj_t *nv)
 
     for (uint8_t i=0; i<4; i++) {
         if (((nv = nv->nx) == NULL) || (nv->valuetype == TYPE_EMPTY)) { break;}
-        if (nv->valuetype == TYPE_INT) {
-            cfg.job_id[i] = nv->value;
+        if (nv->valuetype == TYPE_INTEGER) {
+            cfg.job_id[i] = nv->value_int;
             nv->index = job_start + i;        // index of the SR persistence location
             nv_persist(nv);
         } else {

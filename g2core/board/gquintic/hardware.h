@@ -1,11 +1,12 @@
 /*
  * hardware.h - system hardware configuration
- *              THIS FILE IS HARDWARE PLATFORM SPECIFIC - ARM version
+ * For: /board/gQuintic
+ * THIS FILE IS HARDWARE PLATFORM SPECIFIC - ARM version
  *
  * This file is part of the g2core project
  *
- * Copyright (c) 2013 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2016 Robert Giseburt
+ * Copyright (c) 2013 - 2018 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2018 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -34,43 +35,33 @@
 #ifndef HARDWARE_H_ONCE
 #define HARDWARE_H_ONCE
 
-
 /*--- Hardware platform enumerations ---*/
 
-enum hwPlatform {
-    HM_PLATFORM_NONE = 0,
-    HW_PLATFORM_TINYG_XMEGA,    // TinyG code base on Xmega boards.
-    HW_PLATFORM_G2_DUE,         // G2 code base on native Arduino Due
-    HW_PLATFORM_V9              // G2 code base on v9 boards
-};
+#define G2CORE_HARDWARE_PLATFORM    "gQuintic"
+#define G2CORE_HARDWARE_VERSION     "b"
 
-#define HW_VERSION_TINYGV6      6
-#define HW_VERSION_TINYGV7      7
-#define HW_VERSION_TINYGV8      8
-
-#define HW_VERSION_TINYGV9I     4
-#define HW_VERSION_TINYGV9K     5
-
-
-/***** Axes, motors & PWM channels used by the application *****/
-// Axes, motors & PWM channels must be defines (not enums) so expressions like this:
+/***** Motors & PWM channels supported by this hardware *****/
+// These must be defines (not enums) so expressions like this:
 //  #if (MOTORS >= 6)  will work
 
-#define AXES        6           // number of axes supported in this version
-#define HOMING_AXES 4           // number of axes that can be homed (assumes Zxyabc sequence)
-#define MOTORS      5           // number of motors on the board
-#define COORDS      6           // number of supported coordinate systems (index starts at 1)
-#define PWMS        2           // number of supported PWM channels
-#define TOOLS       32          // number of entries in tool table (index starts at 1)
+#define MOTORS 4                    // number of motors supported the hardware
+#define PWMS 2                      // number of PWM channels supported the hardware
 
+/*************************
+ * Global System Defines *
+ *************************/
 
-////////////////////////////
-/////// ARM VERSION ////////
-////////////////////////////
+#define MILLISECONDS_PER_TICK 1     // MS for system tick (systick * N)
+#define SYS_ID_DIGITS 16            // actual digits in system ID (up to 16)
+#define SYS_ID_LEN 24               // total length including dashes and NUL
+
+/*************************
+ * Motate Setup          *
+ *************************/
 
 #include "MotatePins.h"
-#include "MotateTimers.h" // for TimerChanel<> and related...
-#include "MotateServiceCall.h" // for ServiceCall<>
+#include "MotateTimers.h"           // for TimerChanel<> and related...
+#include "MotateServiceCall.h"      // for ServiceCall<>
 
 using Motate::TimerChannel;
 using Motate::ServiceCall;
@@ -79,14 +70,6 @@ using Motate::pin_number;
 using Motate::Pin;
 using Motate::PWMOutputPin;
 using Motate::OutputPin;
-
-/*************************
- * Global System Defines *
- *************************/
-
-#define MILLISECONDS_PER_TICK 1     // MS for system tick (systick * N)
-#define SYS_ID_DIGITS 12            // actual digits in system ID (up to 16)
-#define SYS_ID_LEN 24               // total length including dashes and NUL
 
 /************************************************************************************
  **** ARM SAM3X8E SPECIFIC HARDWARE *************************************************
@@ -173,18 +156,20 @@ stat_t hardware_periodic();  // callback from the main loop (time sensitive)
 void hw_hard_reset(void);
 stat_t hw_flash(nvObj_t *nv);
 
+stat_t hw_get_fb(nvObj_t *nv);
+stat_t hw_get_fv(nvObj_t *nv);
+stat_t hw_get_hp(nvObj_t *nv);
+stat_t hw_get_hv(nvObj_t *nv);
 stat_t hw_get_fbs(nvObj_t *nv);
 stat_t hw_get_fbc(nvObj_t *nv);
-stat_t hw_set_hv(nvObj_t *nv);
 stat_t hw_get_id(nvObj_t *nv);
 
 #ifdef __TEXT_MODE
 
     void hw_print_fb(nvObj_t *nv);
+    void hw_print_fv(nvObj_t *nv);
     void hw_print_fbs(nvObj_t *nv);
     void hw_print_fbc(nvObj_t *nv);
-    void hw_print_fv(nvObj_t *nv);
-    void hw_print_cv(nvObj_t *nv);
     void hw_print_hp(nvObj_t *nv);
     void hw_print_hv(nvObj_t *nv);
     void hw_print_id(nvObj_t *nv);
@@ -192,10 +177,9 @@ stat_t hw_get_id(nvObj_t *nv);
 #else
 
     #define hw_print_fb tx_print_stub
+    #define hw_print_fv tx_print_stub
     #define hw_print_fbs tx_print_stub
     #define hw_print_fbc tx_print_stub
-    #define hw_print_fv tx_print_stub
-    #define hw_print_cv tx_print_stub
     #define hw_print_hp tx_print_stub
     #define hw_print_hv tx_print_stub
     #define hw_print_id tx_print_stub

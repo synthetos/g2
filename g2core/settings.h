@@ -2,7 +2,7 @@
  * settings.h - default runtime settings
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart Jr.
+ * Copyright (c) 2010 - 2018 Alden S. Hart Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -35,6 +35,10 @@
 #ifndef SETTINGS_H_ONCE
 #define SETTINGS_H_ONCE
 
+// Defines that need to be here instead of a more logical place like canonical_machine.h
+
+#define RADIUS_MIN     (0.0001)   // minimum value for ABC radius settings
+
 /**** MACHINE PROFILES ******************************************************
  *
  * Provide an optional SETTINGS_FILE in the makefile or compiler command line:
@@ -53,5 +57,18 @@
 // Anything not set by the above file is set by this one...
 // The defaults below generally disable that function
 #include "settings/settings_default.h"
+
+// compile-time assertions - mostly checking the settings are not impossible
+
+#define stringify2(a) #a
+#define stringify(a) stringify2(a)
+
+//static_assert ( bool_constexpr , message )    // bool_constexpr must be true or assertion will fail
+static_assert ( (A_RADIUS > RADIUS_MIN), "A axis radius must be more than " stringify(RADIUS_MIN) ", but is " stringify(A_RADIUS) );
+static_assert ( (B_RADIUS > RADIUS_MIN), "B axis radius must be more than " stringify(RADIUS_MIN) ", but is " stringify(B_RADIUS) );
+static_assert ( (C_RADIUS > RADIUS_MIN), "C axis radius must be more than " stringify(RADIUS_MIN) ", but is " stringify(C_RADIUS) );
+
+#undef stringify 
+#undef stringify2
 
 #endif  // End of include guard: SETTINGS_H_ONCE

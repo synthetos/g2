@@ -2,8 +2,8 @@
  * main.cpp - g2core - An embedded rs274/ngc CNC controller
  * This file is part of the g2core project.
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2016 Robert Giseburt
+ * Copyright (c) 2010 - 2018 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2018 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -30,6 +30,7 @@
 #include "report.h"
 #include "planner.h"
 #include "stepper.h"
+#include "coolant.h"
 #include "encoder.h"
 #include "spindle.h"
 #include "temperature.h"
@@ -50,17 +51,19 @@
 
 stat_t status_code;						    // allocate a variable for the ritorno macro
 
-/************* System Globals For Diagnostics ****************/
+/************* System Globals For Debugging and Diagnostics ****************/
+// See also: util.h for debugging and diagnostics
 
 // Using motate pins for profiling
-// see https://github.com/synthetos/g2/wiki/Using-Pin-Changes-for-Timing-(and-light-debugging)
+// Usage: https://github.com/synthetos/g2/wiki/Using-Pin-Changes-for-Timing-(and-light-debugging)
 
 using namespace Motate;
 OutputPin<kDebug1_PinNumber> debug_pin1;
 OutputPin<kDebug2_PinNumber> debug_pin2;
 OutputPin<kDebug3_PinNumber> debug_pin3;
-//OutputPin<kDebug4_PinNumber> debug_pin4;
+OutputPin<kDebug4_PinNumber> debug_pin4;
 
+// or these to disable the pin
 //OutputPin<-1> debug_pin1;
 //OutputPin<-1> debug_pin2;
 //OutputPin<-1> debug_pin3;
@@ -72,7 +75,7 @@ using namespace Motate;
 extern OutputPin<kDebug1_PinNumber> debug_pin1;
 extern OutputPin<kDebug2_PinNumber> debug_pin2;
 extern OutputPin<kDebug3_PinNumber> debug_pin3;
-//extern OutputPin<kDebug4_PinNumber> debug_pin4;
+extern OutputPin<kDebug4_PinNumber> debug_pin4;
 
 //extern OutputPin<-1> debug_pin1;
 //extern OutputPin<-1> debug_pin2;
@@ -93,31 +96,34 @@ extern OutputPin<kDebug3_PinNumber> debug_pin3;
 
 void application_init_services(void)
 {
-    hardware_init();				// system hardware setup 			- must be first
-    persistence_init();				// set up EEPROM or other NVM		- must be second
-    xio_init();						// xtended io subsystem				- must be third
+    hardware_init();				    // system hardware setup 			- must be first
+    persistence_init();				    // set up EEPROM or other NVM		- must be second
+    xio_init();						    // xtended io subsystem				- must be third
 }
 
 void application_init_machine(void)
 {
-    cm.machine_state = MACHINE_INITIALIZING;
+    cm = &cm1;                          // set global canonical machine pointer to primary machine
+    cm->machine_state = MACHINE_INITIALIZING;
 
-    stepper_init();                 // stepper subsystem
-    encoder_init();                 // virtual encoders
-    gpio_init();                    // inputs and outputs
-    pwm_init();                     // pulse width modulation drivers
-    planner_init();                 // motion planning subsystem
-    canonical_machine_init();       // canonical machine
+    stepper_init();                     // stepper subsystem
+    encoder_init();                     // virtual encoders
+    gpio_init();                        // inputs and outputs
+    pwm_init();                         // pulse width modulation drivers
+    canonical_machine_inits();          // combined inits for CMs and planner    
 }
 
 void application_init_startup(void)
 {
     // start the application
-    controller_init();              // should be first startup init (requires xio_init())
-    config_init();					// apply the config settings from persistence
-    canonical_machine_reset();
-    spindle_init();                 // should be after PWM and canonical machine inits and config_init()
+    controller_init();                  // should be first startup init (requires xio_init())
+    config_init();					    // apply the config settings from persistence
+    canonical_machine_reset(&cm1);      // initialize both CMs but only reset the primary
+    gcode_parser_init();                // baseline Gcode parser
+    spindle_init();                     // should be after PWM and canonical machine inits and config_init()
     spindle_reset();
+    coolant_init();
+    coolant_reset();
     temperature_init();
     gpio_reset();
 }

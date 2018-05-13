@@ -2,7 +2,7 @@
  * report.h - Status reports and other reporting functions
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2018 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -36,6 +36,7 @@
 
 #define SR_THROTTLE_COUNT   4       // scale back filtered SR's during time-constrained intervals
 #define MIN_ARC_QR_INTERVAL 200     // minimum interval between QRs during arc generation (in system ticks)
+#define STATUS_REPORT_MAX_MS (MAX_LONG/1000)
 
 typedef enum {                      // status report enable, verbosity and request type
     SR_OFF = 0,                     // no reports
@@ -60,12 +61,11 @@ typedef struct srSingleton {
 
     /*** config values (PUBLIC) ***/
     srVerbosity status_report_verbosity;
-    uint32_t status_report_interval;                    // in milliseconds
+    int32_t status_report_interval;                     // in milliseconds
 
     /*** runtime values (PRIVATE) ***/
     srVerbosity status_report_request;                  // flag that SR has been requested, and what type
     uint32_t status_report_systick;                     // SysTick value for next status report
-    index_t index_of_stat_variable;                     // like it says, the index of the "stat" variable
     index_t stat_index;                                 // table index value for stat - determined during initialization
     uint8_t throttle_counter;                           // slow down SRs when in a constrained time (not phat_city)
     index_t status_report_list[NV_STATUS_REPORT_LEN];   // status report elements to report
@@ -112,6 +112,10 @@ stat_t sr_run_text_status_report(void);
 
 stat_t sr_get(nvObj_t *nv);
 stat_t sr_set(nvObj_t *nv);
+
+stat_t sr_get_sv(nvObj_t *nv);
+stat_t sr_set_sv(nvObj_t *nv);
+stat_t sr_get_si(nvObj_t *nv);
 stat_t sr_set_si(nvObj_t *nv);
 
 void qr_init_queue_report(void);
@@ -124,6 +128,9 @@ stat_t rx_report_callback(void);
 stat_t qr_get(nvObj_t *nv);
 stat_t qi_get(nvObj_t *nv);
 stat_t qo_get(nvObj_t *nv);
+
+stat_t qr_get_qv(nvObj_t *nv);
+stat_t qr_set_qv(nvObj_t *nv);
 
 #ifdef __TEXT_MODE
 

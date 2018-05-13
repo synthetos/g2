@@ -2,8 +2,8 @@
  * error.h - g2core status codes
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
- * Copyright (c) 2010 - 2017 Robert Giseburt
+ * Copyright (c) 2010 - 2018 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2018 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -161,10 +161,11 @@ char *get_status_message(stat_t status);
 #define STAT_ERROR_84 84
 #define STAT_ERROR_85 85
 #define STAT_ERROR_86 86
-#define STAT_ERROR_87 87
 
 // Assertion failures - build down from 99 until they meet the system internal errors
 
+#define STAT_SPINDLE_ASSERTION_FAILURE 86
+#define STAT_EXEC_ALINE_ASSERTION_FAILURE 87
 #define STAT_BUFFER_FREE_ASSERTION_FAILURE 88
 #define STAT_STATE_MANAGEMENT_ASSERTION_FAILURE 89
 #define STAT_CONFIG_ASSERTION_FAILURE 90
@@ -223,19 +224,19 @@ char *get_status_message(stat_t status);
 #define STAT_GCODE_COMMAND_UNSUPPORTED 131      // G command is not supported
 #define STAT_MCODE_COMMAND_UNSUPPORTED 132      // M command is not supported
 #define STAT_GCODE_MODAL_GROUP_VIOLATION 133    // gcode modal group error
-#define STAT_GCODE_AXIS_IS_MISSING 134          // command requires at least one axis present
-#define STAT_GCODE_AXIS_CANNOT_BE_PRESENT 135   // error if G80 has axis words
-#define STAT_GCODE_AXIS_IS_INVALID 136          // an axis is specified that is illegal for the command
-#define STAT_GCODE_AXIS_IS_NOT_CONFIGURED 137   // WARNING: attempt to program an axis that is disabled
-#define STAT_GCODE_AXIS_NUMBER_IS_MISSING 138   // axis word is missing its value
-#define STAT_GCODE_AXIS_NUMBER_IS_INVALID 139   // axis word value is illegal
+#define STAT_AXIS_IS_MISSING 134                // command requires at least one axis present
+#define STAT_AXIS_CANNOT_BE_PRESENT 135         // error if G80 has axis words
+#define STAT_AXIS_IS_INVALID 136                // an axis is specified that is illegal for the command
+#define STAT_AXIS_IS_NOT_CONFIGURED 137         // WARNING: attempt to program an axis that is disabled
+#define STAT_AXIS_NUMBER_IS_MISSING 138         // axis word is missing its value
+#define STAT_AXIS_NUMBER_IS_INVALID 139         // axis word value is illegal
 
-#define STAT_GCODE_ACTIVE_PLANE_IS_MISSING 140  // active plane is not programmed
-#define STAT_GCODE_ACTIVE_PLANE_IS_INVALID 141  // active plane selected is not valid for this command
-#define STAT_GCODE_FEEDRATE_NOT_SPECIFIED 142   // move has no feedrate
-#define STAT_GCODE_INVERSE_TIME_MODE_CANNOT_BE_USED 143  // G38.2 and some canned cycles cannot accept inverse time mode
-#define STAT_GCODE_ROTARY_AXIS_CANNOT_BE_USED 144   // G38.2 and some other commands cannot have rotary axes
-#define STAT_GCODE_G53_WITHOUT_G0_OR_G1 145         // G0 or G1 must be active for G53
+#define STAT_ACTIVE_PLANE_IS_MISSING 140        // active plane is not programmed
+#define STAT_ACTIVE_PLANE_IS_INVALID 141        // active plane selected is not valid for this command
+#define STAT_FEEDRATE_NOT_SPECIFIED 142         // move has no feedrate
+#define STAT_INVERSE_TIME_MODE_CANNOT_BE_USED 143  // G38.2 and some canned cycles cannot accept inverse time mode
+#define STAT_ROTARY_AXIS_CANNOT_BE_USED 144     // G38.2 and some other commands cannot have rotary axes
+#define STAT_GCODE_G53_WITHOUT_G0_OR_G1 145     // G0 or G1 must be active for G53
 #define STAT_REQUESTED_VELOCITY_EXCEEDS_LIMITS 146
 #define STAT_CUTTER_COMPENSATION_CANNOT_BE_ENABLED 147
 #define STAT_PROGRAMMED_POINT_SAME_AS_CURRENT_POINT 148
@@ -244,9 +245,9 @@ char *get_status_message(stat_t status);
 #define STAT_SPINDLE_SPEED_MAX_EXCEEDED 150
 #define STAT_SPINDLE_MUST_BE_OFF 151
 #define STAT_SPINDLE_MUST_BE_TURNING 152            // some canned cycles require spindle to be turning when called
-#define STAT_ARC_ERROR_RESERVED 153                 // RESERVED
+#define STAT_ARC_SPECIFICATION_ERROR 153            // generic arc specification error
 #define STAT_ARC_HAS_IMPOSSIBLE_CENTER_POINT 154    // trap (.05 inch/.5 mm) OR ((.0005 inch/.005mm) AND .1% of radius condition
-#define STAT_ARC_SPECIFICATION_ERROR 155            // generic arc specification error
+#define STAT_ARC_HAS_ROTARY_AXIS 155                // arc specification includes a rotary axis
 #define STAT_ARC_AXIS_MISSING_FOR_SELECTED_PLANE 156  // arc is missing axis (axes) required by selected plane
 #define STAT_ARC_OFFSETS_MISSING_FOR_SELECTED_PLANE 157 // one or both offsets are not specified
 #define STAT_ARC_RADIUS_OUT_OF_TOLERANCE 158        // WARNING - radius arc is too large - accuracy in question
@@ -257,7 +258,7 @@ char *get_status_message(stat_t status);
 #define STAT_P_WORD_IS_ZERO 162
 #define STAT_P_WORD_IS_NEGATIVE 163                 // dwells require positive P values
 #define STAT_P_WORD_IS_NOT_AN_INTEGER 164           // G10s and other commands require integer P numbers
-#define STAT_P_WORD_IS_NOT_VALID_TOOL_NUMBER 165
+#define STAT_P_WORD_IS_NOT_VALID_TOOL_NUMBER 165    // invalid tool number
 #define STAT_D_WORD_IS_MISSING 166
 #define STAT_D_WORD_IS_INVALID 167
 #define STAT_E_WORD_IS_MISSING 168
@@ -335,7 +336,7 @@ char *get_status_message(stat_t status);
 #define STAT_SOFT_LIMIT_EXCEEDED_AMAX 228       // soft limit error - A maximum
 #define STAT_SOFT_LIMIT_EXCEEDED_BMIN 229       // soft limit error - B minimum
 
-#define STAT_SOFT_LIMIT_EXCEEDED_BMAX 220       // soft limit error - B maximum
+#define STAT_SOFT_LIMIT_EXCEEDED_BMAX 230       // soft limit error - B maximum
 #define STAT_SOFT_LIMIT_EXCEEDED_CMIN 231       // soft limit error - C minimum
 #define STAT_SOFT_LIMIT_EXCEEDED_CMAX 232       // soft limit error - C maximum
 #define STAT_SOFT_LIMIT_EXCEEDED_ARC 233        // soft limit err on arc
@@ -465,9 +466,9 @@ static const char stat_82[] = "82";
 static const char stat_83[] = "83";
 static const char stat_84[] = "84";
 static const char stat_85[] = "85";
-static const char stat_86[] = "86";
-static const char stat_87[] = "87";
 
+static const char stat_86[] = "Spindle assertion failure";
+static const char stat_87[] = "mp_exec_aline() assertion failure";
 static const char stat_88[] = "Buffer free assertion failure";
 static const char stat_89[] = "State management assertion failure";
 static const char stat_90[] = "Config assertion failure";
@@ -539,9 +540,9 @@ static const char stat_149[] = "Spindle speed below minimum";
 static const char stat_150[] = "Spindle speed exceeded maximum";
 static const char stat_151[] = "Spindle must be off for this command";
 static const char stat_152[] = "Spindle must be turning for this command";
-static const char stat_153[] = "153";
+static const char stat_153[] = "Arc specification error";
 static const char stat_154[] = "Arc specification error - impossible center point";
-static const char stat_155[] = "Arc specification error";
+static const char stat_155[] = "Arc specification error - arc has rotary axis(es)";
 static const char stat_156[] = "Arc specification error - missing axis(es)";
 static const char stat_157[] = "Arc specification error - missing offset(s)";
 //--------------------------------------1--------10--------20--------30--------40--------50--------60-64
