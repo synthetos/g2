@@ -3,8 +3,8 @@
  * For: /board/printrboardg2
  * This file is part of the g2core project
  *
- * Copyright (c) 2016 Alden S. Hart, Jr.
- * Copyright (c) 2016 Robert Giseburt
+ * Copyright (c) 2016 - 2018 Alden S. Hart, Jr.
+ * Copyright (c) 2016 - 2018 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -74,7 +74,7 @@ StepDirStepper<Motate::kSocket4_StepPinNumber,
 //    Motate::kSocket5_Microstep_1PinNumber,
 //    Motate::kSocket5_Microstep_2PinNumber,
 //    Motate::kSocket5_VrefPinNumber>
-//  motor_5 {M5_ENABLE_POLARITY};
+//  motor_5 {M4_STEP_POLARITY, M4_ENABLE_POLARITY};
 
 // StepDirStepper<
 //    Motate::kSocket6_StepPinNumber,
@@ -84,7 +84,7 @@ StepDirStepper<Motate::kSocket4_StepPinNumber,
 //    Motate::kSocket6_Microstep_1PinNumber,
 //    Motate::kSocket6_Microstep_2PinNumber,
 //    Motate::kSocket6_VrefPinNumber>
-//  motor_6 {M6_ENABLE_POLARITY};
+//  motor_6 {M4_STEP_POLARITY, M4_ENABLE_POLARITY};
 
 Stepper* Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4};
 
