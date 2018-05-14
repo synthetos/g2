@@ -608,12 +608,12 @@ stat_t st_set_mi(nvObj_t *nv);
 stat_t st_get_su(nvObj_t *nv);
 stat_t st_set_su(nvObj_t *nv);
 
-//stat_t st_set_ep(nvObj_t *nv);
-//stat_t st_get_ep(nvObj_t *nv);
-stat_t st_set_sp(nvObj_t *nv);
-stat_t st_get_sp(nvObj_t *nv);
 stat_t st_get_po(nvObj_t *nv);
 stat_t st_set_po(nvObj_t *nv);
+stat_t st_set_ep(nvObj_t *nv);
+stat_t st_get_ep(nvObj_t *nv);
+stat_t st_set_sp(nvObj_t *nv);
+stat_t st_get_sp(nvObj_t *nv);
 
 stat_t st_get_pm(nvObj_t *nv);
 stat_t st_set_pm(nvObj_t *nv);

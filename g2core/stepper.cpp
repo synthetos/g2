@@ -1006,10 +1006,35 @@ stat_t st_get_pwr(nvObj_t *nv)
 	return (STAT_OK);
 }
 
+stat_t st_set_ep(nvObj_t *nv)            // set motor enable polarity
+{
+    if (nv->value_int < IO_ACTIVE_LOW) { return (STAT_INPUT_LESS_THAN_MIN_VALUE); }
+    if (nv->value_int > IO_ACTIVE_HIGH) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
+
+    uint8_t motor = _motor(nv->index);
+    if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
+
+    Motors[motor]->setEnablePolarity((ioMode)nv->value_int);
+    return (STAT_OK);
+}
+
+stat_t st_get_ep(nvObj_t *nv)            // get motor enable polarity
+{
+    if (nv->value_int < IO_ACTIVE_LOW) { return (STAT_INPUT_LESS_THAN_MIN_VALUE); }
+    if (nv->value_int > IO_ACTIVE_HIGH) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
+
+    uint8_t motor = _motor(nv->index);
+    if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
+
+    nv->value_int = (float)Motors[motor]->getEnablePolarity();
+    nv->valuetype = TYPE_INTEGER;
+    return (STAT_OK);
+}
+
 stat_t st_set_sp(nvObj_t *nv)            // set motor step polarity
 {
-    if (nv->value_int < 0) { return (STAT_INPUT_LESS_THAN_MIN_VALUE); }
-    if (nv->value_int > 1) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
+    if (nv->value_int < IO_ACTIVE_LOW) { return (STAT_INPUT_LESS_THAN_MIN_VALUE); }
+    if (nv->value_int > IO_ACTIVE_HIGH) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
 
     uint8_t motor = _motor(nv->index);
     if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
@@ -1020,8 +1045,8 @@ stat_t st_set_sp(nvObj_t *nv)            // set motor step polarity
 
 stat_t st_get_sp(nvObj_t *nv)            // get motor step polarity
 {
-    if (nv->value_int < 0) { return (STAT_INPUT_LESS_THAN_MIN_VALUE); }
-    if (nv->value_int > 1) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
+    if (nv->value_int < IO_ACTIVE_LOW) { return (STAT_INPUT_LESS_THAN_MIN_VALUE); }
+    if (nv->value_int > IO_ACTIVE_HIGH) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
 
     uint8_t motor = _motor(nv->index);
     if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
