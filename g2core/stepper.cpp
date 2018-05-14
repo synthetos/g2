@@ -1008,26 +1008,26 @@ stat_t st_get_pwr(nvObj_t *nv)
 
 stat_t st_set_sp(nvObj_t *nv)            // set motor step polarity
 {
-    if (nv->value < 0) { return (STAT_INPUT_LESS_THAN_MIN_VALUE); }
-    if (nv->value > 1) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
+    if (nv->value_int < 0) { return (STAT_INPUT_LESS_THAN_MIN_VALUE); }
+    if (nv->value_int > 1) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
 
-    uint8_t motor = _get_motor(nv->index);
+    uint8_t motor = _motor(nv->index);
     if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
 
-    Motors[motor]->setStepPolarity((ioMode)nv->value);
+    Motors[motor]->setStepPolarity((ioMode)nv->value_int);
     return (STAT_OK);
 }
 
 stat_t st_get_sp(nvObj_t *nv)            // get motor step polarity
 {
-    if (nv->value < 0) { return (STAT_INPUT_LESS_THAN_MIN_VALUE); }
-    if (nv->value > 1) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
+    if (nv->value_int < 0) { return (STAT_INPUT_LESS_THAN_MIN_VALUE); }
+    if (nv->value_int > 1) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
 
-    uint8_t motor = _get_motor(nv->index);
+    uint8_t motor = _motor(nv->index);
     if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
 
-    nv->value = (float)Motors[motor]->getStepPolarity();
-    nv->valuetype = TYPE_INT;
+    nv->value_int = (float)Motors[motor]->getStepPolarity();
+    nv->valuetype = TYPE_INTEGER;
     return (STAT_OK);
 }
 
