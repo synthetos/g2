@@ -103,6 +103,7 @@ static stat_t get_tick(nvObj_t *nv);        // get system tick count
  *    as rotary axes may be treated as linear if in radius mode, so the flag is needed.
  */
 const cfgItem_t cfgArray[] = {
+
     // group token flags p, print_func,   get_func,   set_func, get/set target,    default value
     { "sys", "fb", _fn,  2, hw_print_fb,  hw_get_fb,  set_ro, nullptr, 0 },   // MUST BE FIRST for persistence checking!
     { "sys", "fv", _fn,  2, hw_print_fv,  hw_get_fv,  set_ro, nullptr, 0 },
@@ -223,6 +224,8 @@ const cfgItem_t cfgArray[] = {
     { "1","1po",_iip, 0, st_print_po, st_get_po, st_set_po, nullptr, M1_POLARITY },
     { "1","1pm",_iip, 0, st_print_pm, st_get_pm, st_set_pm, nullptr, M1_POWER_MODE },
     { "1","1pl",_fip, 3, st_print_pl, st_get_pl, st_set_pl, nullptr, M1_POWER_LEVEL },
+    { "1","1ep",_iip, 0, st_print_ep, st_get_ep, st_set_ep, nullptr, M1_ENABLE_POLARITY },
+    { "1","1sp",_iip, 0, st_print_sp, st_get_sp, st_set_sp, nullptr, M1_STEP_POLARITY },
 //  { "1","1pi",_fip, 3, st_print_pi, st_get_pi, st_set_pi, (float *)&st_cfg.mot[MOTOR_1].power_idle,     M1_POWER_IDLE },
 //  { "1","1mt",_fip, 2, st_print_mt, st_get_mt, st_set_mt, (float *)&st_cfg.mot[MOTOR_1].motor_timeout,  M1_MOTOR_TIMEOUT },
 #if (MOTORS >= 2)
@@ -234,6 +237,8 @@ const cfgItem_t cfgArray[] = {
     { "2","2po",_iip, 0, st_print_po, st_get_po, st_set_po, nullptr, M2_POLARITY },
     { "2","2pm",_iip, 0, st_print_pm, st_get_pm, st_set_pm, nullptr, M2_POWER_MODE },
     { "2","2pl",_fip, 3, st_print_pl, st_get_pl, st_set_pl, nullptr, M2_POWER_LEVEL},
+    { "2","2ep",_iip, 0, st_print_ep, st_get_ep, st_set_ep, nullptr, M2_ENABLE_POLARITY },
+    { "2","2sp",_iip, 0, st_print_sp, st_get_sp, st_set_sp, nullptr, M2_STEP_POLARITY },
 //  { "2","2pi",_fip, 3, st_print_pi, st_get_pi, st_set_pi, (float *)&st_cfg.mot[MOTOR_2].power_idle,     M2_POWER_IDLE },
 //  { "2","2mt",_fip, 2, st_print_mt, st_get_mt, st_set_mt,  float *)&st_cfg.mot[MOTOR_2].motor_timeout,  M2_MOTOR_TIMEOUT },
 #endif
@@ -246,6 +251,8 @@ const cfgItem_t cfgArray[] = {
     { "3","3po",_iip, 0, st_print_po, st_get_po, st_set_po, nullptr, M3_POLARITY },
     { "3","3pm",_iip, 0, st_print_pm, st_get_pm, st_set_pm, nullptr, M3_POWER_MODE },
     { "3","3pl",_fip, 3, st_print_pl, st_get_pl, st_set_pl, nullptr, M3_POWER_LEVEL },
+    { "3","3ep",_iip, 0, st_print_ep, st_get_ep, st_set_ep, nullptr, M3_ENABLE_POLARITY },
+    { "3","3sp",_iip, 0, st_print_sp, st_get_sp, st_set_sp, nullptr, M3_STEP_POLARITY },
 //  { "3","3pi",_fip, 3, st_print_pi, st_get_pi, st_set_pi, (float *)&st_cfg.mot[MOTOR_3].power_idle,     M3_POWER_IDLE },
 //  { "3","3mt",_fip, 2, st_print_mt, st_get_mt, st_set_mt, (float *)&st_cfg.mot[MOTOR_3].motor_timeout,  M3_MOTOR_TIMEOUT },
 #endif
@@ -258,6 +265,8 @@ const cfgItem_t cfgArray[] = {
     { "4","4po",_iip, 0, st_print_po, st_get_po, st_set_po, nullptr, M4_POLARITY },
     { "4","4pm",_iip, 0, st_print_pm, st_get_pm, st_set_pm, nullptr, M4_POWER_MODE },
     { "4","4pl",_fip, 3, st_print_pl, st_get_pl, st_set_pl, nullptr, M4_POWER_LEVEL },
+    { "4","4ep",_iip, 0, st_print_ep, st_get_ep, st_set_ep, nullptr, M4_ENABLE_POLARITY },
+    { "4","4sp",_iip, 0, st_print_sp, st_get_sp, st_set_sp, nullptr, M4_STEP_POLARITY },
 //  { "4","4pi",_fip, 3, st_print_pi, st_get_pi, st_set_pi, (float *)&st_cfg.mot[MOTOR_4].power_idle,     M4_POWER_IDLE },
 //  { "4","4mt",_fip, 2, st_print_mt, st_get_mt, st_set_mt, (float *)&st_cfg.mot[MOTOR_4].motor_timeout,  M4_MOTOR_TIMEOUT },
 #endif
@@ -270,6 +279,8 @@ const cfgItem_t cfgArray[] = {
     { "5","5po",_iip, 0, st_print_po, st_get_po, st_set_po, nullptr, M5_POLARITY },
     { "5","5pm",_iip, 0, st_print_pm, st_get_pm, st_set_pm, nullptr, M5_POWER_MODE },
     { "5","5pl",_fip, 3, st_print_pl, st_get_pl, st_set_pl, nullptr, M5_POWER_LEVEL },
+    { "5","5ep",_iip, 0, st_print_ep, st_get_ep, st_set_ep, nullptr, M5_ENABLE_POLARITY },
+    { "5","5sp",_iip, 0, st_print_sp, st_get_sp, st_set_sp, nullptr, M5_STEP_POLARITY },
 //  { "5","5pi",_fip, 3, st_print_pi, st_get_pi, st_set_pi, (float *)&st_cfg.mot[MOTOR_5].power_idle,     M5_POWER_IDLE },
 //  { "5","5mt",_fip, 2, st_print_mt, get_flt, st_set_mt,   (float *)&st_cfg.mot[MOTOR_5].motor_timeout,  M5_MOTOR_TIMEOUT },
 #endif
@@ -282,8 +293,11 @@ const cfgItem_t cfgArray[] = {
     { "6","6po",_iip, 0, st_print_po, st_get_po, st_set_po, nullptr, M6_POLARITY },
     { "6","6pm",_iip, 0, st_print_pm, st_get_pm, st_set_pm, nullptr, M6_POWER_MODE },
     { "6","6pl",_fip, 3, st_print_pl, st_get_pl, st_set_pl, nullptr, M6_POWER_LEVEL },
+    { "6","6ep",_iip, 0, st_print_ep, st_get_ep, st_set_ep, nullptr, M6_ENABLE_POLARITY },
+    { "6","6sp",_iip, 0, st_print_sp, st_get_sp, st_set_sp, nullptr, M6_STEP_POLARITY },
 //  { "6","6pi",_fip, 3, st_print_pi, st_get_pi, st_set_pi, (float *)&st_cfg.mot[MOTOR_6].power_idle,     M6_POWER_IDLE },
 //  { "6","6mt",_fip, 2, st_print_mt, st_get_mt, st_set_mt, (float *)&st_cfg.mot[MOTOR_6].motor_timeout,  M6_MOTOR_TIMEOUT },
+// >>>>>>> refs/heads/edge
 #endif
 
     // Axis parameters
@@ -773,25 +787,25 @@ const cfgItem_t cfgArray[] = {
 
 #ifdef __USER_DATA
     // User defined data groups
-    { "uda","uda0", _dip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_a[0], USER_DATA_A0 },
-    { "uda","uda1", _dip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_a[1], USER_DATA_A1 },
-    { "uda","uda2", _dip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_a[2], USER_DATA_A2 },
-    { "uda","uda3", _dip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_a[3], USER_DATA_A3 },
+    { "uda","uda0", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_a[0], USER_DATA_A0 },
+    { "uda","uda1", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_a[1], USER_DATA_A1 },
+    { "uda","uda2", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_a[2], USER_DATA_A2 },
+    { "uda","uda3", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_a[3], USER_DATA_A3 },
 
-    { "udb","udb0", _dip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_b[0], USER_DATA_B0 },
-    { "udb","udb1", _dip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_b[1], USER_DATA_B1 },
-    { "udb","udb2", _dip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_b[2], USER_DATA_B2 },
-    { "udb","udb3", _dip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_b[3], USER_DATA_B3 },
+    { "udb","udb0", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_b[0], USER_DATA_B0 },
+    { "udb","udb1", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_b[1], USER_DATA_B1 },
+    { "udb","udb2", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_b[2], USER_DATA_B2 },
+    { "udb","udb3", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_b[3], USER_DATA_B3 },
 
-    { "udc","udc0", _dip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_c[0], USER_DATA_C0 },
-    { "udc","udc1", _dip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_c[1], USER_DATA_C1 },
-    { "udc","udc2", _dip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_c[2], USER_DATA_C2 },
-    { "udc","udc3", _dip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_c[3], USER_DATA_C3 },
+    { "udc","udc0", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_c[0], USER_DATA_C0 },
+    { "udc","udc1", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_c[1], USER_DATA_C1 },
+    { "udc","udc2", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_c[2], USER_DATA_C2 },
+    { "udc","udc3", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_c[3], USER_DATA_C3 },
 
-    { "udd","udd0", _dip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_d[0], USER_DATA_D0 },
-    { "udd","udd1", _dip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_d[1], USER_DATA_D1 },
-    { "udd","udd2", _dip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_d[2], USER_DATA_D2 },
-    { "udd","udd3", _dip, 0, tx_print_int, get_data, set_data,(float *)&cfg.user_data_d[3], USER_DATA_D3 },
+    { "udd","udd0", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_d[0], USER_DATA_D0 },
+    { "udd","udd1", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_d[1], USER_DATA_D1 },
+    { "udd","udd2", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_d[2], USER_DATA_D2 },
+    { "udd","udd3", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_d[3], USER_DATA_D3 },
 #endif
 
     // Tool table offsets
@@ -1128,131 +1142,122 @@ const cfgItem_t cfgArray[] = {
 
     // Diagnostic parameters
 #ifdef __DIAGNOSTIC_PARAMETERS
-    { "",    "clc",_f0, 0, tx_print_nul, st_clc,  st_clc, nullptr, 0 },  // clear diagnostic step counters
- //   { "",   "_dam",_f0, 0, tx_print_nul, cm_dam,  cm_dam, nullptr, 0 },  // dump active model
+    { "",    "clc",_f0, 0, tx_print_nul, st_clc,  st_clc, &cs.null, 0 },  // clear diagnostic step counters
 
-    { "_te","_tex",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->target[AXIS_X], 0 }, // X target endpoint
-    { "_te","_tey",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->target[AXIS_Y], 0 },
-    { "_te","_tez",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->target[AXIS_Z], 0 },
-    { "_te","_teu",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->target[AXIS_U], 0 },
-    { "_te","_tev",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->target[AXIS_V], 0 },
-    { "_te","_tew",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->target[AXIS_W], 0 },
-    { "_te","_tea",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->target[AXIS_A], 0 },
-    { "_te","_teb",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->target[AXIS_B], 0 },
-    { "_te","_tec",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->target[AXIS_C], 0 },
+    { "_te","_tex",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->target[AXIS_X], 0 }, // X target endpoint
+    { "_te","_tey",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->target[AXIS_Y], 0 },
+    { "_te","_tez",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->target[AXIS_Z], 0 },
+    { "_te","_tea",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->target[AXIS_A], 0 },
+    { "_te","_teb",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->target[AXIS_B], 0 },
+    { "_te","_tec",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->target[AXIS_C], 0 },
 
-    { "_tr","_trx",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->gm.target[AXIS_X], 0 },  // X target runtime
-    { "_tr","_try",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->gm.target[AXIS_Y], 0 },
-    { "_tr","_trz",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->gm.target[AXIS_Z], 0 },
-    { "_tr","_tru",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->gm.target[AXIS_U], 0 },
-    { "_tr","_trv",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->gm.target[AXIS_V], 0 },
-    { "_tr","_trw",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->gm.target[AXIS_W], 0 },
-    { "_tr","_tra",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->gm.target[AXIS_A], 0 },
-    { "_tr","_trb",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->gm.target[AXIS_B], 0 },
-    { "_tr","_trc",_f0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->gm.target[AXIS_C], 0 },
+    { "_tr","_trx",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->gm.target[AXIS_X], 0 },  // X target runtime
+    { "_tr","_try",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->gm.target[AXIS_Y], 0 },
+    { "_tr","_trz",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->gm.target[AXIS_Z], 0 },
+    { "_tr","_tra",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->gm.target[AXIS_A], 0 },
+    { "_tr","_trb",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->gm.target[AXIS_B], 0 },
+    { "_tr","_trc",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->gm.target[AXIS_C], 0 },
 
 #if (MOTORS >= 1)
-    { "_ts","_ts1",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->target_steps[MOTOR_1], 0 },      // Motor 1 target steps
-    { "_ps","_ps1",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->position_steps[MOTOR_1], 0 },    // Motor 1 position steps
-    { "_cs","_cs1",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->commanded_steps[MOTOR_1], 0 },   // Motor 1 commanded steps (delayed steps)
-    { "_es","_es1",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->encoder_steps[MOTOR_1], 0 },     // Motor 1 encoder steps
-    { "_xs","_xs1",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&st_pre.mot[MOTOR_1].corrected_steps, 0 }, // Motor 1 correction steps applied
-    { "_fe","_fe1",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->following_error[MOTOR_1], 0 },   // Motor 1 following error in steps
+    { "_ts","_ts1",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->target_steps[MOTOR_1], 0 },      // Motor 1 target steps
+    { "_ps","_ps1",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->position_steps[MOTOR_1], 0 },    // Motor 1 position steps
+    { "_cs","_cs1",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->commanded_steps[MOTOR_1], 0 },   // Motor 1 commanded steps (delayed steps)
+    { "_es","_es1",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->encoder_steps[MOTOR_1], 0 },     // Motor 1 encoder steps
+    { "_xs","_xs1",_f0, 2, tx_print_flt, get_flt, set_nul, &st_pre.mot[MOTOR_1].corrected_steps, 0 }, // Motor 1 correction steps applied
+    { "_fe","_fe1",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->following_error[MOTOR_1], 0 },   // Motor 1 following error in steps
 #endif
 #if (MOTORS >= 2)
-    { "_ts","_ts2",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->target_steps[MOTOR_2], 0 },
-    { "_ps","_ps2",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->position_steps[MOTOR_2], 0 },
-    { "_cs","_cs2",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->commanded_steps[MOTOR_2], 0 },
-    { "_es","_es2",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->encoder_steps[MOTOR_2], 0 },
-    { "_xs","_xs2",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&st_pre.mot[MOTOR_2].corrected_steps, 0 },
-    { "_fe","_fe2",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->following_error[MOTOR_2], 0 },
+    { "_ts","_ts2",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->target_steps[MOTOR_2], 0 },
+    { "_ps","_ps2",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->position_steps[MOTOR_2], 0 },
+    { "_cs","_cs2",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->commanded_steps[MOTOR_2], 0 },
+    { "_es","_es2",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->encoder_steps[MOTOR_2], 0 },
+    { "_xs","_xs2",_f0, 2, tx_print_flt, get_flt, set_nul, &st_pre.mot[MOTOR_2].corrected_steps, 0 },
+    { "_fe","_fe2",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->following_error[MOTOR_2], 0 },
 #endif
 #if (MOTORS >= 3)
-    { "_ts","_ts3",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->target_steps[MOTOR_3], 0 },
-    { "_ps","_ps3",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->position_steps[MOTOR_3], 0 },
-    { "_cs","_cs3",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->commanded_steps[MOTOR_3], 0 },
-    { "_es","_es3",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->encoder_steps[MOTOR_3], 0 },
-    { "_xs","_xs3",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&st_pre.mot[MOTOR_3].corrected_steps, 0 },
-    { "_fe","_fe3",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->following_error[MOTOR_3], 0 },
+    { "_ts","_ts3",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->target_steps[MOTOR_3], 0 },
+    { "_ps","_ps3",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->position_steps[MOTOR_3], 0 },
+    { "_cs","_cs3",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->commanded_steps[MOTOR_3], 0 },
+    { "_es","_es3",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->encoder_steps[MOTOR_3], 0 },
+    { "_xs","_xs3",_f0, 2, tx_print_flt, get_flt, set_nul, &st_pre.mot[MOTOR_3].corrected_steps, 0 },
+    { "_fe","_fe3",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->following_error[MOTOR_3], 0 },
 #endif
 #if (MOTORS >= 4)
-    { "_ts","_ts4",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->target_steps[MOTOR_4], 0 },
-    { "_ps","_ps4",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->position_steps[MOTOR_4], 0 },
-    { "_cs","_cs4",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->commanded_steps[MOTOR_4], 0 },
-    { "_es","_es4",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->encoder_steps[MOTOR_4], 0 },
-    { "_xs","_xs4",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&st_pre.mot[MOTOR_4].corrected_steps, 0 },
-    { "_fe","_fe4",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->following_error[MOTOR_4], 0 },
+    { "_ts","_ts4",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->target_steps[MOTOR_4], 0 },
+    { "_ps","_ps4",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->position_steps[MOTOR_4], 0 },
+    { "_cs","_cs4",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->commanded_steps[MOTOR_4], 0 },
+    { "_es","_es4",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->encoder_steps[MOTOR_4], 0 },
+    { "_xs","_xs4",_f0, 2, tx_print_flt, get_flt, set_nul, &st_pre.mot[MOTOR_4].corrected_steps, 0 },
+    { "_fe","_fe4",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->following_error[MOTOR_4], 0 },
 #endif
 #if (MOTORS >= 5)
-    { "_ts","_ts5",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->target_steps[MOTOR_5], 0 },
-    { "_ps","_ps5",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->position_steps[MOTOR_5], 0 },
-    { "_cs","_cs5",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->commanded_steps[MOTOR_5], 0 },
-    { "_es","_es5",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->encoder_steps[MOTOR_5], 0 },
-    { "_xs","_xs6",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&st_pre.mot[MOTOR_5].corrected_steps, 0 },
-    { "_fe","_fe5",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->following_error[MOTOR_5], 0 },
+    { "_ts","_ts5",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->target_steps[MOTOR_5], 0 },
+    { "_ps","_ps5",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->position_steps[MOTOR_5], 0 },
+    { "_cs","_cs5",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->commanded_steps[MOTOR_5], 0 },
+    { "_es","_es5",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->encoder_steps[MOTOR_5], 0 },
+    { "_xs","_xs6",_f0, 2, tx_print_flt, get_flt, set_nul, &st_pre.mot[MOTOR_5].corrected_steps, 0 },
+    { "_fe","_fe5",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->following_error[MOTOR_5], 0 },
 #endif
 #if (MOTORS >= 6)
-    { "_ts","_ts6",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->target_steps[MOTOR_6], 0 },
-    { "_ps","_ps6",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->position_steps[MOTOR_6], 0 },
-    { "_cs","_cs6",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->commanded_steps[MOTOR_6], 0 },
-    { "_es","_es6",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->encoder_steps[MOTOR_6], 0 },
-    { "_xs","_xs5",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&st_pre.mot[MOTOR_6].corrected_steps, 0 },
-    { "_fe","_fe6",_i0, 2, tx_print_flt, get_flt, set_ro, (float *)&mr->following_error[MOTOR_6], 0 },
+    { "_ts","_ts6",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->target_steps[MOTOR_6], 0 },
+    { "_ps","_ps6",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->position_steps[MOTOR_6], 0 },
+    { "_cs","_cs6",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->commanded_steps[MOTOR_6], 0 },
+    { "_es","_es6",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->encoder_steps[MOTOR_6], 0 },
+    { "_xs","_xs5",_f0, 2, tx_print_flt, get_flt, set_nul, &st_pre.mot[MOTOR_6].corrected_steps, 0 },
+    { "_fe","_fe6",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->following_error[MOTOR_6], 0 },
 #endif
+
 #endif  //  __DIAGNOSTIC_PARAMETERS
 
     // Persistence for status report - must be in sequence
     // *** Count must agree with NV_STATUS_REPORT_LEN in report.h ***
-    { "","se00",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[0], 0 },
-    { "","se01",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[1], 0 },
-    { "","se02",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[2], 0 },
-    { "","se03",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[3], 0 },
-    { "","se04",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[4], 0 },
-    { "","se05",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[5], 0 },
-    { "","se06",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[6], 0 },
-    { "","se07",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[7], 0 },
-    { "","se08",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[8], 0 },
-    { "","se09",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[9], 0 },
-    { "","se10",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[10], 0 },
-    { "","se11",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[11], 0 },
-    { "","se12",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[12], 0 },
-    { "","se13",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[13], 0 },
-    { "","se14",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[14], 0 },
-    { "","se15",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[15], 0 },
-    { "","se16",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[16], 0 },
-    { "","se17",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[17], 0 },
-    { "","se18",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[18], 0 },
-    { "","se19",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[19], 0 },
-    { "","se20",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[20], 0 },
-    { "","se21",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[21], 0 },
-    { "","se22",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[22], 0 },
-    { "","se23",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[23], 0 },
-    { "","se24",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[24], 0 },
-    { "","se25",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[25], 0 },
-    { "","se26",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[26], 0 },
-    { "","se27",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[27], 0 },
-    { "","se28",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[28], 0 },
-    { "","se29",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[29], 0 },
-    { "","se30",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[30], 0 },
-    { "","se31",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[31], 0 },
-    { "","se32",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[32], 0 },
-    { "","se33",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[33], 0 },
-    { "","se34",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[34], 0 },
-    { "","se35",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[35], 0 },
-    { "","se36",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[36], 0 },
-    { "","se37",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[37], 0 },
-    { "","se38",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[38], 0 },
-    { "","se39",_ip, 0, tx_print_nul, get_int32, set_int32,(float *)&sr.status_report_list[39], 0 },
-// Count is 40, since se00 counts as one.
+    { "","se00",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[0],0 },
+    { "","se01",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[1],0 },
+    { "","se02",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[2],0 },
+    { "","se03",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[3],0 },
+    { "","se04",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[4],0 },
+    { "","se05",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[5],0 },
+    { "","se06",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[6],0 },
+    { "","se07",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[7],0 },
+    { "","se08",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[8],0 },
+    { "","se09",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[9],0 },
+    { "","se10",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[10],0 },
+    { "","se11",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[11],0 },
+    { "","se12",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[12],0 },
+    { "","se13",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[13],0 },
+    { "","se14",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[14],0 },
+    { "","se15",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[15],0 },
+    { "","se16",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[16],0 },
+    { "","se17",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[17],0 },
+    { "","se18",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[18],0 },
+    { "","se19",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[19],0 },
+    { "","se20",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[20],0 },
+    { "","se21",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[21],0 },
+    { "","se22",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[22],0 },
+    { "","se23",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[23],0 },
+    { "","se24",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[24],0 },
+    { "","se25",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[25],0 },
+    { "","se26",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[26],0 },
+    { "","se27",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[27],0 },
+    { "","se28",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[28],0 },
+    { "","se29",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[29],0 },
+    { "","se30",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[30],0 },
+    { "","se31",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[31],0 },
+    { "","se32",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[32],0 },
+    { "","se33",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[33],0 },
+    { "","se34",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[34],0 },
+    { "","se35",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[35],0 },
+    { "","se36",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[36],0 },
+    { "","se37",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[37],0 },
+    { "","se38",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[38],0 },
+    { "","se39",_fp, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[39],0 },
+    // Count is 40, since se00 counts as one.
+
 
     // Group lookups - must follow the single-valued entries for proper sub-string matching
     // *** Must agree with NV_COUNT_GROUPS below ***
-    // *** START COUNTING FROM HERE ***
-    // *** Do not count:
-    //      - Optional motors (5 and 6)
-    //      - Optional USER_DATA
-    //      - Optional DIAGNOSTIC_PARAMETERS
-    //      - Uber groups (count these separately)
+    // *** If you adjust the number of entries in a group you must also adjust the count for that group ***
+    // *** COUNT STARTS FROM HERE ***
 
 #define FIXED_GROUPS 4
     { "","sys",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // system group

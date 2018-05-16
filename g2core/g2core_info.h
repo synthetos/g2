@@ -21,13 +21,13 @@
 #ifndef G2CORE_INFO_H_ONCE
 #define G2CORE_INFO_H_ONCE
 
-#define G2CORE_FIRMWARE_BUILD			101.02  // Added UVW axes (9 axis control), Enhanced feedhold actions
+#define G2CORE_FIRMWARE_BUILD			101.03  // Added stepper polarity {1pl:n}
 #define G2CORE_FIRMWARE_VERSION         0.99
 
 #ifdef GIT_VERSION
-#define G2CORE_FIRMWARE_BUILD_STRING	GIT_VERSION
+#define G2CORE_FIRMWARE_BUILD_STRING   GIT_VERSION
 #else
-#define G2CORE_FIRMWARE_BUILD_STRING	"unknown"
+#define G2CORE_FIRMWARE_BUILD_STRING   "unknown"
 #endif
 
 #endif // G2CORE_INFO_H_ONCE

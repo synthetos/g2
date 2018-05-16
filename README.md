@@ -106,7 +106,8 @@ Build 100.xx also significantly advances the project structure to support multip
 
 
 - **System and Communications**
-  - [100.13] **Important:** USB will only expose one virtal serial port by default.
+  - [100.27] Adding motor object keys `ep` "enable polarity" and `sp` "step polarity" to allow having the step and enable pins use inverted polarity
+  - [100.13] **Important:** USB will only expose one virtual serial port by default.
     - This can be overridden in the settings file with:
     ```c++
     // Valid options are 1 or 2 only!

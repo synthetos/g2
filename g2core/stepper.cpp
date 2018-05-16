@@ -1006,6 +1006,56 @@ stat_t st_get_pwr(nvObj_t *nv)
 	return (STAT_OK);
 }
 
+stat_t st_set_ep(nvObj_t *nv)            // set motor enable polarity
+{
+    if (nv->value_int < IO_ACTIVE_LOW) { return (STAT_INPUT_LESS_THAN_MIN_VALUE); }
+    if (nv->value_int > IO_ACTIVE_HIGH) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
+
+    uint8_t motor = _motor(nv->index);
+    if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
+
+    Motors[motor]->setEnablePolarity((ioMode)nv->value_int);
+    return (STAT_OK);
+}
+
+stat_t st_get_ep(nvObj_t *nv)            // get motor enable polarity
+{
+    if (nv->value_int < IO_ACTIVE_LOW) { return (STAT_INPUT_LESS_THAN_MIN_VALUE); }
+    if (nv->value_int > IO_ACTIVE_HIGH) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
+
+    uint8_t motor = _motor(nv->index);
+    if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
+
+    nv->value_int = (float)Motors[motor]->getEnablePolarity();
+    nv->valuetype = TYPE_INTEGER;
+    return (STAT_OK);
+}
+
+stat_t st_set_sp(nvObj_t *nv)            // set motor step polarity
+{
+    if (nv->value_int < IO_ACTIVE_LOW) { return (STAT_INPUT_LESS_THAN_MIN_VALUE); }
+    if (nv->value_int > IO_ACTIVE_HIGH) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
+
+    uint8_t motor = _motor(nv->index);
+    if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
+
+    Motors[motor]->setStepPolarity((ioMode)nv->value_int);
+    return (STAT_OK);
+}
+
+stat_t st_get_sp(nvObj_t *nv)            // get motor step polarity
+{
+    if (nv->value_int < IO_ACTIVE_LOW) { return (STAT_INPUT_LESS_THAN_MIN_VALUE); }
+    if (nv->value_int > IO_ACTIVE_HIGH) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
+
+    uint8_t motor = _motor(nv->index);
+    if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
+
+    nv->value_int = (float)Motors[motor]->getStepPolarity();
+    nv->valuetype = TYPE_INTEGER;
+    return (STAT_OK);
+}
+
 /* GLOBAL FUNCTIONS (SYSTEM LEVEL)
  *
  * st_get_mt() - get motor timeout in seconds
@@ -1087,7 +1137,8 @@ static const char fmt_0tr[] = "[%s%s] m%s travel per revolution%10.4f%s\n";
 static const char fmt_0mi[] = "[%s%s] m%s microsteps%16d [1,2,4,8,16,32]\n";
 static const char fmt_0su[] = "[%s%s] m%s steps per unit %17.5f steps per%s\n";
 static const char fmt_0po[] = "[%s%s] m%s polarity%18d [0=normal,1=reverse]\n";
-static const char fmt_0ep[] = "[%s%s] m%s enable polarity%11d [0=active HIGH,1=ractive LOW]\n";
+static const char fmt_0ep[] = "[%s%s] m%s enable polarity%11d [0=active HIGH,1=active LOW]\n";
+static const char fmt_0sp[] = "[%s%s] m%s step polarity%13d [0=active HIGH,1=active LOW]\n";
 static const char fmt_0pm[] = "[%s%s] m%s power management%10d [0=disabled,1=always on,2=in cycle,3=when moving]\n";
 static const char fmt_0pl[] = "[%s%s] m%s motor power level%13.3f [0.000=minimum, 1.000=maximum]\n";
 static const char fmt_pwr[] = "[%s%s] Motor %c power level:%12.3f\n";
@@ -1127,6 +1178,7 @@ void st_print_mi(nvObj_t *nv) { _print_motor_int(nv, fmt_0mi);}
 void st_print_su(nvObj_t *nv) { _print_motor_flt_units(nv, fmt_0su, cm_get_units_mode(MODEL));}
 void st_print_po(nvObj_t *nv) { _print_motor_int(nv, fmt_0po);}
 void st_print_ep(nvObj_t *nv) { _print_motor_int(nv, fmt_0ep);}
+void st_print_sp(nvObj_t *nv) { _print_motor_int(nv, fmt_0sp);}
 void st_print_pm(nvObj_t *nv) { _print_motor_int(nv, fmt_0pm);}
 void st_print_pl(nvObj_t *nv) { _print_motor_flt(nv, fmt_0pl);}
 void st_print_pwr(nvObj_t *nv){ _print_motor_pwr(nv, fmt_pwr);}
