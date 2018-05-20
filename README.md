@@ -2,11 +2,39 @@
 
 [![Build Status](https://travis-ci.org/synthetos/g2.svg?branch=edge)](https://travis-ci.org/synthetos/g2) [![Issues in Ready](https://badge.waffle.io/synthetos/g2.svg?label=ready&title=Ready)](http://waffle.io/synthetos/g2) [![Issues in Progress](https://badge.waffle.io/synthetos/g2.svg?label=in%20progress&title=In%20Progress)](http://waffle.io/synthetos/g2)
 
+# What it is
+
+g2core is a 9 axes (XYZABC+UVW) motion control system designed for high-performance on small to mid-sized machines.
+
+* CNC
+* 3D printing
+* Laser cutting
+* Robotics
+
+Our default target is the [Arduino Due](https://store.arduino.cc/arduino-due), though it can also be used with other boards.
+
+Some features:
+
+* 9 axis motion (XYZABC+UVW).
+  * **Note** - UVW is only in the `edge` branch for now.
+* Jerk controlled motion for acceleration planning (3rd order motion planning)
+* Status displays ('?' character)
+* XON/XOFF and RTS/CTS protocol over USB serial
+* RESTful interface using JSON
+
+# Mailing List
+
+For both user and developer discussions of g2core, we recently created a mailing list:
+
+* [g2core@links.org](http://lists.links.org/mailman/listinfo/g2core)
+
+Please feel welcome to join in. :smile:
+
 # g2core - Edge Branch
 
-G2 [Edge](https://github.com/synthetos/g2/tree/edge) is the branch for beta testing new features under development. New features are developed in feature branches and merged into the edge branch. Periodically edge is promoted to master.
+G2 [Edge](https://github.com/synthetos/g2/tree/edge) is the branch for beta testing new features under development. New features are developed in feature branches and merged into the edge branch. Periodically edge is promoted to (stable) master.
 
-That said, Edge is for the adventurous. It is not guaranteed to be stable, but we do our best to achieve this. For production uses we recommend using the [Master branch](https://github.com/synthetos/g2/tree/master).
+Edge is for the adventurous. It is not guaranteed to be stable, but we do our best to achieve this. For production uses we recommend using the [Master branch](https://github.com/synthetos/g2/tree/master).
 
 ## Firmware Build 101 `{fb:101.xx}`
 ### Feature Enhancements
