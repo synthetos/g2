@@ -115,17 +115,21 @@ void json_parse_for_exec(char *str, bool execute)
 static stat_t _json_parser_execute(nvObj_t *nv) {
 
     do {
-        if (nv->valuetype == TYPE_PARENT) {
-            // anything?
-        } else if (nv->valuetype == TYPE_NULL) {           // means GET the value
+        if (nv->valuetype == TYPE_PARENT) {         // added as partial fix for Issue #298:
+                                                    // Reading values with nested JSON changes values in inches mode
+            if (strcmp(nv->token, "sr") == 0) {     // Hack to execute Set Status Report (SR parent) See end note (*)
+                return (nv_set(nv));
+            }
+
+        } else if (nv->valuetype == TYPE_NULL) {    // means run the GET function to get the value
             ritorno(nv_get(nv));                    // ritorno returns w/status on any errors
             if (nv->valuetype == TYPE_PARENT) {     // This will be true if you read a group. Exit now
                 return (STAT_OK);
             }
-        } else {
+        } else {                                    // otherwise, run the SET function
             cm_parse_clear(*nv->stringp);           // parse Gcode and clear alarms if M30 or M2 is found
             ritorno(cm_is_alarmed());               // return error status if in alarm, shutdown or panic
-            ritorno(nv_set(nv));                    // set value or call a function (e.g. gcode)
+            ritorno(nv_set(nv));                    // run the SET function  to set value or execute something (e.g. gcode)
             nv_persist(nv);
         }
         if ((nv = nv->nx) == NULL) {
@@ -135,6 +139,10 @@ static stat_t _json_parser_execute(nvObj_t *nv) {
 
     return (STAT_OK);                               // only successful commands exit through this point
 }
+
+// (*) Note: The JSON / token system is essentially flat, as it was derived from a command-line flat-ASCII approach
+//     If the JSON objects had proper recursive descent handlers that just passed the remaining string (at that level) 
+//     off for further processing, we would not need to do this hack. A fix is in the works. For now, this is OK.
 
 static stat_t _json_parser_kernal(nvObj_t *nv, char *str)
 {
