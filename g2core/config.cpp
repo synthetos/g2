@@ -128,7 +128,8 @@ static void _set_defa(nvObj_t *nv, bool print)
     cm_set_units_mode(MILLIMETERS);             // must do inits in MM mode
     for (nv->index=0; nv_index_is_single(nv->index); nv->index++) {
         if (cfgArray[nv->index].flags & F_INITIALIZE) {
-            if ((cfgArray[nv->index].flags & F_TYPE_MASK) == TYPE_INTEGER) {
+            if ((cfgArray[nv->index].flags & TYPE_INTEGER) ||
+                (cfgArray[nv->index].flags & TYPE_BOOLEAN)) {    // Fix for Issue #357
                 nv->value_int = cfgArray[nv->index].def_value;
             } else {
                 nv->value_flt = cfgArray[nv->index].def_value;
