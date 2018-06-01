@@ -26,7 +26,7 @@ Some features:
 
 For both user and developer discussions of g2core, we recently created a mailing list:
 
-* http://lists.links.org/mailman/listinfo/g2core
+* https://lists.links.org/mailman/listinfo/g2core
 
 Please feel welcome to join in. :smile:
 
