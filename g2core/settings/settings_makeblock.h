@@ -54,7 +54,7 @@
 
 // Communications and reporting settings
 
-#define MARLIN_COMPAT_ENABLED       true                    // enable marlin compatibility mode
+#define MARLIN_COMPAT_ENABLED       false                   // enable marlin compatibility mode
 #define COMM_MODE                   JSON_MODE               // one of: TEXT_MODE, JSON_MODE
 #define XIO_ENABLE_FLOW_CONTROL     FLOW_CONTROL_RTS        // FLOW_CONTROL_OFF, FLOW_CONTROL_RTS
 #define USB_SERIAL_PORTS_EXPOSED    1
@@ -89,7 +89,7 @@
                                                         // 1=MOTOR_ALWAYS_POWERED, 
                                                         // 2=MOTOR_POWERED_IN_CYCLE, 
                                                         // 3=MOTOR_POWERED_ONLY_WHEN_MOVING
-#define M1_POWER_LEVEL          0.4                     // 0.0 = off, 1.0 = max
+#define M1_POWER_LEVEL          0.4                     // 1pl:   0.0=no power, 1.0=max power
 #define MOTOR_POWER_TIMEOUT     10.00                    // motor power timeout in seconds
 
 #define M1_MOTOR_MAP            AXIS_X                  // 1ma

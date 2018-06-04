@@ -2,8 +2,8 @@
  * settings_Printrbot_play.h
  * This file is part of the the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2010 - 2016 Robert Giseburt
+ * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2017 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -42,37 +42,37 @@
 #define JUNCTION_INTEGRATION_TIME   1.2                    // cornering - between 0.10 and 2.00 (higher is faster)
 //{jt:1.2}
 //{jt:0.75}
-#define CHORDAL_TOLERANCE           0.01                    // chordal accuracy for arc drawing (in mm)
+#define CHORDAL_TOLERANCE                 0.01                    // chordal accuracy for arc drawing (in mm)
 
-#define SOFT_LIMIT_ENABLE           0                       // 0=off, 1=on
-#define HARD_LIMIT_ENABLE           1                       // 0=off, 1=on
-#define SAFETY_INTERLOCK_ENABLE     1                       // 0=off, 1=on
+#define SOFT_LIMIT_ENABLE                 0                       // 0=off, 1=on
+#define HARD_LIMIT_ENABLE                 1                       // 0=off, 1=on
+#define SAFETY_INTERLOCK_ENABLE           1                       // 0=off, 1=on
 
-#define SPINDLE_ENABLE_POLARITY     1                       // 0=active low, 1=active high
-#define SPINDLE_DIR_POLARITY        0                       // 0=clockwise is low, 1=clockwise is high
-#define SPINDLE_PAUSE_ON_HOLD       true
-#define SPINDLE_DWELL_TIME          1.0
+#define SPINDLE_ENABLE_POLARITY           1                       // 0=active low, 1=active high
+#define SPINDLE_DIR_POLARITY              0                       // 0=clockwise is low, 1=clockwise is high
+#define SPINDLE_PAUSE_ON_HOLD             true
+#define SPINDLE_DWELL_TIME                1.0
 
-#define COOLANT_MIST_POLARITY       1                       // 0=active low, 1=active high
-#define COOLANT_FLOOD_POLARITY      1                       // 0=active low, 1=active high
-#define COOLANT_PAUSE_ON_HOLD       false
+#define COOLANT_MIST_POLARITY             1                       // 0=active low, 1=active high
+#define COOLANT_FLOOD_POLARITY            1                       // 0=active low, 1=active high
+#define COOLANT_PAUSE_ON_HOLD             false
 
 #define TRAVERSE_AT_HIGH_JERK       true                    // EXPERIMENTAL!!
 
 // Communications and reporting settings
 
-#define MARLIN_COMPAT_ENABLED       true                    // enable marlin compatibility mode
-#define COMM_MODE                   JSON_MODE               // one of: TEXT_MODE, JSON_MODE
-#define XIO_ENABLE_FLOW_CONTROL FLOW_CONTROL_RTS            // FLOW_CONTROL_OFF, FLOW_CONTROL_RTS
-#define XIO_UART_MUTES_WHEN_USB_CONNECTED 1                 // Mute the UART when USB connects
+#define MARLIN_COMPAT_ENABLED             true                    // enable marlin compatibility mode
+#define COMM_MODE                         JSON_MODE               // one of: TEXT_MODE, JSON_MODE
+#define XIO_ENABLE_FLOW_CONTROL           FLOW_CONTROL_RTS        // FLOW_CONTROL_OFF, FLOW_CONTROL_RTS
+#define XIO_UART_MUTES_WHEN_USB_CONNECTED 1                       // Mute the UART when USB connects
 
-#define TEXT_VERBOSITY              TV_VERBOSE              // one of: TV_SILENT, TV_VERBOSE
-#define JSON_VERBOSITY              JV_LINENUM              // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
-#define QUEUE_REPORT_VERBOSITY      QR_OFF                  // one of: QR_OFF, QR_SINGLE, QR_TRIPLE
+#define TEXT_VERBOSITY                    TV_VERBOSE              // one of: TV_SILENT, TV_VERBOSE
+#define JSON_VERBOSITY                    JV_LINENUM              // one of: JV_SILENT, JV_FOOTER, JV_CONFIGS, JV_MESSAGES, JV_LINENUM, JV_VERBOSE
+#define QUEUE_REPORT_VERBOSITY            QR_OFF                  // one of: QR_OFF, QR_SINGLE, QR_TRIPLE
 
-#define STATUS_REPORT_VERBOSITY     SR_FILTERED             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
-#define STATUS_REPORT_MIN_MS        100                     // milliseconds - enforces a viable minimum
-#define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
+#define STATUS_REPORT_VERBOSITY           SR_FILTERED             // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
+#define STATUS_REPORT_MIN_MS              100                     // milliseconds - enforces a viable minimum
+#define STATUS_REPORT_INTERVAL_MS         250                     // milliseconds - set $SV=0 to disable
 
 // Defaults for 3DP
 //#define STATUS_REPORT_DEFAULTS    "line","posx","posy","posz","posa","vel","he1t","he1st","he1at","feed","unit","path","stat"
@@ -88,11 +88,27 @@
 #define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","he1t","he1st","he1at","he1op","he3t","he3st","he3at","he3op","feed","vel","unit","path","stat","1ts","1sgr","1csa","2ts","2sgr","2csa","3ts","3sgr","3csa","4ts","4sgr","4csa"
 //#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","he1t","he1st","he1at","he1tr","he1tv","he1op","he2t","he2st","he2at","he2tr","he2tv","he2op","he3t","he3st","he3at","he3tr","he3tv","he3op","feed","vel","unit","path","stat","_xs1","_xs2","_xs3","_xs4"
 // Gcode startup defaults
-#define GCODE_DEFAULT_UNITS         MILLIMETERS             // MILLIMETERS or INCHES
-#define GCODE_DEFAULT_PLANE         CANON_PLANE_XY          // CANON_PLANE_XY, CANON_PLANE_XZ, or CANON_PLANE_YZ
-#define GCODE_DEFAULT_COORD_SYSTEM  G54                     // G54, G55, G56, G57, G58 or G59
-#define GCODE_DEFAULT_PATH_CONTROL  PATH_CONTINUOUS
-#define GCODE_DEFAULT_DISTANCE_MODE ABSOLUTE_DISTANCE_MODE
+#define GCODE_DEFAULT_UNITS               MILLIMETERS             // MILLIMETERS or INCHES
+#define GCODE_DEFAULT_PLANE               CANON_PLANE_XY          // CANON_PLANE_XY, CANON_PLANE_XZ, or CANON_PLANE_YZ
+#define GCODE_DEFAULT_COORD_SYSTEM        G54                     // G54, G55, G56, G57, G58 or G59
+#define GCODE_DEFAULT_PATH_CONTROL        PATH_CONTINUOUS
+#define GCODE_DEFAULT_DISTANCE_MODE       ABSOLUTE_DISTANCE_MODE
+
+#define MARLIN_G29_SCRIPT                 \
+    "M100 ({\"_leds\":3})\n" \
+    "G1 X0 Y95 Z6 F20000\n" \
+    "G38.2 Z-10 F200\n" \
+    "G1 Z5 F20000\n" \
+    "M100 ({\"_leds\":5})\n" \
+    "G1 X70 Y45 F20000\n" \
+    "G38.2 Z-10 F200\n" \
+    "G1 Z5 F20000\n" \
+    "M100 ({\"_leds\":6})\n" \
+    "G1 X0 Y5 F20000\n" \
+    "G38.2 Z-10 F200\n" \
+    "G1 Z5 F20000\n" \
+    "M100 ({\"_leds\":3})\n" \
+    "M100 ({\"tram\":1})\n"
 
 
 // *** motor settings ************************************************************************************
@@ -209,47 +225,47 @@
 
 // *** axis settings **********************************************************************************
 
-#define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX 30000           // xvm  G0 max velocity in mm/min
-#define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
-#define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
-#define X_TRAVEL_MAX 100               // xtm  travel between switches or crashes
+#define X_AXIS_MODE                       AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
+#define X_VELOCITY_MAX                    30000                   // xvm  G0 max velocity in mm/min
+#define X_FEEDRATE_MAX                    X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
+#define X_TRAVEL_MIN                      0                       // xtn  minimum travel - used by soft limits and homing
+#define X_TRAVEL_MAX                      100                     // xtm  travel between switches or crashes
 #define X_JERK_MAX 15000               // xjm  yes, that's "100 billion" mm/(min^3)
 #define X_JERK_HIGH_SPEED 20000        // xjh
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
-#define X_HOMING_DIRECTION          0                       // xhd  0=search moves negative, 1= search moves positive
-#define X_SEARCH_VELOCITY 3000         // xsv  move in negative direction
-#define X_LATCH_VELOCITY            200                     // xlv  mm/min
-#define X_LATCH_BACKOFF 5              // xlb  mm
-#define X_ZERO_BACKOFF              0.5                     // xzb  mm
+#define X_HOMING_DIRECTION                0                       // xhd  0=search moves negative, 1= search moves positive
+#define X_SEARCH_VELOCITY                 3000                    // xsv  move in negative direction
+#define X_LATCH_VELOCITY                  200                     // xlv  mm/min
+#define X_LATCH_BACKOFF                   5                       // xlb  mm
+#define X_ZERO_BACKOFF                    0.5                     // xzb  mm
 
-#define Y_AXIS_MODE                 AXIS_STANDARD
-#define Y_VELOCITY_MAX 30000
-#define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
-#define Y_TRAVEL_MIN                0
-#define Y_TRAVEL_MAX 100
+#define Y_AXIS_MODE                       AXIS_STANDARD
+#define Y_VELOCITY_MAX                    30000
+#define Y_FEEDRATE_MAX                    Y_VELOCITY_MAX
+#define Y_TRAVEL_MIN                      0
+#define Y_TRAVEL_MAX                      100
 #define Y_JERK_MAX 15000
 #define Y_JERK_HIGH_SPEED 20000
 #define Y_HOMING_INPUT 4
-#define Y_HOMING_DIRECTION          1
-#define Y_SEARCH_VELOCITY 1500
-#define Y_LATCH_VELOCITY            200
-#define Y_LATCH_BACKOFF 5
-#define Y_ZERO_BACKOFF              0.5
+#define Y_HOMING_DIRECTION                1
+#define Y_SEARCH_VELOCITY                 1500
+#define Y_LATCH_VELOCITY                  200
+#define Y_LATCH_BACKOFF                   5
+#define Y_ZERO_BACKOFF                    0.5
 
-#define Z_AXIS_MODE                 AXIS_STANDARD
-#define Z_VELOCITY_MAX 300
-#define Z_FEEDRATE_MAX Z_VELOCITY_MAX
-#define Z_TRAVEL_MIN                0
-#define Z_TRAVEL_MAX 125
-#define Z_JERK_MAX 800
-#define Z_JERK_HIGH_SPEED 1600
-#define Z_HOMING_INPUT 5
-#define Z_HOMING_DIRECTION 0
-#define Z_SEARCH_VELOCITY 200
-#define Z_LATCH_VELOCITY            100
-#define Z_LATCH_BACKOFF 5
-#define Z_ZERO_BACKOFF              0
+#define Z_AXIS_MODE                       AXIS_STANDARD
+#define Z_VELOCITY_MAX                    300
+#define Z_FEEDRATE_MAX                    Z_VELOCITY_MAX
+#define Z_TRAVEL_MIN                      0
+#define Z_TRAVEL_MAX                      125
+#define Z_JERK_MAX                        800
+#define Z_JERK_HIGH_SPEED                 1600
+#define Z_HOMING_INPUT                    5
+#define Z_HOMING_DIRECTION                0
+#define Z_SEARCH_VELOCITY                 200
+#define Z_LATCH_VELOCITY                  100
+#define Z_LATCH_BACKOFF                   5
+#define Z_ZERO_BACKOFF                    0
 
 #define G55_Z_OFFSET                0.35 // higher number is farther away from the bed
 
@@ -272,9 +288,9 @@
  ***************************************************************************************/
 
 #define A_AXIS_MODE             AXIS_RADIUS
-#define A_RADIUS 5.30516476972984
-#define A_VELOCITY_MAX 77760.0  // G0 rate ~120 mm/s, 2,400 mm/min
-#define A_FEEDRATE_MAX 9720.0   // 9720.0 = G1 rate ~15 mm/s, 900 mm/min
+#define A_RADIUS                5.30516476972984
+#define A_VELOCITY_MAX          77760.0                 // G0 rate ~120 mm/s, 2,400 mm/min
+#define A_FEEDRATE_MAX          9720.0                  // 9720.0 = G1 rate ~15 mm/s, 900 mm/min
 #define A_TRAVEL_MIN            0
 #define A_TRAVEL_MAX            10
 #define A_JERK_MAX              40000.0 // ~20 million mm/min^3 {ajm:48147.7}
@@ -302,165 +318,148 @@
 #define B_ZERO_BACKOFF          2
 #define B_JERK_HIGH_SPEED       361108.0 // ~150 million mm/min^3
 
- 
+
 //*** Input / output settings ***
 
 //** Temperature Sensors **
 
-//#include "device/max31865/max31865.h"
-
-//#define USING_A_MAX31865 1
-
 #define HAS_TEMPERATURE_SENSOR_1  true
 #if HAS_TEMPERATURE_SENSOR_1
-// Must choose Thermistor or PT100
-#if 1 // 1 if a Thermistor, 0 if a PT100
-    #define TEMPERATURE_SENSOR_1_TYPE  Thermistor<ADCDifferentialPair<kADC1_Neg_PinNumber, kADC1_Pos_PinNumber>>
+    #define TEMPERATURE_SENSOR_1_CIRCUIT_TYPE ADCCircuitSimplePullup
+    #define TEMPERATURE_SENSOR_1_CIRCUIT_INIT { /*pullup_resistance:*/ 4700 }
+    #define TEMPERATURE_SENSOR_1_TYPE  Thermistor<ADCPin<kADC1_PinNumber>>
     #define TEMPERATURE_SENSOR_1_INIT { \
-    /*T1:*/     25.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
-    /*R1:*/  99500.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 200 \
+        /*T1:*/     20.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
+        /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, \
+        &temperature_sensor_1_circuit \
     }
-#else
-    // #define TEMPERATURE_SENSOR_1_TYPE  PT100<ADCDifferentialPair<kADC1_Neg_PinNumber, kADC1_Pos_PinNumber>>
-    // #define TEMPERATURE_SENSOR_1_INIT {/*pullup_resistance:*/ 2000, /*inline_resistance*/0.0}
-   #define TEMPERATURE_SENSOR_1_TYPE  PT100<MAX31865<SPIBus_used_t::SPIBusDevice>>
-   #define TEMPERATURE_SENSOR_1_INIT {/*pullup_resistance:*/ 430, /*inline_resistance*/0, spiBus, spiCSPinMux.getCS(5)}
-#endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_1
 
 #define EXTRUDER_1_OUTPUT_PIN kHeaterOutput1_PinNumber
-#define EXTRUDER_1_FAN_PIN    kOutput5_PinNumber
+#define EXTRUDER_1_FAN_PIN    kOutput3_PinNumber
 
 #define HAS_TEMPERATURE_SENSOR_2  false
 #if HAS_TEMPERATURE_SENSOR_2
-#if 1 // 1 if a Thermistor, 0 if a PT100
-    #define TEMPERATURE_SENSOR_2_TYPE  Thermistor<ADCDifferentialPair<kADC2_Neg_PinNumber, kADC2_Pos_PinNumber>>
+    #define TEMPERATURE_SENSOR_2_CIRCUIT_TYPE ADCCircuitSimplePullup
+    #define TEMPERATURE_SENSOR_2_CIRCUIT_INIT { /*pullup_resistance:*/ 4700 }
+    #define TEMPERATURE_SENSOR_2_TYPE  Thermistor<ADCPin<kADC2_PinNumber>>
     #define TEMPERATURE_SENSOR_2_INIT { \
-    /*T1:*/     25.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
-    /*R1:*/  99500.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 200 \
+        /*T1:*/     20.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
+        /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, \
+        &temperature_sensor_2_circuit \
     }
-#else
-    #define TEMPERATURE_SENSOR_2_TYPE  PT100<ADCDifferentialPair<kADC2_Neg_PinNumber, kADC2_Pos_PinNumber>>
-    #define TEMPERATURE_SENSOR_2_INIT {/*pullup_resistance:*/ 200, /*inline_resistance*/0.0}
-//    #define TEMPERATURE_SENSOR_2_TYPE  PT100<MAX31865<SPIBus_used_t::SPIBusDevice>>
-//    #define TEMPERATURE_SENSOR_2_INIT {/*pullup_resistance:*/ 430, /*inline_resistance*/0, spiBus, spiCSPinMux.getCS(5)}
-#endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_2
 
+// Warning - the PrintrBoardG2 doesn't have a Output2
 #define EXTRUDER_2_OUTPUT_PIN kHeaterOutput2_PinNumber
 
-#define HAS_TEMPERATURE_SENSOR_3  true
+#define HAS_TEMPERATURE_SENSOR_3  false
 #if HAS_TEMPERATURE_SENSOR_3
-#if 1 // 1 if a Thermistor, 0 if a PT100
-    #define TEMPERATURE_SENSOR_3_TYPE  Thermistor<ADCDifferentialPair<kADC2_Neg_PinNumber, kADC2_Pos_PinNumber>>
+    #define TEMPERATURE_SENSOR_3_CIRCUIT_TYPE ADCCircuitSimplePullup
+    #define TEMPERATURE_SENSOR_3_CIRCUIT_INIT { /*pullup_resistance:*/ 4700 }
+    #define TEMPERATURE_SENSOR_3_TYPE  Thermistor<ADCPin<kADC3_PinNumber>>
     #define TEMPERATURE_SENSOR_3_INIT { \
-    /*T1:*/     20.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
-    /*R1:*/ 100000.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 200 \
+        /*T1:*/     20.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
+        /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, \
+        &temperature_sensor_3_circuit \
     }
-#else
-    // #define TEMPERATURE_SENSOR_3_TYPE  PT100<ADCDifferentialPair<kADC3_Neg_PinNumber, kADC3_Pos_PinNumber>>
-    // #define TEMPERATURE_SENSOR_3_INIT {/*pullup_resistance:*/ 200, /*inline_resistance*/0.0}
-   #define TEMPERATURE_SENSOR_3_TYPE  PT100<MAX31865<SPIBus_used_t::SPIBusDevice>>
-   #define TEMPERATURE_SENSOR_3_INIT {/*pullup_resistance:*/ 430, /*inline_resistance*/0, spiBus, spiCSPinMux.getCS(6)}
-
-#endif // 0 or 1
 #endif // HAS_TEMPERATURE_SENSOR_3
 
 #define BED_OUTPUT_PIN kHeaterOutput11_PinNumber
 
 //** Digital Inputs **
 /*
- IO_MODE_DISABLED
- IO_ACTIVE_LOW    aka NORMALLY_OPEN
- IO_ACTIVE_HIGH   aka NORMALLY_CLOSED
+    IO_MODE_DISABLED
+    IO_ACTIVE_LOW    aka NORMALLY_OPEN
+    IO_ACTIVE_HIGH   aka NORMALLY_CLOSED
 
- INPUT_ACTION_NONE
- INPUT_ACTION_STOP
- INPUT_ACTION_FAST_STOP
- INPUT_ACTION_HALT
- INPUT_ACTION_RESET
+    INPUT_ACTION_NONE
+    INPUT_ACTION_STOP
+    INPUT_ACTION_FAST_STOP
+    INPUT_ACTION_HALT
+    INPUT_ACTION_RESET
 
- INPUT_FUNCTION_NONE
- INPUT_FUNCTION_LIMIT
- INPUT_FUNCTION_INTERLOCK
- INPUT_FUNCTION_SHUTDOWN
- INPUT_FUNCTION_PANIC
- */
+    INPUT_FUNCTION_NONE
+    INPUT_FUNCTION_LIMIT
+    INPUT_FUNCTION_INTERLOCK
+    INPUT_FUNCTION_SHUTDOWN
+    INPUT_FUNCTION_PANIC
+*/
 // Inputs are defined for the g2ref(a) board
 // Xmn (board label)
-#define DI1_MODE                    IO_ACTIVE_LOW
-#define DI1_ACTION                  INPUT_ACTION_NONE
-#define DI1_FUNCTION                INPUT_FUNCTION_NONE
+#define DI1_MODE                          IO_ACTIVE_LOW
+#define DI1_ACTION                        INPUT_ACTION_NONE
+#define DI1_FUNCTION                      INPUT_FUNCTION_NONE
 
 // Xmax
-#define DI2_MODE                    IO_MODE_DISABLED
-#define DI2_ACTION                  INPUT_ACTION_NONE
-#define DI2_FUNCTION                INPUT_FUNCTION_NONE
+#define DI2_MODE                          IO_MODE_DISABLED
+#define DI2_ACTION                        INPUT_ACTION_NONE
+#define DI2_FUNCTION                      INPUT_FUNCTION_NONE
 
 // Ymin
-#define DI3_MODE                    IO_MODE_DISABLED
-#define DI3_ACTION                  INPUT_ACTION_NONE
-#define DI3_FUNCTION                INPUT_FUNCTION_NONE
+#define DI3_MODE                          IO_MODE_DISABLED
+#define DI3_ACTION                        INPUT_ACTION_NONE
+#define DI3_FUNCTION                      INPUT_FUNCTION_NONE
 
 // Ymax
-#define DI4_MODE                    IO_ACTIVE_LOW
-#define DI4_ACTION                  INPUT_ACTION_NONE
-#define DI4_FUNCTION                INPUT_FUNCTION_NONE
+#define DI4_MODE                          IO_ACTIVE_LOW
+#define DI4_ACTION                        INPUT_ACTION_NONE
+#define DI4_FUNCTION                      INPUT_FUNCTION_NONE
 
 // Zmin
-#define DI5_MODE                    IO_ACTIVE_LOW
-#define DI5_ACTION                  INPUT_ACTION_NONE
-#define DI5_FUNCTION                INPUT_FUNCTION_NONE
+#define DI5_MODE                          IO_ACTIVE_LOW
+#define DI5_ACTION                        INPUT_ACTION_NONE
+#define DI5_FUNCTION                      INPUT_FUNCTION_PROBE
 
 // Zmax
-#define DI6_MODE                    IO_MODE_DISABLED
-#define DI6_ACTION                  INPUT_ACTION_NONE
-#define DI6_FUNCTION                INPUT_FUNCTION_NONE
+#define DI6_MODE                          IO_MODE_DISABLED
+#define DI6_ACTION                        INPUT_ACTION_NONE
+#define DI6_FUNCTION                      INPUT_FUNCTION_NONE
 
 // Shutdown (Amin on v9 board)
-#define DI7_MODE                    IO_MODE_DISABLED
-#define DI7_ACTION                  INPUT_ACTION_NONE
-#define DI7_FUNCTION                INPUT_FUNCTION_NONE
+#define DI7_MODE                          IO_MODE_DISABLED
+#define DI7_ACTION                        INPUT_ACTION_NONE
+#define DI7_FUNCTION                      INPUT_FUNCTION_NONE
 
 // High Voltage Z Probe In (Amax on v9 board)
-#define DI8_MODE                    IO_ACTIVE_LOW
-#define DI8_ACTION                  INPUT_ACTION_NONE
-#define DI8_FUNCTION                INPUT_FUNCTION_NONE
+#define DI8_MODE                          IO_ACTIVE_LOW
+#define DI8_ACTION                        INPUT_ACTION_NONE
+#define DI8_FUNCTION                      INPUT_FUNCTION_NONE
 
 // Hardware interlock input
-#define DI9_MODE                    IO_MODE_DISABLED
-#define DI9_ACTION                  INPUT_ACTION_NONE
-#define DI9_FUNCTION                INPUT_FUNCTION_NONE
+#define DI9_MODE                          IO_MODE_DISABLED
+#define DI9_ACTION                        INPUT_ACTION_NONE
+#define DI9_FUNCTION                      INPUT_FUNCTION_NONE
 
-//Extruder1_PWM
+// Extruder1_PWM
 #define DO1_MODE                    IO_ACTIVE_HIGH // unavailable, is the extruder output
 
-//Extruder2_PWM
+// Extruder2_PWM
 #define DO2_MODE                    IO_ACTIVE_HIGH // unavailable, is the extruder output
 
-//Fan1A_PWM
+// Fan1A_PWM
 #define DO3_MODE                    IO_ACTIVE_LOW
 
-//Fan1B_PWM
-#define DO4_MODE                    IO_ACTIVE_HIGH
+// Fan1B_PWM
+#define DO4_MODE                          IO_ACTIVE_HIGH
 
-#define DO5_MODE                    IO_ACTIVE_HIGH
-#define DO6_MODE                    IO_ACTIVE_HIGH
-#define DO7_MODE                    IO_ACTIVE_HIGH
+#define DO5_MODE                          IO_ACTIVE_HIGH
+#define DO6_MODE                          IO_ACTIVE_HIGH
+#define DO7_MODE                          IO_ACTIVE_HIGH
 #define DO8_MODE                    IO_ACTIVE_HIGH  // 5V Fan
 
-//SAFEin (Output) signal
-#define DO9_MODE                    IO_ACTIVE_HIGH
+// SAFEin (Output) signal
+#define DO9_MODE                          IO_ACTIVE_HIGH
 
-#define DO10_MODE                   IO_ACTIVE_HIGH
+#define DO10_MODE                         IO_ACTIVE_HIGH
 
-//Header Bed FET
+// Header Bed FET
 #define DO11_MODE                   IO_ACTIVE_LOW // unavailable, is the extruder output
 
-//Indicator_LED
-#define DO12_MODE                   IO_ACTIVE_HIGH
+// Indicator_LED
+#define DO12_MODE                         IO_ACTIVE_HIGH
 
-#define DO13_MODE                   IO_ACTIVE_HIGH
+#define DO13_MODE                         IO_ACTIVE_HIGH
 
 
 /*** Extruders / Heaters ***/
@@ -470,18 +469,16 @@
 #define MIN_FAN_TEMP                50.0  // (he1fl) at this temp the fan starts to ramp up linearly
 #define MAX_FAN_TEMP                100.0 // (he1fh) at this temperature the fan is at "full speed" (MAX_FAN_VALUE)
 
-// PID debug string: {sr:{"he1t":t,"he1st":t,"pid1p":t, "pid1i":t, "pid1d":t, "pid1f":t, "he1op":t, "line":t, "stat":t}}
-
-#define H1_DEFAULT_ENABLE           true
+#define H1_DEFAULT_ENABLE                 true
 #define H1_DEFAULT_P                5
 #define H1_DEFAULT_I                0.01
 #define H1_DEFAULT_D                500
 #define H1_DEFAULT_F                0.0015
 
-#define H2_DEFAULT_ENABLE           false
-#define H2_DEFAULT_P                7.0
-#define H2_DEFAULT_I                0.05
-#define H2_DEFAULT_D                150.0
+#define H2_DEFAULT_ENABLE                 false
+#define H2_DEFAULT_P                      7.0
+#define H2_DEFAULT_I                      0.05
+#define H2_DEFAULT_D                      150.0
 #define H2_DEFAULT_F                0.0
 
 #define H3_DEFAULT_ENABLE           true

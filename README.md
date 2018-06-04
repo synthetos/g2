@@ -9,202 +9,139 @@ G2 [Edge](https://github.com/synthetos/g2/tree/edge) is the branch for beta test
 That said, Edge is for the adventurous. It is not guaranteed to be stable, but we do our best to achieve this. For production uses we recommend using the [Master branch](https://github.com/synthetos/g2/tree/master).
 
 
-## Firmware Build 100 `{fb:100.xx}`
+## Firmware Build 101 `{fb:101.xx}`
 ### Feature Enhancements
-The fb:100 release is a major change from the fb:089 and earlier branches. It represents about a year of development and has many major feature enhancements summarized below. These are described in more detail in the rest of this readme and the linked wiki pages.
-- New Gcode and CNC features
-- 3d printing support
-- GPIO system enhancements
-- Planner enhancements and other operating improvements for high-speed operation
+
+The fb:101 release is a mostly internal change from the fb:100 branches. Here are the highlights, more detailed on each item are further below:
+- Updated motion execution at the segment (smallest) level to be linear velocity instead of constant velocity, resulting in notably smoother motion and more faithful execution of the jerk limitations. (Incidentally, the sound of the motors is also slightly quieter and more "natural.")
+- Updated JT (Junction integration Time, a.k.a. "cornering") handling to be more optimized, and to treat the last move as a corner to a move with no active axes. This allows a non-zero stopping velocity based on the allowed jerk and active JT value.
+- Probing enhancements.
+- Added support for gQuintic (rev B) and fixed issues with gQuadratic board support. (This mostly happened in Motate.)
+- Temperature control enhancements
+  - Temperature inputs are configured differently at compile time. (Ongoing.)
+  - PID control has been adjusted to PID+FF (Proportional, Integral, and Derivative, with Feed Forward). In this case, the feed forward is a multiplier of the difference between the current temperature and the ambient temperature. Since there is no temperature sensor for ambient temperature at the moment, it uses an idealized room temperature of 21ºC.
+- More complete support for TMC2130 by adding more JSON controls for live feedback and configuration.
+- Initial support for Core XY kinematics.
+- Boards are in more control of the planner settings.
+- Experimental setting to have traverse (G0) use the 'high jerk' axis settings.
+- Outputs are now configured at board initialization (and later) to honor the settings more faithfully. This includes setting the pin high or low as soon as possible.
 
 ### Project Changes
-The project is now called g2core (even if the repo remains g2). As of this release the g2core code base is split from the TinyG code base. TinyG will continue to be supported for the Xmega 8-bit platform, and new features will be added, specifically as related to continued support for CNC milling applications. The g2core project will focus on various ARM platforms, as it currently does, and add functions that are not possible in the 8-bit platform.
-
-In this release the Motate hardware abstraction layer has been split into a separate project and is included in g2core as a git submodule. This release also provides better support for cross platform / cross target compilation. A summary of project changes is provided below, with details in this readme and linked wiki pages.
-- Motate submodule
-- Cross platform / cross target support
-- Multiple processor support - ARM M3, M4, M7 cores
-- Device tree / multiple motor types
-- Simplified host-to-board communication protocol (line mode)
-- NodeJS host module for host-to-board communications
-
-### More To Come
-The fb:100 release is the base for  number of other enhancements in the works and planned, including:
-- Further enhancements to GPIO system
-- Additional JSON processing and UI support
-- Enhancements to 3d printer support, including a simplified g2 printer dialect
 
 ## Changelog for Edge Branch
 
-### Edge branch, Build 100.xx
+### Edge branch, Build 101.xx
 
-Build 100.xx has a number of changes, mostly related to extending Gcode support and supporting 3D printing using g2core. These include temperature controls, auto-bed leveling, planner performance improvements and active JSON comments in Gcode.
-
-Communications has advanced to support a linemode protocol to greatly simplify host communications and flow control for very rapid Gcode streams. Please read the Communications pages for details. Also see the NodeJS communications module docs if you are building a UI or host controller.
-
-Build 100.xx also significantly advances the project structure to support multiple processor architectures, hardware configurations and machine configurations in the same code base. Motate has been cleaved off into its own subproject. We recommend carefully reading the Dev pages if you are coding or compiling.
+This build is primarily focused on support for the new boards based on the Atmel SamS70 family, as well as refining the motion control and long awaited feature enhancements. This list will be added to as development proceed.s
 
 #### Functional Changes:
-- **Gcode and CNC Changes**
-  - Included `G10 L1`, `G10 L10`, `G43`, `G49` tool length offset and added 16 slot tool table (deferred until build 100.12)
-  - Included `G10 L20` offset mode
-  - Extended `G38.2` probing to also include `G38.3`, `G38.4`, `G38.5`
-  - Homing can now be set to a non-zero switch. Homing will set to the travel value of the positive or negative switch, as determined by the search direction. This allows homing to home to a maximum - for example - and set the homed location to the non-zero switch.
-  - [100.13] Fixes for dwells mixed with gcode moves.
-  - [100.13] Minor planner refactoring to better handle commands and gcode mixed. (Forward-planning now looks past commands.)
-  - [100.13] *Experimental!* Optioan `TRAVERSE_AT_HIGH_JERK` (defaults to off, set to 1 in a settings file to enable) will make traverse moves (`G0`) use the high-jerk settings instead of the normal jerk settings. This applies to all axes universally.
 
-- **Planner and Motion Changes**
-  - Junction Integration Time - the [`{jt:...}`](https://github.com/synthetos/g2/wiki/Configuring-0.99-System-Groups#jt-junction-integration-time) parameter is now the way to set cornering velocity limits. Cornering now obeys full jerk limitation instead of the centripetal acceleration heuristic, making it much more accurate and more true to the jerk limits set for the machine. JT is a normalized scaled factor that is nominally set to 1.000. Set to less than 1 for slower cornering (less aggressive), greater than 1 (but probably less than 2) for more aggressive cornering. This parameter replaces Junction Acceleration `{ja:...}` and the axis Junction Deviation commands - e.g. `{xjd:0.01}`.
-  - Deprecated `{ja:...}` global parameter. Will return error.
-  - Deprecated `{_jd:...}` per-axis parameter. Will return error.
+*Note: Click the header next to the arrow to expand and display the details.*
 
+<details><summary><strong>Linear-Velocity Segment Execution</strong></summary>
 
-- **3D Printing Support**
-  - Planner improvements to handle extreme cases found in some 3DP slicer outputs
-  - Added automatic bed leveling [{tram:t}](https://github.com/synthetos/g2/wiki/Configuring-0.99-3D-Printing-Extensions#tramt-tram-command) using 3 point probe and coordinate rotation
-  - Added [`{he1:n}`, `{he2:n}`, `{he3:n}`](https://github.com/synthetos/g2/wiki/Configuring-0.99-3D-Printing-Extensions#heater-groups) heater control groups
-  - Added `{pid1:n}`, `{pid2:n}`, `{pid3:n}` ADC PID groups
-  - Note: The semantics of `{he:...}` and `{pid:...}` are still in development and may change.
+  - The overall motion is still jerk-controlled and the computation of motion remains largely the same (although slightly simplified). At the smallest level above raw steps (what we call "segments," which are nominally 0.25ms to 1ms in duration) we previously executed the steps at a constant velocity. We now execute them with a linear change from a start velocity to an end velocity. This results in smoother motion that is more faithful to the planned jerk constraints.
+  - This changed the way the forward differences are used to compute the segment speeds as well. Previously, we were computing the curve at the midpoint (time-wise) of each segment in order to get the median velocity. Now that we want the start and end velocity of each segment we only compute the end (time-wise) of each segment, and use that again later as the start-point of the next segment.
+</details>
 
+<details><summary><strong>Probing enhancements</strong></summary>
 
-- **[GPIO Changes](https://github.com/synthetos/g2/wiki/Digital-IO)**
-  - Changed configuration for [`{di1:n}` ... `{di12:n}`](https://github.com/synthetos/g2/wiki/Digital-IO#digital-inputs) somewhat
-  - Added [`{do1:n}` ... `{do12:n}`](https://github.com/synthetos/g2/wiki/Digital-IO#digital-outputs) digital output controls for controlling general outputs such as fans
-  - Added [`{out1:n}` ... `{out12:n}`](https://github.com/synthetos/g2/wiki/Digital-IO#digital-outputs) digital output state readers for reading the condition of do's
+  - Added `{"prbs":true}` to store the current position as if it were to position of a succesful probe.
+  - Added `{"prbr":true}` to enable and `{"prbr":false}` to enable and disable (respectively) the JSON `{prb:{...}}` report after a probe.
+</details>
 
+<details><summary><strong>gQuintic support</strong></summary>
 
-- **Active JSON comments** - i.e. JSON called from Gcode
-  - Added `M100 ({...})` active comment. Currently only supports temperature setting command.
-  - Added `M101 ({...})` "wait-on-event" active comment. Currently only supports temperature wait command.
-    - Additional note: `M101` will only wait on values that return `true` or `false`, and will only work if given `true` or `false`.
-    - Valid example:
-    ```
-    M101 ({in1: true})
-    ```
-    - Using `0` or `1`, or anything except `true` or `false` will *not* work.
+  - Support for the gQuintic rev B was added. Support for rev D will come shortly.
+</details>
 
+<details><summary><strong>Temperature control enhancements</strong></summary>
 
-- **System and Communications**
-  - [100.13] **Important:** USB will only expose one virtal serial port by default.
-    - This can be overridden in the settings file with:
+  - Added the following settings defines:
+    - `HAS_TEMPERATURE_SENSOR_1`, `HAS_TEMPERATURE_SENSOR_2`, and `HAS_TEMPERATURE_SENSOR_3`
+    - `EXTRUDER_1_OUTPUT_PIN`, `EXTRUDER_2_OUTPUT_PIN`, and `BED_OUTPUT_PIN`
+    - Added `BED_OUTPUT_INIT` in order to control configuration of the Bed output pin settings.
+    - Defaults to `{kNormal, fet_pin3_freq}`.
+    - `EXTRUDER_1_FAN_PIN` for control of the temperature-enabled fan on extruder 1. (Only available on extruder 1 at the moment.)
+  - (*Experimental*) Analog input is now interpreted through one of various `ADCCircuit` objects.
+    - Three are provided currently: `ADCCircuitSimplePullup`, `ADCCircuitDifferentialPullup`, `ADCCircuitRawResistance`
+    - `Thermistor` and `PT100` objects no longer take the pullup value in their constructor, but instead take a pointer to an `ADCCircuit` object.
+  - `Thermistor` and `PT100` objects no longer assume an `ADCPin` is used, but now take the type that conforms to the `ADCPin` interface as a template argument.
+  - **TODO:** Make more of these configurable at runtime. Separate the ADC input from the consumer, and allow other things than temperature to read it.
+  - PID+FF control adds feed-forward (FF) to adjust the output to a reasonable minimum based on heat loss dues to room temperature.
+    - This can be effectively disabled, making the controller a PID controller, by setting the F value to `0.0`.
+    - **Warning** setting this value too high can cause thermal runaway. Set this value conservatively (low), since there's currently no ambient temperature, and the actual heat loss may be less than computed. This will be magnified by another heater (such as that on a heat bed of a 3D printer) in close proximity.
+
+</details>
+
+<details><summary><strong>TMC2130 JSON controls</strong></summary>
+
+  - Added the following setting keys to the motors (`1` - `6`):
+    - `ts`   - *(R)* get the value of the `TSTEP` register
+    - `pth`  - *(R/W)* get/set the value of the `TPWMTHRS` register
+    - `cth`  - *(R/W)* get/set the value of the `TCOOLTHRS` register
+    - `hth`  - *(R/W)* get/set the value of the `THIGH` register
+    - `sgt`  - *(R/W)* get/set the value of the `sgt` value of the `COOLCONF` register
+    - `sgr`  - *(R)* get the `SG_RESULT` value of the `DRV_STATUS` register
+    - `csa`  - *(R)* get the `CS_ACTUAL` value of the `DRV_STATUS` register
+    - `sgs`  - *(R)* get the `stallGuard` value of the `DRV_STATUS` register
+    - `tbl`  - *(R/W)* get/set the `TBL` value of the `CHOPCONF` register
+    - `pgrd` - *(R/W)* get/set the `PWM_GRAD` value of the `PWMCONF` register
+    - `pamp` - *(R/W)* get/set the `PWM_AMPL` value of the `PWMCONF` register
+    - `hend` - *(R/W)* get/set the `HEND_OFFSET` value of the `CHOPCONF` register
+    - `hsrt` - *(R/W)* get/set the `HSTRT/TFD012` value of the `CHOPCONF` register
+    - `smin` - *(R/W)* get/set the `semin` value of the `COOLCONF` register
+    - `smax` - *(R/W)* get/set the `semax` value of the `COOLCONF` register
+    - `sup`  - *(R/W)* get/set the `seup` value of the `COOLCONF` register
+    - `sdn`  - *(R/W)* get/set the `sedn` value of the `COOLCONF` register
+  - Note that all gets retrieve the last cached value.
+</details>
+
+<details><summary><strong>Core XY Kinematics Support</strong></summary>
+
+  - Enabled at compile-time by setting the `KINEMATICS` define to `KINE_CORE_XY`
+    - The default (and only other valid value) for `KINEMATICS` is `KINE_CARTESIAN`
+  - Note that the X and Y axes must have the same settings, or the behavior is undefined.
+  - For the sake of motor mapping, the values `AXIS_COREXY_A` and `AXIS_COREXY_B` have been created.
+  - Example usage:
+  ```c++
+  #define M1_MOTOR_MAP                AXIS_COREXY_A           // 1ma
+  #define M2_MOTOR_MAP                AXIS_COREXY_B           // 2ma
+  ```
+</details>
+
+<details><summary><strong>Planner settings control from board files</strong></summary>
+
+  - The defines `PLANNER_BUFFER_POOL_SIZE` and `MIN_SEGMENT_MS` are now set in the `board/*/hardware.h` files.
+  - `PLANNER_BUFFER_POOL_SIZE` sets the size of the planner buffer array.
+    - Default value if not defined: `48`
+  - `MIN_SEGMENT_MS` sets the minimum segment time (in milliseconds) and several other settings that are comuted based on it.
+    - Default values if not defined: `0.75`
+    - A few of the computed values are shown:
     ```c++
-    // Valid options are 1 or 2 only!
-    #define USB_SERIAL_PORTS_EXPOSED   1        
+    #define NOM_SEGMENT_MS              ((float)MIN_SEGMENT_MS*2.0)        // nominal segment ms (at LEAST MIN_SEGMENT_MS * 2)
+    #define MIN_BLOCK_MS                ((float)MIN_SEGMENT_MS*2.0)        // minimum block (whole move) milliseconds
     ```
-  - [100.13] Refactored XIO to handle `!`, `%`, `~`, and JSON commends intermixed with gcode better.
-  - [100.13] Fixes to USB connection, initialization, and DMA operation for Sam3X-base machines.
-  - Added `Linemode` communication protocol, and provide guidance to use linemode for much simpler and more reliable application-level flow control
-  - Footer format has changed. Checksum is no longer supported and has been removed
-  - Added `ENQ/ACK handshake`. If the host sends an ASCII `ENQ (0x05)` the board should respond with an `ACK (0x06)`. This is provided to facilitate low-level communications startup and automated testing
-  - Added [`{fbs:n}`](https://github.com/synthetos/g2/wiki/Configuring-0.99-System-Groups#fbsn-firmware-build-string) as a read-only parameter to report the git commit used during compilation
-  - Added [`{fbc:n}`](https://github.com/synthetos/g2/wiki/Configuring-0.99-System-Groups#fbcn-firmware-build-config-file) as a read-only parameter to report the configuration file used during compilation
-  - Changes to [`{ej:1}`](https://github.com/synthetos/g2/wiki/Configuring-0.99-System-Groups#ej-enable-json-mode) Enable JSON parameter. JSON and text mode are now "sticky". Auto mode (old style) is also available
-  - Added [`{Nsu:..}`](https://github.com/synthetos/g2/wiki/Configuring-0.99-Motors#1su-steps-per-unit) to directly set motor N's steps-per-unit value
-  - Changes to [Status Codes](https://github.com/synthetos/g2/wiki/Status-Codes) (...or see error.h for source)
-  - [Power Management](https://github.com/synthetos/g2/wiki/Power-Management) commands have been updated as of fb:100.11. Notably `{me:n}` and `{md:n}` are no longer valid commands - use `{me:0}` and `{md:0}` instead. Read the link for more changes.
-  - Additional [`stat`](https://github.com/synthetos/g2/wiki/Status-Reports#stat-values) machine states
-  - Removed `{cv:n}` configuration version tag
-  - Removed `{js:...}` JSON syntax. Responses are now always Strict. Accepts Strict or Relaxed on input
-  - Removed `{ec:...}` Expand CR to CRLF
-  - Removed `{ee:...}` Echo command
-  - Removed `{baud:...}` Set baud rate command
-  - Removed `{ml:...}` Minimum line segment hidden parameter
-  - Removed `{ma:...}` Minimum arc segment hidden parameter
-  - Removed `{ms:...}` Minimum segment time hidden parameter
-  - Exception reports now provide more information about the nature and location of the exception
-  - Removed code for embedded tests. These were a holdover from the TinyGv8 codebase and were not functional in g2. The code is now removed from the project.
+</details>
 
+<details><summary><strong>Experimental traverse at high jerk</strong></summary>
 
-- **[Project Structure and Motate](https://github.com/synthetos/g2/wiki/Project-Structure-and-Motate)**
-  - Motate underpinnings and project structure have changed significantly to support multiple processor architectures, boards, and machine configurations cleanly in the same project. If this affects you please read up on the wiki.
+  - The new define `TRAVERSE_AT_HIGH_JERK` can be set to `true`, making traverse (`G0`) moves (including `E`-only moves in Marlin-flavored gcode mode) will use the jerk-high (`jh`) settings.
+    - If set to `false` or undefined `G0` moves will continue to use the jerk-max (`jm`) settings that feed (`G1`) moves use.
+</details>
 
+<details><summary><strong>PID+FF - added feed forward</strong></summary>
 
-- **NodeJS g2core Communcications Module**
-  - A pre-release of the NodeJS g2core communications module that uses Linemode protocol is available here. This will be superseded with the official release
+  - There is a new JSON value `f` in each `pid`*`n`* object (read-only, for reporting) as well as an `f` setting in the `he`*`n`* objects (for control).
+    - This is controlled in the settings file via `H`*`n`*`_DEFAULT_F`, such as `H1_DEFAULT_F`. Default value is `0.0`.
+    - This is a value that is multiplied to by current temp - 21 and added to the current computed output.
+    - **Warning!** Setting this value too high can result in thermal runaway. Set it conservatively (low) or disable it completely if in doubt.
+    - Set the `he`*`n`*`f` value to `0.0` to effectively disable feed-forward.
 
+</details>
 
-- **Automated Regression Testing**
-  - A simple Python functional and regression test suite is available in [Githup/Synthetos/tg_pytest](https://github.com/synthetos/tg_pytest). Please feel free to use and extend, but be aware that we are not offering much support for this. If you are familiar with Python and JSON the Readme should have everything you need.
+<details><summary><strong>Output setting as soon as possible</strong></summary>
 
-
-#### Known Issues
-- Communications bug for high-speed transmission
-
-
-## Earlier Edges
-
-### Edge branch, build 083.07
-These changes are primarily fixes applied after testing
-- Fixes to spindle speed settings (082.11)
-- Fixes to build environments for Linux and other platforms
-- Fixes for reporting error in inches mode
-
-### Edge branch, build 082.10
-- **[Digital IO (GPIO)](Digital-IO-(GPIO))** introduces major changes to the way switches and other inputs are handled. The digital inputs are completed, the digital outputs have not been. In short, inputs are now just numbered inputs that are mapped to axes, functions, and motion behaviors (feedholds).
-  - **Your configurations will need to change to accommodate these changes.** See settings/settings_shapeoko2.h for an example of setup and use - pay particular attention to `axis settings` and the new `inputs` section.
-  - Typing `$`, `$x`, `$di`, `$in` at the command line is also informative. Of course, all these commands are available as JSON, but in text mode you get the human readable annotations.
-  - These changes also rev the firmware version to 0.98 from 0.97, as a new configuration wiki page will need to be generated (not started yet).
-  - {lim:0}, {lim:1} was added to allow a limit override to backing off switches when a limit is tripped
-  - See also [Alarm Processing](Alarm-Processing), which is intimately related to these changes.
-
-- **[Alarm processing](Alarm-Processing)** has been significantly updated. There are now 3 alarm states:
-  - [ALARM](Alarm-Processing#alarm) - used to support soft and hard limits, safety interlock behaviors (door open), and other conditions.
-  - [SHUTDOWN](Alarm-Processing#shutdown) - used to support external ESTOP functions (the controller doe NOT do ESTOP - read the SHUTDOWN section as to why.
-  - [PANIC](Alarm-Processing#panic) - shuts down the machine immediately if there is an assertion failure or some other unrecoverable error
-  - [CLEAR](Alarm-Processing#clear) describes how to clear alarm states.
-
-- **[Job Exception Handling](Job-Exception-Handling)** has been refined. A new Job Kill has been introduced which is different than a queue flush (%), as these are actually 2 very different use cases.
-
-- **Homing** changes. Homing input switches are now configured differently.
-  - The switch configurations have been removed from the axes and moved to the digital IO inputs.
-  - Two new parameters have been added to the axis configs. All other parameters remain the same.
-    - {xhd:1} - homing direction - 0=search-to-negative, 1=search-to-positive
-    - {xhi:N} - homing input - 0=disable axis for homing, 1-N=enable homing for this input (switch)
-  - Note that setting the homing input to a non-zero value (1) enables homing for this axis, and (2) overrides whatever settings for that input for the duration of homing. So it's possible to set di1 (Xmin) as a limit switch and a homing switch. When not in homing it will be used as a limit switch.
-
-- **Safety Interlock** added
-  - An input configured for interlock will invoke a feedhold when the interlock becomes diseangaged and restart movement when re-engaged.
-  - {saf:0}, {saf:1} was added to enable or disable the interlock system.
-  - There are optional settings for spindle and coolant actions on feedhold. See below
-
-- **Spindle Changes** Expect updates to spindle behaviors in future branches. Here's where it is now:
-  - The spindle can be paused on feedhold with the Spindle-pause-on-hold global setting {spph:1}. For now we recommend not using this {spph:0} as there is not yet a delay in spindle restart.
-  - Spindle enable and direction polarity can now be set using the {spep: } and {spdp: } commands.
-  - Spindle enable and direction state can be returned using {spe:n} and {spd:n}, and these can be configured in status reports
-  - Spindle speed can be returned using {sps:n} and can be configured in status reports
-
-- **Coolant Changes** Expect coolant changes in future branches, in particular to accommodate changes in the digital outputs.
-  - The coolant can be paused on feedhold with the Coolant-pause-on-hold global setting {coph:0}.
-  - Flood and mist coolant polarity can now be set using the {cofp: } and {comp: } commands.
-  - Flood and mist coolant state can be returned using {cof:n} and {com:n}, and these can be configured in status reports
-  - In v9 the flood (M8) and mist (M7) commands are operative, but map the same pin. M9 clears them both, as expected. These should both be set to the same polarity for proper operation. On a Due or a platform with more output pins these can be separated - the code is written for this possibility. The changes should be limited to the pin mapping layers.
-
-- **Power Management** is fully working, as far as we can tell. See $1pm for settings
-
-- **Arc Changes** have been added. Please note any issues immediately. This is still under test.
- - Fixed bug on very large arcs
- - Fixed bug on G18 rotation direction
- - Added P parameter to allow for arcs > 360 degree rotation
-
-- **G10 L20** was added for easier offset setting
-
-- **Bug Fixes**
-  - Fixed some units mode display errors for G20 mode (inches)
-
-- **Still To Go**
-  - SD card persistence
-  - Spindle restart dwell
-  - Digital output generalization and changes
-  - Still needs rigorous testing for very fast feedhold/resume and flush cycles
-
-### Edge branch, build 071.02
-
-* **No Persistence**. Most ARM chips (including the ATSAM3X8C on v9 and ATSAM3X8E on the Arduino Due) do not have persistence. This is the main reason the v9 has a microSD slot. But this has not been programmed yet. So your options are to either load the board each time you fire it up or reset it, or to build yourself a profile and compile your own settings as the defaults.
-
-* **Still working on feedhold.** The serial communications runs a native USB on the ARM instead of through an FTDI USB-to-Serial adapter. We are still shing some bugs out of the single character commands such as feedhold (!), queue flush (%) and cycle start (~).
-
-* **Power Management needs work.** It doesn't always shut the motors off at the end of a cycle.
-
-* **Different Behaviors**. There are some behaviors that are different.
-  * Feedhold / queue flush on v8 works with !%~ in one line. In g2 it requires a newline. Use !\n%\n  This is due to using a USB stack that is partly on the chip and not being able to get at the individual characters that far upstream. This will probably not change in v9.
+  - At board initialization, the output value on each of the `out` objects is set to whatever the pin is configured to be "inactive." This is based on the settings file `DO`*n*`_MODE` setting.
+  - For example, if `DO10_MODE == IO_ACTIVE_LOW` then the pin at `DO10` is initialized as `HIGH` at board setup. This happen even before the `main()` function starts, shortly after the GPIO clocks are enabled for each port.
+</details>

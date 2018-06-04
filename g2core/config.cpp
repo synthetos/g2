@@ -83,7 +83,7 @@ void nv_print(nvObj_t *nv)
     if (nv->index >= nv_index_max()) {
         return;
     }
-    ((fptrCmd)GET_TABLE_WORD(print))(nv);
+    ((fptrPrint)GET_TABLE_WORD(print))(nv);
 }
 
 stat_t nv_persist(nvObj_t *nv)

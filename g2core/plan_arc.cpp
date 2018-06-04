@@ -179,7 +179,7 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
     // test radius arcs for radius tolerance
     if (radius_f) {
         arc.radius = _to_millimeters(radius);           // set radius to internal format (mm)
-        if (fabs(arc.radius) < MIN_ARC_RADIUS) {        // radius value must be > minimum radius
+        if (std::abs(arc.radius) < MIN_ARC_RADIUS) {        // radius value must be > minimum radius
             return (STAT_ARC_RADIUS_OUT_OF_TOLERANCE);
         }
     }
@@ -298,7 +298,7 @@ static stat_t _compute_arc(const bool radius_f)
     // Compute end radius from the center of circle (offsets) to target endpoint
     float end_0 = arc.gm.target[arc.plane_axis_0] - arc.position[arc.plane_axis_0] - arc.offset[arc.plane_axis_0];
     float end_1 = arc.gm.target[arc.plane_axis_1] - arc.position[arc.plane_axis_1] - arc.offset[arc.plane_axis_1];
-    float err = fabs(hypotf(end_0, end_1) - arc.radius);   // end radius - start radius
+    float err = std::abs(hypotf(end_0, end_1) - arc.radius);   // end radius - start radius
     if ((err > ARC_RADIUS_ERROR_MAX) ||
        ((err > ARC_RADIUS_ERROR_MIN) && (err > arc.radius * ARC_RADIUS_TOLERANCE))) {
         return (STAT_ARC_HAS_IMPOSSIBLE_CENTER_POINT);
@@ -338,7 +338,7 @@ static stat_t _compute_arc(const bool radius_f)
     // Length is the total mm of travel of the helix (or just the planar arc)
     arc.linear_travel = arc.gm.target[arc.linear_axis] - arc.position[arc.linear_axis];
     arc.planar_travel = arc.angular_travel * arc.radius;
-    arc.length = hypotf(arc.planar_travel, fabs(arc.linear_travel));
+    arc.length = hypotf(arc.planar_travel, std::abs(arc.linear_travel));
 
     // Find the minimum number of segments that meet accuracy and time constraints...
     // Note: removed segment_length test as segment_time accounts for this (build 083.37)
@@ -497,10 +497,10 @@ static float _estimate_arc_time (float arc_time)
     }
 
     // Downgrade the time if there is a rate-limiting axis
-    arc_time = max(arc_time, (float)fabs(arc.planar_travel/cm.a[arc.plane_axis_0].feedrate_max));
-    arc_time = max(arc_time, (float)fabs(arc.planar_travel/cm.a[arc.plane_axis_1].feedrate_max));
-    if (fabs(arc.linear_travel) > 0) {
-        arc_time = max(arc_time, (float)fabs(arc.linear_travel/cm.a[arc.linear_axis].feedrate_max));
+    arc_time = max(arc_time, (float)std::abs(arc.planar_travel/cm.a[arc.plane_axis_0].feedrate_max));
+    arc_time = max(arc_time, (float)std::abs(arc.planar_travel/cm.a[arc.plane_axis_1].feedrate_max));
+    if (std::abs(arc.linear_travel) > 0) {
+        arc_time = max(arc_time, (float)std::abs(arc.linear_travel/cm.a[arc.linear_axis].feedrate_max));
     }
     return (arc_time);
 }

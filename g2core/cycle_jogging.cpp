@@ -153,7 +153,7 @@ static stat_t _jogging_axis_start(int8_t axis) {
 static stat_t _jogging_axis_ramp_jog(int8_t axis)  // run the jog ramp
 {
     float   direction = jog.start_pos <= jog.dest_pos ? 1. : -1.;
-    float   delta     = fabs(jog.dest_pos - jog.start_pos);
+    float   delta     = std::abs(jog.dest_pos - jog.start_pos);
     uint8_t last      = 0;
 
     float velocity =

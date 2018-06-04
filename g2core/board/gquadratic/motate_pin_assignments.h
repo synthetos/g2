@@ -176,8 +176,10 @@ pin_number kGRBL_CommonEnablePinNumber = -1;
 
 // g2ref extensions
 // These first 5 may replace the Spindle and Coolant pins, above
-pin_number kOutput1_PinNumber = 130;  // DO_1: Extruder1_PWM
-pin_number kOutput2_PinNumber = 131;  // DO_2: Extruder2_PWM
+pin_number kHeaterOutput1_PinNumber = -1;  // DO_1: Extruder1_PWM
+pin_number kHeaterOutput2_PinNumber = -1;  // DO_2: Extruder2_PWM
+pin_number kOutput1_PinNumber = 130;  // DO_1:
+pin_number kOutput2_PinNumber = 131;  // DO_2:
 pin_number kOutput3_PinNumber = 132;  // DO_3: Fan1A_PWM
 pin_number kOutput4_PinNumber = 133;  // DO_4: Fan1B_PWM
 pin_number kOutput5_PinNumber = 134;  // DO_5: Fan2A_PWM
@@ -188,7 +190,8 @@ pin_number kOutput8_PinNumber  = 137;  // See Coolant Enable
 pin_number kOutput9_PinNumber  = 138;  // SAFE signal
 pin_number kOutput10_PinNumber = 139;  // DO_10: Fan2B_PWM
 
-pin_number kOutput11_PinNumber = 140;  // DO_11: Heated Bed FET
+pin_number kHeaterOutput11_PinNumber = -1;  // DO_11: Heated Bed FET
+pin_number kOutput11_PinNumber = 140;  // DO_11:
 pin_number kOutput12_PinNumber = 141;  // DO_12: Indicator_LED
 pin_number kOutput13_PinNumber = -1;   // 142;
 pin_number kOutput14_PinNumber = -1;   // 143;

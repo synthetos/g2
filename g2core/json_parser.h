@@ -48,9 +48,9 @@ typedef enum {
     JV_CONFIGS,                     // [3] returns footer, messages, config commands
     JV_LINENUM,                     // [4] returns footer, messages, config commands, gcode line numbers if present
     JV_VERBOSE,                     // [5] returns footer, messages, config commands, gcode blocks
-    JV_EXCEPTIONS,                  // [6] returns only on messages, configs, and non-zero status
-    JV_STATUS,                      // [7] returns status and any messages in abbreviated format
-    JV_STATUS_COUNT,                // [8] returns status, count and messages in abbreviated format
+    JV_EXCEPTIONS,                  // (unused) [6] returns only on messages, configs, and non-zero status
+    JV_STATUS,                      // (unused) [7] returns status and any messages in abbreviated format
+    JV_STATUS_COUNT,                // (unused) [8] returns status, count and messages in abbreviated format
     JV_MAX_VALUE
 } jsonVerbosity;
 

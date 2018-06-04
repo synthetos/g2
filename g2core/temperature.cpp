@@ -199,7 +199,7 @@ struct ValueHistory {
     float get_std_dev() {
         // Important note: this is a POPULATION standard deviation, not a population standard deviation
         float variance = (rolling_sum_sq/(float)sampled) - (rolling_mean*rolling_mean);
-        return sqrt(fabs(variance));
+        return sqrt(std::abs(variance));
     };
 
     float value() {
@@ -209,7 +209,7 @@ struct ValueHistory {
         float std_dev = get_std_dev();
 
         for (uint16_t i=0; i<sampled; i++) {
-            if (fabs(samples[i].value - rolling_mean) < (variance_max * std_dev)) {
+            if (std::abs(samples[i].value - rolling_mean) < (variance_max * std_dev)) {
                 temp += samples[i].value;
                 ++samples_kept;
             }
@@ -225,12 +225,65 @@ struct ValueHistory {
 };
 
 
+struct ADCCircuit
+{
+    virtual float get_resistance(const float voltage) const;
+    virtual float get_voltage(const float resistance) const;
+};
+
+struct ADCCircuitSimplePullup : ADCCircuit
+{
+    const float _pullup_resistance;
+    ADCCircuitSimplePullup(const float pullup_resistance) : _pullup_resistance{pullup_resistance} {};
+
+    float get_resistance(const float v) const override
+    {
+        return ((_pullup_resistance * v) / (kSystemVoltage - v));
+    };
+
+    float get_voltage(const float r) const override
+    {
+        return r/(r+_pullup_resistance)*kSystemVoltage;
+    };
+};
+
+struct ADCCircuitDifferentialPullup : ADCCircuit
+{
+    const float _pullup_resistance;
+    ADCCircuitDifferentialPullup(const float pullup_resistance) : _pullup_resistance{pullup_resistance} {};
+
+    float get_resistance(float v) const override
+    {
+        float v2 = v / kSystemVoltage;
+        return (v2 * 2.0 * _pullup_resistance)/(1.0 - v2);
+    };
+
+    float get_voltage(const float r) const override
+    {
+        return (kSystemVoltage * r)/(2.0 * _pullup_resistance + r);
+    };
+};
+
+struct ADCCircuitRawResistance : ADCCircuit
+{
+    ADCCircuitRawResistance() {};
+
+    float get_resistance(float v) const override
+    {
+        return v;
+    };
+
+    float get_voltage(const float r) const override
+    {
+        return r;
+    };
+};
+
+
 template<typename ADC_t, uint16_t min_temp = 0, uint16_t max_temp = 300>
 struct Thermistor {
-    const bool differential;
-
-    float c1, c2, c3, pullup_resistance;
-    // We'll pull adc top value from the adc_pin.getTop()
+    float c1, c2, c3;
+    const ADCCircuit *circuit;
 
     ADC_t adc_pin;
     uint16_t raw_adc_value = 0;
@@ -245,22 +298,22 @@ struct Thermistor {
     //  http://assets.newport.com/webDocuments-EN/images/AN04_Thermistor_Calibration_IX.PDF
     //  http://hydraraptor.blogspot.com/2012/11/more-accurate-thermistor-tables.html
 
-    Thermistor(const float temp_low, const float temp_med, const float temp_high, const float res_low, const float res_med, const float res_high, const float pullup_resistance_)
-    : differential{ adc_pin.is_differential }, pullup_resistance{ pullup_resistance_ },
-      adc_pin {adc_pin.is_differential ? kDifferentialPair : kNormal, [&]{this->adc_has_new_value();} }
-    {
-        setup(temp_low, temp_med, temp_high, res_low, res_med, res_high);
-        adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
-        adc_pin.setVoltageRange(kSystemVoltage,
-                                0, //get_voltage_of_temp(min_temp),
-                                kSystemVoltage, //get_voltage_of_temp(max_temp),
-                                1000000.0);
-    };
+//    Thermistor(const float temp_low, const float temp_med, const float temp_high, const float res_low, const float res_med, const float res_high, const ADCCircuit *_circuit)
+//    : circuit{_circuit}
+//      adc_pin {kNormal, [&]{this->adc_has_new_value();} }
+//    {
+//        setup(temp_low, temp_med, temp_high, res_low, res_med, res_high);
+//        adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
+//        adc_pin.setVoltageRange(kSystemVoltage,
+//                                0, //get_voltage_of_temp(min_temp),
+//                                kSystemVoltage, //get_voltage_of_temp(max_temp),
+//                                1000000.0);
+//    };
 
     template <typename... Ts>
-    Thermistor(const float temp_low, const float temp_med, const float temp_high, const float res_low, const float res_med, const float res_high, const float pullup_resistance_, Ts&&... additional_values)
-    : differential{ adc_pin.is_differential }, pullup_resistance{ pullup_resistance_ },
-    adc_pin{adc_pin.is_differential ? kDifferentialPair : kNormal, [&]{this->adc_has_new_value();}, additional_values...}
+    Thermistor(const float temp_low, const float temp_med, const float temp_high, const float res_low, const float res_med, const float res_high, const ADCCircuit *_circuit, Ts&&... additional_values)
+    : circuit{_circuit},
+      adc_pin{kNormal, [&]{this->adc_has_new_value();}, additional_values...}
     {
         setup(temp_low, temp_med, temp_high, res_low, res_med, res_high);
         adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
@@ -312,22 +365,13 @@ struct Thermistor {
     };
 
     float get_resistance() {
-        float r;
         raw_adc_voltage = history.value();
 
         if (isnan(raw_adc_voltage)) {
             return -1;
         }
 
-        if (differential) {
-            float v = raw_adc_voltage / kSystemVoltage;
-            r = (v * 2.0 * pullup_resistance)/(1.0 - v);// - inline_resistance;
-        }
-        else {
-            float v = raw_adc_voltage;
-            r = ((pullup_resistance * v) / (kSystemVoltage - v));// - inline_resistance;
-        }
-        return r;
+        return circuit->get_resistance(raw_adc_voltage);
     };
 
 //    float get_resistance() {
@@ -354,7 +398,7 @@ struct Thermistor {
     // Call back function from the ADC to tell it that the ADC has a new sample...
     void adc_has_new_value() {
         raw_adc_value = adc_pin.getRaw();
-        float v = fabs(adc_pin.getVoltage());
+        float v = std::abs(adc_pin.getVoltage());
         history.add_sample(v);
     };
 };
@@ -362,41 +406,35 @@ struct Thermistor {
 
 template<typename ADC_t, uint16_t min_temp = 0, uint16_t max_temp = 400>
 struct PT100 {
-    const float pullup_resistance;
-    const float inline_resistance;
-    const bool differential;
-    bool gives_raw_resistance = false;
+    const ADCCircuit *circuit;
 
     ADC_t adc_pin;
     float raw_adc_voltage = 0.0;
     int32_t raw_adc_value = 0;
+
+    bool new_sample_since_read = false;
+    uint8_t reads_without_sample = 0;
 
     const float variance_max = 1.1;
     ValueHistory<20> history {variance_max};
 
     typedef PT100<ADC_t, min_temp, max_temp> type;
 
-    PT100(const float pullup_resistance_, const float inline_resistance_)
-    : pullup_resistance{ pullup_resistance_ },
-      inline_resistance{ inline_resistance_ },
-      differential{adc_pin.is_differential},
-      gives_raw_resistance{false},
-      adc_pin{ADC_t::is_differential ? kDifferentialPair : kNormal, [&]{this->adc_has_new_value();} }
-    {
-        adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
-        adc_pin.setVoltageRange(kSystemVoltage,
-                                get_voltage_of_temp(min_temp),
-                                get_voltage_of_temp(max_temp),
-                                6400.0);
-    };
+//    PT100(const ADCCircuit *_circuit)
+//    : circuit{_circuit},
+//      adc_pin{ADC_t::is_differential ? kDifferentialPair : kNormal, [&]{this->adc_has_new_value();} }
+//    {
+//        adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
+//        adc_pin.setVoltageRange(kSystemVoltage,
+//                                get_voltage_of_temp(min_temp),
+//                                get_voltage_of_temp(max_temp),
+//                                6400.0);
+//    };
 
     template <typename... Ts>
-    PT100(const float pullup_resistance_, const float inline_resistance_, Ts&&... additional_values)
-    : pullup_resistance{ pullup_resistance_ },
-      inline_resistance{ inline_resistance_ },
-      differential{false},
-      gives_raw_resistance{true},
-      adc_pin{[&]{this->adc_has_new_value();}, additional_values...}
+    PT100(const ADCCircuit *_circuit, Ts&&... additional_values)
+    : circuit{_circuit},
+      adc_pin{kNormal, [&](bool e){this->adc_has_new_value(e);}, additional_values...}
     {
         adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
         adc_pin.setVoltageRange(kSystemVoltage,
@@ -407,49 +445,72 @@ struct PT100 {
 
     constexpr float get_resistance_of_temp(float t) {
         // R = 100(1 + A*T + B*T^2); A = 3.9083*10^-3; B = -5.775*10^-7
-        return 100 * (1 + 0.0039083*t + -0.0000005775*t*t) + inline_resistance;
+        return 100 * (1 + 0.0039083*t + -0.0000005775*t*t);
     };
 
     constexpr float get_voltage_of_temp(float t) {
         float r = get_resistance_of_temp(t);
 
-        if (differential) {
-            return (kSystemVoltage * r)/(2.0 * pullup_resistance + r);
-        }
-        return r/(r+pullup_resistance)*kSystemVoltage;
+        return circuit->get_voltage(r);
     };
 
     float temperature_exact() {
+        if (!new_sample_since_read) {
+            reads_without_sample++;
+            if (reads_without_sample > 10) {
+                cm_alarm(STAT_TEMPERATURE_CONTROL_ERROR, "Sensor read failed 10 times.");
+            }
+        } else {
+            reads_without_sample = 0;
+        }
+        new_sample_since_read = false;
+
         float r = get_resistance();
         if (r < 0.0) { return -1; }
 
         // from https://www.maximintegrated.com/en/app-notes/index.mvp/id/3450
         // run through wolfram as:
         // solve R = 100(1 + A*T + B*T^2); A = 3.9083*10^-3; B = -5.775*10^-7 for T
-        return 3383.81 - (0.287154*sqrt(159861899.0 - 210000.0*r));
+        float t = 3383.81 - (0.287154*sqrt(159861899.0 - 210000.0*r));
+
+        if (t > max_temp) {
+            return -1;
+        }
+
+        return t;
     };
 
     float get_resistance() {
-        float r;
         raw_adc_voltage = history.value();
 
         if (isnan(raw_adc_voltage)) {
             return -1;
         }
 
-        if (gives_raw_resistance) {
-            r = raw_adc_voltage;
-        }
-        else if (differential) {
-            float v = raw_adc_voltage / kSystemVoltage;
-            r = (v * 2.0 * pullup_resistance)/(1.0 - v) - inline_resistance;
-        }
-        else {
-            float v = raw_adc_voltage;
-            r = ((pullup_resistance * v) / (kSystemVoltage - v)) - inline_resistance;
-        }
-        return r;
+        return circuit->get_resistance(raw_adc_voltage);
     };
+
+//    float get_resistance() {
+//        float r;
+//        raw_adc_voltage = history.value();
+//
+//        if (isnan(raw_adc_voltage)) {
+//            return -1;
+//        }
+//
+//        if (gives_raw_resistance) {
+//            r = raw_adc_voltage;
+//        }
+//        else if (differential) {
+//            float v = raw_adc_voltage / kSystemVoltage;
+//            r = (v * 2.0 * pullup_resistance)/(1.0 - v) - inline_resistance;
+//        }
+//        else {
+//            float v = raw_adc_voltage;
+//            r = ((pullup_resistance * v) / (kSystemVoltage - v)) - inline_resistance;
+//        }
+//        return r;
+//    };
 
     uint16_t get_raw_value() {
         return raw_adc_value;
@@ -465,15 +526,18 @@ struct PT100 {
     };
 
     // Call back function from the ADC to tell it that the ADC has a new sample...
-    void adc_has_new_value() {
-        if (gives_raw_resistance) {
-            raw_adc_value = adc_pin.getRaw();
-            raw_adc_voltage = (raw_adc_value*pullup_resistance)/32768;
-            history.add_sample(raw_adc_voltage);
-        } else {
-            float v = fabs(adc_pin.getVoltage());
-            history.add_sample(v);
-        }
+    void adc_has_new_value(bool error = false) {
+        raw_adc_value = adc_pin.getRaw();
+        float v = std::abs(adc_pin.getVoltage());
+//        if (v < 0) {
+//            char buffer[128];
+//            char *str = buffer;
+//            str += sprintf(str, "Heater sensor failure. Reading was: %f", v);
+//            cm_alarm(STAT_TEMPERATURE_CONTROL_ERROR, buffer);
+//            return;
+//        }
+        history.add_sample(v);
+        new_sample_since_read = true;
     };
 };
 
@@ -482,6 +546,7 @@ struct PT100 {
 
 #if HAS_TEMPERATURE_SENSOR_1
 // Extruder 1
+TEMPERATURE_SENSOR_1_CIRCUIT_TYPE temperature_sensor_1_circuit TEMPERATURE_SENSOR_1_CIRCUIT_INIT;
 TEMPERATURE_SENSOR_1_TYPE temperature_sensor_1 TEMPERATURE_SENSOR_1_INIT;
 #else
 TemperatureSensor temperature_sensor_1;
@@ -490,6 +555,7 @@ TemperatureSensor temperature_sensor_1;
 // Extruder 2
 #if HAS_TEMPERATURE_SENSOR_2
 // Extruder 2
+TEMPERATURE_SENSOR_2_CIRCUIT_TYPE temperature_sensor_2_circuit TEMPERATURE_SENSOR_2_CIRCUIT_INIT;
 TEMPERATURE_SENSOR_2_TYPE temperature_sensor_2 TEMPERATURE_SENSOR_2_INIT;
 #else
 TemperatureSensor temperature_sensor_2;
@@ -497,6 +563,7 @@ TemperatureSensor temperature_sensor_2;
 
 #if HAS_TEMPERATURE_SENSOR_3
 // Heated bed
+TEMPERATURE_SENSOR_3_CIRCUIT_TYPE temperature_sensor_3_circuit TEMPERATURE_SENSOR_3_CIRCUIT_INIT;
 TEMPERATURE_SENSOR_3_TYPE temperature_sensor_3 TEMPERATURE_SENSOR_3_INIT;
 #else
 TemperatureSensor temperature_sensor_3;
@@ -617,7 +684,7 @@ struct PID {
         // Calculate the e (error)
         float e = _set_point - input;
 
-        if (fabs(e) < TEMP_SETPOINT_HYSTERESIS) {
+        if (std::abs(e) < TEMP_SETPOINT_HYSTERESIS) {
             if (!_set_point_timeout.isSet()) {
                 _set_point_timeout.set(TEMP_SETPOINT_HOLD_TIME);
             } else if (_set_point_timeout.isPast()) {
@@ -653,11 +720,7 @@ struct PID {
 
         // Now tha we've done all the checks, square the error, maintaining the sign.
         // The is because the energy required to heat an object is the number of degrees of change needed squared.
-        if (e > 0) {
-            e = e*e;
-        } else {
-            e = -(e*e);
-        }
+        e = std::abs(e)*e;
 
         // P = Proportional
 
@@ -693,11 +756,7 @@ struct PID {
         float d = _derivative * _d_factor;
 
         _feed_forward = (_set_point-21); // 21 is for a roughly ideal room temperature
-        if (_feed_forward > 0) {
-            _feed_forward = _feed_forward*_feed_forward;
-        } else {
-            _feed_forward = -(_feed_forward*_feed_forward);
-        }
+        _feed_forward = std::abs(_feed_forward)*_feed_forward;
 
         float f = _f_factor * _feed_forward;
 
@@ -739,16 +798,6 @@ struct PID {
     bool atSetPoint() {
         return _at_set_point;
     }
-
-// //New-style JSON bindings. DISABLED FOR NOW.
-//    auto json_bindings(const char *object_name) {
-//        return JSON::bind_object(object_name,
-//                                 JSON::bind("set", _set_point,    /*print precision:*/2),
-//                                 JSON::bind("p",   _proportional, /*print precision:*/2),
-//                                 JSON::bind("i",   _integral,     /*print precision:*/5),
-//                                 JSON::bind("d",   _derivative,   /*print precision:*/5)
-//                                 );
-//    }
 };
 
 // NOTICE, the JSON alters incoming values for these!
@@ -867,7 +916,7 @@ stat_t temperature_callback()
             float out1 = pid1.getNewOutput(temp);
             fet_pin1.write(out1);
 
-            if (fabs(temp - last_reported_temp1) > kTempDiffSRTrigger) {
+            if (std::abs(temp - last_reported_temp1) > kTempDiffSRTrigger) {
                 last_reported_temp1 = temp;
                 sr_requested = true;
             }
@@ -879,7 +928,7 @@ stat_t temperature_callback()
             float out2 = pid2.getNewOutput(temp);
             fet_pin2.write(out2);
 
-            if (fabs(temp - last_reported_temp2) > kTempDiffSRTrigger) {
+            if (std::abs(temp - last_reported_temp2) > kTempDiffSRTrigger) {
                 last_reported_temp2 = temp;
                 sr_requested = true;
             }
@@ -893,7 +942,7 @@ stat_t temperature_callback()
             float out3 = pid3.getNewOutput(temp);
             fet_pin3.write(out3);
 
-            if (fabs(temp - last_reported_temp3) > kTempDiffSRTrigger) {
+            if (std::abs(temp - last_reported_temp3) > kTempDiffSRTrigger) {
                 last_reported_temp3 = temp;
                 sr_requested = true;
             }

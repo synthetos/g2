@@ -67,10 +67,15 @@ struct MAX31865 final {
     // Timer to keep track of when we need to do another periodic update
     Motate::Timeout _check_timer;
 
+    // The resulting value is relative to the pullup resistance
+    // To return the correct resistance, we need the pullup value
+    float _pullup_resistance;
+
     // Constructor - this is the only time we directly use the SBIBus
     template <typename SPIBus_t, typename chipSelect_t>
     MAX31865(SPIBus_t &spi_bus,
              const chipSelect_t &_cs,
+             float pullup_resistance = 430,         // 430 is the value used on the Adafruit breakout
              bool is_three_pin = false,
              bool fifty_hz = true
              )
@@ -81,15 +86,18 @@ struct MAX31865 final {
                                   400, // min_between_cs_delay_ns
                                   400, // cs_to_sck_delay_ns
                                   80   // between_word_delay_ns
-                              )}
+                              )},
+        _pullup_resistance{pullup_resistance}
     {
         init(is_three_pin, fifty_hz);
     };
 
     template <typename SPIBus_t, typename chipSelect_t>
-    MAX31865(std::function<void(void)> &&_interrupt,
+    MAX31865(const Motate::PinOptions_t options, // completely ignored, but for compatibility with ADCPin
+             std::function<void(bool)> &&_interrupt,
              SPIBus_t &spi_bus,
              const chipSelect_t &_cs,
+             float pullup_resistance = 430,         // 430 is the value used on the Adafruit breakout
              bool is_three_pin = false,
              bool fifty_hz = true
              )
@@ -101,6 +109,7 @@ struct MAX31865 final {
                               400, // cs_to_sck_delay_ns
                               80   // between_word_delay_ns
         )},
+        _pullup_resistance{pullup_resistance},
         _interrupt_handler{std::move(_interrupt)}
     {
         init(is_three_pin, fifty_hz);
@@ -175,17 +184,17 @@ struct MAX31865 final {
         uint8_t high;
         uint8_t low;
     } _rtd_value_raw;
-    float _rtd_value = -1;
+    int32_t _rtd_value = -1;
     bool _rtd_value_needs_read = false;
     void _postReadRTD() {
         bool fault_detected = _rtd_value_raw.low & 0x01;
         uint16_t rtd_value_int = (_rtd_value_raw.high << 7) | (_rtd_value_raw.low >> 1);
-        _rtd_value = (float)rtd_value_int / 32768.0;
+        _rtd_value = rtd_value_int;
         if (fault_detected) {
             _fault_status_needs_read = true;
         }
         if (_interrupt_handler) {
-            _interrupt_handler();
+            _interrupt_handler(fault_detected);
         }
         _state = NEEDS_SAMPLED;
     };
@@ -225,7 +234,9 @@ struct MAX31865 final {
     } _fault_status;
     bool _fault_status_needs_read = false;
     void _postReadFaultStatus() {
-        /* here is where we would call alarm or something!! */
+        if (_interrupt_handler) {
+            _interrupt_handler(_fault_status.value != 0);
+        }
     };
 
     void _startNextReadWrite()
@@ -328,8 +339,7 @@ struct MAX31865 final {
 
     // interface to make this a drop-in replacement (after init) for an ADCPin
 
-    float _vref = 3.3;
-    std::function<void(void)> _interrupt_handler;
+    std::function<void(bool)> _interrupt_handler;
 
     void startSampling()
     {
@@ -387,62 +397,67 @@ struct MAX31865 final {
         }
     };
 
+    // getRaw is to return the last sampled value
     int32_t getRaw() {
-        uint16_t rtd_value_int = (_rtd_value_raw.high << 7) | (_rtd_value_raw.low >> 1);
-        return rtd_value_int;
-    };
-    int32_t getValue() {
+        if (_fault_status.value) {
+            return -_fault_status.value;
+        }
         return _rtd_value;
     };
-    int32_t getBottom() {
-        return 0;
+
+    // getValue is supposed to request a new value, block, and then return the result
+    // PUNT - return the same as getRaw()
+    int32_t getValue() {
+        return getRaw();
     };
-    float getBottomVoltage() {
-        return 0;
-    };
-    int32_t getTop() {
-        return 32767;
-    };
-    float getTopVoltage() {
-        return _vref;
-    };
+//    int32_t getBottom() {
+//        return 0;
+//    };
+//    float getBottomVoltage() {
+//        return 0;
+//    };
+//    int32_t getTop() {
+//        return 32767;
+//    };
+//    float getTopVoltage() {
+//        return _vref;
+//    };
 
     void setVoltageRange(const float vref,
                          const float min_expected = 0,
                          const float max_expected = -1,
                          const float ideal_steps = 1)
     {
-        _vref = vref;
+//        _vref = vref;
 
-        // uint16_t min_expected_int = (uint16_t)((min_expected/vref) * 32767.0) << 1;
-        // fault_low.high = (min_expected_int >> 8) & 0xff;
-        // fault_low.low = min_expected_int & 0xff;
-        // fault_low_needs_written = true;
-        //
-        // if (max_expected > 0) {
-        //     uint16_t max_expected_int = (uint16_t)((max_expected/vref) * 32767.0) << 1;
-        //     fault_high.high = (max_expected_int >> 8) & 0xff;
-        //     fault_high.low = max_expected_int & 0xff;
-        //     fault_high_needs_written = true;
-        // }
-
-        // differential should always be false
-        // we can't control the resolution, so ignore ideal_steps too
+        // All of the rest are ignored, but here for compatibility of interface
     };
     float getVoltage() {
-        return _rtd_value * _vref;
+        float r = getRaw();
+        if (r < 0) {
+            return r*1000.0;
+        }
+        return ((r*_pullup_resistance)/32768.0);
     };
     operator float() { return getVoltage(); };
+
+    float getResistance() {
+        float r = getRaw();
+        if (r < 0) {
+            return r*1000.0;
+        }
+        return (r*_pullup_resistance)/32768.0;
+    }
 
     void setInterrupts(const uint32_t interrupts) {
         // ignore this -- it's too dangerous to accidentally change the SPI interrupts
     };
 
     // We can only support interrupt inferface option 2: a function with a closure or function pointer
-    void setInterruptHandler(std::function<void(void)> &&handler) {
+    void setInterruptHandler(std::function<void(bool)> &&handler) {
         _interrupt_handler = std::move(handler);
     };
-    void setInterruptHandler(const std::function<void(void)> &handler) {
+    void setInterruptHandler(const std::function<void(bool)> &handler) {
         _interrupt_handler = handler;
     };
 
