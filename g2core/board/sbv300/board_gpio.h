@@ -72,6 +72,9 @@ extern gpioDigitalInputPin<IRQPin<Motate::kInput9_PinNumber>>  din9;
 // extern gpioDigitalInputPin<IRQPin<Motate::kInput11_PinNumber>> din11;
 // extern gpioDigitalInputPin<IRQPin<Motate::kInput12_PinNumber>> din12;
 
+extern gpioDigitalInput*   const d_in[D_IN_CHANNELS];
+
+
 extern gpioDigitalOutputPin<OutputType<OUTPUT1_PWM,  Motate::kOutput1_PinNumber>>  dout1;
 extern gpioDigitalOutputPin<OutputType<OUTPUT2_PWM,  Motate::kOutput2_PinNumber>>  dout2;
 extern gpioDigitalOutputPin<OutputType<OUTPUT3_PWM,  Motate::kOutput3_PinNumber>>  dout3;
@@ -86,5 +89,8 @@ extern gpioDigitalOutputPin<OutputType<OUTPUT11_PWM, Motate::kOutput11_PinNumber
 extern gpioDigitalOutputPin<OutputType<OUTPUT12_PWM, Motate::kOutput12_PinNumber>> dout12;
 extern gpioDigitalOutputPin<OutputType<OUTPUT13_PWM, Motate::kOutput13_PinNumber>> dout13;
 
+extern gpioDigitalOutput*  const d_out[D_OUT_CHANNELS];
+
+extern gpioAnalogInput*    const a_in[A_IN_CHANNELS];
 
 #endif // End of include guard: BOARD_GPIO_H_ONCE
