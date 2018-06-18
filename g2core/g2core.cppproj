@@ -1824,6 +1824,9 @@
     <Compile Include="board\sbv300\sbv300-pinout.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="device\max31865\max31865.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="device\neopixel\neopixel.h">
       <SubType>compile</SubType>
     </Compile>
@@ -1831,6 +1834,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="device\step_dir_driver\step_dir_driver.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="device\step_dir_hobbyservo\step_dir_hobbyservo.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="device\trinamic\tmc2130.cpp">
@@ -1851,6 +1857,18 @@
     <Compile Include="marlin_compatibility.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="settings\settings_axidraw_v3.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_drosmm_v1.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_eggbot.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_ender.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="settings\settings_makeblock.h">
       <SubType>compile</SubType>
     </Compile>
@@ -1864,6 +1882,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings\settings_Printrbot_Simple_1608.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_shapeoko2dualY.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings\settings_ultimaker.h">
@@ -2016,6 +2037,15 @@
     <Compile Include="settings\settings_test.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="settings\settings_Ultimaker_2_Plus.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_watercolorbot_v2.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_xcarve_extended.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="settings\settings_zen7x12.h">
       <SubType>compile</SubType>
     </Compile>
@@ -2067,6 +2097,8 @@
     <Folder Include="board\sbv300\" />
     <Folder Include="device\" />
     <Folder Include="device\neopixel" />
+    <Folder Include="device\max31865" />
+    <Folder Include="device\step_dir_hobbyservo" />
     <Folder Include="device\step_dir_driver\" />
     <Folder Include="device\trinamic\" />
     <Folder Include="settings" />
