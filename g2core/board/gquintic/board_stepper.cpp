@@ -2,8 +2,8 @@
  * board_stepper.cpp - board-specific code for stepper.cpp
  * This file is part of the g2core project
  *
- * Copyright (c) 2016 Alden S. Hart, Jr.
- * Copyright (c) 2016 Robert Giseburt
+ * Copyright (c) 2016-2018 Alden S. Hart, Jr.
+ * Copyright (c) 2016-2018 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -29,7 +29,7 @@
 #include "board_stepper.h"
 
 // These are identical to board_stepper.h, except for the word "extern" and the initialization
-#if defined(USING_A_MAX31865) && USING_A_MAX31865 == 1
+#if QUINTIC_REVISION == 'C'
 HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
              Motate::kSocket2_StepPinNumber,
              Motate::kSocket2_DirPinNumber,
@@ -52,8 +52,10 @@ HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
     motor_4 {spiBus, spiCSPinMux.getCS(0)};
 HOT_DATA StepDirHobbyServo<Motate::kServo1_PinNumber> motor_5;
 
-Stepper* Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5};
-#else
+Stepper* const Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5};
+#endif // 'C'
+
+#if QUINTIC_REVISION == 'D'
 HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
              Motate::kSocket1_StepPinNumber,
              Motate::kSocket1_DirPinNumber,
@@ -81,8 +83,8 @@ HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
     motor_5 {spiBus, spiCSPinMux.getCS(0)};
 HOT_DATA StepDirHobbyServo<Motate::kServo1_PinNumber> motor_6;
 
-Stepper* Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5, &motor_6};
-#endif
+Stepper* const Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5, &motor_6};
+#endif // 'D'
 
 void board_stepper_init() {
     for (uint8_t motor = 0; motor < MOTORS; motor++) { Motors[motor]->init(); }

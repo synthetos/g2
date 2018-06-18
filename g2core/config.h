@@ -185,8 +185,8 @@ typedef uint32_t index_t;               // use this because set/get_int is expec
 
 // Stuff you probably don't want to change
 
-#define GROUP_LEN 4                     // max length of group prefix
-#define TOKEN_LEN 6                     // mnemonic token string: group prefix + short token
+#define GROUP_LEN 6                     // max length of group prefix
+#define TOKEN_LEN 9                     // mnemonic token string: group prefix + short token
 #define NV_FOOTER_LEN 18                // sufficient space to contain a JSON footer array
 #define NV_LIST_LEN (NV_BODY_LEN+2)     // +2 allows for a header and a footer
 #define NV_EXEC_FIRST (NV_BODY_LEN+2)   // index of the first EXEC nv

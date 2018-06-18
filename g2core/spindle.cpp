@@ -30,6 +30,7 @@
 #include "canonical_machine.h"  // #3
 #include "text_parser.h"        // #4
 
+#include "gpio.h"
 #include "spindle.h"
 #include "planner.h"
 #include "hardware.h"
@@ -39,6 +40,18 @@
 /**** Allocate structures ****/
 
 cmSpindleton_t spindle;
+
+
+gpioDigitalOutput *spindle_enable_output = nullptr;
+gpioDigitalOutput *spindle_direction_output = nullptr;
+
+#ifndef SPINDLE_ENABLE_OUTPUT_NUMBER
+#define SPINDLE_ENABLE_OUTPUT_NUMBER 4
+#endif
+
+#ifndef SPINDLE_DIRECTION_OUTPUT_NUMBER
+#define SPINDLE_DIRECTION_OUTPUT_NUMBER 5
+#endif
 
 /**** Static functions ****/
 
@@ -52,6 +65,17 @@ static float _get_spindle_pwm (cmSpindleEnable enable, cmSpindleDir direction);
  */
 void spindle_init()
 {
+    if (SPINDLE_ENABLE_OUTPUT_NUMBER > 0) {
+        spindle_enable_output = d_out[SPINDLE_ENABLE_OUTPUT_NUMBER-1];
+        spindle_enable_output->setEnabled(IO_ENABLED);
+        spindle_enable_output->setPolarity((ioPolarity)SPINDLE_ENABLE_POLARITY);
+    }
+    if (SPINDLE_DIRECTION_OUTPUT_NUMBER > 0) {
+        spindle_direction_output = d_out[SPINDLE_DIRECTION_OUTPUT_NUMBER-1];
+        spindle_direction_output->setEnabled(IO_ENABLED);
+        spindle_direction_output->setPolarity((ioPolarity)SPINDLE_DIR_POLARITY);
+    }
+
     if( pwm.c[PWM_1].frequency < 0 ) {
         pwm.c[PWM_1].frequency = 0;
     }
@@ -153,10 +177,10 @@ stat_t cm_spindle_control(uint8_t control)  // requires SPINDLE_CONTROL_xxx styl
     return(STAT_OK);
 }
 
-    #define _set_spindle_enable_bit_hi() spindle_enable_pin.set()
-    #define _set_spindle_enable_bit_lo() spindle_enable_pin.clear()
-    #define _set_spindle_direction_bit_hi() spindle_dir_pin.set()
-    #define _set_spindle_direction_bit_lo() spindle_dir_pin.clear()
+//    #define _set_spindle_enable_bit_hi() spindle_enable_pin.set()
+//    #define _set_spindle_enable_bit_lo() spindle_enable_pin.clear()
+//    #define _set_spindle_direction_bit_hi() spindle_dir_pin.set()
+//    #define _set_spindle_direction_bit_lo() spindle_dir_pin.clear()
 
 static void _exec_spindle_control(float *value, bool *flag)
 {
@@ -164,10 +188,13 @@ static void _exec_spindle_control(float *value, bool *flag)
     if (flag[1])
     {
         spindle.direction = (cmSpindleDir)value[1];             // record spindle direction in the struct
-        if (spindle.direction ^ spindle.dir_polarity) {
-            _set_spindle_direction_bit_hi();
-        } else {
-            _set_spindle_direction_bit_lo();
+//        if (spindle.direction ^ spindle.dir_polarity) {
+//            _set_spindle_direction_bit_hi();
+//        } else {
+//            _set_spindle_direction_bit_lo();
+//        }
+        if (spindle_direction_output != nullptr) {
+            spindle_direction_output->setValue(spindle.direction);
         }
     }
 
@@ -175,10 +202,13 @@ static void _exec_spindle_control(float *value, bool *flag)
     {
         // set on/off. Mask out PAUSE and consider it OFF
         spindle.enable = (cmSpindleEnable)value[0];             // record spindle enable in the struct
-        if ((spindle.enable & 0x01) ^ spindle.enable_polarity) {
-            _set_spindle_enable_bit_lo();
-        } else {
-            _set_spindle_enable_bit_hi();
+//        if ((spindle.enable & 0x01) ^ spindle.enable_polarity) {
+//            _set_spindle_enable_bit_lo();
+//        } else {
+//            _set_spindle_enable_bit_hi();
+//        }
+        if (spindle_enable_output != nullptr) {
+            spindle_enable_output->setValue(spindle.enable);
         }
     }
 

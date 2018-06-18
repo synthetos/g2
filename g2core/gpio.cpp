@@ -57,245 +57,13 @@
 #include "MotateTimers.h"
 using namespace Motate;
 
-/**** Allocate structures ****/
+/****
+ *
+ * Important: Do not directly allocate or access pins here!
+ * Do that in board_gpio.cpp!
+ *
+ ****/
 
-d_in_t   d_in[D_IN_CHANNELS];
-d_out_t  d_out[D_OUT_CHANNELS];
-a_in_t   a_in[A_IN_CHANNELS];
-a_out_t  a_out[A_OUT_CHANNELS];
-
-/**** Extended DI structure ****/
-
-// To be merged with ioDigitalInput later.
-// For now, we use a pointer to the correct d_in, since the old code did.
-// input_pin_num is the Motate pin number.
-// ext_pin_number is the JSON ("external") pin number, as in "di1".
-template <pin_number input_pin_num, uint8_t ext_pin_number>
-struct ioDigitalInputExt {
-    IRQPin<input_pin_num>  input_pin;
-
-    /* Priority only needs set once in the system during startup.
-     * However, if we wish to switch the interrupt trigger, here are other options:
-     *  kPinInterruptOnRisingEdge
-     *  kPinInterruptOnFallingEdge
-     *
-     * To change the trigger or priority provide a third paramater intValue that will
-     * be called as pin.setInterrupts(intValue), or call pin.setInterrupts at any point.
-     * Note that it may cause an interrupt to fire *immediately*!
-     * intValue defaults to kPinInterruptOnChange|kPinInterruptPriorityMedium if not specified.
-     */
-    ioDigitalInputExt() : input_pin {kPullUp|kDebounce, [&]{this->pin_changed();}} {
-    };
-
-    ioDigitalInputExt(const ioDigitalInputExt&) = delete; // delete copy
-    ioDigitalInputExt(ioDigitalInputExt&&) = delete;      // delete move
-
-    static constexpr d_in_t *in = &d_in[ext_pin_number-1];
-
-    void reset() {
-        if (D_IN_CHANNELS < ext_pin_number) { return; }
-
-        if (in->mode == IO_MODE_DISABLED) {
-            in->state = INPUT_DISABLED;
-            return;
-        }
-
-        bool pin_value = (bool)input_pin;
-        int8_t pin_value_corrected = (pin_value ^ ((int)in->mode ^ 1));    // correct for NO or NC mode
-        in->state = (ioState)pin_value_corrected;
-    }
-
-    void pin_changed() {
-        if (D_IN_CHANNELS < ext_pin_number) { return; }
-
-        // return if input is disabled (not supposed to happen)
-        if (in->mode == IO_MODE_DISABLED) {
-            in->state = INPUT_DISABLED;
-            return;
-        }
-
-        // return if the input is in lockout period (take no action)
-        if (in->lockout_timer.isSet() && !in->lockout_timer.isPast()) {
-            return;
-        }
-
-        // return if no change in state
-        bool pin_value = (bool)input_pin;
-        int8_t pin_value_corrected = (pin_value ^ ((int)in->mode ^ 1));    // correct for NO or NC mode
-        if (in->state == (ioState)pin_value_corrected) {
-            return;
-        }
-
-        // lockout the pin for lockout_ms
-        in->lockout_timer.set(in->lockout_ms);
-
-        // record the changed state
-        in->state = (ioState)pin_value_corrected;
-        if (pin_value_corrected == INPUT_ACTIVE) {
-            in->edge = INPUT_EDGE_LEADING;
-        } else {
-            in->edge = INPUT_EDGE_TRAILING;
-        }
-
-        // perform homing operations if in homing mode
-        if (in->homing_mode) {
-            if (in->edge == INPUT_EDGE_LEADING) {   // we only want the leading edge to fire
-                en_take_encoder_snapshot();
-                cm_start_hold();
-            }
-            return;
-        }
-
-        // perform probing operations if in probing mode
-        if (in->probing_mode) {
-            // We want to capture either way.
-            // Probing tests the start condition for the correct direction ahead of time.
-            // If we see any edge, it's the right one.
-            en_take_encoder_snapshot();
-            cm_start_hold();
-            return;
-        }
-
-        // *** NOTE: From this point on all conditionals assume we are NOT in homing or probe mode ***
-
-        // trigger the action on leading edges
-        if (in->edge == INPUT_EDGE_LEADING) {
-            if (in->action == INPUT_ACTION_STOP) {
-                cm_start_hold();
-            }
-            if (in->action == INPUT_ACTION_FAST_STOP) {
-                cm_start_hold();                        // for now is same as STOP
-            }
-            if (in->action == INPUT_ACTION_HALT) {
-                cm_halt_all();                            // hard stop, including spindle and coolant
-            }
-            if (in->action == INPUT_ACTION_ALARM) {
-                char msg[10];
-                sprintf(msg, "input %d", ext_pin_number);
-                cm_alarm(STAT_ALARM, msg);
-            }
-            if (in->action == INPUT_ACTION_SHUTDOWN) {
-                char msg[10];
-                sprintf(msg, "input %d", ext_pin_number);
-                cm_shutdown(STAT_SHUTDOWN, msg);
-            }
-            if (in->action == INPUT_ACTION_PANIC) {
-                char msg[10];
-                sprintf(msg, "input %d", ext_pin_number);
-                cm_panic(STAT_PANIC, msg);
-            }
-            if (in->action == INPUT_ACTION_RESET) {
-                hw_hard_reset();
-            }
-
-            // these functions also trigger on the leading edge
-
-            if (in->function == INPUT_FUNCTION_LIMIT) {
-                cm.limit_requested = ext_pin_number;
-
-            } else if (in->function == INPUT_FUNCTION_SHUTDOWN) {
-                cm.shutdown_requested = ext_pin_number;
-
-            } else if (in->function == INPUT_FUNCTION_INTERLOCK) {
-                cm.safety_interlock_disengaged = ext_pin_number;
-            }
-        } // if (in->edge == INPUT_EDGE_LEADING)
-
-        // trigger interlock release on trailing edge
-        if (in->edge == INPUT_EDGE_TRAILING) {
-            if (in->function == INPUT_FUNCTION_INTERLOCK) {
-                cm.safety_interlock_reengaged = ext_pin_number;
-            }
-        }
-
-        sr_request_status_report(SR_REQUEST_TIMED);   //+++++ Put this one back in.
-    };
-};
-
-/**** Setup Low Level Stuff ****/
-
-ioDigitalInputExt<kInput1_PinNumber  ,  1> _din1;
-ioDigitalInputExt<kInput2_PinNumber  ,  2> _din2;
-ioDigitalInputExt<kInput3_PinNumber  ,  3> _din3;
-ioDigitalInputExt<kInput4_PinNumber  ,  4> _din4;
-ioDigitalInputExt<kInput5_PinNumber  ,  5> _din5;
-ioDigitalInputExt<kInput6_PinNumber  ,  6> _din6;
-ioDigitalInputExt<kInput7_PinNumber  ,  7> _din7;
-ioDigitalInputExt<kInput8_PinNumber  ,  8> _din8;
-ioDigitalInputExt<kInput9_PinNumber  ,  9> _din9;
-ioDigitalInputExt<kInput10_PinNumber , 10> _din10;
-ioDigitalInputExt<kInput11_PinNumber , 11> _din11;
-ioDigitalInputExt<kInput12_PinNumber , 12> _din12;
-
-// Generated with:
-// perl -e 'for($i=1;$i<14;$i++) { print "#if OUTPUT${i}_PWM == 1\nstatic PWMOutputPin<kOutput${i}_PinNumber>  output_${i}_pin;\n#else\nstatic PWMLikeOutputPin<kOutput${i}_PinNumber>  output_${i}_pin;\n#endif\n";}'
-// BEGIN generated
-#if OUTPUT1_PWM == 1
-static PWMOutputPin<kOutput1_PinNumber>  output_1_pin {(DO1_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
-#else
-static PWMLikeOutputPin<kOutput1_PinNumber>  output_1_pin {(DO1_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
-#endif
-#if OUTPUT2_PWM == 1
-static PWMOutputPin<kOutput2_PinNumber>  output_2_pin {(DO2_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
-#else
-static PWMLikeOutputPin<kOutput2_PinNumber>  output_2_pin {(DO2_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
-#endif
-#if OUTPUT3_PWM == 1
-static PWMOutputPin<kOutput3_PinNumber>  output_3_pin {(DO3_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
-#else
-static PWMLikeOutputPin<kOutput3_PinNumber>  output_3_pin {(DO3_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
-#endif
-#if OUTPUT4_PWM == 1
-static PWMOutputPin<kOutput4_PinNumber>  output_4_pin {(DO4_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
-#else
-static PWMLikeOutputPin<kOutput4_PinNumber>  output_4_pin {(DO4_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
-#endif
-#if OUTPUT5_PWM == 1
-static PWMOutputPin<kOutput5_PinNumber>  output_5_pin {(DO5_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
-#else
-static PWMLikeOutputPin<kOutput5_PinNumber>  output_5_pin {(DO5_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
-#endif
-#if OUTPUT6_PWM == 1
-static PWMOutputPin<kOutput6_PinNumber>  output_6_pin {(DO6_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
-#else
-static PWMLikeOutputPin<kOutput6_PinNumber>  output_6_pin {(DO6_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
-#endif
-#if OUTPUT7_PWM == 1
-static PWMOutputPin<kOutput7_PinNumber>  output_7_pin {(DO7_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
-#else
-static PWMLikeOutputPin<kOutput7_PinNumber>  output_7_pin {(DO7_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
-#endif
-#if OUTPUT8_PWM == 1
-static PWMOutputPin<kOutput8_PinNumber>  output_8_pin {(DO8_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
-#else
-static PWMLikeOutputPin<kOutput8_PinNumber>  output_8_pin {(DO8_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
-#endif
-#if OUTPUT9_PWM == 1
-static PWMOutputPin<kOutput9_PinNumber>  output_9_pin {(DO9_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
-#else
-static PWMLikeOutputPin<kOutput9_PinNumber>  output_9_pin {(DO9_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
-#endif
-#if OUTPUT10_PWM == 1
-static PWMOutputPin<kOutput10_PinNumber>  output_10_pin {(DO10_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
-#else
-static PWMLikeOutputPin<kOutput10_PinNumber>  output_10_pin {(DO10_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
-#endif
-#if OUTPUT11_PWM == 1
-static PWMOutputPin<kOutput11_PinNumber>  output_11_pin {(DO11_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
-#else
-static PWMLikeOutputPin<kOutput11_PinNumber>  output_11_pin {(DO11_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
-#endif
-#if OUTPUT12_PWM == 1
-static PWMOutputPin<kOutput12_PinNumber>  output_12_pin {(DO12_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
-#else
-static PWMLikeOutputPin<kOutput12_PinNumber>  output_12_pin {(DO12_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
-#endif
-#if OUTPUT13_PWM == 1
-static PWMOutputPin<kOutput13_PinNumber>  output_13_pin {(DO13_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
-#else
-static PWMLikeOutputPin<kOutput13_PinNumber>  output_13_pin {(DO13_MODE == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow, 200000};
-#endif
-// END generated
 
 /************************************************************************************
  **** CODE **************************************************************************
@@ -307,99 +75,11 @@ static PWMLikeOutputPin<kOutput13_PinNumber>  output_13_pin {(DO13_MODE == IO_AC
 
 void gpio_init(void)
 {
-    // These are here due to an unfound glitch where for Timer-based pins the frequency isn't getting set.
-
-    // Generated with:
-    // perl -e 'for($i=1;$i<14;$i++) { print "output_${i}_pin.setFrequency(200000);\n";}'
-    // BEGIN generated
-//    output_1_pin.setFrequency(200000);
-//    output_2_pin.setFrequency(200000);
-//    output_3_pin.setFrequency(200000);
-//    output_4_pin.setFrequency(200000);
-//    output_5_pin.setFrequency(200000);
-//    output_6_pin.setFrequency(200000);
-//    output_7_pin.setFrequency(200000);
-//    output_8_pin.setFrequency(200000);
-//    output_9_pin.setFrequency(200000);
-//    output_10_pin.setFrequency(200000);
-//    output_11_pin.setFrequency(200000);
-//    output_12_pin.setFrequency(200000);
-//    output_13_pin.setFrequency(200000);
-    // END generated
-
     return(gpio_reset());
 }
 
-void outputs_reset(void) {
-    // If the output is ACTIVE_LOW set it to 1. ACTIVE_HIGH gets set to 0.
-#if D_OUT_CHANNELS >= 1
-    if (d_out[1-1].mode  != IO_MODE_DISABLED) { (output_1_pin    = (d_out[1-1].mode  == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
-#endif
-#if D_OUT_CHANNELS >= 2
-    if (d_out[2-1].mode  != IO_MODE_DISABLED) { (output_2_pin    = (d_out[2-1].mode  == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
-#endif
-#if D_OUT_CHANNELS >= 3
-    if (d_out[3-1].mode  != IO_MODE_DISABLED) { (output_3_pin    = (d_out[3-1].mode  == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
-#endif
-#if D_OUT_CHANNELS >= 4
-    if (d_out[4-1].mode  != IO_MODE_DISABLED) { (output_4_pin    = (d_out[4-1].mode  == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
-#endif
-#if D_OUT_CHANNELS >= 5
-    if (d_out[5-1].mode  != IO_MODE_DISABLED) { (output_5_pin    = (d_out[5-1].mode  == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
-#endif
-#if D_OUT_CHANNELS >= 6
-    if (d_out[6-1].mode  != IO_MODE_DISABLED) { (output_6_pin    = (d_out[6-1].mode  == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
-#endif
-#if D_OUT_CHANNELS >= 7
-    if (d_out[7-1].mode  != IO_MODE_DISABLED) { (output_7_pin    = (d_out[7-1].mode  == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
-#endif
-#if D_OUT_CHANNELS >= 8
-    if (d_out[8-1].mode  != IO_MODE_DISABLED) { (output_8_pin    = (d_out[8-1].mode  == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
-#endif
-#if D_OUT_CHANNELS >= 9
-    if (d_out[9-1].mode  != IO_MODE_DISABLED) { (output_9_pin    = (d_out[9-1].mode  == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
-#endif
-#if D_OUT_CHANNELS >= 10
-    if (d_out[10-1].mode != IO_MODE_DISABLED) { (output_10_pin   = (d_out[10-1].mode == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
-#endif
-#if D_OUT_CHANNELS >= 11
-    if (d_out[11-1].mode != IO_MODE_DISABLED) { (output_11_pin   = (d_out[11-1].mode == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
-#endif
-#if D_OUT_CHANNELS >= 12
-    if (d_out[12-1].mode != IO_MODE_DISABLED) { (output_12_pin   = (d_out[12-1].mode == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
-#endif
-#if D_OUT_CHANNELS >= 13
-    if (d_out[13-1].mode != IO_MODE_DISABLED) { (output_13_pin   = (d_out[13-1].mode == IO_ACTIVE_LOW) ? 1.0 : 0.0); }
-#endif
-}
-
-void inputs_reset(void) {
-    d_in_t *in;
-
-    for (uint8_t i=0; i<D_IN_CHANNELS; i++) {
-        in = &d_in[i];
-        if (in->mode == IO_MODE_DISABLED) {
-            in->state = INPUT_DISABLED;
-            continue;
-        }
-        in->lockout_ms = INPUT_LOCKOUT_MS;
-        in->lockout_timer.clear();
-    }
-
-  _din1.reset();
-  _din2.reset();
-  _din3.reset();
-  _din4.reset();
-  _din5.reset();
-  _din6.reset();
-  _din7.reset();
-  _din8.reset();
-  _din9.reset();
-  _din10.reset();
-  _din11.reset();
-  _din12.reset();
-
-}
+// implement void outputs_reset(void) in board_gpio.cpp
+// implement void inputs_reset(void) in board_gpio.cpp
 
 void gpio_reset(void)
 {
@@ -407,65 +87,22 @@ void gpio_reset(void)
     outputs_reset();
 }
 
-/******************************
- * Interrupt Service Routines *
- ******************************/
-/*
- * ARM pin change interrupts are setup above when defining the IRQPins (inside the ioDigitalInputExt).
- */
-
 /********************************************
  **** Digital Input Supporting Functions ****
  ********************************************/
-/*
- * switch_rtc_callback() - called from RTC for each RTC tick.
- *
- *  Each switch has a counter which is initially set to negative SW_DEGLITCH_TICKS.
- *  When a switch closure is DETECTED the count increments for each RTC tick.
- *  When the count reaches zero the switch is tripped and action occurs.
- *  The counter continues to increment positive until the lockout is exceeded.
- */
 
 /*
- * gpio_set_homing_mode()   - set/clear input to homing mode
- * gpio_set_probing_mode()  - set/clear input to probing mode
- * gpio_get_probing_input() - get probing input
  * gpio_read_input()        - read conditioned input
  *
- (* Note: input_num_ext means EXTERNAL input number -- 1-based
+ * Note: input_num means the actual input number (1-based), not the exposed-as number
  */
-void  gpio_set_homing_mode(const uint8_t input_num_ext, const bool is_homing)
-{
-    if (input_num_ext == 0) {
-        return;
-    }
-    d_in[input_num_ext-1].homing_mode = is_homing;
-}
 
-void  gpio_set_probing_mode(const uint8_t input_num_ext, const bool is_probing)
+bool gpio_read_input(const uint8_t input_num)
 {
-    if (input_num_ext == 0) {
-        return;
-    }
-    d_in[input_num_ext-1].probing_mode = is_probing;
-}
-
-int8_t gpio_get_probing_input(void) 
-{
-    for (uint8_t i = 0; i <= D_IN_CHANNELS; i++) {
-        if (d_in[i-1].function == INPUT_FUNCTION_PROBE) {
-            return (i);
-        }
-    }
-    return (-1);
-}
-
-bool gpio_read_input(const uint8_t input_num_ext)
-{
-    if (input_num_ext == 0) {
+    if (input_num == 0) {
         return false;
     }
-    return (d_in[input_num_ext-1].state);
+    return (d_in[input_num-1]->getState());
 }
 
 
@@ -475,208 +112,261 @@ bool gpio_read_input(const uint8_t input_num_ext)
  * These functions are not part of the NIST defined functions
  ***********************************************************************************/
 
-static stat_t _input_set_helper(nvObj_t *nv, const int8_t lower_bound, const int8_t upper_bound)
-{
-    if ((nv->value < lower_bound) || (nv->value >= upper_bound)) {
-        return (STAT_INPUT_VALUE_RANGE_ERROR);
-    }
-    set_ui8(nv);        // will this work in -1 is a valid value?
-    if (cm_get_machine_state() != MACHINE_INITIALIZING) {
-        inputs_reset();
-    }
-    return (STAT_OK);
-}
+// internal helpers to get input and output object from the cfgArray target
+// specified by an nv pointer
 
-static stat_t _output_set_helper(nvObj_t *nv, const int8_t lower_bound, const int8_t upper_bound)
-{
-    if ((nv->value < lower_bound) || (nv->value >= upper_bound)) {
-        return (STAT_INPUT_VALUE_RANGE_ERROR);
-    }
-    set_ui8(nv);        // will this work in -1 is a valid value?
-    if (cm_get_machine_state() != MACHINE_INITIALIZING) {
-        outputs_reset();
-    }
-    return (STAT_OK);
-}
+template <typename type>
+type* _io(const nvObj_t *nv) {
+    return reinterpret_cast<type*>(cfgArray[nv->index].target);
+};
 
-stat_t io_set_mo(nvObj_t *nv)            // input type or disabled
-{
-//    return (_io_set_helper(nv, IO_MODE_DISABLED, IO_MODE_MAX));
-    return (_input_set_helper(nv, IO_ACTIVE_LOW, IO_MODE_MAX));
-}
+gpioDigitalInput* _i(const nvObj_t *nv) { return _io<gpioDigitalInput>(nv); }
+gpioDigitalInputReader* _ir(const nvObj_t *nv) { return _io<gpioDigitalInputReader>(nv); }
+gpioDigitalOutput* _o(const nvObj_t *nv) { return _io<gpioDigitalOutput>(nv); }
+gpioDigitalOutputWriter* _ow(const nvObj_t *nv) { return _io<gpioDigitalOutputWriter>(nv); }
+gpioAnalogInput* _ai(const nvObj_t *nv) { return _io<gpioAnalogInput>(nv); }
+gpioAnalogInputReader* _air(const nvObj_t *nv) { return _io<gpioAnalogInputReader>(nv); }
 
-stat_t io_set_ac(nvObj_t *nv)            // input action
-{
-    return (_input_set_helper(nv, INPUT_ACTION_NONE, INPUT_ACTION_MAX));
-}
+gpioDigitalInputReader in1;
+gpioDigitalInputReader in2;
+gpioDigitalInputReader in3;
+gpioDigitalInputReader in4;
+gpioDigitalInputReader in5;
+gpioDigitalInputReader in6;
+gpioDigitalInputReader in7;
+gpioDigitalInputReader in8;
+gpioDigitalInputReader in9;
+gpioDigitalInputReader in10;
+gpioDigitalInputReader in11;
+gpioDigitalInputReader in12;
+gpioDigitalInputReader in13;
+gpioDigitalInputReader in14;
+gpioDigitalInputReader in15;
+gpioDigitalInputReader in16;
 
-stat_t io_set_fn(nvObj_t *nv)            // input function
+gpioDigitalInputReader* const in_r[16] = {&in1, &in2, &in3, &in4, &in5, &in6, &in7, &in8, &in9, &in10, &in11, &in12, &in13, &in14, &in15, &in16};
+
+gpioDigitalOutputWriter out1;
+gpioDigitalOutputWriter out2;
+gpioDigitalOutputWriter out3;
+gpioDigitalOutputWriter out4;
+gpioDigitalOutputWriter out5;
+gpioDigitalOutputWriter out6;
+gpioDigitalOutputWriter out7;
+gpioDigitalOutputWriter out8;
+gpioDigitalOutputWriter out9;
+gpioDigitalOutputWriter out10;
+gpioDigitalOutputWriter out11;
+gpioDigitalOutputWriter out12;
+gpioDigitalOutputWriter out13;
+gpioDigitalOutputWriter out14;
+gpioDigitalOutputWriter out15;
+gpioDigitalOutputWriter out16;
+
+gpioDigitalOutputWriter* const out_w[16] = {&out1, &out2, &out3, &out4, &out5, &out6, &out7, &out8, &out9, &out10, &out11, &out12, &out13, &out14, &out15, &out16};
+
+// lists for the various inputAction events
+gpioDigitalInputHandlerList din_handlers[INPUT_ACTION_ACTUAL_MAX+1];
+
+gpioAnalogInputReader ain1;
+gpioAnalogInputReader ain2;
+gpioAnalogInputReader ain3;
+gpioAnalogInputReader ain4;
+gpioAnalogInputReader ain5;
+gpioAnalogInputReader ain6;
+gpioAnalogInputReader ain7;
+gpioAnalogInputReader ain8;
+
+gpioAnalogInputReader* const ain_r[8] = {&ain1, &ain2, &ain3, &ain4, &ain5, &ain6, &ain7, &ain8};
+
+/*
+ *  Get/set enabled
+ */
+stat_t din_get_en(nvObj_t *nv)
 {
-    return (_input_set_helper(nv, INPUT_FUNCTION_NONE, INPUT_FUNCTION_MAX));
+    return _i(nv)->getEnabled(nv);
+}
+stat_t din_set_en(nvObj_t *nv)
+{
+    return _i(nv)->setEnabled(nv);
 }
 
 /*
- *  io_get_input() - return input state given an nv object
+ *  Get/set input polarity
  */
-stat_t io_get_input(nvObj_t *nv)
+stat_t din_get_po(nvObj_t *nv)
 {
-    char *num_start = nv->token;
-    if (*(nv->group) == 0) {
-        // if we don't have a group, then the group name is in the token
-        // skip over "in"
-        num_start+=2;
-    }
-    nv->value = d_in[strtol(num_start, NULL, 10)-1].state;
-
-    if (nv->value > 1.1) {
-        nv->valuetype = TYPE_NULL;
-    } else {
-        nv->valuetype = TYPE_BOOL;
-    }
-    return (STAT_OK);
+    return _i(nv)->getPolarity(nv);
 }
-
-stat_t io_set_domode(nvObj_t *nv)            // output function
+stat_t din_set_po(nvObj_t *nv)
 {
-    char *num_start = nv->token;
-    if (*(nv->group) == 0) {
-        // if we don't have a group, then the group name is in the token
-        // skip over "out"
-        num_start+=3;
-    }
-    // the token has been stripped down to an ASCII digit string - use it as an index
-    uint8_t output_num = strtol(num_start, NULL, 10);
-
-    if (output_num > D_OUT_CHANNELS) {
-        nv->valuetype = TYPE_NULL;
-        return(STAT_NO_GPIO);
-    }
-
-    // Force pins that aren't available to be "disabled"
-    switch (output_num) {
-        case 1:  if (output_1_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
-        case 2:  if (output_2_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
-        case 3:  if (output_3_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
-        case 4:  if (output_4_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
-        case 5:  if (output_5_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
-        case 6:  if (output_6_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
-        case 7:  if (output_7_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
-        case 8:  if (output_8_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
-        case 9:  if (output_9_pin.isNull())  { nv->value = IO_MODE_DISABLED; } break;
-        case 10: if (output_10_pin.isNull()) { nv->value = IO_MODE_DISABLED; } break;
-        case 11: if (output_11_pin.isNull()) { nv->value = IO_MODE_DISABLED; } break;
-        case 12: if (output_12_pin.isNull()) { nv->value = IO_MODE_DISABLED; } break;
-        case 13: if (output_13_pin.isNull()) { nv->value = IO_MODE_DISABLED; } break;
-
-        default:
-            break;
-    }
-
-    return (_output_set_helper(nv, IO_ACTIVE_LOW, IO_MODE_MAX));
+    return _i(nv)->setPolarity(nv);
 }
 
 /*
- *  io_get_output() - return output state given an nv object
+ *  Get/set input action
  */
-stat_t io_get_output(nvObj_t *nv)
+stat_t din_get_ac(nvObj_t *nv)
 {
-    char *num_start = nv->token;
-    if (*(nv->group) == 0) {
-        // if we don't have a group, then the group name is in the token
-        // skip over "out"
-        num_start+=3;
-    }
-    // the token has been stripped down to an ASCII digit string - use it as an index
-    uint8_t output_num = strtol(num_start, NULL, 10);
-
-    if (output_num > D_OUT_CHANNELS) {
-        nv->valuetype = TYPE_NULL;
-        return(STAT_NO_GPIO);
-    }
-
-    ioMode outMode = d_out[output_num-1].mode;
-    if (outMode == IO_MODE_DISABLED) {
-//        nv->value = 0;
-        nv->valuetype = TYPE_NULL;   // reports back as NULL
-    } else {
-        nv->valuetype = TYPE_FLOAT;
-        nv->precision = 2;
-        bool invert = (outMode == 0);
-        // Note: !! forces a value to boolean 0 or 1
-        switch (output_num) {
-            case 1:  { nv->value = (float)output_1_pin; } break;
-            case 2:  { nv->value = (float)output_2_pin; } break;
-            case 3:  { nv->value = (float)output_3_pin; } break;
-            case 4:  { nv->value = (float)output_4_pin; } break;
-            case 5:  { nv->value = (float)output_5_pin; } break;
-            case 6:  { nv->value = (float)output_6_pin; } break;
-            case 7:  { nv->value = (float)output_7_pin; } break;
-            case 8:  { nv->value = (float)output_8_pin; } break;
-            case 9:  { nv->value = (float)output_9_pin; } break;
-            case 10: { nv->value = (float)output_10_pin; } break;
-            case 11: { nv->value = (float)output_11_pin; } break;
-            case 12: { nv->value = (float)output_12_pin; } break;
-            case 13: { nv->value = (float)output_13_pin; } break;
-
-            default:
-                {
-//                  nv->value = 0;              // inactive
-                    nv->valuetype = TYPE_NULL;  // reports back as NULL
-                }
-        }
-        if (invert) {
-            nv->value = 1.0 - nv->value;
-        }
-    }
-    return (STAT_OK);
+    return _i(nv)->getAction(nv);
+}
+stat_t din_set_ac(nvObj_t *nv)
+{
+    return _i(nv)->setAction(nv);
 }
 
 /*
- *  io_set_output() - return input state given an nv object
+ *  Get/set input function
  */
-stat_t io_set_output(nvObj_t *nv)
-{
-    char *num_start = nv->token;
-    if (*(nv->group) == 0) {
-        // if we don't have a group, then the group name is in the token
-        // skip over "out"
-        num_start+=3;
-    }
-    // the token has been stripped down to an ASCII digit string - use it as an index
-    uint8_t output_num = strtol(num_start, NULL, 10);
 
-    ioMode outMode = d_out[output_num-1].mode;
-    if (outMode == IO_MODE_DISABLED) {
-        nv->value = 0; // Inactive?
-    } else {
-        bool invert = (outMode == 0);
-        float value = nv->value;
-        if (invert) {
-            value = 1.0 - value;
-        }
-        switch (output_num) {
-            // Generated with:
-            // perl -e 'for($i=1;$i<14;$i++) { print "case ${i}:  { output_${i}_pin = value; } break;\n";}'
-            // BEGIN generated
-            case 1:  { output_1_pin = value; } break;
-            case 2:  { output_2_pin = value; } break;
-            case 3:  { output_3_pin = value; } break;
-            case 4:  { output_4_pin = value; } break;
-            case 5:  { output_5_pin = value; } break;
-            case 6:  { output_6_pin = value; } break;
-            case 7:  { output_7_pin = value; } break;
-            case 8:  { output_8_pin = value; } break;
-            case 9:  { output_9_pin = value; } break;
-            case 10:  { output_10_pin = value; } break;
-            case 11:  { output_11_pin = value; } break;
-            case 12:  { output_12_pin = value; } break;
-            case 13:  { output_13_pin = value; } break;
-            // END generated
-            default: { nv->value = 0; } // inactive
-        }
-    }
-    return (STAT_OK);
+/*
+ *  Get/set input function
+ */
+stat_t din_get_in(nvObj_t *nv)
+{
+    return _i(nv)->getExternalNumber(nv);
 }
+stat_t din_set_in(nvObj_t *nv)
+{
+    return _i(nv)->setExternalNumber(nv);
+}
+
+/*
+ *  Get input state given an nv object
+ *  Note: if this is not forwarded to an input or the input is disabled,
+ *  it returns NULL.
+ */
+stat_t din_get_input(nvObj_t *nv)
+{
+    return _ir(nv)->getState(nv);
+}
+
+
+/*
+ *  Get/set enabled
+ */
+stat_t dout_get_en(nvObj_t *nv)
+{
+    return _o(nv)->getEnabled(nv);
+}
+stat_t dout_set_en(nvObj_t *nv)
+{
+    return _o(nv)->setEnabled(nv);
+}
+
+/*
+ *  Get/set output polarity
+ */
+stat_t dout_get_po(nvObj_t *nv)
+{
+    return _o(nv)->getPolarity(nv);
+}
+stat_t dout_set_po(nvObj_t *nv)
+{
+    return _o(nv)->setPolarity(nv);
+}
+
+/*
+ *  Get/set output external number
+ */
+stat_t dout_get_out(nvObj_t *nv)
+{
+    return _o(nv)->getExternalNumber(nv);
+}
+stat_t dout_set_out(nvObj_t *nv)
+{
+    return _o(nv)->setExternalNumber(nv);
+}
+
+
+/*
+ *  Get/set output state given an nv object
+ */
+stat_t dout_get_output(nvObj_t *nv)
+{
+    return _ow(nv)->getValue(nv);
+}
+stat_t dout_set_output(nvObj_t *nv)
+{
+    return _ow(nv)->setValue(nv);
+}
+
+
+/*
+ *  Get/set enabled
+ */
+stat_t ai_get_en(nvObj_t *nv)
+{
+    return _ai(nv)->getEnabled(nv);
+}
+stat_t ai_set_en(nvObj_t *nv)
+{
+    return _ai(nv)->setEnabled(nv);
+}
+
+/*
+ *  Get/set output external number
+ */
+stat_t ai_get_ain(nvObj_t *nv)
+{
+    return _ai(nv)->getExternalNumber(nv);
+}
+stat_t ai_set_ain(nvObj_t *nv)
+{
+    return _ai(nv)->setExternalNumber(nv);
+}
+
+/*
+ *  ain_get_value() - get the measured voltage level of the analog input
+ */
+stat_t ain_get_value(nvObj_t *nv) {
+    return _air(nv)->getValue(nv);
+}
+// no ain_set_value
+
+/*
+ *  ai_get_resistance() - get the measured resistance of the analog input
+ *  NOTE: Requires the circuit type to be configured and the relevant parameters set
+ */
+stat_t ain_get_resistance(nvObj_t *nv) {
+    return _air(nv)->getResistance(nv);
+}
+// no ai_set_resistance
+
+/*
+ *  ai_get_type() - get the measured voltage level of the analog input
+ */
+stat_t ai_get_type(nvObj_t *nv) {
+    return _ai(nv)->getType(nv);
+}
+stat_t ai_set_type(nvObj_t *nv) {
+    return _ai(nv)->setType(nv);
+}
+
+stat_t ai_get_circuit(nvObj_t *nv) {
+    return _ai(nv)->getCircuit(nv);
+}
+stat_t ai_set_circuit(nvObj_t *nv) {
+    return _ai(nv)->setCircuit(nv);
+}
+
+stat_t ai_get_parameter(nvObj_t *nv, const uint8_t p) {
+    return _ai(nv)->getParameter(nv, p);
+}
+stat_t ai_set_parameter(nvObj_t *nv, const uint8_t p) {
+    return _ai(nv)->setParameter(nv, p);
+}
+
+stat_t ai_get_p1(nvObj_t *nv) { return ai_get_parameter(nv, 0); };
+stat_t ai_set_p1(nvObj_t *nv) { return ai_set_parameter(nv, 0); };
+stat_t ai_get_p2(nvObj_t *nv) { return ai_get_parameter(nv, 1); };
+stat_t ai_set_p2(nvObj_t *nv) { return ai_set_parameter(nv, 1); };
+stat_t ai_get_p3(nvObj_t *nv) { return ai_get_parameter(nv, 2); };
+stat_t ai_set_p3(nvObj_t *nv) { return ai_set_parameter(nv, 2); };
+stat_t ai_get_p4(nvObj_t *nv) { return ai_get_parameter(nv, 3); };
+stat_t ai_set_p4(nvObj_t *nv) { return ai_set_parameter(nv, 3); };
+stat_t ai_get_p5(nvObj_t *nv) { return ai_get_parameter(nv, 4); };
+stat_t ai_set_p5(nvObj_t *nv) { return ai_set_parameter(nv, 4); };
 
 /***********************************************************************************
  * TEXT MODE SUPPORT
@@ -685,30 +375,77 @@ stat_t io_set_output(nvObj_t *nv)
 
 #ifdef __TEXT_MODE
 
-    static const char fmt_gpio_mo[] = "[%smo] input mode%17d [0=active-low,1=active-hi,2=disabled]\n";
+    static const char fmt_gpio_in_en[] = "[%smo] input enabled%13d [-1=unavailable,0=disabled,1=enabled]\n";
+    static const char fmt_gpio_in_po[] = "[%smo] input polarity%13d [0=normal/active-high,1=inverted/active-low]\n";
     static const char fmt_gpio_ac[] = "[%sac] input action%15d [0=none,1=stop,2=fast_stop,3=halt,4=alarm,5=shutdown,6=panic,7=reset]\n";
     static const char fmt_gpio_fn[] = "[%sfn] input function%13d [0=none,1=limit,2=interlock,3=shutdown,4=probe]\n";
-    static const char fmt_gpio_in[] = "Input %s state: %5d\n";
+    static const char fmt_gpio_in[] = "[%sin] input external number%6d [0=none,1-16=inX shows the value of this din]\n";
+    static const char fmt_gpio_state[] = "Input %s state: %5d\n";
 
-    static const char fmt_gpio_domode[] = "[%smo] output mode%16d [0=active low,1=active high,2=disabled]\n";
-    static const char fmt_gpio_out[] = "Output %s state: %5d\n";
+    static const char fmt_gpio_out_en[] = "[%smo] output enabled%12d [-1=unavailable,0=disabled,1=enabled]\n";
+    static const char fmt_gpio_out_po[] = "[%smo] output polarity%12d [0=normal/active-high,1=inverted/active-low]\n";
+    static const char fmt_gpio_out_out[] = "[%sout] output external number%5d [0=none,1-16=outX shows the value of this dout]\n";
+    static const char fmt_gpio_out_state[] = "Output %s state: %5d\n";
+
+    static const char fmt_ain_value[] = "Analog input %s voltage: %5.2fV\n";
+    static const char fmt_ain_resistance[] = "Analog input %s resistance: %5.2fohm\n";
+    static const char fmt_gpio_ai_en[] = "[%smo] analog input enabled%12d [-1=unavailable,0=disabled,1=enabled]\n";
+    static const char fmt_gpio_ai_ain[] = "[%sout] analog input external number%5d [0=none,1-8=ainX shows the value of this ai]\n";
+    static const char fmt_ai_type[] = "[%s] input type%17d [0=disabled,1=internal,2=external]\n";
+    static const char fmt_ai_circuit[] = "[%s] analog circuit%13d [0=disabled,1=pull-up,2=external,3=inverted op-amp,4=constant current inverted op-amp]\n";
+    static const char fmt_ai_parameter[] = "[%s] circuit parameter%6.4f [usage varies by circuit type]\n";
 
     static void _print_di(nvObj_t *nv, const char *format)
     {
         sprintf(cs.out_buf, format, nv->group, (int)nv->value);
         xio_writeline(cs.out_buf);
     }
-    void io_print_mo(nvObj_t *nv) {_print_di(nv, fmt_gpio_mo);}
-    void io_print_ac(nvObj_t *nv) {_print_di(nv, fmt_gpio_ac);}
-    void io_print_fn(nvObj_t *nv) {_print_di(nv, fmt_gpio_fn);}
-    void io_print_in(nvObj_t *nv) {
-        sprintf(cs.out_buf, fmt_gpio_in, nv->token, (int)nv->value);
+    void din_print_en(nvObj_t *nv) {_print_di(nv, fmt_gpio_in_en);}
+    void din_print_po(nvObj_t *nv) {_print_di(nv, fmt_gpio_in_po);}
+    void din_print_ac(nvObj_t *nv) {_print_di(nv, fmt_gpio_ac);}
+    void din_print_fn(nvObj_t *nv) {_print_di(nv, fmt_gpio_fn);}
+    void din_print_in(nvObj_t *nv) {_print_di(nv, fmt_gpio_in);}
+    void din_print_state(nvObj_t *nv) {
+        sprintf(cs.out_buf, fmt_gpio_state, nv->token, (int)nv->value);
         xio_writeline(cs.out_buf);
     }
 
-    void io_print_domode(nvObj_t *nv) {_print_di(nv, fmt_gpio_domode);}
-    void io_print_out(nvObj_t *nv) {
-        sprintf(cs.out_buf, fmt_gpio_out, nv->token, (int)nv->value);
+    void dout_print_en(nvObj_t *nv) {_print_di(nv, fmt_gpio_out_en);}
+    void dout_print_po(nvObj_t *nv) {_print_di(nv, fmt_gpio_out_po);}
+    void dout_print_out(nvObj_t *nv) {_print_di(nv, fmt_gpio_out_out);}
+    void dout_print_out_state(nvObj_t *nv) {
+        sprintf(cs.out_buf, fmt_gpio_out_state, nv->token, (int)nv->value);
         xio_writeline(cs.out_buf);
     }
+
+    void ain_print_value(nvObj_t *nv)
+    {
+       sprintf(cs.out_buf, fmt_ain_value, nv->token, (float)nv->value);
+       xio_writeline(cs.out_buf);
+    }
+    void ain_print_resistance(nvObj_t *nv)
+    {
+       sprintf(cs.out_buf, fmt_ain_resistance, nv->token, (float)nv->value);
+       xio_writeline(cs.out_buf);
+    }
+    void ai_print_en(nvObj_t *nv) {_print_di(nv, fmt_gpio_ai_en);}
+    void ai_print_ain(nvObj_t *nv) {_print_di(nv, fmt_gpio_ai_ain);}
+    void ai_print_type(nvObj_t *nv)
+    {
+       sprintf(cs.out_buf, fmt_ai_type, nv->token, (int)nv->value);
+       xio_writeline(cs.out_buf);
+    }
+
+    void ai_print_circuit(nvObj_t *nv)
+    {
+       sprintf(cs.out_buf, fmt_ai_circuit, nv->token, (int)nv->value);
+       xio_writeline(cs.out_buf);
+    }
+
+    void ai_print_p(nvObj_t *nv)
+    {
+       sprintf(cs.out_buf, fmt_ai_parameter, nv->token, (float)nv->value);
+       xio_writeline(cs.out_buf);
+    }
+
 #endif

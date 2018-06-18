@@ -344,6 +344,20 @@
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
+		D4C9C2FD20164DE200487D7F /* G2 gQuadratic SMW3D r7 */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=r7 DEBUG=0";
+			buildConfigurationList = D4C9C2FE20164DE200487D7F /* Build configuration list for PBXLegacyTarget "G2 gQuadratic SMW3D r7" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = .;
+			dependencies = (
+			);
+			name = "G2 gQuadratic SMW3D r7";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
 		D4CBBAD01A0D51FE00150DE2 /* G2 G2V9k Ultimaker */ = {
 			isa = PBXLegacyTarget;
 			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 CONFIG=UltimakerTests BOARD=g2v9k";
@@ -441,6 +455,7 @@
 				D4782AB61D9E39EC00B32136 /* G2 EggBot */,
 				D492E5AE1E54C2B4005ED97D /* G2 gQuadratic AxiDraw v3 */,
 				D43DFE011E8C84B400A2030D /* G2 gQuadratic Ultimaker2+ */,
+				D4C9C2FD20164DE200487D7F /* G2 gQuadratic SMW3D r7 */,
 			);
 		};
 /* End PBXProject section */
@@ -791,6 +806,22 @@
 			};
 			name = Release;
 		};
+		D4C9C2FF20164DE200487D7F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		D4C9C30020164DE200487D7F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		D4CBBAD21A0D51FE00150DE2 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -946,6 +977,15 @@
 			buildConfigurations = (
 				D4B485B41AB1F3CB00C6614F /* Debug */,
 				D4B485B51AB1F3CB00C6614F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4C9C2FE20164DE200487D7F /* Build configuration list for PBXLegacyTarget "G2 gQuadratic SMW3D r7" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4C9C2FF20164DE200487D7F /* Debug */,
+				D4C9C30020164DE200487D7F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

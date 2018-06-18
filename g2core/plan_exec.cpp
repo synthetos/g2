@@ -1019,6 +1019,9 @@ static stat_t _exec_aline_segment()
     // Otherwise if not at a section waypoint compute target from segment time and velocity
     // Don't do waypoint correction if you are going into a hold.
 
+    // See https://en.wikipedia.org/wiki/Kahan_summation_algorithm
+    //   for the description of the summation compensation used.
+
     if ((--mr.segment_count == 0) && (cm.motion_state != MOTION_HOLD)) {
         copy_vector(mr.gm.target, mr.waypoint[mr.section]);
     } else {
@@ -1041,7 +1044,6 @@ static stat_t _exec_aline_segment()
     //
     // NB: The direct manipulation of steps to compute travel_steps only works for Cartesian kinematics.
     //       Other kinematics may require transforming travel distance as opposed to simply subtracting steps.
-
 
     for (uint8_t m=0; m<MOTORS; m++) {
         mr.commanded_steps[m] = mr.position_steps[m];       // previous segment's position, delayed by 1 segment

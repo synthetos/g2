@@ -143,7 +143,7 @@ endif
 
 ifeq ("$(CONFIG)","PrintrbotPlayQuintic")
     ifeq ("$(BOARD)","NONE")
-        BOARD=gquintic-c
+        BOARD=gquintic-d
     endif
     SETTINGS_FILE="settings_Printrbot_Play.h"
 endif
@@ -170,13 +170,13 @@ endif
 
 ifeq ("$(CONFIG)","EggBot")
     ifeq ("$(BOARD)","NONE")
-        BOARD=gquadratic-b
+        BOARD=gquadratic-c
     endif
     SETTINGS_FILE="settings_eggbot.h"
 endif
 ifeq ("$(CONFIG)","AxiDrawv3")
     ifeq ("$(BOARD)","NONE")
-        BOARD=gquadratic-b
+        BOARD=gquadratic-c
     endif
     SETTINGS_FILE="settings_axidraw_v3.h"
 endif
@@ -192,4 +192,24 @@ ifeq ("$(CONFIG)","Quintic-Ender")
    SETTINGS_FILE="settings_ender.h"
 endif
 
+##########
+# SMW3D r7 config:
+# https://www.smw3d.com/r7-cnc-diy-kit/
+
+ifeq ("$(CONFIG)","r7")
+    ifeq ("$(BOARD)","NONE")
+        BOARD=gquintic-d
+    endif
+    SETTINGS_FILE="settings_smw3d_r7.h"
+endif
+
+##########
+# Synthetos Pendulum v2 config:
+
+ifeq ("$(CONFIG)","pendulum")
+    ifeq ("$(BOARD)","NONE")
+        BOARD=gquintic-d
+    endif
+    SETTINGS_FILE="settings_synthetos_pendulum_v2.h"
+endif
 include $(wildcard ./board/$(STAR).mk)

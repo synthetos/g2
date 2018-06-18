@@ -88,7 +88,7 @@
 // #define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","he1t","he1st","he1at","he1op","he3t","he3st","he3at","he3op","feed","vel","unit","path","stat","1ts","1sgr","1csa","2ts","2sgr","2csa","3ts","3sgr","3csa","4ts","4sgr","4csa"
 
 // Defaults for thermistor tuning: cut out: ,"he2t","he2st","he2at","he2tr","he2tv","he2op",
-#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","he1t","he1st","he1at","he1tr","he1tv","he1op","he3t","he3st","he3at","he3tr","he3tv","he3op","feed","vel","unit","path","stat","_xs1","_xs2","_xs3","_xs4","_fe1","_fe2","_fe3","_fe4"
+#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","aso","he1t","he1st","he1at","he1tr","he1tv","he1op","he3t","he3st","he3at","he3tr","he3tv","he3op","feed","vel","unit","path","stat","_xs1","_xs2","_xs3","_xs4","_fe1","_fe2","_fe3","_fe4"
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS         MILLIMETERS             // MILLIMETERS or INCHES
 #define GCODE_DEFAULT_PLANE         CANON_PLANE_XY          // CANON_PLANE_XY, CANON_PLANE_XZ, or CANON_PLANE_YZ
@@ -126,7 +126,7 @@
 #define M1_MICROSTEPS               128                     // 1mi        1,2,4,8,16,32
 #define M1_POLARITY                 0                       // 1po        0=normal, 1=reversed
 #define M1_POWER_MODE               MOTOR_POWERED_IN_CYCLE  // 1pm        standard
-#define M1_POWER_LEVEL              0.8                     // 1pl
+#define M1_POWER_LEVEL              0.65                    // 1pl
 #define M1_TMC2130_TPWMTHRS         1200                    // 1pth
 #define M1_TMC2130_TCOOLTHRS        1000                    // 1cth
 #define M1_TMC2130_THIGH            10                      // 1hth
@@ -149,7 +149,7 @@
 #define M2_MICROSTEPS               128
 #define M2_POLARITY                 1
 #define M2_POWER_MODE               MOTOR_POWERED_IN_CYCLE
-#define M2_POWER_LEVEL              0.8
+#define M2_POWER_LEVEL              0.65
 #define M2_TMC2130_TPWMTHRS         1200
 #define M2_TMC2130_TCOOLTHRS        1000
 #define M2_TMC2130_THIGH            10
@@ -189,10 +189,10 @@
 #define M4_MOTOR_MAP                AXIS_A
 #define M4_STEP_ANGLE               1.8
 #define M4_TRAVEL_PER_REV           360            // degrees moved per motor rev
-#define M4_MICROSTEPS               128
+#define M4_MICROSTEPS               16
 #define M4_POLARITY                 0
 #define M4_POWER_MODE               MOTOR_POWER_MODE
-#define M4_POWER_LEVEL              0.8
+#define M4_POWER_LEVEL              0.7
 #define M4_TMC2130_TPWMTHRS         180000
 #define M4_TMC2130_TCOOLTHRS        100000
 #define M4_TMC2130_THIGH            10
@@ -231,7 +231,7 @@
 // *** axis settings **********************************************************************************
 
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX              8700                    // xvm  G0 max velocity in mm/min
+#define X_VELOCITY_MAX              15000                    // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX                230                     // xtm  travel between switches or crashes
@@ -247,7 +247,7 @@
 //{yjm:5000}
 
 #define Y_AXIS_MODE                 AXIS_STANDARD
-#define Y_VELOCITY_MAX              8700
+#define Y_VELOCITY_MAX              15000
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                224.5
@@ -299,18 +299,18 @@
 
 #define A_AXIS_MODE             AXIS_RADIUS
 #define A_RADIUS                1.428
-//#define A_VELOCITY_MAX          288886.4
+#define A_VELOCITY_MAX          288886.4  // {avm:288886.4}
 //#define A_VELOCITY_MAX          144443.0  // G0 rate ~60 mm/s, 3,600 mm/min
-#define A_VELOCITY_MAX          72221.5  // G0 rate ~30 mm/s, 3,600 mm/min
+//#define A_VELOCITY_MAX          72221.5  // G0 rate ~30 mm/s, 3,600 mm/min
 //NYLON
 //#define A_VELOCITY_MAX           30000.0 // G0 rate ~20 mm/s {avm:60000.0}
 
 //#define A_FEEDRATE_MAX          48147.7 // ~20 mm/s
 //#define A_FEEDRATE_MAX          36110.8 // ~15 mm/s
 //#define A_FEEDRATE_MAX          24073.9 // ~10 mm/s
-//#define A_FEEDRATE_MAX          12036.95 // ~5 mm/s
+#define A_FEEDRATE_MAX          12036.95 // ~5 mm/s
 //#define A_FEEDRATE_MAX          6018.475 // ~2.5 mm/s
-#define A_FEEDRATE_MAX          3000.0 // ~0.415 mm/s {afr:2000}
+//#define A_FEEDRATE_MAX          3000.0 // ~0.415 mm/s {afr:2000}
 // NYLON
 //#define A_FEEDRATE_MAX          800.0  // {afr:800}
 //#define A_FEEDRATE_MAX          500.0 // ~0.2075 mm/s
@@ -318,7 +318,8 @@
 #define A_TRAVEL_MAX            10
 //#define A_JERK_MAX              288886.4 // ~120 million mm/min^3
 //#define A_JERK_MAX              144443.2 // ~60 million mm/min^3
-#define A_JERK_MAX              40000.0 // ~20 million mm/min^3 {ajm:48147.7}
+//#define A_JERK_MAX              40000.0 // ~20 million mm/min^3 {ajm:48147.7}
+#define A_JERK_MAX              2000.0 // ~20 million mm/min^3 {ajm:48147.7}
 //NYLON
 //#define A_JERK_MAX              25000.0 // ~20 million mm/min^3 {ajm:15000.0}
 #define A_HOMING_INPUT          0
@@ -330,8 +331,9 @@
 //#define A_JERK_HIGH_SPEED       288886.4 // ~120 million mm/min^3
 //#define A_JERK_HIGH_SPEED       240739.0 // ~100 million mm/min^3
 //#define A_JERK_HIGH_SPEED       144443.2 // ~60 million mm/min^3
-#define A_JERK_HIGH_SPEED         120000.0 // 
+//#define A_JERK_HIGH_SPEED         120000.0 //
 //#define A_JERK_HIGH_SPEED        95000.0 // ~40 million mm/min^3
+#define A_JERK_HIGH_SPEED         2000.0
 // NYLON
 //#define A_JERK_HIGH_SPEED       35000.0 // ~30 million mm/min^3 {ajh:35000.0}
 
@@ -356,7 +358,7 @@ M100.1 ({{avm:90000.0}})
 M100.1 ({{afr:1000}})
 M100.1 ({{ajm:25000.0}})
 M100.1 ({{ajh:144000.0}})
- 
+
  {ajh:50000.0}
  {ajh:60000.0}
 
@@ -371,11 +373,7 @@ M100.1 ({{ajh:144000.0}})
 
 //** Temperature Sensors **
 
-#include "device/max31865/max31865.h"
-
-#define USING_A_MAX31865 1
-
-#define HAS_TEMPERATURE_SENSOR_1  true
+#define HAS_TEMPERATURE_SENSOR_1  false
 #if HAS_TEMPERATURE_SENSOR_1
 //    #define TEMPERATURE_SENSOR_1_CIRCUIT_TYPE ADCCircuitDifferentialPullup
 //    #define TEMPERATURE_SENSOR_1_CIRCUIT_INIT { /*pullup_resistance:*/ 200 }
@@ -406,7 +404,7 @@ M100.1 ({{ajh:144000.0}})
 
 #define EXTRUDER_2_OUTPUT_PIN kHeaterOutput2_PinNumber
 
-#define HAS_TEMPERATURE_SENSOR_3  true
+#define HAS_TEMPERATURE_SENSOR_3  false
 #if HAS_TEMPERATURE_SENSOR_3
 //    #define TEMPERATURE_SENSOR_3_CIRCUIT_TYPE ADCCircuitDifferentialPullup
 //    #define TEMPERATURE_SENSOR_3_CIRCUIT_INIT { /*pullup_resistance:*/ 200 }

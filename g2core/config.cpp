@@ -256,7 +256,7 @@ stat_t set_noop(nvObj_t *nv) {
     return (STAT_OK);                       // hack until JSON is refactored
 }
 
-stat_t set_nul(nvObj_t *nv) { 
+stat_t set_nul(nvObj_t *nv) {
 //    nv->valuetype = TYPE_NULL;
 //    return (STAT_PARAMETER_IS_READ_ONLY);   // this is what it should be
     return (STAT_OK);                       // hack until JSON is refactored
@@ -264,11 +264,11 @@ stat_t set_nul(nvObj_t *nv) {
 
 stat_t set_ro(nvObj_t *nv) {
     // hack. If setting an SR it doesn't fail
-    if (strcmp(nv_body->token, "sr") == 0) {    
-        return (STAT_OK); 
+    if (strcmp(nv_body->token, "sr") == 0) {
+        return (STAT_OK);
     }
     nv->valuetype = TYPE_NULL;
-    return (STAT_PARAMETER_IS_READ_ONLY); 
+    return (STAT_PARAMETER_IS_READ_ONLY);
 }
 
 stat_t set_ui8(nvObj_t *nv)
@@ -465,6 +465,14 @@ index_t nv_get_index(const char *group, const char *token)
         if (c != str[3]) continue;                                                  // 4th character mismatch
         if ((c = GET_TOKEN_BYTE(token[4])) == NUL) { if (str[4] == NUL) return(i);} // four character match
         if (c != str[4]) continue;                                                  // 5th character mismatch
+        if ((c = GET_TOKEN_BYTE(token[5])) == NUL) { if (str[5] == NUL) return(i);} // four character match
+        if (c != str[5]) continue;                                                  // 6th character mismatch
+        if ((c = GET_TOKEN_BYTE(token[6])) == NUL) { if (str[6] == NUL) return(i);} // four character match
+        if (c != str[6]) continue;                                                  // 7th character mismatch
+        if ((c = GET_TOKEN_BYTE(token[7])) == NUL) { if (str[7] == NUL) return(i);} // four character match
+        if (c != str[7]) continue;                                                  // 8th character mismatch
+        if ((c = GET_TOKEN_BYTE(token[8])) == NUL) { if (str[8] == NUL) return(i);} // four character match
+        if (c != str[8]) continue;                                                  // 9th character mismatch
         return (i);                                                                 // five character match
     }
     return (NO_MATCH);
@@ -617,7 +625,7 @@ nvObj_t *nv_add_object(const char *token)       // add an object to the body usi
         if (nv->valuetype != TYPE_EMPTY) {
             if ((nv = nv->nx) == NULL) {        // not supposed to find a NULL; here for safety
                 return(NULL);
-            }            
+            }
             continue;
         }
         // load the index from the token or die trying
@@ -634,7 +642,7 @@ nvObj_t *nv_add_integer(const char *token, const uint32_t value)// add an intege
     for (uint8_t i=0; i<NV_BODY_LEN; i++) {
         if (nv->valuetype != TYPE_EMPTY) {
             if ((nv = nv->nx) == NULL) {        // not supposed to find a NULL; here for safety
-                return(NULL); 
+                return(NULL);
             }
             continue;
         }
@@ -652,8 +660,8 @@ nvObj_t *nv_add_data(const char *token, const uint32_t value)// add an integer o
     for (uint8_t i=0; i<NV_BODY_LEN; i++) {
         if (nv->valuetype != TYPE_EMPTY) {
             if ((nv = nv->nx) == NULL) {        // not supposed to find a NULL; here for safety
-                 return(NULL); 
-            }            
+                 return(NULL);
+            }
             continue;
         }
         strcpy(nv->token, token);
@@ -672,7 +680,7 @@ nvObj_t *nv_add_float(const char *token, const float value)    // add a float ob
         if (nv->valuetype != TYPE_EMPTY) {
             if ((nv = nv->nx) == NULL) {        // not supposed to find a NULL; here for safety
                 return(NULL);
-            }            
+            }
             continue;
         }
         strncpy(nv->token, token, TOKEN_LEN);
@@ -689,8 +697,8 @@ nvObj_t *nv_add_string(const char *token, const char *string) // add a string ob
     for (uint8_t i=0; i<NV_BODY_LEN; i++) {
         if (nv->valuetype != TYPE_EMPTY) {
             if ((nv = nv->nx) == NULL) {        // not supposed to find a NULL; here for safety
-                return(NULL); 
-            }            
+                return(NULL);
+            }
             continue;
         }
         strncpy(nv->token, token, TOKEN_LEN);

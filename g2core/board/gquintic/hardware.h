@@ -59,7 +59,7 @@ enum hwPlatform {
 
 #define AXES        6           // number of axes supported in this version
 #define HOMING_AXES 4           // number of axes that can be homed (assumes Zxyabc sequence)
-#if defined(USING_A_MAX31865) && USING_A_MAX31865 == 1
+#if QUINTIC_REVISION == 'C'
 #define MOTORS      5           // number of motors on the board - 4 Trinamics + 1 servo
 #else
 #define MOTORS      6           // number of motors on the board - 5 Trinamics + 1 servo
@@ -72,8 +72,7 @@ enum hwPlatform {
 #define MOTOR_2_IS_TRINAMIC
 #define MOTOR_3_IS_TRINAMIC
 #define MOTOR_4_IS_TRINAMIC
-#if defined(USING_A_MAX31865) && USING_A_MAX31865 == 1
-#else
+#if QUINTIC_REVISION == 'D'
 #define MOTOR_5_IS_TRINAMIC
 #endif
 ////////////////////////////
@@ -147,14 +146,13 @@ typedef TimerChannel<9, 0> dda_timer_type;    // stepper pulse generation in ste
 typedef TimerChannel<10, 0> exec_timer_type;       // request exec timer in stepper.cpp
 typedef TimerChannel<11, 0> fwd_plan_timer_type;   // request exec timer in stepper.cpp
 
-Motate::service_call_number kSPI_ServiceCallNumber = 3;
-
 /**** SPI Setup ****/
+Motate::service_call_number kSPI_ServiceCallNumber = 3;
 
 typedef Motate::SPIBus<Motate::kSPI_MISOPinNumber, Motate::kSPI_MOSIPinNumber, Motate::kSPI_SCKPinNumber, kSPI_ServiceCallNumber> SPIBus_used_t;
 extern SPIBus_used_t spiBus;
 
-typedef Motate::SPIChipSelectPinMux<Motate::kSocket1_SPISlaveSelectPinNumber, Motate::kSocket2_SPISlaveSelectPinNumber, Motate::kSocket3_SPISlaveSelectPinNumber, -1> SPI_CS_PinMux_used_t;
+typedef Motate::SPIChipSelectPinMux<Motate::kSocket1_SPISlaveSelectPinNumber, Motate::kSocket2_SPISlaveSelectPinNumber, Motate::kSocket3_SPISlaveSelectPinNumber, Motate::kSocket4_SPISlaveSelectPinNumber> SPI_CS_PinMux_used_t;
 extern SPI_CS_PinMux_used_t spiCSPinMux;
 
 /**** Motate Global Pin Allocations ****/
@@ -169,13 +167,13 @@ static OutputPin<Motate::kGRBL_FeedHoldPinNumber> grbl_feedhold_pin;
 static OutputPin<Motate::kGRBL_CycleStartPinNumber> grbl_cycle_start_pin;
 
 static OutputPin<Motate::kGRBL_CommonEnablePinNumber> motor_common_enable_pin;
-static OutputPin<Motate::kSpindle_EnablePinNumber> spindle_enable_pin;
-static OutputPin<Motate::kSpindle_DirPinNumber> spindle_dir_pin;
+//static OutputPin<Motate::kSpindle_EnablePinNumber> spindle_enable_pin;
+//static OutputPin<Motate::kSpindle_DirPinNumber> spindle_dir_pin;
 
 // NOTE: In the v9 and the Due the flood and mist coolants are mapped to a the same pin
 //static OutputPin<kCoolant_EnablePinNumber> coolant_enable_pin;
-static OutputPin<Motate::kCoolant_EnablePinNumber> flood_enable_pin;
-static OutputPin<Motate::kCoolant_EnablePinNumber> mist_enable_pin;
+//static OutputPin<Motate::kCoolant_EnablePinNumber> flood_enable_pin;
+//static OutputPin<Motate::kCoolant_EnablePinNumber> mist_enable_pin;
 
 // Input pins are defined in gpio.cpp
 

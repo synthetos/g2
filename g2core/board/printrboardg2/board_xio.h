@@ -38,10 +38,10 @@
 #include "MotateUSBCDC.h"
 
 #if USB_SERIAL_PORTS_EXPOSED == 1
-typedef Motate::USBDevice< Motate::USBCDC > XIOUSBDevice_t;
+typedef Motate::USBDevice< USBDeviceHardware, Motate::USBCDC > XIOUSBDevice_t;
 #endif
 #if USB_SERIAL_PORTS_EXPOSED == 2
-typedef Motate::USBDevice<Motate::USBCDC, Motate::USBCDC> XIOUSBDevice_t;
+typedef Motate::USBDevice< USBDeviceHardware, Motate::USBCDC, Motate::USBCDC > XIOUSBDevice_t;
 #endif
 
 extern XIOUSBDevice_t usb;

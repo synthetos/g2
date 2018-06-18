@@ -434,6 +434,7 @@ typedef struct cmSingleton {                // struct to manage cm globals and c
 
     bool probe_report_enable;                 // 0=disabled, 1=enabled
     cmProbeState probe_state[PROBES_STORED];  // probing state machine (simple)
+    uint8_t probe_input;                      // probing digital input
     float probe_results[PROBES_STORED][AXES]; // probing results
 
     float rotation_matrix[3][3];            // three-by-three rotation matrix. We ignore rotary axes.

@@ -81,6 +81,44 @@ static stat_t _controller_state(void);          // manage controller state trans
 
 static Motate::OutputPin<Motate::kOutputSAFE_PinNumber> safe_pin;
 
+gpioDigitalInputHandler _shutdown_input_handler {
+    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+        if (edge != INPUT_EDGE_LEADING) { return false; }
+
+        cm.shutdown_requested = triggering_pin_number;
+
+        return false; // allow others to see this notice
+    },
+    5,    // priority
+    nullptr // next - nullptr to start with
+};
+
+gpioDigitalInputHandler _limit_input_handler {
+    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+        if (edge != INPUT_EDGE_LEADING) { return false; }
+
+        cm.limit_requested = triggering_pin_number;
+
+        return false; // allow others to see this notice
+    },
+    5,    // priority
+    nullptr // next - nullptr to start with
+};
+
+gpioDigitalInputHandler _interlock_input_handler {
+    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+        if (edge == INPUT_EDGE_LEADING) {
+            cm.safety_interlock_disengaged = triggering_pin_number;
+        } else { // edge == INPUT_EDGE_TRAILING
+            cm.safety_interlock_reengaged = triggering_pin_number;
+        }
+
+        return false; // allow others to see this notice
+    },
+    5,    // priority
+    nullptr // next - nullptr to start with
+};
+
 /***********************************************************************************
  **** CODE *************************************************************************
  ***********************************************************************************/
@@ -105,6 +143,10 @@ void controller_init()
         cs.controller_state = CONTROLLER_CONNECTED;
     }
 //  IndicatorLed.setFrequency(100000);
+
+    din_handlers[INPUT_ACTION_SHUTDOWN].registerHandler(&_shutdown_input_handler);
+    din_handlers[INPUT_ACTION_LIMIT].registerHandler(&_limit_input_handler);
+    din_handlers[INPUT_ACTION_INTERLOCK].registerHandler(&_interlock_input_handler);
 }
 
 void controller_request_enquiry()
@@ -297,7 +339,7 @@ static void _dispatch_kernel(const devflags_t flags)
         nv_copy_string(nv, cs.bufp);                        // copy the Gcode line
         nv->valuetype = TYPE_STRING;
         status = gcode_parser(cs.bufp);
-        
+
 #if MARLIN_COMPAT_ENABLED == true
         if (js.json_mode == MARLIN_COMM_MODE) {             // in case a marlin-specific M-code was found
             cs.comm_request_mode = MARLIN_COMM_MODE;        // mode of this command
@@ -340,7 +382,7 @@ static stat_t _controller_state()
 {
     if (cs.controller_state == CONTROLLER_CONNECTED) {        // first time through after reset
         cs.controller_state = CONTROLLER_STARTUP;
-        
+
         // This is here just to put a small delay in before the startup message.
 #if MARLIN_COMPAT_ENABLED == true
         // For Marlin compatibility, we need this to be long enough for the UI to say something and reveal
@@ -349,7 +391,7 @@ static stat_t _controller_state()
             // xio_connected will only return true for USB and other non-permanent connections
             _connection_timeout.set(2000);
         } else {
-            _connection_timeout.set(1);
+            _connection_timeout.set(10);
         }
 #else
         _connection_timeout.set(10);
@@ -462,8 +504,11 @@ static stat_t _sync_to_planner()
 /* ALARM STATE HANDLERS
  *
  * _shutdown_handler() - put system into shutdown state
+ * _shutdown_input_handler - a gpioDigitalInputHandler to capture pin change events
  * _limit_switch_handler() - shut down system if limit switch fired
- * _interlock_handler() - feedhold and resume depending on edge
+ * _limit_input_handler - a gpioDigitalInputHandler to capture pin change events
+ * _interlock_input_handler() - feedhold and resume depending on edge
+ * _interlock_handler - a gpioDigitalInputHandler to capture pin change events
  *
  *    Some handlers return EAGAIN causing the control loop to never advance beyond that point.
  *
@@ -472,6 +517,7 @@ static stat_t _sync_to_planner()
  *   - safety_interlock_requested == INPUT_EDGE_LEADING is interlock onset
  *   - safety_interlock_requested == INPUT_EDGE_TRAILING is interlock offset
  */
+
 static stat_t _shutdown_handler(void)
 {
     if (cm.shutdown_requested != 0) {  // request may contain the (non-zero) input number
@@ -558,5 +604,3 @@ stat_t _test_system_assertions()
     xio_test_assertions();
     return (STAT_OK);
 }
-
-    

@@ -162,8 +162,9 @@ pin_number kDebug4_PinNumber = -1;  // 114;
 
 pin_number kLED_USBRXPinNumber     = 117;
 pin_number kLED_USBTXPinNumber     = 118;
-pin_number kSD_CardDetectPinNumber = 119;
-pin_number kSD_ChipSelectPinNumber = 120;
+pin_number kSD_CardDetectPinNumber = -1;
+pin_number kSD_ChipSelectPinNumber = -1;
+pin_number kUSBVBUS_PinNumber      = 119;
 pin_number kInterlock_InPinNumber  = 121;
 pin_number kOutputSAFE_PinNumber   = 122;  // SAFE signal
 pin_number kLEDPWM_PinNumber       = 123;
