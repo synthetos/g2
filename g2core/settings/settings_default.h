@@ -228,7 +228,7 @@
 #define M1_STEP_ANGLE               1.8                     // {1sa: degrees per step
 #endif
 #ifndef M1_TRAVEL_PER_REV
-#define M1_TRAVEL_PER_REV           1.25                    // {1tr:  1.25 is a typical value for a screw axis
+#define M1_TRAVEL_PER_REV           12.7                   // {1tr:  1.25 is a typical value for a screw axis
 #endif
 #ifndef M1_MICROSTEPS
 #define M1_MICROSTEPS               8                       // {1mi:  1,2,4,8,    16,32 (G2 ONLY)
@@ -246,7 +246,7 @@
 #define M1_STEP_POLARITY            IO_ACTIVE_HIGH          // {1ps:  IO_ACTIVE_LOW or IO_ACTIVE_HIGH
 #endif
 #ifndef M1_POWER_MODE
-#define M1_POWER_MODE               MOTOR_DISABLED          // {1pm:  MOTOR_DISABLED, MOTOR_ALWAYS_POWERED, MOTOR_POWERED_IN_CYCLE, MOTOR_POWERED_ONLY_WHEN_MOVING
+#define M1_POWER_MODE               MOTOR_POWERED_IN_CYCLE          // {1pm:  MOTOR_DISABLED, MOTOR_ALWAYS_POWERED, MOTOR_POWERED_IN_CYCLE, MOTOR_POWERED_ONLY_WHEN_MOVING
 #endif
 #ifndef M1_POWER_LEVEL
 #define M1_POWER_LEVEL              0.0                     // {1pl:   0.0=no power, 1.0=max power
@@ -260,7 +260,7 @@
 #define M2_STEP_ANGLE               1.8
 #endif
 #ifndef M2_TRAVEL_PER_REV
-#define M2_TRAVEL_PER_REV           40.00
+#define M2_TRAVEL_PER_REV           12.7
 #endif
 #ifndef M2_MICROSTEPS
 #define M2_MICROSTEPS               8
@@ -278,7 +278,7 @@
 #define M2_STEP_POLARITY            IO_ACTIVE_HIGH
 #endif
 #ifndef M2_POWER_MODE
-#define M2_POWER_MODE               MOTOR_DISABLED
+#define M2_POWER_MODE               MOTOR_POWERED_IN_CYCLE
 #endif
 #ifndef M2_POWER_LEVEL
 #define M2_POWER_LEVEL              0.0
@@ -292,7 +292,7 @@
 #define M3_STEP_ANGLE               1.8
 #endif
 #ifndef M3_TRAVEL_PER_REV
-#define M3_TRAVEL_PER_REV           1.25                    // 1.25 is a typical value for a screw axis
+#define M3_TRAVEL_PER_REV           12.7                    // 1.25 is a typical value for a screw axis
 #endif
 #ifndef M3_MICROSTEPS
 #define M3_MICROSTEPS               8
@@ -310,7 +310,7 @@
 #define M3_STEP_POLARITY            IO_ACTIVE_HIGH
 #endif
 #ifndef M3_POWER_MODE
-#define M3_POWER_MODE               MOTOR_DISABLED
+#define M3_POWER_MODE               MOTOR_POWERED_IN_CYCLE
 #endif
 #ifndef M3_POWER_LEVEL
 #define M3_POWER_LEVEL              0.0
@@ -330,7 +330,7 @@
 #define M4_MICROSTEPS               8
 #endif
 #ifndef M4_STEPS_PER_UNIT
-#define M4_STEPS_PER_UNIT           0
+#define M4_STEPS_PER_UNIT           1.8
 #endif
 #ifndef M4_POLARITY
 #define M4_POLARITY                 0
@@ -342,7 +342,7 @@
 #define M4_STEP_POLARITY            IO_ACTIVE_HIGH
 #endif
 #ifndef M4_POWER_MODE
-#define M4_POWER_MODE               MOTOR_DISABLED
+#define M4_POWER_MODE               MOTOR_POWERED_IN_CYCLE
 #endif
 #ifndef M4_POWER_LEVEL
 #define M4_POWER_LEVEL              0.0
@@ -418,7 +418,7 @@
 
 // X AXIS
 #ifndef X_AXIS_MODE
-#define X_AXIS_MODE                 AXIS_DISABLED           // {xam:  see canonical_machine.h cmAxisMode for valid values
+#define X_AXIS_MODE                 AXIS_STANDARD           // {xam:  see canonical_machine.h cmAxisMode for valid values
 #endif
 #ifndef X_VELOCITY_MAX
 #define X_VELOCITY_MAX              1000.0                  // {xvm:  G0 max velocity in mm/min
@@ -459,7 +459,7 @@
 
 // Y AXIS
 #ifndef Y_AXIS_MODE
-#define Y_AXIS_MODE                 AXIS_DISABLED
+#define Y_AXIS_MODE                 AXIS_STANDARD
 #endif
 #ifndef Y_VELOCITY_MAX
 #define Y_VELOCITY_MAX              1000.0
@@ -500,7 +500,7 @@
 
 // Z AXIS
 #ifndef Z_AXIS_MODE
-#define Z_AXIS_MODE                 AXIS_DISABLED
+#define Z_AXIS_MODE                 AXIS_STANDARD
 #endif
 #ifndef Z_VELOCITY_MAX
 #define Z_VELOCITY_MAX              1000.0
@@ -696,7 +696,7 @@
 
 // A AXIS
 #ifndef A_AXIS_MODE
-#define A_AXIS_MODE                 AXIS_DISABLED
+#define A_AXIS_MODE                 AXIS_RADIUS
 #endif
 #ifndef A_RADIUS
 #define A_RADIUS                    (M4_TRAVEL_PER_REV/(2*3.14159628))
@@ -855,79 +855,79 @@
 
 // Xmin on v9 board
 #ifndef DI1_MODE
-#define DI1_MODE                    IO_ACTIVE_LOW     // Normally open
+#define DI1_MODE                    IO_ACTIVE_HIGH      // Normally closed
 #endif
 #ifndef DI1_ACTION
-#define DI1_ACTION                  INPUT_ACTION_NONE
+#define DI1_ACTION                  INPUT_ACTION_STOP
 #endif
 #ifndef DI1_FUNCTION
-#define DI1_FUNCTION                INPUT_FUNCTION_NONE
+#define DI1_FUNCTION                INPUT_FUNCTION_LIMIT
 #endif
 
 // Xmax
 #ifndef DI2_MODE
-#define DI2_MODE                    IO_ACTIVE_LOW     // Normally open
+#define DI2_MODE                     IO_ACTIVE_HIGH      // Normally closed
 #endif
 #ifndef DI2_ACTION
-#define DI2_ACTION                  INPUT_ACTION_NONE
+#define DI2_ACTION                  INPUT_ACTION_STOP
 #endif
 #ifndef DI2_FUNCTION
-#define DI2_FUNCTION                INPUT_FUNCTION_NONE
+#define DI2_FUNCTION                INPUT_FUNCTION_LIMIT
 #endif
 
 // Ymin
 #ifndef DI3_MODE
-#define DI3_MODE                    IO_ACTIVE_LOW     // Normally open
+#define DI3_MODE                     IO_ACTIVE_HIGH      // Normally closed
 #endif
 #ifndef DI3_ACTION
-#define DI3_ACTION                  INPUT_ACTION_NONE
+#define DI3_ACTION                  INPUT_ACTION_STOP
 #endif
 #ifndef DI3_FUNCTION
-#define DI3_FUNCTION                INPUT_FUNCTION_NONE
+#define DI3_FUNCTION                INPUT_FUNCTION_LIMIT
 #endif
 
 // Ymax
 #ifndef DI4_MODE
-#define DI4_MODE                    IO_ACTIVE_LOW     // Normally open
+#define DI4_MODE                     IO_ACTIVE_HIGH      // Normally closed
 #endif
 #ifndef DI4_ACTION
-#define DI4_ACTION                  INPUT_ACTION_NONE
+#define DI4_ACTION                  INPUT_ACTION_STOP
 #endif
 #ifndef DI4_FUNCTION
-#define DI4_FUNCTION                INPUT_FUNCTION_NONE
+#define DI4_FUNCTION                INPUT_FUNCTION_LIMIT
 #endif
 
 // Zmin
 #ifndef DI5_MODE
-#define DI5_MODE                    IO_ACTIVE_LOW     // Normally open
+#define DI5_MODE                     IO_ACTIVE_HIGH      // Normally closed
 #endif
 #ifndef DI5_ACTION
-#define DI5_ACTION                  INPUT_ACTION_NONE
+#define DI5_ACTION                  INPUT_ACTION_STOP
 #endif
 #ifndef DI5_FUNCTION
-#define DI5_FUNCTION                INPUT_FUNCTION_PROBE
+#define DI5_FUNCTION                INPUT_FUNCTION_LIMIT
 #endif
 
 // Zmax
 #ifndef DI6_MODE
-#define DI6_MODE                    IO_ACTIVE_LOW     // Normally open
+#define DI6_MODE                     IO_ACTIVE_HIGH      // Normally closed
 #endif
 #ifndef DI6_ACTION
-#define DI6_ACTION                  INPUT_ACTION_NONE
+#define DI6_ACTION                  INPUT_ACTION_STOP
 #endif
 #ifndef DI6_FUNCTION
-#define DI6_FUNCTION                INPUT_FUNCTION_NONE
+#define DI6_FUNCTION                INPUT_FUNCTION_LIMIT
 #endif
 
 // Amin
 #ifndef DI7_MODE
-#define DI7_MODE                    IO_ACTIVE_LOW     // Normally open
+#define DI7_MODE                     IO_ACTIVE_HIGH      // Normally closed
 #endif
 #ifndef DI7_ACTION
-#define DI7_ACTION                  INPUT_ACTION_NONE
+#define DI7_ACTION                  INPUT_ACTION_STOP
 #endif
 #ifndef DI7_FUNCTION
-#define DI7_FUNCTION                INPUT_FUNCTION_NONE
+#define DI7_FUNCTION                INPUT_FUNCTION_PROBE
 #endif
 
 // Amax
