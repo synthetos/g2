@@ -819,326 +819,50 @@ const cfgItem_t cfgArray[] = {
     { "tof","tofb",_fipc, 5, cm_print_cofs, cm_get_tof, cm_set_tof, nullptr, 0 },
     { "tof","tofc",_fipc, 5, cm_print_cofs, cm_get_tof, cm_set_tof, nullptr, 0 },
 
-    // Tool table
-    { "tt1","tt1x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT1_X_OFFSET },
-    { "tt1","tt1y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT1_Y_OFFSET },
-    { "tt1","tt1z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT1_Z_OFFSET },
-    { "tt1","tt1u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT1_U_OFFSET },
-    { "tt1","tt1v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT1_V_OFFSET },
-    { "tt1","tt1w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT1_W_OFFSET },
-    { "tt1","tt1a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT1_A_OFFSET },
-    { "tt1","tt1b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT1_B_OFFSET },
-    { "tt1","tt1c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT1_C_OFFSET },
+    // Tool table offsets
+#define TTOFFSETENTRY(toolnum)                                          \
+    { "tt" #toolnum, "tt" #toolnum "x", _fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT ## toolnum ##_X_OFFSET }, \
+    { "tt" #toolnum, "tt" #toolnum "y", _fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT ## toolnum ##_Y_OFFSET }, \
+    { "tt" #toolnum, "tt" #toolnum "z", _fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT ## toolnum ##_Z_OFFSET }, \
+    { "tt" #toolnum, "tt" #toolnum "u", _fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT ## toolnum ##_U_OFFSET }, \
+    { "tt" #toolnum, "tt" #toolnum "v", _fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT ## toolnum ##_V_OFFSET }, \
+    { "tt" #toolnum, "tt" #toolnum "w", _fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT ## toolnum ##_W_OFFSET }, \
+    { "tt" #toolnum, "tt" #toolnum "a", _fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT ## toolnum ##_A_OFFSET }, \
+    { "tt" #toolnum, "tt" #toolnum "b", _fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT ## toolnum ##_B_OFFSET }, \
+    { "tt" #toolnum, "tt" #toolnum "c", _fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT ## toolnum ##_C_OFFSET },
 
-    { "tt2","tt2x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT2_X_OFFSET },
-    { "tt2","tt2y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT2_Y_OFFSET },
-    { "tt2","tt2z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT2_Z_OFFSET },
-    { "tt2","tt2u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT2_U_OFFSET },
-    { "tt2","tt2v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT2_V_OFFSET },
-    { "tt2","tt2w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT2_W_OFFSET },
-    { "tt2","tt2a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT2_A_OFFSET },
-    { "tt2","tt2b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT2_B_OFFSET },
-    { "tt2","tt2c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT2_C_OFFSET },
-
-    { "tt3","tt3x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT3_X_OFFSET },
-    { "tt3","tt3y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT3_Y_OFFSET },
-    { "tt3","tt3z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT3_Z_OFFSET },
-    { "tt3","tt3u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT3_U_OFFSET },
-    { "tt3","tt3v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT3_V_OFFSET },
-    { "tt3","tt3w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT3_W_OFFSET },
-    { "tt3","tt3a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT3_A_OFFSET },
-    { "tt3","tt3b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT3_B_OFFSET },
-    { "tt3","tt3c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT1_C_OFFSET },
-
-    { "tt4","tt4x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT4_X_OFFSET },
-    { "tt4","tt4y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT4_Y_OFFSET },
-    { "tt4","tt4z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT4_Z_OFFSET },
-    { "tt4","tt4u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT4_U_OFFSET },
-    { "tt4","tt4v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT4_V_OFFSET },
-    { "tt4","tt4w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT4_W_OFFSET },
-    { "tt4","tt4a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT4_A_OFFSET },
-    { "tt4","tt4b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT4_B_OFFSET },
-    { "tt4","tt4c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT4_C_OFFSET },
-
-    { "tt5","tt5x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT5_X_OFFSET },
-    { "tt5","tt5y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT5_Y_OFFSET },
-    { "tt5","tt5z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT5_Z_OFFSET },
-    { "tt5","tt5u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT5_U_OFFSET },
-    { "tt5","tt5v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT5_V_OFFSET },
-    { "tt5","tt5w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT5_W_OFFSET },
-    { "tt5","tt5a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT5_A_OFFSET },
-    { "tt5","tt5b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT5_B_OFFSET },
-    { "tt5","tt5c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT5_C_OFFSET },
-
-    { "tt6","tt6x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT6_X_OFFSET },
-    { "tt6","tt6y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT6_Y_OFFSET },
-    { "tt6","tt6z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT6_Z_OFFSET },
-    { "tt6","tt6u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT6_U_OFFSET },
-    { "tt6","tt6v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT6_V_OFFSET },
-    { "tt6","tt6w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT6_W_OFFSET },
-    { "tt6","tt6a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT6_A_OFFSET },
-    { "tt6","tt6b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT6_B_OFFSET },
-    { "tt6","tt6c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT6_C_OFFSET },
-
-    { "tt7","tt7x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT7_X_OFFSET },
-    { "tt7","tt7y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT7_Y_OFFSET },
-    { "tt7","tt7z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT7_Z_OFFSET },
-    { "tt7","tt7u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT7_U_OFFSET },
-    { "tt7","tt7v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT7_V_OFFSET },
-    { "tt7","tt7w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT7_W_OFFSET },
-    { "tt7","tt7a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT7_A_OFFSET },
-    { "tt7","tt7b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT7_B_OFFSET },
-    { "tt7","tt7c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT7_C_OFFSET },
-
-    { "tt8","tt8x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT8_X_OFFSET },
-    { "tt8","tt8y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT8_Y_OFFSET },
-    { "tt8","tt8z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT8_Z_OFFSET },
-    { "tt8","tt8u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT8_U_OFFSET },
-    { "tt8","tt8v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT8_V_OFFSET },
-    { "tt8","tt8w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT8_W_OFFSET },
-    { "tt8","tt8a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT8_A_OFFSET },
-    { "tt8","tt8b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT8_B_OFFSET },
-    { "tt8","tt8c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT8_C_OFFSET },
-
-    { "tt9","tt9x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT9_X_OFFSET },
-    { "tt9","tt9y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT9_Y_OFFSET },
-    { "tt9","tt9z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT9_Z_OFFSET },
-    { "tt9","tt9u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT9_U_OFFSET },
-    { "tt9","tt9v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT9_V_OFFSET },
-    { "tt9","tt9w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT9_W_OFFSET },
-    { "tt9","tt9a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT9_A_OFFSET },
-    { "tt9","tt9b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT9_B_OFFSET },
-    { "tt9","tt9c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT9_C_OFFSET },
-
-    { "tt10","tt10x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT10_X_OFFSET },
-    { "tt10","tt10y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT10_Y_OFFSET },
-    { "tt10","tt10z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT10_Z_OFFSET },
-    { "tt10","tt10u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT10_U_OFFSET },
-    { "tt10","tt10v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT10_V_OFFSET },
-    { "tt10","tt10w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT10_W_OFFSET },
-    { "tt10","tt10a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT10_A_OFFSET },
-    { "tt10","tt10b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT10_B_OFFSET },
-    { "tt10","tt10c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT10_C_OFFSET },
-
-    { "tt11","tt11x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT11_X_OFFSET },
-    { "tt11","tt11y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT11_Y_OFFSET },
-    { "tt11","tt11z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT11_Z_OFFSET },
-    { "tt11","tt11u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT11_U_OFFSET },
-    { "tt11","tt11v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT11_V_OFFSET },
-    { "tt11","tt11w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT11_W_OFFSET },
-    { "tt11","tt11a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT11_A_OFFSET },
-    { "tt11","tt11b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT11_B_OFFSET },
-    { "tt11","tt11c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT11_C_OFFSET },
-
-    { "tt12","tt12x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT12_X_OFFSET },
-    { "tt12","tt12y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT12_Y_OFFSET },
-    { "tt12","tt12z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT12_Z_OFFSET },
-    { "tt12","tt12u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT12_U_OFFSET },
-    { "tt12","tt12v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT12_V_OFFSET },
-    { "tt12","tt12w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT12_W_OFFSET },
-    { "tt12","tt12a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT12_A_OFFSET },
-    { "tt12","tt12b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT12_B_OFFSET },
-    { "tt12","tt12c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT12_C_OFFSET },
-
-    { "tt13","tt13x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT13_X_OFFSET },
-    { "tt13","tt13y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT13_Y_OFFSET },
-    { "tt13","tt13z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT13_Z_OFFSET },
-    { "tt13","tt13u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT13_U_OFFSET },
-    { "tt13","tt13v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT13_V_OFFSET },
-    { "tt13","tt13w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT13_W_OFFSET },
-    { "tt13","tt13a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT13_A_OFFSET },
-    { "tt13","tt13b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT13_B_OFFSET },
-    { "tt13","tt13c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT13_C_OFFSET },
-
-    { "tt14","tt14x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT14_X_OFFSET },
-    { "tt14","tt14y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT14_Y_OFFSET },
-    { "tt14","tt14z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT14_Z_OFFSET },
-    { "tt14","tt14u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT14_U_OFFSET },
-    { "tt14","tt14v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT14_V_OFFSET },
-    { "tt14","tt14w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT14_W_OFFSET },
-    { "tt14","tt14a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT14_A_OFFSET },
-    { "tt14","tt14b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT14_B_OFFSET },
-    { "tt14","tt14c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT14_C_OFFSET },
-
-    { "tt15","tt15x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT15_X_OFFSET },
-    { "tt15","tt15y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT15_Y_OFFSET },
-    { "tt15","tt15z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT15_Z_OFFSET },
-    { "tt15","tt15u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT15_U_OFFSET },
-    { "tt15","tt15v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT15_V_OFFSET },
-    { "tt15","tt15w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT15_W_OFFSET },
-    { "tt15","tt15a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT15_A_OFFSET },
-    { "tt15","tt15b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT15_B_OFFSET },
-    { "tt15","tt15c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT15_C_OFFSET },
-
-    { "tt16","tt16x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT16_X_OFFSET },
-    { "tt16","tt16y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT16_Y_OFFSET },
-    { "tt16","tt16z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT16_Z_OFFSET },
-    { "tt16","tt16u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT16_U_OFFSET },
-    { "tt16","tt16v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT16_V_OFFSET },
-    { "tt16","tt16w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT16_W_OFFSET },
-    { "tt16","tt16a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT16_A_OFFSET },
-    { "tt16","tt16b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT16_B_OFFSET },
-    { "tt16","tt16c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT16_C_OFFSET },
-
-    { "tt17","tt17x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT17_X_OFFSET },
-    { "tt17","tt17y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT17_Y_OFFSET },
-    { "tt17","tt17z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT17_Z_OFFSET },
-    { "tt17","tt17u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT17_U_OFFSET },
-    { "tt17","tt17v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT17_V_OFFSET },
-    { "tt17","tt17w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT17_W_OFFSET },
-    { "tt17","tt17a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT17_A_OFFSET },
-    { "tt17","tt17b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT17_B_OFFSET },
-    { "tt17","tt17c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT17_C_OFFSET },
-
-    { "tt18","tt18x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT18_X_OFFSET },
-    { "tt18","tt18y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT18_Y_OFFSET },
-    { "tt18","tt18z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT18_Z_OFFSET },
-    { "tt18","tt18u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT18_U_OFFSET },
-    { "tt18","tt18v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT18_V_OFFSET },
-    { "tt18","tt18w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT18_W_OFFSET },
-    { "tt18","tt18a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT18_A_OFFSET },
-    { "tt18","tt18b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT18_B_OFFSET },
-    { "tt18","tt18c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT18_C_OFFSET },
-
-    { "tt19","tt19x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT19_X_OFFSET },
-    { "tt19","tt19y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT19_Y_OFFSET },
-    { "tt19","tt19z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT19_Z_OFFSET },
-    { "tt19","tt19u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT19_U_OFFSET },
-    { "tt19","tt19v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT19_V_OFFSET },
-    { "tt19","tt19w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT19_W_OFFSET },
-    { "tt19","tt19a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT19_A_OFFSET },
-    { "tt19","tt19b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT19_B_OFFSET },
-    { "tt19","tt19c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT19_C_OFFSET },
-
-    { "tt20","tt20x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT20_X_OFFSET },
-    { "tt20","tt20y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT20_Y_OFFSET },
-    { "tt20","tt20z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT20_Z_OFFSET },
-    { "tt20","tt20u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT20_U_OFFSET },
-    { "tt20","tt20v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT20_V_OFFSET },
-    { "tt20","tt20w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT20_W_OFFSET },
-    { "tt20","tt20a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT20_A_OFFSET },
-    { "tt20","tt20b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT20_B_OFFSET },
-    { "tt20","tt20c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT20_C_OFFSET },
-
-    { "tt21","tt21x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT21_X_OFFSET },
-    { "tt21","tt21y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT21_Y_OFFSET },
-    { "tt21","tt21z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT21_Z_OFFSET },
-    { "tt21","tt21u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT21_U_OFFSET },
-    { "tt21","tt21v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT21_V_OFFSET },
-    { "tt21","tt21w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT21_W_OFFSET },
-    { "tt21","tt21a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT21_A_OFFSET },
-    { "tt21","tt21b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT21_B_OFFSET },
-    { "tt21","tt21c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT21_C_OFFSET },
-
-    { "tt22","tt22x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT22_X_OFFSET },
-    { "tt22","tt22y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT22_Y_OFFSET },
-    { "tt22","tt22z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT22_Z_OFFSET },
-    { "tt22","tt22u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT22_U_OFFSET },
-    { "tt22","tt22v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT22_V_OFFSET },
-    { "tt22","tt22w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT22_W_OFFSET },
-    { "tt22","tt22a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT22_A_OFFSET },
-    { "tt22","tt22b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT22_B_OFFSET },
-    { "tt22","tt22c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT22_C_OFFSET },
-
-    { "tt23","tt23x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT23_X_OFFSET },
-    { "tt23","tt23y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT23_Y_OFFSET },
-    { "tt23","tt23z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT23_Z_OFFSET },
-    { "tt23","tt23u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT23_U_OFFSET },
-    { "tt23","tt23v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT23_V_OFFSET },
-    { "tt23","tt23w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT23_W_OFFSET },
-    { "tt23","tt23a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT23_A_OFFSET },
-    { "tt23","tt23b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT23_B_OFFSET },
-    { "tt23","tt23c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT23_C_OFFSET },
-
-    { "tt24","tt24x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT24_X_OFFSET },
-    { "tt24","tt24y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT24_Y_OFFSET },
-    { "tt24","tt24z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT24_Z_OFFSET },
-    { "tt24","tt24u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT24_U_OFFSET },
-    { "tt24","tt24v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT24_V_OFFSET },
-    { "tt24","tt24w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT24_W_OFFSET },
-    { "tt24","tt24a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT24_A_OFFSET },
-    { "tt24","tt24b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT24_B_OFFSET },
-    { "tt24","tt24c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT24_C_OFFSET },
-
-    { "tt25","tt25x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT25_X_OFFSET },
-    { "tt25","tt25y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT25_Y_OFFSET },
-    { "tt25","tt25z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT25_Z_OFFSET },
-    { "tt25","tt25u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT25_U_OFFSET },
-    { "tt25","tt25v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT25_V_OFFSET },
-    { "tt25","tt25w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT25_W_OFFSET },
-    { "tt25","tt25a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT25_A_OFFSET },
-    { "tt25","tt25b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT25_B_OFFSET },
-    { "tt25","tt25c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT25_C_OFFSET },
-
-    { "tt26","tt26x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT26_X_OFFSET },
-    { "tt26","tt26y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT26_Y_OFFSET },
-    { "tt26","tt26z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT26_Z_OFFSET },
-    { "tt26","tt26u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT26_U_OFFSET },
-    { "tt26","tt26v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT26_V_OFFSET },
-    { "tt26","tt26w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT26_W_OFFSET },
-    { "tt26","tt26a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT26_A_OFFSET },
-    { "tt26","tt26b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT26_B_OFFSET },
-    { "tt26","tt26c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT26_C_OFFSET },
-
-    { "tt27","tt27x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT27_X_OFFSET },
-    { "tt27","tt27y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT27_Y_OFFSET },
-    { "tt27","tt27z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT27_Z_OFFSET },
-    { "tt27","tt27u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT27_U_OFFSET },
-    { "tt27","tt27v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT27_V_OFFSET },
-    { "tt27","tt27w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT27_W_OFFSET },
-    { "tt27","tt27a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT27_A_OFFSET },
-    { "tt27","tt27b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT27_B_OFFSET },
-    { "tt27","tt27c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT27_C_OFFSET },
-
-    { "tt28","tt28x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT28_X_OFFSET },
-    { "tt28","tt28y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT28_Y_OFFSET },
-    { "tt28","tt28z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT28_Z_OFFSET },
-    { "tt28","tt28u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT28_U_OFFSET },
-    { "tt28","tt28v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT28_V_OFFSET },
-    { "tt28","tt28w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT28_W_OFFSET },
-    { "tt28","tt28a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT28_A_OFFSET },
-    { "tt28","tt28b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT28_B_OFFSET },
-    { "tt28","tt28c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT28_C_OFFSET },
-
-    { "tt29","tt29x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT29_X_OFFSET },
-    { "tt29","tt29y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT29_Y_OFFSET },
-    { "tt29","tt29z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT29_Z_OFFSET },
-    { "tt29","tt29u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT29_U_OFFSET },
-    { "tt29","tt29v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT29_V_OFFSET },
-    { "tt29","tt29w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT29_W_OFFSET },
-    { "tt29","tt29a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT29_A_OFFSET },
-    { "tt29","tt29b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT29_B_OFFSET },
-    { "tt29","tt29c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT29_C_OFFSET },
-
-    { "tt30","tt30x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT30_X_OFFSET },
-    { "tt30","tt30y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT30_Y_OFFSET },
-    { "tt30","tt30z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT30_Z_OFFSET },
-    { "tt30","tt30u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT30_U_OFFSET },
-    { "tt30","tt30v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT30_V_OFFSET },
-    { "tt30","tt30w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT30_W_OFFSET },
-    { "tt30","tt30a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT30_A_OFFSET },
-    { "tt30","tt30b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT30_B_OFFSET },
-    { "tt30","tt30c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT30_C_OFFSET },
-
-    { "tt31","tt31x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT31_X_OFFSET },
-    { "tt31","tt31y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT31_Y_OFFSET },
-    { "tt31","tt31z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT31_Z_OFFSET },
-    { "tt31","tt31u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT31_U_OFFSET },
-    { "tt31","tt31v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT31_V_OFFSET },
-    { "tt31","tt31w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT31_W_OFFSET },
-    { "tt31","tt31a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT31_A_OFFSET },
-    { "tt31","tt31b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT31_B_OFFSET },
-    { "tt31","tt31c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT31_C_OFFSET },
-
-    { "tt32","tt32x",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT32_X_OFFSET },
-    { "tt32","tt32y",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT32_Y_OFFSET },
-    { "tt32","tt32z",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT32_Z_OFFSET },
-    { "tt32","tt32u",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT32_U_OFFSET },
-    { "tt32","tt32v",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT32_V_OFFSET },
-    { "tt32","tt32w",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT32_W_OFFSET },
-    { "tt32","tt32a",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT32_A_OFFSET },
-    { "tt32","tt32b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT32_B_OFFSET },
-    { "tt32","tt32c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT32_C_OFFSET },
+TTOFFSETENTRY(1)        
+TTOFFSETENTRY(2)        
+TTOFFSETENTRY(3)        
+TTOFFSETENTRY(4)        
+TTOFFSETENTRY(5)        
+TTOFFSETENTRY(6)        
+TTOFFSETENTRY(7)        
+TTOFFSETENTRY(8)        
+TTOFFSETENTRY(9)        
+TTOFFSETENTRY(10)        
+TTOFFSETENTRY(11)        
+TTOFFSETENTRY(12)        
+TTOFFSETENTRY(13)        
+TTOFFSETENTRY(14)        
+TTOFFSETENTRY(15)        
+TTOFFSETENTRY(16)        
+TTOFFSETENTRY(17)
+TTOFFSETENTRY(18)        
+TTOFFSETENTRY(19)        
+TTOFFSETENTRY(20)        
+TTOFFSETENTRY(21)        
+TTOFFSETENTRY(22)        
+TTOFFSETENTRY(23)        
+TTOFFSETENTRY(24)        
+TTOFFSETENTRY(25)        
+TTOFFSETENTRY(26)        
+TTOFFSETENTRY(27)        
+TTOFFSETENTRY(28)        
+TTOFFSETENTRY(29)        
+TTOFFSETENTRY(30)        
+TTOFFSETENTRY(31)        
+TTOFFSETENTRY(32)        
 
     // Diagnostic parameters
 #ifdef __DIAGNOSTIC_PARAMETERS
@@ -1335,39 +1059,44 @@ const cfgItem_t cfgArray[] = {
         
 #define TOOL_OFFSET_GROUPS 33
     { "","tof",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // current tool offsets
-    { "","tt1",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // tt offsets
-    { "","tt2",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // tt offsets
-    { "","tt3",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // tt offsets
-    { "","tt4",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // tt offsets
-    { "","tt5",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // tt offsets
-    { "","tt6",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // tt offsets
-    { "","tt7",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // tt offsets
-    { "","tt8",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // tt offsets
-    { "","tt9",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // tt offsets
-    { "","tt10",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt11",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt12",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt13",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt14",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt15",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt16",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt17",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt18",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt19",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt20",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt21",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt22",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt23",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt24",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt25",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt26",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt27",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt28",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt29",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt30",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt31",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt32",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-        
+
+// tt offsets        
+#define TTOFFSETGROUP(toolnum) \
+    { "","tt" #toolnum, _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
+
+TTOFFSETGROUP(1)        
+TTOFFSETGROUP(2)        
+TTOFFSETGROUP(3)        
+TTOFFSETGROUP(4)        
+TTOFFSETGROUP(5)        
+TTOFFSETGROUP(6)        
+TTOFFSETGROUP(7)        
+TTOFFSETGROUP(8)        
+TTOFFSETGROUP(9)        
+TTOFFSETGROUP(10)        
+TTOFFSETGROUP(11)        
+TTOFFSETGROUP(12)        
+TTOFFSETGROUP(13)        
+TTOFFSETGROUP(14)        
+TTOFFSETGROUP(15)        
+TTOFFSETGROUP(16)        
+TTOFFSETGROUP(17)
+TTOFFSETGROUP(18)        
+TTOFFSETGROUP(19)        
+TTOFFSETGROUP(20)        
+TTOFFSETGROUP(21)        
+TTOFFSETGROUP(22)        
+TTOFFSETGROUP(23)        
+TTOFFSETGROUP(24)        
+TTOFFSETGROUP(25)        
+TTOFFSETGROUP(26)        
+TTOFFSETGROUP(27)        
+TTOFFSETGROUP(28)        
+TTOFFSETGROUP(29)        
+TTOFFSETGROUP(30)        
+TTOFFSETGROUP(31)        
+TTOFFSETGROUP(32)        
+
 #define MACHINE_STATE_GROUPS 8
     { "","mpo",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // machine position group
     { "","pos",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // work position group
