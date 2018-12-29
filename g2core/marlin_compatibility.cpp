@@ -406,14 +406,14 @@ stat_t marlin_report_version()
     char buffer[128];
     char *str = buffer;
 
-    str_concat(str, "ok FIRMWARE_NAME:Marlin g2core-");
+    str_concat(str, "ok FIRMWARE_NAME:Marlin g2core-vegetablejedi-");
     str_concat(str, G2CORE_FIRMWARE_BUILD_STRING);
     *str = 0;
     xio_writeline(buffer);
     str = buffer;
     *str = 0;
 
-    str_concat(str, " SOURCE_CODE_URL:https://github.com/synthetos/g2");
+    str_concat(str, " SOURCE_CODE_URL:https://github.com/synthetos/g2, https://github.com/vegetablejedi/g2");
     *str = 0;
     xio_writeline(buffer);
     str = buffer; *str = 0;
