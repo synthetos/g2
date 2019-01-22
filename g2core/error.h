@@ -394,7 +394,7 @@ static const char stat_15[] = "Initializing";
 static const char stat_16[] = "Entering boot loader";
 static const char stat_17[] = "Function is stubbed";
 static const char stat_18[] = "System alarm";
-static const char stat_19[] = "19";
+static const char stat_19[] = "No Display";
 
 static const char stat_20[] = "Internal error";
 static const char stat_21[] = "Internal range error";
