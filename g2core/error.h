@@ -160,7 +160,6 @@ char *get_status_message(stat_t status);
 #define STAT_ERROR_83 83
 #define STAT_ERROR_84 84
 #define STAT_ERROR_85 85
-#define STAT_ERROR_86 86
 
 // Assertion failures - build down from 99 until they meet the system internal errors
 
