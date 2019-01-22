@@ -502,8 +502,8 @@ static const char stat_116[] = "JSON value does not agree with variable type";
 static const char stat_117[] = "Input from a muted channel was ignored";
 static const char stat_118[] = "The provided checksum didn't match";
 static const char stat_119[] = "The provided line number was out of sequence";
+static const char stat_120[] = "Missing line number when given checksum";
 
-static const char stat_120[] = "120";
 static const char stat_121[] = "121";
 static const char stat_122[] = "122";
 static const char stat_123[] = "123";
