@@ -415,7 +415,7 @@ static const char stat_34[] = "Persistence error";
 static const char stat_35[] = "Bad status report setting";
 static const char stat_36[] = "Failed to get planner buffer";
 
-static const char stat_37[] = "Backplan hit running buffer";
+static const char stat_37[] = "37";
 static const char stat_38[] = "38";
 static const char stat_39[] = "39";
 
