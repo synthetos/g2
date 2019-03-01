@@ -926,8 +926,6 @@ stat_t _execute_gcode_block(char *active_comment)
 {
     stat_t status = STAT_OK;
 
-    cm_cycle_start();   // any G, M or other word will autostart cycle if not already started
-
     if (gf.linenum) {
         cm_set_model_linenum(gv.linenum);
     }
