@@ -88,6 +88,7 @@ HOT_DATA StepDirHobbyServo<Motate::kServo1_PinNumber> motor_6;
 Stepper* const Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5, &motor_6};
 #endif // 'D'
 
+#if (KINEMATICS == KINE_FOUR_CABLE)
 HOT_DATA encoder_0_t encoder_0{plex0, M1_ENCODER_INPUT_A, M1_ENCODER_INPUT_B, 1 << 0};
 HOT_DATA encoder_1_t encoder_1{plex0, M2_ENCODER_INPUT_A, M2_ENCODER_INPUT_B, 1 << 1};
 HOT_DATA encoder_2_t encoder_2{plex0, M3_ENCODER_INPUT_A, M3_ENCODER_INPUT_B, 1 << 2};
@@ -106,6 +107,10 @@ Motate::SysTickEvent external_encoders_tick_event {[&] {
         ee_sample_counter_ = 1;
     }
 }, nullptr};
+
+#else
+ExternalEncoder* const ExternalEncoders[0] = {};
+#endif
 
 void board_stepper_init() {
     for (uint8_t motor = 0; motor < MOTORS; motor++) { Motors[motor]->init(); }

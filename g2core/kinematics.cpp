@@ -173,6 +173,10 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
             joint_position[joint] = position[joint];
         } // for joint
     }
+
+    void sync_encoders() override {
+        // unused
+    }
 };
 
 
@@ -235,6 +239,10 @@ struct CoreXYKinematics final : CartesianKinematics<axes, motors> {
 
         position[0] = 0.5 * (deltaA + deltaB);
         position[1] = 0.5 * (deltaA - deltaB);
+    }
+
+    void sync_encoders() override {
+        // unused
     }
 };
 
@@ -310,6 +318,15 @@ struct FourCableKinematics : KinematicsBase<axes, motors> {
     float sensor_zero_value[4] = {1.45, 1.00, 0.61, 0.97};
     float sensor_value[4];     // stored from last time they were read
     float raw_sensor_value[4];     // stored from last time they were read
+
+    #if (KINEMATICS != KINE_FOUR_CABLE)
+        // define a few things to shut the compiler up - kinda hacky until a more modular system is developed
+        #define EXTERNAL_ENCODER_MM_PER_REV 1.0
+        #define ANCHOR_A_INPUT 0
+        #define ANCHOR_B_INPUT 0
+        #define ANCHOR_C_INPUT 0
+        #define ANCHOR_D_INPUT 0
+    #endif
 
     float const external_encoder_mm_per_rev[4] = {EXTERNAL_ENCODER_MM_PER_REV, -EXTERNAL_ENCODER_MM_PER_REV,
                                                   EXTERNAL_ENCODER_MM_PER_REV, -EXTERNAL_ENCODER_MM_PER_REV};
