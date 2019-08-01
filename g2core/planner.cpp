@@ -808,7 +808,7 @@ void mp_commit_write_buffer(const blockType block_type)
 }
 
 // Note: mp_get_run_buffer() is only called by mp_exec_move(), which is inside an interrupt
-// EMPTY is the one case where nothing is returned. This is not an error
+// EMPTY and INITALIZING are the two cases where nothing is returned. This is not an error
 // Otherwise return the buffer. Let mp_exec_move() manage the state machine to sort out:
 //  (1) is the the first time the run buffer has been retrieved?
 //  (2) is the buffer in error - i.e. not yet ready for running?
@@ -816,7 +816,7 @@ mpBuf_t * mp_get_run_buffer()
 {
     mpBuf_t *r = mp->q.r;
 
-    if (r->buffer_state == MP_BUFFER_EMPTY) {
+    if (r->buffer_state == MP_BUFFER_EMPTY || r->buffer_state == MP_BUFFER_INITIALIZING) {
         return (NULL);
     }
     return (r);
