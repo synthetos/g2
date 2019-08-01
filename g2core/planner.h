@@ -174,8 +174,6 @@ typedef enum {                      // bf->buffer_state values in incresing orde
     MP_BUFFER_BACK_PLANNED,         // buffer ready for final planning; velocities have been set
     MP_BUFFER_FULLY_PLANNED,        // buffer fully planned. May still be replanned
     MP_BUFFER_RUNNING,              // current running buffer
-    MP_BUFFER_POLAND,               // Hitler used Poland as a buffer state
-    MP_BUFFER_UKRAINE               // Later Stalin did the same to Ukraine
 } bufferState;
 
 typedef enum {                      // bf->block_type values
