@@ -341,7 +341,7 @@ const cfgItem_t cfgArray[] = {
     { "z","zsv",_fipc, 0, cm_print_sv, cm_get_sv, cm_set_sv, nullptr, Z_SEARCH_VELOCITY },
     { "z","zlv",_fipc, 2, cm_print_lv, cm_get_lv, cm_set_lv, nullptr, Z_LATCH_VELOCITY },
     { "z","zlb",_fipc, 5, cm_print_lb, cm_get_lb, cm_set_lb, nullptr, Z_LATCH_BACKOFF },
-    { "z","zzb",_fipc, 5, cm_print_zb, cm_get_lb, cm_set_zb, nullptr, Z_ZERO_BACKOFF },
+    { "z","zzb",_fipc, 5, cm_print_zb, cm_get_zb, cm_set_zb, nullptr, Z_ZERO_BACKOFF },
 
     { "u","uam",_iip,  0, cm_print_am, cm_get_am, cm_set_am, nullptr, U_AXIS_MODE },
     { "u","uvm",_fipc, 0, cm_print_vm, cm_get_vm, cm_set_vm, nullptr, U_VELOCITY_MAX },
