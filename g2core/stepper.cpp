@@ -879,7 +879,7 @@ void st_prep_dwell(float milliseconds)
 {
     st_pre.block_type = BLOCK_TYPE_DWELL;
     // we need dwell_ticks to be at least 1
-    st_pre.dwell_ticks = std::max((uint32_t)((milliseconds/1000.0) * FREQUENCY_DWELL), 1UL);
+    st_pre.dwell_ticks = std::max((uint32_t)((milliseconds/1000.0) * FREQUENCY_DWELL), (uint32_t)1UL);
     st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;    // signal that prep buffer is ready
 }
 
@@ -1193,11 +1193,13 @@ stat_t st_set_md(nvObj_t *nv)
 
 #ifdef __TEXT_MODE
 
+#ifndef COMPILING_ALL_AT_ONCE
 static const char msg_units0[] = " in";    // used by generic print functions
 static const char msg_units1[] = " mm";
 static const char msg_units2[] = " deg";
 static const char *const msg_units[] = { msg_units0, msg_units1, msg_units2 };
 #define DEGREE_INDEX 2
+#endif // COMPILING_ALL_AT_ONCE
 
 static const char fmt_me[] = "motors energized\n";
 static const char fmt_md[] = "motors de-energized\n";
