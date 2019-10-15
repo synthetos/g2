@@ -45,7 +45,7 @@ deploy:
   # OR, when we move to Master, we remove this setting.
   prerelease: true
   api_key:
-    secure: hBB3dHzLM97onnpneoxpewDFYfmcDmeE6FPFRxplaGYROO7SjML8orFCGMLX1cEIlvn4lwzAB+NlE2kreujxiB/gEdZy5DNk8ts+QrbfRXax/VmCNgZYp0tOVn037UFi39rKzx8olbFTImdQypMVf5mdbusY64hTpWrrsZ4uBoU=
+    secure: SFQe2M+qWfu4Lm4Q4W6v+JkSv0d8u5/K6MpEBPT6KUvFcIJb0fm7aHzFcZ03Ul8cx9yjmuGbNGId1hNUXCWxM+MeaIWqnx1cvJAEIQpjZV0nQ6yHeO//jX5PRmEBykNmq/GLqILbHkRAFRxBC4TwtBcRFlS/p7kEC9q3tNac5gg=
   skip_cleanup: true
   file:
     - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-Othermill-g2v9k-${TRAVIS_TAG}.elf

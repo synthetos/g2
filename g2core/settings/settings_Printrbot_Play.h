@@ -2,8 +2,8 @@
  * settings_Printrbot_play.h
  * This file is part of the the g2core project
  *
- * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
- * Copyright (c) 2010 - 2017 Robert Giseburt
+ * Copyright (c) 2010 - 2019 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2019 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -113,115 +113,50 @@
 
 // *** motor settings ************************************************************************************
 
-#define MOTOR_POWER_MODE            MOTOR_POWERED_IN_CYCLE  // default motor power mode (see cmMotorPowerMode in stepper.h)
+#define MOTOR_POWER_MODE                  MOTOR_POWERED_IN_CYCLE  // default motor power mode (see cmMotorPowerMode in stepper.h)
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
-#define M1_MOTOR_MAP                AXIS_X                  // 1ma
-#define M1_STEP_ANGLE               1.8                     // 1sa
-// Marlin says 80 steps/unit, and 16 microsteps, with a 200-step/rev motor
-#define M1_TRAVEL_PER_REV           40.64                   // 1tr
-#define M1_MICROSTEPS               128                     // 1mi        1,2,4,8,16,32
-#define M1_POLARITY                 1                       // 1po        0=normal, 1=reversed
-#define M1_POWER_MODE               MOTOR_POWERED_IN_CYCLE  // 1pm        standard
-#define M1_POWER_LEVEL              0.8                     // 1pl
-#define M1_TMC2130_TPWMTHRS         1200                    // 1pth
-#define M1_TMC2130_TCOOLTHRS        1000                    // 1cth
-#define M1_TMC2130_THIGH            10                      // 1hth
-#define M1_TMC2130_SGT              4                       // 1sgt
-#define M1_TMC2130_TBL              2                       // 1tbl
-#define M1_TMC2130_PWM_GRAD         1                       // 1pgrd
-#define M1_TMC2130_PWM_AMPL         200                     // 1pamp
-#define M1_TMC2130_HEND             0                       // 1hend
-#define M1_TMC2130_HSTRT            0                       // 1hsrt
-#define M1_TMC2130_SMIN             5                       // 1smin
-#define M1_TMC2130_SMAX             5                      // 1smax
-#define M1_TMC2130_SUP              2                       // 1sup
-#define M1_TMC2130_SDN              1                       // 1sdn
+#define M1_MOTOR_MAP                      AXIS_X_EXTERNAL         // 1ma
+#define M1_STEP_ANGLE                     1.8                     // 1sa
+#define M1_TRAVEL_PER_REV                 40.64                   // 1tr
+#define M1_MICROSTEPS                     32                      // 1mi		1,2,4,8,16,32
+#define M1_POLARITY                       1                       // 1po		0=normal, 1=reversed
+#define M1_POWER_MODE                     MOTOR_POWER_MODE        // 1pm		standard
+#define M1_POWER_LEVEL                    0.4                     // 1pl:   0.0=no power, 1.0=max power
 
 // 80 steps/mm at 1/16 microstepping = 40 mm/rev
-#define M2_MOTOR_MAP                AXIS_Y
-#define M2_STEP_ANGLE               1.8
-// Marlin says 80 steps/unit, and 16 microsteps, with a 200-step/rev motor
-#define M2_TRAVEL_PER_REV           40.64
-#define M2_MICROSTEPS               128
-#define M2_POLARITY                 0
-#define M2_POWER_MODE               MOTOR_POWERED_IN_CYCLE
-#define M2_POWER_LEVEL              0.8
-#define M2_TMC2130_TPWMTHRS         1200
-#define M2_TMC2130_TCOOLTHRS        1000
-#define M2_TMC2130_THIGH            10
-#define M2_TMC2130_SGT              4
-#define M2_TMC2130_TBL              2
-#define M2_TMC2130_PWM_GRAD         1
-#define M2_TMC2130_PWM_AMPL         200
-#define M2_TMC2130_HEND             0
-#define M2_TMC2130_HSTRT            0
-#define M2_TMC2130_SMIN             5
-#define M2_TMC2130_SMAX             5
-#define M2_TMC2130_SUP              2
-#define M2_TMC2130_SDN              1
+#define M3_MOTOR_MAP                      AXIS_Y_EXTERNAL
+#define M3_STEP_ANGLE                     1.8
+#define M3_TRAVEL_PER_REV                 40.64
+#define M3_MICROSTEPS                     32
+#define M3_POLARITY                       1
+#define M3_POWER_MODE                     MOTOR_POWER_MODE
+#define M3_POWER_LEVEL                    0.4
 
-#define M3_MOTOR_MAP                AXIS_Z
-#define M3_STEP_ANGLE               1.8
-#define M3_TRAVEL_PER_REV           1.5875
-#define M3_MICROSTEPS               128
-#define M3_POLARITY                 0
-#define M3_POWER_MODE               MOTOR_POWERED_IN_CYCLE
-#define M3_POWER_LEVEL              0.6
-#define M3_TMC2130_TPWMTHRS         300
-#define M3_TMC2130_TCOOLTHRS        200
-#define M3_TMC2130_THIGH            10
-#define M3_TMC2130_SGT              4
-#define M3_TMC2130_TBL              2
-#define M3_TMC2130_PWM_GRAD         1
-#define M3_TMC2130_PWM_AMPL         200
-#define M3_TMC2130_HEND             0
-#define M3_TMC2130_HSTRT            0
-#define M3_TMC2130_SMIN             5
-#define M3_TMC2130_SMAX             12
-#define M3_TMC2130_SUP              2
-#define M3_TMC2130_SDN              2
+#define M2_MOTOR_MAP                      AXIS_Z_EXTERNAL
+#define M2_STEP_ANGLE                     1.8
+#define M2_TRAVEL_PER_REV                 1.5875
+#define M2_MICROSTEPS                     32
+#define M2_POLARITY                       1
+#define M2_POWER_MODE                     MOTOR_POWER_MODE
+#define M2_POWER_LEVEL                    0.4
 
-#define M4_MOTOR_MAP                AXIS_A
-#define M4_STEP_ANGLE               1.8
-#define M4_TRAVEL_PER_REV           360            // degrees moved per motor rev
-#define M4_MICROSTEPS               128
-#define M4_POLARITY                 0
-#define M4_POWER_MODE               MOTOR_POWER_MODE
-#define M4_POWER_LEVEL              0.8
-#define M4_TMC2130_TPWMTHRS         180000
-#define M4_TMC2130_TCOOLTHRS        100000
-#define M4_TMC2130_THIGH            10
-#define M4_TMC2130_SGT              3
-#define M4_TMC2130_TBL              2
-#define M4_TMC2130_PWM_GRAD         15
-#define M4_TMC2130_PWM_AMPL         255
-#define M4_TMC2130_HEND             0
-#define M4_TMC2130_HSTRT            0
-#define M4_TMC2130_SMIN             5
-#define M4_TMC2130_SMAX             10
-#define M4_TMC2130_SUP              3
-#define M4_TMC2130_SDN              0
+// 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
+#define M4_MOTOR_MAP                      AXIS_A_EXTERNAL
+#define M4_STEP_ANGLE                     1.8
+#define M4_TRAVEL_PER_REV                 360                     // degrees moved per motor rev
+#define M4_MICROSTEPS                     32
+#define M4_POLARITY                       1
+#define M4_POWER_MODE                     MOTOR_POWER_MODE
+#define M4_POWER_LEVEL                    0.4
 
-#define M5_MOTOR_MAP                AXIS_B
-#define M5_STEP_ANGLE               1.8
-#define M5_TRAVEL_PER_REV           40
-#define M5_MICROSTEPS               128
-#define M5_POLARITY                 1
-#define M5_POWER_MODE               MOTOR_DISABLED
-#define M5_POWER_LEVEL              0.8
-#define M5_TMC2130_TPWMTHRS         1200
-#define M5_TMC2130_TCOOLTHRS        1000
-#define M5_TMC2130_THIGH            10
-#define M5_TMC2130_SGT              4
-#define M5_TMC2130_TBL              2
-#define M5_TMC2130_PWM_GRAD         1
-#define M5_TMC2130_PWM_AMPL         200
-#define M5_TMC2130_HEND             0
-#define M5_TMC2130_HSTRT            0
-#define M5_TMC2130_SMIN             5
-#define M5_TMC2130_SMAX             12
-#define M5_TMC2130_SUP              2
-#define M5_TMC2130_SDN              1
+// 96 steps/mm at 1/16 microstepping = 33.3333 mm/rev
+#define M5_MOTOR_MAP                      AXIS_B_EXTERNAL
+#define M5_STEP_ANGLE                     1.8
+#define M5_TRAVEL_PER_REV                 360                     // degrees moved per motor rev
+#define M5_MICROSTEPS                     32
+#define M5_POLARITY                       0
+#define M5_POWER_MODE                     MOTOR_POWER_MODE
+#define M5_POWER_LEVEL                    0.35
 
 // *** axis settings **********************************************************************************
 

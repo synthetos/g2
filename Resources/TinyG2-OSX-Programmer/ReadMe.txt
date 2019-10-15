@@ -2,7 +2,7 @@ PROGRAMMING THE DUE FROM OS X
 =============================
 
 These notes are also available here and may be more up-to-date:
-https://github.com/synthetos/g2/wiki/Programming-TinyG2
+https://github.com/synthetos/g2/wiki/Flashing-g2core-with-OSX
 
 Download the Arduino 1.5.2 BETA (not the 1.0.5 release at the top of the page) from http://arduino.cc/en/Main/Software for OS X.
 

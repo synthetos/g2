@@ -2,7 +2,8 @@
  * kinematics.cpp - inverse kinematics routines
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2019 Alden S. Hart, Jr.
+ * Copyright (c) 2016 - 2019 Rob Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -616,7 +617,7 @@ struct FourCableKinematics : KinematicsBase<axes, motors> {
             // J = (A_1-A_0)/T
             cable_jerk[joint] = (cable_accel[joint]-prev_cable_accel[joint])/segment_time;
 
-            // float jmax = cm.a[AXIS_X].jerk_max * JERK_MULTIPLIER * 1.5; // 1.5 margin for cartesian plan to cable jerk
+            // float jmax = cm->a[AXIS_X].jerk_max * JERK_MULTIPLIER * 1.5; // 1.5 margin for cartesian plan to cable jerk
             bool jerk_or_velocity_adjusted = false;
             // if (cable_jerk[joint] > jmax) {
             //     cable_jerk[joint] = jmax;
@@ -636,7 +637,7 @@ struct FourCableKinematics : KinematicsBase<axes, motors> {
             }
 
             // limit velocity
-            const double vmax = cm.a[AXIS_X].velocity_max * 1.7;
+            const double vmax = cm->a[AXIS_X].velocity_max * 1.7;
             if (cable_vel[joint] < -vmax) {
                 cable_vel[joint] = -vmax;
                 jerk_or_velocity_adjusted = true;
@@ -990,7 +991,7 @@ struct FourCableKinematics : KinematicsBase<axes, motors> {
             //     cable_vel[joint] = 50.0; // it's already stopped, back it off some
             // }
 
-            float jmax = cm.a[AXIS_X].jerk_high * JERK_MULTIPLIER;
+            float jmax = cm->a[AXIS_X].jerk_high * JERK_MULTIPLIER;
             cable_jerk[joint] = sensor_diff[joint] * jmax;
             cable_accel[joint] = cable_accel[joint] + cable_jerk[joint]*segment_time;
 
@@ -1002,7 +1003,7 @@ struct FourCableKinematics : KinematicsBase<axes, motors> {
             cable_vel[joint] = cable_vel[joint] + cable_accel[joint]*segment_time;
 
             // limit velocity
-            const double vmax = cm.a[AXIS_X].velocity_max;
+            const double vmax = cm->a[AXIS_X].velocity_max;
             if (cable_vel[joint] < -vmax) {
                 cable_vel[joint] = -vmax;
                 // error_offset = 0; // none of it was applied
@@ -1137,7 +1138,7 @@ void kn_config_changed() {
 
     for (uint8_t motor = 0; motor < MOTORS; motor++) {
         auto axis = st_cfg.mot[motor].motor_map;
-        if (cm.a[axis].axis_mode == AXIS_INHIBITED) {
+        if (cm->a[axis].axis_mode == AXIS_INHIBITED) {
             motor_map[motor] = -1;
             steps_per_unit[motor] = 1; // this is the denominator above, avoid 0
         }

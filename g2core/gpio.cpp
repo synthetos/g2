@@ -2,8 +2,8 @@
  * gpio.cpp - digital IO handling functions
  * This file is part of the g2core project
  *
- * Copyright (c) 2015 - 2107 Alden S. Hart, Jr.
- * Copyright (c) 2015 - 2017 Robert Giseburt
+ * Copyright (c) 2015 - 2019 Alden S. Hart, Jr.
+ * Copyright (c) 2015 - 2019 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -389,24 +389,24 @@ stat_t ai_set_p5(nvObj_t *nv) { return ai_set_parameter(nv, 4); };
     static const char fmt_gpio_ac[] = "[%sac] input action%15d [0=none,1=stop,2=fast_stop,3=halt,4=alarm,5=shutdown,6=panic,7=reset]\n";
     static const char fmt_gpio_fn[] = "[%sfn] input function%13d [0=none,1=limit,2=interlock,3=shutdown,4=probe]\n";
     static const char fmt_gpio_in[] = "[%sin] input external number%6d [0=none,1-16=inX shows the value of this din]\n";
-    static const char fmt_gpio_state[] = "Input %s state: %5d\n";
+    static const char fmt_gpio_state[] = "Input %s state: %5ld\n";
 
     static const char fmt_gpio_out_en[] = "[%smo] output enabled%12d [-1=unavailable,0=disabled,1=enabled]\n";
     static const char fmt_gpio_out_po[] = "[%smo] output polarity%12d [0=normal/active-high,1=inverted/active-low]\n";
     static const char fmt_gpio_out_out[] = "[%sout] output external number%5d [0=none,1-16=outX shows the value of this dout]\n";
-    static const char fmt_gpio_out_state[] = "Output %s state: %5d\n";
+    static const char fmt_gpio_out_state[] = "Output %s state: %5ld\n";
 
     static const char fmt_ain_value[] = "Analog input %s voltage: %5.2fV\n";
     static const char fmt_ain_resistance[] = "Analog input %s resistance: %5.2fohm\n";
     static const char fmt_gpio_ai_en[] = "[%smo] analog input enabled%12d [-1=unavailable,0=disabled,1=enabled]\n";
     static const char fmt_gpio_ai_ain[] = "[%sout] analog input external number%5d [0=none,1-8=ainX shows the value of this ai]\n";
-    static const char fmt_ai_type[] = "[%s] input type%17d [0=disabled,1=internal,2=external]\n";
-    static const char fmt_ai_circuit[] = "[%s] analog circuit%13d [0=disabled,1=pull-up,2=external,3=inverted op-amp,4=constant current inverted op-amp]\n";
+    static const char fmt_ai_type[] = "[%s] input type%17ld [0=disabled,1=internal,2=external]\n";
+    static const char fmt_ai_circuit[] = "[%s] analog circuit%13ld [0=disabled,1=pull-up,2=external,3=inverted op-amp,4=constant current inverted op-amp]\n";
     static const char fmt_ai_parameter[] = "[%s] circuit parameter%6.4f [usage varies by circuit type]\n";
 
     static void _print_di(nvObj_t *nv, const char *format)
     {
-        sprintf(cs.out_buf, format, nv->group, (int)nv->value);
+        sprintf(cs.out_buf, format, nv->group, nv->value_int);
         xio_writeline(cs.out_buf);
     }
     void din_print_en(nvObj_t *nv) {_print_di(nv, fmt_gpio_in_en);}
@@ -415,7 +415,7 @@ stat_t ai_set_p5(nvObj_t *nv) { return ai_set_parameter(nv, 4); };
     void din_print_fn(nvObj_t *nv) {_print_di(nv, fmt_gpio_fn);}
     void din_print_in(nvObj_t *nv) {_print_di(nv, fmt_gpio_in);}
     void din_print_state(nvObj_t *nv) {
-        sprintf(cs.out_buf, fmt_gpio_state, nv->token, (int)nv->value);
+        sprintf(cs.out_buf, fmt_gpio_state, nv->token, nv->value_int);
         xio_writeline(cs.out_buf);
     }
 
@@ -423,37 +423,37 @@ stat_t ai_set_p5(nvObj_t *nv) { return ai_set_parameter(nv, 4); };
     void dout_print_po(nvObj_t *nv) {_print_di(nv, fmt_gpio_out_po);}
     void dout_print_out(nvObj_t *nv) {_print_di(nv, fmt_gpio_out_out);}
     void dout_print_out_state(nvObj_t *nv) {
-        sprintf(cs.out_buf, fmt_gpio_out_state, nv->token, (int)nv->value);
+        sprintf(cs.out_buf, fmt_gpio_out_state, nv->token, nv->value_int);
         xio_writeline(cs.out_buf);
     }
 
     void ain_print_value(nvObj_t *nv)
     {
-       sprintf(cs.out_buf, fmt_ain_value, nv->token, (float)nv->value);
+       sprintf(cs.out_buf, fmt_ain_value, nv->token, nv->value_flt);
        xio_writeline(cs.out_buf);
     }
     void ain_print_resistance(nvObj_t *nv)
     {
-       sprintf(cs.out_buf, fmt_ain_resistance, nv->token, (float)nv->value);
+       sprintf(cs.out_buf, fmt_ain_resistance, nv->token, nv->value_flt);
        xio_writeline(cs.out_buf);
     }
     void ai_print_en(nvObj_t *nv) {_print_di(nv, fmt_gpio_ai_en);}
     void ai_print_ain(nvObj_t *nv) {_print_di(nv, fmt_gpio_ai_ain);}
     void ai_print_type(nvObj_t *nv)
     {
-       sprintf(cs.out_buf, fmt_ai_type, nv->token, (int)nv->value);
+       sprintf(cs.out_buf, fmt_ai_type, nv->token, nv->value_int);
        xio_writeline(cs.out_buf);
     }
 
     void ai_print_circuit(nvObj_t *nv)
     {
-       sprintf(cs.out_buf, fmt_ai_circuit, nv->token, (int)nv->value);
+       sprintf(cs.out_buf, fmt_ai_circuit, nv->token, nv->value_int);
        xio_writeline(cs.out_buf);
     }
 
     void ai_print_p(nvObj_t *nv)
     {
-       sprintf(cs.out_buf, fmt_ai_parameter, nv->token, (float)nv->value);
+       sprintf(cs.out_buf, fmt_ai_parameter, nv->token, nv->value_flt);
        xio_writeline(cs.out_buf);
     }
 

@@ -2,8 +2,8 @@
  * step_dir_driver.cpp - control over a Step/Direction/Enable stepper motor driver
  * This file is part of G2 project
  *
- * Copyright (c) 2016 Alden S. Hart, Jr.
- * Copyright (c) 2016 Robert Giseburt
+ * Copyright (c) 2016 - 2018 Alden S. Hart, Jr.
+ * Copyright (c) 2016 - 2018 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -25,8 +25,8 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef STEPP_DIR_DRIVER_H_ONCE
-#define STEPP_DIR_DRIVER_H_ONCE
+#ifndef STEP_DIR_DRIVER_H_ONCE
+#define STEP_DIR_DRIVER_H_ONCE
 
 #include "MotatePins.h"
 #include "MotateTimers.h"
@@ -37,6 +37,7 @@ using Motate::pin_number;
 using Motate::OutputPin;
 using Motate::PWMOutputPin;
 using Motate::kStartHigh;
+using Motate::kStartLow;
 using Motate::kNormal;
 using Motate::Timeout;
 
@@ -60,14 +61,24 @@ struct StepDirStepper final : Stepper  {
     OutputPin<step_num>    _step;
     uint8_t                _step_downcount;
     OutputPin<dir_num>     _dir;
-    OutputPin<enable_num>  _enable{kStartHigh};
+    OutputPin<enable_num>  _enable;
     OutputPin<ms0_num>     _ms0;
     OutputPin<ms1_num>     _ms1;
     OutputPin<ms2_num>     _ms2;
     PWMOutputPin<vref_num> _vref;
 
+    ioMode _step_polarity;                   // IO_ACTIVE_LOW or IO_ACTIVE_HIGH
+    ioMode _enable_polarity;                 // IO_ACTIVE_LOW or IO_ACTIVE_HIGH
+
     // sets default pwm freq for all motor vrefs (commented line below also sets HiZ)
-    StepDirStepper(const uint32_t frequency = 250000) : Stepper{}, _vref{kNormal, frequency} {};
+    StepDirStepper(ioMode step_polarity, ioMode enable_polarity, const uint32_t frequency = 250000) :
+        Stepper{},
+        _step{step_polarity==IO_ACTIVE_LOW?kStartHigh:kStartLow},
+        _enable{enable_polarity==IO_ACTIVE_LOW?kStartHigh:kStartLow},
+        _vref{kNormal, frequency},
+        _step_polarity{step_polarity},
+        _enable_polarity{enable_polarity}
+    {};
 
     /* Optional override of init */
 
@@ -120,19 +131,37 @@ struct StepDirStepper final : Stepper  {
 
     void _enableImpl() override {
         if (!_enable.isNull()) {
-            _enable.clear();
+            if (_enable_polarity == IO_ACTIVE_HIGH) {
+                _enable.set();
+            } else {
+                _enable.clear();
+            }
         }
     };
 
     void _disableImpl() override {
         if (!_enable.isNull()) {
-            _enable.set();
+            if (_enable_polarity == IO_ACTIVE_HIGH) {
+                _enable.clear();
+            } else {
+                _enable.set();
+            }
         }
     };
 
-    void stepStart() override { _step.set(); };
+    void stepStart() override {
+    	if (_step_polarity == IO_ACTIVE_LOW)
+    	    _step.clear();
+    	else
+    	    _step.set();
+    };
 
-    void stepEnd() override { _step.clear(); };
+    void stepEnd() override {
+    	if (_step_polarity == IO_ACTIVE_LOW)
+    	    _step.set();
+    	else
+    	    _step.clear();
+    };
 
     void setDirection(uint8_t new_direction) override {
         if (!_dir.isNull()) {
@@ -149,6 +178,30 @@ struct StepDirStepper final : Stepper  {
             _vref = new_pl * POWER_LEVEL_SCALE_FACTOR;
         }
     };
+
+    ioMode getStepPolarity() const override
+    {
+    	return _step_polarity;
+    };
+
+    void setStepPolarity(ioMode new_sp) override
+    {
+    	_step_polarity = new_sp;
+    	stepEnd();
+    };
+
+    ioMode getEnablePolarity() const override
+    {
+        return _enable_polarity;
+    };
+
+    void setEnablePolarity(ioMode new_mp) override
+    {
+        _enable_polarity = new_mp;
+        // this is a misnomer, but handles the logic we need for asserting the newly adjusted enable line correctly
+        motionStopped();
+    };
+
 };
 
-#endif  // STEPP_DIR_DRIVER_H_ONCE
+#endif  // STEP_DIR_DRIVER_H_ONCE

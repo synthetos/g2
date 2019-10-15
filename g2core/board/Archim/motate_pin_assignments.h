@@ -1,5 +1,6 @@
 /*
- * motate_pin_assignments.h - pin assignments for the g2core Archim boards
+ * motate_pin_assignments.h
+ * For: /board/Archim
  * This file is part of the g2core project
  *
  * Copyright (c) 2013-2016 Robert Giseburt

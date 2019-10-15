@@ -1,9 +1,10 @@
 /*
- * gquintic-b-pinout.h - board pinout specification
+ * gquintic-a-pinout.h - board pinout specification
+ * For: /board/gQuintic
  * This file is part of the g2core project
  *
- * Copyright (c) 2016-2017 Robert Giseburt
- * Copyright (c) 2016-2017 Alden S. Hart Jr.
+ * Copyright (c) 2016 - 2019 Robert Giseburt
+ * Copyright (c) 2016 - 2019 Alden S. Hart Jr.
  *
  * This file is part of the Motate Library.
  *
@@ -206,7 +207,7 @@ namespace Motate {
     
 }  // namespace Motate
 
-// We then allow each chip-type to have it's onw function definitions
+// We then allow each chip-type to have it's own function definitions
 // that will refer to these pin assignments.
 #include "motate_chip_pin_functions.h"
 

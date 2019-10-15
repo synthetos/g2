@@ -1,9 +1,10 @@
 /*
  * board_stepper.h - board-specific code for stepper.h
+ * For: /board/Archim
  * This file is part of g2core project
  *
- * Copyright (c) 2016 Alden S. Hart, Jr.
- * Copyright (c) 2016 Robert Giseburt
+ * Copyright (c) 2016 - 2018 Alden S. Hart, Jr.
+ * Copyright (c) 2016 - 2018 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -74,7 +75,8 @@ extern StepDirStepper<Motate::kSocket4_StepPinNumber,
 //    Motate::kSocket5_Microstep_0PinNumber,
 //    Motate::kSocket5_Microstep_1PinNumber,
 //    Motate::kSocket5_Microstep_2PinNumber,
-//    Motate::kSocket5_VrefPinNumber> motor_5;
+//    Motate::kSocket5_VrefPinNumber> 
+//  motor_5;
 
 // extern StepDirStepper<
 //    Motate::kSocket6_StepPinNumber,
@@ -83,7 +85,8 @@ extern StepDirStepper<Motate::kSocket4_StepPinNumber,
 //    Motate::kSocket6_Microstep_0PinNumber,
 //    Motate::kSocket6_Microstep_1PinNumber,
 //    Motate::kSocket6_Microstep_2PinNumber,
-//    Motate::kSocket6_VrefPinNumber> motor_6 {};
+//    Motate::kSocket6_VrefPinNumber> 
+//  motor_6;
 
 extern Stepper* Motors[MOTORS];
 

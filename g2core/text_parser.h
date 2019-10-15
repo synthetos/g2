@@ -2,7 +2,7 @@
  * text_parser.h - text parser and text mode support
  * This file is part of the g2core project
  *
- * Copyright (c) 2013 - 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2018 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -94,5 +94,8 @@ void text_print_stub(nvObj_t* nv, const char* format);
 stat_t text_parser_stub(char* str);
 void text_response_stub(const stat_t status, char* buf);
 void text_print_list_stub(stat_t status, uint8_t flags);
+
+stat_t txt_get_tv(nvObj_t *nv);
+stat_t txt_set_tv(nvObj_t *nv);
 
 #endif  // End of include guard: TEXT_PARSER_H_ONCE

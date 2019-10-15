@@ -2,8 +2,8 @@
  * temperature.cpp - temperature control module - drives heaters or coolers
  * This file is part of the g2core project
  *
- * Copyright (c) 2016 Robert Giseburt
- * Copyright (c) 2016 Alden S. Hart, Jr.
+ * Copyright (c) 2016 - 2019 Robert Giseburt
+ * Copyright (c) 2016 - 2019 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -38,6 +38,7 @@
 #include "report.h"
 #include "util.h"
 #include "settings.h"
+#include "gpio.h" // for ValueHistory
 
 
 /**** Local safety/limit settings ****/
@@ -843,7 +844,6 @@ HeaterFan<EXTRUDER_1_FAN_PIN> heater_fan1;
 
 /*
  * temperature_init()
- * temperature_init() - stop spindle, set speed to zero, and reset values
  */
 void temperature_init()
 {
@@ -887,7 +887,7 @@ const float kTempDiffSRTrigger = 0.25;
 
 stat_t temperature_callback()
 {
-    if (cm.machine_state == MACHINE_ALARM) {
+    if (cm->machine_state == MACHINE_ALARM) {
         // Force the heaters off (redundant with the safety circuit)
         fet_pin1 = 0.0;
         fet_pin2 = 0.0;
@@ -961,9 +961,13 @@ stat_t temperature_callback()
  * CONFIGURATION AND INTERFACE FUNCTIONS
  * Functions to get and set variables from the cfgArray table
  ***********************************************************************************/
+/*  In these function there are usually 3 PIDs, so a simple switch works.
+ *  The default is a failsafe - can only get there if it's set up in config_app, but not here.
+ */
 
-// In these functions, nv->group == "he1", "he2", or "he3"
-char _get_heater_number(nvObj_t *nv) {
+// helpers
+
+char _get_heater_number(nvObj_t *nv) {  // In these functions nv->group == "he1", "he2", or "he3"
     if (!nv->group[0]) {
         return nv->token[2];
     }
@@ -973,32 +977,28 @@ char _get_heater_number(nvObj_t *nv) {
 stat_t cm_get_heater_enable(nvObj_t *nv)
 {
     switch(_get_heater_number(nv)) {
-        case '1': { nv->value = pid1._enable; break; }
-        case '2': { nv->value = pid2._enable; break; }
-        case '3': { nv->value = pid3._enable; break; }
-        // Failsafe. We can only get here if we set it up in config_app, but not here.
+        case '1': { nv->value_int = pid1._enable; break; }
+        case '2': { nv->value_int = pid2._enable; break; }
+        case '3': { nv->value_int = pid3._enable; break; }
         default: { return(STAT_INPUT_VALUE_RANGE_ERROR); break; }
     }
-    nv->valuetype = TYPE_BOOL;
+    nv->valuetype = TYPE_BOOLEAN;
     return (STAT_OK);
 }
 
 stat_t cm_set_heater_enable(nvObj_t *nv)
 {
     bool enable = false;
-    if (nv->value > 1) {                        // testing a boolean value
+    if (nv-> value_int > 1) {                        // testing a boolean value
         return (STAT_INPUT_VALUE_RANGE_ERROR);
     }
-    if (nv->value > 0.1) {
+    if (nv-> value_int > 0.1) {
         enable = true;
     }
     // The above manipulation of 'enable' was necessary because the compiler won't accept this cast:
     // pid1._enable = (bool)nv->value;   // says it's unsafe to compare ==, != an FP number
 
     switch(_get_heater_number(nv)) {
-        //        case '1': { pid1._enable = (bool)nv->value; break; }
-        //        case '2': { pid2._enable = (bool)nv->value; break; }
-        //        case '3': { pid3._enable = (bool)nv->value; break; }
         case '1': { pid1._enable = enable; break; }
         case '2': { pid2._enable = enable; break; }
         case '3': { pid3._enable = enable; break; }
@@ -1007,110 +1007,99 @@ stat_t cm_set_heater_enable(nvObj_t *nv)
     return (STAT_OK);
 }
 
-/*
- * cm_get_heater_p()/cm_set_heater_p() - get/set the P parameter of the PID
+/****************************************************************************************
+ * cm_get_heater_p() - set the P parameter of the PID
+ * cm_set_heater_p() - set the P parameter of the PID
+ * cm_get_heater_i() - set the I parameter of the PID
+ * cm_set_heater_i() - set the I parameter of the PID
+ * cm_get_heater_d() - set the D parameter of the PID
+ * cm_set_heater_d() - set the D parameter of the PID
  */
+
 stat_t cm_get_heater_p(nvObj_t *nv)
 {
-    // there are three of them, so we can use a simple switch
-    switch(_get_heater_number(nv)) {
-        case '1': { nv->value = pid1._p_factor * 100.0; break; }
-        case '2': { nv->value = pid2._p_factor * 100.0; break; }
-        case '3': { nv->value = pid3._p_factor * 100.0; break; }
-
-        // Failsafe. We can only get here if we set it up in config_app, but not here.
-        default: { nv->value = 0.0; break; }
+    switch(_get_heater_number(nv)) {  // there are three of them, so we can use a simple switch
+        case '1': { nv->value_flt = pid1._p_factor * 100.0; break; }
+        case '2': { nv->value_flt = pid2._p_factor * 100.0; break; }
+        case '3': { nv->value_flt = pid3._p_factor * 100.0; break; }
+        default: { nv->value_flt = 0.0; break; }
     }
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
-
     return (STAT_OK);
 }
 stat_t cm_set_heater_p(nvObj_t *nv)
 {
     switch(_get_heater_number(nv)) {
-        case '1': { pid1._p_factor = nv->value / 100.0; break; }
-        case '2': { pid2._p_factor = nv->value / 100.0; break; }
-        case '3': { pid3._p_factor = nv->value / 100.0; break; }
-
+        case '1': { pid1._p_factor = nv->value_flt / 100.0; break; }
+        case '2': { pid2._p_factor = nv->value_flt / 100.0; break; }
+        case '3': { pid3._p_factor = nv->value_flt / 100.0; break; }
         default: { break; }
     }
-
     return (STAT_OK);
 }
 
-/*
- * cm_get_heater_i()/cm_set_heater_i() - get/set the I parameter of the PID
- */
 stat_t cm_get_heater_i(nvObj_t *nv)
 {
-    // there are three of them, so we can use a simple switch
     switch(_get_heater_number(nv)) {
-        case '1': { nv->value = pid1._i_factor * 100.0; break; }
-        case '2': { nv->value = pid2._i_factor * 100.0; break; }
-        case '3': { nv->value = pid3._i_factor * 100.0; break; }
-
-        default: { nv->value = 0.0; break; }
+        case '1': { nv->value_flt = pid1._i_factor * 100.0; break; }
+        case '2': { nv->value_flt = pid2._i_factor * 100.0; break; }
+        case '3': { nv->value_flt = pid3._i_factor * 100.0; break; }
+        default: { nv->value_flt = 0.0; break; }
     }
-
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
-
     return (STAT_OK);
 }
+
 stat_t cm_set_heater_i(nvObj_t *nv)
 {
     switch(_get_heater_number(nv)) {
-        case '1': { pid1._i_factor = nv->value / 100.0; break; }
-        case '2': { pid2._i_factor = nv->value / 100.0; break; }
-        case '3': { pid3._i_factor = nv->value / 100.0; break; }
-
+        case '1': { pid1._i_factor = nv->value_flt / 100.0; break; }
+        case '2': { pid2._i_factor = nv->value_flt / 100.0; break; }
+        case '3': { pid3._i_factor = nv->value_flt / 100.0; break; }
         default: { break; }
     }
-
     return (STAT_OK);
 }
 
-/*
- * cm_get_heater_d()/cm_set_heater_d() - get/set the D parameter of the PID
- */
 stat_t cm_get_heater_d(nvObj_t *nv)
 {
     switch(_get_heater_number(nv)) {
-        case '1': { nv->value = pid1._d_factor * 100.0; break; }
-        case '2': { nv->value = pid2._d_factor * 100.0; break; }
-        case '3': { nv->value = pid3._d_factor * 100.0; break; }
-
-        default: { nv->value = 0.0; break; }
+        case '1': { nv->value_flt = pid1._d_factor * 100.0; break; }
+        case '2': { nv->value_flt = pid2._d_factor * 100.0; break; }
+        case '3': { nv->value_flt = pid3._d_factor * 100.0; break; }
+        default: { nv->value_flt = 0.0; break; }
     }
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
-
     return (STAT_OK);
 }
 stat_t cm_set_heater_d(nvObj_t *nv)
 {
     switch(_get_heater_number(nv)) {
-        case '1': { pid1._d_factor = nv->value / 100.0; break; }
-        case '2': { pid2._d_factor = nv->value / 100.0; break; }
-        case '3': { pid3._d_factor = nv->value / 100.0; break; }
-
+        case '1': { pid1._d_factor = nv->value_flt / 100.0; break; }
+        case '2': { pid2._d_factor = nv->value_flt / 100.0; break; }
+        case '3': { pid3._d_factor = nv->value_flt / 100.0; break; }
         default: { break; }
     }
     return (STAT_OK);
 }
 
-/*
- * cm_get_heater_f()/cm_set_heater_f() - get/set the F parameter of the PIDF
+/****************************************************************************************
+ * cm_get_heater_f()- get the F parameter of the PIDF
+ * cm_set_heater_f()- set the F parameter of the PIDF
+ *
+ * There are both the file-to-file use version, and the NV-pair form (which uses the other).
  */
 stat_t cm_get_heater_f(nvObj_t *nv)
 {
     switch(_get_heater_number(nv)) {
-        case '1': { nv->value = pid1._f_factor * 100.0; break; }
-        case '2': { nv->value = pid2._f_factor * 100.0; break; }
-        case '3': { nv->value = pid3._f_factor * 100.0; break; }
+        case '1': { nv->value_flt = pid1._f_factor * 100.0; break; }
+        case '2': { nv->value_flt = pid2._f_factor * 100.0; break; }
+        case '3': { nv->value_flt = pid3._f_factor * 100.0; break; }
 
-        default: { nv->value = 0.0; break; }
+        default: { nv->value_flt = 0.0; break; }
     }
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
@@ -1120,20 +1109,22 @@ stat_t cm_get_heater_f(nvObj_t *nv)
 stat_t cm_set_heater_f(nvObj_t *nv)
 {
     switch(_get_heater_number(nv)) {
-        case '1': { pid1._f_factor = nv->value / 100.0; break; }
-        case '2': { pid2._f_factor = nv->value / 100.0; break; }
-        case '3': { pid3._f_factor = nv->value / 100.0; break; }
+        case '1': { pid1._f_factor = nv->value_flt / 100.0; break; }
+        case '2': { pid2._f_factor = nv->value_flt / 100.0; break; }
+        case '3': { pid3._f_factor = nv->value_flt / 100.0; break; }
 
         default: { break; }
     }
     return (STAT_OK);
 }
 
-/*
- * cm_get_set_temperature()/cm_set_set_temperature() - get/set the set value of the PID
+/****************************************************************************************
+ * cm_get_set_temperature() - get the set value of the PID
+ * cm_set_set_temperature() - set the set value of the PID
  *
- *   There are both the file-to-file use version, and the NV-pair form (which uses the other).
+ * There are both the file-to-file use version, and the NV-pair form (which uses the other).
  */
+
 float cm_get_set_temperature(const uint8_t heater)
 {
     switch(heater) {
@@ -1142,17 +1133,17 @@ float cm_get_set_temperature(const uint8_t heater)
         case 3: { return pid3._set_point; break; }
         default: { break; }
     }
-
     return 0.0;
 }
+
 stat_t cm_get_set_temperature(nvObj_t *nv)
 {
-    nv->value = cm_get_set_temperature(_get_heater_number(nv) - '0');
+    nv->value_flt = cm_get_set_temperature(_get_heater_number(nv) - '0');
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
-
     return (STAT_OK);
 }
+
 void cm_set_set_temperature(const uint8_t heater, const float value)
 {
     switch(heater) {
@@ -1166,31 +1157,31 @@ void cm_set_set_temperature(const uint8_t heater, const float value)
 }
 stat_t cm_set_set_temperature(nvObj_t *nv)
 {
-    cm_set_set_temperature(_get_heater_number(nv) - '0', nv->value);
+    cm_set_set_temperature(_get_heater_number(nv) - '0', nv->value_flt);
     return (STAT_OK);
 }
 
-/*
- * cm_get_fan_power()/cm_set_fan_power() - get/set the set high-value setting of the heater fan
+/****************************************************************************************
+ * cm_get_fan_power() - get the set high-value setting of the heater fan
+ * cm_set_fan_power() - set the set high-value setting of the heater fan
  */
+
 float cm_get_fan_power(const uint8_t heater)
 {
     switch(heater) {
         case 1: { return min(1.0f, heater_fan1.max_value); }
-//        case 2: { return min(1.0f, heater_fan2.max_value); }
-//        case 3: { return min(1.0f, heater_fan3.max_value); }
-
+//      case 2: { return min(1.0f, heater_fan2.max_value); }
+//      case 3: { return min(1.0f, heater_fan3.max_value); }
         default: { break; }
     }
-
     return 0.0;
 }
+
 stat_t cm_get_fan_power(nvObj_t *nv)
 {
-    nv->value = cm_get_fan_power(_get_heater_number(nv) - '0');
+    nv->value_flt = cm_get_fan_power(_get_heater_number(nv) - '0');
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
-
     return (STAT_OK);
 }
 
@@ -1198,177 +1189,170 @@ void cm_set_fan_power(const uint8_t heater, const float value)
 {
     switch(heater) {
         case 1: { heater_fan1.max_value = max(0.0f, value); break; }
-//        case 2: { heater_fan2.max_value = max(0.0, value); break; }
-//        case 3: { heater_fan3.max_value = max(0.0, value); break; }
+//      case 2: { heater_fan2.max_value = max(0.0, value); break; }
+//      case 3: { heater_fan3.max_value = max(0.0, value); break; }
         default: { break; }
     }
 }
+
 stat_t cm_set_fan_power(nvObj_t *nv)
 {
-    cm_set_fan_power(_get_heater_number(nv) - '0', nv->value);
+    cm_set_fan_power(_get_heater_number(nv) - '0', nv->value_flt);
     return (STAT_OK);
 }
 
-/*
- * cm_get_fan_min_power()/cm_set_fan_min_power() - get/set the set high-value setting of the heater fan
+/****************************************************************************************
+ * cm_get_fan_min_power() - get the set low-value setting of the heater fan
+ * cm_set_fan_min_power() - set the set low-value setting of the heater fan
  */
+
 stat_t cm_get_fan_min_power(nvObj_t *nv)
 {
     switch(_get_heater_number(nv)) {
-        case '1': { nv->value = heater_fan1.min_value; break; }
-//        case '2': { nv->value = heater_fan2.min_value; break; }
-//        case '3': { nv->value = heater_fan3.min_value; break; }
-
-        default: { nv->value = 0.0; break; }
+        case '1': { nv->value_flt = heater_fan1.min_value; break; }
+//      case '2': { nv->value_flt = heater_fan2.min_value; break; }
+//      case '3': { nv->value_flt = heater_fan3.min_value; break; }
+        default: { nv->value_flt = 0.0; break; }
     }
-
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
-
     return (STAT_OK);
 }
+
 stat_t cm_set_fan_min_power(nvObj_t *nv)
 {
     switch(_get_heater_number(nv)) {
-        case '1': { heater_fan1.max_value = min(0.0f, nv->value); break; }
-//        case '2': { heater_fan2.min_value = min(0.0, nv->value); break; }
-//        case '3': { heater_fan3.min_value = min(0.0, nv->value); break; }
-
+        case '1': { heater_fan1.max_value = min(0.0f, nv->value_flt); break; }
+//      case '2': { heater_fan2.min_value = min(0.0, nv->value_flt); break; }
+//      case '3': { heater_fan3.min_value = min(0.0, nv->value_flt); break; }
         default: { break; }
     }
-
     return (STAT_OK);
 }
 
-/*
- * cm_get_fan_low_temp()/cm_set_fan_low_temp() - get/set the set high-value setting of the heater fan
+/****************************************************************************************
+ * cm_get_fan_low_temp() - get the set low-temp setting of the heater fan
+ * cm_set_fan_low_temp() - set the set low-temp setting of the heater fan
  */
+
 stat_t cm_get_fan_low_temp(nvObj_t *nv)
 {
     switch(_get_heater_number(nv)) {
-        case '1': { nv->value = heater_fan1.low_temp; break; }
-//        case '2': { nv->value = heater_fan2.low_temp; break; }
-//        case '3': { nv->value = heater_fan3.low_temp; break; }
-
-        default: { nv->value = 0.0; break; }
+        case '1': { nv->value_flt = heater_fan1.low_temp; break; }
+//      case '2': { nv->value_flt = heater_fan2.low_temp; break; }
+//      case '3': { nv->value_flt = heater_fan3.low_temp; break; }
+        default: { nv->value_flt = 0.0; break; }
     }
-
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
-
     return (STAT_OK);
 }
+
 stat_t cm_set_fan_low_temp(nvObj_t *nv)
 {
     switch(_get_heater_number(nv)) {
-        case '1': { heater_fan1.low_temp = min(0.0f, nv->value); break; }
-//        case '2': { heater_fan2.low_temp = min(0.0f, nv->value); break; }
-//        case '3': { heater_fan3.low_temp = min(0.0f, nv->value); break; }
-
+        case '1': { heater_fan1.low_temp = min(0.0f, nv->value_flt); break; }
+//      case '2': { heater_fan2.low_temp = min(0.0f, nv->value_flt); break; }
+//      case '3': { heater_fan3.low_temp = min(0.0f, nv->value_flt); break; }
         default: { break; }
     }
-
     return (STAT_OK);
 }
 
-/*
- * cm_get_fan_high_temp()/cm_set_fan_high_temp() - get/set the set high-value setting of the heater fan
+/****************************************************************************************
+ * cm_get_fan_high_temp() - get the set high-value setting of the heater fan
+ * cm_set_fan_high_temp() - set the set high-value setting of the heater fan
  */
+
 stat_t cm_get_fan_high_temp(nvObj_t *nv)
 {
     switch(_get_heater_number(nv)) {
-        case '1': { nv->value = heater_fan1.high_temp; break; }
-//        case '2': { nv->value = heater_fan2.high_temp; break; }
-//        case '3': { nv->value = heater_fan3.high_temp; break; }
-
-        default: { nv->value = 0.0; break; }
+        case '1': { nv->value_flt = heater_fan1.high_temp; break; }
+//      case '2': { nv->value_flt = heater_fan2.high_temp; break; }
+//      case '3': { nv->value_flt = heater_fan3.high_temp; break; }
+        default: { nv->value_flt = 0.0; break; }
     }
-
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
-
     return (STAT_OK);
 }
+
 stat_t cm_set_fan_high_temp(nvObj_t *nv)
 {
     switch(_get_heater_number(nv)) {
-        case '1': { heater_fan1.high_temp = min(0.0f, nv->value); break; }
-//        case '2': { heater_fan2.high_temp = min(0.0f, nv->value); break; }
-//        case '3': { heater_fan3.high_temp = min(0.0f, nv->value); break; }
-
+        case '1': { heater_fan1.high_temp = min(0.0f, nv->value_flt); break; }
+//      case '2': { heater_fan2.high_temp = min(0.0f, nv->value_flt); break; }
+//      case '3': { heater_fan3.high_temp = min(0.0f, nv->value_flt); break; }
         default: { break; }
     }
-
     return (STAT_OK);
 }
 
-/*
- * cm_get_at_temperature() - get a boolean if the heater has reaced the set value of the PID
+/****************************************************************************************
+ * cm_get_at_temperature() - get a boolean if the heater has reached the set value of the PID
  */
+
 bool cm_get_at_temperature(const uint8_t heater)
 {
     switch(heater) {
         case 1: { return pid1._at_set_point; }
         case 2: { return pid2._at_set_point; }
         case 3: { return pid3._at_set_point; }
-
         default: { break; }
     }
-
     return false;
 }
+
 stat_t cm_get_at_temperature(nvObj_t *nv)
 {
-    nv->value = cm_get_at_temperature(_get_heater_number(nv) - '0');
+    nv->value_int = cm_get_at_temperature(_get_heater_number(nv) - '0');
     nv->precision = GET_TABLE_WORD(precision);
-    nv->valuetype = TYPE_BOOL;
-
+    nv->valuetype = TYPE_BOOLEAN;
     return (STAT_OK);
 }
 
-
-/*
+/****************************************************************************************
  * cm_get_heater_output() - get the output value (PWM duty cycle) of the PID
  */
+
 float cm_get_heater_output(const uint8_t heater)
 {
     switch(heater) {
-        case 1: { return pid1._average_output; }
-        case 2: { return pid2._average_output; }
-        case 3: { return pid3._average_output; }
-
+        case 1: { return (float)fet_pin1; }
+        case 2: { return (float)fet_pin2; }
+        case 3: { return (float)fet_pin3; }
         default: { break; }
     }
     return 0.0;
 }
+
 stat_t cm_get_heater_output(nvObj_t *nv)
 {
-    nv->value = cm_get_heater_output(_get_heater_number(nv) - '0');
+    nv->value_flt = cm_get_heater_output(_get_heater_number(nv) - '0');
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
-
     return (STAT_OK);
 }
 
-/*
+/****************************************************************************************
  * cm_get_heater_adc() - get the raw adc value of the PID
  */
+
 stat_t cm_get_heater_adc(nvObj_t *nv)
 {
     switch(_get_heater_number(nv)) {
-        case '1': { nv->value = (float)temperature_sensor_1.get_raw_value(); break; }
-        case '2': { nv->value = (float)temperature_sensor_2.get_raw_value(); break; }
-        case '3': { nv->value = (float)temperature_sensor_3.get_raw_value(); break; }
+        case '1': { nv->value_flt = (float)temperature_sensor_1.get_raw_value(); break; }
+        case '2': { nv->value_flt = (float)temperature_sensor_2.get_raw_value(); break; }
+        case '3': { nv->value_flt = (float)temperature_sensor_3.get_raw_value(); break; }
 
-        default: { nv->value = 0.0; break; }
+        default: { nv->value_flt = 0.0; break; }
     }
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
-
     return (STAT_OK);
 }
 
-/*
+/****************************************************************************************
  * cm_get_temperature() - get the current temperature
  */
  float cm_get_temperature(const uint8_t heater)
@@ -1385,24 +1369,24 @@ stat_t cm_get_heater_adc(nvObj_t *nv)
  }
 stat_t cm_get_temperature(nvObj_t *nv)
 {
-    nv->value = cm_get_temperature(_get_heater_number(nv) - '0');
+    nv->value_flt = cm_get_temperature(_get_heater_number(nv) - '0');
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
-
     return (STAT_OK);
 }
 
-/*
+/****************************************************************************************
  * cm_get_thermistor_resistance() - get the current temperature
  */
+
 stat_t cm_get_thermistor_resistance(nvObj_t *nv)
 {
     switch(_get_heater_number(nv)) {
-        case '1': { nv->value = temperature_sensor_1.get_resistance(); break; }
-        case '2': { nv->value = temperature_sensor_2.get_resistance(); break; }
-        case '3': { nv->value = temperature_sensor_3.get_resistance(); break; }
+        case '1': { nv->value_flt = temperature_sensor_1.get_resistance(); break; }
+        case '2': { nv->value_flt = temperature_sensor_2.get_resistance(); break; }
+        case '3': { nv->value_flt = temperature_sensor_3.get_resistance(); break; }
 
-        default: { nv->value = 0.0; break; }
+        default: { nv->value_flt = 0.0; break; }
     }
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
@@ -1416,16 +1400,15 @@ stat_t cm_get_thermistor_resistance(nvObj_t *nv)
 stat_t cm_get_thermistor_voltage(nvObj_t* nv)
 {
     switch(_get_heater_number(nv)) {
-        case '1': { nv->value = temperature_sensor_1.get_voltage(); break; }
-        case '2': { nv->value = temperature_sensor_2.get_voltage(); break; }
-        case '3': { nv->value = temperature_sensor_3.get_voltage(); break; }
+        case '1': { nv->value_flt = temperature_sensor_1.get_voltage(); break; }
+        case '2': { nv->value_flt = temperature_sensor_2.get_voltage(); break; }
+        case '3': { nv->value_flt = temperature_sensor_3.get_voltage(); break; }
 
             // Failsafe. We can only get here if we set it up in config_app, but not here.
-        default: { nv->value = 0.0; break; }
+        default: { nv->value_flt = 0.0; break; }
     }
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
-
     return (STAT_OK);
 }
 
@@ -1440,71 +1423,66 @@ char _get_pid_number(nvObj_t *nv) {
 }
 
 
-/*
+/****************************************************************************************
  * cm_get_pid_p() - get the active P of the PID (read-only)
+ * cm_get_pid_i() - get the active I of the PID (read-only)
+ * cm_get_pid_d() - get the active D of the PID (read-only)
+ * cm_get_pid_f() - get the active F of the PID (read-only)
  */
+
 stat_t cm_get_pid_p(nvObj_t *nv)
 {
     switch(_get_pid_number(nv)) {
-        case '1': { nv->value = pid1._proportional; break; }
-        case '2': { nv->value = pid2._proportional; break; }
-        case '3': { nv->value = pid3._proportional; break; }
+        case '1': { nv->value_flt = pid1._proportional; break; }
+        case '2': { nv->value_flt = pid2._proportional; break; }
+        case '3': { nv->value_flt = pid3._proportional; break; }
 
-        default: { nv->value = 0.0; break; }
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { nv->value_flt = 0.0; break; }
     }
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
-
     return (STAT_OK);
 }
 
-/*
- * cm_get_pid_i() - get the active I of the PID (read-only)
- */
 stat_t cm_get_pid_i(nvObj_t *nv)
 {
     switch(_get_pid_number(nv)) {
-        case '1': { nv->value = pid1._integral; break; }
-        case '2': { nv->value = pid2._integral; break; }
-        case '3': { nv->value = pid3._integral; break; }
+        case '1': { nv->value_flt = pid1._integral; break; }
+        case '2': { nv->value_flt = pid2._integral; break; }
+        case '3': { nv->value_flt = pid3._integral; break; }
 
-        default: { nv->value = 0.0; break; }
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { nv->value_flt = 0.0; break; }
     }
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
-
     return (STAT_OK);
 }
 
-/*
- * cm_get_pid_d() - get the active D of the PID (read-only)
- */
 stat_t cm_get_pid_d(nvObj_t *nv)
 {
     switch(_get_pid_number(nv)) {
-        case '1': { nv->value = pid1._derivative; break; }
-        case '2': { nv->value = pid2._derivative; break; }
-        case '3': { nv->value = pid3._derivative; break; }
+        case '1': { nv->value_flt = pid1._derivative; break; }
+        case '2': { nv->value_flt = pid2._derivative; break; }
+        case '3': { nv->value_flt = pid3._derivative; break; }
 
-        default: { nv->value = 0.0; break; }
+            // Failsafe. We can only get here if we set it up in config_app, but not here.
+        default: { nv->value_flt = 0.0; break; }
     }
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;
-
     return (STAT_OK);
 }
 
-/*
- * cm_get_pid_f() - get the active F of the PID (read-only)
- */
 stat_t cm_get_pid_f(nvObj_t *nv)
 {
     switch(_get_pid_number(nv)) {
-        case '1': { nv->value = pid1._feed_forward; break; }
-        case '2': { nv->value = pid2._feed_forward; break; }
-        case '3': { nv->value = pid3._feed_forward; break; }
+        case '1': { nv->value_flt = pid1._feed_forward; break; }
+        case '2': { nv->value_flt = pid2._feed_forward; break; }
+        case '3': { nv->value_flt = pid3._feed_forward; break; }
 
-        default: { nv->value = 0.0; break; }
+        default: { nv->value_flt = 0.0; break; }
     }
     nv->precision = GET_TABLE_WORD(precision);
     nv->valuetype = TYPE_FLOAT;

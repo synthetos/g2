@@ -1,9 +1,10 @@
 /*
  * board_stepper.cpp - board-specific code for stepper.cpp
+ * For: /board/gQuadratic
  * This file is part of the g2core project
  *
- * Copyright (c) 2016-2018 Alden S. Hart, Jr.
- * Copyright (c) 2016-2018 Robert Giseburt
+ * Copyright (c) 2016 - 2019 Alden S. Hart, Jr.
+ * Copyright (c) 2016 - 2019 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -50,7 +51,6 @@ HOT_DATA StepDirStepper<Motate::kSocket2_StepPinNumber,
 #endif // QUADRATIC_REVISION == 'B'
 
 #if QUADRATIC_REVISION == 'C'
-#warning setting up trinamics
 // Motate::SPIChipSelectPin<Motate::kSocket3_SPISlaveSelectPinNumber> motor_1_cs;
 HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
              Motate::kSocket1_StepPinNumber,

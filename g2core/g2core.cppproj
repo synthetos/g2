@@ -68,12 +68,12 @@
     <com_atmel_avrdbg_tool_atmelice>
       <ToolOptions>
         <InterfaceProperties>
-          <SwdClock>10000000</SwdClock>
+          <SwdClock>2000000</SwdClock>
         </InterfaceProperties>
         <InterfaceName>SWD</InterfaceName>
       </ToolOptions>
       <ToolType>com.atmel.avrdbg.tool.atmelice</ToolType>
-      <ToolNumber>J41800030015</ToolNumber>
+      <ToolNumber>J41800019454</ToolNumber>
       <ToolName>Atmel-ICE</ToolName>
     </com_atmel_avrdbg_tool_atmelice>
     <UseGdb>True</UseGdb>
@@ -100,9 +100,9 @@
       <HWProgramCounterSampling>True</HWProgramCounterSampling>
     </PercepioTrace>
     <preserveEEPROM>true</preserveEEPROM>
-    <avrtoolserialnumber>J41800030015</avrtoolserialnumber>
+    <avrtoolserialnumber>J41800019454</avrtoolserialnumber>
     <avrdeviceexpectedsignature>0x284E0A60</avrdeviceexpectedsignature>
-    <avrtoolinterfaceclock>10000000</avrtoolinterfaceclock>
+    <avrtoolinterfaceclock>2000000</avrtoolinterfaceclock>
     <custom>
       <ToolOptions xmlns="">
         <InterfaceProperties>
@@ -252,8 +252,8 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'sbv300' ">
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>BOARD=sbv300 COLOR=0 VERBOSE=1</BuildTarget>
-    <CleanTarget>clean BOARD=sbv300</CleanTarget>
+    <BuildTarget>CONFIG=sbv300 COLOR=0 VERBOSE=1</BuildTarget>
+    <CleanTarget>clean CONFIG=sbv300</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\sbv300\</OutputPath>
     <ToolchainSettings>
@@ -376,8 +376,8 @@
     </ToolchainSettings>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>BOARD=g2v9k CONFIG=ShapeokoDualY COLOR=0 VERBOSE=1</BuildTarget>
-    <CleanTarget>clean BOARD=g2v9k CONFIG=ShapeokoDualY</CleanTarget>
+    <BuildTarget>CONFIG=ShopbotTestV9 COLOR=0 VERBOSE=1 DEBUG=2</BuildTarget>
+    <CleanTarget>clean CONFIG=ShopbotTestV9</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <OutputPath>bin\G2v9k\</OutputPath>
   </PropertyGroup>
@@ -1177,7 +1177,7 @@
     <OutputPath>bin\Makeblock-v9\</OutputPath>
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <OutputDirectory />
-    <BuildTarget>CONFIG=Makeblock COLOR=0 VERBOSE=1</BuildTarget>
+    <BuildTarget>CONFIG=Makeblock COLOR=0 VERBOSE=1 DEBUG=2</BuildTarget>
     <CleanTarget>clean CONFIG=Makeblock</CleanTarget>
     <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
     <ToolchainSettings>
@@ -1653,6 +1653,9 @@
     <OutputPath>bin\gQuadratic on AxiDraw v3\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="alarm.cpp">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="board\Archim\Archim-pinout.h">
       <SubType>compile</SubType>
     </Compile>
@@ -1824,16 +1827,16 @@
     <Compile Include="board\sbv300\sbv300-pinout.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="device\neopixel\neopixel.h">
+    <Compile Include="cycle_feedhold.cpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="device\step_dir_driver\step_dir_driver.cpp">
+    <Compile Include="device\neopixel\neopixel.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="device\step_dir_driver\step_dir_driver.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="device\trinamic\tmc2130.cpp">
+    <Compile Include="device\step_dir_hobbyservo\step_dir_hobbyservo.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="device\trinamic\tmc2130.h">
@@ -1851,6 +1854,9 @@
     <Compile Include="marlin_compatibility.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="settings\settings_eggbot.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="settings\settings_makeblock.h">
       <SubType>compile</SubType>
     </Compile>
@@ -1864,6 +1870,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings\settings_Printrbot_Simple_1608.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_shapeoko2dualY.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_shapeoko375_Dual.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings\settings_ultimaker.h">
@@ -1920,7 +1932,7 @@
     <Compile Include="gcode_parser.cpp">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="gcode_parser.h">
+    <Compile Include="gcode.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="gpio.cpp">
@@ -2016,6 +2028,9 @@
     <Compile Include="settings\settings_test.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="settings\settings_watercolorbot_v2.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="settings\settings_zen7x12.h">
       <SubType>compile</SubType>
     </Compile>
@@ -2067,6 +2082,7 @@
     <Folder Include="board\sbv300\" />
     <Folder Include="device\" />
     <Folder Include="device\neopixel" />
+    <Folder Include="device\step_dir_hobbyservo" />
     <Folder Include="device\step_dir_driver\" />
     <Folder Include="device\trinamic\" />
     <Folder Include="settings" />

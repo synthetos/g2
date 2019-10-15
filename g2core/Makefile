@@ -1,8 +1,8 @@
 #
 # Makefile
 #
-# Copyright (c) 2012 - 2016 Robert Giseburt
-# Copyright (c) 2013 - 2016 Alden S. Hart Jr.
+# Copyright (c) 2012 - 2018 Robert Giseburt
+# Copyright (c) 2013 - 2018 Alden S. Hart Jr.
 #
 # This file is part of the g2core project.
 #
@@ -61,6 +61,9 @@ endif
 ifeq ($(DEBUG),3)
 	DEVICE_DEFINES += DEBUG=1 IN_DEBUGGER=1 DEBUG_SEMIHOSTING=1
 endif
+#ifeq ($(DEBUG),3)
+#    DEVICE_DEFINES += DEBUG=1 IN_DEBUGGER=1 DEBUG_SEMIHOSTING=1
+#endif
 
 # TOOLS_VERSION = 6.2u1
 TOOLS_VERSION = 7u2

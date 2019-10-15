@@ -2,8 +2,8 @@
  * g2core_info.h - g2core build information
  * This file is part of the g2core project
  *
- * Copyright (c) 2010 - 2017 Alden S. Hart, Jr.
- * Copyright (c) 2010 - 2017 Robert Giseburt
+ * Copyright (c) 2010 - 2018 Alden S. Hart, Jr.
+ * Copyright (c) 2010 - 2018 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -21,15 +21,13 @@
 #ifndef G2CORE_INFO_H_ONCE
 #define G2CORE_INFO_H_ONCE
 
-#define G2CORE_FIRMWARE_BUILD			100.26  // Merged fixes for #267 and PR #258
+#define G2CORE_FIRMWARE_BUILD			101.03  // Issue #320, #354 - Added stepper polarity {1pl:n},  Fixed SR setting bug
+#define G2CORE_FIRMWARE_VERSION         0.99
+
 #ifdef GIT_VERSION
-#define G2CORE_FIRMWARE_BUILD_STRING	GIT_VERSION
+#define G2CORE_FIRMWARE_BUILD_STRING   GIT_VERSION
 #else
-#define G2CORE_FIRMWARE_BUILD_STRING	"unknown"
+#define G2CORE_FIRMWARE_BUILD_STRING   "unknown"
 #endif
-#define G2CORE_FIRMWARE_VERSION			0.99						// firmware major version
-#define G2CORE_HARDWARE_PLATFORM		HW_PLATFORM_V9		        // hardware platform indicator (2 = Native Arduino Due)
-#define G2CORE_HARDWARE_VERSION		    HW_VERSION_TINYGV9K			// hardware platform revision number
-#define G2CORE_HARDWARE_VERSION_MAX     (G2CORE_HARDWARE_VERSION)
 
 #endif // G2CORE_INFO_H_ONCE

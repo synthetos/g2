@@ -2,8 +2,8 @@
  * gpio.h - Digital IO  handling functions
  * This file is part of the g2core project
  *
- * Copyright (c) 2015 - 2017 Alden S. Hart, Jr.
- * Copyright (c) 2015 - 2017 Robert Giseburt
+ * Copyright (c) 2015 - 2019 Alden S. Hart, Jr.
+ * Copyright (c) 2015 - 2019 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -238,24 +238,24 @@ struct gpioDigitalInput {
             nv->valuetype = TYPE_NULL;
             return (STAT_OK);
         }
-        nv->value = getState();
-        nv->valuetype = TYPE_BOOL;
+        nv->value_int = getState();
+        nv->valuetype = TYPE_BOOLEAN;
         return (STAT_OK);
     };
     // no setState
 
     stat_t getEnabled(nvObj_t *nv)
     {
-        nv->value = getEnabled();
-        nv->valuetype = TYPE_INT;
+        nv->value_int = getEnabled();
+        nv->valuetype = TYPE_INTEGER;
         return (STAT_OK);
     };
     stat_t setEnabled(nvObj_t *nv)
     {
-        if ((nv->value < IO_DISABLED) || (nv->value > IO_ENABLED)) {
+        if ((nv->value_int < IO_DISABLED) || (nv->value_int > IO_ENABLED)) {
             return (STAT_INPUT_VALUE_RANGE_ERROR);
         }
-        if (!setEnabled((ioEnabled)nv->value)) {
+        if (!setEnabled((ioEnabled)nv->value_int)) {
             return STAT_PARAMETER_IS_READ_ONLY;
         }
         return (STAT_OK);
@@ -263,16 +263,16 @@ struct gpioDigitalInput {
 
     stat_t getPolarity(nvObj_t *nv)
     {
-        nv->value = getPolarity();
-        nv->valuetype = TYPE_INT;
+        nv->value_int = getPolarity();
+        nv->valuetype = TYPE_INTEGER;
         return (STAT_OK);
     };
     stat_t setPolarity(nvObj_t *nv)
     {
-        if ((nv->value < IO_ACTIVE_HIGH) || (nv->value > IO_ACTIVE_LOW)) {
+        if ((nv->value_int < IO_ACTIVE_HIGH) || (nv->value_int > IO_ACTIVE_LOW)) {
             return (STAT_INPUT_VALUE_RANGE_ERROR);
         }
-        if (!setPolarity((ioPolarity)nv->value)) {
+        if (!setPolarity((ioPolarity)nv->value_int)) {
             return STAT_PARAMETER_IS_READ_ONLY;
         }
         return (STAT_OK);
@@ -280,16 +280,16 @@ struct gpioDigitalInput {
 
     stat_t getAction(nvObj_t *nv)
     {
-        nv->value = getAction();
-        nv->valuetype = TYPE_INT;
+        nv->value_int = getAction();
+        nv->valuetype = TYPE_INTEGER;
         return (STAT_OK);
     };
     stat_t setAction(nvObj_t *nv)
     {
-        if ((nv->value < INPUT_ACTION_NONE) || (nv->value > INPUT_ACTION_MAX)) {
+        if ((nv->value_int < INPUT_ACTION_NONE) || (nv->value_int > INPUT_ACTION_MAX)) {
             return (STAT_INPUT_VALUE_RANGE_ERROR);
         }
-        if (!setAction((inputAction)nv->value)) {
+        if (!setAction((inputAction)nv->value_int)) {
             return STAT_PARAMETER_IS_READ_ONLY;
         }
         return (STAT_OK);
@@ -298,16 +298,16 @@ struct gpioDigitalInput {
 
     stat_t getExternalNumber(nvObj_t *nv)
     {
-        nv->value = getExternalNumber();
-        nv->valuetype = TYPE_INT;
+        nv->value_int = getExternalNumber();
+        nv->valuetype = TYPE_INTEGER;
         return (STAT_OK);
     };
     stat_t setExternalNumber(nvObj_t *nv)
     {
-        if ((nv->value < 0) || (nv->value > 14)) {
+        if ((nv->value_int < 0) || (nv->value_int > 14)) {
             return (STAT_INPUT_VALUE_RANGE_ERROR);
         }
-        if (!setExternalNumber(nv->value)) {
+        if (!setExternalNumber(nv->value_int)) {
             return STAT_PARAMETER_IS_READ_ONLY;
         }
         return (STAT_OK);
@@ -555,17 +555,17 @@ struct gpioDigitalOutput {
 
     stat_t getEnabled(nvObj_t *nv)
     {
-        nv->value = getEnabled();
-        nv->valuetype = TYPE_INT;
+        nv->value_int = getEnabled();
+        nv->valuetype = TYPE_INTEGER;
         return (STAT_OK);
     };
     stat_t setEnabled(nvObj_t *nv)
     {
-        int32_t value = nv->value;
+        int32_t value = nv->value_int;
         if ((value != IO_DISABLED) && (value != IO_ENABLED)) {
             return (STAT_INPUT_VALUE_RANGE_ERROR);
         }
-        if (!setEnabled((ioEnabled)nv->value)) {
+        if (!setEnabled((ioEnabled)nv->value_int)) {
             return STAT_PARAMETER_IS_READ_ONLY;
         }
         return (STAT_OK);
@@ -573,16 +573,16 @@ struct gpioDigitalOutput {
 
     stat_t getPolarity(nvObj_t *nv)
     {
-        nv->value = getPolarity();
-        nv->valuetype = TYPE_INT;
+        nv->value_int = getPolarity();
+        nv->valuetype = TYPE_INTEGER;
         return (STAT_OK);
     };
     stat_t setPolarity(nvObj_t *nv)
     {
-        if ((nv->value < IO_ACTIVE_HIGH) || (nv->value > IO_ACTIVE_LOW)) {
+        if ((nv->value_int < IO_ACTIVE_HIGH) || (nv->value_int > IO_ACTIVE_LOW)) {
             return (STAT_INPUT_VALUE_RANGE_ERROR);
         }
-        if (!setPolarity((ioPolarity)nv->value)) {
+        if (!setPolarity((ioPolarity)nv->value_int)) {
             return STAT_PARAMETER_IS_READ_ONLY;
         }
         return (STAT_OK);
@@ -592,16 +592,16 @@ struct gpioDigitalOutput {
     {
         auto enabled = getEnabled();
         if (enabled != IO_ENABLED) {
-            nv->value = 0;
+            nv->value_int = 0;
             nv->valuetype = TYPE_NULL;   // reports back as NULL
         } else {
             nv->valuetype = TYPE_FLOAT;
             nv->precision = 2;
-            nv->value = getValue(); // read it as a float
+            nv->value_flt = getValue(); // read it as a float
 
             bool invert = (getPolarity() == IO_ACTIVE_LOW);
             if (invert) {
-                nv->value = 1.0 - nv->value;
+                nv->value_flt = 1.0 - nv->value_flt;
             }
         }
         return (STAT_OK);
@@ -612,7 +612,7 @@ struct gpioDigitalOutput {
         if (enabled != IO_ENABLED) {
             nv->valuetype = TYPE_NULL;   // reports back as NULL
         } else {
-            float value = nv->value; // read it as a float
+            float value = nv->value_flt; // read it as a float
 
             bool invert = (getPolarity() == IO_ACTIVE_LOW);
             if (invert) {
@@ -628,16 +628,16 @@ struct gpioDigitalOutput {
 
     stat_t getExternalNumber(nvObj_t *nv)
     {
-        nv->value = getExternalNumber();
-        nv->valuetype = TYPE_INT;
+        nv->value_int = getExternalNumber();
+        nv->valuetype = TYPE_INTEGER;
         return (STAT_OK);
     };
     stat_t setExternalNumber(nvObj_t *nv)
     {
-        if ((nv->value < 0) || (nv->value > 14)) {
+        if ((nv->value_int < 0) || (nv->value_int > 14)) {
             return (STAT_INPUT_VALUE_RANGE_ERROR);
         }
-        if (!setExternalNumber(nv->value)) {
+        if (!setExternalNumber(nv->value_int)) {
             return STAT_PARAMETER_IS_READ_ONLY;
         }
         return (STAT_OK);
@@ -678,7 +678,7 @@ struct gpioDigitalOutputWriter final {
     stat_t getValue(nvObj_t *nv)
     {
         if (!pin) {
-            nv->value = 0;
+            nv->value_int = 0;
             nv->valuetype = TYPE_NULL;   // reports back as NULL
             return (STAT_OK);
         }
@@ -881,17 +881,17 @@ struct gpioAnalogInput {
 
     stat_t getEnabled(nvObj_t *nv)
     {
-        nv->value = getEnabled();
-        nv->valuetype = TYPE_INT;
+        nv->value_int = getEnabled();
+        nv->valuetype = TYPE_INTEGER;
         return (STAT_OK);
     };
     stat_t setEnabled(nvObj_t *nv)
     {
-        int32_t value = nv->value;
+        int32_t value = nv->value_int;
         if ((value != IO_DISABLED) && (value != IO_ENABLED)) {
             return (STAT_INPUT_VALUE_RANGE_ERROR);
         }
-        if (!setEnabled((ioEnabled)nv->value)) {
+        if (!setEnabled((ioEnabled)nv->value_int)) {
             return STAT_PARAMETER_IS_READ_ONLY;
         }
         return (STAT_OK);
@@ -903,7 +903,7 @@ struct gpioAnalogInput {
             nv->valuetype = TYPE_NULL;
             return (STAT_OK);
         }
-        nv->value = getValue();
+        nv->value_flt = getValue();
         nv->valuetype = TYPE_FLOAT;
         return (STAT_OK);
     };
@@ -915,7 +915,7 @@ struct gpioAnalogInput {
             nv->valuetype = TYPE_NULL;
             return (STAT_OK);
         }
-        nv->value = getResistance();
+        nv->value_flt = getResistance();
         nv->valuetype = TYPE_FLOAT;
         return (STAT_OK);
     };
@@ -923,16 +923,16 @@ struct gpioAnalogInput {
 
     stat_t getType(nvObj_t *nv)
     {
-        nv->value = getType();
-        nv->valuetype = TYPE_INT;
+        nv->value_int = getType();
+        nv->valuetype = TYPE_INTEGER;
         return (STAT_OK);
     };
     stat_t setType(nvObj_t *nv)
     {
-        if ((getEnabled() != IO_ENABLED) || (nv->value > AIN_TYPE_EXTERNAL)) {
+        if ((getEnabled() != IO_ENABLED) || (nv->value_int > AIN_TYPE_EXTERNAL)) {
             return (STAT_INPUT_VALUE_RANGE_ERROR);
         }
-        if (!setType((AnalogInputType_t)nv->value)) {
+        if (!setType((AnalogInputType_t)nv->value_int)) {
             return STAT_PARAMETER_IS_READ_ONLY;
         }
         return (STAT_OK);
@@ -940,16 +940,16 @@ struct gpioAnalogInput {
 
     stat_t getCircuit(nvObj_t *nv)
     {
-        nv->value = getCircuit();
-        nv->valuetype = TYPE_INT;
+        nv->value_int = getCircuit();
+        nv->valuetype = TYPE_INTEGER;
         return (STAT_OK);
     };
     stat_t setCircuit(nvObj_t *nv)
     {
-        if ((nv->value < AIN_CIRCUIT_DISABLED) || (nv->value > AIN_CIRCUIT_MAX)) {
+        if ((nv->value_int < AIN_CIRCUIT_DISABLED) || (nv->value_int > AIN_CIRCUIT_MAX)) {
             return (STAT_INPUT_VALUE_RANGE_ERROR);
         }
-        if (!setCircuit((AnalogCircuit_t)nv->value)) {
+        if (!setCircuit((AnalogCircuit_t)nv->value_int)) {
             return STAT_PARAMETER_IS_READ_ONLY;
         }
         return (STAT_OK);
@@ -957,13 +957,13 @@ struct gpioAnalogInput {
 
     stat_t getParameter(nvObj_t *nv, const uint8_t p)
     {
-        nv->value = getParameter(p);
+        nv->value_flt = getParameter(p);
         nv->valuetype = TYPE_FLOAT;
         return (STAT_OK);
     };
     stat_t setParameter(nvObj_t *nv, const uint8_t p)
     {
-        if (!setParameter(p, nv->value)) {
+        if (!setParameter(p, nv->value_int)) {
             return STAT_PARAMETER_IS_READ_ONLY;
         }
         return (STAT_OK);
@@ -972,16 +972,16 @@ struct gpioAnalogInput {
 
     stat_t getExternalNumber(nvObj_t *nv)
     {
-        nv->value = getExternalNumber();
-        nv->valuetype = TYPE_INT;
+        nv->value_int = getExternalNumber();
+        nv->valuetype = TYPE_INTEGER;
         return (STAT_OK);
     };
     stat_t setExternalNumber(nvObj_t *nv)
     {
-        if ((nv->value < 0) || (nv->value > 14)) {
+        if ((nv->value_int < 0) || (nv->value_int > 14)) {
             return (STAT_INPUT_VALUE_RANGE_ERROR);
         }
-        if (!setExternalNumber(nv->value)) {
+        if (!setExternalNumber(nv->value_int)) {
             return STAT_PARAMETER_IS_READ_ONLY;
         }
         return (STAT_OK);
@@ -1022,7 +1022,7 @@ struct gpioAnalogInputReader final {
 
     stat_t getValue(nvObj_t *nv) {
         if (!pin) {
-            nv->value = 0;
+            nv->value_int = 0;
             nv->valuetype = TYPE_NULL;   // reports back as NULL
             return (STAT_OK);
         }
@@ -1030,7 +1030,7 @@ struct gpioAnalogInputReader final {
     };
     stat_t getResistance(nvObj_t *nv) {
         if (!pin) {
-            nv->value = 0;
+            nv->value_int = 0;
             nv->valuetype = TYPE_NULL;   // reports back as NULL
             return (STAT_OK);
         }

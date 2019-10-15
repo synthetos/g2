@@ -2,8 +2,8 @@
  * stepper.h - stepper motor interface
  * This file is part of g2core project
  *
- * Copyright (c) 2010 - 2016 Alden S. Hart, Jr.
- * Copyright (c) 2013 - 2016 Robert Giseburt
+ * Copyright (c) 2010 - 2019 Alden S. Hart, Jr.
+ * Copyright (c) 2013 - 2019 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -255,6 +255,8 @@
 
 #include "planner.h"    // planner.h must precede stepper.h for moveType typedef
 
+#include "gpio.h" // for ioPolarity
+
 // Note: "board_stepper.h" is inlcluded at the end of this file
 
 /*********************************
@@ -276,12 +278,12 @@ typedef enum {                          // used w/start and stop flags to sequen
 } stPowerState;
 
 typedef enum {
-    MOTOR_DISABLED = 0,                 // [0] motor enable is deactivated
-    MOTOR_ALWAYS_POWERED,               // [1] motor is always powered while machine is ON
-    MOTOR_POWERED_IN_CYCLE,             // [2] motor fully powered during cycles, de-powered out of cycle
-    MOTOR_POWERED_ONLY_WHEN_MOVING,     // [3] motor only powered while moving - idles shortly after it's stopped - even in cycle
-    MOTOR_POWER_MODE_MAX_VALUE          // [4] for input range checking
+    MOTOR_DISABLED = 0,                 // motor enable is deactivated
+    MOTOR_ALWAYS_POWERED,               // motor is always powered while machine is ON
+    MOTOR_POWERED_IN_CYCLE,             // motor fully powered during cycles, de-powered out of cycle
+    MOTOR_POWERED_ONLY_WHEN_MOVING      // motor only powered while moving - idles shortly after it's stopped - even in cycle
 } stPowerMode;
+#define MOTOR_POWER_MODE_MAX_VALUE    MOTOR_POWERED_ONLY_WHEN_MOVING
 
 // Min/Max timeouts allowed for motor disable. Allow for inertial stop; must be non-zero
 #define MOTOR_TIMEOUT_SECONDS_MIN   (float)0.1      // seconds !!! SHOULD NEVER BE ZERO !!!
@@ -424,6 +426,7 @@ extern stPrepSingleton_t st_pre HOT_DATA;   // only used by config_app diagnosti
 /**** Stepper (base object) ****/
 
 struct Stepper {
+protected:
     Timeout _motor_disable_timeout;         // this is the timeout object that will let us know when time is u
     uint32_t _motor_disable_timeout_ms;     // the number of ms that the timeout is reset to
     stPowerState _power_state;              // state machine for managing motor power
@@ -431,7 +434,7 @@ struct Stepper {
     bool _was_enabled;                      // store if we enabled a motor to handle timout setup outside of load
 
     /* stepper default values */
-
+public:
     // sets default pwm freq for all motor vrefs (commented line below also sets HiZ)
     Stepper(const uint32_t frequency = 500000)
     {
@@ -452,6 +455,26 @@ struct Stepper {
         } else if (_power_mode == MOTOR_DISABLED) {
             disable();
         }
+    };
+
+    virtual ioPolarity getEnablePolarity() const
+    {
+        return IO_ACTIVE_LOW; // we have to say something here
+    };
+
+    virtual void setEnablePolarity(ioPolarity new_mp)
+    {
+        // do nothing
+    };
+
+    virtual ioPolarity getStepPolarity() const
+    {
+        return IO_ACTIVE_LOW; // we have to say something here
+    };
+
+    virtual void setStepPolarity(ioPolarity new_mp)
+    {
+        // do nothing
     };
 
     virtual stPowerMode getPowerMode()
@@ -574,6 +597,22 @@ struct Stepper {
     virtual void setPowerLevel(float new_pl) { /* must override */ };
 };
 
+/**** ExternalEncoder (base object) ****/
+
+class ExternalEncoder {
+   public:
+    using callback_t = std::function<void(bool, float)>;
+    enum ReturnFormat { ReturnDegrees, ReturnRadians, ReturnFraction };
+
+    virtual void setCallback(std::function<void(bool, float)> &&handler);
+    virtual void setCallback(std::function<void(bool, float)> &handler);
+
+    virtual void requestAngleDegrees();
+    virtual void requestAngleRadians();
+    virtual void requestAngleFraction();
+
+    virtual float getQuadratureFraction();
+};
 
 /**** FUNCTION PROTOTYPES ****/
 
@@ -593,25 +632,41 @@ void st_request_load_move(void) HOT_FUNC;
 void st_prep_null(void);
 void st_prep_command(void *bf);        // use a void pointer since we don't know about mpBuf_t yet)
 void st_prep_dwell(float milliseconds);
-void st_request_out_of_band_dwell(float microseconds);
+void st_prep_out_of_band_dwell(float milliseconds);
 stat_t st_prep_line(const float start_velocity, const float end_velocity, const float travel_steps[], const float following_error[], const float segment_time)  HOT_FUNC;
 // NOTE: this version is the same, except it's passed an array of start/end velocities, one pair per motor
 stat_t st_prep_line(const float start_velocities[], const float end_velocities[], const float travel_steps[], const float following_error[], const float segment_time)  HOT_FUNC;
 
+stat_t st_get_ma(nvObj_t *nv);
 stat_t st_set_ma(nvObj_t *nv);
+stat_t st_get_sa(nvObj_t *nv);
 stat_t st_set_sa(nvObj_t *nv);
+stat_t st_get_tr(nvObj_t *nv);
 stat_t st_set_tr(nvObj_t *nv);
+stat_t st_get_mi(nvObj_t *nv);
 stat_t st_set_mi(nvObj_t *nv);
 stat_t st_get_su(nvObj_t *nv);
 stat_t st_set_su(nvObj_t *nv);
-stat_t st_set_pm(nvObj_t *nv);
+
+stat_t st_get_po(nvObj_t *nv);
+stat_t st_set_po(nvObj_t *nv);
+stat_t st_set_ep(nvObj_t *nv);
+stat_t st_get_ep(nvObj_t *nv);
+stat_t st_set_sp(nvObj_t *nv);
+stat_t st_get_sp(nvObj_t *nv);
+
 stat_t st_get_pm(nvObj_t *nv);
+stat_t st_set_pm(nvObj_t *nv);
+stat_t st_get_pl(nvObj_t *nv);
 stat_t st_set_pl(nvObj_t *nv);
+
 stat_t st_get_pwr(nvObj_t *nv);
 
+stat_t st_get_mt(nvObj_t *nv);
 stat_t st_set_mt(nvObj_t *nv);
 stat_t st_set_md(nvObj_t *nv);
 stat_t st_set_me(nvObj_t *nv);
+stat_t st_get_dw(nvObj_t *nv);
 
 #ifdef __TEXT_MODE
 
@@ -621,6 +676,8 @@ stat_t st_set_me(nvObj_t *nv);
     void st_print_mi(nvObj_t *nv);
     void st_print_su(nvObj_t *nv);
     void st_print_po(nvObj_t *nv);
+    void st_print_ep(nvObj_t *nv);
+    void st_print_sp(nvObj_t *nv);
     void st_print_pm(nvObj_t *nv);
     void st_print_pl(nvObj_t *nv);
     void st_print_pwr(nvObj_t *nv);
@@ -636,6 +693,8 @@ stat_t st_set_me(nvObj_t *nv);
     #define st_print_mi tx_print_stub
     #define st_print_su tx_print_stub
     #define st_print_po tx_print_stub
+    #define st_print_ep tx_print_stub
+    #define st_print_sp tx_print_stub
     #define st_print_pm tx_print_stub
     #define st_print_pl tx_print_stub
     #define st_print_pwr tx_print_stub

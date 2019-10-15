@@ -37,21 +37,6 @@
 // #include "MotateBuffer.h"
 #include "MotateUtilities.h"  // for to/fromLittle/BigEndian
 
-class ExternalEncoder {
-   public:
-    using callback_t = std::function<void(bool, float)>;
-    enum ReturnFormat { ReturnDegrees, ReturnRadians, ReturnFraction };
-
-    virtual void setCallback(std::function<void(bool, float)> &&handler);
-    virtual void setCallback(std::function<void(bool, float)> &handler);
-
-    virtual void requestAngleDegrees();
-    virtual void requestAngleRadians();
-    virtual void requestAngleFraction();
-
-    virtual float getQuadratureFraction();
-};
-
 // Complete class for I2C_AS5601 drivers.
 template <typename device_t>
 class I2C_AS5601 final : public ExternalEncoder, public gpioDigitalInputHandler {
