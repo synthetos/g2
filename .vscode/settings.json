@@ -45,7 +45,8 @@
         "vector": "cpp",
         "array": "cpp",
         "istream": "cpp",
-        "ostream": "cpp"
+        "ostream": "cpp",
+        "startup_sams70.c": "cpp"
     },
     "C_Cpp.dimInactiveRegions": true,
     "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 4, ColumnLimit: 120 }",
