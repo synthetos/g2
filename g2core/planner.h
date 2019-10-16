@@ -233,7 +233,9 @@ typedef enum {                      // code blocks for planning and trapezoid ge
 #ifndef PLANNER_QUEUE_SIZE
 #define PLANNER_QUEUE_SIZE          ((uint8_t)48)       // Suggest 12 min. Limit is 255
 #endif
+#ifndef SECONDARY_QUEUE_SIZE
 #define SECONDARY_QUEUE_SIZE        ((uint8_t)12)       // Secondary planner queue for feedhold operations
+#endif
 #define PLANNER_BUFFER_HEADROOM     ((uint8_t)4)        // Buffers to reserve in planner before processing new input line
 #define JERK_MULTIPLIER             ((float)1000000)    // DO NOT CHANGE - must always be 1 million
 
@@ -573,7 +575,7 @@ extern mpPlannerRuntime_t mr1 HOT_DATA;          // primary planner runtime cont
 extern mpPlannerRuntime_t mr2 HOT_DATA;          // secondary planner runtime context
 
 extern mpBuf_t mp1_queue[PLANNER_QUEUE_SIZE];   // storage allocation for primary planner queue buffers
-extern mpBuf_t mp2_queue[SECONDARY_QUEUE_SIZE] ; // storage allocation for secondary planner queue buffers
+extern mpBuf_t mp2_queue[SECONDARY_QUEUE_SIZE]; // storage allocation for secondary planner queue buffers
 
 /*
  * Global Scope Functions
