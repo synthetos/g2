@@ -262,7 +262,7 @@
 #if HAS_TEMPERATURE_SENSOR_1
     #define TEMPERATURE_SENSOR_1_CIRCUIT_TYPE ADCCircuitSimplePullup
     #define TEMPERATURE_SENSOR_1_CIRCUIT_INIT { /*pullup_resistance:*/ 4700 }
-    #define TEMPERATURE_SENSOR_1_TYPE  Thermistor<ADCPin<kADC1_PinNumber>>
+    #define TEMPERATURE_SENSOR_1_TYPE  Thermistor<ADCPin<Motate::kADC1_PinNumber>>
     #define TEMPERATURE_SENSOR_1_INIT { \
         /*T1:*/     20.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
         /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, \
@@ -277,7 +277,7 @@
 #if HAS_TEMPERATURE_SENSOR_2
     #define TEMPERATURE_SENSOR_2_CIRCUIT_TYPE ADCCircuitSimplePullup
     #define TEMPERATURE_SENSOR_2_CIRCUIT_INIT { /*pullup_resistance:*/ 4700 }
-    #define TEMPERATURE_SENSOR_2_TYPE  Thermistor<ADCPin<kADC2_PinNumber>>
+    #define TEMPERATURE_SENSOR_2_TYPE  Thermistor<ADCPin<Motate::kADC2_PinNumber>>
     #define TEMPERATURE_SENSOR_2_INIT { \
         /*T1:*/     20.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
         /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, \
@@ -292,7 +292,7 @@
 #if HAS_TEMPERATURE_SENSOR_3
     #define TEMPERATURE_SENSOR_3_CIRCUIT_TYPE ADCCircuitSimplePullup
     #define TEMPERATURE_SENSOR_3_CIRCUIT_INIT { /*pullup_resistance:*/ 4700 }
-    #define TEMPERATURE_SENSOR_3_TYPE  Thermistor<ADCPin<kADC3_PinNumber>>
+    #define TEMPERATURE_SENSOR_3_TYPE  Thermistor<ADCPin<Motate::kADC3_PinNumber>>
     #define TEMPERATURE_SENSOR_3_INIT { \
         /*T1:*/     20.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
         /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, \

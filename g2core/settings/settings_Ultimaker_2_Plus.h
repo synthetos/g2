@@ -377,7 +377,7 @@ M100.1 ({{ajh:144000.0}})
 #if HAS_TEMPERATURE_SENSOR_1
 //    #define TEMPERATURE_SENSOR_1_CIRCUIT_TYPE ADCCircuitDifferentialPullup
 //    #define TEMPERATURE_SENSOR_1_CIRCUIT_INIT { /*pullup_resistance:*/ 200 }
-//    #define TEMPERATURE_SENSOR_1_TYPE  PT100<ADCDifferentialPair<kADC1_Neg_PinNumber, kADC1_Pos_PinNumber>>
+//    #define TEMPERATURE_SENSOR_1_TYPE  PT100<ADCDifferentialPair<Motate::kADC1_Neg_PinNumber, kADC1_Pos_PinNumber>>
 //    #define TEMPERATURE_SENSOR_1_INIT {&temperature_sensor_1_circuit}
 
     #define TEMPERATURE_SENSOR_1_CIRCUIT_TYPE ADCCircuitRawResistance
@@ -393,7 +393,7 @@ M100.1 ({{ajh:144000.0}})
 #if HAS_TEMPERATURE_SENSOR_2
     #define TEMPERATURE_SENSOR_2_CIRCUIT_TYPE ADCCircuitDifferentialPullup
     #define TEMPERATURE_SENSOR_2_CIRCUIT_INIT { /*pullup_resistance:*/ 200 }
-    #define TEMPERATURE_SENSOR_2_TYPE  PT100<ADCDifferentialPair<kADC2_Neg_PinNumber, kADC2_Pos_PinNumber>>
+    #define TEMPERATURE_SENSOR_2_TYPE  PT100<ADCDifferentialPair<Motate::kADC2_Neg_PinNumber, kADC2_Pos_PinNumber>>
     #define TEMPERATURE_SENSOR_2_INIT {&temperature_sensor_2_circuit}
 
     // #define TEMPERATURE_SENSOR_2_CIRCUIT_TYPE ADCCircuitRawResistance
@@ -408,7 +408,7 @@ M100.1 ({{ajh:144000.0}})
 #if HAS_TEMPERATURE_SENSOR_3
 //    #define TEMPERATURE_SENSOR_3_CIRCUIT_TYPE ADCCircuitDifferentialPullup
 //    #define TEMPERATURE_SENSOR_3_CIRCUIT_INIT { /*pullup_resistance:*/ 200 }
-//    #define TEMPERATURE_SENSOR_3_TYPE  PT100<ADCDifferentialPair<kADC3_Neg_PinNumber, kADC3_Pos_PinNumber>>
+//    #define TEMPERATURE_SENSOR_3_TYPE  PT100<ADCDifferentialPair<Motate::kADC3_Neg_PinNumber, kADC3_Pos_PinNumber>>
 //    #define TEMPERATURE_SENSOR_3_INIT {&temperature_sensor_3_circuit}
 
     #define TEMPERATURE_SENSOR_3_CIRCUIT_TYPE ADCCircuitRawResistance

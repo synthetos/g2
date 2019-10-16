@@ -62,13 +62,12 @@ static void _load_move(void) HOT_FUNC;
 
 /**** Setup motate ****/
 
-using namespace Motate;
-extern OutputPin<kDebug1_PinNumber> debug_pin1;
-extern OutputPin<kDebug2_PinNumber> debug_pin2;
-extern OutputPin<kDebug3_PinNumber> debug_pin3;
-//extern OutputPin<kDebug4_PinNumber> debug_pin4;
+extern OutputPin<Motate::kDebug1_PinNumber> debug_pin1;
+extern OutputPin<Motate::kDebug2_PinNumber> debug_pin2;
+extern OutputPin<Motate::kDebug3_PinNumber> debug_pin3;
+//extern OutputPin<Motate::kDebug4_PinNumber> debug_pin4;
 
-dda_timer_type dda_timer     {kTimerUpToMatch, FREQUENCY_DDA};      // stepper pulse generation
+dda_timer_type dda_timer     {Motate::kTimerUpToMatch, FREQUENCY_DDA};      // stepper pulse generation
 exec_timer_type exec_timer;         // triggers calculation of next+1 stepper segment
 fwd_plan_timer_type fwd_plan_timer; // triggers planning of next block
 
@@ -126,6 +125,8 @@ http://en.cppreference.com/w/cpp/language/lambda
  */
 void stepper_init()
 {
+    using namespace Motate;
+
     memset(&st_run, 0, sizeof(st_run));            // clear all values, pointers and status
     memset(&st_pre, 0, sizeof(st_pre));            // clear all values, pointers and status
     stepper_init_assertions();

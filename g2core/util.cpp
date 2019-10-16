@@ -694,7 +694,7 @@ char inttoa(char *str, int n)
 void LAGER(const char * msg)
 {
     char message[64];
-    sprintf(message, "%lu: %s\n", SysTickTimer_getValue(), msg);
+    sprintf(message, "%lu: %s\n", Motate::SysTickTimer.getValue(), msg);
     xio_writeline(message);
 }
 
@@ -702,9 +702,9 @@ void LAGER_cm(const char * msg)
 {
     char message[64];
     if (cm == &cm1) {
-        sprintf(message, "%lu: p1 %s\n", SysTickTimer_getValue(), msg);
+        sprintf(message, "%lu: p1 %s\n", Motate::SysTickTimer.getValue(), msg);
     } else {
-        sprintf(message, "%lu: p2 %s\n", SysTickTimer_getValue(), msg);
+        sprintf(message, "%lu: p2 %s\n", Motate::SysTickTimer.getValue(), msg);
     }
     xio_writeline(message);
 }

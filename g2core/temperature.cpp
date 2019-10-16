@@ -53,19 +53,19 @@
 #define HAS_TEMPERATURE_SENSOR_3  false
 #endif
 #ifndef EXTRUDER_1_OUTPUT_PIN
-#define EXTRUDER_1_OUTPUT_PIN kOutput1_PinNumber
+#define EXTRUDER_1_OUTPUT_PIN Motate::kOutput1_PinNumber
 #endif
 #ifndef EXTRUDER_1_FAN_PIN
-#define EXTRUDER_1_FAN_PIN    kOutput3_PinNumber
+#define EXTRUDER_1_FAN_PIN    Motate::kOutput3_PinNumber
 #endif
 #ifndef EXTRUDER_2_OUTPUT_PIN
-#define EXTRUDER_2_OUTPUT_PIN kOutput2_PinNumber
+#define EXTRUDER_2_OUTPUT_PIN Motate::kOutput2_PinNumber
 #endif
 #ifndef BED_OUTPUT_PIN
-#define BED_OUTPUT_PIN kOutput11_PinNumber
+#define BED_OUTPUT_PIN Motate::kOutput11_PinNumber
 #endif
 #ifndef BED_OUTPUT_INIT
-#define BED_OUTPUT_INIT {kNormal, fet_pin3_freq}
+#define BED_OUTPUT_INIT {Motate::kNormal, fet_pin3_freq}
 // OR
 //#define BED_OUTPUT_INIT {kPWMPinInverted, fet_pin3_freq};
 #endif
@@ -125,8 +125,6 @@
 /**** Allocate structures ****/
 
 // This makes the Motate:: prefix unnecessary.
-using namespace Motate;
-
 /****** Create file-global objects ******/
 
 // The should be set in hardware.h for each board.
@@ -314,10 +312,10 @@ struct Thermistor {
     template <typename... Ts>
     Thermistor(const float temp_low, const float temp_med, const float temp_high, const float res_low, const float res_med, const float res_high, const ADCCircuit *_circuit, Ts&&... additional_values)
     : circuit{_circuit},
-      adc_pin{kNormal, [&]{this->adc_has_new_value();}, std::forward<Ts>(additional_values)...}
+      adc_pin{Motate::kNormal, [&]{this->adc_has_new_value();}, std::forward<Ts>(additional_values)...}
     {
         setup(temp_low, temp_med, temp_high, res_low, res_med, res_high);
-        adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
+        adc_pin.setInterrupts(Motate::kPinInterruptOnChange|Motate::kInterruptPriorityLow);
         adc_pin.setVoltageRange(kSystemVoltage,
                                 0, //get_voltage_of_temp(min_temp),
                                 kSystemVoltage, //get_voltage_of_temp(max_temp),
@@ -435,9 +433,9 @@ struct PT100 {
     template <typename... Ts>
     PT100(const ADCCircuit *_circuit, Ts&&... additional_values)
     : circuit{_circuit},
-      adc_pin{kNormal, [&](bool e){this->adc_has_new_value(e);}, additional_values...}
+      adc_pin{Motate::kNormal, [&](bool e){this->adc_has_new_value(e);}, additional_values...}
     {
-        adc_pin.setInterrupts(kPinInterruptOnChange|kInterruptPriorityLow);
+        adc_pin.setInterrupts(Motate::kPinInterruptOnChange|Motate::kInterruptPriorityLow);
         adc_pin.setVoltageRange(kSystemVoltage,
                                 get_voltage_of_temp(min_temp),
                                 get_voltage_of_temp(max_temp),
@@ -579,7 +577,7 @@ float last_reported_temp3 = 0;
 // DO_1: Extruder1_PWM
 const int32_t fet_pin1_freq = 2000;
 #if TEMPERATURE_OUTPUT_ON == 1
-PWMOutputPin<EXTRUDER_1_OUTPUT_PIN> fet_pin1 {kNormal, fet_pin1_freq};// {kPWMPinInverted, fet_pin1_freq};
+PWMOutputPin<EXTRUDER_1_OUTPUT_PIN> fet_pin1 {Motate::kNormal, fet_pin1_freq};// {kPWMPinInverted, fet_pin1_freq};
 #else
 PWMOutputPin<-1> fet_pin1;// {kPWMPinInverted};
 #endif
@@ -587,7 +585,7 @@ PWMOutputPin<-1> fet_pin1;// {kPWMPinInverted};
 // DO_2: Extruder2_PWM
 const int32_t fet_pin2_freq = 2000;
 #if TEMPERATURE_OUTPUT_ON == 1
-PWMOutputPin<EXTRUDER_2_OUTPUT_PIN> fet_pin2 {kNormal, fet_pin2_freq};// {kPWMPinInverted, fet_pin1_freq};
+PWMOutputPin<EXTRUDER_2_OUTPUT_PIN> fet_pin2 {Motate::kNormal, fet_pin2_freq};// {kPWMPinInverted, fet_pin1_freq};
 #else
 PWMOutputPin<-1> fet_pin2;// {kPWMPinInverted};
 #endif
@@ -603,11 +601,11 @@ PWMOutputPin<-1> fet_pin3;// {kPWMPinInverted};
 
 
 // DO_3: Fan1A_PWM
-//PWMOutputPin<kOutput3_PinNumber> fan_pin1;
+//PWMOutputPin<Motate::kOutput3_PinNumber> fan_pin1;
 // DO_4: Fan1B_PWM
-//PWMOutputPin<kOutput4_PinNumber> fan_pin2;
+//PWMOutputPin<Motate::kOutput4_PinNumber> fan_pin2;
 // DO_5: Fan2A_PWM
-//PWMOutputPin<kOutput5_PinNumber> fan_pin3;
+//PWMOutputPin<Motate::kOutput5_PinNumber> fan_pin3;
 
 
 //// We're going to utilize the fet_pin1 PWMOutputPin<>'s timer interrupt to drive the ADC sampling.
@@ -616,7 +614,7 @@ PWMOutputPin<-1> fet_pin3;// {kPWMPinInverted};
 //#if TEMPERATURE_OUTPUT_ON == 1
 //namespace Motate {
 //    template<>
-//    void PWMOutputPin<kOutput1_PinNumber>::parentTimerType::interrupt() {
+//    void PWMOutputPin<Motate::kOutput1_PinNumber>::parentTimerType::interrupt() {
 //        if (!--fet_pin1_sample_counter) {
 //            ADC_Module::startSampling();
 //            fet_pin1_sample_counter = fet_pin1_sample_freq;
@@ -630,7 +628,7 @@ PWMOutputPin<-1> fet_pin3;// {kPWMPinInverted};
 // We're going to register a SysTick event
 const int16_t temperature_sample_freq = 10; // every fet_pin1_sample_freq interrupts, sample
 int16_t temperature_sample_counter = temperature_sample_freq;
-SysTickEvent adc_tick_event {[&] {
+Motate::SysTickEvent adc_tick_event {[&] {
     if (!--temperature_sample_counter) {
         temperature_sensor_1.start_sampling();
         temperature_sensor_2.start_sampling();
@@ -861,7 +859,7 @@ void temperature_init()
 
     // Register the SysTick event (described above)
 #if TEMPERATURE_OUTPUT_ON == 1
-    SysTickTimer.registerEvent(&adc_tick_event);
+    Motate::SysTickTimer.registerEvent(&adc_tick_event);
 #endif
 
     temperature_reset();

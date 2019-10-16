@@ -302,7 +302,7 @@
 #define B_ZERO_BACKOFF          2
 #define B_JERK_HIGH_SPEED       361108.0 // ~150 million mm/min^3
 
- 
+
 //*** Input / output settings ***
 
 //** Temperature Sensors **
@@ -316,13 +316,13 @@
 #if HAS_TEMPERATURE_SENSOR_1
 // Must choose Thermistor or PT100
 #if 1 // 1 if a Thermistor, 0 if a PT100
-    #define TEMPERATURE_SENSOR_1_TYPE  Thermistor<ADCDifferentialPair<kADC1_Neg_PinNumber, kADC1_Pos_PinNumber>>
+    #define TEMPERATURE_SENSOR_1_TYPE  Thermistor<ADCDifferentialPair<Motate::kADC1_Neg_PinNumber, kADC1_Pos_PinNumber>>
     #define TEMPERATURE_SENSOR_1_INIT { \
         /*T1:*/     20.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
         /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 200 \
     }
 #else
-    // #define TEMPERATURE_SENSOR_1_TYPE  PT100<ADCDifferentialPair<kADC1_Neg_PinNumber, kADC1_Pos_PinNumber>>
+    // #define TEMPERATURE_SENSOR_1_TYPE  PT100<ADCDifferentialPair<Motate::kADC1_Neg_PinNumber, kADC1_Pos_PinNumber>>
     // #define TEMPERATURE_SENSOR_1_INIT {/*pullup_resistance:*/ 2000, /*inline_resistance*/0.0}
    #define TEMPERATURE_SENSOR_1_TYPE  PT100<MAX31865<SPIBus_used_t::SPIBusDevice>>
    #define TEMPERATURE_SENSOR_1_INIT {/*pullup_resistance:*/ 430, /*inline_resistance*/0, spiBus, spiCSPinMux.getCS(5)}
@@ -335,13 +335,13 @@
 #define HAS_TEMPERATURE_SENSOR_2  false
 #if HAS_TEMPERATURE_SENSOR_2
 #if 1 // 1 if a Thermistor, 0 if a PT100
-    #define TEMPERATURE_SENSOR_2_TYPE  Thermistor<ADCDifferentialPair<kADC2_Neg_PinNumber, kADC2_Pos_PinNumber>>
+    #define TEMPERATURE_SENSOR_2_TYPE  Thermistor<ADCDifferentialPair<Motate::kADC2_Neg_PinNumber, kADC2_Pos_PinNumber>>
     #define TEMPERATURE_SENSOR_2_INIT { \
     /*T1:*/     20.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
     /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 4700 \
     }
 #else
-    #define TEMPERATURE_SENSOR_2_TYPE  PT100<ADCDifferentialPair<kADC2_Neg_PinNumber, kADC2_Pos_PinNumber>>
+    #define TEMPERATURE_SENSOR_2_TYPE  PT100<ADCDifferentialPair<Motate::kADC2_Neg_PinNumber, kADC2_Pos_PinNumber>>
     #define TEMPERATURE_SENSOR_2_INIT {/*pullup_resistance:*/ 200, /*inline_resistance*/0.0}
 //    #define TEMPERATURE_SENSOR_2_TYPE  PT100<MAX31865<SPIBus_used_t::SPIBusDevice>>
 //    #define TEMPERATURE_SENSOR_2_INIT {/*pullup_resistance:*/ 430, /*inline_resistance*/0, spiBus, spiCSPinMux.getCS(5)}
@@ -353,13 +353,13 @@
 #define HAS_TEMPERATURE_SENSOR_3  true
 #if HAS_TEMPERATURE_SENSOR_3
 #if 1 // 1 if a Thermistor, 0 if a PT100
-    #define TEMPERATURE_SENSOR_3_TYPE  Thermistor<ADCDifferentialPair<kADC3_Neg_PinNumber, kADC3_Pos_PinNumber>>
+    #define TEMPERATURE_SENSOR_3_TYPE  Thermistor<ADCDifferentialPair<Motate::kADC3_Neg_PinNumber, kADC3_Pos_PinNumber>>
     #define TEMPERATURE_SENSOR_3_INIT { \
     /*T1:*/     20.0, /*T2:*/   190.0,  /*T3:*/ 255.0, \
     /*R1:*/ 144700.0, /*R2:*/  5190.0, /*R3:*/ 4809.0, /*pullup_resistance:*/ 4700 \
     }
 #else
-    // #define TEMPERATURE_SENSOR_3_TYPE  PT100<ADCDifferentialPair<kADC3_Neg_PinNumber, kADC3_Pos_PinNumber>>
+    // #define TEMPERATURE_SENSOR_3_TYPE  PT100<ADCDifferentialPair<Motate::kADC3_Neg_PinNumber, kADC3_Pos_PinNumber>>
     // #define TEMPERATURE_SENSOR_3_INIT {/*pullup_resistance:*/ 200, /*inline_resistance*/0.0}
    #define TEMPERATURE_SENSOR_3_TYPE  PT100<MAX31865<SPIBus_used_t::SPIBusDevice>>
    #define TEMPERATURE_SENSOR_3_INIT {/*pullup_resistance:*/ 430, /*inline_resistance*/0, spiBus, spiCSPinMux.getCS(6)}

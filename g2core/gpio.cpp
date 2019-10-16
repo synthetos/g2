@@ -55,8 +55,6 @@
 #include "xio.h"
 
 #include "MotateTimers.h"
-using namespace Motate;
-
 /****
  *
  * Important: Do not directly allocate or access pins here!

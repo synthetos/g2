@@ -42,10 +42,9 @@
 
 // Using motate pins for profiling (see main.cpp)
 // see https://github.com/synthetos/g2/wiki/Using-Pin-Changes-for-Timing-(and-light-debugging)
-using namespace Motate;
-extern OutputPin<kDebug1_PinNumber> debug_pin1;
-extern OutputPin<kDebug2_PinNumber> debug_pin2;
-extern OutputPin<kDebug3_PinNumber> debug_pin3;
+extern OutputPin<Motate::kDebug1_PinNumber> debug_pin1;
+extern OutputPin<Motate::kDebug2_PinNumber> debug_pin2;
+extern OutputPin<Motate::kDebug3_PinNumber> debug_pin3;
 
 // planner helper functions
 static mpBuf_t* _plan_block(mpBuf_t* bf);
