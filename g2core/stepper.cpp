@@ -1231,11 +1231,13 @@ stat_t st_get_dw(nvObj_t *nv)
 
 #ifdef __TEXT_MODE
 
+#ifndef SINGLE_TRANSLATION_BUILD
 static const char msg_units0[] = " in";    // used by generic print functions
 static const char msg_units1[] = " mm";
 static const char msg_units2[] = " deg";
 static const char *const msg_units[] = { msg_units0, msg_units1, msg_units2 };
 #define DEGREE_INDEX 2
+#endif
 
 static const char fmt_me[] = "motors energized\n";
 static const char fmt_md[] = "motors de-energized\n";
