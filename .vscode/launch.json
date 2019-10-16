@@ -1,93 +1,36 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "cortex-debug fourcable",
-            "type": "cortex-debug",
-            "request": "launch",
-            "servertype": "jlink",
-            "cwd": "${workspaceRoot}/g2core/",
-            "executable": "./bin/fourcable-gquintic-d/g2core.elf",
-            "device": "ATSAMS70N19",
-            "interface": "swd",
-            "showDevDebugOutput": false,
-            "toolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/",
-            "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sams70/ATSAMS70N19.svd",
-            "preLaunchTask": "Build CONFIG=fourcable",
-        },
-        {
-            "name": "cortex-debug r7",
-            "type": "cortex-debug",
-            "request": "launch",
-            "servertype": "jlink",
-            "cwd": "${workspaceRoot}/g2core/",
-            "executable": "./bin/r7-gquintic-d/g2core.elf",
-            "device": "ATSAMS70N19",
-            "interface": "swd",
-            "showDevDebugOutput": false,
-            "toolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/",
-            "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sams70/ATSAMS70N19.svd",
-            "preLaunchTask": "Build CONFIG=r7",
-        },
-        {
-            "name": "Debug fourcable",
-            "type": "cppdbg",
-            "request": "launch",
-            "miDebuggerPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/arm-none-eabi-gdb-py",
-            "MIMode": "gdb",
-            "miDebuggerArgs": "-ex \"dir '${workspaceRoot}/Motate/MotateProject/motate/arch/'\" -x \"./board/gquintic.gdb\" -x \"${workspaceRoot}/Motate/MotateProject/motate/platform/jlink.gdb\"",
-            "miDebuggerServerAddress": "localhost:2331",
-            "targetArchitecture": "arm",
-            "program": "${workspaceRoot}/g2core/bin/fourcable-gquintic-d/g2core.elf",
-            "logging": {
-                "engineLogging": false
-            },
-            // "customLaunchSetupCommands": [
-            //     {
-            //         "text": "dir '${workspaceRoot}/Motate/MotateProject/motate/arch/'"
-            //     }
-            //     // ,
-            //     // {
-            //     //     "text": "source './board/gquintic.gdb'"
-            //     // },
-            //     // {
-            //     //     "text": "source '../Motate/MotateProject/motate/platform/jlink.gdb'"
-            //     // }
-            // ],
-            // "preLaunchTask": "make",
-            // "launchCompleteCommand": "None",
-            "externalConsole": false,
-            "cwd": "${workspaceRoot}/g2core"
-        },
-        {
-            "name": "Debug r7",
-            "type": "cppdbg",
-            "request": "launch",
-            "miDebuggerPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/arm-none-eabi-gdb-py",
-            "MIMode": "gdb",
-            "miDebuggerArgs": "-ex \"dir '${workspaceRoot}/Motate/MotateProject/motate/arch/'\" -x \"./board/gquintic.gdb\" -x \"${workspaceRoot}/Motate/MotateProject/motate/platform/jlink.gdb\"",
-            "miDebuggerServerAddress": "localhost:2331",
-            "targetArchitecture": "arm",
-            "program": "${workspaceRoot}/g2core/bin/r7-gquintic-d/g2core.elf",
-            "logging": {
-                "engineLogging": false
-            },
-            "customLaunchSetupCommands": [
-                {
-                    "text": "dir '${workspaceRoot}/Motate/MotateProject/motate/arch/'"
-                },
-                {
-                    "text": "source ${workspaceRoot}/g2core/board/gquintic.gdb"
-                },
-                {
-                    "text": "source ${workspaceRoot}/Motate/MotateProject/motate/platform/jlink.gdb"
-                }
-            ],
-            "externalConsole": true,
-            "cwd": "${workspaceRoot}/g2core"
-        }
-    ]
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug CONFIG=fourcable (J-Link)",
+      "type": "cortex-debug",
+      "request": "launch",
+      "servertype": "jlink",
+      "cwd": "${workspaceRoot}/g2core/",
+      "executable": "./bin/fourcable-gquintic-d/g2core.elf",
+      "device": "ATSAMS70N19",
+      "interface": "swd",
+      "showDevDebugOutput": false,
+      "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sams70/ATSAMS70N19.svd",
+      "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/",
+      "preLaunchTask": "Build CONFIG=fourcable"
+    },
+    {
+      "name": "Debug CONFIG=r7 (J-Link)",
+      "type": "cortex-debug",
+      "request": "launch",
+      "servertype": "jlink",
+      "cwd": "${workspaceRoot}/g2core/",
+      "executable": "./bin/r7-gquintic-d/g2core.elf",
+      "device": "ATSAMS70N19",
+      "interface": "swd",
+      "showDevDebugOutput": false,
+      "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sams70/ATSAMS70N19.svd",
+      "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/",
+      "preLaunchTask": "Build CONFIG=r7"
+    }
+  ]
 }
