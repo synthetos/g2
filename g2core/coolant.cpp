@@ -181,7 +181,7 @@ stat_t co_set_coph(nvObj_t *nv)
 stat_t co_get_comp(nvObj_t *nv) { return(get_integer(nv, coolant.mist.polarity)); }
 stat_t co_set_comp(nvObj_t *nv) {
     stat_t ret = set_integer(nv, (uint8_t &)coolant.mist.polarity, 0, 1);
-    if (ret == STAT_OK) {
+    if (ret == STAT_OK && coolant.mist.output) {
         coolant.mist.output->setPolarity((ioPolarity) coolant.mist.polarity);
     }
     return ret;
@@ -189,7 +189,7 @@ stat_t co_set_comp(nvObj_t *nv) {
 stat_t co_get_cofp(nvObj_t *nv) { return(get_integer(nv, coolant.flood.polarity)); }
 stat_t co_set_cofp(nvObj_t *nv) {
     stat_t ret = set_integer(nv, (uint8_t &)coolant.flood.polarity, 0, 1);
-    if (ret == STAT_OK) {
+    if (ret == STAT_OK && coolant.flood.output) {
         coolant.flood.output->setPolarity((ioPolarity) coolant.flood.polarity);
     }
     return ret;
