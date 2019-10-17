@@ -1,208 +1,151 @@
 {
-    // See https://go.microsoft.com/fwlink/?LinkId=733558
-    // for the documentation about the tasks.json format
-    "version": "2.0.0",
-    "options": {
-        "cwd": "${workspaceRoot}/g2core"
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "options": {
+    "cwd": "${workspaceRoot}/g2core"
+  },
+
+  // COPY THIS FOR EACH ONE FOR NOW :<
+  // Because there's a bug where fileLocation is needed
+  // And you can't share problem solvers across tasks (yet)
+  // Track here: https://github.com/Microsoft/vscode/issues/24865
+  "problemMatchers": [
+    {
+      "owner": "cpptools",
+      "fileLocation": ["relative", "${workspaceFolder}/g2core"],
+      "pattern": {
+        "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+        "file": 1,
+        "line": 2,
+        "column": 3,
+        "severity": 4,
+        "message": 5
+      }
+    }
+  ],
+
+  "tasks": [
+    {
+      "label": "Build CONFIG=ShapeokoDualY",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=ShapeokoDualY", "VERBOSE=2", "COLOR=0", "RECORD=1"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
     },
-    "problemMatchers": [
+    {
+      "label": "Clean CONFIG=ShapeokoDualY",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=ShapeokoDualY", "clean"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
+      "label": "Build CONFIG=r7",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=r7", "VERBOSE=2", "COLOR=0", "RECORD=1"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": [
         {
-            // COPY THIS FOR EACH ONE FOR NOW :<
-            // Because there's a bug where fileLocation is needed
-            // And you can't share problem solvers across tasks (yet)
-            "owner": "cpptools",
-            "fileLocation": [
-                "relative",
-                "${workspaceFolder}/g2core",
-            ],
-            "pattern": {
-                "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                "file": 1,
-                "line": 2,
-                "column": 3,
-                "severity": 4,
-                "message": 5
-            }
+          "owner": "cpptools",
+          "fileLocation": ["relative", "${workspaceFolder}/g2core"],
+          "pattern": {
+            "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "severity": 4,
+            "message": 5
+          }
         }
-    ],
-    "tasks": [
+      ]
+    },
+    {
+      "label": "Clean CONFIG=r7",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=r7", "clean"],
+      "group": "build",
+      "problemMatcher": [
         {
-            "label": "Build CONFIG=ShapeokoDualY",
-            "type": "process",
-            "command": "make",
-            "args": [
-                "CONFIG=ShapeokoDualY",
-                "VERBOSE=2",
-                "COLOR=0",
-                "RECORD=1"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": [
-                {
-                    "owner": "cpptools",
-                    "fileLocation": [
-                        "relative",
-                        "${workspaceFolder}/g2core",
-                    ],
-                    "pattern": {
-                        "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                        "file": 1,
-                        "line": 2,
-                        "column": 3,
-                        "severity": 4,
-                        "message": 5
-                    }
-                }
-            ]
-        },
-        {
-            "label": "Clean CONFIG=ShapeokoDualY",
-            "type": "process",
-            "command": "make",
-            "args": [
-                "CONFIG=ShapeokoDualY",
-                "clean"
-            ],
-            "group": "build",
-            "problemMatcher": [
-                {
-                    "owner": "cpptools",
-                    "fileLocation": [
-                        "relative",
-                        "${workspaceFolder}/g2core",
-                    ],
-                    "pattern": {
-                        "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                        "file": 1,
-                        "line": 2,
-                        "column": 3,
-                        "severity": 4,
-                        "message": 5
-                    }
-                }
-            ]
-        },
-        {
-            "label": "Build CONFIG=r7",
-            "type": "process",
-            "command": "make",
-            "args": [
-                "CONFIG=r7",
-                "VERBOSE=2",
-                "COLOR=0",
-                "RECORD=1"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": [
-                {
-                    "owner": "cpptools",
-                    "fileLocation": [
-                        "relative",
-                        "${workspaceFolder}/g2core",
-                    ],
-                    "pattern": {
-                        "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                        "file": 1,
-                        "line": 2,
-                        "column": 3,
-                        "severity": 4,
-                        "message": 5
-                    }
-                }
-            ]
-        },
-        {
-            "label": "Clean CONFIG=r7",
-            "type": "process",
-            "command": "make",
-            "args": [
-                "CONFIG=r7",
-                "clean"
-            ],
-            "group": "build",
-            "problemMatcher": [
-                {
-                    "owner": "cpptools",
-                    "fileLocation": [
-                        "relative",
-                        "${workspaceFolder}/g2core",
-                    ],
-                    "pattern": {
-                        "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                        "file": 1,
-                        "line": 2,
-                        "column": 3,
-                        "severity": 4,
-                        "message": 5
-                    }
-                }
-            ]
-        },
-        {
-            "label": "Build CONFIG=fourcable",
-            "type": "process",
-            "command": "make",
-            "args": [
-                "CONFIG=fourcable",
-                "VERBOSE=2",
-                "COLOR=0",
-                "RECORD=1",
-                "DEBUG=2"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": [
-                {
-                    "owner": "cpptools",
-                    "fileLocation": [
-                        "relative",
-                        "${workspaceFolder}/g2core",
-                    ],
-                    "pattern": {
-                        "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                        "file": 1,
-                        "line": 2,
-                        "column": 3,
-                        "severity": 4,
-                        "message": 5
-                    }
-                }
-            ]
-        },
-        {
-            "label": "Clean CONFIG=fourcable",
-            "type": "process",
-            "command": "make",
-            "args": [
-                "CONFIG=fourcable",
-                "clean"
-            ],
-            "group": "build",
-            "problemMatcher": [
-                {
-                    "owner": "cpptools",
-                    "fileLocation": [
-                        "relative",
-                        "${workspaceFolder}/g2core",
-                    ],
-                    "pattern": {
-                        "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                        "file": 1,
-                        "line": 2,
-                        "column": 3,
-                        "severity": 4,
-                        "message": 5
-                    }
-                }
-            ]
+          "owner": "cpptools",
+          "fileLocation": ["relative", "${workspaceFolder}/g2core"],
+          "pattern": {
+            "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "severity": 4,
+            "message": 5
+          }
         }
-    ]
+      ]
+    },
+    {
+      "label": "Build CONFIG=fourcable",
+      "type": "process",
+      "command": "make",
+      "args": [
+        "CONFIG=fourcable",
+        "VERBOSE=2",
+        "COLOR=0",
+        "RECORD=1",
+        "DEBUG=2"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": [
+        {
+          "owner": "cpptools",
+          "fileLocation": ["relative", "${workspaceFolder}/g2core"],
+          "pattern": {
+            "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "severity": 4,
+            "message": 5
+          }
+        }
+      ]
+    },
+    {
+      "label": "Clean CONFIG=fourcable",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=fourcable", "clean"],
+      "group": "build",
+      "problemMatcher": [
+        {
+          "owner": "cpptools",
+          "fileLocation": ["relative", "${workspaceFolder}/g2core"],
+          "pattern": {
+            "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "severity": 4,
+            "message": 5
+          }
+        }
+      ]
+    }
+  ]
 }
