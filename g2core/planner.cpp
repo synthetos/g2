@@ -267,12 +267,14 @@ void mp_set_steps_to_runtime_position()
     float step_position[MOTORS];
     // There use to be a call to kn_inverse_kinematics here, but we don't do that now, instead we call kn->sync_encoders()
     // after handling the steps, allowing the kinematics to intelligently handle the offset of step and position.
+
+    // Reset everything to match the internal encoders
     for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
+        mr->encoder_steps[motor] = en_read_encoder(motor);
+        step_position[motor] = mr->encoder_steps[motor];
         mr->target_steps[motor] = step_position[motor];
         mr->position_steps[motor] = step_position[motor];
         mr->commanded_steps[motor] = step_position[motor];
-        en_set_encoder_steps(motor, step_position[motor]);  // write steps to encoder register
-        mr->encoder_steps[motor] = en_read_encoder(motor);
 
         // These must be zero:
         mr->following_error[motor] = 0;
