@@ -574,7 +574,7 @@ extern mpPlannerRuntime_t *mr HOT_DATA;          // context for block runtime
 extern mpPlannerRuntime_t mr1 HOT_DATA;          // primary planner runtime context
 extern mpPlannerRuntime_t mr2 HOT_DATA;          // secondary planner runtime context
 
-extern mpBuf_t mp1_queue[PLANNER_QUEUE_SIZE];   // storage allocation for primary planner queue buffers
+extern mpBuf_t mp1_queue[PLANNER_QUEUE_SIZE] HOT_DATA;   // storage allocation for primary planner queue buffers
 extern mpBuf_t mp2_queue[SECONDARY_QUEUE_SIZE]; // storage allocation for secondary planner queue buffers
 
 /*
