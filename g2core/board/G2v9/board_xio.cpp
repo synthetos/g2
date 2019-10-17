@@ -73,7 +73,8 @@ void board_hardware_init(void)  // called 1st
 #if XIO_HAS_USB
     // Init USB
     usb.attach();                   // USB setup. Runs in "background" as the rest of this executes
-#endif // XIO_HAS_USB
+    usb.checkAndHandleVbusChange();
+#endif  // XIO_HAS_USB
 }
 
 

@@ -106,6 +106,9 @@ using Motate::OutputPin;
 #define FREQUENCY_DDA		150000UL		// Hz step frequency. Interrupts actually fire at 2x (300 KHz)
 #define FREQUENCY_DWELL		1000UL
 
+#define PLANNER_QUEUE_SIZE (48)
+#define SECONDARY_QUEUE_SIZE (10)
+
 /**** Motate Definitions ****/
 
 // Timer definitions. See stepper.h and other headers for setup

@@ -56,7 +56,7 @@ extern gpioDigitalOutput*  const d_out[D_OUT_CHANNELS];
 using Motate::IRQPin;
 using Motate::PWMOutputPin;
 using Motate::PWMLikeOutputPin;
-template<bool can_pwm, pin_number... V>
+template<bool can_pwm, Motate::pin_number... V>
 using OutputType = typename std::conditional<can_pwm, PWMOutputPin<V...>, PWMLikeOutputPin<V...>>::type;
 
 extern gpioDigitalInputPin<IRQPin<Motate::kInput1_PinNumber>>  din1;

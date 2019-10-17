@@ -32,6 +32,7 @@
 #include "MotateTimers.h"
 
 #include "stepper.h"
+#include "gpio.h" // for ioPolarity
 
 using Motate::pin_number;
 using Motate::OutputPin;
@@ -67,11 +68,11 @@ struct StepDirStepper final : Stepper  {
     OutputPin<ms2_num>     _ms2;
     PWMOutputPin<vref_num> _vref;
 
-    ioMode _step_polarity;                   // IO_ACTIVE_LOW or IO_ACTIVE_HIGH
-    ioMode _enable_polarity;                 // IO_ACTIVE_LOW or IO_ACTIVE_HIGH
+    ioPolarity _step_polarity;                   // IO_ACTIVE_LOW or IO_ACTIVE_HIGH
+    ioPolarity _enable_polarity;                 // IO_ACTIVE_LOW or IO_ACTIVE_HIGH
 
     // sets default pwm freq for all motor vrefs (commented line below also sets HiZ)
-    StepDirStepper(ioMode step_polarity, ioMode enable_polarity, const uint32_t frequency = 250000) :
+    StepDirStepper(ioPolarity step_polarity, ioPolarity enable_polarity, const uint32_t frequency = 250000) :
         Stepper{},
         _step{step_polarity==IO_ACTIVE_LOW?kStartHigh:kStartLow},
         _enable{enable_polarity==IO_ACTIVE_LOW?kStartHigh:kStartLow},
@@ -179,23 +180,23 @@ struct StepDirStepper final : Stepper  {
         }
     };
 
-    ioMode getStepPolarity() const override
+    ioPolarity getStepPolarity() const override
     {
     	return _step_polarity;
     };
 
-    void setStepPolarity(ioMode new_sp) override
+    void setStepPolarity(ioPolarity new_sp) override
     {
     	_step_polarity = new_sp;
     	stepEnd();
     };
 
-    ioMode getEnablePolarity() const override
+    ioPolarity getEnablePolarity() const override
     {
         return _enable_polarity;
     };
 
-    void setEnablePolarity(ioMode new_mp) override
+    void setEnablePolarity(ioPolarity new_mp) override
     {
         _enable_polarity = new_mp;
         // this is a misnomer, but handles the logic we need for asserting the newly adjusted enable line correctly
