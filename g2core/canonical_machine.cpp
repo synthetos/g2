@@ -458,7 +458,7 @@ void cm_set_model_linenum(int32_t linenum)
  */
 
 stat_t cm_check_linenum() {
-    if (cm->gmx.last_line_number != cm->gm.linenum) {
+    if (cm->gmx.last_line_number+1 != cm->gm.linenum) {
         debug_trap("line number out of sequence");
         return STAT_LINE_NUMBER_OUT_OF_SEQUENCE;
     }
