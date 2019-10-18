@@ -42,8 +42,11 @@
  * hardware_init() - lowest level hardware init
  */
 
+HOT_DATA SPIBus_used_t spiBus;
+
 void hardware_init()
 {
+    spiBus.init();
     board_hardware_init();
 	return;
 }
