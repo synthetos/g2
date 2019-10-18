@@ -52,7 +52,9 @@
         "regex": "cpp",
         "scoped_allocator": "cpp",
         "cortex_handlers.c": "cpp",
-        "*.def": "cpp"
+        "*.def": "cpp",
+        "__locale": "cpp",
+        "rope": "cpp"
     },
     "C_Cpp.dimInactiveRegions": true,
     "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 4, ColumnLimit: 120 }",
