@@ -127,7 +127,7 @@ _MAKE_MOTATE_PIN(kInput6_PinNumber, 'A', 13);                 // ZAxis_MaxPinNum
 _MAKE_MOTATE_PIN(kInput7_PinNumber, 'A', 14);                 // AAxis_MinPinNumber
 _MAKE_MOTATE_PIN(kInput8_PinNumber, 'A', 15);                 // AAxis_MaxPinNumber
 _MAKE_MOTATE_PIN(kSocket1_Microstep_1PinNumber, 'A', 16);     // Socket1_Microstep_1PinNumber
-_MAKE_MOTATE_PIN(kSD_ChipSelectPinNumber, 'A', 17);           // Interlock_In
+_MAKE_MOTATE_PIN(kInterlock_InPinNumber, 'A', 17);            // Interlock_In
 _MAKE_MOTATE_PIN(kLED_USBRXPinNumber, 'A', 18);               // LED_USBRXPinNumber
 _MAKE_MOTATE_PIN(kLED_USBTXPinNumber, 'A', 19);               // LED_USBTXPinNumber
 _MAKE_MOTATE_PIN(kUnassigned2, 'A', 20);                      // unassigned and disconnected
@@ -138,7 +138,7 @@ _MAKE_MOTATE_PIN(kSocket1_Microstep_0PinNumber, 'A', 24);     // Socket1_Microst
 _MAKE_MOTATE_PIN(kSPI0_MISOPinNumber, 'A', 25);               // SPI0_MISOPinNumber
 _MAKE_MOTATE_PIN(kSPI0_MOSIPinNumber, 'A', 26);               // SPI0_MOSIPinNumber
 _MAKE_MOTATE_PIN(kSPI0_SCKPinNumber, 'A', 27);                // SPI0_SCKPinNumber
-_MAKE_MOTATE_PIN(kSocket1_SPISlaveSelectPinNumber, 'A', 28);  // Socket1_SPISlaveSelectPinNumber
+_MAKE_MOTATE_PIN(kSD_ChipSelectPinNumber, 'A', 28);           // Socket1_SPISlaveSelectPinNumber
 _MAKE_MOTATE_PIN(kSocket2_Microstep_0PinNumber, 'A', 29);     // Socket2_Microstep_0PinNumber
 
 _MAKE_MOTATE_PIN(kSocket2_StepPinNumber, 'B', 0);             // Socket2_StepPinNumber
@@ -161,10 +161,10 @@ _MAKE_MOTATE_PIN(kSocket1_Microstep_2PinNumber, 'B', 16);     // Socket1_Microst
 _MAKE_MOTATE_PIN(kSocket1_VrefPinNumber, 'B', 17);            // Socket1_VrefPinNumber
 _MAKE_MOTATE_PIN(kSocket2_VrefPinNumber, 'B', 18);            // Socket2_VrefPinNumber
 _MAKE_MOTATE_PIN(kSocket3_VrefPinNumber, 'B', 19);            // Socket3_VrefPinNumber
-_MAKE_MOTATE_PIN(kADC1_PinNumber, 'B', 20);                   // Socket2_SPISlaveSelectPinNumber
-_MAKE_MOTATE_PIN(kADC2_PinNumber, 'B', 21);                   // Socket3_SPISlaveSelectPinNumber
+_MAKE_MOTATE_PIN(kSocket1_SPISlaveSelectPinNumber, 'B', 20);  // Socket2_SPISlaveSelectPinNumber
+_MAKE_MOTATE_PIN(kSocket2_SPISlaveSelectPinNumber, 'B', 21);  // Socket3_SPISlaveSelectPinNumber
 _MAKE_MOTATE_PIN(kSocket4_EnablePinNumber, 'B', 22);          // Socket4_EnablePinNumber
-_MAKE_MOTATE_PIN(kSocket4_SPISlaveSelectPinNumber, 'B', 23);  // Socket4_SPISlaveSelectPinNumber
+_MAKE_MOTATE_PIN(kSocket3_SPISlaveSelectPinNumber, 'B', 23);  // Socket4_SPISlaveSelectPinNumber
 _MAKE_MOTATE_PIN(kSocket4_DirPinNumber, 'B', 24);             // Socket4_DirPinNumber
 _MAKE_MOTATE_PIN(kUnassigned5, 'B', 25);                      // unassigned and disconnected
 _MAKE_MOTATE_PIN(kInput1_PinNumber, 'B', 26);                 // XAxis_MinPinNumber
