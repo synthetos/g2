@@ -963,7 +963,7 @@ struct gpioAnalogInput {
     };
     stat_t setParameter(nvObj_t *nv, const uint8_t p)
     {
-        if (!setParameter(p, nv->value_int)) {
+        if (!setParameter(p, nv->value_flt)) {
             return STAT_PARAMETER_IS_READ_ONLY;
         }
         return (STAT_OK);
@@ -1133,8 +1133,8 @@ protected: // so we know if anyone tries to reach in
     AnalogCircuit_t circuit;
     float parameters[6];
 
-    const uint8_t ext_pin_number;             // the number used externally for this pin ("in" + ext_pin_number)
-    uint8_t proxy_pin_number;           // the number used externally for this pin ("in" + proxy_pin_number)
+    const uint8_t ext_pin_number;             // external number to configure this pin ("ai" + ext_pin_number)
+    uint8_t proxy_pin_number;                 // optional external number to access this pin ("ain" + proxy_pin_number)
 
     const float variance_max = 1.1;
     ValueHistory<20> history {variance_max};

@@ -2,8 +2,8 @@
  * max31865/max31865.h - suppport for talking to the MAX31865 RTD (PT100) sensor amp/ADC
  * This file is part of the G2 project
  *
- * Copyright (c) 2017 Alden S. Hart, Jr.
- * Copyright (c) 2017 Robert Giseburt
+ * Copyright (c) 2017-2019 Alden S. Hart, Jr.
+ * Copyright (c) 2017-2019 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -479,7 +479,8 @@ protected: // so we know if anyone tries to reach in
     ioEnabled enabled;                  // -1=unavailable, 0=disabled, 1=enabled
     AnalogInputType_t type;
 
-    uint8_t ext_pin_number;             // the number used externally for this pin ("in" + ext_pin_number)
+    const uint8_t ext_pin_number;       // external number to configure this pin ("ai" + ext_pin_number)
+    uint8_t proxy_pin_number;           // optional external number to access this pin ("ain" + proxy_pin_number)
 
     using ADCPin_t = MAX31865<device_t>;
 
@@ -489,11 +490,12 @@ public:
     // In constructor, simply forward all values to the pin
     // To get a different behavior, override this object.
     template <typename... T>
-    gpioAnalogInputPin(const ioEnabled _enabled, const AnalogInputType_t _type, const uint8_t _ext_pin_number, T&&... additional_values) :
+    gpioAnalogInputPin(const ioEnabled _enabled, const AnalogInputType_t _type, const uint8_t _ext_pin_number, const uint8_t _proxy_pin_number, T&&... additional_values) :
     gpioAnalogInput{},
     enabled{_enabled},
     type{_type},
     ext_pin_number{_ext_pin_number},
+    proxy_pin_number{ _proxy_pin_number },
     pin{Motate::kNormal, [&](bool e){this->adc_has_new_value(e);}, additional_values...}
     {
         // nothing to do here
@@ -575,6 +577,27 @@ public:
 
     void startSampling() override {
         pin.startSampling();
+    };
+
+
+    bool setExternalNumber(const uint8_t e) override
+    {
+        if (e == proxy_pin_number) { return true; }
+        if (proxy_pin_number > 0) {
+            // clear the old pin
+            ain_r[proxy_pin_number-1]->setPin(nullptr);
+        }
+        proxy_pin_number = e;
+        if (proxy_pin_number > 0) {
+            // set the new pin
+            ain_r[proxy_pin_number-1]->setPin(this);
+        }
+        return true;
+    };
+
+    const uint8_t getExternalNumber() override
+    {
+        return proxy_pin_number;
     };
 
     // support function for pin value update interrupt handling

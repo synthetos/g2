@@ -29,7 +29,8 @@
 #define BOARD_GPIO_H_ONCE
 
 // this file is included from the bottom of gpio.h, but we do this for completeness
-#include "../../gpio.h"
+#include "gpio.h"
+#include "hardware.h"
 
 /*
  * GPIO defines
