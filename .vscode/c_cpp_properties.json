@@ -1,9 +1,9 @@
 {
     "configurations": [
         {
-            "name": "g2core",
+            "name": "Mac",
             "compileCommands": "${workspaceFolder}/g2core/compile_commands.json",
-            "compilerPath": "/usr/bin/clang",
+            "compilerPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/arm-none-eabi-gcc",
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "gcc-x64",
