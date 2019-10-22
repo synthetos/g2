@@ -746,7 +746,6 @@ const cfgItem_t cfgArray[] = {
 
     // Analog input configs
 #if (A_IN_CHANNELS >= 1)
-#warning A_IN_CHANNELS >= 1
     { "ai1","ai1en",_iip, 0, ai_print_en,         ai_get_en,         ai_set_en,      &ai1,  AI1_ENABLED },
     { "ai1","ai1ain",_iip,0, ai_print_ain,        ai_get_ain,        ai_set_ain,     &ai1,  AI1_EXTERNAL_NUMBER },
     { "ai1","ai1ty",_iip, 0, ai_print_type,       ai_get_type,       ai_set_type,    &ai1,  AI1_TYPE },
