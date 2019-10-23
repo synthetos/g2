@@ -46,17 +46,8 @@
 // These must be defines (not enums) so expressions like this:
 //  #if (MOTORS >= 6)  will work
 
-<<<<<<< HEAD
-#define AXES 6          // number of axes supported in this version
-#define HOMING_AXES 4   // number of axes that can be homed (assumes Zxyabc sequence)
-#define MOTORS 3        // number of motors on the board
-#define COORDS 6        // number of supported coordinate systems (index starts at 1)
-#define PWMS 2          // number of supported PWM channels
-#define TOOLS 32        // number of entries in tool table (index starts at 1)
-=======
 #define MOTORS 4                    // number of motors supported the hardware
 #define PWMS 2                      // number of PWM channels supported the hardware
->>>>>>> edge
 
 /*************************
  * Global System Defines *
@@ -71,28 +62,19 @@
  *************************/
 
 #include "MotatePins.h"
-<<<<<<< HEAD
 #if QUADRATIC_REVISION == 'C'
 #define MOTOR_1_IS_TRINAMIC
 #define MOTOR_2_IS_TRINAMIC
 #include "MotateSPI.h"
 #endif
 #include "MotateTimers.h"       // for TimerChanel<> and related...
-#include "MotateServiceCall.h"  // for ServiceCall<>
-=======
-#include "MotateTimers.h"           // for TimerChanel<> and related...
-#include "MotateServiceCall.h"      // for ServiceCall<>
->>>>>>> edge
 
 using Motate::TimerChannel;
-using Motate::ServiceCall;
-
 using Motate::pin_number;
 using Motate::Pin;
 using Motate::PWMOutputPin;
 using Motate::OutputPin;
 
-<<<<<<< HEAD
 /*************************
  * Global System Defines *
  *************************/
@@ -100,36 +82,6 @@ using Motate::OutputPin;
 #define MILLISECONDS_PER_TICK 1  // MS for system tick (systick * N)
 #define SYS_ID_DIGITS 12         // actual digits in system ID (up to 16)
 #define SYS_ID_LEN 24            // total length including dashes and NUL
-=======
-/************************************************************************************
- **** ARM SAM3X8E SPECIFIC HARDWARE *************************************************
- ************************************************************************************/
-
-/**** Resource Assignment via Motate ****
- *
- * This section defines resource usage for pins, timers, PWM channels, communications
- * and other resources. Please refer to /motate/utility/SamPins.h, SamTimers.h and
- * other files for pinouts and other configuration details.
- *
- * Commenting out or #ifdef'ing out definitions below will cause the compiler to
- * drop references to these resources from the compiled code. This will reduce
- * compiled code size and runtime CPU cycles. E.g. if you are compiling for a 3 motor,
- * XYZ axis config commenting out the higher motors and axes here will remove them
- * from later code (using the motate .isNull() test).
- */
-
-/* Interrupt usage and priority
- *
- * The following interrupts are defined w/indicated priorities
- *
- *	 0	DDA_TIMER (9) for step pulse generation
- *	 1	DWELL_TIMER (10) for dwell timing
- *	 2	LOADER software generated interrupt (STIR / SGI)
- *	 3	Serial read character interrupt
- *	 4	EXEC software generated interrupt (STIR / SGI)
- *	 5	Serial write character interrupt
- */
->>>>>>> edge
 
 /**** Stepper DDA and dwell timer settings ****/
 
@@ -154,9 +106,7 @@ static OutputPin<indicator_led_pin_num> IndicatorLed;
 
 /**** SPI Setup ****/
 #if QUADRATIC_REVISION == 'C'
-Motate::service_call_number kSPI_ServiceCallNumber = 3;
-
-typedef Motate::SPIBus<Motate::kSPI_MISOPinNumber, Motate::kSPI_MOSIPinNumber, Motate::kSPI_SCKPinNumber, kSPI_ServiceCallNumber> SPIBus_used_t;
+typedef Motate::SPIBus<Motate::kSPI_MISOPinNumber, Motate::kSPI_MOSIPinNumber> SPIBus_used_t;
 extern SPIBus_used_t spiBus;
 
 #endif

@@ -62,10 +62,8 @@
 #include "MotatePins.h"
 #include "MotateSPI.h"
 #include "MotateTimers.h"           // for TimerChanel<> and related...
-#include "MotateServiceCall.h"      // for ServiceCall<>
 
 using Motate::TimerChannel;
-using Motate::ServiceCall;
 
 using Motate::pin_number;
 using Motate::Pin;
@@ -123,9 +121,7 @@ pin_number indicator_led_pin_num = Motate::kLED_USBRXPinNumber;
 static PWMOutputPin<indicator_led_pin_num> IndicatorLed;
 
 /**** SPI Setup ****/
-Motate::service_call_number kSPI_ServiceCallNumber = 3;
-
-typedef Motate::SPIBus<Motate::kSPI_MISOPinNumber, Motate::kSPI_MOSIPinNumber, Motate::kSPI_SCKPinNumber, kSPI_ServiceCallNumber> SPIBus_used_t;
+typedef Motate::SPIBus<Motate::kSPI_MISOPinNumber, Motate::kSPI_MOSIPinNumber, Motate::kSPI_SCKPinNumber> SPIBus_used_t;
 extern SPIBus_used_t spiBus;
 
 // typedef Motate::SPIChipSelectPinMux<Motate::kSocket1_SPISlaveSelectPinNumber, Motate::kSocket2_SPISlaveSelectPinNumber, Motate::kSocket3_SPISlaveSelectPinNumber, Motate::kSocket4_SPISlaveSelectPinNumber> SPI_CS_PinMux_used_t;
