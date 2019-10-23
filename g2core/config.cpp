@@ -130,7 +130,7 @@ static void _set_defa(nvObj_t *nv, bool print)
         if (cfgArray[nv->index].flags & F_INITIALIZE) {
             if ((cfgArray[nv->index].flags & TYPE_INTEGER) ||
                 (cfgArray[nv->index].flags & TYPE_BOOLEAN)) {    // Fix for Issue #357
-                nv->valuetype = TYPE_INTEGER;
+                nv->valuetype = cfgArray[nv->index].flags & (TYPE_INTEGER|TYPE_BOOLEAN);
                 nv->value_int = cfgArray[nv->index].def_value;
             } else {
                 nv->valuetype = TYPE_FLOAT;
