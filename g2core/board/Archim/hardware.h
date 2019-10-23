@@ -37,7 +37,7 @@
 
 /*--- Hardware platform enumerations ---*/
 
-#define G2CORE_HARDWARE_PLATFORM    "Archim" 
+#define G2CORE_HARDWARE_PLATFORM    "Archim"
 #define G2CORE_HARDWARE_VERSION     "na"
 
 /***** Motors & PWM channels supported by this hardware *****/
@@ -111,8 +111,8 @@ using Motate::OutputPin;
 // Timer definitions. See stepper.h and other headers for setup
 typedef TimerChannel<3,0> dda_timer_type;	// stepper pulse generation in stepper.cpp
 typedef TimerChannel<4,0> load_timer_type;	    // request load timer in stepper.cpp
-typedef ServiceCall<1> exec_timer_type;	    // request exec timer in stepper.cpp
-typedef ServiceCall<2> fwd_plan_timer_type;	// request exec timer in stepper.cpp
+typedef ServiceCall exec_timer_type;	    // request exec timer in stepper.cpp
+typedef ServiceCall fwd_plan_timer_type;	// request exec timer in stepper.cpp
 
 // Pin assignments
 

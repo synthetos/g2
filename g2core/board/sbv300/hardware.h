@@ -61,10 +61,8 @@
 
 #include "MotatePins.h"
 #include "MotateTimers.h"           // for TimerChanel<> and related...
-#include "MotateServiceCall.h"      // for ServiceCall<>
 
 using Motate::TimerChannel;
-using Motate::ServiceCall;
 
 using Motate::pin_number;
 using Motate::Pin;
