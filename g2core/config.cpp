@@ -130,15 +130,17 @@ static void _set_defa(nvObj_t *nv, bool print)
         if (cfgArray[nv->index].flags & F_INITIALIZE) {
             if ((cfgArray[nv->index].flags & TYPE_INTEGER) ||
                 (cfgArray[nv->index].flags & TYPE_BOOLEAN)) {    // Fix for Issue #357
+                nv->valuetype = cfgArray[nv->index].flags & (TYPE_INTEGER|TYPE_BOOLEAN);
                 nv->value_int = cfgArray[nv->index].def_value;
             } else {
+                nv->valuetype = TYPE_FLOAT;
                 nv->value_flt = cfgArray[nv->index].def_value;
             }
             strncpy(nv->token, cfgArray[nv->index].token, TOKEN_LEN);
             cfgArray[nv->index].set(nv);        // run the set method, nv_set(nv);
             if (cfgArray[nv->index].flags & F_PERSIST) {
                 nv_persist(nv);
-            }            
+            }
         }
     }
     sr_init_status_report();                    // reset status reports
@@ -150,7 +152,7 @@ static void _set_defa(nvObj_t *nv, bool print)
 stat_t set_defaults(nvObj_t *nv)
 {
     // failsafe. nv->value_int must be true or no action occurs
-    if (!nv->value_int) { 
+    if (!nv->value_int) {
         return(help_defa(nv));
     }
     _set_defa(nv, true);
@@ -251,10 +253,10 @@ stat_t set_nul(nvObj_t *nv) {
 
 stat_t set_ro(nvObj_t *nv) {
     if (strcmp(nv_body->token, "sr") == 0) { // hack. If setting an SR it doesn't fail
-        return (STAT_OK); 
+        return (STAT_OK);
     }
     nv->valuetype = TYPE_NULL;
-    return (STAT_PARAMETER_IS_READ_ONLY); 
+    return (STAT_PARAMETER_IS_READ_ONLY);
 }
 
 stat_t set_int32(nvObj_t *nv)

@@ -658,73 +658,73 @@ const cfgItem_t cfgArray[] = {
     { "in","in16", _f0, 0, din_print_state, din_get_input, set_ro,  &in16, 0 },
 
     // digital output configs
-    { "do1", "do1en", _fip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  &dout1,  DO1_ENABLED },
-    { "do1", "do1po", _fip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  &dout1,  DO1_POLARITY },
-    { "do1", "do1out",_fip, 0,   dout_print_out, dout_get_out, dout_set_out, &dout1,  DO1_EXTERNAL_NUMBER },
+    { "do1", "do1en", _iip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  &dout1,  DO1_ENABLED },
+    { "do1", "do1po", _iip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  &dout1,  DO1_POLARITY },
+    { "do1", "do1out",_iip, 0,   dout_print_out, dout_get_out, dout_set_out, &dout1,  DO1_EXTERNAL_NUMBER },
 #if (D_OUT_CHANNELS >= 2)
-    { "do2", "do2en", _fip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  &dout2,  DO2_ENABLED },
-    { "do2", "do2po", _fip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  &dout2,  DO2_POLARITY },
-    { "do2", "do2out",_fip, 0,   dout_print_out, dout_get_out, dout_set_out, &dout2,  DO2_EXTERNAL_NUMBER },
+    { "do2", "do2en", _iip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  &dout2,  DO2_ENABLED },
+    { "do2", "do2po", _iip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  &dout2,  DO2_POLARITY },
+    { "do2", "do2out",_iip, 0,   dout_print_out, dout_get_out, dout_set_out, &dout2,  DO2_EXTERNAL_NUMBER },
 #endif
 #if (D_OUT_CHANNELS >= 3)
-    { "do3", "do3en", _fip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  &dout3,  DO3_ENABLED },
-    { "do3", "do3po", _fip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  &dout3,  DO3_POLARITY },
-    { "do3", "do3out",_fip, 0,   dout_print_out, dout_get_out, dout_set_out, &dout3,  DO3_EXTERNAL_NUMBER },
+    { "do3", "do3en", _iip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  &dout3,  DO3_ENABLED },
+    { "do3", "do3po", _iip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  &dout3,  DO3_POLARITY },
+    { "do3", "do3out",_iip, 0,   dout_print_out, dout_get_out, dout_set_out, &dout3,  DO3_EXTERNAL_NUMBER },
 #endif
 #if (D_OUT_CHANNELS >= 4)
-    { "do4", "do4en", _fip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  &dout4,  DO4_ENABLED },
-    { "do4", "do4po", _fip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  &dout4,  DO4_POLARITY },
-    { "do4", "do4out",_fip, 0,   dout_print_out, dout_get_out, dout_set_out, &dout4,  DO4_EXTERNAL_NUMBER },
+    { "do4", "do4en", _iip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  &dout4,  DO4_ENABLED },
+    { "do4", "do4po", _iip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  &dout4,  DO4_POLARITY },
+    { "do4", "do4out",_iip, 0,   dout_print_out, dout_get_out, dout_set_out, &dout4,  DO4_EXTERNAL_NUMBER },
 #endif
 #if (D_OUT_CHANNELS >= 5)
-    { "do5", "do5en", _fip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  &dout5,  DO5_ENABLED },
-    { "do5", "do5po", _fip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  &dout5,  DO5_POLARITY },
-    { "do5", "do5out",_fip, 0,   dout_print_out, dout_get_out, dout_set_out, &dout5,  DO5_EXTERNAL_NUMBER },
+    { "do5", "do5en", _iip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  &dout5,  DO5_ENABLED },
+    { "do5", "do5po", _iip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  &dout5,  DO5_POLARITY },
+    { "do5", "do5out",_iip, 0,   dout_print_out, dout_get_out, dout_set_out, &dout5,  DO5_EXTERNAL_NUMBER },
 #endif
 #if (D_OUT_CHANNELS >= 6)
-    { "do6", "do6en", _fip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  &dout6,  DO6_ENABLED },
-    { "do6", "do6po", _fip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  &dout6,  DO6_POLARITY },
-    { "do6", "do6out",_fip, 0,   dout_print_out, dout_get_out, dout_set_out, &dout6,  DO6_EXTERNAL_NUMBER },
+    { "do6", "do6en", _iip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  &dout6,  DO6_ENABLED },
+    { "do6", "do6po", _iip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  &dout6,  DO6_POLARITY },
+    { "do6", "do6out",_iip, 0,   dout_print_out, dout_get_out, dout_set_out, &dout6,  DO6_EXTERNAL_NUMBER },
 #endif
 #if (D_OUT_CHANNELS >= 7)
-    { "do7", "do7en", _fip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  &dout7,  DO7_ENABLED },
-    { "do7", "do7po", _fip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  &dout7,  DO7_POLARITY },
-    { "do7", "do7out",_fip, 0,   dout_print_out, dout_get_out, dout_set_out, &dout7,  DO7_EXTERNAL_NUMBER },
+    { "do7", "do7en", _iip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  &dout7,  DO7_ENABLED },
+    { "do7", "do7po", _iip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  &dout7,  DO7_POLARITY },
+    { "do7", "do7out",_iip, 0,   dout_print_out, dout_get_out, dout_set_out, &dout7,  DO7_EXTERNAL_NUMBER },
 #endif
 #if (D_OUT_CHANNELS >= 8)
-    { "do8", "do8en", _fip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  &dout8,  DO8_ENABLED },
-    { "do8", "do8po", _fip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  &dout8,  DO8_POLARITY },
-    { "do8", "do8out",_fip, 0,   dout_print_out, dout_get_out, dout_set_out, &dout8,  DO8_EXTERNAL_NUMBER },
+    { "do8", "do8en", _iip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  &dout8,  DO8_ENABLED },
+    { "do8", "do8po", _iip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  &dout8,  DO8_POLARITY },
+    { "do8", "do8out",_iip, 0,   dout_print_out, dout_get_out, dout_set_out, &dout8,  DO8_EXTERNAL_NUMBER },
 #endif
 #if (D_OUT_CHANNELS >= 9)
-    { "do9", "do9en", _fip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  &dout9,  DO9_ENABLED },
-    { "do9", "do9po", _fip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  &dout9,  DO9_POLARITY },
-    { "do9", "do9out",_fip, 0,   dout_print_out, dout_get_out, dout_set_out, &dout9,  DO9_EXTERNAL_NUMBER },
+    { "do9", "do9en", _iip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  &dout9,  DO9_ENABLED },
+    { "do9", "do9po", _iip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  &dout9,  DO9_POLARITY },
+    { "do9", "do9out",_iip, 0,   dout_print_out, dout_get_out, dout_set_out, &dout9,  DO9_EXTERNAL_NUMBER },
 #endif
 #if (D_OUT_CHANNELS >= 10)
-    { "do10", "do10en", _fip, 0, dout_print_en,  dout_get_en,  dout_set_en,  &dout10, DO10_ENABLED },
-    { "do10", "do10po", _fip, 0, dout_print_po,  dout_get_po,  dout_set_po,  &dout10, DO10_POLARITY },
-    { "do10", "do10out",_fip, 0, dout_print_out, dout_get_out, dout_set_out, &dout10, DO10_EXTERNAL_NUMBER },
+    { "do10", "do10en", _iip, 0, dout_print_en,  dout_get_en,  dout_set_en,  &dout10, DO10_ENABLED },
+    { "do10", "do10po", _iip, 0, dout_print_po,  dout_get_po,  dout_set_po,  &dout10, DO10_POLARITY },
+    { "do10", "do10out",_iip, 0, dout_print_out, dout_get_out, dout_set_out, &dout10, DO10_EXTERNAL_NUMBER },
 #endif
 #if (D_OUT_CHANNELS >= 11)
-    { "do11", "do11en", _fip, 0, dout_print_en,  dout_get_en,  dout_set_en,  &dout11, DO11_ENABLED },
-    { "do11", "do11po", _fip, 0, dout_print_po,  dout_get_po,  dout_set_po,  &dout11, DO11_POLARITY },
-    { "do11", "do11out",_fip, 0, dout_print_out, dout_get_out, dout_set_out, &dout11, DO11_EXTERNAL_NUMBER },
+    { "do11", "do11en", _iip, 0, dout_print_en,  dout_get_en,  dout_set_en,  &dout11, DO11_ENABLED },
+    { "do11", "do11po", _iip, 0, dout_print_po,  dout_get_po,  dout_set_po,  &dout11, DO11_POLARITY },
+    { "do11", "do11out",_iip, 0, dout_print_out, dout_get_out, dout_set_out, &dout11, DO11_EXTERNAL_NUMBER },
 #endif
 #if (D_OUT_CHANNELS >= 12)
-    { "do12", "do12en", _fip, 0, dout_print_en,  dout_get_en,  dout_set_en,  &dout12, DO12_ENABLED },
-    { "do12", "do12po", _fip, 0, dout_print_po,  dout_get_po,  dout_set_po,  &dout12, DO12_POLARITY },
-    { "do12", "do12out",_fip, 0, dout_print_out, dout_get_out, dout_set_out, &dout12, DO12_EXTERNAL_NUMBER },
+    { "do12", "do12en", _iip, 0, dout_print_en,  dout_get_en,  dout_set_en,  &dout12, DO12_ENABLED },
+    { "do12", "do12po", _iip, 0, dout_print_po,  dout_get_po,  dout_set_po,  &dout12, DO12_POLARITY },
+    { "do12", "do12out",_iip, 0, dout_print_out, dout_get_out, dout_set_out, &dout12, DO12_EXTERNAL_NUMBER },
 #endif
 #if (D_OUT_CHANNELS >= 13)
-    { "do13", "do13en", _fip, 0, dout_print_en,  dout_get_en,  dout_set_en,  &dout13, DO13_ENABLED },
-    { "do13", "do13po", _fip, 0, dout_print_po,  dout_get_po,  dout_set_po,  &dout13, DO13_POLARITY },
-    { "do13", "do13out",_fip, 0, dout_print_out, dout_get_out, dout_set_out, &dout13, DO13_EXTERNAL_NUMBER },
+    { "do13", "do13en", _iip, 0, dout_print_en,  dout_get_en,  dout_set_en,  &dout13, DO13_ENABLED },
+    { "do13", "do13po", _iip, 0, dout_print_po,  dout_get_po,  dout_set_po,  &dout13, DO13_POLARITY },
+    { "do13", "do13out",_iip, 0, dout_print_out, dout_get_out, dout_set_out, &dout13, DO13_EXTERNAL_NUMBER },
 #endif
 #if (D_OUT_CHANNELS >= 14)
-    { "do14", "do14en", _fip, 0, dout_print_en,  dout_get_en,  dout_set_en,  &dout14, DO14_ENABLED },
-    { "do14", "do14po", _fip, 0, dout_print_po,  dout_get_po,  dout_set_po,  &dout14, DO14_POLARITY },
-    { "do14", "do14out",_fip, 0, dout_print_out, dout_get_out, dout_set_out, &dout14, DO14_EXTERNAL_NUMBER },
+    { "do14", "do14en", _iip, 0, dout_print_en,  dout_get_en,  dout_set_en,  &dout14, DO14_ENABLED },
+    { "do14", "do14po", _iip, 0, dout_print_po,  dout_get_po,  dout_set_po,  &dout14, DO14_POLARITY },
+    { "do14", "do14out",_iip, 0, dout_print_out, dout_get_out, dout_set_out, &dout14, DO14_EXTERNAL_NUMBER },
 #endif
     // Digital output state readers (default to non-active)
     { "out","out1",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, &out1,  0 },
@@ -746,10 +746,10 @@ const cfgItem_t cfgArray[] = {
 
     // Analog input configs
 #if (A_IN_CHANNELS >= 1)
-    { "ai1","ai1en",_fip, 0, ai_print_en,         ai_get_en,         ai_set_en,      &ai1,  AI1_ENABLED },
-    { "ai1","ai1ain",_fip,0, ai_print_ain,        ai_get_ain,        ai_set_ain,     &ai1,  AI1_EXTERNAL_NUMBER },
-    { "ai1","ai1ty",_fip, 0, ai_print_type,       ai_get_type,       ai_set_type,    &ai1,  AI1_TYPE },
-    { "ai1","ai1ct",_fip, 0, ai_print_circuit,    ai_get_circuit,    ai_set_circuit, &ai1,  AI1_CIRCUIT },
+    { "ai1","ai1en",_iip, 0, ai_print_en,         ai_get_en,         ai_set_en,      &ai1,  AI1_ENABLED },
+    { "ai1","ai1ain",_iip,0, ai_print_ain,        ai_get_ain,        ai_set_ain,     &ai1,  AI1_EXTERNAL_NUMBER },
+    { "ai1","ai1ty",_iip, 0, ai_print_type,       ai_get_type,       ai_set_type,    &ai1,  AI1_TYPE },
+    { "ai1","ai1ct",_iip, 0, ai_print_circuit,    ai_get_circuit,    ai_set_circuit, &ai1,  AI1_CIRCUIT },
     { "ai1","ai1p1",_fip, 4, ai_print_p,          ai_get_p1,         ai_set_p1,      &ai1,  AI1_P1 },
     { "ai1","ai1p2",_fip, 4, ai_print_p,          ai_get_p2,         ai_set_p2,      &ai1,  AI1_P2 },
     { "ai1","ai1p3",_fip, 4, ai_print_p,          ai_get_p3,         ai_set_p3,      &ai1,  AI1_P3 },
@@ -757,10 +757,10 @@ const cfgItem_t cfgArray[] = {
     { "ai1","ai1p5",_fip, 4, ai_print_p,          ai_get_p5,         ai_set_p5,      &ai1,  AI1_P5 },
 #endif
 #if (A_IN_CHANNELS >= 2)
-    { "ai2","ai2en",_fip, 0, ai_print_en,         ai_get_en,         ai_set_en,      &ai2,  AI2_ENABLED },
-    { "ai2","ai2ain",_fip,0, ai_print_ain,        ai_get_ain,        ai_set_ain,     &ai2,  AI2_EXTERNAL_NUMBER },
-    { "ai2","ai2ty",_fip, 0, ai_print_type,       ai_get_type,       ai_set_type,    &ai2,  AI2_TYPE },
-    { "ai2","ai2ct",_fip, 0, ai_print_circuit,    ai_get_circuit,    ai_set_circuit, &ai2,  AI2_CIRCUIT },
+    { "ai2","ai2en",_iip, 0, ai_print_en,         ai_get_en,         ai_set_en,      &ai2,  AI2_ENABLED },
+    { "ai2","ai2ain",_iip,0, ai_print_ain,        ai_get_ain,        ai_set_ain,     &ai2,  AI2_EXTERNAL_NUMBER },
+    { "ai2","ai2ty",_iip, 0, ai_print_type,       ai_get_type,       ai_set_type,    &ai2,  AI2_TYPE },
+    { "ai2","ai2ct",_iip, 0, ai_print_circuit,    ai_get_circuit,    ai_set_circuit, &ai2,  AI2_CIRCUIT },
     { "ai2","ai2p1",_fip, 4, ai_print_p,          ai_get_p1,         ai_set_p1,      &ai2,  AI2_P1 },
     { "ai2","ai2p2",_fip, 4, ai_print_p,          ai_get_p2,         ai_set_p2,      &ai2,  AI2_P2 },
     { "ai2","ai2p3",_fip, 4, ai_print_p,          ai_get_p3,         ai_set_p3,      &ai2,  AI2_P3 },
@@ -768,10 +768,10 @@ const cfgItem_t cfgArray[] = {
     { "ai2","ai2p5",_fip, 4, ai_print_p,          ai_get_p5,         ai_set_p5,      &ai2,  AI2_P5 },
 #endif
 #if (A_IN_CHANNELS >= 3)
-    { "ai3","ai3en",_fip, 0, ai_print_en,         ai_get_en,         ai_set_en,      &ai3,  AI3_ENABLED },
-    { "ai3","ai3ain",_fip,0, ai_print_ain,        ai_get_ain,        ai_set_ain,     &ai3,  AI3_EXTERNAL_NUMBER },
-    { "ai3","ai3ty",_fip, 0, ai_print_type,       ai_get_type,       ai_set_type,    &ai3,  AI3_TYPE },
-    { "ai3","ai3ct",_fip, 0, ai_print_circuit,    ai_get_circuit,    ai_set_circuit, &ai3,  AI3_CIRCUIT },
+    { "ai3","ai3en",_iip, 0, ai_print_en,         ai_get_en,         ai_set_en,      &ai3,  AI3_ENABLED },
+    { "ai3","ai3ain",_iip,0, ai_print_ain,        ai_get_ain,        ai_set_ain,     &ai3,  AI3_EXTERNAL_NUMBER },
+    { "ai3","ai3ty",_iip, 0, ai_print_type,       ai_get_type,       ai_set_type,    &ai3,  AI3_TYPE },
+    { "ai3","ai3ct",_iip, 0, ai_print_circuit,    ai_get_circuit,    ai_set_circuit, &ai3,  AI3_CIRCUIT },
     { "ai3","ai3p1",_fip, 4, ai_print_p,          ai_get_p1,         ai_set_p1,      &ai3,  AI3_P1 },
     { "ai3","ai3p2",_fip, 4, ai_print_p,          ai_get_p2,         ai_set_p2,      &ai3,  AI3_P2 },
     { "ai3","ai3p3",_fip, 4, ai_print_p,          ai_get_p3,         ai_set_p3,      &ai3,  AI3_P3 },
@@ -779,10 +779,10 @@ const cfgItem_t cfgArray[] = {
     { "ai3","ai3p5",_fip, 4, ai_print_p,          ai_get_p5,         ai_set_p5,      &ai3,  AI3_P5 },
 #endif
 #if (A_IN_CHANNELS >= 4)
-    { "ai4","ai4en",_fip, 0, ai_print_en,         ai_get_en,         ai_set_en,      &ai4,  AI4_ENABLED },
-    { "ai4","ai4ain",_fip,0, ai_print_ain,        ai_get_ain,        ai_set_ain,     &ai4,  AI4_EXTERNAL_NUMBER },
-    { "ai4","ai4ty",_fip, 0, ai_print_type,       ai_get_type,       ai_set_type,    &ai4,  AI4_TYPE },
-    { "ai4","ai4ct",_fip, 0, ai_print_circuit,    ai_get_circuit,    ai_set_circuit, &ai4,  AI4_CIRCUIT },
+    { "ai4","ai4en",_iip, 0, ai_print_en,         ai_get_en,         ai_set_en,      &ai4,  AI4_ENABLED },
+    { "ai4","ai4ain",_iip,0, ai_print_ain,        ai_get_ain,        ai_set_ain,     &ai4,  AI4_EXTERNAL_NUMBER },
+    { "ai4","ai4ty",_iip, 0, ai_print_type,       ai_get_type,       ai_set_type,    &ai4,  AI4_TYPE },
+    { "ai4","ai4ct",_iip, 0, ai_print_circuit,    ai_get_circuit,    ai_set_circuit, &ai4,  AI4_CIRCUIT },
     { "ai4","ai4p1",_fip, 4, ai_print_p,          ai_get_p1,         ai_set_p1,      &ai4,  AI4_P1 },
     { "ai4","ai4p2",_fip, 4, ai_print_p,          ai_get_p2,         ai_set_p2,      &ai4,  AI4_P2 },
     { "ai4","ai4p3",_fip, 4, ai_print_p,          ai_get_p3,         ai_set_p3,      &ai4,  AI4_P3 },

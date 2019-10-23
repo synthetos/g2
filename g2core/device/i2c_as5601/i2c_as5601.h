@@ -1,9 +1,10 @@
 /*
- * i2c_as5601/i2c_as5601.h - suppport for talking to various I2C/SMBus EEPROM
- * modules This file is part of the G2 project
+ * i2c_as5601/i2c_as5601.h - suppport for AS5601 Position Sensor
+ * https://ams.com/AS5601
+ * This file is part of the G2 project
  *
- * Copyright (c) 2018 Alden S. Hart, Jr.
- * Copyright (c) 2018 Robert Giseburt
+ * Copyright (c) 2018-2019 Alden S. Hart, Jr.
+ * Copyright (c) 2018-2019 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 2 as
