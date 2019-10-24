@@ -14,9 +14,6 @@
       "args": ["CONFIG=ShapeokoDualY", "VERBOSE=2", "COLOR=0", "DEBUG=2",
          "RECORD=1"],
       "group": "build",
-      "presentation": {
-        "reveal": "never"
-      },
       "problemMatcher": {
         "base": "$gcc",
         "fileLocation": ["relative", "${workspaceRoot}/g2core"]

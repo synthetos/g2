@@ -175,7 +175,7 @@ pin_number kGRBL_CommonEnablePinNumber = -1;
 pin_number kHeaterOutput1_PinNumber = -1;  // DO_1: Extruder1_PWM
 pin_number kHeaterOutput2_PinNumber = -1;  // DO_2: Extruder2_PWM
 pin_number kOutput1_PinNumber = 130;  // DO_1:
-pin_number kOutput2_PinNumber = 131;  // DO_2: 
+pin_number kOutput2_PinNumber = 131;  // DO_2:
 pin_number kOutput3_PinNumber = 132;  // DO_3: Fan1A_PWM
 pin_number kOutput4_PinNumber = 133;  // DO_4: Fan1B_PWM
 pin_number kOutput5_PinNumber = 134;  // DO_5: Fan2A_PWM
@@ -234,17 +234,13 @@ pin_number kUnassigned1  = 254;  // 254 is the max.. Do not exceed this number
 
 // For the SAM3X8C boards, we actually use the same NUMBERING, but have different number to pin linkages
 
-// We're putting this in to make the autocomplete work for XCode,
-// since it doesn't understand the special syntax coming up.
-#ifdef XCODE_INDEX
-#include <G2v9k-pinout.h>
-#endif
-
 #ifdef MOTATE_BOARD
-#define MOTATE_BOARD_PINOUT < MOTATE_BOARD-pinout.h >
+#define MOTATE_BOARD_PINOUT <MOTATE_BOARD-pinout.h>
 #include MOTATE_BOARD_PINOUT
 #else
 #error Unknown board layout $(MOTATE_BOARD)
+// This next include is for IDEs only
+#include <G2v9k-pinout.h>
 #endif
 
 #endif

@@ -194,7 +194,7 @@ pin_number kOutput9_PinNumber  = 138;  // SAFE signal
 pin_number kOutput10_PinNumber = 139;  // DO_10: Fan2B_PWM
 
 pin_number kHeaterOutput11_PinNumber = 140;  // DO_11: Heated Bed FET
-pin_number kOutput11_PinNumber = -1;  // DO_11: 
+pin_number kOutput11_PinNumber = -1;  // DO_11:
 pin_number kOutput12_PinNumber = 141;  // DO_12: Indicator_LED
 pin_number kOutput13_PinNumber = -1;   // 142;
 pin_number kOutput14_PinNumber = -1;   // 143;
@@ -250,19 +250,13 @@ pin_number kUnassigned1  = 254;  // 254 is the max.. Do not exceed this number
 
 }  // namespace Motate
 
-// For the SAM3X8C boards, we actually use the same NUMBERING, but have different number to pin linkages
-
-// We're putting this in to make the autocomplete work for XCode,
-// since it doesn't understand the special syntax coming up.
-#ifdef XCODE_INDEX
-#include <pboard-a-pinout.h>
-#endif
-
 #ifdef MOTATE_BOARD
-#define MOTATE_BOARD_PINOUT < MOTATE_BOARD-pinout.h >
+#define MOTATE_BOARD_PINOUT <MOTATE_BOARD-pinout.h>
 #include MOTATE_BOARD_PINOUT
 #else
 #error Unknown board layout $(MOTATE_BOARD)
+// This next include is for IDEs only
+#include <printrboardG2v3-pinout.h>
 #endif
 
 #endif

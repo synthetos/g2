@@ -56,9 +56,11 @@
         "__locale": "cpp",
         "rope": "cpp"
     },
-    "C_Cpp.dimInactiveRegions": true,
     "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 4, ColumnLimit: 120 }",
     "C_Cpp.default.cppStandard": "c++17",
     // Render vertical rulers after a certain number of monospace characters. Use multiple values for multiple rulers. No rulers are drawn if array is empty.
-    "editor.rulers": [120]
+    "editor.rulers": [
+        120
+    ],
+    "C_Cpp.workspaceSymbols": "All"
 }
