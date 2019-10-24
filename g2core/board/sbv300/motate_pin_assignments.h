@@ -310,17 +310,13 @@ pin_number kUnassigned1  = 254;  // 254 is the max.. Do not exceed this number
 
 }  // namespace Motate
 
-// We're putting this in to make the autocomplete work for XCode,
-// since it doesn't understand the special syntax coming up.
-#ifdef XCODE_INDEX
-#include <sbv300-pinout.h>
-#endif
-
 #ifdef MOTATE_BOARD
-#define MOTATE_BOARD_PINOUT < MOTATE_BOARD-pinout.h >
+#define MOTATE_BOARD_PINOUT <MOTATE_BOARD-pinout.h>
 #include MOTATE_BOARD_PINOUT
 #else
 #error Unknown board layout
+// This next include is for IDEs only
+#include <sbv300-pinout.h>
 #endif
 
 #endif

@@ -180,17 +180,13 @@ _MAKE_MOTATE_PIN(78, 'B', 23);  // SS1
 #include "motate_chip_pin_functions.h"
 
 
-// We're putting this in to make the autocomplete work for XCode,
-// since it doesn't understand the special syntax coming up.
-#ifdef XCODE_INDEX
-#include <Due-pinout.h>
-#endif
-
 #ifdef MOTATE_BOARD
-#define MOTATE_BOARD_PINOUT < MOTATE_BOARD-pinout.h >
+#define MOTATE_BOARD_PINOUT <MOTATE_BOARD-pinout.h>
 #include MOTATE_BOARD_PINOUT
 #else
 #error Unknown board layout
+// This next include is for IDEs only
+#include <Due-pinout.h>
 #endif
 
 #endif

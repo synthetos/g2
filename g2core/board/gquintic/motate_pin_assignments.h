@@ -251,19 +251,13 @@ pin_number kUnassigned2  = 253;
 pin_number kUnassigned1  = 254;  // 254 is the max.. Do not exceed this number
 }  // namespace Motate
 
-// For the SAM3X8C boards, we actually use the same NUMBERING, but have different number to pin linkages
-
-// We're putting this in to make the autocomplete work for XCode,
-// since it doesn't understand the special syntax coming up.
-#ifdef XCODE_INDEX
-#include <gquintic-a-pinout.h>
-#endif
-
 #ifdef MOTATE_BOARD
 #define MOTATE_BOARD_PINOUT <MOTATE_BOARD-pinout.h>
 #include MOTATE_BOARD_PINOUT
 #else
 #error Unknown board layout $(MOTATE_BOARD)
+// This next include is for IDEs only
+#include <gquintic-d-pinout.h>
 #endif
 
 #endif
