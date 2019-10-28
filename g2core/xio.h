@@ -118,6 +118,7 @@ stat_t xio_test_assertions(void);
 
 size_t xio_write(const char *buffer, size_t size, bool only_to_muted = false);
 char *xio_readline(devflags_t &flags, uint16_t &size);
+void xio_flush_device(devflags_t flags);
 int16_t xio_writeline(const char *buffer, bool only_to_muted = false);
 bool xio_connected();
 void xio_flush_to_command();
