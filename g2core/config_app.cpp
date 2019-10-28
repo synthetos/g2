@@ -216,214 +216,216 @@ const cfgItem_t cfgArray[] = {
 	{ "pwr","pwr6",_f0, 3, st_print_pwr, st_get_pwr, set_ro, nullptr, 0},
 #endif
 
+
     // Motor parameters
     // generated with ${PROJECT_ROOT}/Resources/generate_motors_cfgArray.js
 
+
 #if (MOTORS >= 1)
-    { "1","1ma", _fip,  0, st_print_ma, st_get_ma, st_set_ma, &st_cfg.mot[MOTOR_1].motor_map,      M1_MOTOR_MAP },
+    { "1","1ma", _iip,  0, st_print_ma, st_get_ma, st_set_ma, &st_cfg.mot[MOTOR_1].motor_map,      M1_MOTOR_MAP },
     { "1","1sa", _fip,  3, st_print_sa, st_get_sa, st_set_sa, &st_cfg.mot[MOTOR_1].step_angle,     M1_STEP_ANGLE },
     { "1","1tr", _fipc, 4, st_print_tr, st_get_tr, st_set_tr, &st_cfg.mot[MOTOR_1].travel_rev,     M1_TRAVEL_PER_REV },
     { "1","1su", _fipi, 5, st_print_su, st_get_su, st_set_su, &st_cfg.mot[MOTOR_1].steps_per_unit, M1_STEPS_PER_UNIT },
-    { "1","1mi", _fip,  0, st_print_mi, st_get_mi, st_set_mi, &st_cfg.mot[MOTOR_1].microsteps,     M1_MICROSTEPS },
-    { "1","1po", _fip,  0, st_print_po, st_get_po, st_set_po, &st_cfg.mot[MOTOR_1].polarity,       M1_POLARITY },
-    { "1","1pm", _fip,  0, st_print_pm, st_get_pm, st_set_pm, &cs.null,                            M1_POWER_MODE },
+    { "1","1mi", _iip,  0, st_print_mi, st_get_mi, st_set_mi, &st_cfg.mot[MOTOR_1].microsteps,     M1_MICROSTEPS },
+    { "1","1po", _iip,  0, st_print_po, st_get_po, st_set_po, &st_cfg.mot[MOTOR_1].polarity,       M1_POLARITY },
+    { "1","1pm", _iip,  0, st_print_pm, st_get_pm, st_set_pm, &cs.null,                            M1_POWER_MODE },
     { "1","1pl", _fip,  3, st_print_pl, st_get_pl, st_set_pl, &st_cfg.mot[MOTOR_1].power_level,    M1_POWER_LEVEL },
     { "1","1ep", _iip,  0, st_print_ep, st_get_ep, st_set_ep, nullptr,                             M1_ENABLE_POLARITY },
     { "1","1sp", _iip,  0, st_print_sp, st_get_sp, st_set_sp, nullptr,                             M1_STEP_POLARITY },
 //  { "1","1pi", _fip,  3, st_print_pi, st_get_pi, st_set_pi, &st_cfg.mot[MOTOR_1].power_idle,     M1_POWER_IDLE },
 //  { "1","1mt", _fip,  2, st_print_mt, st_get_mt, st_set_mt, &st_cfg.mot[MOTOR_1].motor_timeout,  M1_MOTOR_TIMEOUT },
 #ifdef MOTOR_1_IS_TRINAMIC
-    { "1","1ts",  _f0,  0, tx_print_nul, motor_1.get_ts_fn,  set_ro,              &motor_1, 0 },
-    { "1","1pth", _fip, 0, tx_print_nul, motor_1.get_pth_fn, motor_1.set_pth_fn,  &motor_1, M1_TMC2130_TPWMTHRS },
-    { "1","1cth", _fip, 0, tx_print_nul, motor_1.get_cth_fn, motor_1.set_cth_fn,  &motor_1, M1_TMC2130_TCOOLTHRS },
-    { "1","1hth", _fip, 0, tx_print_nul, motor_1.get_hth_fn, motor_1.set_hth_fn,  &motor_1, M1_TMC2130_THIGH },
-    { "1","1sgt", _fip, 0, tx_print_nul, motor_1.get_sgt_fn, motor_1.set_sgt_fn,  &motor_1, M1_TMC2130_SGT },
-    { "1","1sgr", _f0,  0, tx_print_nul, motor_1.get_sgr_fn, set_ro,              &motor_1, 0 },
-    { "1","1csa", _f0,  0, tx_print_nul, motor_1.get_csa_fn, set_ro,              &motor_1, 0 },
-    { "1","1sgs", _f0,  0, tx_print_nul, motor_1.get_sgs_fn, set_ro,              &motor_1, 0 },
-    { "1","1tbl", _fip, 0, tx_print_nul, motor_1.get_tbl_fn, motor_1.set_tbl_fn,  &motor_1, M1_TMC2130_TBL },
-    { "1","1pgrd",_fip, 0, tx_print_nul, motor_1.get_pgrd_fn,motor_1.set_pgrd_fn, &motor_1, M1_TMC2130_PWM_GRAD },
-    { "1","1pamp",_fip, 0, tx_print_nul, motor_1.get_pamp_fn,motor_1.set_pamp_fn, &motor_1, M1_TMC2130_PWM_AMPL },
-    { "1","1hend",_fip, 0, tx_print_nul, motor_1.get_hend_fn,motor_1.set_hend_fn, &motor_1, M1_TMC2130_HEND },
-    { "1","1hsrt",_fip, 0, tx_print_nul, motor_1.get_hsrt_fn,motor_1.set_hsrt_fn, &motor_1, M1_TMC2130_HSTRT },
-    { "1","1smin",_fip, 0, tx_print_nul, motor_1.get_smin_fn,motor_1.set_smin_fn, &motor_1, M1_TMC2130_SMIN },
-    { "1","1smax",_fip, 0, tx_print_nul, motor_1.get_smax_fn,motor_1.set_smax_fn, &motor_1, M1_TMC2130_SMAX },
-    { "1","1sup", _fip, 0, tx_print_nul, motor_1.get_sup_fn, motor_1.set_sup_fn,  &motor_1, M1_TMC2130_SUP },
-    { "1","1sdn", _fip, 0, tx_print_nul, motor_1.get_sdn_fn, motor_1.set_sdn_fn,  &motor_1, M1_TMC2130_SDN },
+    { "1","1ts",  _i0,  0, tx_print_nul, motor_1.get_ts_fn,  set_ro,              &motor_1, 0 },
+    { "1","1pth", _iip, 0, tx_print_nul, motor_1.get_pth_fn, motor_1.set_pth_fn,  &motor_1, M1_TMC2130_TPWMTHRS },
+    { "1","1cth", _iip, 0, tx_print_nul, motor_1.get_cth_fn, motor_1.set_cth_fn,  &motor_1, M1_TMC2130_TCOOLTHRS },
+    { "1","1hth", _iip, 0, tx_print_nul, motor_1.get_hth_fn, motor_1.set_hth_fn,  &motor_1, M1_TMC2130_THIGH },
+    { "1","1sgt", _iip, 0, tx_print_nul, motor_1.get_sgt_fn, motor_1.set_sgt_fn,  &motor_1, M1_TMC2130_SGT },
+    { "1","1sgr", _i0,  0, tx_print_nul, motor_1.get_sgr_fn, set_ro,              &motor_1, 0 },
+    { "1","1csa", _i0,  0, tx_print_nul, motor_1.get_csa_fn, set_ro,              &motor_1, 0 },
+    { "1","1sgs", _i0,  0, tx_print_nul, motor_1.get_sgs_fn, set_ro,              &motor_1, 0 },
+    { "1","1tbl", _iip, 0, tx_print_nul, motor_1.get_tbl_fn, motor_1.set_tbl_fn,  &motor_1, M1_TMC2130_TBL },
+    { "1","1pgrd",_iip, 0, tx_print_nul, motor_1.get_pgrd_fn,motor_1.set_pgrd_fn, &motor_1, M1_TMC2130_PWM_GRAD },
+    { "1","1pamp",_iip, 0, tx_print_nul, motor_1.get_pamp_fn,motor_1.set_pamp_fn, &motor_1, M1_TMC2130_PWM_AMPL },
+    { "1","1hend",_iip, 0, tx_print_nul, motor_1.get_hend_fn,motor_1.set_hend_fn, &motor_1, M1_TMC2130_HEND },
+    { "1","1hsrt",_iip, 0, tx_print_nul, motor_1.get_hsrt_fn,motor_1.set_hsrt_fn, &motor_1, M1_TMC2130_HSTRT },
+    { "1","1smin",_iip, 0, tx_print_nul, motor_1.get_smin_fn,motor_1.set_smin_fn, &motor_1, M1_TMC2130_SMIN },
+    { "1","1smax",_iip, 0, tx_print_nul, motor_1.get_smax_fn,motor_1.set_smax_fn, &motor_1, M1_TMC2130_SMAX },
+    { "1","1sup", _iip, 0, tx_print_nul, motor_1.get_sup_fn, motor_1.set_sup_fn,  &motor_1, M1_TMC2130_SUP },
+    { "1","1sdn", _iip, 0, tx_print_nul, motor_1.get_sdn_fn, motor_1.set_sdn_fn,  &motor_1, M1_TMC2130_SDN },
 #endif
 #endif
 
 #if (MOTORS >= 2)
-    { "2","2ma", _fip,  0, st_print_ma, st_get_ma, st_set_ma, &st_cfg.mot[MOTOR_2].motor_map,      M2_MOTOR_MAP },
+    { "2","2ma", _iip,  0, st_print_ma, st_get_ma, st_set_ma, &st_cfg.mot[MOTOR_2].motor_map,      M2_MOTOR_MAP },
     { "2","2sa", _fip,  3, st_print_sa, st_get_sa, st_set_sa, &st_cfg.mot[MOTOR_2].step_angle,     M2_STEP_ANGLE },
     { "2","2tr", _fipc, 4, st_print_tr, st_get_tr, st_set_tr, &st_cfg.mot[MOTOR_2].travel_rev,     M2_TRAVEL_PER_REV },
     { "2","2su", _fipi, 5, st_print_su, st_get_su, st_set_su, &st_cfg.mot[MOTOR_2].steps_per_unit, M2_STEPS_PER_UNIT },
-    { "2","2mi", _fip,  0, st_print_mi, st_get_mi, st_set_mi, &st_cfg.mot[MOTOR_2].microsteps,     M2_MICROSTEPS },
-    { "2","2po", _fip,  0, st_print_po, st_get_po, st_set_po, &st_cfg.mot[MOTOR_2].polarity,       M2_POLARITY },
-    { "2","2pm", _fip,  0, st_print_pm, st_get_pm, st_set_pm, &cs.null,                            M2_POWER_MODE },
+    { "2","2mi", _iip,  0, st_print_mi, st_get_mi, st_set_mi, &st_cfg.mot[MOTOR_2].microsteps,     M2_MICROSTEPS },
+    { "2","2po", _iip,  0, st_print_po, st_get_po, st_set_po, &st_cfg.mot[MOTOR_2].polarity,       M2_POLARITY },
+    { "2","2pm", _iip,  0, st_print_pm, st_get_pm, st_set_pm, &cs.null,                            M2_POWER_MODE },
     { "2","2pl", _fip,  3, st_print_pl, st_get_pl, st_set_pl, &st_cfg.mot[MOTOR_2].power_level,    M2_POWER_LEVEL },
     { "2","2ep", _iip,  0, st_print_ep, st_get_ep, st_set_ep, nullptr,                             M2_ENABLE_POLARITY },
     { "2","2sp", _iip,  0, st_print_sp, st_get_sp, st_set_sp, nullptr,                             M2_STEP_POLARITY },
 //  { "2","2pi", _fip,  3, st_print_pi, st_get_pi, st_set_pi, &st_cfg.mot[MOTOR_2].power_idle,     M2_POWER_IDLE },
 //  { "2","2mt", _fip,  2, st_print_mt, st_get_mt, st_set_mt, &st_cfg.mot[MOTOR_2].motor_timeout,  M2_MOTOR_TIMEOUT },
 #ifdef MOTOR_2_IS_TRINAMIC
-    { "2","2ts",  _f0,  0, tx_print_nul, motor_2.get_ts_fn,  set_ro,              &motor_2, 0 },
-    { "2","2pth", _fip, 0, tx_print_nul, motor_2.get_pth_fn, motor_2.set_pth_fn,  &motor_2, M2_TMC2130_TPWMTHRS },
-    { "2","2cth", _fip, 0, tx_print_nul, motor_2.get_cth_fn, motor_2.set_cth_fn,  &motor_2, M2_TMC2130_TCOOLTHRS },
-    { "2","2hth", _fip, 0, tx_print_nul, motor_2.get_hth_fn, motor_2.set_hth_fn,  &motor_2, M2_TMC2130_THIGH },
-    { "2","2sgt", _fip, 0, tx_print_nul, motor_2.get_sgt_fn, motor_2.set_sgt_fn,  &motor_2, M2_TMC2130_SGT },
-    { "2","2sgr", _f0,  0, tx_print_nul, motor_2.get_sgr_fn, set_ro,              &motor_2, 0 },
-    { "2","2csa", _f0,  0, tx_print_nul, motor_2.get_csa_fn, set_ro,              &motor_2, 0 },
-    { "2","2sgs", _f0,  0, tx_print_nul, motor_2.get_sgs_fn, set_ro,              &motor_2, 0 },
-    { "2","2tbl", _fip, 0, tx_print_nul, motor_2.get_tbl_fn, motor_2.set_tbl_fn,  &motor_2, M2_TMC2130_TBL },
-    { "2","2pgrd",_fip, 0, tx_print_nul, motor_2.get_pgrd_fn,motor_2.set_pgrd_fn, &motor_2, M2_TMC2130_PWM_GRAD },
-    { "2","2pamp",_fip, 0, tx_print_nul, motor_2.get_pamp_fn,motor_2.set_pamp_fn, &motor_2, M2_TMC2130_PWM_AMPL },
-    { "2","2hend",_fip, 0, tx_print_nul, motor_2.get_hend_fn,motor_2.set_hend_fn, &motor_2, M2_TMC2130_HEND },
-    { "2","2hsrt",_fip, 0, tx_print_nul, motor_2.get_hsrt_fn,motor_2.set_hsrt_fn, &motor_2, M2_TMC2130_HSTRT },
-    { "2","2smin",_fip, 0, tx_print_nul, motor_2.get_smin_fn,motor_2.set_smin_fn, &motor_2, M2_TMC2130_SMIN },
-    { "2","2smax",_fip, 0, tx_print_nul, motor_2.get_smax_fn,motor_2.set_smax_fn, &motor_2, M2_TMC2130_SMAX },
-    { "2","2sup", _fip, 0, tx_print_nul, motor_2.get_sup_fn, motor_2.set_sup_fn,  &motor_2, M2_TMC2130_SUP },
-    { "2","2sdn", _fip, 0, tx_print_nul, motor_2.get_sdn_fn, motor_2.set_sdn_fn,  &motor_2, M2_TMC2130_SDN },
+    { "2","2ts",  _i0,  0, tx_print_nul, motor_2.get_ts_fn,  set_ro,              &motor_2, 0 },
+    { "2","2pth", _iip, 0, tx_print_nul, motor_2.get_pth_fn, motor_2.set_pth_fn,  &motor_2, M2_TMC2130_TPWMTHRS },
+    { "2","2cth", _iip, 0, tx_print_nul, motor_2.get_cth_fn, motor_2.set_cth_fn,  &motor_2, M2_TMC2130_TCOOLTHRS },
+    { "2","2hth", _iip, 0, tx_print_nul, motor_2.get_hth_fn, motor_2.set_hth_fn,  &motor_2, M2_TMC2130_THIGH },
+    { "2","2sgt", _iip, 0, tx_print_nul, motor_2.get_sgt_fn, motor_2.set_sgt_fn,  &motor_2, M2_TMC2130_SGT },
+    { "2","2sgr", _i0,  0, tx_print_nul, motor_2.get_sgr_fn, set_ro,              &motor_2, 0 },
+    { "2","2csa", _i0,  0, tx_print_nul, motor_2.get_csa_fn, set_ro,              &motor_2, 0 },
+    { "2","2sgs", _i0,  0, tx_print_nul, motor_2.get_sgs_fn, set_ro,              &motor_2, 0 },
+    { "2","2tbl", _iip, 0, tx_print_nul, motor_2.get_tbl_fn, motor_2.set_tbl_fn,  &motor_2, M2_TMC2130_TBL },
+    { "2","2pgrd",_iip, 0, tx_print_nul, motor_2.get_pgrd_fn,motor_2.set_pgrd_fn, &motor_2, M2_TMC2130_PWM_GRAD },
+    { "2","2pamp",_iip, 0, tx_print_nul, motor_2.get_pamp_fn,motor_2.set_pamp_fn, &motor_2, M2_TMC2130_PWM_AMPL },
+    { "2","2hend",_iip, 0, tx_print_nul, motor_2.get_hend_fn,motor_2.set_hend_fn, &motor_2, M2_TMC2130_HEND },
+    { "2","2hsrt",_iip, 0, tx_print_nul, motor_2.get_hsrt_fn,motor_2.set_hsrt_fn, &motor_2, M2_TMC2130_HSTRT },
+    { "2","2smin",_iip, 0, tx_print_nul, motor_2.get_smin_fn,motor_2.set_smin_fn, &motor_2, M2_TMC2130_SMIN },
+    { "2","2smax",_iip, 0, tx_print_nul, motor_2.get_smax_fn,motor_2.set_smax_fn, &motor_2, M2_TMC2130_SMAX },
+    { "2","2sup", _iip, 0, tx_print_nul, motor_2.get_sup_fn, motor_2.set_sup_fn,  &motor_2, M2_TMC2130_SUP },
+    { "2","2sdn", _iip, 0, tx_print_nul, motor_2.get_sdn_fn, motor_2.set_sdn_fn,  &motor_2, M2_TMC2130_SDN },
 #endif
 #endif
 
 #if (MOTORS >= 3)
-    { "3","3ma", _fip,  0, st_print_ma, st_get_ma, st_set_ma, &st_cfg.mot[MOTOR_3].motor_map,      M3_MOTOR_MAP },
+    { "3","3ma", _iip,  0, st_print_ma, st_get_ma, st_set_ma, &st_cfg.mot[MOTOR_3].motor_map,      M3_MOTOR_MAP },
     { "3","3sa", _fip,  3, st_print_sa, st_get_sa, st_set_sa, &st_cfg.mot[MOTOR_3].step_angle,     M3_STEP_ANGLE },
     { "3","3tr", _fipc, 4, st_print_tr, st_get_tr, st_set_tr, &st_cfg.mot[MOTOR_3].travel_rev,     M3_TRAVEL_PER_REV },
     { "3","3su", _fipi, 5, st_print_su, st_get_su, st_set_su, &st_cfg.mot[MOTOR_3].steps_per_unit, M3_STEPS_PER_UNIT },
-    { "3","3mi", _fip,  0, st_print_mi, st_get_mi, st_set_mi, &st_cfg.mot[MOTOR_3].microsteps,     M3_MICROSTEPS },
-    { "3","3po", _fip,  0, st_print_po, st_get_po, st_set_po, &st_cfg.mot[MOTOR_3].polarity,       M3_POLARITY },
-    { "3","3pm", _fip,  0, st_print_pm, st_get_pm, st_set_pm, &cs.null,                            M3_POWER_MODE },
+    { "3","3mi", _iip,  0, st_print_mi, st_get_mi, st_set_mi, &st_cfg.mot[MOTOR_3].microsteps,     M3_MICROSTEPS },
+    { "3","3po", _iip,  0, st_print_po, st_get_po, st_set_po, &st_cfg.mot[MOTOR_3].polarity,       M3_POLARITY },
+    { "3","3pm", _iip,  0, st_print_pm, st_get_pm, st_set_pm, &cs.null,                            M3_POWER_MODE },
     { "3","3pl", _fip,  3, st_print_pl, st_get_pl, st_set_pl, &st_cfg.mot[MOTOR_3].power_level,    M3_POWER_LEVEL },
     { "3","3ep", _iip,  0, st_print_ep, st_get_ep, st_set_ep, nullptr,                             M3_ENABLE_POLARITY },
     { "3","3sp", _iip,  0, st_print_sp, st_get_sp, st_set_sp, nullptr,                             M3_STEP_POLARITY },
 //  { "3","3pi", _fip,  3, st_print_pi, st_get_pi, st_set_pi, &st_cfg.mot[MOTOR_3].power_idle,     M3_POWER_IDLE },
 //  { "3","3mt", _fip,  2, st_print_mt, st_get_mt, st_set_mt, &st_cfg.mot[MOTOR_3].motor_timeout,  M3_MOTOR_TIMEOUT },
 #ifdef MOTOR_3_IS_TRINAMIC
-    { "3","3ts",  _f0,  0, tx_print_nul, motor_3.get_ts_fn,  set_ro,              &motor_3, 0 },
-    { "3","3pth", _fip, 0, tx_print_nul, motor_3.get_pth_fn, motor_3.set_pth_fn,  &motor_3, M3_TMC2130_TPWMTHRS },
-    { "3","3cth", _fip, 0, tx_print_nul, motor_3.get_cth_fn, motor_3.set_cth_fn,  &motor_3, M3_TMC2130_TCOOLTHRS },
-    { "3","3hth", _fip, 0, tx_print_nul, motor_3.get_hth_fn, motor_3.set_hth_fn,  &motor_3, M3_TMC2130_THIGH },
-    { "3","3sgt", _fip, 0, tx_print_nul, motor_3.get_sgt_fn, motor_3.set_sgt_fn,  &motor_3, M3_TMC2130_SGT },
-    { "3","3sgr", _f0,  0, tx_print_nul, motor_3.get_sgr_fn, set_ro,              &motor_3, 0 },
-    { "3","3csa", _f0,  0, tx_print_nul, motor_3.get_csa_fn, set_ro,              &motor_3, 0 },
-    { "3","3sgs", _f0,  0, tx_print_nul, motor_3.get_sgs_fn, set_ro,              &motor_3, 0 },
-    { "3","3tbl", _fip, 0, tx_print_nul, motor_3.get_tbl_fn, motor_3.set_tbl_fn,  &motor_3, M3_TMC2130_TBL },
-    { "3","3pgrd",_fip, 0, tx_print_nul, motor_3.get_pgrd_fn,motor_3.set_pgrd_fn, &motor_3, M3_TMC2130_PWM_GRAD },
-    { "3","3pamp",_fip, 0, tx_print_nul, motor_3.get_pamp_fn,motor_3.set_pamp_fn, &motor_3, M3_TMC2130_PWM_AMPL },
-    { "3","3hend",_fip, 0, tx_print_nul, motor_3.get_hend_fn,motor_3.set_hend_fn, &motor_3, M3_TMC2130_HEND },
-    { "3","3hsrt",_fip, 0, tx_print_nul, motor_3.get_hsrt_fn,motor_3.set_hsrt_fn, &motor_3, M3_TMC2130_HSTRT },
-    { "3","3smin",_fip, 0, tx_print_nul, motor_3.get_smin_fn,motor_3.set_smin_fn, &motor_3, M3_TMC2130_SMIN },
-    { "3","3smax",_fip, 0, tx_print_nul, motor_3.get_smax_fn,motor_3.set_smax_fn, &motor_3, M3_TMC2130_SMAX },
-    { "3","3sup", _fip, 0, tx_print_nul, motor_3.get_sup_fn, motor_3.set_sup_fn,  &motor_3, M3_TMC2130_SUP },
-    { "3","3sdn", _fip, 0, tx_print_nul, motor_3.get_sdn_fn, motor_3.set_sdn_fn,  &motor_3, M3_TMC2130_SDN },
+    { "3","3ts",  _i0,  0, tx_print_nul, motor_3.get_ts_fn,  set_ro,              &motor_3, 0 },
+    { "3","3pth", _iip, 0, tx_print_nul, motor_3.get_pth_fn, motor_3.set_pth_fn,  &motor_3, M3_TMC2130_TPWMTHRS },
+    { "3","3cth", _iip, 0, tx_print_nul, motor_3.get_cth_fn, motor_3.set_cth_fn,  &motor_3, M3_TMC2130_TCOOLTHRS },
+    { "3","3hth", _iip, 0, tx_print_nul, motor_3.get_hth_fn, motor_3.set_hth_fn,  &motor_3, M3_TMC2130_THIGH },
+    { "3","3sgt", _iip, 0, tx_print_nul, motor_3.get_sgt_fn, motor_3.set_sgt_fn,  &motor_3, M3_TMC2130_SGT },
+    { "3","3sgr", _i0,  0, tx_print_nul, motor_3.get_sgr_fn, set_ro,              &motor_3, 0 },
+    { "3","3csa", _i0,  0, tx_print_nul, motor_3.get_csa_fn, set_ro,              &motor_3, 0 },
+    { "3","3sgs", _i0,  0, tx_print_nul, motor_3.get_sgs_fn, set_ro,              &motor_3, 0 },
+    { "3","3tbl", _iip, 0, tx_print_nul, motor_3.get_tbl_fn, motor_3.set_tbl_fn,  &motor_3, M3_TMC2130_TBL },
+    { "3","3pgrd",_iip, 0, tx_print_nul, motor_3.get_pgrd_fn,motor_3.set_pgrd_fn, &motor_3, M3_TMC2130_PWM_GRAD },
+    { "3","3pamp",_iip, 0, tx_print_nul, motor_3.get_pamp_fn,motor_3.set_pamp_fn, &motor_3, M3_TMC2130_PWM_AMPL },
+    { "3","3hend",_iip, 0, tx_print_nul, motor_3.get_hend_fn,motor_3.set_hend_fn, &motor_3, M3_TMC2130_HEND },
+    { "3","3hsrt",_iip, 0, tx_print_nul, motor_3.get_hsrt_fn,motor_3.set_hsrt_fn, &motor_3, M3_TMC2130_HSTRT },
+    { "3","3smin",_iip, 0, tx_print_nul, motor_3.get_smin_fn,motor_3.set_smin_fn, &motor_3, M3_TMC2130_SMIN },
+    { "3","3smax",_iip, 0, tx_print_nul, motor_3.get_smax_fn,motor_3.set_smax_fn, &motor_3, M3_TMC2130_SMAX },
+    { "3","3sup", _iip, 0, tx_print_nul, motor_3.get_sup_fn, motor_3.set_sup_fn,  &motor_3, M3_TMC2130_SUP },
+    { "3","3sdn", _iip, 0, tx_print_nul, motor_3.get_sdn_fn, motor_3.set_sdn_fn,  &motor_3, M3_TMC2130_SDN },
 #endif
 #endif
 
 #if (MOTORS >= 4)
-    { "4","4ma", _fip,  0, st_print_ma, st_get_ma, st_set_ma, &st_cfg.mot[MOTOR_4].motor_map,      M4_MOTOR_MAP },
+    { "4","4ma", _iip,  0, st_print_ma, st_get_ma, st_set_ma, &st_cfg.mot[MOTOR_4].motor_map,      M4_MOTOR_MAP },
     { "4","4sa", _fip,  3, st_print_sa, st_get_sa, st_set_sa, &st_cfg.mot[MOTOR_4].step_angle,     M4_STEP_ANGLE },
     { "4","4tr", _fipc, 4, st_print_tr, st_get_tr, st_set_tr, &st_cfg.mot[MOTOR_4].travel_rev,     M4_TRAVEL_PER_REV },
     { "4","4su", _fipi, 5, st_print_su, st_get_su, st_set_su, &st_cfg.mot[MOTOR_4].steps_per_unit, M4_STEPS_PER_UNIT },
-    { "4","4mi", _fip,  0, st_print_mi, st_get_mi, st_set_mi, &st_cfg.mot[MOTOR_4].microsteps,     M4_MICROSTEPS },
-    { "4","4po", _fip,  0, st_print_po, st_get_po, st_set_po, &st_cfg.mot[MOTOR_4].polarity,       M4_POLARITY },
-    { "4","4pm", _fip,  0, st_print_pm, st_get_pm, st_set_pm, &cs.null,                            M4_POWER_MODE },
+    { "4","4mi", _iip,  0, st_print_mi, st_get_mi, st_set_mi, &st_cfg.mot[MOTOR_4].microsteps,     M4_MICROSTEPS },
+    { "4","4po", _iip,  0, st_print_po, st_get_po, st_set_po, &st_cfg.mot[MOTOR_4].polarity,       M4_POLARITY },
+    { "4","4pm", _iip,  0, st_print_pm, st_get_pm, st_set_pm, &cs.null,                            M4_POWER_MODE },
     { "4","4pl", _fip,  3, st_print_pl, st_get_pl, st_set_pl, &st_cfg.mot[MOTOR_4].power_level,    M4_POWER_LEVEL },
     { "4","4ep", _iip,  0, st_print_ep, st_get_ep, st_set_ep, nullptr,                             M4_ENABLE_POLARITY },
     { "4","4sp", _iip,  0, st_print_sp, st_get_sp, st_set_sp, nullptr,                             M4_STEP_POLARITY },
 //  { "4","4pi", _fip,  3, st_print_pi, st_get_pi, st_set_pi, &st_cfg.mot[MOTOR_4].power_idle,     M4_POWER_IDLE },
 //  { "4","4mt", _fip,  2, st_print_mt, st_get_mt, st_set_mt, &st_cfg.mot[MOTOR_4].motor_timeout,  M4_MOTOR_TIMEOUT },
 #ifdef MOTOR_4_IS_TRINAMIC
-    { "4","4ts",  _f0,  0, tx_print_nul, motor_4.get_ts_fn,  set_ro,              &motor_4, 0 },
-    { "4","4pth", _fip, 0, tx_print_nul, motor_4.get_pth_fn, motor_4.set_pth_fn,  &motor_4, M4_TMC2130_TPWMTHRS },
-    { "4","4cth", _fip, 0, tx_print_nul, motor_4.get_cth_fn, motor_4.set_cth_fn,  &motor_4, M4_TMC2130_TCOOLTHRS },
-    { "4","4hth", _fip, 0, tx_print_nul, motor_4.get_hth_fn, motor_4.set_hth_fn,  &motor_4, M4_TMC2130_THIGH },
-    { "4","4sgt", _fip, 0, tx_print_nul, motor_4.get_sgt_fn, motor_4.set_sgt_fn,  &motor_4, M4_TMC2130_SGT },
-    { "4","4sgr", _f0,  0, tx_print_nul, motor_4.get_sgr_fn, set_ro,              &motor_4, 0 },
-    { "4","4csa", _f0,  0, tx_print_nul, motor_4.get_csa_fn, set_ro,              &motor_4, 0 },
-    { "4","4sgs", _f0,  0, tx_print_nul, motor_4.get_sgs_fn, set_ro,              &motor_4, 0 },
-    { "4","4tbl", _fip, 0, tx_print_nul, motor_4.get_tbl_fn, motor_4.set_tbl_fn,  &motor_4, M4_TMC2130_TBL },
-    { "4","4pgrd",_fip, 0, tx_print_nul, motor_4.get_pgrd_fn,motor_4.set_pgrd_fn, &motor_4, M4_TMC2130_PWM_GRAD },
-    { "4","4pamp",_fip, 0, tx_print_nul, motor_4.get_pamp_fn,motor_4.set_pamp_fn, &motor_4, M4_TMC2130_PWM_AMPL },
-    { "4","4hend",_fip, 0, tx_print_nul, motor_4.get_hend_fn,motor_4.set_hend_fn, &motor_4, M4_TMC2130_HEND },
-    { "4","4hsrt",_fip, 0, tx_print_nul, motor_4.get_hsrt_fn,motor_4.set_hsrt_fn, &motor_4, M4_TMC2130_HSTRT },
-    { "4","4smin",_fip, 0, tx_print_nul, motor_4.get_smin_fn,motor_4.set_smin_fn, &motor_4, M4_TMC2130_SMIN },
-    { "4","4smax",_fip, 0, tx_print_nul, motor_4.get_smax_fn,motor_4.set_smax_fn, &motor_4, M4_TMC2130_SMAX },
-    { "4","4sup", _fip, 0, tx_print_nul, motor_4.get_sup_fn, motor_4.set_sup_fn,  &motor_4, M4_TMC2130_SUP },
-    { "4","4sdn", _fip, 0, tx_print_nul, motor_4.get_sdn_fn, motor_4.set_sdn_fn,  &motor_4, M4_TMC2130_SDN },
+    { "4","4ts",  _i0,  0, tx_print_nul, motor_4.get_ts_fn,  set_ro,              &motor_4, 0 },
+    { "4","4pth", _iip, 0, tx_print_nul, motor_4.get_pth_fn, motor_4.set_pth_fn,  &motor_4, M4_TMC2130_TPWMTHRS },
+    { "4","4cth", _iip, 0, tx_print_nul, motor_4.get_cth_fn, motor_4.set_cth_fn,  &motor_4, M4_TMC2130_TCOOLTHRS },
+    { "4","4hth", _iip, 0, tx_print_nul, motor_4.get_hth_fn, motor_4.set_hth_fn,  &motor_4, M4_TMC2130_THIGH },
+    { "4","4sgt", _iip, 0, tx_print_nul, motor_4.get_sgt_fn, motor_4.set_sgt_fn,  &motor_4, M4_TMC2130_SGT },
+    { "4","4sgr", _i0,  0, tx_print_nul, motor_4.get_sgr_fn, set_ro,              &motor_4, 0 },
+    { "4","4csa", _i0,  0, tx_print_nul, motor_4.get_csa_fn, set_ro,              &motor_4, 0 },
+    { "4","4sgs", _i0,  0, tx_print_nul, motor_4.get_sgs_fn, set_ro,              &motor_4, 0 },
+    { "4","4tbl", _iip, 0, tx_print_nul, motor_4.get_tbl_fn, motor_4.set_tbl_fn,  &motor_4, M4_TMC2130_TBL },
+    { "4","4pgrd",_iip, 0, tx_print_nul, motor_4.get_pgrd_fn,motor_4.set_pgrd_fn, &motor_4, M4_TMC2130_PWM_GRAD },
+    { "4","4pamp",_iip, 0, tx_print_nul, motor_4.get_pamp_fn,motor_4.set_pamp_fn, &motor_4, M4_TMC2130_PWM_AMPL },
+    { "4","4hend",_iip, 0, tx_print_nul, motor_4.get_hend_fn,motor_4.set_hend_fn, &motor_4, M4_TMC2130_HEND },
+    { "4","4hsrt",_iip, 0, tx_print_nul, motor_4.get_hsrt_fn,motor_4.set_hsrt_fn, &motor_4, M4_TMC2130_HSTRT },
+    { "4","4smin",_iip, 0, tx_print_nul, motor_4.get_smin_fn,motor_4.set_smin_fn, &motor_4, M4_TMC2130_SMIN },
+    { "4","4smax",_iip, 0, tx_print_nul, motor_4.get_smax_fn,motor_4.set_smax_fn, &motor_4, M4_TMC2130_SMAX },
+    { "4","4sup", _iip, 0, tx_print_nul, motor_4.get_sup_fn, motor_4.set_sup_fn,  &motor_4, M4_TMC2130_SUP },
+    { "4","4sdn", _iip, 0, tx_print_nul, motor_4.get_sdn_fn, motor_4.set_sdn_fn,  &motor_4, M4_TMC2130_SDN },
 #endif
 #endif
 
 #if (MOTORS >= 5)
-    { "5","5ma", _fip,  0, st_print_ma, st_get_ma, st_set_ma, &st_cfg.mot[MOTOR_5].motor_map,      M5_MOTOR_MAP },
+    { "5","5ma", _iip,  0, st_print_ma, st_get_ma, st_set_ma, &st_cfg.mot[MOTOR_5].motor_map,      M5_MOTOR_MAP },
     { "5","5sa", _fip,  3, st_print_sa, st_get_sa, st_set_sa, &st_cfg.mot[MOTOR_5].step_angle,     M5_STEP_ANGLE },
     { "5","5tr", _fipc, 4, st_print_tr, st_get_tr, st_set_tr, &st_cfg.mot[MOTOR_5].travel_rev,     M5_TRAVEL_PER_REV },
     { "5","5su", _fipi, 5, st_print_su, st_get_su, st_set_su, &st_cfg.mot[MOTOR_5].steps_per_unit, M5_STEPS_PER_UNIT },
-    { "5","5mi", _fip,  0, st_print_mi, st_get_mi, st_set_mi, &st_cfg.mot[MOTOR_5].microsteps,     M5_MICROSTEPS },
-    { "5","5po", _fip,  0, st_print_po, st_get_po, st_set_po, &st_cfg.mot[MOTOR_5].polarity,       M5_POLARITY },
-    { "5","5pm", _fip,  0, st_print_pm, st_get_pm, st_set_pm, &cs.null,                            M5_POWER_MODE },
+    { "5","5mi", _iip,  0, st_print_mi, st_get_mi, st_set_mi, &st_cfg.mot[MOTOR_5].microsteps,     M5_MICROSTEPS },
+    { "5","5po", _iip,  0, st_print_po, st_get_po, st_set_po, &st_cfg.mot[MOTOR_5].polarity,       M5_POLARITY },
+    { "5","5pm", _iip,  0, st_print_pm, st_get_pm, st_set_pm, &cs.null,                            M5_POWER_MODE },
     { "5","5pl", _fip,  3, st_print_pl, st_get_pl, st_set_pl, &st_cfg.mot[MOTOR_5].power_level,    M5_POWER_LEVEL },
     { "5","5ep", _iip,  0, st_print_ep, st_get_ep, st_set_ep, nullptr,                             M5_ENABLE_POLARITY },
     { "5","5sp", _iip,  0, st_print_sp, st_get_sp, st_set_sp, nullptr,                             M5_STEP_POLARITY },
 //  { "5","5pi", _fip,  3, st_print_pi, st_get_pi, st_set_pi, &st_cfg.mot[MOTOR_5].power_idle,     M5_POWER_IDLE },
 //  { "5","5mt", _fip,  2, st_print_mt, st_get_mt, st_set_mt, &st_cfg.mot[MOTOR_5].motor_timeout,  M5_MOTOR_TIMEOUT },
 #ifdef MOTOR_5_IS_TRINAMIC
-    { "5","5ts",  _f0,  0, tx_print_nul, motor_5.get_ts_fn,  set_ro,              &motor_5, 0 },
-    { "5","5pth", _fip, 0, tx_print_nul, motor_5.get_pth_fn, motor_5.set_pth_fn,  &motor_5, M5_TMC2130_TPWMTHRS },
-    { "5","5cth", _fip, 0, tx_print_nul, motor_5.get_cth_fn, motor_5.set_cth_fn,  &motor_5, M5_TMC2130_TCOOLTHRS },
-    { "5","5hth", _fip, 0, tx_print_nul, motor_5.get_hth_fn, motor_5.set_hth_fn,  &motor_5, M5_TMC2130_THIGH },
-    { "5","5sgt", _fip, 0, tx_print_nul, motor_5.get_sgt_fn, motor_5.set_sgt_fn,  &motor_5, M5_TMC2130_SGT },
-    { "5","5sgr", _f0,  0, tx_print_nul, motor_5.get_sgr_fn, set_ro,              &motor_5, 0 },
-    { "5","5csa", _f0,  0, tx_print_nul, motor_5.get_csa_fn, set_ro,              &motor_5, 0 },
-    { "5","5sgs", _f0,  0, tx_print_nul, motor_5.get_sgs_fn, set_ro,              &motor_5, 0 },
-    { "5","5tbl", _fip, 0, tx_print_nul, motor_5.get_tbl_fn, motor_5.set_tbl_fn,  &motor_5, M5_TMC2130_TBL },
-    { "5","5pgrd",_fip, 0, tx_print_nul, motor_5.get_pgrd_fn,motor_5.set_pgrd_fn, &motor_5, M5_TMC2130_PWM_GRAD },
-    { "5","5pamp",_fip, 0, tx_print_nul, motor_5.get_pamp_fn,motor_5.set_pamp_fn, &motor_5, M5_TMC2130_PWM_AMPL },
-    { "5","5hend",_fip, 0, tx_print_nul, motor_5.get_hend_fn,motor_5.set_hend_fn, &motor_5, M5_TMC2130_HEND },
-    { "5","5hsrt",_fip, 0, tx_print_nul, motor_5.get_hsrt_fn,motor_5.set_hsrt_fn, &motor_5, M5_TMC2130_HSTRT },
-    { "5","5smin",_fip, 0, tx_print_nul, motor_5.get_smin_fn,motor_5.set_smin_fn, &motor_5, M5_TMC2130_SMIN },
-    { "5","5smax",_fip, 0, tx_print_nul, motor_5.get_smax_fn,motor_5.set_smax_fn, &motor_5, M5_TMC2130_SMAX },
-    { "5","5sup", _fip, 0, tx_print_nul, motor_5.get_sup_fn, motor_5.set_sup_fn,  &motor_5, M5_TMC2130_SUP },
-    { "5","5sdn", _fip, 0, tx_print_nul, motor_5.get_sdn_fn, motor_5.set_sdn_fn,  &motor_5, M5_TMC2130_SDN },
+    { "5","5ts",  _i0,  0, tx_print_nul, motor_5.get_ts_fn,  set_ro,              &motor_5, 0 },
+    { "5","5pth", _iip, 0, tx_print_nul, motor_5.get_pth_fn, motor_5.set_pth_fn,  &motor_5, M5_TMC2130_TPWMTHRS },
+    { "5","5cth", _iip, 0, tx_print_nul, motor_5.get_cth_fn, motor_5.set_cth_fn,  &motor_5, M5_TMC2130_TCOOLTHRS },
+    { "5","5hth", _iip, 0, tx_print_nul, motor_5.get_hth_fn, motor_5.set_hth_fn,  &motor_5, M5_TMC2130_THIGH },
+    { "5","5sgt", _iip, 0, tx_print_nul, motor_5.get_sgt_fn, motor_5.set_sgt_fn,  &motor_5, M5_TMC2130_SGT },
+    { "5","5sgr", _i0,  0, tx_print_nul, motor_5.get_sgr_fn, set_ro,              &motor_5, 0 },
+    { "5","5csa", _i0,  0, tx_print_nul, motor_5.get_csa_fn, set_ro,              &motor_5, 0 },
+    { "5","5sgs", _i0,  0, tx_print_nul, motor_5.get_sgs_fn, set_ro,              &motor_5, 0 },
+    { "5","5tbl", _iip, 0, tx_print_nul, motor_5.get_tbl_fn, motor_5.set_tbl_fn,  &motor_5, M5_TMC2130_TBL },
+    { "5","5pgrd",_iip, 0, tx_print_nul, motor_5.get_pgrd_fn,motor_5.set_pgrd_fn, &motor_5, M5_TMC2130_PWM_GRAD },
+    { "5","5pamp",_iip, 0, tx_print_nul, motor_5.get_pamp_fn,motor_5.set_pamp_fn, &motor_5, M5_TMC2130_PWM_AMPL },
+    { "5","5hend",_iip, 0, tx_print_nul, motor_5.get_hend_fn,motor_5.set_hend_fn, &motor_5, M5_TMC2130_HEND },
+    { "5","5hsrt",_iip, 0, tx_print_nul, motor_5.get_hsrt_fn,motor_5.set_hsrt_fn, &motor_5, M5_TMC2130_HSTRT },
+    { "5","5smin",_iip, 0, tx_print_nul, motor_5.get_smin_fn,motor_5.set_smin_fn, &motor_5, M5_TMC2130_SMIN },
+    { "5","5smax",_iip, 0, tx_print_nul, motor_5.get_smax_fn,motor_5.set_smax_fn, &motor_5, M5_TMC2130_SMAX },
+    { "5","5sup", _iip, 0, tx_print_nul, motor_5.get_sup_fn, motor_5.set_sup_fn,  &motor_5, M5_TMC2130_SUP },
+    { "5","5sdn", _iip, 0, tx_print_nul, motor_5.get_sdn_fn, motor_5.set_sdn_fn,  &motor_5, M5_TMC2130_SDN },
 #endif
 #endif
 
 #if (MOTORS >= 6)
-    { "6","6ma", _fip,  0, st_print_ma, st_get_ma, st_set_ma, &st_cfg.mot[MOTOR_6].motor_map,      M6_MOTOR_MAP },
+    { "6","6ma", _iip,  0, st_print_ma, st_get_ma, st_set_ma, &st_cfg.mot[MOTOR_6].motor_map,      M6_MOTOR_MAP },
     { "6","6sa", _fip,  3, st_print_sa, st_get_sa, st_set_sa, &st_cfg.mot[MOTOR_6].step_angle,     M6_STEP_ANGLE },
     { "6","6tr", _fipc, 4, st_print_tr, st_get_tr, st_set_tr, &st_cfg.mot[MOTOR_6].travel_rev,     M6_TRAVEL_PER_REV },
     { "6","6su", _fipi, 5, st_print_su, st_get_su, st_set_su, &st_cfg.mot[MOTOR_6].steps_per_unit, M6_STEPS_PER_UNIT },
-    { "6","6mi", _fip,  0, st_print_mi, st_get_mi, st_set_mi, &st_cfg.mot[MOTOR_6].microsteps,     M6_MICROSTEPS },
-    { "6","6po", _fip,  0, st_print_po, st_get_po, st_set_po, &st_cfg.mot[MOTOR_6].polarity,       M6_POLARITY },
-    { "6","6pm", _fip,  0, st_print_pm, st_get_pm, st_set_pm, &cs.null,                            M6_POWER_MODE },
+    { "6","6mi", _iip,  0, st_print_mi, st_get_mi, st_set_mi, &st_cfg.mot[MOTOR_6].microsteps,     M6_MICROSTEPS },
+    { "6","6po", _iip,  0, st_print_po, st_get_po, st_set_po, &st_cfg.mot[MOTOR_6].polarity,       M6_POLARITY },
+    { "6","6pm", _iip,  0, st_print_pm, st_get_pm, st_set_pm, &cs.null,                            M6_POWER_MODE },
     { "6","6pl", _fip,  3, st_print_pl, st_get_pl, st_set_pl, &st_cfg.mot[MOTOR_6].power_level,    M6_POWER_LEVEL },
     { "6","6ep", _iip,  0, st_print_ep, st_get_ep, st_set_ep, nullptr,                             M6_ENABLE_POLARITY },
     { "6","6sp", _iip,  0, st_print_sp, st_get_sp, st_set_sp, nullptr,                             M6_STEP_POLARITY },
 //  { "6","6pi", _fip,  3, st_print_pi, st_get_pi, st_set_pi, &st_cfg.mot[MOTOR_6].power_idle,     M6_POWER_IDLE },
 //  { "6","6mt", _fip,  2, st_print_mt, st_get_mt, st_set_mt, &st_cfg.mot[MOTOR_6].motor_timeout,  M6_MOTOR_TIMEOUT },
 #ifdef MOTOR_6_IS_TRINAMIC
-    { "6","6ts",  _f0,  0, tx_print_nul, motor_6.get_ts_fn,  set_ro,              &motor_6, 0 },
-    { "6","6pth", _fip, 0, tx_print_nul, motor_6.get_pth_fn, motor_6.set_pth_fn,  &motor_6, M6_TMC2130_TPWMTHRS },
-    { "6","6cth", _fip, 0, tx_print_nul, motor_6.get_cth_fn, motor_6.set_cth_fn,  &motor_6, M6_TMC2130_TCOOLTHRS },
-    { "6","6hth", _fip, 0, tx_print_nul, motor_6.get_hth_fn, motor_6.set_hth_fn,  &motor_6, M6_TMC2130_THIGH },
-    { "6","6sgt", _fip, 0, tx_print_nul, motor_6.get_sgt_fn, motor_6.set_sgt_fn,  &motor_6, M6_TMC2130_SGT },
-    { "6","6sgr", _f0,  0, tx_print_nul, motor_6.get_sgr_fn, set_ro,              &motor_6, 0 },
-    { "6","6csa", _f0,  0, tx_print_nul, motor_6.get_csa_fn, set_ro,              &motor_6, 0 },
-    { "6","6sgs", _f0,  0, tx_print_nul, motor_6.get_sgs_fn, set_ro,              &motor_6, 0 },
-    { "6","6tbl", _fip, 0, tx_print_nul, motor_6.get_tbl_fn, motor_6.set_tbl_fn,  &motor_6, M6_TMC2130_TBL },
-    { "6","6pgrd",_fip, 0, tx_print_nul, motor_6.get_pgrd_fn,motor_6.set_pgrd_fn, &motor_6, M6_TMC2130_PWM_GRAD },
-    { "6","6pamp",_fip, 0, tx_print_nul, motor_6.get_pamp_fn,motor_6.set_pamp_fn, &motor_6, M6_TMC2130_PWM_AMPL },
-    { "6","6hend",_fip, 0, tx_print_nul, motor_6.get_hend_fn,motor_6.set_hend_fn, &motor_6, M6_TMC2130_HEND },
-    { "6","6hsrt",_fip, 0, tx_print_nul, motor_6.get_hsrt_fn,motor_6.set_hsrt_fn, &motor_6, M6_TMC2130_HSTRT },
-    { "6","6smin",_fip, 0, tx_print_nul, motor_6.get_smin_fn,motor_6.set_smin_fn, &motor_6, M6_TMC2130_SMIN },
-    { "6","6smax",_fip, 0, tx_print_nul, motor_6.get_smax_fn,motor_6.set_smax_fn, &motor_6, M6_TMC2130_SMAX },
-    { "6","6sup", _fip, 0, tx_print_nul, motor_6.get_sup_fn, motor_6.set_sup_fn,  &motor_6, M6_TMC2130_SUP },
-    { "6","6sdn", _fip, 0, tx_print_nul, motor_6.get_sdn_fn, motor_6.set_sdn_fn,  &motor_6, M6_TMC2130_SDN },
+    { "6","6ts",  _i0,  0, tx_print_nul, motor_6.get_ts_fn,  set_ro,              &motor_6, 0 },
+    { "6","6pth", _iip, 0, tx_print_nul, motor_6.get_pth_fn, motor_6.set_pth_fn,  &motor_6, M6_TMC2130_TPWMTHRS },
+    { "6","6cth", _iip, 0, tx_print_nul, motor_6.get_cth_fn, motor_6.set_cth_fn,  &motor_6, M6_TMC2130_TCOOLTHRS },
+    { "6","6hth", _iip, 0, tx_print_nul, motor_6.get_hth_fn, motor_6.set_hth_fn,  &motor_6, M6_TMC2130_THIGH },
+    { "6","6sgt", _iip, 0, tx_print_nul, motor_6.get_sgt_fn, motor_6.set_sgt_fn,  &motor_6, M6_TMC2130_SGT },
+    { "6","6sgr", _i0,  0, tx_print_nul, motor_6.get_sgr_fn, set_ro,              &motor_6, 0 },
+    { "6","6csa", _i0,  0, tx_print_nul, motor_6.get_csa_fn, set_ro,              &motor_6, 0 },
+    { "6","6sgs", _i0,  0, tx_print_nul, motor_6.get_sgs_fn, set_ro,              &motor_6, 0 },
+    { "6","6tbl", _iip, 0, tx_print_nul, motor_6.get_tbl_fn, motor_6.set_tbl_fn,  &motor_6, M6_TMC2130_TBL },
+    { "6","6pgrd",_iip, 0, tx_print_nul, motor_6.get_pgrd_fn,motor_6.set_pgrd_fn, &motor_6, M6_TMC2130_PWM_GRAD },
+    { "6","6pamp",_iip, 0, tx_print_nul, motor_6.get_pamp_fn,motor_6.set_pamp_fn, &motor_6, M6_TMC2130_PWM_AMPL },
+    { "6","6hend",_iip, 0, tx_print_nul, motor_6.get_hend_fn,motor_6.set_hend_fn, &motor_6, M6_TMC2130_HEND },
+    { "6","6hsrt",_iip, 0, tx_print_nul, motor_6.get_hsrt_fn,motor_6.set_hsrt_fn, &motor_6, M6_TMC2130_HSTRT },
+    { "6","6smin",_iip, 0, tx_print_nul, motor_6.get_smin_fn,motor_6.set_smin_fn, &motor_6, M6_TMC2130_SMIN },
+    { "6","6smax",_iip, 0, tx_print_nul, motor_6.get_smax_fn,motor_6.set_smax_fn, &motor_6, M6_TMC2130_SMAX },
+    { "6","6sup", _iip, 0, tx_print_nul, motor_6.get_sup_fn, motor_6.set_sup_fn,  &motor_6, M6_TMC2130_SUP },
+    { "6","6sdn", _iip, 0, tx_print_nul, motor_6.get_sdn_fn, motor_6.set_sdn_fn,  &motor_6, M6_TMC2130_SDN },
 #endif
 #endif
 
-
+  // END generated with ${PROJECT_ROOT}/Resources/generate_motors_cfgArray.js
 
     // Axis parameters
     { "x","xam",_iip,  0, cm_print_am, cm_get_am, cm_set_am, nullptr, X_AXIS_MODE },
@@ -555,107 +557,116 @@ const cfgItem_t cfgArray[] = {
     { "c","clb",_fipc, 5, cm_print_lb, cm_get_lb, cm_set_lb, nullptr, C_LATCH_BACKOFF },
     { "c","czb",_fipc, 5, cm_print_zb, cm_get_zb, cm_set_zb, nullptr, C_ZERO_BACKOFF },
 
-    // Digital input configs
-    { "di1","di1en",_fip,   0, din_print_en, din_get_en, din_set_en, &din1,  DI1_ENABLED },
-    { "di1","di1po",_fip,   0, din_print_po, din_get_po, din_set_po, &din1,  DI1_POLARITY },
-    { "di1","di1ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, &din1,  DI1_ACTION },
-    // { "di1","di1fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, &din1,  DI1_FUNCTION },
-    { "di1","di1in",_fip,   0, din_print_in, din_get_in, din_set_in, &din1,  DI1_EXTERNAL_NUMBER },
 
-    { "di2","di2en",_fip,   0, din_print_en, din_get_en, din_set_en, &din2,  DI2_ENABLED },
-    { "di2","di2po",_fip,   0, din_print_po, din_get_po, din_set_po, &din2,  DI2_POLARITY },
-    { "di2","di2ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, &din2,  DI2_ACTION },
-    // { "di2","di2fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, &din2,  DI2_FUNCTION },
-    { "di2","di2in",_fip,   0, din_print_in, din_get_in, din_set_in, &din2,  DI2_EXTERNAL_NUMBER },
+
+    // Digital input configs
+    // generated with ${PROJECT_ROOT}/Resources/generate_dins_cfgArray.js
+
+
+#if (D_IN_CHANNELS >= 1)
+    { "di1","di1en",_bip,   0, din_print_en, din_get_en, din_set_en, &din1,  DI1_ENABLED },
+    { "di1","di1po",_iip,   0, din_print_po, din_get_po, din_set_po, &din1,  DI1_POLARITY },
+    { "di1","di1ac",_iip,   0, din_print_ac, din_get_ac, din_set_ac, &din1,  DI1_ACTION },
+    { "di1","di1in",_iip,   0, din_print_in, din_get_in, din_set_in, &din1,  DI1_EXTERNAL_NUMBER },
+#endif
+
+#if (D_IN_CHANNELS >= 2)
+    { "di2","di2en",_bip,   0, din_print_en, din_get_en, din_set_en, &din2,  DI2_ENABLED },
+    { "di2","di2po",_iip,   0, din_print_po, din_get_po, din_set_po, &din2,  DI2_POLARITY },
+    { "di2","di2ac",_iip,   0, din_print_ac, din_get_ac, din_set_ac, &din2,  DI2_ACTION },
+    { "di2","di2in",_iip,   0, din_print_in, din_get_in, din_set_in, &din2,  DI2_EXTERNAL_NUMBER },
+#endif
 
 #if (D_IN_CHANNELS >= 3)
-    { "di3","di3en",_fip,   0, din_print_en, din_get_en, din_set_en, &din3,  DI3_ENABLED },
-    { "di3","di3po",_fip,   0, din_print_po, din_get_po, din_set_po, &din3,  DI3_POLARITY },
-    { "di3","di3ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, &din3,  DI3_ACTION },
-    // { "di3","di3fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, &din3,  DI3_FUNCTION },
-    { "di3","di3in",_fip,   0, din_print_in, din_get_in, din_set_in, &din3,  DI3_EXTERNAL_NUMBER },
-#endif
-#if (D_IN_CHANNELS >= 4)
-    { "di4","di4en",_fip,   0, din_print_en, din_get_en, din_set_en, &din4,  DI4_ENABLED },
-    { "di4","di4po",_fip,   0, din_print_po, din_get_po, din_set_po, &din4,  DI4_POLARITY },
-    { "di4","di4ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, &din4,  DI4_ACTION },
-    // { "di4","di4fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, &din4,  DI4_FUNCTION },
-    { "di4","di4in",_fip,   0, din_print_in, din_get_in, din_set_in, &din4,  DI4_EXTERNAL_NUMBER },
-#endif
-#if (D_IN_CHANNELS >= 5)
-    { "di5","di5en",_fip,   0, din_print_en, din_get_en, din_set_en, &din5,  DI5_ENABLED },
-    { "di5","di5po",_fip,   0, din_print_po, din_get_po, din_set_po, &din5,  DI5_POLARITY },
-    { "di5","di5ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, &din5,  DI5_ACTION },
-    // { "di5","di5fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, &din5,  DI5_FUNCTION },
-    { "di5","di5in",_fip,   0, din_print_in, din_get_in, din_set_in, &din5,  DI5_EXTERNAL_NUMBER },
-#endif
-#if (D_IN_CHANNELS >= 6)
-    { "di6","di6en",_fip,   0, din_print_en, din_get_en, din_set_en, &din6,  DI6_ENABLED },
-    { "di6","di6po",_fip,   0, din_print_po, din_get_po, din_set_po, &din6,  DI6_POLARITY },
-    { "di6","di6ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, &din6,  DI6_ACTION },
-    // { "di6","di6fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, &din6,  DI6_FUNCTION },
-    { "di6","di6in",_fip,   0, din_print_in, din_get_in, din_set_in, &din6,  DI6_EXTERNAL_NUMBER },
-#endif
-#if (D_IN_CHANNELS >= 7)
-    { "di7","di7en",_fip,   0, din_print_en, din_get_en, din_set_en, &din7,  DI7_ENABLED },
-    { "di7","di7po",_fip,   0, din_print_po, din_get_po, din_set_po, &din7,  DI7_POLARITY },
-    { "di7","di7ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, &din7,  DI7_ACTION },
-    // { "di7","di7fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, &din7,  DI7_FUNCTION },
-    { "di7","di7in",_fip,   0, din_print_in, din_get_in, din_set_in, &din7,  DI7_EXTERNAL_NUMBER },
-#endif
-#if (D_IN_CHANNELS >= 8)
-    { "di8","di8en",_fip,   0, din_print_en, din_get_en, din_set_en, &din8,  DI8_ENABLED },
-    { "di3","di8po",_fip,   0, din_print_po, din_get_po, din_set_po, &din8,  DI8_POLARITY },
-    { "di8","di8ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, &din8,  DI8_ACTION },
-    // { "di8","di8fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, &din8,  DI8_FUNCTION },
-    { "di8","di8in",_fip,   0, din_print_in, din_get_in, din_set_in, &din8,  DI8_EXTERNAL_NUMBER },
-#endif
-#if (D_IN_CHANNELS >= 9)
-    { "di9","di9en",_fip,   0, din_print_en, din_get_en, din_set_en, &din9,  DI9_ENABLED },
-    { "di9","di9po",_fip,   0, din_print_po, din_get_po, din_set_po, &din9,  DI9_POLARITY },
-    { "di9","di9ac",_fip,   0, din_print_ac, din_get_ac, din_set_ac, &din9,  DI9_ACTION },
-    // { "di9","di9fn",_fip,   0, din_print_fn, din_get_fn, din_set_fn, &din9,  DI9_FUNCTION },
-    { "di9","di9in",_fip,   0, din_print_in, din_get_in, din_set_in, &din9,  DI9_EXTERNAL_NUMBER },
-#endif
-#if (D_IN_CHANNELS >= 10)
-    { "di10","di10en",_fip, 0, din_print_en, din_get_en, din_set_en, &din10, DI10_ENABLED },
-    { "di10","di10po",_fip, 0, din_print_po, din_get_po, din_set_po, &din10, DI10_POLARITY },
-    { "di10","di10ac",_fip, 0, din_print_ac, din_get_ac, din_set_ac, &din10, DI10_ACTION },
-    // { "di10","di10fn",_fip, 0, din_print_fn, din_get_fn, din_set_fn, &din10, DI10_FUNCTION },
-    { "di10","di10in",_fip, 0, din_print_in, din_get_in, din_set_in, &din10, DI10_EXTERNAL_NUMBER },
-#endif
-#if (D_IN_CHANNELS >= 11)
-    { "di11","di11en",_fip, 0, din_print_en, din_get_en, din_set_en, &din11, DI11_ENABLED },
-    { "di11","di11po",_fip, 0, din_print_po, din_get_po, din_set_po, &din11, DI11_POLARITY },
-    { "di11","di11ac",_fip, 0, din_print_ac, din_get_ac, din_set_ac, &din11, DI11_ACTION },
-    // { "di11","di11fn",_fip, 0, din_print_fn, din_get_fn, din_set_fn, &din11, DI11_FUNCTION },
-    { "di11","di11in",_fip, 0, din_print_in, din_get_in, din_set_in, &din11, DI11_EXTERNAL_NUMBER },
-#endif
-#if (D_IN_CHANNELS >= 12)
-    { "di12","di12en",_fip, 0, din_print_en, din_get_en, din_set_en, &din12, DI12_ENABLED },
-    { "di12","di12po",_fip, 0, din_print_po, din_get_po, din_set_po, &din12, DI12_POLARITY },
-    { "di12","di12ac",_fip, 0, din_print_ac, din_get_ac, din_set_ac, &din12, DI12_ACTION },
-    // { "di12","di12fn",_fip, 0, din_print_fn, din_get_fn, din_set_fn, &din12, DI12_FUNCTION },
-    { "di12","di12in",_fip, 0, din_print_in, din_get_in, din_set_in, &din12, DI12_EXTERNAL_NUMBER },
+    { "di3","di3en",_bip,   0, din_print_en, din_get_en, din_set_en, &din3,  DI3_ENABLED },
+    { "di3","di3po",_iip,   0, din_print_po, din_get_po, din_set_po, &din3,  DI3_POLARITY },
+    { "di3","di3ac",_iip,   0, din_print_ac, din_get_ac, din_set_ac, &din3,  DI3_ACTION },
+    { "di3","di3in",_iip,   0, din_print_in, din_get_in, din_set_in, &din3,  DI3_EXTERNAL_NUMBER },
 #endif
 
+#if (D_IN_CHANNELS >= 4)
+    { "di4","di4en",_bip,   0, din_print_en, din_get_en, din_set_en, &din4,  DI4_ENABLED },
+    { "di4","di4po",_iip,   0, din_print_po, din_get_po, din_set_po, &din4,  DI4_POLARITY },
+    { "di4","di4ac",_iip,   0, din_print_ac, din_get_ac, din_set_ac, &din4,  DI4_ACTION },
+    { "di4","di4in",_iip,   0, din_print_in, din_get_in, din_set_in, &din4,  DI4_EXTERNAL_NUMBER },
+#endif
+
+#if (D_IN_CHANNELS >= 5)
+    { "di5","di5en",_bip,   0, din_print_en, din_get_en, din_set_en, &din5,  DI5_ENABLED },
+    { "di5","di5po",_iip,   0, din_print_po, din_get_po, din_set_po, &din5,  DI5_POLARITY },
+    { "di5","di5ac",_iip,   0, din_print_ac, din_get_ac, din_set_ac, &din5,  DI5_ACTION },
+    { "di5","di5in",_iip,   0, din_print_in, din_get_in, din_set_in, &din5,  DI5_EXTERNAL_NUMBER },
+#endif
+
+#if (D_IN_CHANNELS >= 6)
+    { "di6","di6en",_bip,   0, din_print_en, din_get_en, din_set_en, &din6,  DI6_ENABLED },
+    { "di6","di6po",_iip,   0, din_print_po, din_get_po, din_set_po, &din6,  DI6_POLARITY },
+    { "di6","di6ac",_iip,   0, din_print_ac, din_get_ac, din_set_ac, &din6,  DI6_ACTION },
+    { "di6","di6in",_iip,   0, din_print_in, din_get_in, din_set_in, &din6,  DI6_EXTERNAL_NUMBER },
+#endif
+
+#if (D_IN_CHANNELS >= 7)
+    { "di7","di7en",_bip,   0, din_print_en, din_get_en, din_set_en, &din7,  DI7_ENABLED },
+    { "di7","di7po",_iip,   0, din_print_po, din_get_po, din_set_po, &din7,  DI7_POLARITY },
+    { "di7","di7ac",_iip,   0, din_print_ac, din_get_ac, din_set_ac, &din7,  DI7_ACTION },
+    { "di7","di7in",_iip,   0, din_print_in, din_get_in, din_set_in, &din7,  DI7_EXTERNAL_NUMBER },
+#endif
+
+#if (D_IN_CHANNELS >= 8)
+    { "di8","di8en",_bip,   0, din_print_en, din_get_en, din_set_en, &din8,  DI8_ENABLED },
+    { "di8","di8po",_iip,   0, din_print_po, din_get_po, din_set_po, &din8,  DI8_POLARITY },
+    { "di8","di8ac",_iip,   0, din_print_ac, din_get_ac, din_set_ac, &din8,  DI8_ACTION },
+    { "di8","di8in",_iip,   0, din_print_in, din_get_in, din_set_in, &din8,  DI8_EXTERNAL_NUMBER },
+#endif
+
+#if (D_IN_CHANNELS >= 9)
+    { "di9","di9en",_bip,   0, din_print_en, din_get_en, din_set_en, &din9,  DI9_ENABLED },
+    { "di9","di9po",_iip,   0, din_print_po, din_get_po, din_set_po, &din9,  DI9_POLARITY },
+    { "di9","di9ac",_iip,   0, din_print_ac, din_get_ac, din_set_ac, &din9,  DI9_ACTION },
+    { "di9","di9in",_iip,   0, din_print_in, din_get_in, din_set_in, &din9,  DI9_EXTERNAL_NUMBER },
+#endif
+
+#if (D_IN_CHANNELS >= 10)
+    { "di10","di10en",_bip,   0, din_print_en, din_get_en, din_set_en, &din10,  DI10_ENABLED },
+    { "di10","di10po",_iip,   0, din_print_po, din_get_po, din_set_po, &din10,  DI10_POLARITY },
+    { "di10","di10ac",_iip,   0, din_print_ac, din_get_ac, din_set_ac, &din10,  DI10_ACTION },
+    { "di10","di10in",_iip,   0, din_print_in, din_get_in, din_set_in, &din10,  DI10_EXTERNAL_NUMBER },
+#endif
+
+#if (D_IN_CHANNELS >= 11)
+    { "di11","di11en",_bip,   0, din_print_en, din_get_en, din_set_en, &din11,  DI11_ENABLED },
+    { "di11","di11po",_iip,   0, din_print_po, din_get_po, din_set_po, &din11,  DI11_POLARITY },
+    { "di11","di11ac",_iip,   0, din_print_ac, din_get_ac, din_set_ac, &din11,  DI11_ACTION },
+    { "di11","di11in",_iip,   0, din_print_in, din_get_in, din_set_in, &din11,  DI11_EXTERNAL_NUMBER },
+#endif
+
+#if (D_IN_CHANNELS >= 12)
+    { "di12","di12en",_bip,   0, din_print_en, din_get_en, din_set_en, &din12,  DI12_ENABLED },
+    { "di12","di12po",_iip,   0, din_print_po, din_get_po, din_set_po, &din12,  DI12_POLARITY },
+    { "di12","di12ac",_iip,   0, din_print_ac, din_get_ac, din_set_ac, &din12,  DI12_ACTION },
+    { "di12","di12in",_iip,   0, din_print_in, din_get_in, din_set_in, &din12,  DI12_EXTERNAL_NUMBER },
+#endif
+
+    // END generated with ${PROJECT_ROOT}/Resources/generate_dins_cfgArray.js
+
+
     // Digital input state readers
-    { "in","in1", _f0, 0,  din_print_state, din_get_input, set_ro,  &in1,  0 },
-    { "in","in2", _f0, 0,  din_print_state, din_get_input, set_ro,  &in2,  0 },
-    { "in","in3", _f0, 0,  din_print_state, din_get_input, set_ro,  &in3,  0 },
-    { "in","in4", _f0, 0,  din_print_state, din_get_input, set_ro,  &in4,  0 },
-    { "in","in5", _f0, 0,  din_print_state, din_get_input, set_ro,  &in5,  0 },
-    { "in","in6", _f0, 0,  din_print_state, din_get_input, set_ro,  &in6,  0 },
-    { "in","in7", _f0, 0,  din_print_state, din_get_input, set_ro,  &in7,  0 },
-    { "in","in8", _f0, 0,  din_print_state, din_get_input, set_ro,  &in8,  0 },
-    { "in","in9", _f0, 0,  din_print_state, din_get_input, set_ro,  &in9,  0 },
-    { "in","in10", _f0, 0, din_print_state, din_get_input, set_ro,  &in10, 0 },
-    { "in","in11", _f0, 0, din_print_state, din_get_input, set_ro,  &in11, 0 },
-    { "in","in12", _f0, 0, din_print_state, din_get_input, set_ro,  &in12, 0 },
-    { "in","in13", _f0, 0, din_print_state, din_get_input, set_ro,  &in13, 0 },
-    { "in","in14", _f0, 0, din_print_state, din_get_input, set_ro,  &in14, 0 },
-    { "in","in15", _f0, 0, din_print_state, din_get_input, set_ro,  &in15, 0 },
-    { "in","in16", _f0, 0, din_print_state, din_get_input, set_ro,  &in16, 0 },
+    { "in","in1", _i0, 0,  din_print_state, din_get_input, set_ro,  &in1,  0 },
+    { "in","in2", _i0, 0,  din_print_state, din_get_input, set_ro,  &in2,  0 },
+    { "in","in3", _i0, 0,  din_print_state, din_get_input, set_ro,  &in3,  0 },
+    { "in","in4", _i0, 0,  din_print_state, din_get_input, set_ro,  &in4,  0 },
+    { "in","in5", _i0, 0,  din_print_state, din_get_input, set_ro,  &in5,  0 },
+    { "in","in6", _i0, 0,  din_print_state, din_get_input, set_ro,  &in6,  0 },
+    { "in","in7", _i0, 0,  din_print_state, din_get_input, set_ro,  &in7,  0 },
+    { "in","in8", _i0, 0,  din_print_state, din_get_input, set_ro,  &in8,  0 },
+    { "in","in9", _i0, 0,  din_print_state, din_get_input, set_ro,  &in9,  0 },
+    { "in","in10", _i0, 0, din_print_state, din_get_input, set_ro,  &in10, 0 },
+    { "in","in11", _i0, 0, din_print_state, din_get_input, set_ro,  &in11, 0 },
+    { "in","in12", _i0, 0, din_print_state, din_get_input, set_ro,  &in12, 0 },
+    { "in","in13", _i0, 0, din_print_state, din_get_input, set_ro,  &in13, 0 },
+    { "in","in14", _i0, 0, din_print_state, din_get_input, set_ro,  &in14, 0 },
+    { "in","in15", _i0, 0, din_print_state, din_get_input, set_ro,  &in15, 0 },
+    { "in","in16", _i0, 0, din_print_state, din_get_input, set_ro,  &in16, 0 },
 
     // digital output configs
     { "do1", "do1en", _iip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  &dout1,  DO1_ENABLED },
