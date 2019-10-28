@@ -23,6 +23,9 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifndef SETTINGS_OTHERMILL_H_ONCE
+#define SETTINGS_OTHERMILL_H_ONCE
+
 /***********************************************************************/
 /**** Otherlab OtherMill profile ***************************************/
 /***********************************************************************/
@@ -57,21 +60,19 @@
 // WARNING: Very old, pre-release Othermills may have a 15deg can stack for their Z axis.
 //          All other machines use a stepper which has the same config as the other axis.
 #define HAS_CANSTACK_Z_AXIS         false
-/*
+
 // Switch definitions for interlock & E-stop
 #define ENABLE_INTERLOCK_AND_ESTOP
-#define INTERLOCK_SWITCH_AXIS       AXIS_Y
-#define INTERLOCK_SWITCH_POSITION   SW_MAX
-#define ESTOP_SWITCH_AXIS           AXIS_X
-#define ESTOP_SWITCH_POSITION       SW_MAX
-#define PAUSE_DWELL_TIME            1.5 //after unpausing and turning the spindle on, dwell for 1.5s
-*/
+#define INTERLOCK_SWITCH_INPUT          4   // DI4
+#define ESTOP_SWITCH_INPUT              2   // DI2
+#undef PAUSE_DWELL_TIME
+#define PAUSE_DWELL_TIME                1.5 //after unpausing and turning the spindle on, dwell for 1.5s
 
 // Communications and reporting settings
 
 #define USB_SERIAL_PORTS_EXPOSED    1                   // Valid options are 1 or 2, only!
 
-#define COMM_MODE                   JSON_MODE           // one of: TEXT_MODE, JSON_MODE
+#define COMM_MODE                   AUTO_MODE           // one of: TEXT_MODE, JSON_MODE
 #define XIO_ENABLE_FLOW_CONTROL     FLOW_CONTROL_RTS    // FLOW_CONTROL_OFF, FLOW_CONTROL_RTS
 
 #define TEXT_VERBOSITY              TV_VERBOSE          // one of: TV_SILENT, TV_VERBOSE
@@ -86,8 +87,8 @@
                                     "g55x", "g55y", "g55z", \
                                     "unit", "stat", "coor", "momo", "dist", \
                                     "home", "mots", "plan", "line", "path", \
-                                    "frmo", "hold", "macs", "cycs" 
-//                                  "prbe", "safe", "spe", "spd", "sps"
+                                    "frmo", "prbe", "safe", "estp", "spc", \
+                                    "hold", "macs", "cycs", "sps"
 
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS MILLIMETERS     // MILLIMETERS or INCHES
@@ -173,7 +174,7 @@
 #define JERK_MAX                    500                 // 500 million mm/(min^3)
 #define JERK_HIGH_SPEED             1000                // 1000 million mm/(min^3) // Jerk during homing needs to stop *fast*
 #define VELOCITY_MAX                1500
-#define SEARCH_VELOCITY             (VELOCITY_MAX / 3)
+#define SEARCH_VELOCITY             500
 #define LATCH_VELOCITY              25                  // reeeeally slow for accuracy
 
 #define X_AXIS_MODE                 AXIS_STANDARD       // xam  see canonical_machine.h cmAxisMode for valid values
@@ -199,7 +200,7 @@
 #define Y_JERK_HIGH_SPEED           JERK_HIGH_SPEED
 #define Y_HOMING_INPUT              3
 #define Y_HOMING_DIRECTION          0
-#define Y_SEARCH_VELOCITY           (Y_FEEDRATE_MAX / 3)
+#define Y_SEARCH_VELOCITY           SEARCH_VELOCITY
 #define Y_LATCH_VELOCITY            LATCH_VELOCITY
 #define Y_LATCH_BACKOFF             2
 #define Y_ZERO_BACKOFF              0.4
@@ -213,7 +214,7 @@
 #define Z_JERK_HIGH_SPEED           JERK_HIGH_SPEED
 #define Z_HOMING_INPUT              6
 #define Z_HOMING_DIRECTION          1
-#define Z_SEARCH_VELOCITY           (Z_FEEDRATE_MAX / 3)
+#define Z_SEARCH_VELOCITY           SEARCH_VELOCITY
 #define Z_LATCH_VELOCITY            LATCH_VELOCITY
 #define Z_LATCH_BACKOFF             2
 #define Z_ZERO_BACKOFF              0.4
@@ -245,21 +246,21 @@
 // Xmin on v9 board                 // X homing - see X axis setup
 #define DI1_MODE                    IO_ACTIVE_HIGH      // Normally Closed
 #define DI1_ACTION                  INPUT_ACTION_NONE
-#define DI1_FUNCTION                INPUT_FUNCTION_NONE
+#define DI1_FUNCTION                INPUT_FUNCTION_LIMIT
 
 // Xmax                             // External ESTOP
 #define DI2_MODE                    IO_ACTIVE_HIGH
-#define DI2_ACTION                  INPUT_ACTION_HALT
-#define DI2_FUNCTION                INPUT_FUNCTION_SHUTDOWN
+#define DI2_ACTION                  INPUT_ACTION_NONE   // SHUTDOWN handled by E-Stop handler
+#define DI2_FUNCTION                INPUT_FUNCTION_NONE
 
 // Ymin                             // Y homing - see Y axis setup
 #define DI3_MODE                    IO_ACTIVE_HIGH
 #define DI3_ACTION                  INPUT_ACTION_NONE
-#define DI3_FUNCTION                INPUT_FUNCTION_NONE
+#define DI3_FUNCTION                INPUT_FUNCTION_LIMIT
 
 // Ymax                             // Safety interlock
 #define DI4_MODE                    IO_ACTIVE_HIGH
-#define DI4_ACTION                  INPUT_ACTION_NONE   // (hold is performed by Interlock function)
+#define DI4_ACTION                  INPUT_ACTION_STOP   // (hold is performed by Interlock function)
 #define DI4_FUNCTION                INPUT_FUNCTION_INTERLOCK
 
 // Zmin                             // Z probe
@@ -270,20 +271,20 @@
 // Zmax                             // Z homing - see Z axis for setup
 #define DI6_MODE                    IO_ACTIVE_HIGH
 #define DI6_ACTION                  INPUT_ACTION_NONE
-#define DI6_FUNCTION                INPUT_FUNCTION_NONE
+#define DI6_FUNCTION                INPUT_FUNCTION_LIMIT
 
-// Amin                             // Unused
-#define DI7_MODE                    IO_MODE_DISABLED
+// Amin                             // Version pin - board type
+#define DI7_MODE                    IO_ACTIVE_HIGH
 #define DI7_ACTION                  INPUT_ACTION_NONE
 #define DI7_FUNCTION                INPUT_FUNCTION_NONE
 
-// Amax                             // Unused
-#define DI8_MODE                    IO_MODE_DISABLED
+// Amax                             // Version pin - board type
+#define DI8_MODE                    IO_ACTIVE_HIGH
 #define DI8_ACTION                  INPUT_ACTION_NONE
 #define DI8_FUNCTION                INPUT_FUNCTION_NONE
 
-// Safety line w/HW timer           // Unused
-#define DI9_MODE                    IO_MODE_DISABLED
+// Safety line w/HW timer           // Version pin - board type
+#define DI9_MODE                    IO_ACTIVE_HIGH
 #define DI9_ACTION                  INPUT_ACTION_NONE
 #define DI9_FUNCTION                INPUT_FUNCTION_NONE
 
@@ -301,3 +302,10 @@
 #define P1_CCW_PHASE_HI             0.1
 #define P1_PWM_PHASE_OFF            0.1
 
+//#define P1_USE_MAPPING_CUBIC
+#define P1_MAPPING_CUBIC_X3     2.1225328766717546e-013
+#define P1_MAPPING_CUBIC_X2    -7.2900167282605129e-009
+#define P1_MAPPING_CUBIC_X1     8.5854646785876479e-005
+#define P1_MAPPING_CUBIC_X0    -2.1301489219406905e-001
+
+#endif  //  SETTINGS_OTHERMILL_H_ONCE
