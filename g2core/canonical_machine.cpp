@@ -2150,6 +2150,8 @@ stat_t cm_get_hom(nvObj_t *nv)  { return (get_integer(nv, cm->homed[_axis(nv)]))
 
 stat_t cm_get_prob(nvObj_t *nv) { return(_get_msg_helper(nv, msg_probe, cm_get_probe_state())); }
 stat_t cm_get_prb(nvObj_t *nv)  { return (get_float(nv, cm->probe_results[0][_axis(nv)])); }
+stat_t cm_get_probe_input(nvObj_t *nv) { return (get_integer(nv, cm->probe_input)); }
+stat_t cm_set_probe_input(nvObj_t *nv) { return (set_integer(nv, cm->probe_input, 0, D_IN_CHANNELS)); }
 
 stat_t cm_get_coord(nvObj_t *nv) { return (get_float(nv, cm->coord_offset[_coord(nv)][_axis(nv)])); }
 stat_t cm_set_coord(nvObj_t *nv) { return (set_float(nv, cm->coord_offset[_coord(nv)][_axis(nv)])); }

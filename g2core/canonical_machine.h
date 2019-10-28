@@ -554,6 +554,8 @@ stat_t cm_set_home(nvObj_t *nv);        // set machine homing state
 stat_t cm_get_hom(nvObj_t *nv);         // get homing state for axis
 stat_t cm_get_prob(nvObj_t *nv);        // get probe state
 stat_t cm_get_prb (nvObj_t *nv);        // get probe result for axis
+stat_t cm_get_probe_input(nvObj_t *nv);
+stat_t cm_set_probe_input(nvObj_t *nv);
 stat_t cm_run_jog(nvObj_t *nv);         // start jogging cycle
 
 stat_t cm_get_unit(nvObj_t *nv);        // get unit mode
