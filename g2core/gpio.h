@@ -519,7 +519,7 @@ struct gpioDigitalInputPin final : gpioDigitalInput {
             din_handlers[action].call(pin_value_corrected, edge, ext_pin_number);
         }
 
-        sr_request_status_report(SR_REQUEST_TIMED);   //+++++ Put this one back in.
+        sr_request_status_report(SR_REQUEST_TIMED);
     };
 };
 
