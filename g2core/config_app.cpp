@@ -984,6 +984,17 @@ const cfgItem_t cfgArray[] = {
     { "jid","jidc",_d0, 0, tx_print_nul, get_data, set_data, &cfg.job_id[2], 0 },
     { "jid","jidd",_d0, 0, tx_print_nul, get_data, set_data, &cfg.job_id[3], 0 },
 
+    // fixturing information    
+    { "fxa","fxast",_fipc, 0, tx_print_nul, get_flt, set_flt, &cfg.fx_state_a, 0 },
+    { "fxa","fxa1x",_fipc, 3, tx_print_nul, get_flt, set_flt, &cfg.fx_coords_a[0][0], 0 },
+    { "fxa","fxa1y",_fipc, 3, tx_print_nul, get_flt, set_flt, &cfg.fx_coords_a[0][1], 0 },
+    { "fxa","fxa2x",_fipc, 3, tx_print_nul, get_flt, set_flt, &cfg.fx_coords_a[1][0], 0 },
+    { "fxa","fxa2y",_fipc, 3, tx_print_nul, get_flt, set_flt, &cfg.fx_coords_a[1][1], 0 },
+    { "fxa","fxa3x",_fipc, 3, tx_print_nul, get_flt, set_flt, &cfg.fx_coords_a[2][0], 0 },
+    { "fxa","fxa3y",_fipc, 3, tx_print_nul, get_flt, set_flt, &cfg.fx_coords_a[2][1], 0 },
+    { "fxa","fxa4x",_fipc, 3, tx_print_nul, get_flt, set_flt, &cfg.fx_coords_a[3][0], 0 },
+    { "fxa","fxa4y",_fipc, 3, tx_print_nul, get_flt, set_flt, &cfg.fx_coords_a[3][1], 0 },
+
     // Spindle functions
     { "sp","spmo", _iip, 0, sp_print_spmo, sp_get_spmo, sp_set_spmo, nullptr, SPINDLE_MODE },
     { "sp","spph", _bip, 0, sp_print_spph, sp_get_spph, sp_set_spph, nullptr, SPINDLE_PAUSE_ON_HOLD },
@@ -1671,7 +1682,7 @@ const cfgItem_t cfgArray[] = {
     { "","tt31",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
     { "","tt32",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
 
-#define MACHINE_STATE_GROUPS 8
+#define MACHINE_STATE_GROUPS 9
     { "","mpo",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // machine position group
     { "","pos",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // work position group
     { "","ofs",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // work offset group
@@ -1680,6 +1691,7 @@ const cfgItem_t cfgArray[] = {
     { "","pwr",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // motor power enagled group
     { "","jog",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // axis jogging state group
     { "","jid",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // job ID group
+    { "","fxa",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // fixturing group a
 
 #define TEMPERATURE_GROUPS 6
     { "","he1", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // heater 1 group
