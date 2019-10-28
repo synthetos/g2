@@ -281,14 +281,18 @@ typedef enum {
     MOTOR_DISABLED = 0,                 // motor enable is deactivated
     MOTOR_ALWAYS_POWERED,               // motor is always powered while machine is ON
     MOTOR_POWERED_IN_CYCLE,             // motor fully powered during cycles, de-powered out of cycle
-    MOTOR_POWERED_ONLY_WHEN_MOVING      // motor only powered while moving - idles shortly after it's stopped - even in cycle
+    MOTOR_POWERED_ONLY_WHEN_MOVING,     // motor only powered while moving - idles shortly after it's stopped - even in cycle
+    MOTOR_POWER_REDUCED_WHEN_IDLE       // enable Vref current reduction for idle
 } stPowerMode;
-#define MOTOR_POWER_MODE_MAX_VALUE    MOTOR_POWERED_ONLY_WHEN_MOVING
+#define MOTOR_POWER_MODE_MAX_VALUE    MOTOR_POWER_REDUCED_WHEN_IDLE
 
 // Min/Max timeouts allowed for motor disable. Allow for inertial stop; must be non-zero
 #define MOTOR_TIMEOUT_SECONDS_MIN   (float)0.1      // seconds !!! SHOULD NEVER BE ZERO !!!
 #define MOTOR_TIMEOUT_SECONDS_MAX   (float)4294967  // (4294967295/1000) -- for conversion to uint32_t
                                                     // 1 dog year (7 weeks)
+
+#define MOTOR_VREF_RC_TIMEOUT_USEC  (float)5000.0   // how long it takes vref to stabilize after changing it
+
 // Step generation constants
 #define STEP_INITIAL_DIRECTION        DIRECTION_CW
 
@@ -352,7 +356,8 @@ typedef struct cfgMotor {                   // per-motor configs
     uint8_t  motor_map;                     // map motor to axis
     uint32_t microsteps;                    // microsteps to apply for each axis (ex: 8)
     uint8_t  polarity;                      // 0=normal polarity, 1=reverse motor direction
-    float power_level;                      // set 0.000 to 1.000 for PMW vref setting
+    float power_level;                      // set 0.000 to 1.000 for PWM vref setting
+    float power_level_idle;                 // set 0.000 to 1.000 for PWM vref idle setting
     float step_angle;                       // degrees per whole step (ex: 1.8)
     float travel_rev;                       // mm or deg of travel per motor revolution
     float steps_per_unit;                   // microsteps per mm (or degree) of travel
@@ -482,13 +487,18 @@ public:
          return _power_mode;
     };
 
+    virtual stPowerState getPowerState()
+    {
+      return _power_state;
+    };
+
     virtual float getCurrentPowerLevel(uint8_t motor)
     {
         if (_power_state == MOTOR_OFF) {
             return (0.0);
         }
         if (_power_state == MOTOR_IDLE) {
-            return (0.0);
+            return (st_cfg.mot[motor].power_level_idle);
         }
         return (st_cfg.mot[motor].power_level);
     };
@@ -539,7 +549,14 @@ public:
         }
         this->_disableImpl();
         _motor_disable_timeout.clear();
-        _power_state = MOTOR_IDLE; // or MOTOR_OFF
+        _power_state = MOTOR_OFF;
+    };
+
+    // idle motor partially energized for torque maintenance
+    void idle(uint8_t motor)
+    {
+        setPowerLevel(st_cfg.mot[motor].power_level_idle);
+        _power_state = MOTOR_IDLE;
     };
 
     // turn off motor is only powered when moving
@@ -549,6 +566,8 @@ public:
         if (_power_mode == MOTOR_POWERED_IN_CYCLE) {
             this->enable();
             _power_state = MOTOR_POWER_TIMEOUT_START;
+        } else if (_power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE) {
+            _power_state = MOTOR_POWER_TIMEOUT_START;
         } else if (_power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
             if (_power_state == MOTOR_RUNNING) {
                 _power_state = MOTOR_POWER_TIMEOUT_START;
@@ -556,7 +575,7 @@ public:
         }
     };
 
-    virtual void periodicCheck(bool have_actually_stopped) // can be overridden
+    virtual void periodicCheck(bool have_actually_stopped, uint8_t motor) // can be overridden
     {
         if (_was_enabled) {
             _motor_disable_timeout_ms = st_cfg.motor_power_timeout * 1000.0;
@@ -569,7 +588,7 @@ public:
         // start timeouts initiated during a load so the loader does not need to burn these cycles
         if (_power_state == MOTOR_POWER_TIMEOUT_START && _power_mode != MOTOR_ALWAYS_POWERED) {
             _power_state = MOTOR_POWER_TIMEOUT_COUNTDOWN;
-            if (_power_mode == MOTOR_POWERED_IN_CYCLE) {
+            if (_power_mode == MOTOR_POWERED_IN_CYCLE || _power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE) {
                 _motor_disable_timeout.set(_motor_disable_timeout_ms);
             } else if (_power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
                 _motor_disable_timeout.set(st_cfg.motor_power_timeout * 1000.0);
@@ -579,8 +598,12 @@ public:
         // count down and time out the motor
         if (_power_state == MOTOR_POWER_TIMEOUT_COUNTDOWN) {
             if (_motor_disable_timeout.isPast()) {
-                disable();
-				sr_request_status_report(SR_REQUEST_TIMED);
+                if (_power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE) {
+                    idle(motor);
+                } else {
+                    disable();
+                }
+                sr_request_status_report(SR_REQUEST_TIMED);
             }
         }
     };
@@ -658,7 +681,9 @@ stat_t st_get_sp(nvObj_t *nv);
 stat_t st_get_pm(nvObj_t *nv);
 stat_t st_set_pm(nvObj_t *nv);
 stat_t st_get_pl(nvObj_t *nv);
+stat_t st_get_pi(nvObj_t *nv);
 stat_t st_set_pl(nvObj_t *nv);
+stat_t st_set_pi(nvObj_t *nv);
 
 stat_t st_get_pwr(nvObj_t *nv);
 
@@ -680,6 +705,7 @@ stat_t st_get_dw(nvObj_t *nv);
     void st_print_sp(nvObj_t *nv);
     void st_print_pm(nvObj_t *nv);
     void st_print_pl(nvObj_t *nv);
+    void st_print_pi(nvObj_t *nv);
     void st_print_pwr(nvObj_t *nv);
     void st_print_mt(nvObj_t *nv);
     void st_print_me(nvObj_t *nv);
@@ -697,6 +723,7 @@ stat_t st_get_dw(nvObj_t *nv);
     #define st_print_sp tx_print_stub
     #define st_print_pm tx_print_stub
     #define st_print_pl tx_print_stub
+    #define st_print_pi tx_print_stub
     #define st_print_pwr tx_print_stub
     #define st_print_mt tx_print_stub
     #define st_print_me tx_print_stub

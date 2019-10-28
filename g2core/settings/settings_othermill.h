@@ -107,7 +107,7 @@
 #define MOTOR_POWER_LEVEL_Z_IDLE    0.15
 #define MOTOR_POWER_LEVEL_DISABLED  0.05
 
-#define MOTOR_POWER_MODE            MOTOR_POWERED_IN_CYCLE
+#define MOTOR_POWER_MODE            MOTOR_POWER_REDUCED_WHEN_IDLE
 #define MOTOR_POWER_TIMEOUT         2.00                    // motor power timeout in seconds
 
 #define M1_MOTOR_MAP                AXIS_X_EXTERNAL         // 1ma

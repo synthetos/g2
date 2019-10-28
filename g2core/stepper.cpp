@@ -146,8 +146,13 @@ void stepper_init()
 
     // setup motor power levels and apply power level to stepper drivers
     for (uint8_t motor=0; motor<MOTORS; motor++) {
-        Motors[motor]->setPowerLevel(st_cfg.mot[motor].power_level);
-        st_run.mot[motor].power_level_dynamic = st_cfg.mot[motor].power_level;
+        if (Motors[motor]->getPowerMode() == MOTOR_POWER_REDUCED_WHEN_IDLE) {
+            Motors[motor]->setPowerLevel(st_cfg.mot[motor].power_level_idle);
+            st_run.mot[motor].power_level_dynamic = st_cfg.mot[motor].power_level_idle;
+        } else {
+            Motors[motor]->setPowerLevel(st_cfg.mot[motor].power_level);
+            st_run.mot[motor].power_level_dynamic = st_cfg.mot[motor].power_level;
+        }
     }
     board_stepper_init();
     stepper_reset();                            // reset steppers to known state
@@ -243,7 +248,7 @@ stat_t st_motor_power_callback()     // called by controller
 
     // manage power for each motor individually
     for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
-        Motors[motor]->periodicCheck(have_actually_stopped);
+        Motors[motor]->periodicCheck(have_actually_stopped, motor);
     }
     return (STAT_OK);
 }
@@ -452,6 +457,8 @@ void st_request_load_move()
 
 static void _load_move()
 {
+    bool waitForVref = false;
+
     // Be aware that dda_ticks_downcount must equal zero for the loader to run.
     // So the initial load must also have this set to zero as part of initialization
     if (st_runtime_isbusy()) {
@@ -510,6 +517,10 @@ static void _load_move()
 
             // Enable the stepper and start/update motor power management
             motor_1.enable();
+            if(motor_1.getPowerMode() == MOTOR_POWER_REDUCED_WHEN_IDLE) {
+                motor_1.setPowerLevel(st_cfg.mot[MOTOR_1].power_level);
+                waitForVref = true;
+            }
             SET_ENCODER_STEP_SIGN(MOTOR_1, st_pre.mot[MOTOR_1].step_sign);
 
         } else {  // Motor has 0 steps; might need to energize motor for power mode processing
@@ -528,6 +539,10 @@ static void _load_move()
                 motor_2.setDirection(st_pre.mot[MOTOR_2].direction);
             }
             motor_2.enable();
+            if(motor_2.getPowerMode() == MOTOR_POWER_REDUCED_WHEN_IDLE) {
+                motor_2.setPowerLevel(st_cfg.mot[MOTOR_2].power_level);
+                waitForVref = true;
+            }
             SET_ENCODER_STEP_SIGN(MOTOR_2, st_pre.mot[MOTOR_2].step_sign);
         } else {
             st_run.mot[MOTOR_2].substep_increment_increment = 0;
@@ -544,6 +559,10 @@ static void _load_move()
                 motor_3.setDirection(st_pre.mot[MOTOR_3].direction);
             }
             motor_3.enable();
+            if(motor_3.getPowerMode() == MOTOR_POWER_REDUCED_WHEN_IDLE) {
+                motor_3.setPowerLevel(st_cfg.mot[MOTOR_3].power_level);
+                waitForVref = true;
+            }
             SET_ENCODER_STEP_SIGN(MOTOR_3, st_pre.mot[MOTOR_3].step_sign);
         } else {
             st_run.mot[MOTOR_3].substep_increment_increment = 0;
@@ -560,6 +579,10 @@ static void _load_move()
                 motor_4.setDirection(st_pre.mot[MOTOR_4].direction);
             }
             motor_4.enable();
+            if(motor_4.getPowerMode() == MOTOR_POWER_REDUCED_WHEN_IDLE) {
+                motor_4.setPowerLevel(st_cfg.mot[MOTOR_4].power_level);
+                waitForVref = true;
+            }
             SET_ENCODER_STEP_SIGN(MOTOR_4, st_pre.mot[MOTOR_4].step_sign);
         } else {
             st_run.mot[MOTOR_4].substep_increment_increment = 0;
@@ -576,6 +599,10 @@ static void _load_move()
                 motor_5.setDirection(st_pre.mot[MOTOR_5].direction);
             }
             motor_5.enable();
+            if(motor_5.getPowerMode() == MOTOR_POWER_REDUCED_WHEN_IDLE) {
+                motor_5.setPowerLevel(st_cfg.mot[MOTOR_5].power_level);
+                waitForVref = true;
+            }
             SET_ENCODER_STEP_SIGN(MOTOR_5, st_pre.mot[MOTOR_5].step_sign);
         } else {
             st_run.mot[MOTOR_5].substep_increment_increment = 0;
@@ -592,6 +619,10 @@ static void _load_move()
                 motor_6.setDirection(st_pre.mot[MOTOR_6].direction);
             }
             motor_6.enable();
+            if(motor_6.getPowerMode() == MOTOR_POWER_REDUCED_WHEN_IDLE) {
+                motor_6.setPowerLevel(st_cfg.mot[MOTOR_6].power_level);
+                waitForVref = true;
+            }
             SET_ENCODER_STEP_SIGN(MOTOR_6, st_pre.mot[MOTOR_6].step_sign);
         } else {
             st_run.mot[MOTOR_6].substep_increment_increment = 0;
@@ -599,6 +630,11 @@ static void _load_move()
         }
         ACCUMULATE_ENCODER(MOTOR_6);
 #endif
+
+        // Wait for Vref to settle with new power level
+        if (waitForVref) {
+            st_prep_out_of_band_dwell(MOTOR_VREF_RC_TIMEOUT_USEC);
+        }
 
         //**** do this last ****
 
@@ -939,6 +975,7 @@ static float _set_motor_steps_per_unit(nvObj_t *nv)
  * st_set_pm() - set motor power mode
  * st_get_pm() - get motor power mode
  * st_set_pl() - set motor power level
+ * st_set_pi() - set motor idle power level
  */
 
 /*
@@ -1079,21 +1116,37 @@ stat_t st_set_pm(nvObj_t *nv)
 
 /*
  * st_get_pl() - get motor power level
+ * st_get_pi() - get motor idle power level
  * st_set_pl() - set motor power level
+ * st_set_pi() - set motor idle power level
  *
  *  Input value may vary from 0.000 to 1.000 The setting is scaled to allowable PWM range.
  *  This function sets both the scaled and dynamic power levels, and applies the
  *  scaled value to the vref.
  */
 stat_t st_get_pl(nvObj_t *nv) { return(get_float(nv, st_cfg.mot[_motor(nv->index)].power_level)); }
+stat_t st_get_pi(nvObj_t *nv) { return(get_float(nv, st_cfg.mot[_motor(nv->index)].power_level_idle)); }
 stat_t st_set_pl(nvObj_t *nv)
 {
     uint8_t m = _motor(nv->index);
     ritorno(set_float_range(nv, st_cfg.mot[m].power_level, 0.0, 1.0));
     st_cfg.mot[m].power_level = nv->value_flt;
-    st_run.mot[m].power_level_dynamic = st_cfg.mot[m].power_level;
-    Motors[m]->setPowerLevel(st_cfg.mot[m].power_level);
+    if(Motors[m]->getPowerState() != MOTOR_IDLE || Motors[m]->getPowerMode() != MOTOR_POWER_REDUCED_WHEN_IDLE) {
+        st_run.mot[m].power_level_dynamic = st_cfg.mot[m].power_level;
+        Motors[m]->setPowerLevel(st_cfg.mot[m].power_level);
+    }
     return(STAT_OK);
+}
+
+stat_t st_set_pi(nvObj_t *nv) {
+    uint8_t m = _motor(nv->index);
+    ritorno(set_float_range(nv, st_cfg.mot[m].power_level_idle, 0.0, 1.0));
+    st_cfg.mot[m].power_level_idle = nv->value_flt;
+    if(Motors[m]->getPowerState() == MOTOR_IDLE && Motors[m]->getPowerMode() == MOTOR_POWER_REDUCED_WHEN_IDLE) {
+        st_run.mot[m].power_level_dynamic = st_cfg.mot[m].power_level_idle;
+        Motors[m]->setPowerLevel(st_cfg.mot[m].power_level_idle);
+    }
+    return (STAT_OK);
 }
 
 /*
@@ -1250,8 +1303,9 @@ static const char fmt_0su[] = "[%s%s] m%s steps per unit %17.5f steps per%s\n";
 static const char fmt_0po[] = "[%s%s] m%s polarity%18d [0=normal,1=reverse]\n";
 static const char fmt_0ep[] = "[%s%s] m%s enable polarity%11d [0=active HIGH,1=active LOW]\n";
 static const char fmt_0sp[] = "[%s%s] m%s step polarity%13d [0=active HIGH,1=active LOW]\n";
-static const char fmt_0pm[] = "[%s%s] m%s power management%10d [0=disabled,1=always on,2=in cycle,3=when moving]\n";
+static const char fmt_0pm[] = "[%s%s] m%s power management%10d [0=disabled,1=always on,2=in cycle,3=when moving,4=reduced when idle]\n";
 static const char fmt_0pl[] = "[%s%s] m%s motor power level%13.3f [0.000=minimum, 1.000=maximum]\n";
+static const char fmt_0pi[] = "[%s%s] m%s motor idle power level%13.3f [0.000=minimum, 1.000=maximum]\n";
 static const char fmt_pwr[] = "[%s%s] Motor %c power level:%12.3f\n";
 
 void st_print_me(nvObj_t *nv) { text_print(nv, fmt_me);}    // TYPE_NULL - message only
@@ -1292,6 +1346,7 @@ void st_print_ep(nvObj_t *nv) { _print_motor_int(nv, fmt_0ep);}
 void st_print_sp(nvObj_t *nv) { _print_motor_int(nv, fmt_0sp);}
 void st_print_pm(nvObj_t *nv) { _print_motor_int(nv, fmt_0pm);}
 void st_print_pl(nvObj_t *nv) { _print_motor_flt(nv, fmt_0pl);}
+void st_print_pi(nvObj_t *nv) { _print_motor_flt(nv, fmt_0pi);}
 void st_print_pwr(nvObj_t *nv){ _print_motor_pwr(nv, fmt_pwr);}
 
 #endif // __TEXT_MODE
