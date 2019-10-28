@@ -31,6 +31,53 @@
       }
     },
     {
+      "label": "Build CONFIG=MiniMill Debug Unity",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=MiniMill", "VERBOSE=2", "COLOR=0", "DEBUG=2",
+         "RECORD=1"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
+      "label": "Build CONFIG=MiniMill Debug",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=MiniMill", "VERBOSE=2", "COLOR=0", "DEBUG=2",
+         "RECORD=1"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
+      "label": "Build CONFIG=MiniMill Production",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=MiniMill", "VERBOSE=2", "COLOR=0",
+         "RECORD=1"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
+      "label": "Clean CONFIG=MiniMill",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=MiniMill", "clean"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
       "label": "Build CONFIG=r7",
       "type": "process",
       "command": "make",

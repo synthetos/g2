@@ -48,6 +48,13 @@ ifeq ("$(CONFIG)","OthermillPro")
     SETTINGS_FILE="settings_othermill_pro.h"
 endif
 
+ifeq ("$(CONFIG)","MiniMill")
+    ifeq ("$(BOARD)","NONE")
+        BOARD=g2v9k
+    endif
+    SETTINGS_FILE="settings_minimill.h"
+endif
+
 ifeq ("$(CONFIG)","ProbotixV90")
     ifeq ("$(BOARD)","NONE")
         BOARD=g2v9k
