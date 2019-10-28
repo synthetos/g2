@@ -129,8 +129,8 @@
 #define FEEDHOLD_Z_LIFT             0       // {zl: mm to lift Z on feedhold
 #endif
 
-#ifndef PROBE_REPORT_ENABLE 
-#define PROBE_REPORT_ENABLE         true    // {prbr: 
+#ifndef PROBE_REPORT_ENABLE
+#define PROBE_REPORT_ENABLE         true    // {prbr:
 #endif
 
 #ifndef MANUAL_FEEDRATE_OVERRIDE_ENABLE
@@ -1088,25 +1088,41 @@
 // Set to allow the board to function if not otherwise set up
 // (least disruptive settings)
 
-/* Legend:
-    IO_MODE_DISABLED
+// Set the probing input (universal, all axis probe)
+#ifndef PROBING_INPUT
+#define PROBING_INPUT 0
+#endif
+
+/* Legend of valid options:
+  DIn_ENABLED
+    IO_UNAVAILABLE   // input/output is missing/used/unavailable
+    IO_DISABLED      // input/output is disabled
+    IO_ENABLED       // input/output enabled
+
+  DIn_POLARITY:
     IO_ACTIVE_LOW    aka NORMALLY_OPEN
     IO_ACTIVE_HIGH   aka NORMALLY_CLOSED
 
+  DIn_ACTION:
     INPUT_ACTION_NONE
-    INPUT_ACTION_STOP
-    INPUT_ACTION_FAST_STOP
-    INPUT_ACTION_HALT
-    INPUT_ACTION_RESET
+    INPUT_ACTION_STOP        - stop at normal jerk - preserves positional accuracy
+    INPUT_ACTION_FAST_STOP   - stop at high jerk - preserves positional accuracy
+    INPUT_ACTION_HALT        - stop immediately - not guaranteed to preserve position
+    INPUT_ACTION_CYCLE_START - start / restart cycle after feedhold (RESERVED)
+    INPUT_ACTION_ALARM       - initiate an alarm. stops everything immediately - preserves position
+    INPUT_ACTION_SHUTDOWN    - initiate a shutdown. stops everything immediately - does not preserve position
+    INPUT_ACTION_PANIC       - initiate a panic. stops everything immediately - does not preserve position
+    INPUT_ACTION_RESET       - reset system
 
-    INPUT_FUNCTION_NONE
-    INPUT_ACTION_LIMIT
-    INPUT_FUNCTION_INTERLOCK
-    INPUT_FUNCTION_SHUTDOWN
-    INPUT_FUNCTION_PANIC
+    INPUT_ACTION_LIMIT       - limit switch processing
+    INPUT_ACTION_INTERLOCK   - interlock processing
 */
 
 // Xmin on v9 board
+#ifdef DI1_MODE
+#error DI1_MODE is no longer used, please update your settings file
+#error Use DI1_ENABLED and DI1_POLARITY instead
+#endif
 #ifndef DI1_ENABLED
 #define DI1_ENABLED                 IO_ENABLED
 #endif
@@ -1116,11 +1132,19 @@
 #ifndef DI1_ACTION
 #define DI1_ACTION                  INPUT_ACTION_NONE
 #endif
+#ifdef DI1_FUNCTION
+#error DI1_FUNCTION is no longer used, please update your settings file
+#error Use DI1_ACTION instead
+#endif
 #ifndef DI1_EXTERNAL_NUMBER
 #define DI1_EXTERNAL_NUMBER         1
 #endif
 
 // Xmax
+#ifdef DI2_MODE
+#error DI2_MODE is no longer used, please update your settings file
+#error Use DI2_ENABLED and DI2_POLARITY instead
+#endif
 #ifndef DI2_ENABLED
 #define DI2_ENABLED                 IO_ENABLED
 #endif
@@ -1130,11 +1154,19 @@
 #ifndef DI2_ACTION
 #define DI2_ACTION                  INPUT_ACTION_NONE
 #endif
+#ifdef DI2_FUNCTION
+#error DI2_FUNCTION is no longer used, please update your settings file
+#error Use DI2_ACTION instead
+#endif
 #ifndef DI2_EXTERNAL_NUMBER
 #define DI2_EXTERNAL_NUMBER         2
 #endif
 
 // Ymin
+#ifdef DI3_MODE
+#error DI3_MODE is no longer used, please update your settings file
+#error Use DI3_ENABLED and DI3_POLARITY instead
+#endif
 #ifndef DI3_ENABLED
 #define DI3_ENABLED                 IO_ENABLED
 #endif
@@ -1144,11 +1176,19 @@
 #ifndef DI3_ACTION
 #define DI3_ACTION                  INPUT_ACTION_NONE
 #endif
+#ifdef DI3_FUNCTION
+#error DI3_FUNCTION is no longer used, please update your settings file
+#error Use DI3_ACTION instead
+#endif
 #ifndef DI3_EXTERNAL_NUMBER
 #define DI3_EXTERNAL_NUMBER         3
 #endif
 
 // Ymax
+#ifdef DI4_MODE
+#error DI4_MODE is no longer used, please update your settings file
+#error Use DI4_ENABLED and DI4_POLARITY instead
+#endif
 #ifndef DI4_ENABLED
 #define DI4_ENABLED                 IO_ENABLED
 #endif
@@ -1158,11 +1198,19 @@
 #ifndef DI4_ACTION
 #define DI4_ACTION                  INPUT_ACTION_NONE
 #endif
+#ifdef DI4_FUNCTION
+#error DI4_FUNCTION is no longer used, please update your settings file
+#error Use DI4_ACTION instead
+#endif
 #ifndef DI4_EXTERNAL_NUMBER
 #define DI4_EXTERNAL_NUMBER         4
 #endif
 
 // Zmin
+#ifdef DI5_MODE
+#error DI5_MODE is no longer used, please update your settings file
+#error Use DI5_ENABLED and DI5_POLARITY instead
+#endif
 #ifndef DI5_ENABLED
 #define DI5_ENABLED                 IO_ENABLED
 #endif
@@ -1172,11 +1220,19 @@
 #ifndef DI5_ACTION
 #define DI5_ACTION                  INPUT_ACTION_NONE
 #endif
+#ifdef DI5_FUNCTION
+#error DI5_FUNCTION is no longer used, please update your settings file
+#error Use DI5_ACTION instead
+#endif
 #ifndef DI5_EXTERNAL_NUMBER
 #define DI5_EXTERNAL_NUMBER         5
 #endif
 
 // Zmax
+#ifdef DI6_MODE
+#error DI6_MODE is no longer used, please update your settings file
+#error Use DI6_ENABLED and DI6_POLARITY instead
+#endif
 #ifndef DI6_ENABLED
 #define DI6_ENABLED                 IO_ENABLED
 #endif
@@ -1186,11 +1242,19 @@
 #ifndef DI6_ACTION
 #define DI6_ACTION                  INPUT_ACTION_NONE
 #endif
+#ifdef DI6_FUNCTION
+#error DI6_FUNCTION is no longer used, please update your settings file
+#error Use DI6_ACTION instead
+#endif
 #ifndef DI6_EXTERNAL_NUMBER
 #define DI6_EXTERNAL_NUMBER         6
 #endif
 
 // Amin
+#ifdef DI7_MODE
+#error DI7_MODE is no longer used, please update your settings file
+#error Use DI7_ENABLED and DI7_POLARITY instead
+#endif
 #ifndef DI7_ENABLED
 #define DI7_ENABLED                 IO_ENABLED
 #endif
@@ -1200,11 +1264,19 @@
 #ifndef DI7_ACTION
 #define DI7_ACTION                  INPUT_ACTION_NONE
 #endif
+#ifdef DI7_FUNCTION
+#error DI7_FUNCTION is no longer used, please update your settings file
+#error Use DI7_ACTION instead
+#endif
 #ifndef DI7_EXTERNAL_NUMBER
 #define DI7_EXTERNAL_NUMBER         7
 #endif
 
 // Amax
+#ifdef DI8_MODE
+#error DI8_MODE is no longer used, please update your settings file
+#error Use DI8_ENABLED and DI8_POLARITY instead
+#endif
 #ifndef DI8_ENABLED
 #define DI8_ENABLED                 IO_ENABLED
 #endif
@@ -1214,11 +1286,19 @@
 #ifndef DI8_ACTION
 #define DI8_ACTION                  INPUT_ACTION_NONE
 #endif
+#ifdef DI8_FUNCTION
+#error DI8_FUNCTION is no longer used, please update your settings file
+#error Use DI8_ACTION instead
+#endif
 #ifndef DI8_EXTERNAL_NUMBER
 #define DI8_EXTERNAL_NUMBER         8
 #endif
 
 // Safety line
+#ifdef DI9_MODE
+#error DI9_MODE is no longer used, please update your settings file
+#error Use DI9_ENABLED and DI9_POLARITY instead
+#endif
 #ifndef DI9_ENABLED
 #define DI9_ENABLED                 IO_ENABLED
 #endif
@@ -1228,10 +1308,18 @@
 #ifndef DI9_ACTION
 #define DI9_ACTION                  INPUT_ACTION_NONE
 #endif
+#ifdef DI9_FUNCTION
+#error DI9_FUNCTION is no longer used, please update your settings file
+#error Use DI9_ACTION instead
+#endif
 #ifndef DI9_EXTERNAL_NUMBER
 #define DI9_EXTERNAL_NUMBER         9
 #endif
 
+#ifdef DI10_MODE
+#error DI10_MODE is no longer used, please update your settings file
+#error Use DI10_ENABLED and DI10_POLARITY instead
+#endif
 #ifndef DI10_ENABLED
 #define DI10_ENABLED                IO_ENABLED
 #endif
@@ -1241,10 +1329,18 @@
 #ifndef DI10_ACTION
 #define DI10_ACTION                 INPUT_ACTION_NONE
 #endif
+#ifdef DI10_FUNCTION
+#error DI10_FUNCTION is no longer used, please update your settings file
+#error Use DI10_ACTION instead
+#endif
 #ifndef DI10_EXTERNAL_NUMBER
 #define DI10_EXTERNAL_NUMBER         10
 #endif
 
+#ifdef DI11_MODE
+#error DI11_MODE is no longer used, please update your settings file
+#error Use DI11_ENABLED and DI11_POLARITY instead
+#endif
 #ifndef DI11_ENABLED
 #define DI11_ENABLED                IO_ENABLED
 #endif
@@ -1254,10 +1350,18 @@
 #ifndef DI11_ACTION
 #define DI11_ACTION                 INPUT_ACTION_NONE
 #endif
+#ifdef DI11_FUNCTION
+#error DI11_FUNCTION is no longer used, please update your settings file
+#error Use DI11_ACTION instead
+#endif
 #ifndef DI11_EXTERNAL_NUMBER
 #define DI11_EXTERNAL_NUMBER         11
 #endif
 
+#ifdef DI12_MODE
+#error DI12_MODE is no longer used, please update your settings file
+#error Use DI12_ENABLED and DI12_POLARITY instead
+#endif
 #ifndef DI12_ENABLED
 #define DI12_ENABLED                IO_ENABLED
 #endif
@@ -1266,6 +1370,10 @@
 #endif
 #ifndef DI12_ACTION
 #define DI12_ACTION                 INPUT_ACTION_NONE
+#endif
+#ifdef DI12_FUNCTION
+#error DI12_FUNCTION is no longer used, please update your settings file
+#error Use DI12_ACTION instead
 #endif
 #ifndef DI12_EXTERNAL_NUMBER
 #define DI12_EXTERNAL_NUMBER         12
