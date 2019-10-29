@@ -220,23 +220,24 @@ const cfgItem_t cfgArray[] = {
 #endif
 
 
+
   // Motor parameters
   // generated with ${PROJECT_ROOT}/Resources/generate_motors_cfgArray.js
 
 
 #if (MOTORS >= 1)
-    { "1","1ma", _iip,  0, st_print_ma, st_get_ma, st_set_ma, &st_cfg.mot[MOTOR_1].motor_map,        M1_MOTOR_MAP },
-    { "1","1sa", _fip,  3, st_print_sa, st_get_sa, st_set_sa, &st_cfg.mot[MOTOR_1].step_angle,       M1_STEP_ANGLE },
-    { "1","1tr", _fipc, 4, st_print_tr, st_get_tr, st_set_tr, &st_cfg.mot[MOTOR_1].travel_rev,       M1_TRAVEL_PER_REV },
-    { "1","1su", _fipi, 5, st_print_su, st_get_su, st_set_su, &st_cfg.mot[MOTOR_1].steps_per_unit,   M1_STEPS_PER_UNIT },
-    { "1","1mi", _iip,  0, st_print_mi, st_get_mi, st_set_mi, &st_cfg.mot[MOTOR_1].microsteps,       M1_MICROSTEPS },
-    { "1","1po", _iip,  0, st_print_po, st_get_po, st_set_po, &st_cfg.mot[MOTOR_1].polarity,         M1_POLARITY },
-    { "1","1pm", _iip,  0, st_print_pm, st_get_pm, st_set_pm, &cs.null,                              M1_POWER_MODE },
-    { "1","1pl", _fip,  3, st_print_pl, st_get_pl, st_set_pl, &st_cfg.mot[MOTOR_1].power_level,      M1_POWER_LEVEL },
-    { "1","1pi", _fip,  3, st_print_pi, st_get_pi, st_set_pi, &st_cfg.mot[MOTOR_1].power_level_idle, M1_POWER_LEVEL_IDLE },
-    { "1","1ep", _iip,  0, st_print_ep, st_get_ep, st_set_ep, nullptr,                               M1_ENABLE_POLARITY },
-    { "1","1sp", _iip,  0, st_print_sp, st_get_sp, st_set_sp, nullptr,                               M1_STEP_POLARITY },
-//  { "1","1mt", _fip,  2, st_print_mt, st_get_mt, st_set_mt, &st_cfg.mot[MOTOR_1].motor_timeout,    M1_MOTOR_TIMEOUT },
+    { "1","1ma", _iip,  0, st_print_ma, st_get_ma, st_set_ma, nullptr, M1_MOTOR_MAP },
+    { "1","1sa", _fip,  3, st_print_sa, st_get_sa, st_set_sa, nullptr, M1_STEP_ANGLE },
+    { "1","1tr", _fipc, 4, st_print_tr, st_get_tr, st_set_tr, nullptr, M1_TRAVEL_PER_REV },
+    { "1","1su", _fipi, 5, st_print_su, st_get_su, st_set_su, nullptr, M1_STEPS_PER_UNIT },
+    { "1","1mi", _iip,  0, st_print_mi, st_get_mi, st_set_mi, nullptr, M1_MICROSTEPS },
+    { "1","1po", _iip,  0, st_print_po, st_get_po, st_set_po, nullptr, M1_POLARITY },
+    { "1","1pm", _iip,  0, st_print_pm, st_get_pm, st_set_pm, nullptr, M1_POWER_MODE },
+    { "1","1pl", _fip,  3, st_print_pl, st_get_pl, st_set_pl, nullptr, M1_POWER_LEVEL },
+    { "1","1ep", _iip,  0, st_print_ep, st_get_ep, st_set_ep, nullptr, M1_ENABLE_POLARITY },
+    { "1","1sp", _iip,  0, st_print_sp, st_get_sp, st_set_sp, nullptr, M1_STEP_POLARITY },
+    { "1","1pi", _fip,  3, st_print_pi, st_get_pi, st_set_pi, nullptr, M1_POWER_LEVEL_IDLE },
+//  { "1","1mt", _fip,  2, st_print_mt, st_get_mt, st_set_mt, nullptr, M1_MOTOR_TIMEOUT },
 #ifdef MOTOR_1_IS_TRINAMIC
     { "1","1ts",  _i0,  0, tx_print_nul, motor_1.get_ts_fn,  set_ro,              &motor_1, 0 },
     { "1","1pth", _iip, 0, tx_print_nul, motor_1.get_pth_fn, motor_1.set_pth_fn,  &motor_1, M1_TMC2130_TPWMTHRS },
@@ -259,18 +260,18 @@ const cfgItem_t cfgArray[] = {
 #endif
 
 #if (MOTORS >= 2)
-    { "2","2ma", _iip,  0, st_print_ma, st_get_ma, st_set_ma, &st_cfg.mot[MOTOR_2].motor_map,        M2_MOTOR_MAP },
-    { "2","2sa", _fip,  3, st_print_sa, st_get_sa, st_set_sa, &st_cfg.mot[MOTOR_2].step_angle,       M2_STEP_ANGLE },
-    { "2","2tr", _fipc, 4, st_print_tr, st_get_tr, st_set_tr, &st_cfg.mot[MOTOR_2].travel_rev,       M2_TRAVEL_PER_REV },
-    { "2","2su", _fipi, 5, st_print_su, st_get_su, st_set_su, &st_cfg.mot[MOTOR_2].steps_per_unit,   M2_STEPS_PER_UNIT },
-    { "2","2mi", _iip,  0, st_print_mi, st_get_mi, st_set_mi, &st_cfg.mot[MOTOR_2].microsteps,       M2_MICROSTEPS },
-    { "2","2po", _iip,  0, st_print_po, st_get_po, st_set_po, &st_cfg.mot[MOTOR_2].polarity,         M2_POLARITY },
-    { "2","2pm", _iip,  0, st_print_pm, st_get_pm, st_set_pm, &cs.null,                              M2_POWER_MODE },
-    { "2","2pl", _fip,  3, st_print_pl, st_get_pl, st_set_pl, &st_cfg.mot[MOTOR_2].power_level,      M2_POWER_LEVEL },
-    { "2","2pi", _fip,  3, st_print_pi, st_get_pi, st_set_pi, &st_cfg.mot[MOTOR_2].power_level_idle, M2_POWER_LEVEL_IDLE },
-    { "2","2ep", _iip,  0, st_print_ep, st_get_ep, st_set_ep, nullptr,                               M2_ENABLE_POLARITY },
-    { "2","2sp", _iip,  0, st_print_sp, st_get_sp, st_set_sp, nullptr,                               M2_STEP_POLARITY },
-//  { "2","2mt", _fip,  2, st_print_mt, st_get_mt, st_set_mt, &st_cfg.mot[MOTOR_2].motor_timeout,    M2_MOTOR_TIMEOUT },
+    { "2","2ma", _iip,  0, st_print_ma, st_get_ma, st_set_ma, nullptr, M2_MOTOR_MAP },
+    { "2","2sa", _fip,  3, st_print_sa, st_get_sa, st_set_sa, nullptr, M2_STEP_ANGLE },
+    { "2","2tr", _fipc, 4, st_print_tr, st_get_tr, st_set_tr, nullptr, M2_TRAVEL_PER_REV },
+    { "2","2su", _fipi, 5, st_print_su, st_get_su, st_set_su, nullptr, M2_STEPS_PER_UNIT },
+    { "2","2mi", _iip,  0, st_print_mi, st_get_mi, st_set_mi, nullptr, M2_MICROSTEPS },
+    { "2","2po", _iip,  0, st_print_po, st_get_po, st_set_po, nullptr, M2_POLARITY },
+    { "2","2pm", _iip,  0, st_print_pm, st_get_pm, st_set_pm, nullptr, M2_POWER_MODE },
+    { "2","2pl", _fip,  3, st_print_pl, st_get_pl, st_set_pl, nullptr, M2_POWER_LEVEL },
+    { "2","2ep", _iip,  0, st_print_ep, st_get_ep, st_set_ep, nullptr, M2_ENABLE_POLARITY },
+    { "2","2sp", _iip,  0, st_print_sp, st_get_sp, st_set_sp, nullptr, M2_STEP_POLARITY },
+    { "2","2pi", _fip,  3, st_print_pi, st_get_pi, st_set_pi, nullptr, M2_POWER_LEVEL_IDLE },
+//  { "2","2mt", _fip,  2, st_print_mt, st_get_mt, st_set_mt, nullptr, M2_MOTOR_TIMEOUT },
 #ifdef MOTOR_2_IS_TRINAMIC
     { "2","2ts",  _i0,  0, tx_print_nul, motor_2.get_ts_fn,  set_ro,              &motor_2, 0 },
     { "2","2pth", _iip, 0, tx_print_nul, motor_2.get_pth_fn, motor_2.set_pth_fn,  &motor_2, M2_TMC2130_TPWMTHRS },
@@ -293,18 +294,18 @@ const cfgItem_t cfgArray[] = {
 #endif
 
 #if (MOTORS >= 3)
-    { "3","3ma", _iip,  0, st_print_ma, st_get_ma, st_set_ma, &st_cfg.mot[MOTOR_3].motor_map,        M3_MOTOR_MAP },
-    { "3","3sa", _fip,  3, st_print_sa, st_get_sa, st_set_sa, &st_cfg.mot[MOTOR_3].step_angle,       M3_STEP_ANGLE },
-    { "3","3tr", _fipc, 4, st_print_tr, st_get_tr, st_set_tr, &st_cfg.mot[MOTOR_3].travel_rev,       M3_TRAVEL_PER_REV },
-    { "3","3su", _fipi, 5, st_print_su, st_get_su, st_set_su, &st_cfg.mot[MOTOR_3].steps_per_unit,   M3_STEPS_PER_UNIT },
-    { "3","3mi", _iip,  0, st_print_mi, st_get_mi, st_set_mi, &st_cfg.mot[MOTOR_3].microsteps,       M3_MICROSTEPS },
-    { "3","3po", _iip,  0, st_print_po, st_get_po, st_set_po, &st_cfg.mot[MOTOR_3].polarity,         M3_POLARITY },
-    { "3","3pm", _iip,  0, st_print_pm, st_get_pm, st_set_pm, &cs.null,                              M3_POWER_MODE },
-    { "3","3pl", _fip,  3, st_print_pl, st_get_pl, st_set_pl, &st_cfg.mot[MOTOR_3].power_level,      M3_POWER_LEVEL },
-    { "3","3pi", _fip,  3, st_print_pi, st_get_pi, st_set_pi, &st_cfg.mot[MOTOR_3].power_level_idle, M3_POWER_LEVEL_IDLE },
-    { "3","3ep", _iip,  0, st_print_ep, st_get_ep, st_set_ep, nullptr,                               M3_ENABLE_POLARITY },
-    { "3","3sp", _iip,  0, st_print_sp, st_get_sp, st_set_sp, nullptr,                               M3_STEP_POLARITY },
-//  { "3","3mt", _fip,  2, st_print_mt, st_get_mt, st_set_mt, &st_cfg.mot[MOTOR_3].motor_timeout,    M3_MOTOR_TIMEOUT },
+    { "3","3ma", _iip,  0, st_print_ma, st_get_ma, st_set_ma, nullptr, M3_MOTOR_MAP },
+    { "3","3sa", _fip,  3, st_print_sa, st_get_sa, st_set_sa, nullptr, M3_STEP_ANGLE },
+    { "3","3tr", _fipc, 4, st_print_tr, st_get_tr, st_set_tr, nullptr, M3_TRAVEL_PER_REV },
+    { "3","3su", _fipi, 5, st_print_su, st_get_su, st_set_su, nullptr, M3_STEPS_PER_UNIT },
+    { "3","3mi", _iip,  0, st_print_mi, st_get_mi, st_set_mi, nullptr, M3_MICROSTEPS },
+    { "3","3po", _iip,  0, st_print_po, st_get_po, st_set_po, nullptr, M3_POLARITY },
+    { "3","3pm", _iip,  0, st_print_pm, st_get_pm, st_set_pm, nullptr, M3_POWER_MODE },
+    { "3","3pl", _fip,  3, st_print_pl, st_get_pl, st_set_pl, nullptr, M3_POWER_LEVEL },
+    { "3","3ep", _iip,  0, st_print_ep, st_get_ep, st_set_ep, nullptr, M3_ENABLE_POLARITY },
+    { "3","3sp", _iip,  0, st_print_sp, st_get_sp, st_set_sp, nullptr, M3_STEP_POLARITY },
+    { "3","3pi", _fip,  3, st_print_pi, st_get_pi, st_set_pi, nullptr, M3_POWER_LEVEL_IDLE },
+//  { "3","3mt", _fip,  2, st_print_mt, st_get_mt, st_set_mt, nullptr, M3_MOTOR_TIMEOUT },
 #ifdef MOTOR_3_IS_TRINAMIC
     { "3","3ts",  _i0,  0, tx_print_nul, motor_3.get_ts_fn,  set_ro,              &motor_3, 0 },
     { "3","3pth", _iip, 0, tx_print_nul, motor_3.get_pth_fn, motor_3.set_pth_fn,  &motor_3, M3_TMC2130_TPWMTHRS },
@@ -327,18 +328,18 @@ const cfgItem_t cfgArray[] = {
 #endif
 
 #if (MOTORS >= 4)
-    { "4","4ma", _iip,  0, st_print_ma, st_get_ma, st_set_ma, &st_cfg.mot[MOTOR_4].motor_map,        M4_MOTOR_MAP },
-    { "4","4sa", _fip,  3, st_print_sa, st_get_sa, st_set_sa, &st_cfg.mot[MOTOR_4].step_angle,       M4_STEP_ANGLE },
-    { "4","4tr", _fipc, 4, st_print_tr, st_get_tr, st_set_tr, &st_cfg.mot[MOTOR_4].travel_rev,       M4_TRAVEL_PER_REV },
-    { "4","4su", _fipi, 5, st_print_su, st_get_su, st_set_su, &st_cfg.mot[MOTOR_4].steps_per_unit,   M4_STEPS_PER_UNIT },
-    { "4","4mi", _iip,  0, st_print_mi, st_get_mi, st_set_mi, &st_cfg.mot[MOTOR_4].microsteps,       M4_MICROSTEPS },
-    { "4","4po", _iip,  0, st_print_po, st_get_po, st_set_po, &st_cfg.mot[MOTOR_4].polarity,         M4_POLARITY },
-    { "4","4pm", _iip,  0, st_print_pm, st_get_pm, st_set_pm, &cs.null,                              M4_POWER_MODE },
-    { "4","4pl", _fip,  3, st_print_pl, st_get_pl, st_set_pl, &st_cfg.mot[MOTOR_4].power_level,      M4_POWER_LEVEL },
-    { "4","4pi", _fip,  3, st_print_pi, st_get_pi, st_set_pi, &st_cfg.mot[MOTOR_4].power_level_idle, M4_POWER_LEVEL_IDLE },
-    { "4","4ep", _iip,  0, st_print_ep, st_get_ep, st_set_ep, nullptr,                               M4_ENABLE_POLARITY },
-    { "4","4sp", _iip,  0, st_print_sp, st_get_sp, st_set_sp, nullptr,                               M4_STEP_POLARITY },
-//  { "4","4mt", _fip,  2, st_print_mt, st_get_mt, st_set_mt, &st_cfg.mot[MOTOR_4].motor_timeout,    M4_MOTOR_TIMEOUT },
+    { "4","4ma", _iip,  0, st_print_ma, st_get_ma, st_set_ma, nullptr, M4_MOTOR_MAP },
+    { "4","4sa", _fip,  3, st_print_sa, st_get_sa, st_set_sa, nullptr, M4_STEP_ANGLE },
+    { "4","4tr", _fipc, 4, st_print_tr, st_get_tr, st_set_tr, nullptr, M4_TRAVEL_PER_REV },
+    { "4","4su", _fipi, 5, st_print_su, st_get_su, st_set_su, nullptr, M4_STEPS_PER_UNIT },
+    { "4","4mi", _iip,  0, st_print_mi, st_get_mi, st_set_mi, nullptr, M4_MICROSTEPS },
+    { "4","4po", _iip,  0, st_print_po, st_get_po, st_set_po, nullptr, M4_POLARITY },
+    { "4","4pm", _iip,  0, st_print_pm, st_get_pm, st_set_pm, nullptr, M4_POWER_MODE },
+    { "4","4pl", _fip,  3, st_print_pl, st_get_pl, st_set_pl, nullptr, M4_POWER_LEVEL },
+    { "4","4ep", _iip,  0, st_print_ep, st_get_ep, st_set_ep, nullptr, M4_ENABLE_POLARITY },
+    { "4","4sp", _iip,  0, st_print_sp, st_get_sp, st_set_sp, nullptr, M4_STEP_POLARITY },
+    { "4","4pi", _fip,  3, st_print_pi, st_get_pi, st_set_pi, nullptr, M4_POWER_LEVEL_IDLE },
+//  { "4","4mt", _fip,  2, st_print_mt, st_get_mt, st_set_mt, nullptr, M4_MOTOR_TIMEOUT },
 #ifdef MOTOR_4_IS_TRINAMIC
     { "4","4ts",  _i0,  0, tx_print_nul, motor_4.get_ts_fn,  set_ro,              &motor_4, 0 },
     { "4","4pth", _iip, 0, tx_print_nul, motor_4.get_pth_fn, motor_4.set_pth_fn,  &motor_4, M4_TMC2130_TPWMTHRS },
@@ -361,18 +362,18 @@ const cfgItem_t cfgArray[] = {
 #endif
 
 #if (MOTORS >= 5)
-    { "5","5ma", _iip,  0, st_print_ma, st_get_ma, st_set_ma, &st_cfg.mot[MOTOR_5].motor_map,        M5_MOTOR_MAP },
-    { "5","5sa", _fip,  3, st_print_sa, st_get_sa, st_set_sa, &st_cfg.mot[MOTOR_5].step_angle,       M5_STEP_ANGLE },
-    { "5","5tr", _fipc, 4, st_print_tr, st_get_tr, st_set_tr, &st_cfg.mot[MOTOR_5].travel_rev,       M5_TRAVEL_PER_REV },
-    { "5","5su", _fipi, 5, st_print_su, st_get_su, st_set_su, &st_cfg.mot[MOTOR_5].steps_per_unit,   M5_STEPS_PER_UNIT },
-    { "5","5mi", _iip,  0, st_print_mi, st_get_mi, st_set_mi, &st_cfg.mot[MOTOR_5].microsteps,       M5_MICROSTEPS },
-    { "5","5po", _iip,  0, st_print_po, st_get_po, st_set_po, &st_cfg.mot[MOTOR_5].polarity,         M5_POLARITY },
-    { "5","5pm", _iip,  0, st_print_pm, st_get_pm, st_set_pm, &cs.null,                              M5_POWER_MODE },
-    { "5","5pl", _fip,  3, st_print_pl, st_get_pl, st_set_pl, &st_cfg.mot[MOTOR_5].power_level,      M5_POWER_LEVEL },
-    { "5","5pi", _fip,  3, st_print_pi, st_get_pi, st_set_pi, &st_cfg.mot[MOTOR_5].power_level_idle, M5_POWER_LEVEL_IDLE },
-    { "5","5ep", _iip,  0, st_print_ep, st_get_ep, st_set_ep, nullptr,                               M5_ENABLE_POLARITY },
-    { "5","5sp", _iip,  0, st_print_sp, st_get_sp, st_set_sp, nullptr,                               M5_STEP_POLARITY },
-//  { "5","5mt", _fip,  2, st_print_mt, st_get_mt, st_set_mt, &st_cfg.mot[MOTOR_5].motor_timeout,    M5_MOTOR_TIMEOUT },
+    { "5","5ma", _iip,  0, st_print_ma, st_get_ma, st_set_ma, nullptr, M5_MOTOR_MAP },
+    { "5","5sa", _fip,  3, st_print_sa, st_get_sa, st_set_sa, nullptr, M5_STEP_ANGLE },
+    { "5","5tr", _fipc, 4, st_print_tr, st_get_tr, st_set_tr, nullptr, M5_TRAVEL_PER_REV },
+    { "5","5su", _fipi, 5, st_print_su, st_get_su, st_set_su, nullptr, M5_STEPS_PER_UNIT },
+    { "5","5mi", _iip,  0, st_print_mi, st_get_mi, st_set_mi, nullptr, M5_MICROSTEPS },
+    { "5","5po", _iip,  0, st_print_po, st_get_po, st_set_po, nullptr, M5_POLARITY },
+    { "5","5pm", _iip,  0, st_print_pm, st_get_pm, st_set_pm, nullptr, M5_POWER_MODE },
+    { "5","5pl", _fip,  3, st_print_pl, st_get_pl, st_set_pl, nullptr, M5_POWER_LEVEL },
+    { "5","5ep", _iip,  0, st_print_ep, st_get_ep, st_set_ep, nullptr, M5_ENABLE_POLARITY },
+    { "5","5sp", _iip,  0, st_print_sp, st_get_sp, st_set_sp, nullptr, M5_STEP_POLARITY },
+    { "5","5pi", _fip,  3, st_print_pi, st_get_pi, st_set_pi, nullptr, M5_POWER_LEVEL_IDLE },
+//  { "5","5mt", _fip,  2, st_print_mt, st_get_mt, st_set_mt, nullptr, M5_MOTOR_TIMEOUT },
 #ifdef MOTOR_5_IS_TRINAMIC
     { "5","5ts",  _i0,  0, tx_print_nul, motor_5.get_ts_fn,  set_ro,              &motor_5, 0 },
     { "5","5pth", _iip, 0, tx_print_nul, motor_5.get_pth_fn, motor_5.set_pth_fn,  &motor_5, M5_TMC2130_TPWMTHRS },
@@ -395,18 +396,18 @@ const cfgItem_t cfgArray[] = {
 #endif
 
 #if (MOTORS >= 6)
-    { "6","6ma", _iip,  0, st_print_ma, st_get_ma, st_set_ma, &st_cfg.mot[MOTOR_6].motor_map,        M6_MOTOR_MAP },
-    { "6","6sa", _fip,  3, st_print_sa, st_get_sa, st_set_sa, &st_cfg.mot[MOTOR_6].step_angle,       M6_STEP_ANGLE },
-    { "6","6tr", _fipc, 4, st_print_tr, st_get_tr, st_set_tr, &st_cfg.mot[MOTOR_6].travel_rev,       M6_TRAVEL_PER_REV },
-    { "6","6su", _fipi, 5, st_print_su, st_get_su, st_set_su, &st_cfg.mot[MOTOR_6].steps_per_unit,   M6_STEPS_PER_UNIT },
-    { "6","6mi", _iip,  0, st_print_mi, st_get_mi, st_set_mi, &st_cfg.mot[MOTOR_6].microsteps,       M6_MICROSTEPS },
-    { "6","6po", _iip,  0, st_print_po, st_get_po, st_set_po, &st_cfg.mot[MOTOR_6].polarity,         M6_POLARITY },
-    { "6","6pm", _iip,  0, st_print_pm, st_get_pm, st_set_pm, &cs.null,                              M6_POWER_MODE },
-    { "6","6pl", _fip,  3, st_print_pl, st_get_pl, st_set_pl, &st_cfg.mot[MOTOR_6].power_level,      M6_POWER_LEVEL },
-    { "6","6pi", _fip,  3, st_print_pi, st_get_pi, st_set_pi, &st_cfg.mot[MOTOR_6].power_level_idle, M6_POWER_LEVEL_IDLE },
-    { "6","6ep", _iip,  0, st_print_ep, st_get_ep, st_set_ep, nullptr,                               M6_ENABLE_POLARITY },
-    { "6","6sp", _iip,  0, st_print_sp, st_get_sp, st_set_sp, nullptr,                               M6_STEP_POLARITY },
-//  { "6","6mt", _fip,  2, st_print_mt, st_get_mt, st_set_mt, &st_cfg.mot[MOTOR_6].motor_timeout,    M6_MOTOR_TIMEOUT },
+    { "6","6ma", _iip,  0, st_print_ma, st_get_ma, st_set_ma, nullptr, M6_MOTOR_MAP },
+    { "6","6sa", _fip,  3, st_print_sa, st_get_sa, st_set_sa, nullptr, M6_STEP_ANGLE },
+    { "6","6tr", _fipc, 4, st_print_tr, st_get_tr, st_set_tr, nullptr, M6_TRAVEL_PER_REV },
+    { "6","6su", _fipi, 5, st_print_su, st_get_su, st_set_su, nullptr, M6_STEPS_PER_UNIT },
+    { "6","6mi", _iip,  0, st_print_mi, st_get_mi, st_set_mi, nullptr, M6_MICROSTEPS },
+    { "6","6po", _iip,  0, st_print_po, st_get_po, st_set_po, nullptr, M6_POLARITY },
+    { "6","6pm", _iip,  0, st_print_pm, st_get_pm, st_set_pm, nullptr, M6_POWER_MODE },
+    { "6","6pl", _fip,  3, st_print_pl, st_get_pl, st_set_pl, nullptr, M6_POWER_LEVEL },
+    { "6","6ep", _iip,  0, st_print_ep, st_get_ep, st_set_ep, nullptr, M6_ENABLE_POLARITY },
+    { "6","6sp", _iip,  0, st_print_sp, st_get_sp, st_set_sp, nullptr, M6_STEP_POLARITY },
+    { "6","6pi", _fip,  3, st_print_pi, st_get_pi, st_set_pi, nullptr, M6_POWER_LEVEL_IDLE },
+//  { "6","6mt", _fip,  2, st_print_mt, st_get_mt, st_set_mt, nullptr, M6_MOTOR_TIMEOUT },
 #ifdef MOTOR_6_IS_TRINAMIC
     { "6","6ts",  _i0,  0, tx_print_nul, motor_6.get_ts_fn,  set_ro,              &motor_6, 0 },
     { "6","6pth", _iip, 0, tx_print_nul, motor_6.get_pth_fn, motor_6.set_pth_fn,  &motor_6, M6_TMC2130_TPWMTHRS },
@@ -998,7 +999,7 @@ const cfgItem_t cfgArray[] = {
     { "jid","jidc",_d0, 0, tx_print_nul, get_data, set_data, &cfg.job_id[2], 0 },
     { "jid","jidd",_d0, 0, tx_print_nul, get_data, set_data, &cfg.job_id[3], 0 },
 
-    // fixturing information    
+    // fixturing information
     { "fxa","fxast",_fipc, 0, tx_print_nul, get_flt, set_flt, &cfg.fx_state_a, 0 },
     { "fxa","fxa1x",_fipc, 3, tx_print_nul, get_flt, set_flt, &cfg.fx_coords_a[0][0], 0 },
     { "fxa","fxa1y",_fipc, 3, tx_print_nul, get_flt, set_flt, &cfg.fx_coords_a[0][1], 0 },
