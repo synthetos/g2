@@ -38,13 +38,9 @@
 #include "MotateBuffer.h"
 #include "MotateUtilities.h" // for to/fromLittle/BigEndian
 
-using Motate::OutputPin;
-using Motate::kStartHigh;
 using Motate::SPIMessage;
 using Motate::SPIInterrupt;
 using Motate::SPIDeviceMode;
-using Motate::fromBigEndian;
-using Motate::toBigEndian;
 
 // Complete class for MAX31865 drivers.
 template <typename device_t>
@@ -150,7 +146,7 @@ struct MAX31865 final {
     // IMPORTANT NOTE: The endianness of the ARM is little endian, but other processors
     //  may be different.
 
-    uint8_t _scribble_buffer[4];
+    alignas(4) uint8_t _scribble_buffer[4];
 
     struct {
         uint8_t address;
