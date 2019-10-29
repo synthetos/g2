@@ -283,8 +283,6 @@ enum stPowerMode {
 #define MOTOR_TIMEOUT_SECONDS_MAX   (float)4294967  // (4294967295/1000) -- for conversion to uint32_t
                                                     // 1 dog year (7 weeks)
 
-#define MOTOR_VREF_RC_TIMEOUT_MSEC  (float)1.0      // how long it takes vref to stabilize after changing it
-
 // Step generation constants
 #define STEP_INITIAL_DIRECTION        DIRECTION_CW
 
