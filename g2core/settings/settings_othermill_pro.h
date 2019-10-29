@@ -43,13 +43,18 @@
 
 // interim max values for testing
 #undef X_VELOCITY_MAX
+#undef X_FEEDRATE_MAX
 #undef Y_VELOCITY_MAX
+#undef Y_FEEDRATE_MAX
+#define X_VELOCITY_MAX 2600
+#define X_FEEDRATE_MAX X_VELOCITY_MAX
+#define Y_VELOCITY_MAX 2600
+#define Y_FEEDRATE_MAX Y_VELOCITY_MAX
+
 #undef P1_CW_SPEED_HI
 #undef P1_CW_SPEED_LO
 #undef P1_CW_PHASE_HI
 #undef P1_CW_PHASE_LO
-#define X_VELOCITY_MAX 2600
-#define Y_VELOCITY_MAX 2600
 #define P1_CW_SPEED_HI 26000
 #define P1_CW_SPEED_LO 8000
 #define P1_CW_PHASE_HI 0.19
