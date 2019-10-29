@@ -243,6 +243,8 @@
     INPUT_FUNCTION_PANIC
 */
 
+#define PROBING_INPUT               5
+
 // Xmin on v9 board                 // X homing - see X axis setup
 #define DI1_ENABLED                 IO_ENABLED
 #define DI1_POLARITY                IO_ACTIVE_HIGH      // Normally Closed

@@ -633,7 +633,7 @@ static void _load_move()
 
         // Wait for Vref to settle with new power level
         if (waitForVref) {
-            st_prep_out_of_band_dwell(MOTOR_VREF_RC_TIMEOUT_USEC);
+            st_prep_out_of_band_dwell(MOTOR_VREF_RC_TIMEOUT_MSEC);
         }
 
         //**** do this last ****
