@@ -53,20 +53,20 @@ using Motate::kStartLow;
 
 //--- do not change from here down ---//
 
-typedef enum {
+enum ioEnabled {
     IO_UNAVAILABLE = -1,   // input/output is missing/used/unavailable
     IO_DISABLED    =  0,   // input/output is disabled
     IO_ENABLED     =  1    // input/output enabled
-} ioEnabled;
+};
 
-typedef enum {
+enum ioPolarity {
     IO_ACTIVE_HIGH = 0,                 // input/output is active high (aka normally closed)
     IO_ACTIVE_LOW = 1,                  // input/output is active low (aka normally open)
-} ioPolarity;
+};
 #define NORMALLY_OPEN   IO_ACTIVE_LOW   // equivalent
 #define NORMALLY_CLOSED IO_ACTIVE_HIGH  // equivalent
 
-typedef enum {                          // actions are initiated from within the input's ISR
+enum inputAction {                          // actions are initiated from within the input's ISR
     INPUT_ACTION_NONE = 0,
     INPUT_ACTION_STOP,                  //  1 - stop at normal jerk - preserves positional accuracy
     INPUT_ACTION_FAST_STOP,             //  2 - stop at high jerk - preserves positional accuracy
@@ -81,21 +81,21 @@ typedef enum {                          // actions are initiated from within the
     INPUT_ACTION_INTERLOCK,             // 10 - interlock processing
 
     INPUT_ACTION_INTERNAL,              // 11 - homing/probing processing (internal only)
-} inputAction;
+};
 #define INPUT_ACTION_MAX INPUT_ACTION_INTERLOCK // for range checking
 #define INPUT_ACTION_ACTUAL_MAX INPUT_ACTION_INTERNAL // for internal checking and resource allocation
 
-typedef enum {
+enum ioState {
     INPUT_INACTIVE = 0,                 // aka switch open, also read as 'false'
     INPUT_ACTIVE = 1,                   // aka switch closed, also read as 'true'
     INPUT_DISABLED = 2                  // value returned if input is disabled
-} ioState;
+};
 
-typedef enum {
+enum inputEdgeFlag {
     INPUT_EDGE_NONE = 0,                // no edge detected or edge flag reset (must be zero)
     INPUT_EDGE_LEADING,                 // flag is set when leading edge is detected
     INPUT_EDGE_TRAILING                 // flag is set when trailing edge is detected
-} inputEdgeFlag;
+};
 
 // forward declare
 struct gpioDigitalInputReader;
