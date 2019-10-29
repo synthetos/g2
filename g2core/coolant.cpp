@@ -44,11 +44,15 @@ coCoolant_t coolant;
 // gpioDigitalOutput *flood_enable_output = nullptr;
 
 #ifndef MIST_ENABLE_OUTPUT_NUMBER
-#define MIST_ENABLE_OUTPUT_NUMBER 6
+#warning MIST_ENABLE_OUTPUT_NUMBER is defaulted to 0 (off)!
+#warning MIST_ENABLE_OUTPUT_NUMBER should be defined in settings or a board file!
+#define MIST_ENABLE_OUTPUT_NUMBER 0
 #endif
 
 #ifndef FLOOD_ENABLE_OUTPUT_NUMBER
-#define FLOOD_ENABLE_OUTPUT_NUMBER 7
+#warning FLOOD_ENABLE_OUTPUT_NUMBER is defaulted to 0 (off)!
+#warning FLOOD_ENABLE_OUTPUT_NUMBER should be defined in settings or a board file!
+#define FLOOD_ENABLE_OUTPUT_NUMBER 0
 #endif
 
 /**** Static functions ****/

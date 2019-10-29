@@ -46,10 +46,14 @@ gpioDigitalOutput *spindle_enable_output = nullptr;
 gpioDigitalOutput *spindle_direction_output = nullptr;
 
 #ifndef SPINDLE_ENABLE_OUTPUT_NUMBER
+#warning SPINDLE_ENABLE_OUTPUT_NUMBER is defaulted to 4!
+#warning SPINDLE_ENABLE_OUTPUT_NUMBER should be defined in settings or a board file!
 #define SPINDLE_ENABLE_OUTPUT_NUMBER 4
 #endif
 
 #ifndef SPINDLE_DIRECTION_OUTPUT_NUMBER
+#warning SPINDLE_DIRECTION_OUTPUT_NUMBER is defaulted to 5!
+#warning SPINDLE_DIRECTION_OUTPUT_NUMBER should be defined in settings or a board file!
 #define SPINDLE_DIRECTION_OUTPUT_NUMBER 5
 #endif
 
@@ -176,7 +180,7 @@ static void _exec_spindle_control(float *value, bool *flag)
 //        rpt_exception(STAT_SPINDLE_ASSERTION_FAILURE, "illegal spindle state");
         return;
     }
-    spControl matrix[20] = {
+    constexpr spControl matrix[20] = {
         SPINDLE_OFF,  SPINDLE_CW,    SPINDLE_CCW,    SPINDLE_NOP,   SPINDLE_NOP,
         SPINDLE_OFF,  SPINDLE_NOP,   SPINDLE_REV,    SPINDLE_PAUSE, SPINDLE_NOP,
         SPINDLE_OFF,  SPINDLE_REV,   SPINDLE_NOP,    SPINDLE_PAUSE, SPINDLE_NOP,

@@ -43,11 +43,15 @@ pwmControl_t pwm;
 gpioDigitalOutput *spindle_pwm_output = nullptr;
 gpioDigitalOutput *secondary_pwm_output = nullptr;
 
-#ifndef SPINDLE_OUTPUT_NUMBER
-#define SPINDLE_OUTPUT_NUMBER 6
+#ifndef SPINDLE_PWM_NUMBER
+#warning SPINDLE_PWM_NUMBER is defaulted to 6!
+#warning SPINDLE_PWM_NUMBER should be defined in settings or a board file!
+#define SPINDLE_PWM_NUMBER 6
 #endif
 
 #ifndef SECONDARY_PWM_OUTPUT_NUMBER
+#warning SECONDARY_PWM_OUTPUT_NUMBER is defaulted to 0 (off)!
+#warning SECONDARY_PWM_OUTPUT_NUMBER should be defined in settings or a board file!
 #define SECONDARY_PWM_OUTPUT_NUMBER 0
 #endif
 
@@ -62,8 +66,8 @@ gpioDigitalOutput *secondary_pwm_output = nullptr;
  *  - Don't do this: memset(&TIMER_PWM1, 0, sizeof(PWM_TIMER_t)); // zero out the timer registers
  */
 void pwm_init() {
-    if (SPINDLE_OUTPUT_NUMBER > 0) {
-        spindle_pwm_output = d_out[SPINDLE_OUTPUT_NUMBER-1];
+    if (SPINDLE_PWM_NUMBER > 0) {
+        spindle_pwm_output = d_out[SPINDLE_PWM_NUMBER-1];
         spindle_pwm_output->setFrequency(P1_PWM_FREQUENCY);
 
     }
