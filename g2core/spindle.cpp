@@ -169,7 +169,7 @@ void spindle_reset()
     - REVERSE   Reverse spindle direction (Q: need a cycle to spin down then back up again?)
  */
 
-static void _exec_spindle_control(float *value, bool *flag)
+static void _exec_spindle_control(float *value, bool *)
 {
     spControl control = (spControl)value[0];
     if (control > SPINDLE_ACTION_MAX) {
