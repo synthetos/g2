@@ -431,13 +431,6 @@ extern stPrepSingleton_t st_pre HOT_DATA;   // only used by config_app diagnosti
 /**** Stepper (base object) ****/
 
 struct Stepper {
-protected:
-    Timeout _motor_disable_timeout;         // this is the timeout object that will let us know when time is u
-    uint32_t _motor_disable_timeout_ms;     // the number of ms that the timeout is reset to
-    stPowerState _power_state;              // state machine for managing motor power
-    stPowerMode _power_mode;                // See stPowerMode for values
-    bool _was_enabled;                      // store if we enabled a motor to handle timout setup outside of load
-
     /* stepper default values */
 public:
     // sets default pwm freq for all motor vrefs (commented line below also sets HiZ)
@@ -450,16 +443,6 @@ public:
     virtual void init() // can be overridden
     {
         this->setDirection(STEP_INITIAL_DIRECTION);
-    };
-
-    virtual void setPowerMode(stPowerMode new_pm)
-    {
-        _power_mode = new_pm;
-        if (_power_mode == MOTOR_ALWAYS_POWERED) {
-            enable();
-        } else if (_power_mode == MOTOR_DISABLED) {
-            disable();
-        }
     };
 
     virtual ioPolarity getEnablePolarity() const
@@ -482,131 +465,48 @@ public:
         // do nothing
     };
 
+    virtual void setPowerMode(stPowerMode new_pm)
+    {
+        // do nothing
+    };
+
     virtual stPowerMode getPowerMode()
     {
-         return _power_mode;
+         return MOTOR_DISABLED;
     };
 
-    virtual stPowerState getPowerState()
+    virtual float getCurrentPowerLevel()
     {
-      return _power_state;
-    };
-
-    virtual float getCurrentPowerLevel(uint8_t motor)
-    {
-        if (_power_state == MOTOR_OFF) {
+        // Override to return a proper value
             return (0.0);
-        }
-        if (_power_state == MOTOR_IDLE) {
-            return (st_cfg.mot[motor].power_level_idle);
-        }
-        return (st_cfg.mot[motor].power_level);
     };
-
-//    bool isDisabled()
-//    {
-//        return (_power_mode == MOTOR_DISABLED);
-//    };
 
     // turn on motor in all cases unless it's disabled
     // this version is called from the loader, and explicitly does NOT have floating point computations
     // HOT - called from the DDA interrupt
     void enable() //HOT_FUNC
     {
-        if (_power_mode == MOTOR_DISABLED) {
-            return;
-        }
         this->_enableImpl();
-        _power_state = MOTOR_RUNNING;
-
-        _was_enabled = true; // flag to handle it in the periodic call
     };
 
-    // turn on motor in all cases unless it's disabled
-    // this version has the timeout computed here, as provided
-    void enable(float timeout) //HOT_FUNC
+    virtual void enableWithTimeout(float timeout_ms) // override if wanted
     {
-        if (_power_mode == MOTOR_DISABLED) {
-            return;
-        }
         this->_enableImpl();
-        _power_state = MOTOR_RUNNING;
-        _was_enabled = false; // we're doing it here, so don't do it elsewhere
-
-        if ((uint8_t)timeout == 0) {
-            timeout = st_cfg.motor_power_timeout;
-        }
-        _motor_disable_timeout_ms = timeout * 1000.0;
-
     };
 
     // turn off motor in all cases unless it's permanently enabled
     // HOT - called from the DDA interrupt
     void disable() //HOT_FUNC
     {
-        if (this->getPowerMode() == MOTOR_ALWAYS_POWERED) {
-            return;
-        }
         this->_disableImpl();
-        _motor_disable_timeout.clear();
-        _power_state = MOTOR_OFF;
-    };
-
-    // idle motor partially energized for torque maintenance
-    void idle(uint8_t motor)
-    {
-        setPowerLevel(st_cfg.mot[motor].power_level_idle);
-        _power_state = MOTOR_IDLE;
     };
 
     // turn off motor is only powered when moving
     // HOT - called from the DDA interrupt
-    void motionStopped() //HOT_FUNC
-    {
-        if (_power_mode == MOTOR_POWERED_IN_CYCLE) {
-            this->enable();
-            _power_state = MOTOR_POWER_TIMEOUT_START;
-        } else if (_power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE) {
-            _power_state = MOTOR_POWER_TIMEOUT_START;
-        } else if (_power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
-            if (_power_state == MOTOR_RUNNING) {
-                _power_state = MOTOR_POWER_TIMEOUT_START;
-            }
-        }
-    };
+    void motionStopped() {};
 
-    virtual void periodicCheck(bool have_actually_stopped, uint8_t motor) // can be overridden
-    {
-        if (_was_enabled) {
-            _motor_disable_timeout_ms = st_cfg.motor_power_timeout * 1000.0;
-        }
-
-        if (have_actually_stopped && _power_state == MOTOR_RUNNING) {
-            _power_state = MOTOR_POWER_TIMEOUT_START;    // ...start motor power timeouts
-        }
-
-        // start timeouts initiated during a load so the loader does not need to burn these cycles
-        if (_power_state == MOTOR_POWER_TIMEOUT_START && _power_mode != MOTOR_ALWAYS_POWERED) {
-            _power_state = MOTOR_POWER_TIMEOUT_COUNTDOWN;
-            if (_power_mode == MOTOR_POWERED_IN_CYCLE || _power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE) {
-                _motor_disable_timeout.set(_motor_disable_timeout_ms);
-            } else if (_power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
-                _motor_disable_timeout.set(st_cfg.motor_power_timeout * 1000.0);
-          }
-        }
-
-        // count down and time out the motor
-        if (_power_state == MOTOR_POWER_TIMEOUT_COUNTDOWN) {
-            if (_motor_disable_timeout.isPast()) {
-                if (_power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE) {
-                    idle(motor);
-                } else {
-                    disable();
-                }
-                sr_request_status_report(SR_REQUEST_TIMED);
-            }
-        }
-    };
+    virtual void periodicCheck(bool have_actually_stopped) {}; // can be overridden
+    virtual void setActivityTimeout(float idle_milliseconds) {}; // can be overridden
 
     /* Functions that must be implemented in subclasses */
 
@@ -615,9 +515,9 @@ public:
     virtual void _disableImpl() { /* must override */ };
     virtual void stepStart() HOT_FUNC { /* must override */ }; // HOT - called from the DDA interrupt
     virtual void stepEnd() HOT_FUNC { /* must override */ };   // HOT - called from the DDA interrupt
-    virtual void setDirection(uint8_t new_direction) HOT_FUNC { /* must override */ }; // HOT - called from the DDA interrupt
+    virtual void setDirection(uint8_t direction) HOT_FUNC { /* must override */ }; // HOT - called from the DDA interrupt
     virtual void setMicrosteps(const uint16_t microsteps) { /* must override */ };
-    virtual void setPowerLevel(float new_pl) { /* must override */ };
+    virtual void setPowerLevels(float active_pl, float idle_pl) { /* must override */ };
 };
 
 /**** ExternalEncoder (base object) ****/

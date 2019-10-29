@@ -57,8 +57,7 @@ template <pin_number step_num,  // Setup a stepper template to hold our pins
           pin_number ms2_num,
           pin_number vref_num>
 struct StepDirStepper final : Stepper  {
-    /* stepper pin assignments */
-
+   protected:
     OutputPin<step_num>    _step;
     uint8_t                _step_downcount;
     OutputPin<dir_num>     _dir;
@@ -71,6 +70,34 @@ struct StepDirStepper final : Stepper  {
     ioPolarity _step_polarity;                   // IO_ACTIVE_LOW or IO_ACTIVE_HIGH
     ioPolarity _enable_polarity;                 // IO_ACTIVE_LOW or IO_ACTIVE_HIGH
 
+    Timeout _motor_activity_timeout;         // this is the timeout object that will let us know when time is up
+    uint32_t _motor_activity_timeout_ms;     // the number of ms that the timeout is reset to
+    enum stPowerState {                          // used w/start and stop flags to sequence motor power
+        MOTOR_OFF = 0,                      // motor is stopped and deenergized
+        MOTOR_IDLE,                         // motor is stopped and may be partially energized for torque maintenance
+        MOTOR_RUNNING,                      // motor is running (and fully energized)
+        MOTOR_POWER_TIMEOUT_START,          // transitional state to start power-down timeout
+        MOTOR_POWER_TIMEOUT_COUNTDOWN       // count down the time to de-energizing motor
+    } _power_state;              // state machine for managing motor power
+    stPowerMode _power_mode;                // See stPowerMode for values
+
+    float _active_power_level; // the power level during motion
+    float _idle_power_level; // the power level when idle
+    float _power_level; // the power level now
+
+    void _updatePowerLevel() {
+        if (MOTOR_IDLE == _power_state) {
+            _power_level = _idle_power_level;
+        } else {
+            _power_level = _active_power_level;
+        }
+
+        if (!_vref.isNull()) {
+            _vref = _power_level * POWER_LEVEL_SCALE_FACTOR;
+        }
+    }
+
+   public:
     // sets default pwm freq for all motor vrefs (commented line below also sets HiZ)
     StepDirStepper(ioPolarity step_polarity, ioPolarity enable_polarity, const uint32_t frequency = 250000) :
         Stepper{},
@@ -130,7 +157,37 @@ struct StepDirStepper final : Stepper  {
         }
     };
 
+    void enableWithTimeout(float timeout_ms) override {
+        if (_power_mode == MOTOR_DISABLED || _power_state == MOTOR_RUNNING) {
+            return;
+        }
+
+        if (timeout_ms < 0.1) {
+            timeout_ms = _motor_activity_timeout_ms;
+        }
+
+        _power_state = MOTOR_POWER_TIMEOUT_COUNTDOWN;
+        if (_power_mode == MOTOR_POWERED_IN_CYCLE || _power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE) {
+            _motor_activity_timeout.set(timeout_ms);
+        }
+
+        if (!_enable.isNull()) {
+            if (_enable_polarity == IO_ACTIVE_HIGH) {
+                _enable.set();
+            } else {
+                _enable.clear();
+            }
+        }
+    };
+
     void _enableImpl() override {
+        if (_power_mode == MOTOR_DISABLED || _power_state == MOTOR_RUNNING) {
+            return;
+        }
+
+        _power_state = MOTOR_RUNNING;
+        _updatePowerLevel();
+
         if (!_enable.isNull()) {
             if (_enable_polarity == IO_ACTIVE_HIGH) {
                 _enable.set();
@@ -141,6 +198,9 @@ struct StepDirStepper final : Stepper  {
     };
 
     void _disableImpl() override {
+        if (this->getPowerMode() == MOTOR_ALWAYS_POWERED) {
+            return;
+        }
         if (!_enable.isNull()) {
             if (_enable_polarity == IO_ACTIVE_HIGH) {
                 _enable.clear();
@@ -148,6 +208,8 @@ struct StepDirStepper final : Stepper  {
                 _enable.set();
             }
         }
+        _motor_activity_timeout.clear();
+        _power_state = MOTOR_OFF;
     };
 
     void stepStart() override {
@@ -174,10 +236,32 @@ struct StepDirStepper final : Stepper  {
         }
     };
 
-    void setPowerLevel(float new_pl) override {
-        if (!_vref.isNull()) {
-            _vref = new_pl * POWER_LEVEL_SCALE_FACTOR;
+    virtual void setPowerMode(stPowerMode new_pm)
+    {
+        _power_mode = new_pm;
+        if (_power_mode == MOTOR_ALWAYS_POWERED) {
+            enable();
+        } else if (_power_mode == MOTOR_DISABLED) {
+            disable();
         }
+    };
+
+    stPowerMode getPowerMode() override
+    {
+         return _power_mode;
+    };
+
+    float getCurrentPowerLevel() override
+    {
+        return _power_level;
+    };
+
+    void setPowerLevels(float new_active_pl, float new_idle_pl) override
+    {
+        _active_power_level = new_active_pl;
+        _idle_power_level = new_idle_pl;
+
+        _updatePowerLevel();
     };
 
     ioPolarity getStepPolarity() const override
@@ -201,6 +285,60 @@ struct StepDirStepper final : Stepper  {
         _enable_polarity = new_mp;
         // this is a misnomer, but handles the logic we need for asserting the newly adjusted enable line correctly
         motionStopped();
+    };
+
+    // turn off motor is only powered when moving
+    // HOT - called from the DDA interrupt
+    void motionStopped() //HOT_FUNC
+    {
+        if (_power_mode == MOTOR_POWERED_IN_CYCLE) {
+            this->enable();
+        } else if (_power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE) {
+            // _power_state = MOTOR_POWER_TIMEOUT_START;
+            // ^^^ will get set during periodicCheck when all motors have stopped
+        } else if (_power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
+            if (_power_state == MOTOR_RUNNING) {
+                // flag for periodicCheck - not actually using a timeout
+                _power_state = MOTOR_POWER_TIMEOUT_START;
+            }
+        }
+    };
+
+    virtual void setActivityTimeout(float idle_milliseconds) override
+    {
+        _motor_activity_timeout_ms = idle_milliseconds;
+    };
+
+
+    void periodicCheck(bool have_actually_stopped) override
+    {
+        if (_power_state == MOTOR_POWER_TIMEOUT_START && _power_mode != MOTOR_ALWAYS_POWERED) {
+            if (_power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
+                this->disable();
+                return;
+            }
+
+            // start timeouts initiated during a load so the loader does not need to burn these cycles
+            _power_state = MOTOR_POWER_TIMEOUT_COUNTDOWN;
+            if (_power_mode == MOTOR_POWERED_IN_CYCLE || _power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE) {
+                _motor_activity_timeout.set(_motor_activity_timeout_ms);
+            }
+        }
+
+        // count down and time out the motor
+        if (_power_state == MOTOR_POWER_TIMEOUT_COUNTDOWN) {
+            if (_motor_activity_timeout.isPast()) {
+                if (_power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE) {
+                    _power_state = MOTOR_IDLE;
+                    this->_updatePowerLevel();
+                } else {
+                    this->disable();
+                }
+
+                // NOTE: Only global call allowed!
+                sr_request_status_report(SR_REQUEST_TIMED);
+            }
+        }
     };
 
 };
