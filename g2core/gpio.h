@@ -44,7 +44,6 @@ using Motate::kPullUp;
 using Motate::kDebounce;
 using Motate::kStartHigh;
 using Motate::kStartLow;
-using Motate::kPWMPinInverted;
 
 /*
  * GPIO defines
@@ -720,7 +719,7 @@ struct gpioDigitalOutputPin final : gpioDigitalOutput {
         enabled{ _enabled },
         polarity{ _polarity },
         proxy_pin_number{ 0 },
-        pin{((polarity == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow), std::forward<T>(V)...}
+        pin{((polarity == IO_ACTIVE_LOW) ? kStartHigh : kStartLow), std::forward<T>(V)...}
     {
         if (pin.isNull()) {
             enabled = IO_UNAVAILABLE;
@@ -752,7 +751,7 @@ struct gpioDigitalOutputPin final : gpioDigitalOutput {
     bool setPolarity(const ioPolarity new_polarity) override
     {
         polarity = new_polarity;
-        pin.setOptions((polarity == IO_ACTIVE_LOW) ? kStartHigh|kPWMPinInverted : kStartLow);
+        pin.setOptions((polarity == IO_ACTIVE_LOW) ? kStartHigh : kStartLow);
         return true;
     };
 
