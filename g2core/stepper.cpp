@@ -1195,6 +1195,7 @@ stat_t st_set_mt(nvObj_t *nv) {
     for (uint8_t motor = MOTOR_1; motor < MOTORS; motor++) {
         Motors[motor]->setActivityTimeout(st_cfg.motor_power_timeout*1000.0);
     }
+    return (STAT_OK);
 }
 
 // Make sure this function is not part of initialization --> f00
