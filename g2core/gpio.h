@@ -598,11 +598,6 @@ struct gpioDigitalOutput {
             nv->valuetype = TYPE_FLOAT;
             nv->precision = 2;
             nv->value_flt = getValue(); // read it as a float
-
-            bool invert = (getPolarity() == IO_ACTIVE_LOW);
-            if (invert) {
-                nv->value_flt = 1.0 - nv->value_flt;
-            }
         }
         return (STAT_OK);
     };
@@ -613,11 +608,6 @@ struct gpioDigitalOutput {
             nv->valuetype = TYPE_NULL;   // reports back as NULL
         } else {
             float value = nv->value_flt; // read it as a float
-
-            bool invert = (getPolarity() == IO_ACTIVE_LOW);
-            if (invert) {
-                value = 1.0 - value;
-            }
 
             if (!setValue(value)) {
                 return STAT_INPUT_VALUE_RANGE_ERROR;
@@ -768,14 +758,26 @@ struct gpioDigitalOutputPin final : gpioDigitalOutput {
 
     float getValue() override
     {
-        return (const float)pin;
+        float value = (const float)pin;
+        bool invert = (getPolarity() == IO_ACTIVE_LOW);
+        if (invert) {
+            return 1.0 - value;
+        }
+
+        return value;
     };
     bool setValue(const float v) override
     {
         if (pin.isNull()) {
             return false;
         }
-        pin = v;
+        bool invert = (getPolarity() == IO_ACTIVE_LOW);
+        if (invert) {
+            pin = 1 - v;
+        } else {
+            pin = v;
+        }
+
         return true;
     };
 
