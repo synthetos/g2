@@ -294,8 +294,7 @@ struct StepDirStepper final : Stepper  {
         if (_power_mode == MOTOR_POWERED_IN_CYCLE) {
             this->enable();
         } else if (_power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE) {
-            // _power_state = MOTOR_POWER_TIMEOUT_START;
-            // ^^^ will get set during periodicCheck when all motors have stopped
+            _power_state = MOTOR_POWER_TIMEOUT_START;
         } else if (_power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
             if (_power_state == MOTOR_RUNNING) {
                 // flag for periodicCheck - not actually using a timeout
