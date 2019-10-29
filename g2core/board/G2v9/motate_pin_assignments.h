@@ -140,11 +140,12 @@ pin_number kInput10_PinNumber = 109;
 pin_number kInput11_PinNumber = 110;
 pin_number kInput12_PinNumber = 111;
 
-pin_number kSpindle_EnablePinNumber = 112;
-pin_number kSpindle_DirPinNumber    = 113;
-pin_number kSpindle_PwmPinNumber    = 114;
-pin_number kSpindle_Pwm2PinNumber   = 115;
-pin_number kCoolant_EnablePinNumber = 116;
+// REMOVED: See board_gpio.h for new defines
+// pin_number kSpindle_EnablePinNumber = 112;
+// pin_number kSpindle_DirPinNumber    = 113;
+// pin_number kSpindle_PwmPinNumber    = 114;
+// pin_number kSpindle_Pwm2PinNumber   = 115;
+// pin_number kCoolant_EnablePinNumber = 116;
 
 // START DEBUG PINS - Convenient pins to hijack for hardware debugging
 // To reuse a pin for debug change the original pin number to -1
@@ -180,9 +181,9 @@ pin_number kOutput3_PinNumber = 132;  // DO_3: Fan1A_PWM
 pin_number kOutput4_PinNumber = 133;  // DO_4: Fan1B_PWM
 pin_number kOutput5_PinNumber = 134;  // DO_5: Fan2A_PWM
 
-pin_number kOutput6_PinNumber  = -1;   // 135;     // See Spindle Enable
-pin_number kOutput7_PinNumber  = -1;   // 136;     // See Spindle Direction
-pin_number kOutput8_PinNumber  = -1;   // 137;     // See Coolant Enable
+pin_number kOutput6_PinNumber  = 135; // See Spindle Enable
+pin_number kOutput7_PinNumber  = 136; // See Spindle Direction
+pin_number kOutput8_PinNumber  = 137; // See Coolant Enable
 pin_number kOutput9_PinNumber  = 138;  // <unassigned, available out>
 pin_number kOutput10_PinNumber = 139;  // DO_10: Fan2B_PWM
 

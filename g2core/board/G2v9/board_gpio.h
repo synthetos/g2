@@ -44,6 +44,15 @@
 
 #define INPUT_LOCKOUT_MS    10          // milliseconds to go dead after input firing
 
+// Setup spindle and coolant pin assignments
+#define SPINDLE_ENABLE_OUTPUT_NUMBER 1
+#define SPINDLE_DIRECTION_OUTPUT_NUMBER 2
+#define SPINDLE_PWM_NUMBER 3
+#define MIST_ENABLE_OUTPUT_NUMBER 4
+
+#define FLOOD_ENABLE_OUTPUT_NUMBER 0
+#define SECONDARY_PWM_OUTPUT_NUMBER 0
+
 /*
  * The GPIO objects themselves - this must match up with board_gpio.cpp!
  */
