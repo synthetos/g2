@@ -109,7 +109,7 @@ gpioDigitalInputHandler _homing_handler {
         en_take_encoder_snapshot();
         cm_request_feedhold(FEEDHOLD_TYPE_SKIP, FEEDHOLD_EXIT_RESET_POSITION);
 
-        return false; // allow others to see this notice
+        return true; // DO NOT allow others to see this notice (particularly limits)
     },
     100,    // priority
     nullptr // next - nullptr to start with
@@ -429,11 +429,11 @@ static stat_t _homing_error_exit(int8_t axis, stat_t status) {
 
 static stat_t _homing_finalize_exit(int8_t axis)  // third part of return to home
 {
+    cm_set_feed_rate(hm.saved_feed_rate);
     cm_set_coord_system(hm.saved_coord_system);  // restore to work coordinate system
     cm_set_units_mode(hm.saved_units_mode);
     cm_set_distance_mode(hm.saved_distance_mode);
     cm_set_feed_rate_mode(hm.saved_feed_rate_mode);
-    cm_set_feed_rate(hm.saved_feed_rate);
     cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);
     cm_canned_cycle_end();
     return (STAT_OK);
