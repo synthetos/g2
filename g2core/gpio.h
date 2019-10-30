@@ -129,6 +129,11 @@ extern gpioDigitalInputReader* const in_r[16];
     din_handlers[INPUT_ACTION_LIMIT].registerHandler(limitHandler);
  */
 
+enum {
+    GPIO_HANDLED = true,
+    GPIO_NOT_HANDLED = false
+};
+
 struct gpioDigitalInputHandler {
     // const means it must be provided at compile time
     const std::function<bool(const bool, const inputEdgeFlag, const uint8_t)> callback;  // the function to call
@@ -191,12 +196,12 @@ struct gpioDigitalInputHandlerList {
     bool call(const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
         gpioDigitalInputHandler * current_handler = _first_handler;
         while (current_handler != nullptr) {
-            if (current_handler->callback(state, edge, triggering_pin_number)) {
-                return true;
+            if (GPIO_HANDLED == current_handler->callback(state, edge, triggering_pin_number)) {
+                return GPIO_HANDLED;
             }
             current_handler = current_handler->next;
         }
-        return false;
+        return GPIO_NOT_HANDLED;
     }
 };
 
@@ -514,7 +519,7 @@ struct gpioDigitalInputPin final : gpioDigitalInput {
         }
 
         // start with INPUT_ACTION_INTERNAL for transient event processing like homing and probing
-        if (!din_handlers[INPUT_ACTION_INTERNAL].call(pin_value_corrected, edge, ext_pin_number)) {
+        if (GPIO_NOT_HANDLED == din_handlers[INPUT_ACTION_INTERNAL].call(pin_value_corrected, edge, ext_pin_number)) {
             din_handlers[action].call(pin_value_corrected, edge, ext_pin_number);
         }
 

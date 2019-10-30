@@ -130,13 +130,13 @@ static void _motion_end_callback(float* vect, bool* flag)
  */
 gpioDigitalInputHandler _probing_handler {
     [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
-        if (cm->cycle_type != CYCLE_PROBE) { return false; }
-        if (triggering_pin_number != pb.probe_input) { return false; }
+        if (cm->cycle_type != CYCLE_PROBE) { return GPIO_NOT_HANDLED; }
+        if (triggering_pin_number != pb.probe_input) { return GPIO_NOT_HANDLED; }
 
         en_take_encoder_snapshot();
         cm_request_feedhold(FEEDHOLD_TYPE_SKIP, FEEDHOLD_EXIT_STOP);
 
-        return false; // allow others to see this notice
+        return GPIO_HANDLED; // DO NOT allow others to see this notice (particularly limits)
     },
     100,    // priority
     nullptr // next - nullptr to start with

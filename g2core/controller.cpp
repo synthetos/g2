@@ -90,11 +90,11 @@ static Motate::OutputPin<Motate::kOutputSAFE_PinNumber> safe_pin;
 
 gpioDigitalInputHandler _shutdown_input_handler {
     [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
-        if (edge != INPUT_EDGE_LEADING) { return false; }
+        if (edge != INPUT_EDGE_LEADING) { return GPIO_NOT_HANDLED; }
 
         cm->shutdown_requested = triggering_pin_number;
 
-        return false; // allow others to see this notice
+        return GPIO_HANDLED;
     },
     5,    // priority
     nullptr // next - nullptr to start with
@@ -102,17 +102,17 @@ gpioDigitalInputHandler _shutdown_input_handler {
 
 gpioDigitalInputHandler _limit_input_handler {
     [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
-        if (edge != INPUT_EDGE_LEADING) { return false; }
+        if (edge != INPUT_EDGE_LEADING) { return GPIO_NOT_HANDLED; }
 
         cm->limit_requested = triggering_pin_number;
 
-        return false; // allow others to see this notice
+        return GPIO_NOT_HANDLED;  // allow others to see this notice
     },
     5,    // priority
     nullptr // next - nullptr to start with
 };
 
-gpioDigitalInputHandler _interlock_input_handler {
+gpioDigitalInputHandler _interlock_input_handler{
     [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
         if (edge == INPUT_EDGE_LEADING) {
             cm->safety_interlock_disengaged = triggering_pin_number;
@@ -120,10 +120,10 @@ gpioDigitalInputHandler _interlock_input_handler {
             cm->safety_interlock_reengaged = triggering_pin_number;
         }
 
-        return false; // allow others to see this notice
+        return GPIO_HANDLED;
     },
-    5,    // priority
-    nullptr // next - nullptr to start with
+    5,       // priority
+    nullptr  // next - nullptr to start with
 };
 
 /***********************************************************************************

@@ -102,14 +102,14 @@ static stat_t _set_homing_func(stat_t (*func)(int8_t axis)) {
  */
 gpioDigitalInputHandler _homing_handler {
     [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
-        if (cm->cycle_type != CYCLE_HOMING) { return false; }
-        if (triggering_pin_number != hm.homing_input) { return false; }
-        if (edge != INPUT_EDGE_LEADING) { return false; }
+        if (cm->cycle_type != CYCLE_HOMING) { return GPIO_NOT_HANDLED; }
+        if (triggering_pin_number != hm.homing_input) { return GPIO_NOT_HANDLED; }
+        if (edge != INPUT_EDGE_LEADING) { return GPIO_NOT_HANDLED; }
 
         en_take_encoder_snapshot();
         cm_request_feedhold(FEEDHOLD_TYPE_SKIP, FEEDHOLD_EXIT_RESET_POSITION);
 
-        return true; // DO NOT allow others to see this notice (particularly limits)
+        return GPIO_HANDLED; // DO NOT allow others to see this notice (particularly limits)
     },
     100,    // priority
     nullptr // next - nullptr to start with
