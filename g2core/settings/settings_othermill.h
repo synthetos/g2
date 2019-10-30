@@ -35,7 +35,7 @@
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
-#define JUNCTION_INTEGRATION_TIME   0.75    // cornering - between 0.10 and 2.00 (higher is faster)
+#define JUNCTION_INTEGRATION_TIME   0.1     // cornering - between 0.10 and 2.00 (higher is faster)
 #define CHORDAL_TOLERANCE           0.01    // chordal accuracy for arc drawing (in mm)
 
 #define SOFT_LIMIT_ENABLE           0       // 0=off, 1=on

@@ -32,7 +32,7 @@
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
-#define JUNCTION_INTEGRATION_TIME   0.75    // cornering - between 0.10 and 2.00 (higher is faster)
+#define JUNCTION_INTEGRATION_TIME   0.15     // cornering - between 0.10 and 2.00 (higher is faster)
 #define CHORDAL_TOLERANCE           0.01    // chordal accuracy for arc drawing (in mm)
 
 #define SOFT_LIMIT_ENABLE           0       // 0=off, 1=on
@@ -42,6 +42,7 @@
 #define SPINDLE_ENABLE_POLARITY     0       // 0=active low, 1=active high
 #define SPINDLE_DIR_POLARITY        0       // 0=clockwise is low, 1=clockwise is high
 #define SPINDLE_PAUSE_ON_HOLD       true
+#define SPINDLE_SPINUP_DELAY        2.0
 #define SPINDLE_DWELL_TIME          1.5     // after unpausing and turning the spindle on, dwell for 1.5s
 
 #define ESC_BOOT_TIME               5000    // how long the ESC takes to boot, in milliseconds
@@ -78,13 +79,13 @@
 #define STATUS_REPORT_VERBOSITY     SR_FILTERED         // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 #define STATUS_REPORT_MIN_MS        100                 // milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS   250                 // milliseconds - set $SV=0 to disable
-#define STATUS_REPORT_DEFAULTS      "mpox", "mpoy", "mpoz", \
-                                    "ofsx", "ofsy", "ofsz", \
-                                    "g55x", "g55y", "g55z", \
+#define STATUS_REPORT_DEFAULTS      "posx", "posy", "posz", \
                                     "unit", "stat", "coor", "momo", "dist", \
-                                    "home", "mots", "plan", "line", "path", \
-                                    "frmo", "hold", "macs", "cycs", \
+                                    "home", "vel", "plan", "line", "path", \
+                                    "frmo", "hold", "macs", "cycs", "spc", \
                                     "prbe", "in1", "in3", "in5", "in6"
+                                    // "ofsx", "ofsy", "ofsz",
+                                    // "g55x", "g55y", "g55z",
 
 // Gcode startup defaults
 #define GCODE_DEFAULT_UNITS MILLIMETERS     // MILLIMETERS or INCHES
@@ -97,7 +98,7 @@
 
 // NOTE: Motor numbers are reversed from TinyGv8 in order to maintain compatibility with wiring harnesses
 
-#define MOTOR_POWER_LEVEL_XY        0.375               // default motor power level 0.00 - 1.00
+#define MOTOR_POWER_LEVEL_XY        0.6                // default motor power level 0.00 - 1.00
 #define MOTOR_POWER_LEVEL_XY_IDLE   0.15
 #define MOTOR_POWER_LEVEL_Z         0.375
 #define MOTOR_POWER_LEVEL_Z_IDLE    0.15
@@ -162,9 +163,9 @@
 
 // *** axis settings **********************************************************************************
 
-#define JERK_MAX                    800                 // 500 million mm/(min^3)
-#define JERK_HIGH_SPEED             1000                // 1000 million mm/(min^3) // Jerk during homing needs to stop *fast*
-#define VELOCITY_MAX                5500
+#define JERK_MAX                    400                 // 500 million mm/(min^3)
+#define JERK_HIGH_SPEED             400                // 1000 million mm/(min^3) // Jerk during homing needs to stop *fast*
+#define VELOCITY_MAX                4000
 #define LATCH_VELOCITY              25                  // reeeeally slow for accuracy
 
 #define X_AXIS_MODE                 AXIS_STANDARD       // xam  see canonical_machine.h cmAxisMode for valid values
@@ -178,11 +179,11 @@
 #define X_HOMING_DIRECTION          1                   // xhd  0=search moves negative, 1= search moves positive
 #define X_SEARCH_VELOCITY           1000                // xsv
 #define X_LATCH_VELOCITY            LATCH_VELOCITY      // xlv  mm/min
-#define X_LATCH_BACKOFF             2                   // xlb  mm
-#define X_ZERO_BACKOFF              0.4                 // xzb  mm
+#define X_LATCH_BACKOFF             4                   // xlb  mm
+#define X_ZERO_BACKOFF              1                   // xzb  mm
 
 #define Y_AXIS_MODE                 AXIS_STANDARD
-#define Y_VELOCITY_MAX              X_VELOCITY_MAX
+#define Y_VELOCITY_MAX              VELOCITY_MAX
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                200
@@ -192,22 +193,22 @@
 #define Y_HOMING_DIRECTION          1
 #define Y_SEARCH_VELOCITY           1000
 #define Y_LATCH_VELOCITY            LATCH_VELOCITY
-#define Y_LATCH_BACKOFF             2
-#define Y_ZERO_BACKOFF              0.4
+#define Y_LATCH_BACKOFF             4
+#define Y_ZERO_BACKOFF              1
 
 #define Z_AXIS_MODE                 AXIS_STANDARD
 #define Z_VELOCITY_MAX              7000
 #define Z_FEEDRATE_MAX              Z_VELOCITY_MAX
 #define Z_TRAVEL_MIN                0
 #define Z_TRAVEL_MAX                87
-#define Z_JERK_MAX                  2000
-#define Z_JERK_HIGH_SPEED           JERK_HIGH_SPEED
+#define Z_JERK_MAX                  1000
+#define Z_JERK_HIGH_SPEED           Z_JERK_MAX
 #define Z_HOMING_INPUT              5
 #define Z_HOMING_DIRECTION          1
 #define Z_SEARCH_VELOCITY           500
 #define Z_LATCH_VELOCITY            LATCH_VELOCITY
-#define Z_LATCH_BACKOFF             2
-#define Z_ZERO_BACKOFF              0.4
+#define Z_LATCH_BACKOFF             4
+#define Z_ZERO_BACKOFF              1
 
 //*** Input / output settings ***
 /*
