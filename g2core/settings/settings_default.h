@@ -101,8 +101,9 @@
 #ifdef SPINDLE_DWELL_TIME
 #define SPINDLE_SPINUP_DELAY SPINDLE_DWELL_TIME
 #warning Please update your settings! SPINDLE_DWELL_TIME is now SPINDLE_SPINUP_DELAY
-#endif
+#else
 #define SPINDLE_SPINUP_DELAY        0     // {spde:
+#endif
 #endif
 
 #ifndef SPINDLE_DWELL_MAX
