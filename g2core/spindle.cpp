@@ -279,6 +279,11 @@ stat_t spindle_control_sync(spControl control)  // uses spControl arg: OFF, CW, 
         return (STAT_OK);
     }
 
+    // ignore pause and resume if the spindle isn't even on
+    if ((spindle.state == SPINDLE_OFF) && (control == SPINDLE_PAUSE || control == SPINDLE_RESUME)) {
+        return (STAT_OK);
+    }
+
     // queue the spindle control
     float value[] = { (float)control };
     mp_queue_command(_exec_spindle_control, value, nullptr);
