@@ -59,16 +59,16 @@ static stat_t _run_alarm(void);
 static stat_t _run_shutdown(void);
 static stat_t _run_interlock(void);
 static stat_t _run_reset_position(void);
- 
+
 /****************************************************************************************
  * OPERATIONS AND ACTIONS
  *
  *  Operations provide a way to assemble a multi-step function from underlying actions,
  *  then execute the actions in sequence until the operation either completes or returns
- *  an error. It handles actions that complete immediately (synchronous) as well as long 
+ *  an error. It handles actions that complete immediately (synchronous) as well as long
  *  running asynchronous operations such as a series of multiple moves.
  *
- *  It works by assembling an operation using a series of add_action() calls, then running 
+ *  It works by assembling an operation using a series of add_action() calls, then running
  *  the operation by one or more run_operation() calls. The cm_operation_sequencing_callback()
  *  both runs long-running operations, as well as queues operation requests that must
  *  run sequentially of have other conditions.
@@ -82,7 +82,7 @@ static stat_t _run_reset_position(void);
  *    STAT_NOOP     - no operation is set up, but it's OK to call the operation runner
  *    STAT_OK       - operation has completed successfully
  *    STAT_EAGAIN   - operation needs to be re-entered to complete (via operation callback)
- *    STAT_XXXXX    - any other status is an error that quits the operation 
+ *    STAT_XXXXX    - any other status is an error that quits the operation
  *
  *  Current constraints to keep this simple (at least for now):
  *    - Operations run to completion. They cannot be canceled, or preempted by other operations
@@ -135,7 +135,7 @@ typedef struct cmOperation {                // operation runner object
     stat_t run_operation(void) {
         if (run->func == NULL) { return (STAT_NOOP); }  // not an error. This is normal.
         in_operation = true;                // disable add_action during operations
- 
+
         stat_t status;
         while ((status = run->func()) == STAT_OK) {
             run = run->nx;
@@ -148,7 +148,7 @@ typedef struct cmOperation {                // operation runner object
         reset();                            // reset operation if action threw an error
         return (status);                    // return error code
     };
-      
+
 } cmOperation_t;
 
 cmOperation_t op;   // operations runner object
@@ -166,14 +166,14 @@ void cm_operation_init()
  **** Feedhold and Related Functions ****************************************************
  ****************************************************************************************/
 /*
- *  Feedholds, queue flushes and the various feedhold exits are all related. 
- *  These are performed in this file and in plan_exec.cpp. Feedholds are implemented 
- *  as a state machine (cmFeedholdState) that runs in these files using Operations. 
+ *  Feedholds, queue flushes and the various feedhold exits are all related.
+ *  These are performed in this file and in plan_exec.cpp. Feedholds are implemented
+ *  as a state machine (cmFeedholdState) that runs in these files using Operations.
  *
- *  BACKGROUND: There are 2 planners: p1 (primary planner) and p2 (secondary planner). 
+ *  BACKGROUND: There are 2 planners: p1 (primary planner) and p2 (secondary planner).
  *
- *  A feedhold (!) received while in p1 stops motion in p1 and optionally transitions to p2, 
- *  where feedhold entry actions such as Z lift, parking moves, spindle and coolant pause 
+ *  A feedhold (!) received while in p1 stops motion in p1 and optionally transitions to p2,
+ *  where feedhold entry actions such as Z lift, parking moves, spindle and coolant pause
  *  are run. While in p2 (almost) all machine operations are available. There are different
  *  Types of feedholds; Feedhold with action and feedholds with no action transition to p2,
  *  but others do not (e.g. feedhold with sync).
@@ -201,10 +201,10 @@ void cm_operation_init()
  *                    FEEDHOLD_HOLD or FEEDHOLD_OFF.
  *
  *  For internal purposes, any state other than FEEDHOLD_OFF is considered to be in a hold.
- * 
+ *
  *  Feedhold processing performs the following (in rough sequence order):
  *
- *  (0) - Feedhold is request by calling cm_feedhold_request() 
+ *  (0) - Feedhold is request by calling cm_feedhold_request()
  *
  * Control transfers to plan_exec.cpp feedhold functions:
  *
@@ -245,7 +245,7 @@ void cm_operation_init()
  *  (no-hold)  ~    No action. Cannot exit a feedhold that does not exist
  *  (no-hold)  %    No action. Queue flush is not honored except during a feedhold
  *  (in-cycle) !    Start a hold to motion in the p1 planner
- *  (in-hold)  ~    Wait for feedhold actions to complete, exit feedhold, resume motion 
+ *  (in-hold)  ~    Wait for feedhold actions to complete, exit feedhold, resume motion
  *  (in-hold)  %    Wait for feedhold actions to complete, exit feedhold, do not resume motion
  *  (in-p2)    !    If moving in p2 during a p1 hold ! will perform a SYNC type hold in p2
  *  (in-cycle) !~   Start a feedhold, do enter and exit actions, exit feedhold, resume motion
@@ -254,8 +254,8 @@ void cm_operation_init()
  *  (in-cycle) !~%  Same as above (this one's an anomaly, but the intent would be to Q flush)
  *
  *  The requests are arranged in priority order, highest priority first.
- *  Note that feedholds from p1 are initiated immediately from cm_request_feedhld(), 
- *  and are not triggered here. Only queued p2 feedholds (feedhold in feedhold) are 
+ *  Note that feedholds from p1 are initiated immediately from cm_request_feedhld(),
+ *  and are not triggered here. Only queued p2 feedholds (feedhold in feedhold) are
  *  handled in the sequencer.
  */
 
@@ -288,7 +288,7 @@ bool cm_has_hold()
 }
 
 /*
- * cm_feedhold_command_blocker() - prevents new Gcode commands from reaching the parser while feedhold is in effect 
+ * cm_feedhold_command_blocker() - prevents new Gcode commands from reaching the parser while feedhold is in effect
  */
 
 stat_t cm_feedhold_command_blocker()
@@ -321,9 +321,18 @@ static stat_t _run_reset_position()
     return (STAT_OK);
 }
 
-static stat_t _run_alarm() { return (STAT_OK); }
-static stat_t _run_shutdown() { return (STAT_OK); }
-static stat_t _run_interlock() { return (STAT_OK); }
+static stat_t _run_alarm() {
+    cm->machine_state = MACHINE_ALARM;
+    return (STAT_OK);
+}
+static stat_t _run_shutdown() {
+    cm->machine_state = MACHINE_SHUTDOWN;
+    return (STAT_OK);
+}
+static stat_t _run_interlock() {
+    cm->machine_state = MACHINE_INTERLOCK;
+    return (STAT_OK);
+}
 
 /****************************************************************************************
  * cm_request_cycle_start() - set request enum only
@@ -336,15 +345,15 @@ void cm_request_cycle_start()
         if (cm1.queue_flush_state == QUEUE_FLUSH_REQUESTED) {   // possible race condition. Flush wins
             cm1.cycle_start_state = CYCLE_START_OFF;
         } else {
-            cm1.cycle_start_state = CYCLE_START_REQUESTED; 
+            cm1.cycle_start_state = CYCLE_START_REQUESTED;
         }
     } else {                                        // execute cycle start directly
         if (mp_has_runnable_buffer(&mp1)) {
             cm_cycle_start();
             st_request_exec_move();
         }
-        cm1.cycle_start_state = CYCLE_START_OFF;        
-    }    
+        cm1.cycle_start_state = CYCLE_START_OFF;
+    }
 }
 
 static void _start_cycle_restart()
@@ -367,7 +376,7 @@ static void _start_cycle_restart()
             case FEEDHOLD_EXIT_INTERLOCK: { op.add_action(_run_interlock); break; }
             default: {}
         }
-    } 
+    }
 }
 
 /****************************************************************************************
@@ -389,7 +398,7 @@ void cm_request_queue_flush()
 #endif
         cm1.queue_flush_state = QUEUE_FLUSH_REQUESTED;
     } else {
-        cm1.queue_flush_state = QUEUE_FLUSH_OFF;        
+        cm1.queue_flush_state = QUEUE_FLUSH_OFF;
     }
 }
 
@@ -433,7 +442,7 @@ static stat_t _run_queue_flush()            // typically runs from cm1 planner
  *  (0)  job kill from ALARM, SHUTDOWN, PANIC   no action, end request
  *  (1)  job kill from READY, STOP, END         perform PROGRAM_END
  *  (2a) Job kill from machining cycle          hold, flush, perform PROGRAM_END
- *  (2b) Job kill from pending hold             wait for hold to complete 
+ *  (2b) Job kill from pending hold             wait for hold to complete
  *  (2c) Job kill from finished hold            flush, perform PROGRAM_END
  *  (3)  Job kill from PROBE                    flush, perform PROGRAM_END
  *  (4)  Job kill from HOMING                   flush, perform PROGRAM_END
@@ -457,7 +466,7 @@ static stat_t _run_job_kill()
         cm = &cm1;                                      // return to primary planner (p1)
         mp = (mpPlanner_t *)cm->mp;                     // cm->mp is a void pointer
         mr = mp->mr;
-        
+
         copy_vector(cm1.gmx.position, mr2.position);    // transfer actual position back to p1
         copy_vector(cm1.gm.target, mr2.position);
         copy_vector(mp1.position, mr2.position);
@@ -479,7 +488,7 @@ static stat_t _run_job_kill()
     cm_program_end();
 
     rpt_exception(STAT_KILL_JOB, "Job killed by ^d");
-    sr_request_status_report(SR_REQUEST_IMMEDIATE);    
+    sr_request_status_report(SR_REQUEST_IMMEDIATE);
     cm->job_kill_state = JOB_KILL_OFF;
     return (STAT_OK);
 }
@@ -495,7 +504,7 @@ static void _start_job_kill()
             cm1.job_kill_state = JOB_KILL_OFF;
             return;
         }
-        case MACHINE_CYCLE: {                           // Case 2's 
+        case MACHINE_CYCLE: {                           // Case 2's
             if (cm1.hold_state == FEEDHOLD_OFF) {       // Case 2a - in cycle and not in a hold
                 op.add_action(_feedhold_no_actions);
 //                op.add_action(_run_job_kill);
@@ -505,7 +514,7 @@ static void _start_job_kill()
             }
             return;                                     // Case 2b - hold is in progress. Wait for hold to reach HOLD
         }
-        default: { _run_job_kill(); }                   // Cases 1,3,4,5,6 
+        default: { _run_job_kill(); }                   // Cases 1,3,4,5,6
     }
 }
 
@@ -542,6 +551,7 @@ void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit)
         switch (cm1.hold_type) {
             case FEEDHOLD_TYPE_HOLD:     { op.add_action(_feedhold_no_actions); break; }
             case FEEDHOLD_TYPE_ACTIONS:  { op.add_action(_feedhold_with_actions); break; }
+            case FEEDHOLD_TYPE_SCRAM:
             case FEEDHOLD_TYPE_SKIP:     { op.add_action(_feedhold_skip); break; }
             default: {}
         }
@@ -563,7 +573,7 @@ void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit)
         cm2.hold_state = FEEDHOLD_REQUESTED;
         return;
     }
-    
+
     // Reset the request if it's invalid
     if ((cm1.machine_state != MACHINE_CYCLE) || (cm1.motion_state == MOTION_STOP)) {
         cm->hold_state = FEEDHOLD_OFF;          // cannot honor the feedhold request. reset it
@@ -581,7 +591,7 @@ static void _start_p2_feedhold()
 }
 */
 
-/*  
+/*
  * _enter_p2()  - enter p2 planner with proper state transfer from p1
  * _exit_p2()   - reenter p1 planner with proper state transfer from p2
  *
@@ -635,9 +645,9 @@ static void _exit_p2()
 static void _check_motion_stopped()
 {
     if (mp_runtime_is_idle()) {                         // wait for steppers to actually finish
-            
+
         mpBuf_t *bf = mp_get_r();
-            
+
         // Motion has stopped, so we can rely on positions and other values to be stable
         // If SKIP type, discard the remainder of the block and position to the next block
         if (cm->hold_type == FEEDHOLD_TYPE_SKIP) {
@@ -686,7 +696,7 @@ static stat_t _feedhold_no_actions()
             return (STAT_EAGAIN);
         }
     }
-    
+
     // wait until feedhold reaches the hold point
     if (cm1.hold_state < FEEDHOLD_MOTION_STOPPED) {
         return (STAT_EAGAIN);
@@ -719,7 +729,7 @@ static stat_t _feedhold_with_actions()          // Execute Case (5)
         }
     }
 
-    // Code to run once motion has stopped 
+    // Code to run once motion has stopped
     if (cm1.hold_state == FEEDHOLD_MOTION_STOPPED) {
         cm->hold_state = FEEDHOLD_HOLD_ACTIONS_PENDING;         // next state
         _enter_p2();                                            // enter p2 correctly
@@ -743,7 +753,7 @@ static stat_t _feedhold_with_actions()          // Execute Case (5)
     if (cm1.hold_state == FEEDHOLD_HOLD_ACTIONS_PENDING) {
         return (STAT_EAGAIN);
     }
-    
+
     // finalize feedhold entry after callback (this is needed so we can return STAT_OK)
     if (cm1.hold_state == FEEDHOLD_HOLD_ACTIONS_COMPLETE) {
         cm1.hold_state = FEEDHOLD_HOLD;
@@ -795,18 +805,18 @@ static stat_t _feedhold_restart_with_actions()   // Execute Cases (6) and (7)
         cm1.hold_state = FEEDHOLD_EXIT_ACTIONS_PENDING;
         return (STAT_EAGAIN);
     }
-    
+
     // wait for exit actions to complete
     if (cm1.hold_state == FEEDHOLD_EXIT_ACTIONS_PENDING) {
         return (STAT_EAGAIN);
     }
-    
+
     // finalize feedhold exit
     if (cm1.hold_state == FEEDHOLD_EXIT_ACTIONS_COMPLETE) {
         _exit_p2();                         // re-enter p1 correctly
         return (STAT_OK);
     }
-    
+
     return (STAT_EAGAIN);                   // still waiting
 }
 
