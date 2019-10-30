@@ -101,8 +101,7 @@ using Motate::OutputPin;
 
 /**** Stepper DDA and dwell timer settings ****/
 
-//#define FREQUENCY_DDA		200000UL		// Hz step frequency. Interrupts actually fire at 2x (400 KHz)
-#define FREQUENCY_DDA		150000UL		// Hz step frequency. Interrupts actually fire at 2x (300 KHz)
+#define FREQUENCY_DDA		150000UL
 #define FREQUENCY_DWELL		1000UL
 
 #define PLANNER_QUEUE_SIZE (48)
