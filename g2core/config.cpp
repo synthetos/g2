@@ -244,8 +244,14 @@ stat_t get_data(nvObj_t *nv)
  */
 
 stat_t set_noop(nvObj_t *nv) {
-    nv->valuetype = TYPE_NULL;
-    return (STAT_OK);                       // hack until JSON is refactored
+    // we call this for msg to parrot back the string
+    // check for string type and pass-through
+    if (cfgArray[nv->index].flags & TYPE_STRING) {
+        nv->valuetype = TYPE_STRING;
+    } else {
+        nv->valuetype = TYPE_NULL;
+    }
+    return (STAT_OK);  // hack until JSON is refactored
 }
 
 stat_t set_nul(nvObj_t *nv) {
