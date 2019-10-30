@@ -42,7 +42,6 @@
 #define SPINDLE_ENABLE_POLARITY     0       // 0=active low, 1=active high
 #define SPINDLE_DIR_POLARITY        0       // 0=clockwise is low, 1=clockwise is high
 #define SPINDLE_PAUSE_ON_HOLD       true
-#define SPINDLE_SPINUP_DELAY        2.0
 #define SPINDLE_SPINUP_DELAY        1.5     // after unpausing and turning the spindle on, dwell for 1.5s
 
 #define ESC_BOOT_TIME               5000    // how long the ESC takes to boot, in milliseconds
