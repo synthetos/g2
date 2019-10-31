@@ -33,10 +33,18 @@
 #include "controller.h"
 #include "text_parser.h"
 #include "board_xio.h"
+#include "sd_card.h"
 
 #include "MotateUtilities.h"
 #include "MotateUniqueID.h"
 #include "MotatePower.h"
+
+extern SDCard<SPIBus_used_t::SPIBusDevice> sd_card;
+
+SDCard<SPIBus_used_t::SPIBusDevice> sd_card {
+    spiBus,
+    Motate::SPIChipSelectPin<Motate::kSocket1_SPISlaveSelectPinNumber>{}
+};
 
 /*
  * hardware_init() - lowest level hardware init

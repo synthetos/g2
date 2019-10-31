@@ -1833,6 +1833,33 @@
     <Compile Include="device\neopixel\neopixel.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="device\sd_card\fatfs\diskio.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="device\sd_card\fatfs\diskio.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="device\sd_card\fatfs\ff.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="device\sd_card\fatfs\ff.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="device\sd_card\fatfs\ffconf.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="device\sd_card\fatfs\integer.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="device\sd_card\fatfs\option\syscall.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="device\sd_card\fatfs\option\unicode.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="device\sd_card\sd_card.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="device\step_dir_driver\step_dir_driver.h">
       <SubType>compile</SubType>
     </Compile>
@@ -2082,6 +2109,9 @@
     <Folder Include="board\sbv300\" />
     <Folder Include="device\" />
     <Folder Include="device\neopixel" />
+    <Folder Include="device\sd_card" />
+    <Folder Include="device\sd_card\fatfs" />
+    <Folder Include="device\sd_card\fatfs\option" />
     <Folder Include="device\step_dir_hobbyservo" />
     <Folder Include="device\step_dir_driver\" />
     <Folder Include="device\trinamic\" />
@@ -2140,6 +2170,9 @@
       <SubType>compile</SubType>
     </None>
     <None Include="board\sbv300.mk">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="device\sd_card\fatfs\00readme.txt">
       <SubType>compile</SubType>
     </None>
     <None Include="LICENSE-gpl-2.0.txt">
