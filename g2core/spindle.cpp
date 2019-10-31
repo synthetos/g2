@@ -193,6 +193,22 @@ static void _exec_spindle_control(float *value, bool *)
     int8_t dir_bit = -1;                    // -1 will skip setting the direction. 0 & 1 are valid values
     bool do_spinup_delay = false;
 
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
+    if(cm->estop_state != 0) // In E-stop, don't process any spindle commands
+        action = SPINDLE_OFF;
+
+    // If we're paused or in interlock, or the esc is rebooting, send the spindle an "OFF" command (invisible to cm->gm),
+    // and issue a hold if necessary
+    else if(action == SPINDLE_PAUSE || cm->safety_state != 0) {
+        if(action != SPINDLE_PAUSE) {
+            action = SPINDLE_PAUSE;
+            cm_set_motion_state(MOTION_STOP);
+            cm_request_feedhold(FEEDHOLD_TYPE_ACTIONS, FEEDHOLD_EXIT_INTERLOCK);
+            sr_request_status_report(SR_REQUEST_IMMEDIATE);
+        }
+    }
+#endif
+
     switch (action) {
         case SPINDLE_NOP: { return; }
 
@@ -282,6 +298,11 @@ static void _exec_spindle_speed(float *value, bool *flag)
 {
     float previous_speed = spindle.speed;
 
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
+    if(cm->estop_state != 0 || cm->safety_state != 0 || spindle.state == SPINDLE_PAUSE)
+        spindle_control_immediate(SPINDLE_OFF);
+#endif
+    
     spindle.speed = value[0];
     pwm_set_duty(PWM_1, _get_spindle_pwm(spindle, pwm));
 

@@ -381,8 +381,12 @@ static void _start_cycle_restart()
 
 void cm_request_queue_flush()
 {
-    // Can only initiate a queue flush if in a feedhold
+    // Can only initiate a queue flush if in a feedhold and e-stop not pressed
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
+    if ((cm1.hold_state != FEEDHOLD_OFF) && (cm1.estop_state == 0)) {
+#else
     if (cm1.hold_state != FEEDHOLD_OFF) {
+#endif
         cm1.queue_flush_state = QUEUE_FLUSH_REQUESTED;
     } else {
         cm1.queue_flush_state = QUEUE_FLUSH_OFF;        
@@ -462,6 +466,11 @@ static stat_t _run_job_kill()
 
     _run_queue_flush();
 
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
+    if((cm->safety_state & (SAFETY_ESC_MASK | SAFETY_INTERLOCK_MASK)) != 0 && spindle.state != SPINDLE_OFF)
+        return STAT_EAGAIN;
+#endif
+
     coolant_control_immediate(COOLANT_OFF, COOLANT_BOTH); // stop coolant
     spindle_control_immediate(SPINDLE_OFF);               // stop spindle
 
@@ -514,11 +523,16 @@ static void _start_job_kill()
 
 void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit)
 {
-    // Can only initiate a feedhold if you are in a machining cycle, running, and not already in a feedhold
+    // Can only initiate a feedhold if you are in a machining cycle, running, not already in a feedhold, and e-stop is not pressed
 
     // +++++ This needs to be extended to allow HOLDs to be requested when motion has stopped
     if ((cm1.hold_state == FEEDHOLD_OFF) &&
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
+        (cm1.machine_state == MACHINE_CYCLE) && (cm1.motion_state == MOTION_RUN) &&
+        (cm1.estop_state == 0)) {
+#else
         (cm1.machine_state == MACHINE_CYCLE) && (cm1.motion_state == MOTION_RUN)) {
+#endif
 
         cm1.hold_type = type;
         cm1.hold_exit = exit;

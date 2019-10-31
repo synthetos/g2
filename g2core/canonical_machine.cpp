@@ -304,6 +304,12 @@ void canonical_machine_reset(cmMachine_t *_cm)
     _cm->gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE; // never start in a motion mode
     _cm->machine_state = MACHINE_READY;
 
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
+    _cm->safety_state = _cm->estop_state = 0;
+    _cm->esc_boot_timer = Motate::SysTickTimer.getValue();
+    _cm->safety_state = SAFETY_ESC_REBOOTING;
+#endif
+
     cm_operation_init();                            // reset operations runner
 
     canonical_machine_reset_rotation(_cm);
@@ -1691,7 +1697,7 @@ static void _exec_program_finalize(float *value, bool *flag)
 
     // Allow update in the alarm state, to accommodate queue flush (RAS)
     if ((cm->cycle_type == CYCLE_MACHINING || cm->cycle_type == CYCLE_NONE) &&
-//      (cm->machine_state != MACHINE_ALARM) &&             // omitted by OMC (RAS)
+        (cm->machine_state != MACHINE_ALARM) &&
         (cm->machine_state != MACHINE_SHUTDOWN)) {
         cm->machine_state = machine_state;                  // don't update macs/cycs if we're in the middle of a canned cycle,
         cm->cycle_type = CYCLE_NONE;                        // or if we're in machine alarm/shutdown mode
@@ -1762,6 +1768,16 @@ void cm_program_end()
     float value[] = { (float)MACHINE_PROGRAM_END };
     mp_queue_command(_exec_program_finalize, value, nullptr);
 }
+
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
+stat_t cm_ack_estop(nvObj_t *nv)
+{
+    cm->estop_state &= ~ESTOP_UNACKED;
+    nv->value_flt = (float)cm->estop_state;
+    nv->valuetype = TYPE_FLOAT;
+    return (STAT_OK);
+}
+#endif
 
 /****************************************************************************************
  **** Additional Functions **************************************************************
@@ -2075,6 +2091,21 @@ static const char msg_g94[] = "G94 - units-per-minute mode (i.e. feedrate mode)"
 static const char msg_g95[] = "G95 - units-per-revolution mode";
 static const char *const msg_frmo[] = { msg_g93, msg_g94, msg_g95 };
 
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
+static const char msg_safe0[] = "Interlock Circuit Closed/ESC nominal";
+static const char msg_safe1[] = "Interlock Circuit Broken/ESC nominal";
+static const char msg_safe2[] = "Interlock Circuit Closed/ESC rebooting";
+static const char msg_safe3[] = "Interlock Circuit Broken/ESC rebooting";
+static const char *const msg_safe[] = { msg_safe0, msg_safe1, msg_safe2, msg_safe3 };
+
+static const char msg_estp0[] = "E-Stop Circuit Closed";
+static const char msg_estp1[] = "E-Stop Circuit Closed but unacked";
+static const char msg_estp2[] = "E-Stop Circuit Broken and acked";
+static const char msg_estp3[] = "E-Stop Circuit Broken and unacked";
+// Don't worry about indicating the "Active" state
+static const char *const msg_estp[] = { msg_estp0, msg_estp1, msg_estp2, msg_estp3 };
+#endif
+
 #else
 
 #define msg_units NULL
@@ -2092,6 +2123,10 @@ static const char *const msg_frmo[] = { msg_g93, msg_g94, msg_g95 };
 #define msg_dist NULL
 #define msg_admo NULL
 #define msg_frmo NULL
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
+#define msg_safe NULL
+#define msg_estp NULL
+#endif
 #define msg_am NULL
 
 #endif // __TEXT_MODE
@@ -2119,6 +2154,17 @@ stat_t cm_get_path(nvObj_t *nv) { return(_get_msg_helper(nv, msg_path, cm_get_pa
 stat_t cm_get_dist(nvObj_t *nv) { return(_get_msg_helper(nv, msg_dist, cm_get_distance_mode(ACTIVE_MODEL)));}
 stat_t cm_get_admo(nvObj_t *nv) { return(_get_msg_helper(nv, msg_admo, cm_get_arc_distance_mode(ACTIVE_MODEL)));}
 stat_t cm_get_frmo(nvObj_t *nv) { return(_get_msg_helper(nv, msg_frmo, cm_get_feed_rate_mode(ACTIVE_MODEL)));}
+
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
+stat_t cm_get_safe(nvObj_t *nv) {
+    uint8_t safe = 0;
+    if((cm->safety_state & SAFETY_INTERLOCK_MASK) != 0)
+        safe |= 0x1;
+    if((cm->safety_state & SAFETY_ESC_MASK) != 0)
+        safe |= 0x2;
+    return(_get_msg_helper(nv, msg_safe, safe)); }
+stat_t cm_get_estp(nvObj_t *nv) { return(_get_msg_helper(nv, msg_estp, (cm->estop_state & 0x3))); }
+#endif
 
 stat_t cm_get_toolv(nvObj_t *nv) { return(get_integer(nv, cm_get_tool(ACTIVE_MODEL))); }
 stat_t cm_get_mline(nvObj_t *nv) { return(get_integer(nv, cm_get_linenum(MODEL))); }
@@ -2480,6 +2526,10 @@ static const char fmt_dist[] = "Distance mode:       %s\n";
 static const char fmt_admo[] = "Arc Distance mode:   %s\n";
 static const char fmt_frmo[] = "Feed rate mode:      %s\n";
 static const char fmt_tool[] = "Tool number          %d\n";
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
+static const char fmt_safe[] = "Safety System Flags: %s\n";
+static const char fmt_estp[] = "Emergency Stop:      %s\n";
+#endif
 static const char fmt_g92e[] = "G92 enabled          %d\n";
 
 void cm_print_vel(nvObj_t *nv) { text_print_flt_units(nv, fmt_vel, GET_UNITS(ACTIVE_MODEL));}
@@ -2501,6 +2551,10 @@ void cm_print_path(nvObj_t *nv) { text_print_str(nv, fmt_path);}
 void cm_print_dist(nvObj_t *nv) { text_print_str(nv, fmt_dist);}
 void cm_print_admo(nvObj_t *nv) { text_print_str(nv, fmt_admo);}
 void cm_print_frmo(nvObj_t *nv) { text_print_str(nv, fmt_frmo);}
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
+void cm_print_safe(nvObj_t *nv) { text_print_str(nv, fmt_safe);}
+void cm_print_estp(nvObj_t *nv) { text_print_str(nv, fmt_estp);}
+#endif
 
 static const char fmt_gpl[] = "[gpl] default gcode plane%10d [0=G17,1=G18,2=G19]\n";
 static const char fmt_gun[] = "[gun] default gcode units mode%5d [0=G20,1=G21]\n";

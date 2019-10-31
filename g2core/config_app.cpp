@@ -115,26 +115,31 @@ const cfgItem_t cfgArray[] = {
     { "sys", "id", _sn,  0, hw_print_id,  hw_get_id,  set_ro, nullptr, 0 },   // device ID (ASCII signature)
 
     // dynamic model attributes for reporting purposes (up front for speed)
-    { "", "stat",_i0, 0, cm_print_stat, cm_get_stat, set_ro, nullptr, 0 },    // combined machine state
-    { "","stat2",_i0, 0, cm_print_stat, cm_get_stat2,set_ro, nullptr, 0 },    // combined machine state
-    { "", "n",   _ii, 0, cm_print_line, cm_get_mline,set_noop,nullptr,0 },    // Model line number
-    { "", "line",_ii, 0, cm_print_line, cm_get_line, set_ro, nullptr, 0 },    // Active line number - model or runtime line number
-    { "", "vel", _f0, 2, cm_print_vel,  cm_get_vel,  set_ro, nullptr, 0 },    // current velocity
-    { "", "feed",_f0, 2, cm_print_feed, cm_get_feed, set_ro, nullptr, 0 },    // feed rate
-    { "", "macs",_i0, 0, cm_print_macs, cm_get_macs, set_ro, nullptr, 0 },    // raw machine state
-    { "", "cycs",_i0, 0, cm_print_cycs, cm_get_cycs, set_ro, nullptr, 0 },    // cycle state
-    { "", "mots",_i0, 0, cm_print_mots, cm_get_mots, set_ro, nullptr, 0 },    // motion state
-    { "", "hold",_i0, 0, cm_print_hold, cm_get_hold, set_ro, nullptr, 0 },    // feedhold state
-    { "", "unit",_i0, 0, cm_print_unit, cm_get_unit, set_ro, nullptr, 0 },    // units mode
-    { "", "coor",_i0, 0, cm_print_coor, cm_get_coor, set_ro, nullptr, 0 },    // coordinate system
-    { "", "momo",_i0, 0, cm_print_momo, cm_get_momo, set_ro, nullptr, 0 },    // motion mode
-    { "", "plan",_i0, 0, cm_print_plan, cm_get_plan, set_ro, nullptr, 0 },    // plane select
-    { "", "path",_i0, 0, cm_print_path, cm_get_path, set_ro, nullptr, 0 },    // path control mode
-    { "", "dist",_i0, 0, cm_print_dist, cm_get_dist, set_ro, nullptr, 0 },    // distance mode
-    { "", "admo",_i0, 0, cm_print_admo, cm_get_admo, set_ro, nullptr, 0 },    // arc distance mode
-    { "", "frmo",_i0, 0, cm_print_frmo, cm_get_frmo, set_ro, nullptr, 0 },    // feed rate mode
-    { "", "tool",_i0, 0, cm_print_tool, cm_get_toolv,set_ro, nullptr, 0 },    // active tool
-    { "", "g92e",_i0, 0, cm_print_g92e, cm_get_g92e, set_ro, nullptr, 0 },    // G92 enable state
+    { "", "stat", _i0, 0, cm_print_stat, cm_get_stat,  set_ro,       nullptr, 0 },    // combined machine state
+    { "","stat2", _i0, 0, cm_print_stat, cm_get_stat2, set_ro,       nullptr, 0 },    // combined machine state
+    { "", "n",    _ii, 0, cm_print_line, cm_get_mline, set_noop,     nullptr, 0 },    // Model line number
+    { "", "line", _ii, 0, cm_print_line, cm_get_line,  set_ro,       nullptr, 0 },    // Active line number - model or runtime line number
+    { "", "vel",  _f0, 2, cm_print_vel,  cm_get_vel,   set_ro,       nullptr, 0 },    // current velocity
+    { "", "feed", _f0, 2, cm_print_feed, cm_get_feed,  set_ro,       nullptr, 0 },    // feed rate
+    { "", "macs", _i0, 0, cm_print_macs, cm_get_macs,  set_ro,       nullptr, 0 },    // raw machine state
+    { "", "cycs", _i0, 0, cm_print_cycs, cm_get_cycs,  set_ro,       nullptr, 0 },    // cycle state
+    { "", "mots", _i0, 0, cm_print_mots, cm_get_mots,  set_ro,       nullptr, 0 },    // motion state
+    { "", "hold", _i0, 0, cm_print_hold, cm_get_hold,  set_ro,       nullptr, 0 },    // feedhold state
+    { "", "unit", _i0, 0, cm_print_unit, cm_get_unit,  set_ro,       nullptr, 0 },    // units mode
+    { "", "coor", _i0, 0, cm_print_coor, cm_get_coor,  set_ro,       nullptr, 0 },    // coordinate system
+    { "", "momo", _i0, 0, cm_print_momo, cm_get_momo,  set_ro,       nullptr, 0 },    // motion mode
+    { "", "plan", _i0, 0, cm_print_plan, cm_get_plan,  set_ro,       nullptr, 0 },    // plane select
+    { "", "path", _i0, 0, cm_print_path, cm_get_path,  set_ro,       nullptr, 0 },    // path control mode
+    { "", "dist", _i0, 0, cm_print_dist, cm_get_dist,  set_ro,       nullptr, 0 },    // distance mode
+    { "", "admo", _i0, 0, cm_print_admo, cm_get_admo,  set_ro,       nullptr, 0 },    // arc distance mode
+    { "", "frmo", _i0, 0, cm_print_frmo, cm_get_frmo,  set_ro,       nullptr, 0 },    // feed rate mode
+    { "", "tool", _i0, 0, cm_print_tool, cm_get_toolv, set_ro,       nullptr, 0 },    // active tool
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
+    { "", "safe", _i0, 0, cm_print_safe, cm_get_safe,  set_ro,       nullptr, 0 },    // interlock status
+    { "", "estp", _i0, 0, cm_print_estp, cm_get_estp,  cm_ack_estop, nullptr, 0 },    // E-stop status (SET to ack)
+    { "", "estpc",_i0, 0, cm_print_estp, cm_ack_estop, cm_ack_estop, nullptr, 0 },  // E-stop status clear (GET to ack)
+#endif
+    { "", "g92e", _i0, 0, cm_print_g92e, cm_get_g92e,  set_ro,       nullptr, 0 },    // G92 enable state
 #ifdef TEMPORARY_HAS_LEDS
     { "", "_leds",_i0, 0, tx_print_nul, _get_leds,_set_leds, nullptr, 0 },    // TEMPORARY - change LEDs
 #endif

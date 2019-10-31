@@ -45,6 +45,9 @@
 #include "util.h"
 #include "xio.h"
 #include "settings.h"
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
+#include "spindle.h"
+#endif
 
 #include "MotatePower.h"
 
@@ -65,7 +68,11 @@ controller_t cs;        // controller state structure
 static void _controller_HSM(void);
 static stat_t _led_indicator(void);             // twiddle the LED indicator
 static stat_t _shutdown_handler(void);          // new (replaces _interlock_estop_handler)
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
+static stat_t _interlock_estop_handler(void);
+#else
 static stat_t _interlock_handler(void);         // new (replaces _interlock_estop_handler)
+#endif
 static stat_t _limit_switch_handler(void);      // revised for new GPIO code
 
 static void _init_assertions(void);
@@ -194,7 +201,11 @@ static void _controller_HSM()
     DISPATCH(hardware_periodic());              // give the hardware a chance to do stuff
     DISPATCH(_led_indicator());                 // blink LEDs at the current rate
     DISPATCH(_shutdown_handler());              // invoke shutdown
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
+    DISPATCH(_interlock_estop_handler());       // interlock or estop have been thrown
+#else
     DISPATCH(_interlock_handler());             // invoke / remove safety interlock
+#endif
     DISPATCH(temperature_callback());           // makes sure temperatures are under control
     DISPATCH(_limit_switch_handler());          // invoke limit switch
     DISPATCH(_controller_state());              // controller state management
@@ -254,7 +265,11 @@ static stat_t _dispatch_control()
 
 static stat_t _dispatch_command()
 {
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
+    if (cs.controller_state != CONTROLLER_PAUSED && cm->estop_state == 0) {
+#else
     if (cs.controller_state != CONTROLLER_PAUSED) {
+#endif
         devflags_t flags = DEV_IS_BOTH | DEV_IS_MUTED; // expressly state we'll handle muted devices
         if ((!mp_planner_is_full(mp)) && (cs.bufp = xio_readline(flags, cs.linelen)) != NULL) {
             _dispatch_kernel(flags);
@@ -547,6 +562,76 @@ static stat_t _limit_switch_handler(void)
     return (STAT_OK);
 }
 
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
+static stat_t _interlock_estop_handler(void)
+{
+    bool report = false;
+    //Process E-Stop and Interlock signals
+    if((cm->safety_state & SAFETY_INTERLOCK_MASK) == SAFETY_INTERLOCK_CLOSED && gpio_read_input(INTERLOCK_SWITCH_INPUT) == INPUT_ACTIVE) {
+        cm->safety_state |= SAFETY_INTERLOCK_OPEN;
+        if(spindle.state != SPINDLE_OFF) {
+            if(mp_get_run_buffer() != NULL)
+                cm_request_feedhold(FEEDHOLD_TYPE_ACTIONS, FEEDHOLD_EXIT_INTERLOCK);  // may have already requested STOP as INPUT_ACTION
+            else {
+                cm_cycle_start();
+                spindle_control_immediate(spindle.state);
+            }
+        }
+        //If we just entered interlock and we're not off, start the lockout timer
+        if((cm->safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_ONLINE || (cm->safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_REBOOTING) {
+            cm->esc_lockout_timer = Motate::SysTickTimer.getValue();
+            cm->safety_state |= SAFETY_ESC_LOCKOUT;
+        }
+        report = true;
+    } else if((cm->safety_state & SAFETY_INTERLOCK_MASK) == SAFETY_INTERLOCK_OPEN && gpio_read_input(INTERLOCK_SWITCH_INPUT) == INPUT_INACTIVE) {
+        cm->safety_state &= ~SAFETY_INTERLOCK_OPEN;
+        //If we just left interlock, stop the lockout timer
+        if((cm->safety_state & SAFETY_ESC_LOCKOUT) == SAFETY_ESC_LOCKOUT)
+            cm->safety_state &= ~SAFETY_ESC_LOCKOUT;
+        report = true;
+    }
+    if((cm->estop_state & ESTOP_PRESSED_MASK) == ESTOP_RELEASED && gpio_read_input(ESTOP_SWITCH_INPUT) == INPUT_ACTIVE) {
+        cm->estop_state = ESTOP_PRESSED | ESTOP_UNACKED | ESTOP_ACTIVE;
+        cm_shutdown(STAT_SHUTDOWN, "e-stop pressed");
+        //E-stop always sets the ESC to off
+        cm->safety_state &= ~SAFETY_ESC_MASK;
+        cm->safety_state |= SAFETY_ESC_OFFLINE;
+        report = true;
+    } else if((cm->estop_state & ESTOP_PRESSED_MASK) == ESTOP_PRESSED && gpio_read_input(ESTOP_SWITCH_INPUT) == INPUT_INACTIVE) {
+        cm->estop_state &= ~ESTOP_PRESSED;
+        report = true;
+    }
+
+    //if E-Stop and Interlock are both 0, and we're off, go into "ESC Reboot"
+    if((cm->safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_OFFLINE && (cm->estop_state & ESTOP_PRESSED) == 0 && (cm->safety_state & SAFETY_INTERLOCK_OPEN) == 0) {
+        cm->safety_state &= ~SAFETY_ESC_MASK;
+        cm->safety_state |= SAFETY_ESC_REBOOTING;
+        cm->esc_boot_timer = Motate::SysTickTimer.getValue();
+        report = true;
+    }
+
+    //Check if ESC lockout timer or reboot timer have expired
+    uint32_t now = Motate::SysTickTimer.getValue();
+    if((cm->safety_state & SAFETY_ESC_LOCKOUT) != 0 && (now - cm->esc_lockout_timer) > ESC_LOCKOUT_TIME) {
+        cm->safety_state &= ~SAFETY_ESC_MASK;
+        cm->safety_state |= SAFETY_ESC_OFFLINE;
+        report = true;
+    }
+    if((cm->safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_REBOOTING && (now - cm->esc_boot_timer) > ESC_BOOT_TIME) {
+        cm->safety_state &= ~SAFETY_ESC_MASK;
+        report = true;
+    }
+
+    //If we've successfully ended all the ESTOP conditions, then end ESTOP
+    if(cm->estop_state == ESTOP_ACTIVE) {
+        cm->estop_state = 0;
+        report = true;
+    }
+    if(report)
+        sr_request_status_report(SR_REQUEST_IMMEDIATE);
+    return (STAT_OK);
+}
+#else
 static stat_t _interlock_handler(void)
 {
     if (cm->safety_interlock_enable) {
@@ -570,6 +655,7 @@ static stat_t _interlock_handler(void)
     }
     return(STAT_OK);
 }
+#endif
 
 /****************************************************************************************
  * _init_assertions() - initialize controller memory integrity assertions

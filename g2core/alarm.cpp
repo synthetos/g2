@@ -86,11 +86,16 @@ void cm_clear()
     } else if (cm->machine_state == MACHINE_SHUTDOWN) {
         cm->machine_state = MACHINE_READY;
     }
+
 }
 
 void cm_parse_clear(const char *s)
 {
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
+    if (cm->machine_state == MACHINE_ALARM || (cm->machine_state == MACHINE_SHUTDOWN && cm->estop_state != 0)) {
+#else
     if (cm->machine_state == MACHINE_ALARM) {
+#endif
         if (toupper(s[0]) == 'M') {
             if (( (s[1]=='3') && (s[2]=='0') && (s[3]==0)) || ((s[1]=='2') && (s[2]==0) )) {
                 cm_clear();
