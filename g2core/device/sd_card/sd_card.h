@@ -28,20 +28,20 @@ struct SDCard final {
     Motate::Timeout check_timer;
 
     // we only read/write 4 bytes at a time in this example
-    alignas(4) uint8_t read_buffer[4] HOT_DATA;
-    alignas(4) uint8_t write_buffer[4] HOT_DATA;
+    alignas(4) uint8_t read_buffer[4];
+    alignas(4) uint8_t write_buffer[4];
 
   public:
     // Primary constructor - templated to take any SPIBus and chipSelect type
     template <typename SPIBus_t, typename chipSelect_t>
-    SDCard(SPIBus_t &spi_bus, const chipSelect_t &cs)
-        : device{spi_bus.getDevice(cs,     // pass it the chipSelect
+    SDCard(SPIBus_t &spi_bus, const chipSelect_t &_cs)
+        : device{spi_bus.getDevice(_cs,    // pass it the chipSelect
                                   4000000, //frequency in Hz
                                   SPIDeviceMode::kSPIMode0 | SPIDeviceMode::kSPI8Bit, // device mode
                                   0,       // min_between_cs_delay_ns
                                   0,       // cs_to_sck_delay_ns
                                   0        // between_word_delay_ns
-                                  )},
+                                  )}
     {
         init();
     };

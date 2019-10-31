@@ -9,7 +9,7 @@
 /* to use the Motate SPI functionality.                                  */
 /*-----------------------------------------------------------------------*/
 
-#include "diskio.h"		/* FatFs lower layer API */
+#include "zOLD_diskio.h"		/* FatFs lower layer API */
 #include "MotateTimers.h"
 #include "MotateSPI.h"
 #include "SamSPI.h"

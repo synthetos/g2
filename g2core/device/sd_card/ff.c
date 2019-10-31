@@ -120,7 +120,7 @@
 /---------------------------------------------------------------------------*/
 
 #include "ff.h"			/* Declarations of FatFs API */
-#include "diskio.h"		/* Declarations of disk I/O functions */
+#include "zOLD_diskio.h"		/* Declarations of disk I/O functions */
 
 
 

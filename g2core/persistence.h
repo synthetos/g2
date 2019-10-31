@@ -29,7 +29,7 @@
 #define PERSISTENCE_H_ONCE
 
 #include "config.h"  // needed for nvObj_t definition
-#include "fatfs/ff.h"
+#include "ff.h"
 #include "util.h"                   // FIXME: this won't compile if included after <map>
 #include <map>
 
