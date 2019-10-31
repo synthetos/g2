@@ -15,7 +15,7 @@ extern "C" {
 // been fully tested
 #define _USE_IOCTL	1	/* 0: Enable disk_ioctl fucntion */
 
-#include "integer.h"
+#include "ff.h"
 
 
 /* Status of Disk Functions */

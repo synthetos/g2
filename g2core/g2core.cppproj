@@ -1842,16 +1842,10 @@
     <Compile Include="device\sd_card\ffconf.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="device\sd_card\integer.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="device\sd_card\sd_card.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="device\sd_card\syscall.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="device\sd_card\unicode.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="device\sd_card\zOLD_diskio.cpp">
