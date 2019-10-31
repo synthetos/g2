@@ -48,6 +48,7 @@
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
 #include "spindle.h"
 #endif
+#include "persistence.h"
 
 #include "MotatePower.h"
 
@@ -232,6 +233,7 @@ static void _controller_HSM()
 #if MARLIN_COMPAT_ENABLED == true
     DISPATCH(marlin_callback());                // handle Marlin stuff - may return EAGAIN, must be after planner_callback!
 #endif
+    DISPATCH(write_persistent_values_callback());
 
 //----- command readers and parsers --------------------------------------------------//
 

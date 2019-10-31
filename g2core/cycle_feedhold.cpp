@@ -36,7 +36,7 @@
 #include "spindle.h"
 #include "coolant.h"
 #include "util.h"
-//#include "xio.h"        // DIAGNOSTIC
+#include "xio.h"
 
 //static void _start_feedhold(void);
 static void _start_cycle_restart(void);
@@ -406,6 +406,7 @@ static void _start_queue_flush()
 {
     // Don't initiate the queue until in HOLD state (this also means that runtime is idle)
     if ((cm1.queue_flush_state == QUEUE_FLUSH_REQUESTED) && (cm1.hold_state == FEEDHOLD_HOLD)) {
+        xio_flush_device(DEV_IS_DATA);
         if (cm1.hold_type == FEEDHOLD_TYPE_ACTIONS) {
             op.add_action(_feedhold_restart_with_actions);
         } else {
