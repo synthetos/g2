@@ -14,6 +14,9 @@ using Motate::SPIMessage;
 using Motate::SPIInterrupt;
 using Motate::SPIDeviceMode;
 
+/* Definitions */
+#define SCRIBBLE_BUF_MAX    10  // Maximum number of bytes expected for toss
+
 template <typename device_t>
 struct SDCard final {
   private:
@@ -30,10 +33,6 @@ struct SDCard final {
 
     // Timer to keep track of when we need to do another periodic update
     Motate::Timeout check_timer;
-
-    // we only read/write 4 bytes at a time in this example
-    alignas(4) uint8_t read_buffer[4];
-    alignas(4) uint8_t write_buffer[4];
 
   public:
     // Primary constructor - templated to take any SPIBus and chipSelect type
@@ -56,10 +55,13 @@ struct SDCard final {
     // Prevent copying
     SDCard(const SDCard &) = delete;
 
-    uint8_t _scribble_buffer[1];
+    // Toss out buffer
+    uint8_t _scribble_buffer[SCRIBBLE_BUF_MAX];
 
     bool _spi_write = false;
     bool _spi_read = false;
+    bool _last_xfer = false;
+    uint16_t _num_bytes = 0;
 
     uint8_t *_spi_data;
 
@@ -74,11 +76,11 @@ struct SDCard final {
         // We write before we read -- so we don't lose what we set in the registers when writing
         if (_spi_write) { 
             _spi_write = false;
-            _message.setup(_spi_data, _scribble_buffer, 1, SPIMessage::DeassertAfter, SPIMessage::EndTransaction);
+            _message.setup(_spi_data, _scribble_buffer, _num_bytes, SPIMessage::DeassertAfter, SPIMessage::EndTransaction);
 
         } else if (_spi_read) {
             _spi_read = false;
-            _message.setup(_scribble_buffer, _spi_data, 1, SPIMessage::DeassertAfter, SPIMessage::EndTransaction);
+            _message.setup(_scribble_buffer, _spi_data, _num_bytes, SPIMessage::DeassertAfter, SPIMessage::EndTransaction);
 
         // otherwise we're done here
         } else {
@@ -94,6 +96,8 @@ struct SDCard final {
         // Establish default values
         _spi_write = false;
         _spi_read = false;
+        _last_xfer = false;
+        _num_bytes = 0;
         
         // mark that init has finished and set the timer
         _inited = true;
@@ -110,12 +114,21 @@ struct SDCard final {
     void read(bool last_transfer = false, uint8_t send_as_noop = 0x00) {
         _spi_read = true;
         _spi_data = (uint8_t*)&send_as_noop;
+         _num_bytes = 1;
         _startNextReadWrite();
     };
 
     void write(uint8_t data, bool last_transfer = false) {
         _spi_write = true;
         _spi_data = (uint8_t*)&data;
+        _num_bytes = 1;
+        _startNextReadWrite();
+    };
+
+    void write(uint8_t *data, uint16_t num_bytes, bool last_transfer = false) {
+        _spi_write = true;
+        _spi_data = data;
+        _num_bytes = num_bytes;
         _startNextReadWrite();
     };
 
@@ -131,6 +144,8 @@ struct SDCard final {
         this->write(0x03);
         this->write(0x05);
         this->write(0x07);
+        static uint8_t stuff[4] = {0x02, 0x04, 0x06, 0x08};
+        this->write(stuff, 4, true);
         //TEMP
     };
 
