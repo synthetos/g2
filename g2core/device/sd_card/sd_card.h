@@ -76,11 +76,11 @@ struct SDCard final {
         // We write before we read -- so we don't lose what we set in the registers when writing
         if (_spi_write) { 
             _spi_write = false;
-            _message.setup(_spi_data, _scribble_buffer, _num_bytes, SPIMessage::DeassertAfter, SPIMessage::EndTransaction);
+            _message.setup(_spi_data, _scribble_buffer, _num_bytes, _last_xfer, SPIMessage::EndTransaction);
 
         } else if (_spi_read) {
             _spi_read = false;
-            _message.setup(_scribble_buffer, _spi_data, _num_bytes, SPIMessage::DeassertAfter, SPIMessage::EndTransaction);
+            _message.setup(_scribble_buffer, _spi_data, _num_bytes, _last_xfer, SPIMessage::EndTransaction);
 
         // otherwise we're done here
         } else {
@@ -111,24 +111,40 @@ struct SDCard final {
         _startNextReadWrite();
     };
 
-    void read(bool last_transfer = false, uint8_t send_as_noop = 0x00) {
+    void read(const bool last_transfer = SPIMessage::RemainAsserted, const uint8_t send_as_noop = 0x00) {
+        
+        // Configure single byte read
         _spi_read = true;
         _spi_data = (uint8_t*)&send_as_noop;
-         _num_bytes = 1;
+        _last_xfer = last_transfer;
+        _num_bytes = 1;
+
+        // Set up read
         _startNextReadWrite();
     };
 
-    void write(uint8_t data, bool last_transfer = false) {
+    void write(const uint8_t data, const bool last_transfer = SPIMessage::RemainAsserted) {
+
+        // Configure single byte write
         _spi_write = true;
         _spi_data = (uint8_t*)&data;
+        _last_xfer = last_transfer;
         _num_bytes = 1;
+
+
+        // Set up write
         _startNextReadWrite();
     };
 
-    void write(uint8_t *data, uint16_t num_bytes, bool last_transfer = false) {
+    void write(const uint8_t *data, const uint16_t num_bytes, const bool last_transfer = SPIMessage::RemainAsserted) {
+
+        // Configure multi byte write
         _spi_write = true;
         _spi_data = data;
+        _last_xfer = last_transfer;
         _num_bytes = num_bytes;
+
+        // Set up write
         _startNextReadWrite();
     };
 
@@ -140,12 +156,14 @@ struct SDCard final {
         }
 
         //TEMP
-        this->write(0x01);
-        this->write(0x03);
-        this->write(0x05);
-        this->write(0x07);
-        static uint8_t stuff[4] = {0x02, 0x04, 0x06, 0x08};
-        this->write(stuff, 4, true);
+        //this->write(0x01, SPIMessage::RemainAsserted);
+        //this->write(0x03, SPIMessage::DeassertAfter);
+        //this->write(0x05, SPIMessage::RemainAsserted);
+        //this->write(0x07, SPIMessage::DeassertAfter);
+        //static uint8_t stuff[4] = {0x02, 0x04, 0x06, 0x08};
+        //static uint8_t stuff2[4] = {0x0A, 0x0C, 0x0E, 0x0F};
+        //this->write(stuff, 4, SPIMessage::RemainAsserted);
+        //this->write(stuff2, 4, SPIMessage::DeassertAfter);
         //TEMP
     };
 
