@@ -1833,6 +1833,12 @@
     <Compile Include="device\neopixel\neopixel.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="device\sd_card\diskio.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="device\sd_card\diskio.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="device\sd_card\ff.c">
       <SubType>compile</SubType>
     </Compile>
@@ -1846,12 +1852,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="device\sd_card\syscall.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="device\sd_card\zOLD_diskio.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="device\sd_card\zOLD_diskio.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="device\step_dir_driver\step_dir_driver.h">
