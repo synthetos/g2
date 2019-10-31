@@ -39,22 +39,24 @@
 #include "MotateUniqueID.h"
 #include "MotatePower.h"
 
-extern SDCard<SPIBus_used_t::SPIBusDevice> sd_card;
-
-SDCard<SPIBus_used_t::SPIBusDevice> sd_card {
-    spiBus,
-    Motate::SPIChipSelectPin<Motate::kSocket1_SPISlaveSelectPinNumber>{}
-};
-
 /*
  * hardware_init() - lowest level hardware init
  */
 
-HOT_DATA SPIBus_used_t spiBus;
+SPIBus_used_t spiBus;
+
+extern SDCard<SPIBus_used_t::SPIBusDevice> sd_card;
+
+SDCard<SPIBus_used_t::SPIBusDevice> sd_card {
+    spiBus,
+    Motate::SPIChipSelectPin<Motate::kSD_ChipSelectPinNumber>{}
+};
+
 
 void hardware_init()
 {
     spiBus.init();
+    sd_card.init();
     board_hardware_init();
 	return;
 }
@@ -65,6 +67,7 @@ void hardware_init()
 
 stat_t hardware_periodic()
 {
+    sd_card.periodicCheck();
     return STAT_OK;
 }
 

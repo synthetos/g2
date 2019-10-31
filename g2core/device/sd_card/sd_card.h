@@ -36,11 +36,11 @@ struct SDCard final {
     template <typename SPIBus_t, typename chipSelect_t>
     SDCard(SPIBus_t &spi_bus, const chipSelect_t &_cs)
         : device{spi_bus.getDevice(_cs,    // pass it the chipSelect
-                                  4000000, //frequency in Hz
-                                  SPIDeviceMode::kSPIMode0 | SPIDeviceMode::kSPI8Bit, // device mode
-                                  0,       // min_between_cs_delay_ns
-                                  0,       // cs_to_sck_delay_ns
-                                  0        // between_word_delay_ns
+                                  4000000,
+                                  SPIDeviceMode::kSPIMode0 | SPIDeviceMode::kSPI8Bit,
+                                  0, // min_between_cs_delay_ns
+                                  0, // cs_to_sck_delay_ns
+                                  0   // between_word_delay_ns
                                   )}
     {
         init();

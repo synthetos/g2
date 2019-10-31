@@ -120,6 +120,8 @@
 /---------------------------------------------------------------------------*/
 
 #include "ff.h"			/* Declarations of FatFs API */
+//#include "sd_card.h"	/* Declarations of SD card I/O functions */
+
 #include "zOLD_diskio.h"		/* Declarations of disk I/O functions */
 
 
