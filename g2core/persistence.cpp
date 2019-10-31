@@ -28,7 +28,7 @@
 #include "persistence.h"
 #include "canonical_machine.h"
 #include "report.h"
-//#include "util.h"
+#include "util.h"
 
 /***********************************************************************************
  **** STRUCTURE ALLOCATIONS ********************************************************
@@ -44,6 +44,14 @@ stat_t prepare_persistence_file();
 stat_t write_persistent_values();
 stat_t validate_persistence_file();
 uint8_t active_file_index();
+
+// Leaving this in for now in case bugs come up; we can remove it when we're confident
+// it's stable
+#if 0
+# define DEBUG_PRINT(...) printf(__VA_ARGS__);
+#else
+# define DEBUG_PRINT(...) do {} while (0)
+#endif
 
 // Analogous to ritorno(a), but for the FatFS return codes and with optional debug output
 #define fs_ritorno(a, msg) if((status_code=a) != FR_OK) \
@@ -72,7 +80,7 @@ const char* filenames[PERSISTENCE_FILENAME_CNT] = {
 void persistence_init()
 {
     nvm.file_index = 0;
-    nvm.last_write_systick = SysTickTimer_getValue();
+    nvm.last_write_systick = Motate::SysTickTimer.getValue();
     nvm.write_failures = 0;
     return;
 }
@@ -85,7 +93,6 @@ void persistence_init()
 
 stat_t read_persistent_value(nvObj_t *nv)
 {
-    nv->value_flt = 0;
     ritorno(prepare_persistence_file());
     DEBUG_PRINT("file opened for reading\n");
     fs_ritorno(f_lseek(&nvm.file, nv->index * NVM_VALUE_LEN), "f_lseek during read");
@@ -94,8 +101,8 @@ stat_t read_persistent_value(nvObj_t *nv)
     if (br != NVM_VALUE_LEN) {
         return (STAT_PERSISTENCE_ERROR);
     }
-    memcpy(&nv->value, &nvm.io_buffer, NVM_VALUE_LEN);
-    DEBUG_PRINT("value copied from address %i in file: %f\n", nv->index * NVM_VALUE_LEN, nv->value);
+    memcpy(&nv->value_flt, &nvm.io_buffer, NVM_VALUE_LEN);
+    DEBUG_PRINT("value copied from address %i in file: %f\n", nv->index * NVM_VALUE_LEN, nv->value_flt);
     return (STAT_OK);
 }
 
@@ -108,15 +115,15 @@ stat_t read_persistent_value(nvObj_t *nv)
 
 stat_t write_persistent_value(nvObj_t *nv)
 {
-    nvm.tmp_value = nv->value;
+    nvm.tmp_value = nv->value_flt;
     if (read_persistent_value(nv) != STAT_OK ||
-        (isnan((double)nv->value)) ||
-        (isinf((double)nv->value)) ||
-        (nv->value != nvm.tmp_value)) { // use a bitwise equality check rather than fp_EQ
+        (isnan((double)nv->value_flt)) ||
+        (isinf((double)nv->value_flt)) ||
+        (fp_NE(nv->value_flt, nvm.tmp_value))) { // use a bitwise equality check rather than fp_EQ
                                         // since underlying value might not really be a float
         nvm.write_cache[nv->index] = nvm.tmp_value;
     }
-    nv->value =nvm.tmp_value;   // always restore value
+    nv->value_flt =nvm.tmp_value;   // always restore value
     return (STAT_OK);
 }
 
@@ -132,9 +139,9 @@ stat_t write_persistent_values_callback()
    // FIXME: it would be much better to do this with an interrupt!
    f_polldisk();
    if (nvm.write_cache.size()) {
-       if (SysTickTimer_getValue() - nvm.last_write_systick < MIN_WRITE_INTERVAL) return (STAT_NOOP);
+       if (Motate::SysTickTimer.getValue() - nvm.last_write_systick < MIN_WRITE_INTERVAL) return (STAT_NOOP);
        // this check may not be necessary on ARM, but just in case...
-       if (cm.cycle_state != CYCLE_OFF) return(STAT_NOOP);    // can't write when machine is moving
+       if (cm->cycle_type != CYCLE_NONE) return(STAT_NOOP);    // can't write when machine is moving
        
        if(write_persistent_values() == STAT_OK) {
            nvm.write_cache.clear();
@@ -148,7 +155,7 @@ stat_t write_persistent_values_callback()
                return(rpt_exception(STAT_PERSISTENCE_ERROR, NULL));
            }
        }
-       nvm.last_write_systick = SysTickTimer_getValue();
+       nvm.last_write_systick = Motate::SysTickTimer.getValue();
        return STAT_OK;
    }
    return STAT_NOOP;
@@ -221,7 +228,7 @@ stat_t prepare_persistence_file()
 stat_t validate_persistence_file()
 {
    uint32_t crc = 0;
-   uint32_t filecrc = NAN;
+   uint32_t filecrc = -1;
    UINT br, br_sum = 0;
    fs_ritorno(f_lseek(&nvm.file, 0), "crc check seek");
    while (!f_eof(&nvm.file)) {
@@ -273,7 +280,7 @@ stat_t write_persistent_values()
    uint16_t step = IO_BUFFER_SIZE/NVM_VALUE_LEN;
    for (index_t cnt = 0; cnt < nv_index_max(); cnt += step) {
        // try to read old values from existing file
-       uint16_t io_byte_count = std::min(IO_BUFFER_SIZE, (nv_index_max()-cnt) * NVM_VALUE_LEN);
+       uint16_t io_byte_count = std::min((float)IO_BUFFER_SIZE, (float)((nv_index_max()-cnt) * NVM_VALUE_LEN));
        UINT br = 0;
        f_read(&nvm.file, &nvm.io_buffer, io_byte_count, &br);
        DEBUG_PRINT("read %i bytes from old file\n", br);

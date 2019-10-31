@@ -47,6 +47,7 @@ ifeq ("$(BASE_BOARD)","g2v9")
 	include $(PLATFORM_BASE).mk
 
 	ifeq ("$(BANTAM)", "1")
+		SOURCE_DIRS += device/sd_card device/sd_card/fatfs
 		CUSTOM_LINKER_SCRIPT := board/G2v9/bantam-checksum-flash.ld
 		ALL_ADDITIONS += $(OUTPUT_BIN)-summed.bin
 define ADDITIONAL_RECIPES

@@ -168,6 +168,7 @@ struct xioDeviceWrapperBase {                // C++ base class for device primit
     virtual int16_t write(const char *buffer, int16_t len) { return -1; };
 
     virtual char *readline(devflags_t limit_flags, uint16_t &size) { return nullptr; };
+    virtual void flushDevice() {};
 
 #if MARLIN_COMPAT_ENABLED == true
     virtual void exitFakeBootloaderMode() {};
@@ -392,6 +393,17 @@ struct xio_t {
         return (NULL);
     };
 
+    void flushDevice(devflags_t &flags)
+    {
+        for (uint8_t dev=0; dev < _dev_count; dev++) {
+            if(!DeviceWrappers[dev]->isActive())
+                continue;
+            if(!(DeviceWrappers[dev]->flags & flags))
+                continue;
+            DeviceWrappers[dev]->flushRead();
+        }
+    };
+
 #if MARLIN_COMPAT_ENABLED == true
     void exitFakeBootloaderMode() {
         for (int8_t i = 0; i < _dev_count; ++i) {
@@ -402,17 +414,6 @@ struct xio_t {
 
     uint16_t magic_end;
 };
-
-void xio_flush_device(devflags_t flags)
-{
-  or( uint8_t dev=0; dev < DEV_MAX; dev++) {
-    if(!xio.d[dev]->isActive())
-      continue;
-    if(!(xio.d[dev]->flags & flags))
-      continue;
-    DeviceWrappers[dev]->flushRead();
-  }
-}
 
 // Declare (but don't define) the xio singleton object now, define it later
 // Why? xioDeviceWrapper uses it, but we need to define it to contain xioDeviceWrapper objects.
@@ -1413,6 +1414,15 @@ bool xio_send_file(xio_flash_file &file) {
 
 void xio_flush_to_command() {
     return xio.flushToCommand();
+}
+
+/*
+ * xio_flush_device() - flush reads on all devices except those that are active or have flags provided
+ */
+
+void xio_flush_device(devflags_t &flags)
+{
+    xio.flushDevice(flags);
 }
 
 #if MARLIN_COMPAT_ENABLED == true

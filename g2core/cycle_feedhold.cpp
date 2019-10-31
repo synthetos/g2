@@ -404,9 +404,11 @@ void cm_request_queue_flush()
 
 static void _start_queue_flush()
 {
+    devflags_t flags = DEV_IS_DATA;
+    
     // Don't initiate the queue until in HOLD state (this also means that runtime is idle)
     if ((cm1.queue_flush_state == QUEUE_FLUSH_REQUESTED) && (cm1.hold_state == FEEDHOLD_HOLD)) {
-        xio_flush_device(DEV_IS_DATA);
+        xio_flush_device(flags);
         if (cm1.hold_type == FEEDHOLD_TYPE_ACTIONS) {
             op.add_action(_feedhold_restart_with_actions);
         } else {

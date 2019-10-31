@@ -43,6 +43,7 @@
 //**** persistence singleton ****
 
 typedef struct nvmSingleton {
+    float tmp_value;
     FATFS fat_fs;
     FIL file;
     uint8_t file_index;

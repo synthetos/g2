@@ -95,6 +95,7 @@ float *set_vector_by_axis(float value, uint8_t axis);
 uint8_t isnumber(char c);
 char *escape_string(char *dst, char *src);
 uint16_t compute_checksum(char const *string, const uint16_t length);
+uint32_t crc32(uint32_t crc, const void *buf, size_t size);
 char floattoa(char *buffer, float in, int precision, int maxlen = 16);
 char inttoa(char *str, int n);
 
