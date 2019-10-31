@@ -403,16 +403,15 @@ struct xio_t {
     uint16_t magic_end;
 };
 
-//ms: fix
 void xio_flush_device(devflags_t flags)
 {
-  /*or( uint8_t dev=0; dev < DEV_MAX; dev++) {
+  or( uint8_t dev=0; dev < DEV_MAX; dev++) {
     if(!xio.d[dev]->isActive())
       continue;
     if(!(xio.d[dev]->flags & flags))
       continue;
     DeviceWrappers[dev]->flushRead();
-  }*/
+  }
 }
 
 // Declare (but don't define) the xio singleton object now, define it later

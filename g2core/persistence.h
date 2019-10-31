@@ -29,24 +29,34 @@
 #define PERSISTENCE_H_ONCE
 
 #include "config.h"  // needed for nvObj_t definition
+#include "fatfs/ff.h"
+#include "util.h"                   // FIXME: this won't compile if included after <map>
+#include <map>
 
-#define NVM_VALUE_LEN 4       // NVM value length (float, fixed length)
-#define NVM_BASE_ADDR 0x0000  // base address of usable NVM
+#define NVM_VALUE_LEN 4             // NVM value length (float, fixed length)
+#define NVM_BASE_ADDR 0x0000        // base address of usable NVM
+
+#define IO_BUFFER_SIZE 512          // this should be evenly divisible by NVM_VALUE_LEN, and <=512 until multi-block reads are fixed (right now they are hanging...)
+#define MIN_WRITE_INTERVAL 1000     // minimum interval between persistence file writes
+#define MAX_WRITE_FAILURES 3
 
 //**** persistence singleton ****
 
 typedef struct nvmSingleton {
-    uint16_t base_addr;     // NVM base address
-    uint16_t profile_base;  // NVM base address of current profile]
-    uint16_t address;
-    float    tmp_value;
-    int8_t   byte_array[NVM_VALUE_LEN];
+    FATFS fat_fs;
+    FIL file;
+    uint8_t file_index;
+    uint8_t io_buffer[IO_BUFFER_SIZE];
+    std::map<index_t, float> write_cache;
+    uint32_t last_write_systick;
+    uint8_t write_failures;
 } nvmSingleton_t;
 
 //**** persistence function prototypes ****
 
 void persistence_init(void);
-stat_t read_persistent_value(nvObj_t* nv);
-stat_t write_persistent_value(nvObj_t* nv);
+stat_t read_persistent_value(nvObj_t *nv);
+stat_t write_persistent_value(nvObj_t *nv);
+stat_t write_persistent_values_callback();
 
 #endif  // End of include guard: PERSISTENCE_H_ONCE
