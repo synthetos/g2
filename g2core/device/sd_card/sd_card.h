@@ -71,7 +71,7 @@ struct SDCard final {
         _transmitting = true; // preemptively say we're transmitting .. as a mutex
 
         // Set up SPI buffers
-        _scribble_buffer[0] = 0x00; //ms: allow to change for sendAsNoop
+        _scribble_buffer[0] = 0x00;
 
         // We write before we read -- so we don't lose what we set in the registers when writing
         if (_spi_write) { 
@@ -111,32 +111,25 @@ struct SDCard final {
         _startNextReadWrite();
     };
 
-    void read(const bool last_transfer = SPIMessage::RemainAsserted, const uint8_t send_as_noop = 0x00) {
+    void read(uint8_t *data, const uint16_t num_bytes, const bool last_transfer = SPIMessage::RemainAsserted) {
         
-        // Configure single byte read
+        // Configure multi byte read
         _spi_read = true;
-        _spi_data = (uint8_t*)&send_as_noop;
+        _spi_data = data;
         _last_xfer = last_transfer;
-        _num_bytes = 1;
+        _num_bytes = num_bytes;
 
         // Set up read
         _startNextReadWrite();
     };
 
-    void write(const uint8_t data, const bool last_transfer = SPIMessage::RemainAsserted) {
-
-        // Configure single byte write
-        _spi_write = true;
-        _spi_data = (uint8_t*)&data;
-        _last_xfer = last_transfer;
-        _num_bytes = 1;
-
-
-        // Set up write
-        _startNextReadWrite();
+    void read(uint8_t *data, const bool last_transfer = SPIMessage::RemainAsserted) {
+        
+        // Configure and set up single byte read
+        read(data, 1, last_transfer);
     };
 
-    void write(const uint8_t *data, const uint16_t num_bytes, const bool last_transfer = SPIMessage::RemainAsserted) {
+    void write(uint8_t *data, const uint16_t num_bytes, const bool last_transfer = SPIMessage::RemainAsserted) {
 
         // Configure multi byte write
         _spi_write = true;
@@ -148,6 +141,12 @@ struct SDCard final {
         _startNextReadWrite();
     };
 
+    void write(uint8_t data, const bool last_transfer = SPIMessage::RemainAsserted) {
+        
+        // Configure and set up single byte write
+        write(&data, 1, last_transfer);
+    };
+
     // this would be called by the project or from a SysTickHandler
     void periodicCheck() {
         if (!_inited || (check_timer.isSet() && !check_timer.isPast())) {
@@ -156,14 +155,21 @@ struct SDCard final {
         }
 
         //TEMP
-        //this->write(0x01, SPIMessage::RemainAsserted);
-        //this->write(0x03, SPIMessage::DeassertAfter);
-        //this->write(0x05, SPIMessage::RemainAsserted);
-        //this->write(0x07, SPIMessage::DeassertAfter);
-        //static uint8_t stuff[4] = {0x02, 0x04, 0x06, 0x08};
-        //static uint8_t stuff2[4] = {0x0A, 0x0C, 0x0E, 0x0F};
-        //this->write(stuff, 4, SPIMessage::RemainAsserted);
-        //this->write(stuff2, 4, SPIMessage::DeassertAfter);
+        /*
+        uint8_t rd[5] = {0x2, 0x4, 0x6, 0x8, 0xA};
+        this->read(rd, 5, SPIMessage::DeassertAfter);
+        this->write(rd, 5, SPIMessage::DeassertAfter);
+        uint8_t rd = 0x2;
+        this->read(&rd);
+        this->write(rd, SPIMessage::DeassertAfter);
+        this->write(0x01, SPIMessage::RemainAsserted);
+        this->write(0x03, SPIMessage::DeassertAfter);
+        this->write(0x05, SPIMessage::RemainAsserted);
+        this->write(0x07, SPIMessage::DeassertAfter);
+        static uint8_t stuff[4] = {0x02, 0x04, 0x06, 0x08};
+        static uint8_t stuff2[4] = {0x0A, 0x0C, 0x0E, 0x0F};
+        this->write(stuff, 4, SPIMessage::RemainAsserted);
+        this->write(stuff2, 4, SPIMessage::DeassertAfter);*/
         //TEMP
     };
 
