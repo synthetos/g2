@@ -82,9 +82,13 @@ stat_t cm_clr(nvObj_t *nv)                // clear alarm or shutdown from comman
 void cm_clear()
 {
     if (cm->machine_state == MACHINE_ALARM) {
+        // immediately clear the alarm, then reset the rest of the stuff
         cm->machine_state = MACHINE_PROGRAM_STOP;
+        cm_program_stop();
     } else if (cm->machine_state == MACHINE_SHUTDOWN) {
+        // immediately clear the shutdown, then reset the rest of the stuff
         cm->machine_state = MACHINE_READY;
+        cm_program_end();
     }
 
 }
