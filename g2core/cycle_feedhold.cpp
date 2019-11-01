@@ -323,11 +323,13 @@ static stat_t _run_reset_position()
 }
 
 static stat_t _run_alarm() {
-    cm->machine_state = MACHINE_ALARM;
+    cm1.machine_state = MACHINE_ALARM;
+    cm1.hold_exit = FEEDHOLD_EXIT_END;
     return (STAT_OK);
 }
 static stat_t _run_shutdown() {
-    cm->machine_state = MACHINE_SHUTDOWN;
+    cm1.machine_state = MACHINE_SHUTDOWN;
+    cm1.hold_exit = FEEDHOLD_EXIT_END;
     return (STAT_OK);
 }
 static stat_t _run_interlock_started() {

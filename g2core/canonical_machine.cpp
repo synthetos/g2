@@ -1704,7 +1704,7 @@ static void _exec_program_finalize(float *value, bool *flag)
     }
 
     // reset the rest of the states
-    cm->cycle_type = CYCLE_NONE;
+    // cm->cycle_type = CYCLE_NONE;
     cm->hold_state = FEEDHOLD_OFF;
     mp_zero_segment_velocity();                             // for reporting purposes
 
