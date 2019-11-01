@@ -386,9 +386,6 @@ struct gpioDigitalInputPin final : gpioDigitalInput {
 
     inputEdgeFlag edge;                 // keeps a transient record of edges for immediate inquiry
 
-    bool homing_mode;                   // set true when input is in homing mode.
-    bool probing_mode;                  // set true when input is in probing mode.
-
     const uint8_t ext_pin_number;       // the number used externally for this pin ("din" + ext_pin_number)
     uint8_t proxy_pin_number;           // the number used externally for this pin ("in" + proxy_pin_number)
 
