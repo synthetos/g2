@@ -82,6 +82,7 @@ void persistence_init()
     nvm.file_index = 0;
     nvm.last_write_systick = Motate::SysTickTimer.getValue();
     nvm.write_failures = 0;
+    nvm.changed_nvs = 0;
     return;
 }
 
@@ -115,15 +116,9 @@ stat_t read_persistent_value(nvObj_t *nv)
 
 stat_t write_persistent_value(nvObj_t *nv)
 {
-    nvm.tmp_value = nv->value_flt;
-    if (read_persistent_value(nv) != STAT_OK ||
-        (isnan((double)nv->value_flt)) ||
-        (isinf((double)nv->value_flt)) ||
-        (fp_NE(nv->value_flt, nvm.tmp_value))) { // use a bitwise equality check rather than fp_EQ
-                                        // since underlying value might not really be a float
-        nvm.write_cache[nv->index] = nvm.tmp_value;
+    if (read_persistent_value(nv) != STAT_OK) {
+      nvm.changed_nv_indexes[nvm.changed_nvs++] = nv->index;
     }
-    nv->value_flt =nvm.tmp_value;   // always restore value
     return (STAT_OK);
 }
 
@@ -138,19 +133,19 @@ stat_t write_persistent_values_callback()
    // Check the disk status to ensure we catch card-detect pin changes.
    // FIXME: it would be much better to do this with an interrupt!
    f_polldisk();
-   if (nvm.write_cache.size()) {
+   if (nvm.changed_nvs > 0) {
        if (Motate::SysTickTimer.getValue() - nvm.last_write_systick < MIN_WRITE_INTERVAL) return (STAT_NOOP);
        // this check may not be necessary on ARM, but just in case...
        if (cm->cycle_type != CYCLE_NONE) return(STAT_NOOP);    // can't write when machine is moving
        
        if(write_persistent_values() == STAT_OK) {
-           nvm.write_cache.clear();
+           nvm.changed_nvs = 0;
            nvm.write_failures = 0;
        } else {
            // if the write failed, make sure no half-written output file exists
            f_unlink(filenames[NEXT_FILE_INDEX]);
            if (++nvm.write_failures >= MAX_WRITE_FAILURES) {
-               nvm.write_cache.clear(); // give up on these values
+               nvm.changed_nvs = 0;     // give up on these values
                nvm.write_failures = 0;  // but try again if we get more values later
                return(rpt_exception(STAT_PERSISTENCE_ERROR, NULL));
            }
@@ -265,7 +260,13 @@ stat_t write_persistent_values()
    
    FIL f_out;
    UINT bw;
-   
+   nvObj_t *nv = nv_reset_nv_list();  // sets *nv to the start of the body
+   cmDistanceMode saved_distance_mode;
+   uint16_t changed_nvs_idx = 0;
+
+   // Save the current units mode
+   saved_distance_mode  = (cmDistanceMode)cm_get_distance_mode(ACTIVE_MODEL);
+
    // attempt to open file with previously persisted values
    if (prepare_persistence_file() == STAT_OK) {
        fs_ritorno(f_lseek(&nvm.file, 0), "f_lseek to input file start");
@@ -278,6 +279,7 @@ stat_t write_persistent_values()
    
    uint32_t crc = 0;
    uint16_t step = IO_BUFFER_SIZE/NVM_VALUE_LEN;
+
    for (index_t cnt = 0; cnt < nv_index_max(); cnt += step) {
        // try to read old values from existing file
        uint16_t io_byte_count = std::min((float)IO_BUFFER_SIZE, (float)((nv_index_max()-cnt) * NVM_VALUE_LEN));
@@ -293,15 +295,32 @@ stat_t write_persistent_values()
            memcpy(nvm.io_buffer+br, &cfgArray[index].def_value, NVM_VALUE_LEN);
        }
        DEBUG_PRINT("io_buffer populated with %i bytes total\n", br);
-       
-       // update the values in the buffer from the write cache
-       for (auto i = nvm.write_cache.lower_bound(cnt);
-           i != nvm.write_cache.lower_bound(cnt+step);
-            ++i) {
-           index_t index = (i->first - cnt) * NVM_VALUE_LEN;
-           memcpy(nvm.io_buffer+index, &i->second, NVM_VALUE_LEN);
-           DEBUG_PRINT("item index: %i, write index: %i (cnt: %i), value: %f\n", i->first, index, cnt, i->second);
-       }
+
+      // update the values in the buffer from the changes indexes in the current range
+      for (nv->index = cnt; nv->index < (cnt + step); nv->index++) {
+
+        // Found an entry that needs to be written
+        if (nv->index == nvm.changed_nv_indexes[changed_nvs_idx])  {
+          nv_get_nvObj(nv);
+
+          // Get the index for the current NVM value
+          index_t index = (nv->index - cnt) * NVM_VALUE_LEN;
+
+          // Write out based on the value type
+          if (nv->valuetype == TYPE_INTEGER || nv->valuetype == TYPE_BOOLEAN) {
+            memcpy(nvm.io_buffer + index, &nv->value_int, NVM_VALUE_LEN);
+            DEBUG_PRINT("item index: %i, write index: %i (cnt: %i), value: %d\n", nv->index, index, cnt, nv->value_int);
+          } else if (nv->valuetype == TYPE_FLOAT) {
+            memcpy(nvm.io_buffer + index, &nv->value_flt, NVM_VALUE_LEN);
+            DEBUG_PRINT("item index: %i, write index: %i (cnt: %i), value: %d\n", nv->index, index, cnt, nv->value_flt);
+          } else {
+            // next - ignore strings and other stuff which shouldn't be set to persist anyway
+          }
+
+          // Increment the changed nv index
+          changed_nvs_idx++;
+        }
+      }
        
        // write updated values to output file and sync
        fs_ritorno(f_write(&f_out, &nvm.io_buffer, io_byte_count, &bw), "new file write");
@@ -325,6 +344,9 @@ stat_t write_persistent_values()
        DEBUG_PRINT("deleted obsolete file %s\n", filenames[nvm.file_index]);
        nvm.file_index = 0;
    }
-   
+
+   // Restore units mode   
+   cm_set_distance_mode(saved_distance_mode);
+
    return (STAT_OK);
 }

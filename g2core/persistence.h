@@ -39,6 +39,7 @@
 #define IO_BUFFER_SIZE 512          // this should be evenly divisible by NVM_VALUE_LEN, and <=512 until multi-block reads are fixed (right now they are hanging...)
 #define MIN_WRITE_INTERVAL 1000     // minimum interval between persistence file writes
 #define MAX_WRITE_FAILURES 3
+#define MAX_WRITE_CHANGES IO_BUFFER_SIZE    // maximum number of write values that change - ms: TODO
 
 //**** persistence singleton ****
 
@@ -48,7 +49,8 @@ typedef struct nvmSingleton {
     FIL file;
     uint8_t file_index;
     uint8_t io_buffer[IO_BUFFER_SIZE];
-    std::map<index_t, float> write_cache;
+    index_t changed_nv_indexes[MAX_WRITE_CHANGES];
+    uint16_t changed_nvs;
     uint32_t last_write_systick;
     uint8_t write_failures;
 } nvmSingleton_t;
