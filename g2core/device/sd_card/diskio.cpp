@@ -40,7 +40,7 @@ int rcvr_datablock (	/* 1:OK, 0:Failed */
 		token = sd_card.read(SPIMessage::DeassertAfter, 0xFF);
 	} while ((token != 0xFE) && Motate::SysTickTimer.getValue()-start < 100);
 	if(token != 0xFE) {
-        return 0;		/* If not valid data token, retutn with error */
+        return 0;		/* If not valid data token, return with error */
     }
     
     sd_card.read((uint8_t*)buff, btr);
@@ -73,9 +73,9 @@ int xmit_datablock (	/* 1:OK, 0:Failed */
   if (token != 0xFD) {	/* Is data token */
     sd_card.write(buff_temp, 512);
     sd_card.write(0xFF);					/* CRC (Dummy) */
-    sd_card.write(0xFF, SPIMessage::RemainAsserted);
+    sd_card.write(0xFF, SPIMessage::DeassertAfter);
     do {
-      resp = sd_card.read() & 0x1F;				/* Reveive data response */
+      resp = sd_card.read() & 0x1F;				/* Receive data response */
     } while (resp == 0 || resp == 0x1F);
 		if (resp != 0x05)		/* If not accepted, return with error */
       return 0;
@@ -166,7 +166,7 @@ DSTATUS disk_initialize (
 	if (disk_status(drv) & STA_NODISK) return Stat;	/* No card in the socket */
     
     // initialization has to be performed at a slower speed
-    //ms: fix spi.reset(new Motate::SPI<Motate::kSocket1_SPISlaveSelectPinNumber>(SD_INIT_SPEED));
+    sd_card.setOptions(SD_INIT_SPEED);
     
 	for (n = 10; n; n--) sd_card.read();	/* 80 dummy clocks */
     
@@ -201,7 +201,7 @@ DSTATUS disk_initialize (
 		Stat &= ~STA_NOINIT;		/* Clear STA_NOINIT */
 	}
     
-    //ms: fix spi.reset(new Motate::SPI<Motate::kSocket1_SPISlaveSelectPinNumber>(SD_ACTIVE_SPEED));
+  sd_card.setOptions(SD_ACTIVE_SPEED);
     
 	return Stat;
 }

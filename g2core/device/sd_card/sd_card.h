@@ -108,6 +108,10 @@ struct SDCard final {
         _inited = true;
     };
 
+    void setOptions(const uint32_t baud, const uint16_t options = (SPIDeviceMode::kSPIMode0 | SPIDeviceMode::kSPI8Bit), uint32_t min_between_cs_delay_ns = 0, uint32_t cs_to_sck_delay_ns = 0, uint32_t between_word_delay_ns = 0) {
+        _device.setOptions(baud, options, min_between_cs_delay_ns, cs_to_sck_delay_ns, between_word_delay_ns);
+    }
+
     void messageDoneCallback() {
         check_timer.set(1);  // don't send again until 1ms has past
 
