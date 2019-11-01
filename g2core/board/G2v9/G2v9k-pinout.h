@@ -127,7 +127,7 @@ _MAKE_MOTATE_PIN(kInput6_PinNumber, 'A', 13);                 // ZAxis_MaxPinNum
 _MAKE_MOTATE_PIN(kInput7_PinNumber, 'A', 14);                 // AAxis_MinPinNumber
 _MAKE_MOTATE_PIN(kInput8_PinNumber, 'A', 15);                 // AAxis_MaxPinNumber
 _MAKE_MOTATE_PIN(kSocket1_Microstep_1PinNumber, 'A', 16);     // Socket1_Microstep_1PinNumber
-_MAKE_MOTATE_PIN(kInterlock_InPinNumber, 'A', 17);            // Interlock_In
+_MAKE_MOTATE_PIN(kInput9_PinNumber, 'A', 17);                 // Interlock_In
 _MAKE_MOTATE_PIN(kLED_USBRXPinNumber, 'A', 18);               // LED_USBRXPinNumber
 _MAKE_MOTATE_PIN(kLED_USBTXPinNumber, 'A', 19);               // LED_USBTXPinNumber
 _MAKE_MOTATE_PIN(kUnassigned2, 'A', 20);                      // unassigned and disconnected
