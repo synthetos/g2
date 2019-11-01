@@ -1,8 +1,13 @@
-#include "diskio.h"
 #include "hardware.h"
+#include "diskio.h"
+#include "sd_card.h"
 #include <stdio.h>
 #include <memory>
 
+// SD Card
+extern SDCard<SPIBus_used_t::SPIBusDevice> sd_card;
+
+// Card Detect Pin
 Motate::Pin<Motate::kSD_CardDetectPinNumber> cdPin(Motate::kInput);
 
 /*--------------------------------------------------------------------------
@@ -32,16 +37,16 @@ int rcvr_datablock (	/* 1:OK, 0:Failed */
     
     uint32_t start = Motate::SysTickTimer.getValue();
 	do {							/* Wait for data packet in timeout of 100ms */
-		//ms: fix token = spi->read(true, 0xFF);
+		token = sd_card.read(SPIMessage::DeassertAfter, 0xFF);
 	} while ((token != 0xFE) && Motate::SysTickTimer.getValue()-start < 100);
 	if(token != 0xFE) {
         return 0;		/* If not valid data token, retutn with error */
     }
     
-    //ms: fix spi->read((uint8_t*)buff, btr);
+    sd_card.read((uint8_t*)buff, btr);
     
-	//ms: fix spi->read(false, 0xFF);					/* Discard CRC */
-	//ms: fix spi->read(false, 0xFF);
+	sd_card.read(SPIMessage::RemainAsserted, 0xFF);					/* Discard CRC */
+	sd_card.read(SPIMessage::RemainAsserted, 0xFF);
     
 	return 1;						/* Return with success */
 }
@@ -59,20 +64,22 @@ int xmit_datablock (	/* 1:OK, 0:Failed */
                     BYTE token			/* Data/Stop token */
 )
 {
-	BYTE resp = 0;
-    
-    //ms: fix bool stop = (token == 0xFD);
-	//ms: fix spi->write(token, stop);					/* Xmit data token */
-	if (token != 0xFD) {	/* Is data token */
-        //ms: fix spi->write(buff, 512);
-		//ms: fix spi->write(0xFF);					/* CRC (Dummy) */
-		//ms: fix spi->write(0xFF, true);
-        do {
-            //ms: fix resp = spi->read() & 0x1F;				/* Reveive data response */
-        } while (resp == 0 || resp == 0x1F);
+  BYTE resp = 0;
+  BYTE *buff_temp = (BYTE *)buff;  //ms: fix
+  bool stop = (token == 0xFD);
+  
+  sd_card.write(token, stop);					/* Xmit data token */
+  
+  if (token != 0xFD) {	/* Is data token */
+    sd_card.write(buff_temp, 512);
+    sd_card.write(0xFF);					/* CRC (Dummy) */
+    sd_card.write(0xFF, SPIMessage::RemainAsserted);
+    do {
+      resp = sd_card.read() & 0x1F;				/* Reveive data response */
+    } while (resp == 0 || resp == 0x1F);
 		if (resp != 0x05)		/* If not accepted, return with error */
-			return 0;
-	}
+      return 0;
+  }
     
 	return 1;
 }
@@ -93,11 +100,8 @@ uint8_t send_cmd (      /* Returns command response (bit7==1:Send failed)*/
 )
 {
     uint8_t res = 0xFF;
-    
-    //ms: fix
 
-    /*
-    if (cmd & 0x80) {   * ACMD<n> is the command sequense of CMD55-CMD<n> *
+    if (cmd & 0x80) {   /* ACMD<n> is the command sequence of CMD55-CMD<n> */
         cmd &= 0x7F;
         res = send_cmd(CMD55, 0);
         if (res > 1) return res;
@@ -105,12 +109,12 @@ uint8_t send_cmd (      /* Returns command response (bit7==1:Send failed)*/
     
     // wait until card is ready to receive command
     uint32_t start = Motate::SysTickTimer.getValue();
-    while ((spi->read(true, 0xFF) != 0xFF) && Motate::SysTickTimer.getValue() - start < 1000) {};
+    while ((sd_card.read(SPIMessage::DeassertAfter, 0xFF) != 0xFF) && Motate::SysTickTimer.getValue() - start < 1000) {};
 
     // choose the command CRC
-    uint8_t n = 0x01;                           * Dummy CRC + Stop *
-    if (cmd == CMD0) n = 0x95;          * Valid CRC for CMD0(0) *
-    if (cmd == CMD8) n = 0x87;          * Valid CRC for CMD8(0x1AA) *
+    uint8_t n = 0x01;                           /* Dummy CRC + Stop */
+    if (cmd == CMD0) n = 0x95;          /* Valid CRC for CMD0(0) */
+    if (cmd == CMD8) n = 0x87;          /* Valid CRC for CMD8(0x1AA) */
     
     // send command packet
     uint8_t data[6] = {
@@ -121,18 +125,17 @@ uint8_t send_cmd (      /* Returns command response (bit7==1:Send failed)*/
         (uint8_t)(arg & 0xFF),
         n
     };
-    spi->write(data, 6, false);
+    sd_card.write(data, 6, SPIMessage::RemainAsserted);
     
     // receive response
-    if (cmd == CMD12) spi->read(false, 0xFF);       / Skip a stuff byte when stop reading *
-    uint8_t tries = 0xFF;                           * Wait for a valid response in timeout of 10 attempts *
+    if (cmd == CMD12) sd_card.read(SPIMessage::RemainAsserted, 0xFF); /* Skip a stuff byte when stop reading */
+    uint8_t tries = 0xFF;                                             /* Wait for a valid response in timeout of 10 attempts */
     do
-        res = spi->read(false, 0xFF);
+        res = sd_card.read(SPIMessage::RemainAsserted, 0xFF);
     while ((res & 0x80) && --tries);                // 7th bit is low in all valid responses
     
     if (ocr)
-        spi->read(ocr, 4);
-    */
+        sd_card.read(ocr, 4);
     
     return res;         /* Return with the response value */
 }
@@ -154,11 +157,10 @@ uint8_t send_cmd_until_specific_response(uint8_t command, uint32_t args, uint8_t
 /*-----------------------------------------------------------------------*/
 
 DSTATUS disk_initialize (
-                         BYTE drv		/* Physical drive nmuber (0) */
+                         BYTE drv		/* Physical drive number (0) */
 )
 {
-	//ms fix BYTE n, 
-    BYTE ty, cmd, ocr[4];
+	  BYTE n, ty, cmd, ocr[4];
     
 	if (drv) return STA_NOINIT;			/* Supports only single drive */
 	if (disk_status(drv) & STA_NODISK) return Stat;	/* No card in the socket */
@@ -166,7 +168,7 @@ DSTATUS disk_initialize (
     // initialization has to be performed at a slower speed
     //ms: fix spi.reset(new Motate::SPI<Motate::kSocket1_SPISlaveSelectPinNumber>(SD_INIT_SPEED));
     
-	//ms: fix for (n = 10; n; n--) spi->read();	/* 80 dummy clocks */
+	for (n = 10; n; n--) sd_card.read();	/* 80 dummy clocks */
     
 	ty = 0;
     if (send_cmd_until_specific_response(CMD0, 0, 1)) {     /* Enter Idle state */
@@ -195,7 +197,7 @@ DSTATUS disk_initialize (
 	}
 	CardType = ty;
     
-	if (ty) {			/* Initialization succeded */
+	if (ty) {			/* Initialization succeeded */
 		Stat &= ~STA_NOINIT;		/* Clear STA_NOINIT */
 	}
     
@@ -342,9 +344,9 @@ DRESULT disk_ioctl (
         case GET_BLOCK_SIZE :	/* Get erase block size in unit of sector (DWORD) */
             if (CardType & CT_SD2) {			/* SDv2 */
                 if (send_cmd(ACMD13, 0) == 0) {		/* Read SD status */
-                    //ms: fix spi->read();
+                    sd_card.read();
                     if (rcvr_datablock(csd, 16)) {				/* Read partial block */
-                        //ms: fix for (n = 64 - 16; n; n--) spi->read();	/* Purge trailing data */
+                        for (n = 64 - 16; n; n--) sd_card.read();	/* Purge trailing data */
                         *(DWORD*)buff = 16UL << (csd[10] >> 4);
                         res = RES_OK;
                     }
@@ -384,9 +386,9 @@ DRESULT disk_ioctl (
             }
             break;
             
-        case MMC_GET_SDSTAT :	/* Receive SD statsu as a data block (64 bytes) */
+        case MMC_GET_SDSTAT :	/* Receive SD status as a data block (64 bytes) */
             if (send_cmd(ACMD13, 0) == 0) {	/* SD_STATUS */
-                //ms: fix spi->read();
+                sd_card.read();
                 if (rcvr_datablock(ptr, 64))
                     res = RES_OK;
             }

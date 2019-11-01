@@ -60,7 +60,8 @@ struct SDCard final {
 
     bool _spi_write = false;
     bool _spi_read = false;
-    bool _last_xfer = false;
+    bool _deassert_cs = false;
+    uint8_t _send_as_noop = 0x0;
     uint16_t _num_bytes = 0;
 
     uint8_t *_spi_data;
@@ -70,17 +71,20 @@ struct SDCard final {
         if (_transmitting || !_inited) { return; }
         _transmitting = true; // preemptively say we're transmitting .. as a mutex
 
-        // Set up SPI buffers
-        _scribble_buffer[0] = 0x00;
-
         // We write before we read -- so we don't lose what we set in the registers when writing
         if (_spi_write) { 
             _spi_write = false;
-            _message.setup(_spi_data, _scribble_buffer, _num_bytes, _last_xfer, SPIMessage::EndTransaction);
+            _message.setup(_spi_data, _scribble_buffer, _num_bytes, _deassert_cs, SPIMessage::EndTransaction);
 
         } else if (_spi_read) {
             _spi_read = false;
-            _message.setup(_scribble_buffer, _spi_data, _num_bytes, _last_xfer, SPIMessage::EndTransaction);
+
+            // Populate scribble buffer with no op bytes
+            for (int i = 0; i < _num_bytes; i++) {
+                _scribble_buffer[i] = _send_as_noop;
+            }
+
+            _message.setup(_scribble_buffer, _spi_data, _num_bytes, _deassert_cs, SPIMessage::EndTransaction);
 
         // otherwise we're done here
         } else {
@@ -96,7 +100,8 @@ struct SDCard final {
         // Establish default values
         _spi_write = false;
         _spi_read = false;
-        _last_xfer = false;
+        _deassert_cs = false;
+        _send_as_noop = 0x0;
         _num_bytes = 0;
         
         // mark that init has finished and set the timer
@@ -111,40 +116,45 @@ struct SDCard final {
         _startNextReadWrite();
     };
 
-    void read(uint8_t *data, const uint16_t num_bytes, const bool last_transfer = SPIMessage::RemainAsserted) {
+    void read(uint8_t *data, const uint16_t num_bytes, const bool deassert_cs = SPIMessage::RemainAsserted, const uint8_t send_as_noop = 0x0) {
         
         // Configure multi byte read
         _spi_read = true;
         _spi_data = data;
-        _last_xfer = last_transfer;
+        _deassert_cs = deassert_cs;
+        _send_as_noop = send_as_noop;
         _num_bytes = num_bytes;
 
         // Set up read
         _startNextReadWrite();
     };
 
-    void read(uint8_t *data, const bool last_transfer = SPIMessage::RemainAsserted) {
+    uint8_t read(const bool deassert_cs = SPIMessage::RemainAsserted, const uint8_t send_as_noop = 0x0) {
+        
+        uint8_t data;
         
         // Configure and set up single byte read
-        read(data, 1, last_transfer);
+        read(&data, 1, deassert_cs, send_as_noop);
+        
+        return data;
     };
 
-    void write(uint8_t *data, const uint16_t num_bytes, const bool last_transfer = SPIMessage::RemainAsserted) {
+    void write(uint8_t *data, const uint16_t num_bytes, const bool deassert_cs = SPIMessage::RemainAsserted) {
 
         // Configure multi byte write
         _spi_write = true;
         _spi_data = data;
-        _last_xfer = last_transfer;
+        _deassert_cs = deassert_cs;
         _num_bytes = num_bytes;
 
         // Set up write
         _startNextReadWrite();
     };
 
-    void write(uint8_t data, const bool last_transfer = SPIMessage::RemainAsserted) {
+    void write(uint8_t data, const bool deassert_cs = SPIMessage::RemainAsserted) {
         
         // Configure and set up single byte write
-        write(&data, 1, last_transfer);
+        write(&data, 1, deassert_cs);
     };
 
     // this would be called by the project or from a SysTickHandler
@@ -155,11 +165,11 @@ struct SDCard final {
         }
 
         //TEMP
-        /*
-        uint8_t rd[5] = {0x2, 0x4, 0x6, 0x8, 0xA};
-        this->read(rd, 5, SPIMessage::DeassertAfter);
-        this->write(rd, 5, SPIMessage::DeassertAfter);
         uint8_t rd = 0x2;
+        uint8_t noop = 0xA5;
+        rd = this->read(SPIMessage::DeassertAfter, noop);
+        this->write(rd, SPIMessage::DeassertAfter);
+        /*uint8_t rd = 0x2;
         this->read(&rd);
         this->write(rd, SPIMessage::DeassertAfter);
         this->write(0x01, SPIMessage::RemainAsserted);
