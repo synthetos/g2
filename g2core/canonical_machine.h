@@ -175,8 +175,8 @@ typedef enum {                      // applies to cm->probe_state
     PROBE_WAITING = 2               // probe is waiting to be started or is running
 } cmProbeState;
 
- typedef enum {
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
+ typedef enum {
     ESTOP_RELEASED = 0,             // pressed/released is physical state, acked/unacked is machine control state, active/inactive is whether we're currently in estop mode
     ESTOP_ACKED    = 0,
     ESTOP_INACTIVE = 0,
@@ -188,8 +188,10 @@ typedef enum {                      // applies to cm->probe_state
     ESTOP_ACK_MASK = 0x2,
     ESTOP_PRESSED_MASK = 0x1,
 } cmEstopState;
+#endif
 
 typedef enum {
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
     SAFETY_INTERLOCK_CLOSED = 0,
     SAFETY_INTERLOCK_OPEN = 0x1,
 
@@ -201,11 +203,12 @@ typedef enum {
 
     SAFETY_INTERLOCK_MASK = 0x1,
     SAFETY_ESC_MASK = 0xE,
-#else
-    SAFETY_INTERLOCK_ENGAGED = 0,   // meaning the interlock input is CLOSED (low)
-    SAFETY_INTERLOCK_DISENGAGED
 #endif
-} cmSafetyState; 
+    SAFETY_INTERLOCK_ENGAGED = 0,   // meaning the interlock input is CLOSED (low)
+    SAFETY_INTERLOCK_DISENGAGING,   // meaning the interlock opened and we're dealing with it
+    SAFETY_INTERLOCK_DISENGAGED,
+    SAFETY_INTERLOCK_ENGAGING
+} cmSafetyState;
 
 typedef enum {                      // feed override state machine
     MFO_OFF = 0,

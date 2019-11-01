@@ -57,7 +57,8 @@ static stat_t _run_program_stop(void);
 static stat_t _run_program_end(void);
 static stat_t _run_alarm(void);
 static stat_t _run_shutdown(void);
-static stat_t _run_interlock(void);
+static stat_t _run_interlock_started(void);
+static stat_t _run_interlock_ended(void);
 static stat_t _run_reset_position(void);
 
 /****************************************************************************************
@@ -181,7 +182,7 @@ void cm_operation_init()
  *  A cycle_start (~) returns to p1 and exits the feedhold, performing exit actions if entry
  *  actions were performed. Motion resumes in p1 from the held point.
  *
- *  A queue_flush (~) returns to p1 and exits the feedhold, performing exit actions if entry
+ *  A queue_flush (%) returns to p1 and exits the feedhold, performing exit actions if entry
  *  actions were performed. The p1 planner is flushed, and motion does not resume. The machine
  *  executes a program_stop, and ends in the STOP state.
  *
@@ -329,9 +330,14 @@ static stat_t _run_shutdown() {
     cm->machine_state = MACHINE_SHUTDOWN;
     return (STAT_OK);
 }
-static stat_t _run_interlock() {
-    cm->machine_state = MACHINE_INTERLOCK;
+static stat_t _run_interlock_started() {
+    cm1.safety_interlock_state = SAFETY_INTERLOCK_DISENGAGED;
+    // cm->machine_state = MACHINE_INTERLOCK;
     return (STAT_OK);
+}
+static stat_t _run_interlock_ended() {
+    cm1.safety_interlock_state = SAFETY_INTERLOCK_ENGAGED;
+    return (_run_restart_cycle());
 }
 
 /****************************************************************************************
@@ -371,9 +377,7 @@ static void _start_cycle_restart()
             case FEEDHOLD_EXIT_FLUSH:     { op.add_action(_run_queue_flush); } // no break
             case FEEDHOLD_EXIT_STOP:      { op.add_action(_run_program_stop); break; }
             case FEEDHOLD_EXIT_END:       { op.add_action(_run_program_end); break; }
-            case FEEDHOLD_EXIT_ALARM:     { op.add_action(_run_alarm); break; }
-            case FEEDHOLD_EXIT_SHUTDOWN:  { op.add_action(_run_shutdown); break; }
-            case FEEDHOLD_EXIT_INTERLOCK: { op.add_action(_run_interlock); break; }
+            case FEEDHOLD_EXIT_INTERLOCK: { op.add_action(_run_interlock_ended); break; }
             default: {}
         }
     }
@@ -405,7 +409,7 @@ void cm_request_queue_flush()
 static void _start_queue_flush()
 {
     devflags_t flags = DEV_IS_DATA;
-    
+
     // Don't initiate the queue until in HOLD state (this also means that runtime is idle)
     if ((cm1.queue_flush_state == QUEUE_FLUSH_REQUESTED) && (cm1.hold_state == FEEDHOLD_HOLD)) {
         xio_flush_device(flags);
@@ -535,16 +539,15 @@ static void _start_job_kill()
 
 void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit)
 {
-    // Can only initiate a feedhold if you are in a machining cycle, running, not already in a feedhold, and e-stop is not pressed
-
-    // +++++ This needs to be extended to allow HOLDs to be requested when motion has stopped
-    if ((cm1.hold_state == FEEDHOLD_OFF) &&
+    // Can only initiate a feedhold if not already in a feedhold
+    if ((cm1.hold_state == FEEDHOLD_OFF)
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
-        (cm1.machine_state == MACHINE_CYCLE) && (cm1.motion_state == MOTION_RUN) &&
-        (cm1.estop_state == 0)) {
-#else
-        (cm1.machine_state == MACHINE_CYCLE) && (cm1.motion_state == MOTION_RUN)) {
+        && (cm1.estop_state == 0)
 #endif
+        ) {
+        // OLD: Can only initiate a feedhold if you are in a machining cycle, running, and not already in a feedhold
+        // OLD: && (cm1.machine_state == MACHINE_CYCLE) && (cm1.motion_state == MOTION_RUN)
+        // NEW: Will run the operations even if not moving, they will each need to handle cycle/running state correctly
 
         cm1.hold_type = type;
         cm1.hold_exit = exit;
@@ -563,7 +566,7 @@ void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit)
             case FEEDHOLD_EXIT_END:       { op.add_action(_run_program_end); break; }
             case FEEDHOLD_EXIT_ALARM:     { op.add_action(_run_alarm); break; }
             case FEEDHOLD_EXIT_SHUTDOWN:  { op.add_action(_run_shutdown); break; }
-            case FEEDHOLD_EXIT_INTERLOCK: { op.add_action(_run_interlock); break; }
+            case FEEDHOLD_EXIT_INTERLOCK: { op.add_action(_run_interlock_started); break; }
             case FEEDHOLD_EXIT_RESET_POSITION: { op.add_action(_run_reset_position); break; }
             default: {}
         }
@@ -653,9 +656,12 @@ static void _check_motion_stopped()
 
         // Motion has stopped, so we can rely on positions and other values to be stable
         // If SKIP type, discard the remainder of the block and position to the next block
-        if (cm->hold_type == FEEDHOLD_TYPE_SKIP) {
+        // OR if the buffer is empty then there's nothing to discard, don't modify the buffer either
+        if ((cm->hold_type == FEEDHOLD_TYPE_SKIP) || (bf->buffer_state == MP_BUFFER_EMPTY)) {
             copy_vector(mp->position, mr->position);    // update planner position to the final runtime position
-            mp_free_run_buffer();                       // advance to next block, discarding the rest of the move
+            if (mp_get_run_buffer()) {
+                mp_free_run_buffer();                       // advance to next block, discarding the rest of the move
+            }
         } else { // Otherwise setup the block to complete motion (regardless of how hold will ultimately be exited)
             bf->length = get_axis_vector_length(mr->position, mr->target); // update bf w/remaining length in move
             bf->block_state = BLOCK_INITIAL_ACTION;     // tell _exec to re-use the bf buffer
@@ -671,6 +677,11 @@ static void _check_motion_stopped()
 
 static stat_t _feedhold_skip()
 {
+    // check for actual motion to stop
+    if (cm1.machine_state != MACHINE_CYCLE) {
+        return (STAT_OK);
+    }
+
     if (cm1.hold_state == FEEDHOLD_OFF) {       // if entered while OFF start a feedhold
         cm1.hold_type = FEEDHOLD_TYPE_SKIP;
         cm1.hold_state = FEEDHOLD_SYNC;         // ...FLUSH can be overridden by setting hold_exit after this function
@@ -726,6 +737,7 @@ static stat_t _feedhold_with_actions()          // Execute Case (5)
         if (cm1.motion_state == MOTION_STOP) {  // if motion has already stopped declare that you are in a feedhold
             _check_motion_stopped();
             cm1.hold_state = FEEDHOLD_HOLD;
+            cm1.hold_type = FEEDHOLD_TYPE_HOLD; // no actions will be performed, don't try to undo them
         } else {
             cm1.hold_state = FEEDHOLD_SYNC;     // ... STOP can be overridden by setting hold_exit after this function
             return (STAT_EAGAIN);
@@ -757,8 +769,8 @@ static stat_t _feedhold_with_actions()          // Execute Case (5)
         return (STAT_EAGAIN);
     }
 
-    // finalize feedhold entry after callback (this is needed so we can return STAT_OK)
-    if (cm1.hold_state == FEEDHOLD_HOLD_ACTIONS_COMPLETE) {
+    // finalize feedhold entry after callback OR skipping actions (this is needed so we can return STAT_OK)
+    if ((cm1.hold_state == FEEDHOLD_HOLD_ACTIONS_COMPLETE) || (cm1.hold_state == FEEDHOLD_HOLD)) {
         cm1.hold_state = FEEDHOLD_HOLD;
         return (STAT_OK);
     }

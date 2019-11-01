@@ -115,10 +115,10 @@ gpioDigitalInputHandler _limit_input_handler {
 
 gpioDigitalInputHandler _interlock_input_handler{
     [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
-        if (edge == INPUT_EDGE_LEADING) {
-            cm->safety_interlock_disengaged = triggering_pin_number;
+        if (edge != INPUT_EDGE_LEADING) {
+            cm1.safety_interlock_disengaged = triggering_pin_number;
         } else { // edge == INPUT_EDGE_TRAILING
-            cm->safety_interlock_reengaged = triggering_pin_number;
+            cm1.safety_interlock_reengaged = triggering_pin_number;
         }
 
         return GPIO_HANDLED;
@@ -636,22 +636,19 @@ static stat_t _interlock_estop_handler(void)
 #else
 static stat_t _interlock_handler(void)
 {
-    if (cm->safety_interlock_enable) {
-    // interlock broken
-        if (cm->safety_interlock_disengaged != 0) {
-            cm->safety_interlock_disengaged = 0;
-            cm->safety_interlock_state = SAFETY_INTERLOCK_DISENGAGED;
+    // NOTE: Always use cm1. directly for interlock state!
+    if (cm1.safety_interlock_enable) {
+        // interlock broken
+        if ((cm1.safety_interlock_disengaged != 0) && (cm1.safety_interlock_state == SAFETY_INTERLOCK_ENGAGED)) {
+            cm1.safety_interlock_disengaged = 0;
+            cm1.safety_interlock_state = SAFETY_INTERLOCK_DISENGAGING;
             cm_request_feedhold(FEEDHOLD_TYPE_ACTIONS, FEEDHOLD_EXIT_INTERLOCK);  // may have already requested STOP as INPUT_ACTION
-            // feedhold was initiated by input action in gpio
-            // pause spindle
-            // pause coolant
         }
 
         // interlock restored
-        if ((cm->safety_interlock_reengaged != 0) && (mp_runtime_is_idle())) {
-            cm->safety_interlock_reengaged = 0;
-            cm->safety_interlock_state = SAFETY_INTERLOCK_ENGAGED;  // interlock restored
-//            cm_request_exit_hold();                                 // use cm_request_exit_hold() instead of just ending +++++
+        if ((cm1.safety_interlock_reengaged != 0) && mp_runtime_is_idle() && (cm1.safety_interlock_state == SAFETY_INTERLOCK_DISENGAGED)) {
+            cm1.safety_interlock_reengaged = 0;
+            cm1.safety_interlock_state = SAFETY_INTERLOCK_ENGAGING;  // interlock restored
             cm_request_cycle_start();                               // proper way to restart the cycle
         }
     }
