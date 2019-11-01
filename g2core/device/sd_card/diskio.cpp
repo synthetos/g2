@@ -8,8 +8,8 @@
 extern SDCard<SPIBus_used_t::SPIBusDevice> sd_card;
 
 // Card Detect Pin
-Motate::Pin<Motate::kSD_CardDetectPinNumber> cdPin(Motate::kInput);
-
+Motate::InputPin<Motate::kSD_CardDetectPinNumber> cdPin;
+ 
 /*--------------------------------------------------------------------------
  
  Module Private Functions
@@ -212,12 +212,12 @@ DSTATUS disk_initialize (
 /*-----------------------------------------------------------------------*/
 
 DSTATUS disk_status (
-	BYTE drv		/* Physical drive nmuber to identify the drive */
+	BYTE drv		/* Physical drive number to identify the drive */
 )
 {
     if (drv != SD0) return STA_NOINIT;
     
-    if (cdPin.get()) {
+    if (cdPin.getInputValue()) {
         Stat = STA_NODISK | STA_NOINIT;
     } else {
         Stat &= ~STA_NODISK;
