@@ -31,7 +31,6 @@
 #include "config.h"  // needed for nvObj_t definition
 #include "ff.h"
 #include "util.h"                   // FIXME: this won't compile if included after <map>
-#include <map>
 
 #define NVM_VALUE_LEN 4             // NVM value length (float, fixed length)
 #define NVM_BASE_ADDR 0x0000        // base address of usable NVM
