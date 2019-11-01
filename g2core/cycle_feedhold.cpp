@@ -334,11 +334,16 @@ static stat_t _run_shutdown() {
 }
 static stat_t _run_interlock_started() {
     cm1.safety_interlock_state = SAFETY_INTERLOCK_DISENGAGED;
-    // cm->machine_state = MACHINE_INTERLOCK;
+    cm1.machine_state = MACHINE_INTERLOCK;
     return (STAT_OK);
 }
 static stat_t _run_interlock_ended() {
     cm1.safety_interlock_state = SAFETY_INTERLOCK_ENGAGED;
+    if (cm1.cycle_type != CYCLE_NONE) {
+        cm1.machine_state = MACHINE_CYCLE;
+    } else {
+        cm1.machine_state = MACHINE_PROGRAM_END;
+    }
     return (_run_restart_cycle());
 }
 
