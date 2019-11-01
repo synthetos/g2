@@ -32,6 +32,7 @@
 #include "canonical_machine.h"
 #include "planner.h"
 #include "util.h"
+#include "report.h"
 #include "xio.h"
 
 #define JOGGING_START_VELOCITY ((float)10.0)
@@ -111,6 +112,7 @@ stat_t cm_jogging_cycle_start(uint8_t axis) {
 
     cm->machine_state = MACHINE_CYCLE;
     cm->cycle_type = CYCLE_JOG;
+    sr_request_status_report(SR_REQUEST_IMMEDIATE);
     return (STAT_OK);
 }
 
