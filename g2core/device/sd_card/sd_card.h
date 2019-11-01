@@ -135,12 +135,12 @@ struct SDCard final {
 
     uint8_t read(const bool deassert_cs = SPIMessage::RemainAsserted, const uint8_t send_as_noop = 0x0) {
         
-        uint8_t data;
+        uint8_t data[1] = {0x00};
         
         // Configure and set up single byte read
-        read(&data, 1, deassert_cs, send_as_noop);
+        read(data, 1, deassert_cs, send_as_noop);
         
-        return data;
+        return data[0];
     };
 
     void write(uint8_t *data, const uint16_t num_bytes, const bool deassert_cs = SPIMessage::RemainAsserted) {
@@ -159,6 +159,32 @@ struct SDCard final {
         
         // Configure and set up single byte write
         write(&data, 1, deassert_cs);
+    };
+    
+    // this would be called by the project or from a SysTickHandler
+    void periodicCheck() {
+        if (!_inited || (check_timer.isSet() && !check_timer.isPast())) {
+            // not yet, too soon
+            return;
+        }
+        
+        //TEMP
+        //uint8_t rd = 0x2;
+        //uint8_t noop = 0xA5;
+        //rd = this->read(SPIMessage::DeassertAfter, noop);
+        //this->write(rd, SPIMessage::DeassertAfter);
+        /*uint8_t rd = 0x2;
+        this->read(&rd);
+        this->write(rd, SPIMessage::DeassertAfter);
+        this->write(0x01, SPIMessage::RemainAsserted);
+        this->write(0x03, SPIMessage::DeassertAfter);
+        this->write(0x05, SPIMessage::RemainAsserted);
+        this->write(0x07, SPIMessage::DeassertAfter);
+        static uint8_t stuff[4] = {0x02, 0x04, 0x06, 0x08};
+        static uint8_t stuff2[4] = {0x0A, 0x0C, 0x0E, 0x0F};
+        this->write(stuff, 4, SPIMessage::RemainAsserted);
+        this->write(stuff2, 4, SPIMessage::DeassertAfter);*/
+        //TEMP
     };
 };
 
