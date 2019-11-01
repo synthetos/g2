@@ -67,7 +67,6 @@ void hardware_init()
 
 stat_t hardware_periodic()
 {
-    sd_card.periodicCheck();
     return STAT_OK;
 }
 
