@@ -33,11 +33,11 @@
 #include "controller.h"
 #include "text_parser.h"
 #include "board_xio.h"
-#include "sd_card.h"
 
 #include "MotateUtilities.h"
 #include "MotateUniqueID.h"
 #include "MotatePower.h"
+#include "board_spi.h"
 
 /*
  * hardware_init() - lowest level hardware init
@@ -45,13 +45,8 @@
 
 SPIBus_used_t spiBus;
 
-extern SDCard<SPIBus_used_t::SPIBusDevice> sd_card;
-
-SDCard<SPIBus_used_t::SPIBusDevice> sd_card {
-    spiBus,
-    Motate::SPIChipSelectPin<Motate::kSD_ChipSelectPinNumber>{}
-};
-
+Motate::SPIChipSelectPin<Motate::kSD_ChipSelectPinNumber> sdcs{};
+SDCard_used_t sd_card{spiBus, sdcs};
 
 void hardware_init()
 {

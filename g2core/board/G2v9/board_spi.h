@@ -1,8 +1,9 @@
 /*
- * persistence.h - persistence code
- * This file is part of the g2code project
+ *  * gpio.h - SPI definitions for this board
+ * For: /board/g2v9
+ * This file is part of the g2core project
  *
- * Copyright (c) 2013 - 2018 Alden S. Hart Jr.
+ * Copyright (c) 2019 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -25,27 +26,17 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PERSISTENCE_H_ONCE
-#define PERSISTENCE_H_ONCE
+#ifndef BOARD_SPI_H_ONCE
+#define BOARD_SPI_H_ONCE
 
-#include "config.h"  // needed for nvObj_t definition
-// #include "ff.h"
-// #include "util.h"                   // FIXME: this won't compile if included after <map>
+#include "MotateSPI.h"
+#include "sd_card.h"
 
-#define NVM_VALUE_LEN 4             // NVM value length (float, fixed length)
-#define NVM_BASE_ADDR 0x0000        // base address of usable NVM
+/**** SPI Setup ****/
+typedef Motate::SPIBus<Motate::kSPI_MISOPinNumber, Motate::kSPI_MOSIPinNumber, Motate::kSPI_SCKPinNumber> SPIBus_used_t;
+extern SPIBus_used_t spiBus;
 
-#define IO_BUFFER_SIZE 512          // this should be evenly divisible by NVM_VALUE_LEN, and <=512 until multi-block reads are fixed (right now they are hanging...)
-#define MIN_WRITE_INTERVAL 1000     // minimum interval between persistence file writes
-#define MAX_WRITE_FAILURES 3
-#define MAX_WRITE_CHANGES IO_BUFFER_SIZE    // maximum number of write values that change - ms: TODO
+typedef SDCard<SPIBus_used_t::SPIBusDevice, Motate::SPIChipSelectPin<Motate::kSD_ChipSelectPinNumber>> SDCard_used_t;
+extern SDCard_used_t sd_card;
 
-//**** persistence function prototypes ****
-
-void persistence_init(void);
-stat_t read_persistent_value(nvObj_t *nv);
-stat_t write_persistent_value(nvObj_t *nv);
-stat_t write_persistent_values_callback();
-
-#endif  // End of include guard: PERSISTENCE_H_ONCE
-//
+#endif // BOARD_SPI_H_ONCE

@@ -17,6 +17,8 @@
 #ifndef _FATFS
 #define _FATFS	80376	/* Revision ID */
 
+#include <stdalign.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -119,7 +121,7 @@ typedef struct {
 	DWORD	dirbase;		/* Root directory start sector (FAT32:Cluster#) */
 	DWORD	database;		/* Data start sector */
 	DWORD	winsect;		/* Current sector appearing in the win[] */
-	BYTE	win[_MAX_SS];	/* Disk access window for Directory, FAT (and file data at tiny cfg) */
+	alignas(4) BYTE	win[_MAX_SS];	/* Disk access window for Directory, FAT (and file data at tiny cfg) */
 } FATFS;
 
 
@@ -147,7 +149,7 @@ typedef struct {
 	UINT	lockid;			/* File lock ID origin from 1 (index of file semaphore table Files[]) */
 #endif
 #if !_FS_TINY
-	BYTE	buf[_MAX_SS];	/* File private data read/write window */
+	alignas(4) BYTE	buf[_MAX_SS];	/* File private data read/write window */
 #endif
 } FIL;
 

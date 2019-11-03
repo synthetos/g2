@@ -29,12 +29,26 @@
 #include "canonical_machine.h"
 #include "report.h"
 #include "util.h"
+#include "board_spi.h"
+#include "ff.h"
 
 /***********************************************************************************
  **** STRUCTURE ALLOCATIONS ********************************************************
  ***********************************************************************************/
 
-nvmSingleton_t nvm;
+//**** persistence singleton ****
+
+struct nvmSingleton_t {
+    float tmp_value;
+    FATFS fat_fs;
+    FIL file;
+    uint8_t file_index;
+    alignas(4) uint8_t io_buffer[IO_BUFFER_SIZE];
+    index_t changed_nv_indexes[MAX_WRITE_CHANGES];
+    uint16_t changed_nvs;
+    uint32_t last_write_systick;
+    uint8_t write_failures;
+} nvm;
 
 /***********************************************************************************
  **** GENERIC STATIC FUNCTIONS AND VARIABLES ***************************************
@@ -129,7 +143,7 @@ stat_t write_persistent_value(nvObj_t *nv)
  */
 
 stat_t write_persistent_values_callback()
-{   
+{
    // Check the disk status to ensure we catch card-detect pin changes.
    // FIXME: it would be much better to do this with an interrupt!
    f_polldisk();
@@ -137,7 +151,7 @@ stat_t write_persistent_values_callback()
        if (Motate::SysTickTimer.getValue() - nvm.last_write_systick < MIN_WRITE_INTERVAL) return (STAT_NOOP);
        // this check may not be necessary on ARM, but just in case...
        if (cm->cycle_type != CYCLE_NONE) return(STAT_NOOP);    // can't write when machine is moving
-       
+
        if(write_persistent_values() == STAT_OK) {
            nvm.changed_nvs = 0;
            nvm.write_failures = 0;
@@ -192,7 +206,7 @@ stat_t prepare_persistence_file()
    // would slow down consecutive reads. However, we still need to re-validate before
    // every use to ensure that the card status hasn't changed.
    if (f_is_open(&nvm.file) && validate(&nvm.file) == FR_OK) return STAT_OK;
-   
+
    // mount volume if necessary
    if (!nvm.fat_fs.fs_type) {
        fs_ritorno(f_mount(&nvm.fat_fs, "", 1), "mount");       /* Give a work area to the default drive */
@@ -201,7 +215,7 @@ stat_t prepare_persistence_file()
    uint8_t index = active_file_index();
    fs_ritorno(f_open(&nvm.file, filenames[index], FA_READ | FA_OPEN_EXISTING), "open input");
    nvm.file_index = index;
-   
+
    // if CRC doesn't match, delete file and return error
    if (validate_persistence_file() != STAT_OK) {
        f_close(&nvm.file);
@@ -217,7 +231,7 @@ stat_t prepare_persistence_file()
 /*
  * validate_persistence_file()
  *
- * ARM only. Helper function that checks the CRC and byte count of the 
+ * ARM only. Helper function that checks the CRC and byte count of the
  *  persistence file. Assumes the file is already open.
  */
 stat_t validate_persistence_file()
@@ -228,7 +242,7 @@ stat_t validate_persistence_file()
    fs_ritorno(f_lseek(&nvm.file, 0), "crc check seek");
    while (!f_eof(&nvm.file)) {
        fs_ritorno(f_read(&nvm.file, &nvm.io_buffer, IO_BUFFER_SIZE, &br), "file read during CRC check");
-       
+
        if (f_eof(&nvm.file)) {
            br -= std::min((UINT)CRC_LEN, br); // don't include old CRC in current CRC calculation
            memcpy(&filecrc, nvm.io_buffer+br, CRC_LEN); // copy old CRC out of read buffer
@@ -237,7 +251,7 @@ stat_t validate_persistence_file()
        crc = crc32(crc, nvm.io_buffer, br);
        br_sum += br;
    }
-   
+
    // how did we do?
    if (br_sum != nv_index_max() * NVM_VALUE_LEN) {
        DEBUG_PRINT("bad byte count in file: %i\n", br_sum);
@@ -249,7 +263,7 @@ stat_t validate_persistence_file()
 
 /*
  * write_persistent_values()
- * 
+ *
  * ARM only. Writes all the values from the write cache to the SD card. Since we can't
  *  rewrite individual pieces of data in the middle of an existing file, this requires
  *  rewriting all the data into a new file.
@@ -257,7 +271,7 @@ stat_t validate_persistence_file()
 stat_t write_persistent_values()
 {
    DEBUG_PRINT("writing new version\n");
-   
+
    FIL f_out;
    UINT bw;
    nvObj_t *nv = nv_reset_nv_list();  // sets *nv to the start of the body
@@ -271,12 +285,12 @@ stat_t write_persistent_values()
    if (prepare_persistence_file() == STAT_OK) {
        fs_ritorno(f_lseek(&nvm.file, 0), "f_lseek to input file start");
    }
-   
+
    // open new file for writing updated values
    fs_ritorno(f_open(&f_out, filenames[NEXT_FILE_INDEX], FA_WRITE | FA_OPEN_ALWAYS), "open output");
    fs_ritorno(f_sync(&f_out), "sync output file");
    DEBUG_PRINT("opened %s for writing\n", filenames[NEXT_FILE_INDEX]);
-   
+
    uint32_t crc = 0;
    uint16_t step = IO_BUFFER_SIZE/NVM_VALUE_LEN;
 
@@ -286,7 +300,7 @@ stat_t write_persistent_values()
        UINT br = 0;
        f_read(&nvm.file, &nvm.io_buffer, io_byte_count, &br);
        DEBUG_PRINT("read %i bytes from old file\n", br);
-       
+
        // if we didn't get enough bytes from the old file, pad the buffer with defaults
        // to keep the length correct
        // FIXME: integrate this with default-setting code in config.cpp
@@ -321,16 +335,16 @@ stat_t write_persistent_values()
           changed_nvs_idx++;
         }
       }
-       
+
        // write updated values to output file and sync
        fs_ritorno(f_write(&f_out, &nvm.io_buffer, io_byte_count, &bw), "new file write");
        if (bw != io_byte_count) return (STAT_PERSISTENCE_ERROR);
        fs_ritorno(f_sync(&f_out), "out sync");
-       
+
        // update CRC
        crc = crc32(crc, nvm.io_buffer, io_byte_count);
    }
-   
+
    // write CRC in final 4 bytes
    fs_ritorno(f_write(&f_out, &crc, CRC_LEN, &bw), "write crc");
    DEBUG_PRINT("wrote crc: %lu\n", crc);
@@ -345,7 +359,7 @@ stat_t write_persistent_values()
        nvm.file_index = 0;
    }
 
-   // Restore units mode   
+   // Restore units mode
    cm_set_distance_mode(saved_distance_mode);
 
    return (STAT_OK);

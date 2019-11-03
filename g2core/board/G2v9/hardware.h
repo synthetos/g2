@@ -60,8 +60,8 @@
  *************************/
 
 #include "MotatePins.h"
-#include "MotateSPI.h"
 #include "MotateTimers.h"           // for TimerChanel<> and related...
+#include "MotateUtilities.h"           // for TimerChanel<> and related...
 
 using Motate::TimerChannel;
 
@@ -118,14 +118,6 @@ typedef TimerChannel<5,0> fwd_plan_timer_type;	// request exec timer in stepper.
 
 pin_number indicator_led_pin_num = Motate::kLED_USBRXPinNumber;
 static PWMOutputPin<indicator_led_pin_num> IndicatorLed;
-
-/**** SPI Setup ****/
-typedef Motate::SPIBus<Motate::kSPI_MISOPinNumber, Motate::kSPI_MOSIPinNumber, Motate::kSPI_SCKPinNumber> SPIBus_used_t;
-extern SPIBus_used_t spiBus;
-
-// typedef Motate::SPIChipSelectPinMux<Motate::kSocket1_SPISlaveSelectPinNumber, Motate::kSocket2_SPISlaveSelectPinNumber, Motate::kSocket3_SPISlaveSelectPinNumber, Motate::kSocket4_SPISlaveSelectPinNumber> SPI_CS_PinMux_used_t;
-// extern SPI_CS_PinMux_used_t spiCSPinMux;
-
 
 /**** Motate Global Pin Allocations ****/
 
