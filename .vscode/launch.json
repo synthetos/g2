@@ -59,6 +59,20 @@
       "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sam3x/ATSAM3X8E.svd",
       "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/",
       "preLaunchTask": "Build CONFIG=MiniMill Debug"
+    },
+    {
+      "name": "Debug CONFIG=MiniMill Unity (J-Link)",
+      "type": "cortex-debug",
+      "request": "launch",
+      "servertype": "jlink",
+      "cwd": "${workspaceRoot}/g2core/",
+      "executable": "./bin/MiniMill-g2v9k/g2core.elf",
+      "device": "ATSAM3X8E",
+      "interface": "swd",
+      "showDevDebugOutput": false,
+      "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sam3x/ATSAM3X8E.svd",
+      "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/",
+      "preLaunchTask": "Build CONFIG=MiniMill Debug Unity"
     }
   ]
 }
