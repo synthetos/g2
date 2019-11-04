@@ -32,22 +32,22 @@ int rcvr_datablock (	/* 1:OK, 0:Failed */
                     UINT btr			/* Byte count (must be even number) */
 )
 {
-	volatile INT token;
+    volatile INT token;
 
     uint32_t start = Motate::SysTickTimer.getValue();
-	do {							/* Wait for data packet in timeout of 100ms */
-		token = sd_card.read(SPIMessage::DeassertAfter);
-	} while ((token != 0xFE) && Motate::SysTickTimer.getValue()-start < 100);
-	if(token != 0xFE) {
+    do {							/* Wait for data packet in timeout of 100ms */
+        token = sd_card.read(SPIMessage::DeassertAfter);
+    } while ((token != 0xFE) && Motate::SysTickTimer.getValue()-start < 100);
+    if(token != 0xFE) {
         return 0;		/* If not valid data token, return with error */
     }
 
     sd_card.read((uint8_t*)buff, btr);
 
-	sd_card.read(SPIMessage::RemainAsserted);					/* Discard CRC */
-	sd_card.read(SPIMessage::RemainAsserted);
+    sd_card.read(SPIMessage::RemainAsserted);					/* Discard CRC */
+    sd_card.read(SPIMessage::RemainAsserted);
 
-	return 1;						/* Return with success */
+    return 1;						/* Return with success */
 }
 
 
@@ -80,11 +80,11 @@ int xmit_datablock (	/* 1:OK, 0:Failed */
         return 0;
   }
 
-	return 1;
+    return 1;
 }
 #endif
 
-alignas(4) uint8_t data[6];
+alignas(4) uint8_t data[12];
 
 /*-----------------------------------------------------------------------*/
 /* Send a command packet to MMC                                          */
@@ -109,7 +109,11 @@ uint8_t send_cmd (      /* Returns command response (bit7==1:Send failed)*/
     // wait until card is ready to receive command
     Motate::Timeout timeout;
     timeout.set(1000);
-    while ((sd_card.read(SPIMessage::DeassertAfter) != 0xFF) && !timeout.isPast()) {};
+    data[8] = 0x00;
+    while ((data[8] != 0xFF) && !timeout.isPast()) {
+        data[0] = 0xFF;
+        sd_card.readWrite(data, data + 8, 1, SPIMessage::DeassertAfter);
+    };
 
     // choose the command CRC
     uint8_t n = 0x01;                           /* Dummy CRC + Stop */
@@ -127,14 +131,18 @@ uint8_t send_cmd (      /* Returns command response (bit7==1:Send failed)*/
     sd_card.write(data, 6, SPIMessage::RemainAsserted);
 
     // receive response
-    if (cmd == CMD12) sd_card.read(SPIMessage::RemainAsserted);       /* Skip a stuff byte when stop reading */
-    uint8_t tries = 0xFF;                                             /* Wait for a valid response in timeout of 10 attempts */
-    do
-        res = sd_card.read(SPIMessage::RemainAsserted);
-    while ((res & 0x80) && --tries);                // 7th bit is low in all valid responses
+    if (cmd == CMD12) {
+        sd_card.read(SPIMessage::RemainAsserted);       /* Skip a stuff byte when stop reading */
+    }
 
-    if (ocr)
+    uint8_t tries = 10;                                             /* Wait for a valid response in timeout of 10 attempts */
+    do {
+        res = sd_card.read(SPIMessage::RemainAsserted);
+    } while ((res & 0x80) && --tries);                // 7th bit is low in all valid responses
+
+    if (ocr) {
         sd_card.read(ocr, 4);
+    }
 
     return res;         /* Return with the response value */
 }
@@ -159,32 +167,32 @@ DSTATUS disk_initialize (
                          BYTE drv		/* Physical drive number (0) */
 )
 {
-	  BYTE ty, cmd, ocr[4];
+      BYTE ty, cmd, ocr[4];
 
-	if (drv) return STA_NOINIT;			/* Supports only single drive */
-	if (disk_status(drv) & STA_NODISK) return Stat;	/* No card in the socket */
+    if (drv) return STA_NOINIT;			/* Supports only single drive */
+    if (disk_status(drv) & STA_NODISK) return Stat;	/* No card in the socket */
 
     // initialization has to be performed at a slower speed
     sd_card.setOptions(SD_INIT_SPEED);
 
-	sd_card.setSDMode();	/* 80 dummy clocks */
+    sd_card.setSDMode();	/* 80 dummy clocks */
 
-	ty = 0;
+    ty = 0;
     if (send_cmd_until_specific_response(CMD0, 0, 1)) {     /* Enter Idle state */
-		if (send_cmd(CMD8, 0x1AA, &ocr[0]) == 1) {	/* SDv2? */
-			if (ocr[2] == 0x01 && ocr[3] == 0xAA) {				/* The card can work at vdd range of 2.7-3.6V */
+        if (send_cmd(CMD8, 0x1AA, &ocr[0]) == 1) {	/* SDv2? */
+            if (ocr[2] == 0x01 && ocr[3] == 0xAA) {				/* The card can work at vdd range of 2.7-3.6V */
                 if (send_cmd_until_specific_response(ACMD41, 1UL << 30, 0, nullptr, 1000)) { /* Wait for leaving idle state (ACMD41 with HCS bit) */
                     if (send_cmd_until_specific_response(CMD58, 0, 0, &ocr[0])) {
                         ty = (ocr[0] & 0x40) ? CT_SD2 | CT_BLOCK : CT_SD2;	/* SDv2 */
                     }
                 }
-			}
-		} else {							/* SDv1 or MMCv3 */
-			if (send_cmd(ACMD41, 0) <= 1) 	{
-				ty = CT_SD1; cmd = ACMD41;	/* SDv1 */
-			} else {
-				ty = CT_MMC; cmd = CMD1;	/* MMCv3 */
-			}
+            }
+        } else {							/* SDv1 or MMCv3 */
+            if (send_cmd(ACMD41, 0) <= 1) 	{
+                ty = CT_SD1; cmd = ACMD41;	/* SDv1 */
+            } else {
+                ty = CT_MMC; cmd = CMD1;	/* MMCv3 */
+            }
             bool success = false;
             if (send_cmd_until_specific_response(cmd, 0, 0, nullptr, 1000)) { /* Wait for leaving idle state */
                 if (send_cmd(CMD16, 512) == 0) /* Set R/W block length to 512 */
@@ -192,17 +200,17 @@ DSTATUS disk_initialize (
             }
             if (!success)
                 ty = 0;
-		}
-	}
-	CardType = ty;
+        }
+    }
+    CardType = ty;
 
-	if (ty) {			/* Initialization succeeded */
-		Stat &= ~STA_NOINIT;		/* Clear STA_NOINIT */
-	}
+    if (ty) {			/* Initialization succeeded */
+        Stat &= ~STA_NOINIT;		/* Clear STA_NOINIT */
+    }
 
   sd_card.setOptions(SD_ACTIVE_SPEED);
 
-	return Stat;
+    return Stat;
 }
 
 
@@ -211,7 +219,7 @@ DSTATUS disk_initialize (
 /*-----------------------------------------------------------------------*/
 
 DSTATUS disk_status (
-	BYTE drv		/* Physical drive number to identify the drive */
+    BYTE drv		/* Physical drive number to identify the drive */
 )
 {
     if (drv != SD0) return STA_NOINIT;
@@ -233,29 +241,29 @@ DSTATUS disk_status (
 /*-----------------------------------------------------------------------*/
 
 DRESULT disk_read (
-	BYTE drv,		/* Physical drive nmuber to identify the drive */
-	BYTE *buff,		/* Data buffer to store read data */
-	DWORD sector,	/* Sector address in LBA */
-	UINT count		/* Number of sectors to read */
+    BYTE drv,		/* Physical drive nmuber to identify the drive */
+    BYTE *buff,		/* Data buffer to store read data */
+    DWORD sector,	/* Sector address in LBA */
+    UINT count		/* Number of sectors to read */
 )
 {
-	if (drv || !count) return RES_PARERR;
+    if (drv || !count) return RES_PARERR;
     if (disk_status(drv) & (STA_NODISK | STA_NOINIT)) return RES_NOTRDY;
 
-	if (!(CardType & CT_BLOCK)) sector *= 512;	/* Convert to byte address if needed */
+    if (!(CardType & CT_BLOCK)) sector *= 512;	/* Convert to byte address if needed */
 
     BYTE cmd;
-	cmd = count > 1 ? CMD18 : CMD17;			/*  READ_MULTIPLE_BLOCK : READ_SINGLE_BLOCK */
+    cmd = count > 1 ? CMD18 : CMD17;			/*  READ_MULTIPLE_BLOCK : READ_SINGLE_BLOCK */
 
-	if (send_cmd_until_specific_response(cmd, sector, 0)) {
-		do {
-			if (!rcvr_datablock(buff, 512)) break;
-			buff += 512;
-		} while (--count);
-		if (cmd == CMD18) send_cmd(CMD12, 0);	/* STOP_TRANSMISSION */
-	}
+    if (send_cmd_until_specific_response(cmd, sector, 0)) {
+        do {
+            if (!rcvr_datablock(buff, 512)) break;
+            buff += 512;
+        } while (--count);
+        if (cmd == CMD18) send_cmd(CMD12, 0);	/* STOP_TRANSMISSION */
+    }
 
-	return count ? RES_ERROR : RES_OK;
+    return count ? RES_ERROR : RES_OK;
 }
 
 
@@ -266,37 +274,37 @@ DRESULT disk_read (
 
 #if _USE_WRITE
 DRESULT disk_write (
-	BYTE drv,			/* Physical drive nmuber to identify the drive */
-	const BYTE *buff,	/* Data to be written */
-	DWORD sector,		/* Sector address in LBA */
-	UINT count			/* Number of sectors to write */
+    BYTE drv,			/* Physical drive nmuber to identify the drive */
+    const BYTE *buff,	/* Data to be written */
+    DWORD sector,		/* Sector address in LBA */
+    UINT count			/* Number of sectors to write */
 )
 {
     if (drv || !count) return RES_PARERR;
 
     if (disk_status(drv) & (STA_NODISK | STA_NOINIT)) return RES_NOTRDY;
-	if (Stat & STA_PROTECT) return RES_WRPRT;
+    if (Stat & STA_PROTECT) return RES_WRPRT;
 
-	if (!(CardType & CT_BLOCK)) sector *= 512;	/* Convert to byte address if needed */
+    if (!(CardType & CT_BLOCK)) sector *= 512;	/* Convert to byte address if needed */
 
-	if (count == 1) {	/* Single block write */
+    if (count == 1) {	/* Single block write */
         if (send_cmd_until_specific_response(CMD24, sector, 0)
-			&& xmit_datablock(buff, 0xFE))
-			count = 0;
-	}
-	else {				/* Multiple block write */
-		if (CardType & CT_SDC) send_cmd(ACMD23, count);
-		if (send_cmd(CMD25, sector) == 0) {	/* WRITE_MULTIPLE_BLOCK */
-			do {
-				if (!xmit_datablock(buff, 0xFC)) break;
-				buff += 512;
-			} while (--count);
-			if (!xmit_datablock(0, 0xFD))	/* STOP_TRAN token */
-				count = 1;
-		}
-	}
+            && xmit_datablock(buff, 0xFE))
+            count = 0;
+    }
+    else {				/* Multiple block write */
+        if (CardType & CT_SDC) send_cmd(ACMD23, count);
+        if (send_cmd(CMD25, sector) == 0) {	/* WRITE_MULTIPLE_BLOCK */
+            do {
+                if (!xmit_datablock(buff, 0xFC)) break;
+                buff += 512;
+            } while (--count);
+            if (!xmit_datablock(0, 0xFD))	/* STOP_TRAN token */
+                count = 1;
+        }
+    }
 
-	return count ? RES_ERROR : RES_OK;
+    return count ? RES_ERROR : RES_OK;
 }
 #endif
 
@@ -312,16 +320,16 @@ DRESULT disk_ioctl (
                     void *buff		/* Buffer to send/receive control data */
 )
 {
-	DRESULT res;
-	BYTE n, csd[16], *ptr = (BYTE*)buff;
-	DWORD cs;
+    DRESULT res;
+    BYTE n, csd[16], *ptr = (BYTE*)buff;
+    DWORD cs;
 
 
-	if (drv) return RES_PARERR;
+    if (drv) return RES_PARERR;
     if (disk_status(drv) & (STA_NODISK | STA_NOINIT)) return RES_NOTRDY;
 
-	res = RES_ERROR;
-	switch (ctrl) {
+    res = RES_ERROR;
+    switch (ctrl) {
         case CTRL_SYNC :		/* Make sure that no pending write process */
             res = RES_OK;
             break;
@@ -395,10 +403,10 @@ DRESULT disk_ioctl (
 
         default:
             res = RES_PARERR;
-	}
+    }
 
 //	deselect();
 
-	return res;
+    return res;
 }
 #endif

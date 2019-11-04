@@ -43,10 +43,10 @@ struct SDCard final {
     template <typename SPIBus_t>
     SDCard(SPIBus_t &spi_bus, chipSelect_t &chip_select)
         : _device{spi_bus.getDevice(chip_select,  // pass it the chip select
-                                    100000, SPIDeviceMode::kSPIMode0 | SPIDeviceMode::kSPI8Bit,
-                                    400,  // min_between_chip_select_delay_ns
-                                    400,  // cs_to_sck_delay_ns
-                                    80    // between_word_delay_ns
+                                    400000, SPIDeviceMode::kSPIMode0 | SPIDeviceMode::kSPI8Bit,
+                                    0,  // min_between_chip_select_delay_ns
+                                    0,  // cs_to_sck_delay_ns
+                                    0    // between_word_delay_ns
                                     )},
           _chip_select{chip_select}
     { init(); };
@@ -58,8 +58,7 @@ struct SDCard final {
     SDCard(const SDCard &) = delete;
 
     // Toss out buffer
-    uint8_t _scribble_buffer[SCRIBBLE_BUF_MAX];
-    uint8_t _out_buffer[512];
+    alignas(4) uint8_t _scribble_buffer[SCRIBBLE_BUF_MAX];
 
     bool _spi_write = false;
     bool _spi_read = false;
@@ -67,6 +66,7 @@ struct SDCard final {
     uint16_t _num_bytes = 0;
 
     uint8_t *_spi_data;
+    uint8_t *_spi_read_data;
 
     void _startNextReadWrite()
     {
@@ -76,7 +76,7 @@ struct SDCard final {
         // We write before we read -- so we don't lose what we set in the registers when writing
         if (_spi_write) {
             _spi_write = false;
-            _message.setup(_spi_data, nullptr, _num_bytes, _deassert_chip_select, SPIMessage::EndTransaction);
+            _message.setup(_spi_data, _spi_read_data, _num_bytes, _deassert_chip_select, SPIMessage::EndTransaction);
 
         } else if (_spi_read) {
             _spi_read = false;
@@ -94,6 +94,11 @@ struct SDCard final {
     void init() {
         _message.message_done_callback = [&] { this->messageDoneCallback(); };
 
+        const auto miso_mode = _device._spi_bus->misoPin.getMode();
+        _device._spi_bus->misoPin.setMode(Motate::kOutput);
+        _device._spi_bus->misoPin.clear();
+        _device._spi_bus->misoPin.setMode(miso_mode);
+
         // Establish default values
         _spi_write = false;
         _spi_read = false;
@@ -105,24 +110,27 @@ struct SDCard final {
     }
 
     void setSDMode() {
-        // _device._spi_bus->misoPin.setOptions(Motate::kPullUp);
+        // _device._spi_bus->misoPin.setOptions(Motate::kOutput);
         for (size_t i = 100000; i--;) {
             /* code */
         }
-        const auto cs_mode = _chip_select.getMode();
-        _chip_select.setMode(Motate::kOutput);
-        _chip_select.set();
+        // const auto cs_mode = _chip_select.getMode();
+        // _chip_select.setMode(Motate::kOutput);
+        // _chip_select.set();
         // _device._spi_bus->misoPin.setMode(Motate::kOutput);
         // _device._spi_bus->misoPin.set();
 
         alignas(4) uint8_t tossme[12];
-        this->read(tossme, 10); /* 80 dummy clocks */
+        tossme[0] = 0xff;
+        uint8_t i = 10;
+        while (i--) { this->write(tossme, 1); /* 80 dummy clocks */ }
 
-        _chip_select.setMode(cs_mode);
-        // _device._spi_bus->misoPin.setOptions(Motate::kNormal);
+        // _chip_select.setMode(cs_mode);
     };
 
-    void setOptions(const uint32_t baud, const uint16_t options = (SPIDeviceMode::kSPIMode0 | SPIDeviceMode::kSPI8Bit), uint32_t min_between_chip_select_delay_ns = 400, uint32_t cs_to_sck_delay_ns = 400, uint32_t between_word_delay_ns = 80) {
+    void setOptions(const uint32_t baud, const uint16_t options = (SPIDeviceMode::kSPIMode0 | SPIDeviceMode::kSPI8Bit),
+                    uint32_t min_between_chip_select_delay_ns = 0, uint32_t cs_to_sck_delay_ns = 0,
+                    uint32_t between_word_delay_ns = 0) {
         _device.setOptions(baud, options, min_between_chip_select_delay_ns, cs_to_sck_delay_ns, between_word_delay_ns);
     }
 
@@ -134,11 +142,29 @@ struct SDCard final {
         _startNextReadWrite();
     };
 
-    void read(uint8_t *data, const uint16_t num_bytes, const bool deassert_chip_select = SPIMessage::DeassertAfter) {
+    void read(uint8_t *data, const uint16_t num_bytes, const bool deassert_chip_select = SPIMessage::RemainAsserted) {
 
         // Configure multi byte read
         _spi_read = true;
         _spi_data = data;
+        _spi_read_data = nullptr;
+        _deassert_chip_select = deassert_chip_select;
+        _num_bytes = num_bytes;
+
+        // Set up read
+        _startNextReadWrite();
+
+        while (_transmitting) {
+            ;
+        }
+    };
+
+    void readWrite(uint8_t *data, uint8_t *read, const uint16_t num_bytes, const bool deassert_chip_select = SPIMessage::DeassertAfter) {
+
+        // Configure multi byte read
+        _spi_write = true;
+        _spi_data = data;
+        _spi_read_data = read;
         _deassert_chip_select = deassert_chip_select;
         _num_bytes = num_bytes;
 
@@ -151,7 +177,6 @@ struct SDCard final {
     };
 
     uint8_t read(const bool deassert_chip_select = SPIMessage::DeassertAfter) {
-        // Configure and set up single byte read
         read(_scribble_buffer, 1, deassert_chip_select);
 
         return _scribble_buffer[0];
@@ -162,6 +187,7 @@ struct SDCard final {
         // Configure multi byte write
         _spi_write = true;
         _spi_data = data;
+        _spi_read_data = nullptr;
         _deassert_chip_select = deassert_chip_select;
         _num_bytes = num_bytes;
 
@@ -173,7 +199,7 @@ struct SDCard final {
         }
     };
 
-    void write(uint8_t data, const bool deassert_chip_select = SPIMessage::DeassertAfter) {
+    void write(uint8_t data, const bool deassert_chip_select = SPIMessage::RemainAsserted) {
         _scribble_buffer[0] = data;
         // Configure and set up single byte write
         write(_scribble_buffer, 1, deassert_chip_select);
