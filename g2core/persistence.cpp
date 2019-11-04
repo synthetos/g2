@@ -130,9 +130,9 @@ stat_t read_persistent_value(nvObj_t *nv)
 
 stat_t write_persistent_value(nvObj_t *nv)
 {
-    if (read_persistent_value(nv) != STAT_OK) {
+    // if (read_persistent_value(nv) != STAT_OK) {
       nvm.changed_nv_indexes[nvm.changed_nvs++] = nv->index;
-    }
+    // }
     return (STAT_OK);
 }
 

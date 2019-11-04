@@ -194,7 +194,7 @@ void sr_init_status_report()
     // record the index of the "stat" variable so we can use it during reporting
     sr.stat_index = nv_get_index((const char *)"", (const char *)"stat");
 
-    // setup the status report array 
+    // setup the status report array
     for (uint8_t i=0; i < NV_STATUS_REPORT_LEN ; i++) {
         if (sr_defaults[i][0] == NUL) break;                    // quit on first blank array entry
         sr.status_report_value[i] = -1234567;                   // pre-load values with an unlikely number
@@ -204,7 +204,7 @@ void sr_init_status_report()
             return;
         }
         nv_set(nv);
-        nv_persist(nv);                                         // conditionally persist - automatic by nv_persist()
+        // nv_persist(nv);                                         // conditionally persist - automatic by nv_persist()
         nv->index++;                                            // increment SR NVM index
     }
 }
@@ -379,8 +379,8 @@ static uint8_t _populate_filtered_status_report()
     char tmp[TOKEN_LEN+1];
     float current_value;
     nvObj_t *nv = nv_reset_nv_list();           // sets nv to the start of the body
-    
-    // Set thresholds to detect value changes based on precision for the value. 
+
+    // Set thresholds to detect value changes based on precision for the value.
     // Allow for floating point roundoffs, i.e. precision = 2 is 0.01 becomes --> 0.009
     float precision[8] = { 0.9, 0.09, 0.009, 0.0009, 0.00009, 0.000009, 0.0000009, 0.00000009 };
 
@@ -395,7 +395,7 @@ static uint8_t _populate_filtered_status_report()
         }
         nv_get_nvObj(nv);
 
-        // extract the value and cast into a float, regardless of value type 
+        // extract the value and cast into a float, regardless of value type
         if ((valueType)(cfgArray[nv->index].flags & F_TYPE_MASK) == TYPE_FLOAT) {
             current_value = nv->value_flt;
         } else {
@@ -414,7 +414,7 @@ static uint8_t _populate_filtered_status_report()
             strcpy(nv->token, tmp);            //...or here.
             sr.status_report_value[i] = current_value;
             if ((nv = nv->nx) == NULL) {        // should never be NULL unless SR length exceeds available buffer array
-                return (false); 
+                return (false);
             }
             has_data = true;
         } else {

@@ -140,9 +140,9 @@ static void _set_defa(nvObj_t *nv, bool print)
             }
             strncpy(nv->token, cfgArray[nv->index].token, TOKEN_LEN);
             cfgArray[nv->index].set(nv);        // run the set method, nv_set(nv);
-            if (cfgArray[nv->index].flags & F_PERSIST) {
-                nv_persist(nv);
-            }
+            // if (cfgArray[nv->index].flags & F_PERSIST) {
+            //     nv_persist(nv);
+            // }
         }
     }
     sr_init_status_report();                    // reset status reports
