@@ -66,6 +66,76 @@
       }
     },
     {
+      "label": "Build CONFIG=Othermill Debug",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=Othermill", "VERBOSE=2", "COLOR=0", "DEBUG=2",
+         "RECORD=1"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
+      "label": "Build CONFIG=Othermill Production",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=Othermill", "VERBOSE=2", "COLOR=0",
+         "RECORD=1"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
+      "label": "Clean CONFIG=Othermill",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=Othermill", "clean"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
+      "label": "Build CONFIG=OthermillPro Debug",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=OthermillPro", "VERBOSE=2", "COLOR=0", "DEBUG=2",
+         "RECORD=1"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
+      "label": "Build CONFIG=OthermillPro Production",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=OthermillPro", "VERBOSE=2", "COLOR=0",
+         "RECORD=1"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
+      "label": "Clean CONFIG=OthermillPro",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=OthermillPro", "clean"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
       "label": "Build CONFIG=r7",
       "type": "process",
       "command": "make",

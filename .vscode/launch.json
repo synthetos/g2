@@ -4,6 +4,7 @@
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
+
     {
       "name": "Debug CONFIG=fourcable (J-Link)",
       "type": "cortex-debug",
@@ -47,18 +48,32 @@
       "preLaunchTask": "Build CONFIG=ShapeokoDualY"
     },
     {
-      "name": "Debug CONFIG=MiniMill (J-Link)",
+      "name": "Debug CONFIG=Minimill (J-Link)",
       "type": "cortex-debug",
       "request": "launch",
       "servertype": "jlink",
       "cwd": "${workspaceRoot}/g2core/",
-      "executable": "./bin/MiniMill-g2v9k/g2core.elf",
+      "executable": "./bin/Minimill-g2v9k/g2core.elf",
       "device": "ATSAM3X8E",
       "interface": "swd",
       "showDevDebugOutput": false,
       "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sam3x/ATSAM3X8E.svd",
       "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/",
-      "preLaunchTask": "Build CONFIG=MiniMill Debug"
+      "preLaunchTask": "Build CONFIG=Minimill Debug"
+    },
+    {
+      "name": "Debug CONFIG=OthermillPro (J-Link)",
+      "type": "cortex-debug",
+      "request": "launch",
+      "servertype": "jlink",
+      "cwd": "${workspaceRoot}/g2core/",
+      "executable": "./bin/OthermillPro-g2v9k/g2core.elf",
+      "device": "ATSAM3X8E",
+      "interface": "swd",
+      "showDevDebugOutput": false,
+      "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sam3x/ATSAM3X8E.svd",
+      "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/",
+      "preLaunchTask": "Build CONFIG=OthermillPro Debug"
     },
     {
       "name": "Debug CONFIG=MiniMill Unity (J-Link)",
