@@ -121,7 +121,7 @@ void config_init()
     read_persistent_value(nv);
     if (fp_NE(nv->value_flt, G2CORE_FIRMWARE_BUILD)) {   // case (1) NVM is not setup or not in revision
         _set_defa(nv, false);
-    } else {    
+    } else {
         for (nv->index=0; nv_index_is_single(nv->index); nv->index++) {
             if (GET_TABLE_BYTE(flags) & F_INITIALIZE) {
                 strncpy(nv->token, cfgArray[nv->index].token, TOKEN_LEN); // read the token from the array
@@ -129,6 +129,7 @@ void config_init()
                 nv_set(nv);
             }
         }
+        sr_init_status_report();                    // reset status reports
     }
     rpt_print_loading_configs_message();
 }
