@@ -61,7 +61,7 @@ uint8_t active_file_index();
 
 // Leaving this in for now in case bugs come up; we can remove it when we're confident
 // it's stable
-#if 0
+#if 1
 # define DEBUG_PRINT(...) printf(__VA_ARGS__);
 #else
 # define DEBUG_PRINT(...) do {} while (0)

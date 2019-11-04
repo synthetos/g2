@@ -114,7 +114,22 @@ void config_init()
     nvObj_t *nv = nv_reset_nv_list();
     config_init_assertions();
     js.json_mode = JSON_MODE;                    // initial value until persistence is read
-    _set_defa(nv, false);
+
+    cm_set_units_mode(MILLIMETERS);             // must do inits in millimeter mode
+    nv->index = 0;                              // this will read the first record in NVM
+
+    read_persistent_value(nv);
+    if (fp_NE(nv->value_flt, G2CORE_FIRMWARE_BUILD)) {   // case (1) NVM is not setup or not in revision
+        _set_defa(nv, false);
+    } else {    
+        for (nv->index=0; nv_index_is_single(nv->index); nv->index++) {
+            if (GET_TABLE_BYTE(flags) & F_INITIALIZE) {
+                strncpy(nv->token, cfgArray[nv->index].token, TOKEN_LEN); // read the token from the array
+                read_persistent_value(nv);
+                nv_set(nv);
+            }
+        }
+    }
     rpt_print_loading_configs_message();
 }
 
@@ -140,9 +155,9 @@ static void _set_defa(nvObj_t *nv, bool print)
             }
             strncpy(nv->token, cfgArray[nv->index].token, TOKEN_LEN);
             cfgArray[nv->index].set(nv);        // run the set method, nv_set(nv);
-            // if (cfgArray[nv->index].flags & F_PERSIST) {
-            //     nv_persist(nv);
-            // }
+            if (nv->index == 0 || cfgArray[nv->index].flags & F_PERSIST) {
+                 nv_persist(nv);
+            }
         }
     }
     sr_init_status_report();                    // reset status reports
