@@ -44,7 +44,6 @@ struct nvmSingleton_t {
     FIL file;
     uint8_t file_index;
     alignas(4) uint8_t io_buffer[IO_BUFFER_SIZE];
-    index_t changed_nv_indexes[MAX_WRITE_CHANGES];
     uint16_t changed_nvs;
     uint32_t last_write_systick;
     uint8_t write_failures;
@@ -61,7 +60,7 @@ uint8_t active_file_index();
 
 // Leaving this in for now in case bugs come up; we can remove it when we're confident
 // it's stable
-#if 1
+#if 0
 # define DEBUG_PRINT(...) printf(__VA_ARGS__);
 #else
 # define DEBUG_PRINT(...) do {} while (0)
@@ -116,8 +115,21 @@ stat_t read_persistent_value(nvObj_t *nv)
     if (br != NVM_VALUE_LEN) {
         return (STAT_PERSISTENCE_ERROR);
     }
-    memcpy(&nv->value_flt, &nvm.io_buffer, NVM_VALUE_LEN);
-    DEBUG_PRINT("value copied from address %i in file: %f\n", nv->index * NVM_VALUE_LEN, nv->value_flt);
+
+    if (cfgArray[nv->index].flags & TYPE_INTEGER) {
+        nv->valuetype = TYPE_INTEGER;
+        nv->value_int = *(int32_t *)nvm.io_buffer;
+        DEBUG_PRINT("value (i) copied from address %l in file: %l\n", nv->index * NVM_VALUE_LEN, nv->value_int);
+    } else if (cfgArray[nv->index].flags & TYPE_BOOLEAN) {
+        nv->valuetype = TYPE_BOOLEAN;
+        nv->value_int = *(int32_t *)nvm.io_buffer;
+        DEBUG_PRINT("value (b) copied from address %l in file: %l\n", nv->index * NVM_VALUE_LEN, nv->value_int);
+    } else {
+        nv->valuetype = TYPE_FLOAT;
+        nv->value_flt = *(float *)nvm.io_buffer;
+        DEBUG_PRINT("value (f) copied from address %l in file: %f\n", nv->index * NVM_VALUE_LEN, nv->value_flt);
+    }
+
     return (STAT_OK);
 }
 
@@ -130,9 +142,7 @@ stat_t read_persistent_value(nvObj_t *nv)
 
 stat_t write_persistent_value(nvObj_t *nv)
 {
-    // if (read_persistent_value(nv) != STAT_OK) {
-      nvm.changed_nv_indexes[nvm.changed_nvs++] = nv->index;
-    // }
+    nvm.changed_nvs++;
     return (STAT_OK);
 }
 
@@ -148,9 +158,13 @@ stat_t write_persistent_values_callback()
    // FIXME: it would be much better to do this with an interrupt!
    f_polldisk();
    if (nvm.changed_nvs > 0) {
-       if (Motate::SysTickTimer.getValue() - nvm.last_write_systick < MIN_WRITE_INTERVAL) return (STAT_NOOP);
+       if (Motate::SysTickTimer.getValue() - nvm.last_write_systick < MIN_WRITE_INTERVAL) {
+           return (STAT_NOOP);
+       }
        // this check may not be necessary on ARM, but just in case...
-       if (cm->cycle_type != CYCLE_NONE) return(STAT_NOOP);    // can't write when machine is moving
+       if (cm->cycle_type != CYCLE_NONE) {
+           return(STAT_NOOP);    // can't write when machine is moving
+       }
 
        if(write_persistent_values() == STAT_OK) {
            nvm.changed_nvs = 0;
@@ -276,7 +290,6 @@ stat_t write_persistent_values()
    UINT bw;
    nvObj_t *nv = nv_reset_nv_list();  // sets *nv to the start of the body
    cmDistanceMode saved_distance_mode;
-   uint16_t changed_nvs_idx = 0;
 
    // Save the current units mode
    saved_distance_mode  = (cmDistanceMode)cm_get_distance_mode(ACTIVE_MODEL);
@@ -314,7 +327,7 @@ stat_t write_persistent_values()
       for (nv->index = cnt; nv->index < (cnt + step); nv->index++) {
 
         // Found an entry that needs to be written
-        if (nv->index == nvm.changed_nv_indexes[changed_nvs_idx])  {
+        if (nv->index == 0 || cfgArray[nv->index].flags & F_PERSIST) {
           nv_get_nvObj(nv);
 
           // Get the index for the current NVM value
@@ -323,16 +336,13 @@ stat_t write_persistent_values()
           // Write out based on the value type
           if (nv->valuetype == TYPE_INTEGER || nv->valuetype == TYPE_BOOLEAN) {
             memcpy(nvm.io_buffer + index, &nv->value_int, NVM_VALUE_LEN);
-            DEBUG_PRINT("item index: %i, write index: %i (cnt: %i), value: %d\n", nv->index, index, cnt, nv->value_int);
+            DEBUG_PRINT("item index: %l , write index: %l (cnt: %l), value: %i\n", nv->index, index, cnt, nv->value_int);
           } else if (nv->valuetype == TYPE_FLOAT) {
             memcpy(nvm.io_buffer + index, &nv->value_flt, NVM_VALUE_LEN);
-            DEBUG_PRINT("item index: %i, write index: %i (cnt: %i), value: %d\n", nv->index, index, cnt, nv->value_flt);
+            DEBUG_PRINT("item index: %l , write index: %l (cnt: %l), value: %f\n", nv->index, index, cnt, nv->value_flt);
           } else {
             // next - ignore strings and other stuff which shouldn't be set to persist anyway
           }
-
-          // Increment the changed nv index
-          changed_nvs_idx++;
         }
       }
 
