@@ -27,10 +27,10 @@
 #include "coolant.h"
 #include "util.h"
 #include "xio.h"                    // for char definitions
+#include "json_parser.h"
 
 #if MARLIN_COMPAT_ENABLED == true
 #include "marlin_compatibility.h"
-#include "json_parser.h"            // so we can switch js.comm_mode on a marlin M-code
 #endif
 
 // Helpers
@@ -60,7 +60,7 @@ typedef enum {                          // Used for detecting gcode errors. See 
 #define MODAL_GROUP_COUNT (MODAL_GROUP_M9+1)
 // Note 1: Our G0 omits G4,G30,G53,G92.1,G92.2,G92.3 as these have no axis components to error check
 
-/* The difference between NextAction and MotionMode (in canonical machine) is that 
+/* The difference between NextAction and MotionMode (in canonical machine) is that
 *  NextAction is used by the current block, and may carry non-modal commands, whereas
  * MotionMode persists across blocks (as G modal group 1)
  */
@@ -138,7 +138,7 @@ typedef struct GCodeInputValue {    // Gcode inputs - meaning depends on context
     uint8_t arc_distance_mode;      // G90.1=use absolute IJK offsets, G91.1=incremental IJK offsets
     uint8_t origin_offset_mode;     // G92...TRUE=in origin offset mode
     uint8_t absolute_override;      // G53 TRUE = move using machine coordinates - this block only (G53)
-    
+
     uint8_t tool;                   // Tool after T and M6 (tool_select and tool_change)
     uint8_t tool_select;            // T value - T sets this value
     uint8_t tool_change;            // M6 tool change flag - moves "tool_select" to "tool"
@@ -198,7 +198,7 @@ typedef struct GCodeFlags {         // Gcode input flags
     bool fro_control;
     bool tro_control;
     bool spo_control;
-    
+
     bool checksum;
 
 #if MARLIN_COMPAT_ENABLED == true
@@ -263,6 +263,9 @@ stat_t gcode_parser(char *block)
     // TODO, now MSG is put in the active comment, handle that.
 
     if (str[0] == NUL) {                    // normalization returned null string
+        if ((active_comment != nullptr) && (active_comment[0] == '{')) {
+            json_parser(active_comment);
+        }
         return (STAT_OK);                   // most likely a comment line
     }
 
@@ -869,7 +872,7 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
             case 'L': SET_NON_MODAL (L_word, value);
             case 'R': SET_NON_MODAL (arc_radius, value);
             case 'N': SET_NON_MODAL (linenum, value_int);           // line number handled as special case to preserve integer value
-            
+
 #if MARLIN_COMPAT_ENABLED == true
             case 'E': SET_NON_MODAL (E_word, value);                // extruder value
 #endif
@@ -932,7 +935,7 @@ stat_t _execute_gcode_block(char *active_comment)
     if (gf.linenum) {
         cm_set_model_linenum(gv.linenum);
     }
-        
+
     EXEC_FUNC(cm_m48_enable, m48_enable);
 
     if (gf.fro_control) {                                   // feedrate override
@@ -952,7 +955,7 @@ stat_t _execute_gcode_block(char *active_comment)
     if (gf.linenum && gf.checksum) {
         ritorno(cm_check_linenum());
     }
-        
+
     EXEC_FUNC(spindle_speed_sync, S_word);                  // S
     EXEC_FUNC(cm_select_tool, tool_select);                 // T - tool_select is where it's written
     EXEC_FUNC(cm_change_tool, tool_change);                 // M6 - is where it's effected
@@ -1029,7 +1032,7 @@ stat_t _execute_gcode_block(char *active_comment)
         case NEXT_ACTION_JSON_COMMAND_SYNC:       { status = cm_json_command(active_comment); break;}               // M100.0
         case NEXT_ACTION_JSON_COMMAND_ASYNC:      { status = cm_json_command_immediate(active_comment); break;}     // M100.1
         case NEXT_ACTION_JSON_WAIT:               { status = cm_json_wait(active_comment); break;}                  // M101
-        
+
         case NEXT_ACTION_DEFAULT: {
             cm_set_absolute_override(MODEL, gv.absolute_override); // apply absolute override & display as absolute
             switch (gv.motion_mode) {
