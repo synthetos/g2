@@ -13,7 +13,7 @@ for (n=1; n<=6; n++) {
     { "${n}","${n}ma", _iip,  0, st_print_ma, st_get_ma, st_set_ma, nullptr, M${n}_MOTOR_MAP },
     { "${n}","${n}sa", _fip,  3, st_print_sa, st_get_sa, st_set_sa, nullptr, M${n}_STEP_ANGLE },
     { "${n}","${n}tr", _fipc, 4, st_print_tr, st_get_tr, st_set_tr, nullptr, M${n}_TRAVEL_PER_REV },
-    { "${n}","${n}su", _fipi, 5, st_print_su, st_get_su, st_set_su, nullptr, M${n}_STEPS_PER_UNIT },
+    { "${n}","${n}su", _f0,   5, st_print_su, st_get_su, st_set_su, nullptr, M${n}_STEPS_PER_UNIT },
     { "${n}","${n}mi", _iip,  0, st_print_mi, st_get_mi, st_set_mi, nullptr, M${n}_MICROSTEPS },
     { "${n}","${n}po", _iip,  0, st_print_po, st_get_po, st_set_po, nullptr, M${n}_POLARITY },
     { "${n}","${n}pm", _iip,  0, st_print_pm, st_get_pm, st_set_pm, nullptr, M${n}_POWER_MODE },
