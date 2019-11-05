@@ -52,9 +52,11 @@ typedef struct cfgParameters {  // mostly communications variables at this point
     uint32_t user_data_d[4];
 #endif
 
-   // installed fixturing information
-   float fx_coords_a[4][2];    // x/y coordinates of up to 4 points on fixturing object
-   float fx_state_a;         // state flag
+    // installed fixturing information
+    float fx_coords_a[4][2];  // x/y coordinates of up to 4 points on fixturing object
+    float fx_state_a;         // state flag
+
+    uint32_t mark;            // just a rtransient value to return when asked
 
     uint16_t magic_end;
 } cfgParameters_t;

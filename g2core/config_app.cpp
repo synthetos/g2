@@ -1098,6 +1098,7 @@ const cfgItem_t cfgArray[] = {
     { "", "tick", _n0, 0, tx_print_int,  get_tick,  set_nul,   nullptr, 0 },    // get system time tic
     { "", "tram", _b0, 0, cm_print_tram,cm_get_tram,cm_set_tram,nullptr,0 },    // SET to attempt setting rotation matrix from probes
     { "", "defa", _b0, 0, tx_print_nul,  help_defa,set_defaults,nullptr,0 },    // set/print defaults / help screen
+    { "", "mark", _i0, 0, tx_print_nul,  get_int32, set_int32, &cfg.mark, 0 },
     { "", "flash",_b0, 0, tx_print_nul,  help_flash,hw_flash,  nullptr, 0 },
 
 #ifdef __HELP_SCREENS
