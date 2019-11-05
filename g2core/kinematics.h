@@ -47,12 +47,9 @@ struct KinematicsBase {
     // take the target (in cartesian coordinates in mm), and convert them to steps for each joints
     // taking the joint_map into consideration, and returning the values in the provided array steps[]
     // must be as fast as possible while retaining precision
-    virtual void inverse_kinematics(const float target[axes], float steps[motors]);
-
-    // this version is the same as above, but is provided more information for the sake of tracking
+    // the other information is for the sake of tracking and intelligent error correction
     // the derivatives (acceleration, jerk) or other considerations
     virtual void inverse_kinematics(const float target[axes], const float position[axes], const float start_velocity, const float end_velocity, const float segment_time, float steps[motors]) {
-        inverse_kinematics(target, steps);
     }
 
     // if the planner buffer is empty, the idel_task will be given the opportunity to drive the runtime
@@ -99,7 +96,6 @@ stat_t kn_get_pos_d(nvObj_t *nv);
 #endif
 
 void kn_config_changed();
-void kn_inverse_kinematics(const float travel[], float steps[]);
 void kn_forward_kinematics(const float steps[], float travel[]);
 
 #endif  // End of include Guard: KINEMATICS_H_ONCE

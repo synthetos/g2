@@ -105,7 +105,9 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
     //  8 = W (maybe)
 
     float steps_per_unit[motors];
-    uint8_t joint_map[joints]; // for each joint, which motor or -1
+    float steps_offset[motors];
+    bool needs_sync_encoders = true; // if true, we need to update the steps_offset
+    uint8_t joint_map[joints];  // for each joint, which motor or -1
 
     float joint_position[joints];
 
@@ -122,18 +124,37 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
             }
             steps_per_unit[motor] = new_steps_per_unit[motor];
         }
+        needs_sync_encoders = true;
     }
 
-    void inverse_kinematics(const float target[axes], float steps[motors]) override
+    void inverse_kinematics(const float target[axes], const float position[axes], const float start_velocity,
+                            const float end_velocity, const float segment_time, float steps[motors]) override
     {
         // joint == axis in cartesian kinematics
         for (uint8_t joint = 0; joint < joints; joint++) {
             uint8_t motor = joint_map[joint];
             if (motor == -1) { continue; }
 
-            steps[motor] = target[joint] * steps_per_unit[motor];
+            if (needs_sync_encoders) {
+                // incoming position should reflect where the outer system expects the current location (position)
+                // to be, so update the steps_offset to adjust from joint_position to position, such that
+                // if this were called with position == target, we would return the same steps we did last time
+                // when position == joint_position
+
+                // figure out what was returned last time for joint_position
+                float old_steps = joint_position[joint] * steps_per_unit[motor];
+
+                // figure out what we would return (pre-sync) for position
+                float new_steps = position[joint] * steps_per_unit[motor];
+
+                // put the difference in steps_offset
+                steps_offset[motor] = old_steps - new_steps;
+            }
+
+            steps[motor] = steps_offset[motor] + target[joint] * steps_per_unit[motor];
             joint_position[joint] = target[joint];
         }
+        needs_sync_encoders = false;
     }
 
     void get_position(float position[axes]) override
@@ -175,9 +196,7 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
         } // for joint
     }
 
-    void sync_encoders() override {
-        // unused
-    }
+    void sync_encoders() override { needs_sync_encoders = true; }
 };
 
 
@@ -198,7 +217,8 @@ struct CoreXYKinematics final : CartesianKinematics<axes, motors> {
     //  7 = V (maybe)
     //  8 = W (maybe)
 
-    void inverse_kinematics(const float target[axes], float steps[motors]) override
+    void inverse_kinematics(const float target[axes], const float position[axes], const float start_velocity,
+                            const float end_velocity, const float segment_time, float steps[motors]) override
     {
         // need to have a place to store the adjusted COREXY A and B
         float axes_target[axes];
@@ -213,7 +233,7 @@ struct CoreXYKinematics final : CartesianKinematics<axes, motors> {
         }
 
         // just use the cartesian method from here on
-        parent::inverse_kinematics(axes_target, steps);
+        parent::inverse_kinematics(axes_target, position, start_velocity, end_velocity, segment_time, steps);
     }
 
     void forward_kinematics(const float steps[motors], float position[axes]) override
@@ -240,10 +260,6 @@ struct CoreXYKinematics final : CartesianKinematics<axes, motors> {
 
         position[0] = 0.5 * (deltaA + deltaB);
         position[1] = 0.5 * (deltaA - deltaB);
-    }
-
-    void sync_encoders() override {
-        // unused
     }
 };
 
@@ -1151,23 +1167,6 @@ void kn_config_changed() {
     kn->configure(steps_per_unit, motor_map);
 
     mp_set_steps_to_runtime_position();
-}
-
-
-/*
- * kn_kinematics() - wrapper routine for inverse kinematics
- *
- *	Calls kinematics function(s).
- *	Performs axis mapping & conversion of length units to steps (and deals with inhibited axes)
- *
- *	The reason steps are returned as floats (as opposed to, say, uint32_t) is to accommodate
- *	fractional DDA steps. The DDA deals with fractional step values as fixed-point binary in
- *	order to get the smoothest possible operation. Steps are passed to the move prep routine
- *	as floats and converted to fixed-point binary during queue loading. See stepper.c for details.
- */
-
-void kn_inverse_kinematics(const float travel[], float steps[]) {
-    kn->inverse_kinematics(travel, steps);
 }
 
 /*
