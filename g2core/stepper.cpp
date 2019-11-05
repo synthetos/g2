@@ -303,28 +303,29 @@ void dda_timer_type::interrupt()
 //    for (uint8_t motor=0; motor<MOTORS; motor++) {
 //        if  ((st_run.mot[motor].substep_accumulator += st_run.mot[motor].substep_increment) > 0) {
 //            Motors[motor]->stepStart();        // turn step bit on
-//            st_run.mot[motor].substep_accumulator -= st_run.dda_ticks_X_substeps;
+//            st_run.mot[motor].substep_accumulator -= DDA_SUBSTEPS;
 //            INCREMENT_ENCODER(motor);
 //        }
+//        st_run.mot[motor].substep_increment += st_run.mot[motor].substep_increment_increment;
 //    }
 
     // process DDAs for each motor
     if  ((st_run.mot[MOTOR_1].substep_accumulator += st_run.mot[MOTOR_1].substep_increment) > 0) {
         motor_1.stepStart();        // turn step bit on
-        st_run.mot[MOTOR_1].substep_accumulator -= DDA_SUBSTEPS; //st_run.dda_ticks_X_substeps;
+        st_run.mot[MOTOR_1].substep_accumulator -= DDA_SUBSTEPS;
         INCREMENT_ENCODER(MOTOR_1);
     }
     st_run.mot[MOTOR_1].substep_increment += st_run.mot[MOTOR_1].substep_increment_increment;
     if ((st_run.mot[MOTOR_2].substep_accumulator += st_run.mot[MOTOR_2].substep_increment) > 0) {
         motor_2.stepStart();        // turn step bit on
-        st_run.mot[MOTOR_2].substep_accumulator -= DDA_SUBSTEPS; //st_run.dda_ticks_X_substeps;
+        st_run.mot[MOTOR_2].substep_accumulator -= DDA_SUBSTEPS;
         INCREMENT_ENCODER(MOTOR_2);
     }
     st_run.mot[MOTOR_2].substep_increment += st_run.mot[MOTOR_2].substep_increment_increment;
 #if MOTORS > 2
     if ((st_run.mot[MOTOR_3].substep_accumulator += st_run.mot[MOTOR_3].substep_increment) > 0) {
         motor_3.stepStart();        // turn step bit on
-        st_run.mot[MOTOR_3].substep_accumulator -= DDA_SUBSTEPS; //st_run.dda_ticks_X_substeps;
+        st_run.mot[MOTOR_3].substep_accumulator -= DDA_SUBSTEPS;
         INCREMENT_ENCODER(MOTOR_3);
     }
     st_run.mot[MOTOR_3].substep_increment += st_run.mot[MOTOR_3].substep_increment_increment;
@@ -332,7 +333,7 @@ void dda_timer_type::interrupt()
 #if MOTORS > 3
     if ((st_run.mot[MOTOR_4].substep_accumulator += st_run.mot[MOTOR_4].substep_increment) > 0) {
         motor_4.stepStart();        // turn step bit on
-        st_run.mot[MOTOR_4].substep_accumulator -= DDA_SUBSTEPS; //st_run.dda_ticks_X_substeps;
+        st_run.mot[MOTOR_4].substep_accumulator -= DDA_SUBSTEPS;
         INCREMENT_ENCODER(MOTOR_4);
     }
     st_run.mot[MOTOR_4].substep_increment += st_run.mot[MOTOR_4].substep_increment_increment;
@@ -340,15 +341,15 @@ void dda_timer_type::interrupt()
 #if MOTORS > 4
     if ((st_run.mot[MOTOR_5].substep_accumulator += st_run.mot[MOTOR_5].substep_increment) > 0) {
         motor_5.stepStart();        // turn step bit on
-        st_run.mot[MOTOR_5].substep_accumulator -= DDA_SUBSTEPS; //st_run.dda_ticks_X_substeps;
+        st_run.mot[MOTOR_5].substep_accumulator -= DDA_SUBSTEPS;
         INCREMENT_ENCODER(MOTOR_5);
-        st_run.mot[MOTOR_5].substep_increment += st_run.mot[MOTOR_5].substep_increment_increment;
     }
+    st_run.mot[MOTOR_5].substep_increment += st_run.mot[MOTOR_5].substep_increment_increment;
 #endif
 #if MOTORS > 5
     if ((st_run.mot[MOTOR_6].substep_accumulator += st_run.mot[MOTOR_6].substep_increment) > 0) {
         motor_6.stepStart();        // turn step bit on
-        st_run.mot[MOTOR_6].substep_accumulator -= DDA_SUBSTEPS; //st_run.dda_ticks_X_substeps;
+        st_run.mot[MOTOR_6].substep_accumulator -= DDA_SUBSTEPS;
         INCREMENT_ENCODER(MOTOR_6);
     }
     st_run.mot[MOTOR_6].substep_increment += st_run.mot[MOTOR_6].substep_increment_increment;
@@ -494,7 +495,7 @@ static void _load_move()
             //     always operate on the last segment actually run by this motor, regardless of how many
             //     segments it may have been inactive in between.
 
-            // Apply accumulator correction if the time base has changed since previous segment
+            // Prepare the substep increment increment for linear velocity ramping
             st_run.mot[MOTOR_1].substep_increment_increment = st_pre.mot[MOTOR_1].substep_increment_increment;
 
             // Detect direction change and if so:

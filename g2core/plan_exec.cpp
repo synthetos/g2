@@ -912,7 +912,6 @@ static stat_t _exec_aline_segment()
     }
 
     // Convert target position to steps
-    // kn->inverse_kinematics(mr->gm.target, exec_target_steps);   // now determine the target steps...
     kn->inverse_kinematics(mr->gm.target, mr->position, mr->segment_velocity, mr->target_velocity, mr->segment_time, exec_target_steps);
 
     // Update the mb->run_time_remaining -- we know it's missing the current segment's time before it's loaded, that's ok.
