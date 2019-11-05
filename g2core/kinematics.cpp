@@ -142,7 +142,7 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
                 // when position == joint_position
 
                 // figure out what was returned last time for joint_position
-                float old_steps = joint_position[joint] * steps_per_unit[motor];
+                float old_steps = steps_offset[motor] + joint_position[joint] * steps_per_unit[motor];
 
                 // figure out what we would return (pre-sync) for position
                 float new_steps = position[joint] * steps_per_unit[motor];
