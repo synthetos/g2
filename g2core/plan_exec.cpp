@@ -281,7 +281,7 @@ stat_t mp_exec_move()
             }
 
             if (bf->buffer_state == MP_BUFFER_BACK_PLANNED) {
-                debug_trap_if_true((cm->motion_state == MOTION_RUN), "mp_exec_move() buffer prepped but not planned");
+                // debug_trap_if_true((cm->motion_state == MOTION_RUN), "mp_exec_move() buffer prepped but not planned");
                 // IMPORTANT: can't rpt_exception from here!
                 // We need to have it planned. We don't want to do this here,
                 // as it might already be happening in a lower interrupt.
