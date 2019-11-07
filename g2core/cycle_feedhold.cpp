@@ -99,15 +99,15 @@ typedef stat_t (*action_exec_t)();          // callback to action execution func
 typedef struct cmAction {                   // struct to manage execution of operations
     uint8_t number;                         // DIAGNOSTIC for easier debugging. Not used functionally.
     struct cmAction *nx;                    // static pointer to next buffer
-    action_exec_t func;                     // callback to operation action function. NULL == disabled
+    action_exec_t func;                     // callback to operation action function. nullptr == disabled
 
     void reset() {                          // clears function pointer
-        func = NULL;
+        func = nullptr;
     };
 } cmAction_t;
 
 typedef struct cmOperation {                // operation runner object
-
+    uint32_t check = 0xBEFE;
     cmAction action[ACTION_MAX];            // singly linked list of action structures
     cmAction *add;                          // pointer to next action to be added
     cmAction *run;                          // pointer to action being executed
@@ -119,7 +119,7 @@ typedef struct cmOperation {                // operation runner object
             action[i].number = i;           // DIAGNOSTIC only. Otherwise not used
             action[i].nx = &action[i+1];    // link to the next action
         }
-        action[ACTION_MAX-1].nx = NULL;     // set last action (end of list)
+        action[ACTION_MAX-1].nx = nullptr;     // set last action (end of list)
         add = action;                       // initialize pointers to first action struct
         run = action;
         in_operation = false;
@@ -127,20 +127,20 @@ typedef struct cmOperation {                // operation runner object
 
     stat_t add_action(stat_t(*action_exec)()) {
         if (in_operation) { return (STAT_COMMAND_NOT_ACCEPTED); }       // can't add
-        if (add == NULL)  { return (STAT_INPUT_EXCEEDS_MAX_LENGTH); }   // no more room
+        if (add == nullptr)  { return (STAT_INPUT_EXCEEDS_MAX_LENGTH); }   // no more room
         add->func = action_exec;
         add = add->nx;
         return (STAT_OK);
     };
 
     stat_t run_operation(void) {
-        if (run->func == NULL) { return (STAT_NOOP); }  // not an error. This is normal.
+        if (run->func == nullptr) { return (STAT_NOOP); }  // not an error. This is normal.
         in_operation = true;                // disable add_action during operations
 
         stat_t status;
         while ((status = run->func()) == STAT_OK) {
             run = run->nx;
-            if (run->func == NULL) {        // operation has completed
+            if (run == nullptr || run->func == nullptr) {        // operation has completed
                 reset();                    // setup for next operation
                 return (STAT_OK);
             }
