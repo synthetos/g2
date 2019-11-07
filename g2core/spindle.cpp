@@ -312,7 +312,7 @@ static void _exec_spindle_speed(float *value, bool *flag)
     spindle.speed = value[0];
     pwm_set_duty(PWM_1, _get_spindle_pwm(spindle, pwm));
 
-    if (fp_ZERO(previous_speed)) {
+    if (fp_ZERO(previous_speed) && !fp_ZERO(spindle.speed)) {
         mp_request_out_of_band_dwell(spindle.spinup_delay);
     }
 }
