@@ -399,27 +399,16 @@ static void _send_probe_report() {
 
     if (cm->probe_report_enable) {
         // If probe was successful the 'e' word == 1, otherwise e == 0 to signal an error
-        char  buf[32];
+        char  buf[256];
         char* bufp = buf;
-        bufp += sprintf(bufp, "{\"prb\":{\"e\":%i, \"", (int)cm->probe_state[0]);
-        if (pb.flags[AXIS_X]) {
-            sprintf(bufp, "x\":%0.5f}}\n", cm->probe_results[0][AXIS_X]);
-        }
-        if (pb.flags[AXIS_Y]) {
-            sprintf(bufp, "y\":%0.5f}}\n", cm->probe_results[0][AXIS_Y]);
-        }
-        if (pb.flags[AXIS_Z]) {
-            sprintf(bufp, "z\":%0.5f}}\n", cm->probe_results[0][AXIS_Z]);
-        }
-        if (pb.flags[AXIS_A]) {
-            sprintf(bufp, "a\":%0.5f}}\n", cm->probe_results[0][AXIS_A]);
-        }
-        if (pb.flags[AXIS_B]) {
-            sprintf(bufp, "b\":%0.5f}}\n", cm->probe_results[0][AXIS_B]);
-        }
-        if (pb.flags[AXIS_C]) {
-            sprintf(bufp, "c\":%0.5f}}\n", cm->probe_results[0][AXIS_C]);
-        }
+        bufp += sprintf(bufp, "{\"prb\":{\"e\":%i,", (int)cm->probe_state[0]);
+        bufp += sprintf(bufp, "\"x\":%0.5f,", cm->probe_results[0][AXIS_X]);
+        bufp += sprintf(bufp, "\"y\":%0.5f,", cm->probe_results[0][AXIS_Y]);
+        bufp += sprintf(bufp, "\"z\":%0.5f,", cm->probe_results[0][AXIS_Z]);
+        bufp += sprintf(bufp, "\"a\":%0.5f,", cm->probe_results[0][AXIS_A]);
+        bufp += sprintf(bufp, "\"b\":%0.5f,", cm->probe_results[0][AXIS_B]);
+        bufp += sprintf(bufp, "\"c\":%0.5f", cm->probe_results[0][AXIS_C]);
+        bufp += sprintf(bufp, "}}\n");
         xio_writeline(buf);
     }
 }
