@@ -243,7 +243,7 @@ struct gpioDigitalInput {
             return (STAT_OK);
         }
         nv->value_int = getState();
-        nv->valuetype = TYPE_BOOLEAN;
+        nv->valuetype = TYPE_INTEGER;
         return (STAT_OK);
     };
     // no setState
