@@ -50,8 +50,13 @@ decltype(usb.mixin<0>::Serial) &SerialUSB = usb.mixin<0>::Serial;
 decltype(usb.mixin<1>::Serial) &SerialUSB1 = usb.mixin<1>::Serial;
 #endif
 
+#ifdef BANTAM
+MOTATE_SET_USB_VENDOR_STRING( u"Bantam Tools" )
+MOTATE_SET_USB_PRODUCT_STRING( u"Bantam Control Board (g2core)" )
+#else
 MOTATE_SET_USB_VENDOR_STRING( u"Synthetos" )
 MOTATE_SET_USB_PRODUCT_STRING( u"TinyG v2" )
+#endif
 MOTATE_SET_USB_SERIAL_NUMBER_STRING_FROM_CHIPID()
 #endif // XIO_HAS_USB
 
