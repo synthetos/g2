@@ -175,7 +175,7 @@ stat_t cm_alarm(const stat_t status, const char *msg)
         (cm->machine_state == MACHINE_PANIC)) {
         return (STAT_OK);                       // don't alarm if already in an alarm state
     }
-    cm_request_feedhold(FEEDHOLD_TYPE_SCRAM, FEEDHOLD_EXIT_ALARM);  // fast stop and alarm
+    cm_request_feedhold(FEEDHOLD_TYPE_SKIP, FEEDHOLD_EXIT_ALARM);  // fast stop and alarm
     rpt_exception(status, msg);                 // send alarm message
     sr_request_status_report(SR_REQUEST_TIMED);
     return (status);
@@ -203,7 +203,7 @@ stat_t cm_shutdown(const stat_t status, const char *msg)
     if ((cm->machine_state == MACHINE_SHUTDOWN) || (cm->machine_state == MACHINE_PANIC)) {
         return (STAT_OK);                       // don't shutdown if shutdown or panic'd
     }
-    cm_request_feedhold(FEEDHOLD_TYPE_SCRAM, FEEDHOLD_EXIT_SHUTDOWN);  // fast stop and shutdown
+    cm_request_feedhold(FEEDHOLD_TYPE_SKIP, FEEDHOLD_EXIT_SHUTDOWN);  // fast stop and shutdown
 
 //    spindle_reset();                            // stop spindle immediately and set speed to 0 RPM
 //    coolant_reset();                            // stop coolant immediately

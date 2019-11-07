@@ -564,7 +564,7 @@ void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit)
         switch (cm1.hold_type) {
             case FEEDHOLD_TYPE_HOLD:     { op.add_action(_feedhold_no_actions); break; }
             case FEEDHOLD_TYPE_ACTIONS:  { op.add_action(_feedhold_with_actions); break; }
-            case FEEDHOLD_TYPE_SCRAM:
+            // case FEEDHOLD_TYPE_SCRAM: <- no longer used, use FEEDHOLD_TYPE_SKIP instead
             case FEEDHOLD_TYPE_SKIP:     { op.add_action(_feedhold_skip); break; }
             default: {}
         }
