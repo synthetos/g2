@@ -403,22 +403,22 @@ static void _send_probe_report() {
         char* bufp = buf;
         bufp += sprintf(bufp, "{\"prb\":{\"e\":%i, \"", (int)cm->probe_state[0]);
         if (pb.flags[AXIS_X]) {
-            sprintf(bufp, "x\":%0.3f}}\n", cm->probe_results[0][AXIS_X]);
+            sprintf(bufp, "x\":%0.5f}}\n", cm->probe_results[0][AXIS_X]);
         }
         if (pb.flags[AXIS_Y]) {
-            sprintf(bufp, "y\":%0.3f}}\n", cm->probe_results[0][AXIS_Y]);
+            sprintf(bufp, "y\":%0.5f}}\n", cm->probe_results[0][AXIS_Y]);
         }
         if (pb.flags[AXIS_Z]) {
-            sprintf(bufp, "z\":%0.3f}}\n", cm->probe_results[0][AXIS_Z]);
+            sprintf(bufp, "z\":%0.5f}}\n", cm->probe_results[0][AXIS_Z]);
         }
         if (pb.flags[AXIS_A]) {
-            sprintf(bufp, "a\":%0.3f}}\n", cm->probe_results[0][AXIS_A]);
+            sprintf(bufp, "a\":%0.5f}}\n", cm->probe_results[0][AXIS_A]);
         }
         if (pb.flags[AXIS_B]) {
-            sprintf(bufp, "b\":%0.3f}}\n", cm->probe_results[0][AXIS_B]);
+            sprintf(bufp, "b\":%0.5f}}\n", cm->probe_results[0][AXIS_B]);
         }
         if (pb.flags[AXIS_C]) {
-            sprintf(bufp, "c\":%0.3f}}\n", cm->probe_results[0][AXIS_C]);
+            sprintf(bufp, "c\":%0.5f}}\n", cm->probe_results[0][AXIS_C]);
         }
         xio_writeline(buf);
     }
