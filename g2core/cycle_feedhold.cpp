@@ -332,6 +332,20 @@ static stat_t _run_shutdown() {
     cm1.hold_exit = FEEDHOLD_EXIT_END;
     return (STAT_OK);
 }
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
+static stat_t _run_interlock_started() {
+    cm1.machine_state = MACHINE_INTERLOCK;
+    return (STAT_OK);
+}
+static stat_t _run_interlock_ended() {
+    if (cm1.cycle_type != CYCLE_NONE) {
+        cm1.machine_state = MACHINE_CYCLE;
+    } else {
+        cm1.machine_state = MACHINE_PROGRAM_END;
+    }
+    return (_run_restart_cycle());
+}
+#else
 static stat_t _run_interlock_started() {
     cm1.safety_interlock_state = SAFETY_INTERLOCK_DISENGAGED;
     cm1.machine_state = MACHINE_INTERLOCK;
@@ -346,7 +360,7 @@ static stat_t _run_interlock_ended() {
     }
     return (_run_restart_cycle());
 }
-
+#endif
 /****************************************************************************************
  * cm_request_cycle_start() - set request enum only
  * _start_cycle_start()  - run the cycle start
