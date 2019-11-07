@@ -203,11 +203,12 @@ typedef enum {
 
     SAFETY_INTERLOCK_MASK = 0x1,
     SAFETY_ESC_MASK = 0xE,
-#endif
+#else
     SAFETY_INTERLOCK_ENGAGED = 0,   // meaning the interlock input is CLOSED (low)
     SAFETY_INTERLOCK_DISENGAGING,   // meaning the interlock opened and we're dealing with it
     SAFETY_INTERLOCK_DISENGAGED,
     SAFETY_INTERLOCK_ENGAGING
+#endif
 } cmSafetyState;
 
 typedef enum {                      // feed override state machine
@@ -340,7 +341,6 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     uint8_t safety_interlock_disengaged;    // set non-zero to start interlock processing (value is input number)
     uint8_t safety_interlock_reengaged;     // set non-zero to end interlock processing (value is input number)
     cmSafetyState safety_interlock_state;   // safety interlock state
-    // Motate::Timeout esc_boot_timer;      // timer for Electronic Speed Control (Spindle electronics) to boot
 
     cmHomingState homing_state;             // home: homing cycle sub-state machine
     uint8_t homed[AXES];                    // individual axis homing flags
@@ -361,10 +361,10 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     GCodeState_t *am;                       // active Gcode model is maintained by state management
 
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
-    uint8_t safety_state;                   // Tracks whether interlock has been triggered, whether esc is rebooting, etc
-    uint8_t estop_state;                    // Whether estop has been triggered
-    uint32_t esc_boot_timer;                // When the ESC last booted up
-    uint32_t esc_lockout_timer;             // When the ESC lockout last triggered
+    uint8_t safety_state;               // Tracks whether interlock has been triggered, whether esc is rebooting, etc
+    uint8_t estop_state;                // Whether estop has been triggered
+    Motate::Timeout esc_boot_timer;     // When the ESC last booted up
+    Motate::Timeout esc_lockout_timer;  // When the ESC lockout last triggered
 #endif
 
     GCodeState_t  gm;                       // core gcode model state

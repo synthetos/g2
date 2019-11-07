@@ -299,14 +299,13 @@ void canonical_machine_reset(cmMachine_t *_cm)
     _cm->cycle_type = CYCLE_NONE;
     _cm->motion_state = MOTION_STOP;
     _cm->hold_state = FEEDHOLD_OFF;
-    // _cm->esc_boot_timer.set(???); // no longer used?
     _cm->gmx.block_delete_switch = true;
     _cm->gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE; // never start in a motion mode
     _cm->machine_state = MACHINE_READY;
 
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
     _cm->safety_state = _cm->estop_state = 0;
-    _cm->esc_boot_timer = Motate::SysTickTimer.getValue();
+    _cm->esc_boot_timer.set(ESC_BOOT_TIME);
     _cm->safety_state = SAFETY_ESC_REBOOTING;
 #endif
 
@@ -2157,12 +2156,15 @@ stat_t cm_get_frmo(nvObj_t *nv) { return(_get_msg_helper(nv, msg_frmo, cm_get_fe
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
 stat_t cm_get_safe(nvObj_t *nv) {
     uint8_t safe = 0;
-    if((cm->safety_state & SAFETY_INTERLOCK_MASK) != 0)
+    if ((cm->safety_state & SAFETY_INTERLOCK_MASK) != 0) {
         safe |= 0x1;
-    if((cm->safety_state & SAFETY_ESC_MASK) != 0)
+    }
+    if ((cm->safety_state & SAFETY_ESC_MASK) != 0) {
         safe |= 0x2;
-    return(_get_msg_helper(nv, msg_safe, safe)); }
-stat_t cm_get_estp(nvObj_t *nv) { return(_get_msg_helper(nv, msg_estp, (cm->estop_state & 0x3))); }
+    }
+    return (_get_msg_helper(nv, msg_safe, safe));
+}
+stat_t cm_get_estp(nvObj_t *nv) { return (_get_msg_helper(nv, msg_estp, (cm->estop_state & 0x3))); }
 #endif
 
 stat_t cm_get_toolv(nvObj_t *nv) { return(get_integer(nv, cm_get_tool(ACTIVE_MODEL))); }

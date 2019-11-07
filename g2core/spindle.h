@@ -96,13 +96,6 @@ typedef struct spSpindle {
 
     bool        override_enable;    // {spoe:} TRUE = spindle speed override enabled (see also m48_enable in canonical machine)
     float       override_factor;    // {spo:}  1.0000 x S spindle speed. Go up or down from there
-
-    // No longer used?
-    // // Spindle speed controller variables
-    // ESCState    esc_state;          // state management for ESC controller
-    // uint32_t    esc_boot_timer;     // When the ESC last booted up
-    // uint32_t    esc_lockout_timer;  // When the ESC lockout last triggered
-
 } spSpindle_t;
 extern spSpindle_t spindle;
 

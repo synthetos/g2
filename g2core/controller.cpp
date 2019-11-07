@@ -565,72 +565,77 @@ static stat_t _limit_switch_handler(void)
 }
 
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
-static stat_t _interlock_estop_handler(void)
-{
+static stat_t _interlock_estop_handler(void) {
     bool report = false;
-    //Process E-Stop and Interlock signals
-    if((cm->safety_state & SAFETY_INTERLOCK_MASK) == SAFETY_INTERLOCK_CLOSED && gpio_read_input(INTERLOCK_SWITCH_INPUT) == INPUT_ACTIVE) {
+    // Process E-Stop and Interlock signals
+    if ((cm->safety_state & SAFETY_INTERLOCK_MASK) == SAFETY_INTERLOCK_CLOSED &&
+        gpio_read_input(INTERLOCK_SWITCH_INPUT) == INPUT_ACTIVE) {
         cm->safety_state |= SAFETY_INTERLOCK_OPEN;
-        if(spindle.state != SPINDLE_OFF) {
-            if(mp_get_run_buffer() != NULL)
-                cm_request_feedhold(FEEDHOLD_TYPE_ACTIONS, FEEDHOLD_EXIT_INTERLOCK);  // may have already requested STOP as INPUT_ACTION
+        if (spindle.state != SPINDLE_OFF) {
+            if (mp_get_run_buffer() != NULL)
+                cm_request_feedhold(FEEDHOLD_TYPE_HOLD,
+                                    FEEDHOLD_EXIT_STOP);  // may have already requested STOP as INPUT_ACTION
             else {
-                cm_cycle_start();
+                cm_request_cycle_start();  // proper way to restart the cycle
                 spindle_control_immediate(spindle.state);
             }
         }
-        //If we just entered interlock and we're not off, start the lockout timer
-        if((cm->safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_ONLINE || (cm->safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_REBOOTING) {
-            cm->esc_lockout_timer = Motate::SysTickTimer.getValue();
+        // If we just entered interlock and we're not off, start the lockout timer
+        if ((cm->safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_ONLINE ||
+            (cm->safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_REBOOTING) {
+            cm->esc_lockout_timer.set(ESC_LOCKOUT_TIME);
             cm->safety_state |= SAFETY_ESC_LOCKOUT;
         }
         report = true;
-    } else if((cm->safety_state & SAFETY_INTERLOCK_MASK) == SAFETY_INTERLOCK_OPEN && gpio_read_input(INTERLOCK_SWITCH_INPUT) == INPUT_INACTIVE) {
+    } else if ((cm->safety_state & SAFETY_INTERLOCK_MASK) == SAFETY_INTERLOCK_OPEN &&
+               gpio_read_input(INTERLOCK_SWITCH_INPUT) == INPUT_INACTIVE) {
         cm->safety_state &= ~SAFETY_INTERLOCK_OPEN;
-        //If we just left interlock, stop the lockout timer
-        if((cm->safety_state & SAFETY_ESC_LOCKOUT) == SAFETY_ESC_LOCKOUT)
-            cm->safety_state &= ~SAFETY_ESC_LOCKOUT;
+        // If we just left interlock, stop the lockout timer
+        if ((cm->safety_state & SAFETY_ESC_LOCKOUT) == SAFETY_ESC_LOCKOUT) cm->safety_state &= ~SAFETY_ESC_LOCKOUT;
         report = true;
     }
-    if((cm->estop_state & ESTOP_PRESSED_MASK) == ESTOP_RELEASED && gpio_read_input(ESTOP_SWITCH_INPUT) == INPUT_ACTIVE) {
+    if ((cm->estop_state & ESTOP_PRESSED_MASK) == ESTOP_RELEASED &&
+        gpio_read_input(ESTOP_SWITCH_INPUT) == INPUT_ACTIVE) {
         cm->estop_state = ESTOP_PRESSED | ESTOP_UNACKED | ESTOP_ACTIVE;
         cm_shutdown(STAT_SHUTDOWN, "e-stop pressed");
-        //E-stop always sets the ESC to off
+        // E-stop always sets the ESC to off
         cm->safety_state &= ~SAFETY_ESC_MASK;
         cm->safety_state |= SAFETY_ESC_OFFLINE;
         report = true;
-    } else if((cm->estop_state & ESTOP_PRESSED_MASK) == ESTOP_PRESSED && gpio_read_input(ESTOP_SWITCH_INPUT) == INPUT_INACTIVE) {
+    } else if ((cm->estop_state & ESTOP_PRESSED_MASK) == ESTOP_PRESSED &&
+               gpio_read_input(ESTOP_SWITCH_INPUT) == INPUT_INACTIVE) {
         cm->estop_state &= ~ESTOP_PRESSED;
         report = true;
     }
 
-    //if E-Stop and Interlock are both 0, and we're off, go into "ESC Reboot"
-    if((cm->safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_OFFLINE && (cm->estop_state & ESTOP_PRESSED) == 0 && (cm->safety_state & SAFETY_INTERLOCK_OPEN) == 0) {
+    // if E-Stop and Interlock are both 0, and we're off, go into "ESC Reboot"
+    if ((cm->safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_OFFLINE && (cm->estop_state & ESTOP_PRESSED) == 0 &&
+        (cm->safety_state & SAFETY_INTERLOCK_OPEN) == 0) {
         cm->safety_state &= ~SAFETY_ESC_MASK;
         cm->safety_state |= SAFETY_ESC_REBOOTING;
-        cm->esc_boot_timer = Motate::SysTickTimer.getValue();
+        cm->esc_boot_timer.set(ESC_BOOT_TIME);
         report = true;
     }
 
-    //Check if ESC lockout timer or reboot timer have expired
-    uint32_t now = Motate::SysTickTimer.getValue();
-    if((cm->safety_state & SAFETY_ESC_LOCKOUT) != 0 && (now - cm->esc_lockout_timer) > ESC_LOCKOUT_TIME) {
+    // Check if ESC lockout timer or reboot timer have expired
+    if ((cm->safety_state & SAFETY_ESC_LOCKOUT) != 0 && cm->esc_lockout_timer.isPast()) {
         cm->safety_state &= ~SAFETY_ESC_MASK;
         cm->safety_state |= SAFETY_ESC_OFFLINE;
         report = true;
     }
-    if((cm->safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_REBOOTING && (now - cm->esc_boot_timer) > ESC_BOOT_TIME) {
+    if ((cm->safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_REBOOTING && cm->esc_boot_timer.isPast()) {
         cm->safety_state &= ~SAFETY_ESC_MASK;
         report = true;
     }
 
-    //If we've successfully ended all the ESTOP conditions, then end ESTOP
-    if(cm->estop_state == ESTOP_ACTIVE) {
+    // If we've successfully ended all the ESTOP conditions, then end ESTOP
+    if (cm->estop_state == ESTOP_ACTIVE) {
         cm->estop_state = 0;
         report = true;
     }
-    if(report)
+    if (report) {
         sr_request_status_report(SR_REQUEST_IMMEDIATE);
+    }
     return (STAT_OK);
 }
 #else
