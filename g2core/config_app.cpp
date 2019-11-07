@@ -1615,17 +1615,38 @@ const cfgItem_t cfgArray[] = {
     { "","6",  _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
 #endif
 
-#define DIGITAL_IN_GROUPS 10
+#define DIGITAL_IN_GROUPS D_IN_CHANNELS
     { "","in",  _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // input state
+#if (D_IN_CHANNELS >= 1)
     { "","di1", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // input configs
+#endif
+#if (D_IN_CHANNELS >= 2)
     { "","di2", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
+#endif
+#if (D_IN_CHANNELS >= 3)
     { "","di3", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
+#endif
+#if (D_IN_CHANNELS >= 4)
     { "","di4", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
+#endif
+#if (D_IN_CHANNELS >= 5)
     { "","di5", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
+#endif
+#if (D_IN_CHANNELS >= 6)
     { "","di6", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
+#endif
+#if (D_IN_CHANNELS >= 7)
     { "","di7", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
+#endif
+#if (D_IN_CHANNELS >= 8)
     { "","di8", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
+#endif
+#if (D_IN_CHANNELS >= 9)
     { "","di9", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
+#endif
+#if (D_IN_CHANNELS >= 10)
+    { "","di10", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
+#endif
 
 #define DIGITAL_OUT_GROUPS 14
     { "","out", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // output state
