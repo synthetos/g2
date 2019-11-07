@@ -263,7 +263,7 @@
 // Ymax                             // Safety interlock
 #define DI4_ENABLED                 IO_ENABLED
 #define DI4_POLARITY                IO_ACTIVE_HIGH
-#define DI4_ACTION                  INPUT_ACTION_STOP   // (hold is performed by Interlock function)
+#define DI4_ACTION                  INPUT_ACTION_NONE   // (hold is performed by Interlock function)
 
 // Zmin                             // Z probe
 #define DI5_ENABLED                 IO_ENABLED
@@ -277,19 +277,25 @@
 
 // Amin                             // Version pin - board type
 #define DI7_ENABLED                 IO_ENABLED
-#define DI7_POLARITY                IO_ACTIVE_HIGH
+#define DI7_POLARITY                IO_ACTIVE_LOW
 #define DI7_ACTION                  INPUT_ACTION_NONE
 
 // Amax                             // Version pin - board type
 #define DI8_ENABLED                 IO_ENABLED
-#define DI8_POLARITY                IO_ACTIVE_HIGH
+#define DI8_POLARITY                IO_ACTIVE_LOW
 #define DI8_ACTION                  INPUT_ACTION_NONE
 
 // Safety line w/HW timer           // Version pin - board type
-#define DI9_ENABLED                 IO_ENABLED
-#define DI9_POLARITY                IO_ACTIVE_HIGH
+#define DI9_ENABLED                 IO_DISABLED
+#define DI9_POLARITY                IO_ACTIVE_LOW
 #define DI9_ACTION                  INPUT_ACTION_NONE
+#define DI9_EXTERNAL_NUMBER         10
 
+// Silk marked as "CS2"             // Version pin - machine type
+#define DI10_ENABLED                 IO_ENABLED
+#define DI10_POLARITY                IO_ACTIVE_LOW
+#define DI10_ACTION                  INPUT_ACTION_NONE
+#define DI10_EXTERNAL_NUMBER         9
 
 // *** PWM SPINDLE CONTROL ***
 
