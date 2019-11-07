@@ -185,11 +185,11 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
             // If this motor has a better (or the only) resolution, then we use this motor's value
             if (best_steps_per_unit[axis] < steps_per_unit[motor]) {
                 best_steps_per_unit[axis] = steps_per_unit[motor];
-                position[axis]            = steps[motor] / steps_per_unit[motor];
+                position[axis]            = (steps[motor] - steps_offset[motor]) / steps_per_unit[motor];
 
                 // If a second motor has the same resolution for the same axis, we'll average their values
             } else if (fp_EQ(best_steps_per_unit[axis], steps_per_unit[motor])) {
-                position[axis] = (position[axis] + (steps[motor] / steps_per_unit[axis])) / 2.0;
+                position[axis] = (position[axis] + ((steps[motor] - steps_offset[motor]) / steps_per_unit[axis])) / 2.0;
             }
 
             joint_position[joint] = position[joint];
