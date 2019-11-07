@@ -196,7 +196,7 @@ const cfgItem_t cfgArray[] = {
     { "prb","prbb",_f0, 5, tx_print_nul, cm_get_prb, set_ro, nullptr, 0 },    // B probe results
     { "prb","prbc",_f0, 5, tx_print_nul, cm_get_prb, set_ro, nullptr, 0 },    // C probe results
     { "prb","prbs",_i0, 0, tx_print_nul, get_nul, cm_set_probe, nullptr,0 },  // store probe
-    { "prb","prbr",_b0, 0, tx_print_nul, cm_get_prbr, cm_set_prbr, nullptr,0 },                  // enable probe report. Init in cm_init
+    { "prb","prbr",_b0, 0, tx_print_nul, cm_get_prbr, cm_set_prbr, nullptr, PROBE_REPORT_ENABLE },                  // enable probe report. Init in cm_init
     { "prb","prbin",_iip, 0, tx_print_nul, cm_get_probe_input, cm_set_probe_input, nullptr, PROBING_INPUT }, // probing input
 
     { "jog","jogx",_f0, 0, tx_print_nul, get_nul, cm_run_jog, nullptr, 0},    // jog in X axis
