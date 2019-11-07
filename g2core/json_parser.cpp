@@ -110,6 +110,7 @@ void json_parse_for_exec(char *str, bool execute)
         nv = nv_exec;
         status = _json_parser_execute(nv);          // execute the command
     }
+    sr_request_status_report(SR_REQUEST_TIMED);     // generate incremental status report to show any changes
 }
 
 static stat_t _json_parser_execute(nvObj_t *nv) {
