@@ -1694,7 +1694,6 @@ static void _exec_program_finalize(float *value, bool *flag)
     cmMachineState machine_state = (cmMachineState)value[0];
     cm_set_motion_state(MOTION_STOP);                       // also changes active model back to MODEL
 
-    // Allow update in the alarm state, to accommodate queue flush (RAS)
     if ((cm->cycle_type == CYCLE_MACHINING || cm->cycle_type == CYCLE_NONE) &&
         (cm->machine_state != MACHINE_ALARM) &&
         (cm->machine_state != MACHINE_SHUTDOWN)) {

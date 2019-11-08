@@ -123,9 +123,9 @@ void _actually_set_spindle_speed() {
         if (spindle.speed < speed_lo) {
             spindle.speed = speed_lo;
         }
-        if (spindle.speed_actual < speed_lo) {
-            spindle.speed_actual = speed_lo;
-        }
+        // if (spindle.speed_actual < speed_lo) {
+        //     spindle.speed_actual = speed_lo;
+        // }
         if (spindle.speed > speed_hi) {
             spindle.speed = speed_hi;
         }

@@ -504,8 +504,9 @@ static stat_t _run_job_kill()
     _run_queue_flush();
 
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
-    if((cm1.safety_state & (SAFETY_ESC_MASK | SAFETY_INTERLOCK_MASK)) != 0 && spindle.state != SPINDLE_OFF)
+    if ((cm1.safety_state & (SAFETY_ESC_MASK | SAFETY_INTERLOCK_MASK)) != 0 && spindle.state != SPINDLE_OFF) {
         return STAT_EAGAIN;
+    }
 #endif
 
     coolant_control_immediate(COOLANT_OFF, COOLANT_BOTH); // stop coolant
@@ -562,9 +563,9 @@ void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit)
 {
     // Can only initiate a feedhold if not already in a feedhold
     if ((cm1.hold_state == FEEDHOLD_OFF)
-#ifdef ENABLE_INTERLOCK_AND_ESTOP
-        && (cm1.estop_state == 0)
-#endif
+// #ifdef ENABLE_INTERLOCK_AND_ESTOP
+//         && (cm1.estop_state == 0)
+// #endif
         ) {
         // OLD: Can only initiate a feedhold if you are in a machining cycle, running, and not already in a feedhold
         // OLD: && (cm1.machine_state == MACHINE_CYCLE) && (cm1.motion_state == MOTION_RUN)
@@ -578,7 +579,6 @@ void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit)
         switch (cm1.hold_type) {
             case FEEDHOLD_TYPE_HOLD:     { op.add_action(_feedhold_no_actions); break; }
             case FEEDHOLD_TYPE_ACTIONS:  { op.add_action(_feedhold_with_actions); break; }
-            // case FEEDHOLD_TYPE_SCRAM: <- no longer used, use FEEDHOLD_TYPE_SKIP instead
             case FEEDHOLD_TYPE_SKIP:     { op.add_action(_feedhold_skip); break; }
             default: {}
         }

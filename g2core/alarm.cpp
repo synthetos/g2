@@ -95,11 +95,11 @@ void cm_clear()
 
 void cm_parse_clear(const char *s)
 {
-#ifdef ENABLE_INTERLOCK_AND_ESTOP
-    if (cm->machine_state == MACHINE_ALARM || (cm->machine_state == MACHINE_SHUTDOWN && cm1.estop_state != 0)) {
-#else
-    if (cm->machine_state == MACHINE_ALARM) {
-#endif
+// #ifdef ENABLE_INTERLOCK_AND_ESTOP
+//     if (cm->machine_state == MACHINE_ALARM || (cm->machine_state == MACHINE_SHUTDOWN && cm1.estop_state != 0)) {
+// #else
+    if ((cm->machine_state == MACHINE_ALARM) || (cm->machine_state == MACHINE_SHUTDOWN)) {
+// #endif
         if (toupper(s[0]) == 'M') {
             if (( (s[1]=='3') && (s[2]=='0') && (s[3]==0)) || ((s[1]=='2') && (s[2]==0) )) {
                 cm_clear();
@@ -115,6 +115,9 @@ void cm_parse_clear(const char *s)
 stat_t cm_is_alarmed()
 {
     if (cm->machine_state == MACHINE_ALARM)    { return (STAT_COMMAND_REJECTED_BY_ALARM); }
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
+    if (cm1.estop_state != 0)                  { return (STAT_COMMAND_REJECTED_BY_SHUTDOWN); }
+#endif
     if (cm->machine_state == MACHINE_SHUTDOWN) { return (STAT_COMMAND_REJECTED_BY_SHUTDOWN); }
     if (cm->machine_state == MACHINE_PANIC)    { return (STAT_COMMAND_REJECTED_BY_PANIC); }
     return (STAT_OK);
@@ -201,14 +204,14 @@ stat_t cm_alarm(const stat_t status, const char *msg)
 stat_t cm_shutdown(const stat_t status, const char *msg)
 {
     if ((cm->machine_state == MACHINE_SHUTDOWN) || (cm->machine_state == MACHINE_PANIC)) {
-        return (STAT_OK);                       // don't shutdown if shutdown or panic'd
+        return (STAT_OK);  // don't shutdown if shutdown or panic'd
     }
     cm_request_feedhold(FEEDHOLD_TYPE_SKIP, FEEDHOLD_EXIT_SHUTDOWN);  // fast stop and shutdown
 
-//    spindle_reset();                            // stop spindle immediately and set speed to 0 RPM
-//    coolant_reset();                            // stop coolant immediately
-//    temperature_reset();                        // turn off heaters and fans
-//    cm_queue_flush(&cm1);                       // flush all queues and reset positions
+    spindle_reset();      // stop spindle immediately and set speed to 0 RPM
+    coolant_reset();      // stop coolant immediately
+    temperature_reset();  // turn off heaters and fans
+                          //    cm_queue_flush(&cm1);                       // flush all queues and reset positions
 
     for (uint8_t i = 0; i < HOMING_AXES; i++) { // unhome axes and the machine
         cm->homed[i] = false;

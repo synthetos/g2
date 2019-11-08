@@ -274,11 +274,11 @@ static stat_t _dispatch_control()
 
 static stat_t _dispatch_command()
 {
-#ifdef ENABLE_INTERLOCK_AND_ESTOP
-    if (cs.controller_state != CONTROLLER_PAUSED && cm1.estop_state == 0) {
-#else
+// #ifdef ENABLE_INTERLOCK_AND_ESTOP
+//     if (cs.controller_state != CONTROLLER_PAUSED && cm1.estop_state == 0) {
+// #else
     if (cs.controller_state != CONTROLLER_PAUSED) {
-#endif
+// #endif
         devflags_t flags = DEV_IS_BOTH | DEV_IS_MUTED; // expressly state we'll handle muted devices
         if ((!mp_planner_is_full(mp)) && (cs.bufp = xio_readline(flags, cs.linelen)) != NULL) {
             _dispatch_kernel(flags);
