@@ -96,7 +96,7 @@ void cm_clear()
 void cm_parse_clear(const char *s)
 {
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
-    if (cm->machine_state == MACHINE_ALARM || (cm->machine_state == MACHINE_SHUTDOWN && cm->estop_state != 0)) {
+    if (cm->machine_state == MACHINE_ALARM || (cm->machine_state == MACHINE_SHUTDOWN && cm1.estop_state != 0)) {
 #else
     if (cm->machine_state == MACHINE_ALARM) {
 #endif

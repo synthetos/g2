@@ -304,9 +304,9 @@ void canonical_machine_reset(cmMachine_t *_cm)
     _cm->machine_state = MACHINE_READY;
 
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
-    _cm->safety_state = _cm->estop_state = 0;
-    _cm->esc_boot_timer.set(ESC_BOOT_TIME);
-    _cm->safety_state = SAFETY_ESC_REBOOTING;
+    cm1.safety_state = cm1.estop_state = 0;
+    cm1.esc_boot_timer.set(ESC_BOOT_TIME);
+    cm1.safety_state = SAFETY_ESC_REBOOTING;
 #endif
 
     cm_operation_init();                            // reset operations runner
@@ -1770,8 +1770,8 @@ void cm_program_end()
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
 stat_t cm_ack_estop(nvObj_t *nv)
 {
-    cm->estop_state &= ~ESTOP_UNACKED;
-    nv->value_flt = (float)cm->estop_state;
+    cm1.estop_state &= ~ESTOP_UNACKED;
+    nv->value_flt = (float)cm1.estop_state;
     nv->valuetype = TYPE_FLOAT;
     return (STAT_OK);
 }
@@ -2156,15 +2156,15 @@ stat_t cm_get_frmo(nvObj_t *nv) { return(_get_msg_helper(nv, msg_frmo, cm_get_fe
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
 stat_t cm_get_safe(nvObj_t *nv) {
     uint8_t safe = 0;
-    if ((cm->safety_state & SAFETY_INTERLOCK_MASK) != 0) {
+    if ((cm1.safety_state & SAFETY_INTERLOCK_MASK) != 0) {
         safe |= 0x1;
     }
-    if ((cm->safety_state & SAFETY_ESC_MASK) != 0) {
+    if ((cm1.safety_state & SAFETY_ESC_MASK) != 0) {
         safe |= 0x2;
     }
     return (_get_msg_helper(nv, msg_safe, safe));
 }
-stat_t cm_get_estp(nvObj_t *nv) { return (_get_msg_helper(nv, msg_estp, (cm->estop_state & 0x3))); }
+stat_t cm_get_estp(nvObj_t *nv) { return (_get_msg_helper(nv, msg_estp, (cm1.estop_state & 0x3))); }
 #endif
 
 stat_t cm_get_toolv(nvObj_t *nv) { return(get_integer(nv, cm_get_tool(ACTIVE_MODEL))); }

@@ -368,6 +368,10 @@ static stat_t _run_interlock_ended() {
 
 void cm_request_cycle_start()
 {
+    #ifdef ENABLE_INTERLOCK_AND_ESTOP
+
+    #endif
+
     if (cm1.hold_state != FEEDHOLD_OFF) {           // restart from a feedhold
         if (cm1.queue_flush_state == QUEUE_FLUSH_REQUESTED) {   // possible race condition. Flush wins
             cm1.cycle_start_state = CYCLE_START_OFF;
@@ -504,7 +508,7 @@ static stat_t _run_job_kill()
     _run_queue_flush();
 
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
-    if((cm->safety_state & (SAFETY_ESC_MASK | SAFETY_INTERLOCK_MASK)) != 0 && spindle.state != SPINDLE_OFF)
+    if((cm1.safety_state & (SAFETY_ESC_MASK | SAFETY_INTERLOCK_MASK)) != 0 && spindle.state != SPINDLE_OFF)
         return STAT_EAGAIN;
 #endif
 

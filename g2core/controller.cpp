@@ -155,6 +155,13 @@ void controller_init()
     din_handlers[INPUT_ACTION_SHUTDOWN].registerHandler(&_shutdown_input_handler);
     din_handlers[INPUT_ACTION_LIMIT].registerHandler(&_limit_input_handler);
     din_handlers[INPUT_ACTION_INTERLOCK].registerHandler(&_interlock_input_handler);
+    if (gpio_read_input(INTERLOCK_SWITCH_INPUT) == INPUT_ACTIVE) {
+        // cm1.safety_interlock_disengaged = INTERLOCK_SWITCH_INPUT;
+        cm1.safety_state |= SAFETY_INTERLOCK_OPEN;
+    }
+    // if (gpio_read_input(ESTOP_SWITCH_INPUT) == INPUT_ACTIVE) {
+    //     cm1.estop_state = ESTOP_PRESSED | ESTOP_UNACKED | ESTOP_ACTIVE;
+    // }
 }
 
 void controller_request_enquiry()
@@ -268,7 +275,7 @@ static stat_t _dispatch_control()
 static stat_t _dispatch_command()
 {
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
-    if (cs.controller_state != CONTROLLER_PAUSED && cm->estop_state == 0) {
+    if (cs.controller_state != CONTROLLER_PAUSED && cm1.estop_state == 0) {
 #else
     if (cs.controller_state != CONTROLLER_PAUSED) {
 #endif
@@ -568,71 +575,81 @@ static stat_t _limit_switch_handler(void)
 static stat_t _interlock_estop_handler(void) {
     bool report = false;
     // Process E-Stop and Interlock signals
-    if ((cm->safety_state & SAFETY_INTERLOCK_MASK) == SAFETY_INTERLOCK_CLOSED &&
-        gpio_read_input(INTERLOCK_SWITCH_INPUT) == INPUT_ACTIVE) {
-        cm->safety_state |= SAFETY_INTERLOCK_OPEN;
+
+    // Door opened and was closed
+    if ((cm1.safety_state & SAFETY_INTERLOCK_MASK) == SAFETY_INTERLOCK_CLOSED && (gpio_read_input(INTERLOCK_SWITCH_INPUT) == INPUT_ACTIVE)) {
+        cm1.safety_state |= SAFETY_INTERLOCK_OPEN;
+
+        // Check if the spindle is on
         if (spindle.state != SPINDLE_OFF) {
-            if (mp_get_run_buffer() != NULL)
-                cm_request_feedhold(FEEDHOLD_TYPE_HOLD,
-                                    FEEDHOLD_EXIT_STOP);  // may have already requested STOP as INPUT_ACTION
-            else {
-                cm_request_cycle_start();  // proper way to restart the cycle
-                spindle_control_immediate(spindle.state);
+            if (cm1.machine_state == MACHINE_CYCLE) {
+                cm_request_feedhold(FEEDHOLD_TYPE_ACTIONS, FEEDHOLD_EXIT_CYCLE);
+            } else {
+                // cm_request_cycle_start();  // proper way to restart the cycle
+                spindle_control_immediate(SPINDLE_OFF);
             }
         }
+
         // If we just entered interlock and we're not off, start the lockout timer
-        if ((cm->safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_ONLINE ||
-            (cm->safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_REBOOTING) {
+        if ((cm1.safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_ONLINE ||
+            (cm1.safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_REBOOTING) {
             cm->esc_lockout_timer.set(ESC_LOCKOUT_TIME);
-            cm->safety_state |= SAFETY_ESC_LOCKOUT;
+            cm1.safety_state |= SAFETY_ESC_LOCKOUT;
         }
         report = true;
-    } else if ((cm->safety_state & SAFETY_INTERLOCK_MASK) == SAFETY_INTERLOCK_OPEN &&
-               gpio_read_input(INTERLOCK_SWITCH_INPUT) == INPUT_INACTIVE) {
-        cm->safety_state &= ~SAFETY_INTERLOCK_OPEN;
+
+    // Door closed and was open
+    } else if ((cm1.safety_state & SAFETY_INTERLOCK_MASK) == SAFETY_INTERLOCK_OPEN && (gpio_read_input(INTERLOCK_SWITCH_INPUT) == INPUT_INACTIVE)) {
+        cm1.safety_state &= ~SAFETY_INTERLOCK_OPEN;
         // If we just left interlock, stop the lockout timer
-        if ((cm->safety_state & SAFETY_ESC_LOCKOUT) == SAFETY_ESC_LOCKOUT) cm->safety_state &= ~SAFETY_ESC_LOCKOUT;
+        if ((cm1.safety_state & SAFETY_ESC_LOCKOUT) == SAFETY_ESC_LOCKOUT) {
+            cm1.safety_state &= ~SAFETY_ESC_LOCKOUT;
+            cm->esc_lockout_timer.clear();
+        }
         report = true;
     }
-    if ((cm->estop_state & ESTOP_PRESSED_MASK) == ESTOP_RELEASED &&
-        gpio_read_input(ESTOP_SWITCH_INPUT) == INPUT_ACTIVE) {
-        cm->estop_state = ESTOP_PRESSED | ESTOP_UNACKED | ESTOP_ACTIVE;
+
+    // EStop was pressed
+    if ((cm1.estop_state & ESTOP_PRESSED_MASK) == ESTOP_RELEASED && gpio_read_input(ESTOP_SWITCH_INPUT) == INPUT_ACTIVE) {
+        cm1.estop_state = ESTOP_PRESSED | ESTOP_UNACKED | ESTOP_ACTIVE;
         cm_shutdown(STAT_SHUTDOWN, "e-stop pressed");
+
         // E-stop always sets the ESC to off
-        cm->safety_state &= ~SAFETY_ESC_MASK;
-        cm->safety_state |= SAFETY_ESC_OFFLINE;
+        cm1.safety_state &= ~SAFETY_ESC_MASK;
+        cm1.safety_state |= SAFETY_ESC_OFFLINE;
         report = true;
-    } else if ((cm->estop_state & ESTOP_PRESSED_MASK) == ESTOP_PRESSED &&
-               gpio_read_input(ESTOP_SWITCH_INPUT) == INPUT_INACTIVE) {
-        cm->estop_state &= ~ESTOP_PRESSED;
+
+    // EStop was released
+    } else if ((cm1.estop_state & ESTOP_PRESSED_MASK) == ESTOP_PRESSED && gpio_read_input(ESTOP_SWITCH_INPUT) == INPUT_INACTIVE) {
+        cm1.estop_state &= ~ESTOP_PRESSED;
         report = true;
     }
 
     // if E-Stop and Interlock are both 0, and we're off, go into "ESC Reboot"
-    if ((cm->safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_OFFLINE && (cm->estop_state & ESTOP_PRESSED) == 0 &&
-        (cm->safety_state & SAFETY_INTERLOCK_OPEN) == 0) {
-        cm->safety_state &= ~SAFETY_ESC_MASK;
-        cm->safety_state |= SAFETY_ESC_REBOOTING;
+    if ((cm1.safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_OFFLINE && (cm1.estop_state & ESTOP_PRESSED) == 0 && (cm1.safety_state & SAFETY_INTERLOCK_OPEN) == 0) {
+        cm1.safety_state &= ~SAFETY_ESC_MASK;
+        cm1.safety_state |= SAFETY_ESC_REBOOTING;
         cm->esc_boot_timer.set(ESC_BOOT_TIME);
         report = true;
     }
 
     // Check if ESC lockout timer or reboot timer have expired
-    if ((cm->safety_state & SAFETY_ESC_LOCKOUT) != 0 && cm->esc_lockout_timer.isPast()) {
-        cm->safety_state &= ~SAFETY_ESC_MASK;
-        cm->safety_state |= SAFETY_ESC_OFFLINE;
+    if ((cm1.safety_state & SAFETY_ESC_LOCKOUT) != 0 && cm->esc_lockout_timer.isPast()) {
+        cm1.safety_state &= ~SAFETY_ESC_MASK;
+        cm1.safety_state |= SAFETY_ESC_OFFLINE;
         report = true;
     }
-    if ((cm->safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_REBOOTING && cm->esc_boot_timer.isPast()) {
-        cm->safety_state &= ~SAFETY_ESC_MASK;
+    if ((cm1.safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_REBOOTING && cm->esc_boot_timer.isPast()) {
+        cm1.safety_state &= ~SAFETY_ESC_MASK;
         report = true;
     }
 
     // If we've successfully ended all the ESTOP conditions, then end ESTOP
-    if (cm->estop_state == ESTOP_ACTIVE) {
-        cm->estop_state = 0;
+    if (cm1.estop_state == ESTOP_ACTIVE) {
+        cm1.estop_state = 0;
         report = true;
     }
+
     if (report) {
         sr_request_status_report(SR_REQUEST_IMMEDIATE);
     }
