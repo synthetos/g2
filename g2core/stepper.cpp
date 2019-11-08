@@ -42,6 +42,8 @@
 #include "kinematics.h"
 #include "gpio.h"
 
+#include "spindle.h"
+
 /**** Debugging output with semihosting ****/
 
 #include "MotateDebug.h"
@@ -73,7 +75,7 @@ fwd_plan_timer_type fwd_plan_timer; // triggers planning of next block
 
 // SystickEvent for handling dwells (must be registered before it is active)
 Motate::SysTickEvent dwell_systick_event {[&] {
-    if (--st_run.dwell_ticks_downcount == 0) {
+    if (spindle_speed_ramp_from_systick() && (--st_run.dwell_ticks_downcount == 0)) {
         SysTickTimer.unregisterEvent(&dwell_systick_event);
         _load_move();       // load the next move at the current interrupt level
     }
@@ -611,7 +613,7 @@ static void _load_move()
         // We now use SysTick events to handle dwells
         SysTickTimer.registerEvent(&dwell_systick_event);
 
-        // handle synchronous commands
+    // handle synchronous commands
     } else if (st_pre.block_type == BLOCK_TYPE_COMMAND) {
         mp_runtime_command(st_pre.bf);
 

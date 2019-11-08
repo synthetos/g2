@@ -81,6 +81,7 @@ void coolant_reset();
 
 stat_t coolant_control_immediate(coControl control, coSelect select);
 stat_t coolant_control_sync(coControl control, coSelect select);
+bool coolant_ready();
 
 stat_t co_get_coph(nvObj_t *nv);
 stat_t co_set_coph(nvObj_t *nv);

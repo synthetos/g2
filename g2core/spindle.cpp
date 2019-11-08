@@ -66,6 +66,10 @@ static float _get_spindle_pwm (spSpindle_t &_spindle, pwmControl_t &_pwm);
          spindle.direction = SPINDLE_CW; \
     }
 
+#ifndef SPINDLE_SPEED_CHANGE_PER_MS
+#define SPINDLE_SPEED_CHANGE_PER_MS 0
+#endif
+
 /****************************************************************************************
  * spindle_init()
  * spindle_reset() - stop spindle, set speed to zero, and reset values
@@ -90,12 +94,62 @@ void spindle_init()
     }
     pwm_set_freq(PWM_1, pwm.c[PWM_1].frequency);
     pwm_set_duty(PWM_1, pwm.c[PWM_1].phase_off);
+
+    spindle.speed_change_per_tick = SPINDLE_SPEED_CHANGE_PER_MS;
 }
 
 void spindle_reset()
 {
     spindle_speed_immediate(0);
     spindle_control_immediate(SPINDLE_OFF);
+}
+
+// to be used blow, assumes spindle.speed (etc) are already setup
+void _actually_set_spindle_speed() {
+    float speed_lo, speed_hi;
+    if (spindle.state == SPINDLE_CW) {
+        speed_lo = pwm.c[PWM_1].cw_speed_lo;
+        speed_hi = pwm.c[PWM_1].cw_speed_hi;
+    } else if (spindle.state == SPINDLE_CCW ) {
+        speed_lo = pwm.c[PWM_1].ccw_speed_lo;
+        speed_hi = pwm.c[PWM_1].ccw_speed_hi;
+    } else {
+        // off/disabled/paused
+        spindle.speed_actual = 0;
+    }
+
+    if ((spindle.state == SPINDLE_CW) || (spindle.state == SPINDLE_CCW)) {
+        // clamp spindle speed to lo/hi range
+        if (spindle.speed < speed_lo) {
+            spindle.speed = speed_lo;
+        }
+        if (spindle.speed_actual < speed_lo) {
+            spindle.speed_actual = speed_lo;
+        }
+        if (spindle.speed > speed_hi) {
+            spindle.speed = speed_hi;
+        }
+        if (spindle.speed_actual > speed_hi) {
+            spindle.speed_actual = speed_hi;
+        }
+    } else {
+        pwm_set_duty(PWM_1, _get_spindle_pwm(spindle, pwm));
+        return;
+    }
+
+    if (fp_ZERO(spindle.speed_change_per_tick)) {
+        spindle.speed_actual = spindle.speed;
+    }
+    pwm_set_duty(PWM_1, _get_spindle_pwm(spindle, pwm));
+
+    if (fp_NE(spindle.speed_actual, spindle.speed)) {
+        // use the larger of: spindup_delay setting, or the time it'll take to ramp to the new speed, converted to seconds
+        if (fp_NOT_ZERO(spindle.speed_change_per_tick)) {
+            mp_request_out_of_band_dwell(std::max(spindle.spinup_delay, std::abs(spindle.speed_actual-spindle.speed)/spindle.speed_change_per_tick)/1000.0);
+        } else {
+            mp_request_out_of_band_dwell(spindle.spinup_delay);
+        }
+    }
 }
 
 /****************************************************************************************
@@ -194,13 +248,13 @@ static void _exec_spindle_control(float *value, bool *)
     bool do_spinup_delay = false;
 
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
-    if(cm->estop_state != 0) { // In E-stop, don't process any spindle commands
+    if(cm1.estop_state != 0) { // In E-stop, don't process any spindle commands
         action = SPINDLE_OFF;
     }
 
     // // If we're paused or in interlock, or the esc is rebooting, send the spindle an "OFF" command (invisible to cm->gm),
     // // and issue a hold if necessary
-    // else if(action == SPINDLE_PAUSE || cm->safety_state != 0) {
+    // else if(action == SPINDLE_PAUSE || cm1.safety_state != 0) {
     //     if(action != SPINDLE_PAUSE) {
     //         action = SPINDLE_PAUSE;
     //         cm_set_motion_state(MOTION_STOP);
@@ -228,7 +282,7 @@ static void _exec_spindle_control(float *value, bool *)
         }
         case SPINDLE_PAUSE : {
             spindle.state = SPINDLE_PAUSE;
-            break;                          // enable bit is already set up to stop the move
+            break;  // enable bit is already set up to stop the move
         }
         case SPINDLE_RESUME: {
             enable_bit = 1;
@@ -254,11 +308,7 @@ static void _exec_spindle_control(float *value, bool *)
         spindle_enable_output->setValue(enable_bit);
     }
 
-    pwm_set_duty(PWM_1, _get_spindle_pwm(spindle, pwm));
-
-    if (do_spinup_delay) {
-        mp_request_out_of_band_dwell(spindle.spinup_delay);
-    }
+    _actually_set_spindle_speed();
 }
 
 /*
@@ -304,17 +354,14 @@ static void _exec_spindle_speed(float *value, bool *flag)
 {
     float previous_speed = spindle.speed;
 
-#ifdef ENABLE_INTERLOCK_AND_ESTOP
-    if(cm->estop_state != 0 || cm->safety_state != 0 || spindle.state == SPINDLE_PAUSE)
-        spindle_control_immediate(SPINDLE_OFF);
-#endif
+// #ifdef ENABLE_INTERLOCK_AND_ESTOP
+//     if(cm1.estop_state != 0 || cm1.safety_state != 0 || spindle.state == SPINDLE_PAUSE)
+//         spindle_control_immediate(SPINDLE_OFF);
+// #endif
 
     spindle.speed = value[0];
-    pwm_set_duty(PWM_1, _get_spindle_pwm(spindle, pwm));
 
-    if (fp_ZERO(previous_speed) && !fp_ZERO(spindle.speed)) {
-        mp_request_out_of_band_dwell(spindle.spinup_delay);
-    }
+    _actually_set_spindle_speed();
 }
 
 static stat_t _casey_jones(float speed)
@@ -340,6 +387,44 @@ stat_t spindle_speed_sync(float speed)
     return (STAT_OK);
 }
 
+bool spindle_ready_to_resume() {
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
+    if ((cm1.estop_state == 0) && (cm1.safety_state == 0)) {
+        return true;
+    }
+    return false;
+#endif
+}
+
+// returns if it's done
+bool spindle_speed_ramp_from_systick() {
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
+    bool done = false;
+    if ((cm1.estop_state == 0) && (cm1.safety_state == 0)) {
+        if (fp_EQ(spindle.speed_actual, spindle.speed)) {
+            return true;
+        } else if (spindle.speed_actual < spindle.speed) {
+            spindle.speed_actual += spindle.speed_change_per_tick;
+            if (spindle.speed_actual > spindle.speed) {
+                spindle.speed_actual = spindle.speed;
+                done = true;
+            }
+        }
+        else {
+            spindle.speed_actual -= spindle.speed_change_per_tick;
+            if (spindle.speed_actual < spindle.speed) {
+                spindle.speed_actual = spindle.speed;
+                done = true;
+            }
+        }
+        pwm_set_duty(PWM_1, _get_spindle_pwm(spindle, pwm));
+    }
+    return done;
+#else
+    return true;
+#endif
+}
+
 /****************************************************************************************
  * _get_spindle_pwm() - return PWM phase (duty cycle) for dir and speed
  */
@@ -361,14 +446,14 @@ static float _get_spindle_pwm (spSpindle_t &_spindle, pwmControl_t &_pwm)
 
     if ((_spindle.state == SPINDLE_CW) || (_spindle.state == SPINDLE_CCW)) {
         // clamp spindle speed to lo/hi range
-        if (_spindle.speed < speed_lo) {
-            _spindle.speed = speed_lo;
+        if (_spindle.speed_actual < speed_lo) {
+            _spindle.speed_actual = speed_lo;
         }
-        if (_spindle.speed > speed_hi) {
-            _spindle.speed = speed_hi;
+        if (_spindle.speed_actual > speed_hi) {
+            _spindle.speed_actual = speed_hi;
         }
         // normalize speed to [0..1]
-        float speed = (_spindle.speed - speed_lo) / (speed_hi - speed_lo);
+        float speed = (_spindle.speed_actual - speed_lo) / (speed_hi - speed_lo);
         return ((speed * (phase_hi - phase_lo)) + phase_lo);
     } else {
         return (_pwm.c[PWM_1].phase_off);

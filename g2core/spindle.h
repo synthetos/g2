@@ -87,6 +87,8 @@ typedef struct spSpindle {
     float       speed;              // {sps:}  S in RPM
     float       speed_min;          // {spsn:} minimum settable spindle speed
     float       speed_max;          // {spsm:} maximum settable spindle speed
+    float       speed_actual;       // hidden internal value used in speed ramping
+    float    speed_change_per_tick; // hidden internal value used in speed ramping
 
     spPolarity  enable_polarity;    // {spep:} 0=active low, 1=active high
     spPolarity  dir_polarity;       // {spdp:} 0=clockwise low, 1=clockwise high
@@ -111,7 +113,10 @@ stat_t spindle_control_sync(spControl control);
 stat_t spindle_speed_immediate(float speed);    // S parameter
 stat_t spindle_speed_sync(float speed);         // S parameter
 
-stat_t spindle_override_control(const float P_word, const bool P_flag); // M51
+bool spindle_ready_to_resume(); // if the spindle can resume at this time, return true
+bool spindle_speed_ramp_from_systick();
+
+stat_t spindle_override_control(const float P_word, const bool P_flag);  // M51
 void spindle_start_override(const float ramp_time, const float override_factor);
 void spindle_end_override(const float ramp_time);
 

@@ -368,10 +368,6 @@ static stat_t _run_interlock_ended() {
 
 void cm_request_cycle_start()
 {
-    #ifdef ENABLE_INTERLOCK_AND_ESTOP
-
-    #endif
-
     if (cm1.hold_state != FEEDHOLD_OFF) {           // restart from a feedhold
         if (cm1.queue_flush_state == QUEUE_FLUSH_REQUESTED) {   // possible race condition. Flush wins
             cm1.cycle_start_state = CYCLE_START_OFF;
@@ -834,6 +830,10 @@ static stat_t _feedhold_restart_with_actions()   // Execute Cases (6) and (7)
 
     // Check to run first-time code
     if (cm1.hold_state == FEEDHOLD_HOLD) {
+        if (!coolant_ready() || !spindle_ready_to_resume()) {
+            return (STAT_EAGAIN);
+        }
+
         // perform end-hold actions --- while still in secondary machine
         coolant_control_sync(COOLANT_RESUME, COOLANT_BOTH); // resume coolant if paused
         spindle_control_sync(SPINDLE_RESUME);               // resume spindle if paused
