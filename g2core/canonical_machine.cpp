@@ -1689,9 +1689,9 @@ stat_t cm_tro_control(const float P_word, const bool P_flag) // M50.1
  *   10.  Turn off all heaters and fans
  */
 
-static void _exec_program_finalize(float *value, bool *flag)
+static void _exec_program_finalize(cmMachineState machine_state)
 {
-    cmMachineState machine_state = (cmMachineState)value[0];
+    // cmMachineState machine_state = (cmMachineState)value[0];
     cm_set_motion_state(MOTION_STOP);                       // also changes active model back to MODEL
 
     if ((cm->cycle_type == CYCLE_MACHINING || cm->cycle_type == CYCLE_NONE) &&
@@ -1736,34 +1736,29 @@ void cm_cycle_start()
 void cm_cycle_end()
 {
     if (cm->cycle_type == CYCLE_MACHINING) {
-        float value[] = { (float)MACHINE_PROGRAM_STOP };
-        _exec_program_finalize(value, nullptr);
+        _exec_program_finalize(MACHINE_PROGRAM_STOP);
     }
 }
 
 void cm_canned_cycle_end()
 {
     cm->cycle_type = CYCLE_NONE;
-    float value[] = { (float)MACHINE_PROGRAM_STOP };
-    _exec_program_finalize(value, nullptr);
+    _exec_program_finalize(MACHINE_PROGRAM_STOP);
 }
 
 void cm_program_stop()
 {
-    float value[] = { (float)MACHINE_PROGRAM_STOP };
-    mp_queue_command(_exec_program_finalize, value, nullptr);
+    _exec_program_finalize(MACHINE_PROGRAM_STOP);
 }
 
 void cm_optional_program_stop()
 {
-    float value[] = { (float)MACHINE_PROGRAM_STOP };
-    mp_queue_command(_exec_program_finalize, value, nullptr);
+    _exec_program_finalize(MACHINE_PROGRAM_STOP);
 }
 
 void cm_program_end()
 {
-    float value[] = { (float)MACHINE_PROGRAM_END };
-    mp_queue_command(_exec_program_finalize, value, nullptr);
+    _exec_program_finalize(MACHINE_PROGRAM_END);
 }
 
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
