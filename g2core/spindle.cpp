@@ -137,15 +137,15 @@ void _actually_set_spindle_speed() {
         return;
     }
 
-    if (fp_ZERO(spindle.speed_change_per_tick)) {
+    if (fp_ZERO(spindle.speed_change_per_tick)) { //  || (spindle.speed <= spindle.speed_actual)
         spindle.speed_actual = spindle.speed;
     }
     pwm_set_duty(PWM_1, _get_spindle_pwm(spindle, pwm));
 
-    if (fp_NE(spindle.speed_actual, spindle.speed)) {
+    if (fp_NE(spindle.speed_actual, spindle.speed)) { //  && (spindle.speed > spindle.speed_actual)
         // use the larger of: spindup_delay setting, or the time it'll take to ramp to the new speed, converted to seconds
         if (fp_NOT_ZERO(spindle.speed_change_per_tick)) {
-            mp_request_out_of_band_dwell(std::max(spindle.spinup_delay, std::abs(spindle.speed_actual-spindle.speed)/spindle.speed_change_per_tick)/1000.0);
+            mp_request_out_of_band_dwell(spindle.spinup_delay + 0.001*std::abs(spindle.speed-spindle.speed_actual)/spindle.speed_change_per_tick);
         } else {
             mp_request_out_of_band_dwell(spindle.spinup_delay);
         }
@@ -446,9 +446,9 @@ static float _get_spindle_pwm (spSpindle_t &_spindle, pwmControl_t &_pwm)
 
     if ((_spindle.state == SPINDLE_CW) || (_spindle.state == SPINDLE_CCW)) {
         // clamp spindle speed to lo/hi range
-        if (_spindle.speed_actual < speed_lo) {
-            _spindle.speed_actual = speed_lo;
-        }
+        // if (_spindle.speed_actual < speed_lo) {
+        //     _spindle.speed_actual = speed_lo;
+        // }
         if (_spindle.speed_actual > speed_hi) {
             _spindle.speed_actual = speed_hi;
         }
