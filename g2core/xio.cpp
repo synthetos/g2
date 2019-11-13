@@ -360,11 +360,11 @@ struct xio_t {
             if (!DeviceWrappers[dev]->isActive()) {
                 continue;
             }
-                        
+
             // If this channel is a DATA only, skip it this pass
             if (!DeviceWrappers[dev]->isCtrl()) {
                 continue;
-            }            
+            }
             ret_buffer = DeviceWrappers[dev]->readline(DEV_IS_CTRL, size);
 
             if (size > 0) {
@@ -425,7 +425,7 @@ extern xio_t xio;
 // See here for a discussion of what this means if you are not familiar with C++
 // https://github.com/synthetos/g2/wiki/Dual-Endpoint-USB-Internals#c-classes-virtual-functions-and-inheritance
 
-// LineRXBuffer takes the Motate RXBuffer (which handles "transfers", usually DMA), 
+// LineRXBuffer takes the Motate RXBuffer (which handles "transfers", usually DMA),
 // and adds G2 line-reading semantics to it.
 template <uint16_t _size, typename owner_type, uint8_t _header_count = 8, uint16_t _line_buffer_size = RX_BUFFER_SIZE>
 struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
@@ -457,6 +457,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
     uint16_t _last_line_length;         // used for ensuring lines aren't too long
     bool     _ignore_until_next_line;   // if we get a too-long-line, we ignore the rest by setting this flag
     bool     _at_start_of_line;         // true if the last character scanned was the end of a line
+    bool _last_control_was_feedhold;    // true if the last single-character we found was a feedhold, meaning a feedhold was requested
 
     uint16_t _lines_found;              // count of complete non-control lines that were found during scanning.
 
@@ -587,8 +588,8 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
      * where it left off - i.e. avoiding rescanning the entire buffer multiple times.
      *
      * _scanBuffer() returns true if it finds a control line.
-     * The control line starts at the character at _line_start_offset and includes 
-     * the characters up to _scan_offset-1. If there are multiple line-ending chars 
+     * The control line starts at the character at _line_start_offset and includes
+     * the characters up to _scan_offset-1. If there are multiple line-ending chars
      * ("\r\n" for example) _scan_offset will point to the *first* one.
      *
      * With ASCII art (where "." means "invalid data" or "don't care"):
@@ -626,12 +627,12 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
      *
      * If we find a line that classifies as "control" then we return true and stop scanning.
      *
-     * We also have a constraint that we may run out of characters at any time. This is OK, 
-     * and enough state is kept that we can enter the function at any point with new 
+     * We also have a constraint that we may run out of characters at any time. This is OK,
+     * and enough state is kept that we can enter the function at any point with new
      * characters added to the RX DMA buffer and get the same results.
      *
-     * Another constraint is that lines MAY have single character commands embedded in them. 
-     * In this case we need to un-embed them. Since we may not have the end of the line yet, 
+     * Another constraint is that lines MAY have single character commands embedded in them.
+     * In this case we need to un-embed them. Since we may not have the end of the line yet,
      * we need to move the command to the beginning of the line.
      *
      * Note that _at_start_of_line means that we *just* parsed a character that is *at* the end of the line.
@@ -743,17 +744,17 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
             {
                 // don't do anything
             }
-            // Classify the line if it's a single character 
+            // Classify the line if it's a single character
             else if (_at_start_of_line &&
                 ((c == '!')         ||      // feedhold
                  (c == '~')         ||      // cycle start
                  (c == ENQ)         ||      // request ENQ/ack
                  (c == CHAR_RESET)  ||      // ^X - reset (aka cancel, terminate)
                  (c == CHAR_ALARM)  ||      // ^D - request job kill (end of transmission)
-                 (c == '%' && cm_has_hold()) // flush (only in feedhold or part of control header)
+                 (c == '%' && (_last_control_was_feedhold || cm_has_hold())) // flush (only in feedhold or part of control header)
                 ))
             {
-
+                _last_control_was_feedhold = (c == '!');
                 _line_start_offset = _scan_offset;
 
                 // single-character control
@@ -767,6 +768,7 @@ struct LineRXBuffer : RXBuffer<_size, owner_type, char> {
                     _last_line_length = 0;
                 }
                 _at_start_of_line = false;
+                _last_control_was_feedhold = false;
             }
 
             // bump the _scan_offset
