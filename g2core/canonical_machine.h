@@ -132,17 +132,17 @@ typedef enum {                      // feedhold final operation
 } cmFeedholdExit;
 
 typedef enum {                      // feedhold state machine
-    FEEDHOLD_OFF = 0,               // no feedhold in effect
-    FEEDHOLD_REQUESTED,             // feedhold has been requested but not started yet
-    FEEDHOLD_SYNC,                  // start hold - sync to latest aline segment
-    FEEDHOLD_DECEL_CONTINUE,        // in deceleration that will not end at zero
-    FEEDHOLD_DECEL_TO_ZERO,         // in deceleration that will go to zero
-    FEEDHOLD_DECEL_COMPLETE,        // feedhold deceleration has completed, but motors may not have stopped yet
-    FEEDHOLD_MOTION_STOPPING,       // waiting for motors to have stopped at hold point (motion stop)
-    FEEDHOLD_MOTION_STOPPED,        // motion has stopped at hold point
-    FEEDHOLD_HOLD_ACTIONS_PENDING,  // wait for feedhold actions to complete
-    FEEDHOLD_HOLD_ACTIONS_COMPLETE, //
-    FEEDHOLD_HOLD,                  // HOLDING (steady state)
+    FEEDHOLD_OFF = 0,               //  0 - no feedhold in effect
+    FEEDHOLD_REQUESTED,             //  1 - feedhold has been requested but not started yet
+    FEEDHOLD_SYNC,                  //  2 - start hold - sync to latest aline segment
+    FEEDHOLD_DECEL_CONTINUE,        //  3 - in deceleration that will not end at zero
+    FEEDHOLD_DECEL_TO_ZERO,         //  4 - in deceleration that will go to zero
+    FEEDHOLD_DECEL_COMPLETE,        //  5 - feedhold deceleration has completed, but motors may not have stopped yet
+    FEEDHOLD_MOTION_STOPPING,       //  6 - waiting for motors to have stopped at hold point (motion stop)
+    FEEDHOLD_MOTION_STOPPED,        //  7 - motion has stopped at hold point
+    FEEDHOLD_HOLD_ACTIONS_PENDING,  //  8 - wait for feedhold actions to complete
+    FEEDHOLD_HOLD_ACTIONS_COMPLETE, //  9
+    FEEDHOLD_HOLD,                  // 10 - HOLDING (steady state)
     FEEDHOLD_EXIT_ACTIONS_PENDING,  // performing exit actions
     FEEDHOLD_EXIT_ACTIONS_COMPLETE  // completed exit actions
 } cmFeedholdState;
@@ -540,7 +540,7 @@ void cm_request_alarm(void);
 void cm_request_fasthold(void);
 void cm_request_cycle_start(void);
 void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit);
-void cm_request_queue_flush(void);
+void cm_request_queue_flush();
 stat_t cm_feedhold_sequencing_callback(void);                   // process feedhold, cycle start and queue flush requests
 stat_t cm_feedhold_command_blocker(void);
 
