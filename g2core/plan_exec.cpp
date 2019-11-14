@@ -285,8 +285,9 @@ stat_t mp_exec_move()
                 // IMPORTANT: can't rpt_exception from here!
                 // We need to have it planned. We don't want to do this here,
                 // as it might already be happening in a lower interrupt.
+                st_prep_null();
                 st_request_forward_plan();
-                return (STAT_NOOP);
+                return (STAT_NOOP); // IOW: kick it back to the loader
             }
 
             if (bf->buffer_state == MP_BUFFER_FULLY_PLANNED) {
