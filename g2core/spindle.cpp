@@ -107,25 +107,28 @@ void spindle_reset()
 // to be used blow, assumes spindle.speed (etc) are already setup
 void _actually_set_spindle_speed() {
     float speed_lo, speed_hi;
+    bool clamp_speeds = false;
     if (spindle.state == SPINDLE_CW) {
         speed_lo = pwm.c[PWM_1].cw_speed_lo;
         speed_hi = pwm.c[PWM_1].cw_speed_hi;
+        clamp_speeds = true;
     } else if (spindle.state == SPINDLE_CCW ) {
         speed_lo = pwm.c[PWM_1].ccw_speed_lo;
         speed_hi = pwm.c[PWM_1].ccw_speed_hi;
+        clamp_speeds = true;
     } else {
         // off/disabled/paused
         spindle.speed_actual = 0;
     }
 
-    if ((spindle.state == SPINDLE_CW) || (spindle.state == SPINDLE_CCW)) {
+    if (clamp_speeds) {
         // clamp spindle speed to lo/hi range
         if (spindle.speed < speed_lo) {
             spindle.speed = speed_lo;
         }
-        // if (spindle.speed_actual < speed_lo) {
-        //     spindle.speed_actual = speed_lo;
-        // }
+        if (spindle.speed_actual < speed_lo) {
+            spindle.speed_actual = speed_lo;
+        }
         if (spindle.speed > speed_hi) {
             spindle.speed = speed_hi;
         }
@@ -245,24 +248,23 @@ static void _exec_spindle_control(float *value, bool *)
     SPINDLE_DIRECTION_ASSERT;               // ensure that the spindle direction is sane
     int8_t enable_bit = 0;                  // default to 0=off
     int8_t dir_bit = -1;                    // -1 will skip setting the direction. 0 & 1 are valid values
-    bool do_spinup_delay = false;
 
-#ifdef ENABLE_INTERLOCK_AND_ESTOP
-    if(cm1.estop_state != 0) { // In E-stop, don't process any spindle commands
-        action = SPINDLE_OFF;
-    }
+// #ifdef ENABLE_INTERLOCK_AND_ESTOP
+//     if (!spindle_ready_to_resume()) { // In E-stop, don't process any spindle commands
+//         action = SPINDLE_OFF;
+//     }
 
-    // // If we're paused or in interlock, or the esc is rebooting, send the spindle an "OFF" command (invisible to cm->gm),
-    // // and issue a hold if necessary
-    // else if(action == SPINDLE_PAUSE || cm1.safety_state != 0) {
-    //     if(action != SPINDLE_PAUSE) {
-    //         action = SPINDLE_PAUSE;
-    //         cm_set_motion_state(MOTION_STOP);
-    //         cm_request_feedhold(FEEDHOLD_TYPE_ACTIONS, FEEDHOLD_EXIT_INTERLOCK);
-    //         sr_request_status_report(SR_REQUEST_IMMEDIATE);
-    //     }
-    // }
-#endif
+//     // // If we're paused or in interlock, or the esc is rebooting, send the spindle an "OFF" command (invisible to cm->gm),
+//     // // and issue a hold if necessary
+//     // else if(action == SPINDLE_PAUSE || cm1.safety_state != 0) {
+//     //     if(action != SPINDLE_PAUSE) {
+//     //         action = SPINDLE_PAUSE;
+//     //         cm_set_motion_state(MOTION_STOP);
+//     //         cm_request_feedhold(FEEDHOLD_TYPE_ACTIONS, FEEDHOLD_EXIT_INTERLOCK);
+//     //         sr_request_status_report(SR_REQUEST_IMMEDIATE);
+//     //     }
+//     // }
+// #endif
 
     switch (action) {
         case SPINDLE_NOP: { return; }
@@ -277,7 +279,6 @@ static void _exec_spindle_control(float *value, bool *)
             dir_bit = control-1;            // adjust direction to be used as a bitmask
             spindle.direction = control;
             spindle.state = control;
-            do_spinup_delay = true;
             break;
         }
         case SPINDLE_PAUSE : {
@@ -288,7 +289,6 @@ static void _exec_spindle_control(float *value, bool *)
             enable_bit = 1;
             dir_bit = spindle.direction-1;  // spindle direction was stored as '1' & '2'
             spindle.state = spindle.direction;
-            do_spinup_delay = true;
             break;
         }
         default: {}                         // reversals not handled yet
@@ -335,6 +335,11 @@ stat_t spindle_control_sync(spControl control)  // uses spControl arg: OFF, CW, 
         return (STAT_OK);
     }
 
+    if (!spindle_ready_to_resume()) {
+        // request a feedhold immediately
+        cm_request_feedhold(FEEDHOLD_TYPE_ACTIONS, FEEDHOLD_EXIT_CYCLE);
+    }
+
     // queue the spindle control
     float value[] = { (float)control };
     mp_queue_command(_exec_spindle_control, value, nullptr);
@@ -352,13 +357,6 @@ stat_t spindle_control_sync(spControl control)  // uses spControl arg: OFF, CW, 
 
 static void _exec_spindle_speed(float *value, bool *flag)
 {
-    float previous_speed = spindle.speed;
-
-// #ifdef ENABLE_INTERLOCK_AND_ESTOP
-//     if(cm1.estop_state != 0 || cm1.safety_state != 0 || spindle.state == SPINDLE_PAUSE)
-//         spindle_control_immediate(SPINDLE_OFF);
-// #endif
-
     spindle.speed = value[0];
 
     _actually_set_spindle_speed();
@@ -389,11 +387,18 @@ stat_t spindle_speed_sync(float speed)
 
 bool spindle_ready_to_resume() {
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
-    if ((cm1.estop_state == 0) && (cm1.safety_state == 0)) {
+    if ((cm1.estop_state != 0) || (cm1.safety_state != 0)) {
+        return false;
+    }
+#endif
+    return true;
+}
+
+bool spindle_is_on_or_paused() {
+    if (spindle.state != SPINDLE_OFF) {
         return true;
     }
     return false;
-#endif
 }
 
 // returns if it's done

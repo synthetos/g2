@@ -114,7 +114,8 @@ stat_t spindle_speed_immediate(float speed);    // S parameter
 stat_t spindle_speed_sync(float speed);         // S parameter
 
 bool spindle_ready_to_resume(); // if the spindle can resume at this time, return true
-bool spindle_speed_ramp_from_systick();
+bool spindle_is_on_or_paused(); // returns if the stepper is on or paused - IOW would it try to resume from feedhold
+bool spindle_speed_ramp_from_systick(); // used only in systick call from stepper.cpp
 
 stat_t spindle_override_control(const float P_word, const bool P_flag);  // M51
 void spindle_start_override(const float ramp_time, const float override_factor);
