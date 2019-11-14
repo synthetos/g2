@@ -76,7 +76,7 @@ typedef enum {                      // check alignment with messages in config.c
     COMBINED_PROGRAM_END,           // [4] program end
     COMBINED_RUN,                   // [5] machine is running
     COMBINED_HOLD,                  // [6] machine is holding
-    COMBINED_PROBE,                 // [7] probe cycle activ
+    COMBINED_PROBE,                 // [7] probe cycle active
     COMBINED_CYCLE,                 // [8] reserved for canned cycles
     COMBINED_HOMING,                // [9] homing cycle active
     COMBINED_JOG,                   // [10] jogging cycle active

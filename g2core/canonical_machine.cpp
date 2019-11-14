@@ -1696,9 +1696,6 @@ stat_t cm_tro_control(const float P_word, const bool P_flag) // M50.1
  */
 
 static void _exec_program_finalize(float* value, bool* flag) {
-    // cmMachineState machine_state = (cmMachineState)value[0];
-    cm_set_motion_state(MOTION_STOP);                       // also changes active model back to MODEL
-
     sr_request_status_report(SR_REQUEST_IMMEDIATE);         // request a final and full status report (not filtered)
 }
 
@@ -1712,12 +1709,10 @@ static void _exec_program_stop_end(cmMachineState machine_state)
         (cm->machine_state != MACHINE_ALARM) &&
         (cm->machine_state != MACHINE_SHUTDOWN)) {
         cm->machine_state = machine_state;                  // don't update macs/cycs if we're in the middle of a canned cycle,
-        cm->cycle_type = CYCLE_NONE;                        // or if we're in machine alarm/shutdown mode
     }
 
     // reset the rest of the states
-    // DISABLED - too dangerous
-    // cm->hold_state = FEEDHOLD_OFF;
+    cm->hold_state = FEEDHOLD_OFF;
     // mp_zero_segment_velocity();                             // for reporting purposes
 
     // perform the following resets if it's a program END
@@ -1738,6 +1733,8 @@ static void _exec_program_stop_end(cmMachineState machine_state)
         /* FIXME */ temperature_reset();                    // (IMMEDIATE - should me Q) turn off all heaters and fans
     }
 
+    cm_set_motion_state(MOTION_STOP);                       // also changes active model back to MODEL
+
     float value[] = { (float)machine_state };
     mp_queue_command(_exec_program_finalize, value, nullptr);
 }
@@ -1752,10 +1749,13 @@ void cm_cycle_start()
     }
 }
 
-void cm_cycle_end()
-{
+void cm_cycle_end() {
     if (cm->cycle_type == CYCLE_MACHINING) {
-        _exec_program_stop_end(MACHINE_PROGRAM_STOP);
+        // _exec_program_stop_end(MACHINE_PROGRAM_STOP);
+
+        cm->machine_state = MACHINE_PROGRAM_STOP;
+        cm->cycle_type = CYCLE_NONE;
+        cm_set_motion_state(MOTION_STOP);
     }
 }
 
