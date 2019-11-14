@@ -248,9 +248,47 @@ uint8_t cm_probing_cycle_callback(void)
         return (STAT_NOOP);                 // exit if not in a probing cycle
     }
     if (pb.waiting_for_motion_complete) {   // sync to planner move ends (using callback)
-        return (STAT_EAGAIN);
+        // check for alarm or shutdown and recover
+        // expect the alarm or shutdown to flush the queue, so don't worry about that
+        if (cm->machine_state == MACHINE_ALARM || cm->machine_state == MACHINE_SHUTDOWN) {
+            cm_abort_probing(cm);
+            return (STAT_OK);
+        }
+       return (STAT_EAGAIN);
     }
     return (pb.func());                     // execute the current probing move
+}
+
+/***********************************************************************************
+ * cm_abort_probing() - something big happened, the queue is flushing, reset to non-probing state
+ *
+ *  Note: No need to worry about resetting states we saved (if we are actually probing), since
+ *  when this is called everything is being reset anyway.
+ *
+ *  The task here is to stop sending homing moves to the planner, and ensure we can re-enter
+ *  homing fresh without issue.
+ *
+ */
+
+void cm_abort_probing(cmMachine_t *_cm) {
+    // The queue has been emptied, the callback is lost, and all of the states we saved are reset
+    pb.waiting_for_motion_complete = false;
+
+    // The cycle_type may have already been changed, but if it hasn't do so now
+    if (_cm->cycle_type == CYCLE_PROBE) {
+        _cm->cycle_type = CYCLE_NONE;
+    }
+
+    // Also clean up the latest probe record
+    if (cm->probe_state[0] == PROBE_WAITING) {
+        // we can stop waiting
+        cm->probe_state[0] = PROBE_FAILED;
+    }
+
+    // This is idempotent - if it's not there, no worries
+    din_handlers[INPUT_ACTION_INTERNAL].deregisterHandler(&_probing_handler);
+
+    pb.func = nullptr;
 }
 
 /***********************************************************************************

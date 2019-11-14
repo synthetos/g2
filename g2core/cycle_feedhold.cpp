@@ -322,14 +322,24 @@ static stat_t _run_reset_position()
     return (STAT_OK);
 }
 
-static stat_t _run_alarm() {
+stat_t _run_job_kill();
+
+stat_t _run_alarm() {
+    if (cm1.hold_state == FEEDHOLD_HOLD) {
+        _run_job_kill();
+    } else {
+        return (STAT_EAGAIN);
+    }
     cm1.machine_state = MACHINE_ALARM;
-    cm1.hold_exit = FEEDHOLD_EXIT_END;
     return (STAT_OK);
 }
-static stat_t _run_shutdown() {
+stat_t _run_shutdown() {
+    if (cm1.hold_state == FEEDHOLD_HOLD) {
+        _run_job_kill();
+    } else {
+        return (STAT_EAGAIN);
+    }
     cm1.machine_state = MACHINE_SHUTDOWN;
-    cm1.hold_exit = FEEDHOLD_EXIT_END;
     return (STAT_OK);
 }
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
@@ -451,6 +461,8 @@ static void _start_queue_flush()
 static stat_t _run_queue_flush()            // typically runs from cm1 planner
 {
     cm_abort_arc(cm);                       // kill arcs so they don't just create more alines
+    cm_abort_homing(cm);                    // kill homing so it can reset cleanly
+    cm_abort_probing(cm);                   // kill probing so it can exit cleanly
     planner_reset((mpPlanner_t *)cm->mp);   // reset primary planner. also resets the mr under the planner
     cm_reset_position_to_absolute_position(cm);
     cm1.queue_flush_state = QUEUE_FLUSH_OFF;
@@ -502,12 +514,6 @@ static stat_t _run_job_kill()
     }
 
     _run_queue_flush();
-
-#ifdef ENABLE_INTERLOCK_AND_ESTOP
-    if ((cm1.safety_state & (SAFETY_ESC_MASK | SAFETY_INTERLOCK_MASK)) != 0 && spindle.state != SPINDLE_OFF) {
-        return STAT_EAGAIN;
-    }
-#endif
 
     coolant_control_immediate(COOLANT_OFF, COOLANT_BOTH); // stop coolant
     spindle_control_immediate(SPINDLE_OFF);               // stop spindle
@@ -573,8 +579,8 @@ void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit)
 
         cm1.hold_type = type;
         cm1.hold_exit = exit;
-        cm1.hold_profile = ((type == FEEDHOLD_TYPE_ACTIONS) || (type == FEEDHOLD_TYPE_HOLD)) ?
-        PROFILE_NORMAL : PROFILE_FAST;
+        cm1.hold_profile =
+            ((type == FEEDHOLD_TYPE_ACTIONS) || (type == FEEDHOLD_TYPE_HOLD)) ? PROFILE_NORMAL : PROFILE_FAST;
 
         switch (cm1.hold_type) {
             case FEEDHOLD_TYPE_HOLD:     { op.add_action(_feedhold_no_actions); break; }

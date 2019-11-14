@@ -550,11 +550,14 @@ bool cm_has_hold(void);                                         // has hold in p
 stat_t cm_homing_cycle_start(const float axes[], const bool flags[]);        // G28.2
 stat_t cm_homing_cycle_start_no_set(const float axes[], const bool flags[]); // G28.4
 stat_t cm_homing_cycle_callback(void);                          // G28.2/.4 main loop callback
+void cm_abort_homing(cmMachine_t *_cm); // called from the queue flush sequence to clean up
 
 // Probe cycles
 stat_t cm_straight_probe(float target[], bool flags[],          // G38.x
                          bool trip_sense, bool alarm_flag);
 stat_t cm_probing_cycle_callback(void);                         // G38.x main loop callback
+void cm_abort_probing(cmMachine_t *_cm); // called from the queue flush sequence to clean up
+
 stat_t cm_get_prbr(nvObj_t *nv);                                // enable/disable probe report
 stat_t cm_set_prbr(nvObj_t *nv);
 

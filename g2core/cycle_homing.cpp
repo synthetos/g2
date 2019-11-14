@@ -190,6 +190,7 @@ stat_t cm_homing_cycle_start(const float axes[], const bool flags[]) {
     cm_set_coord_system(ABSOLUTE_COORDS);  // homing is done in machine coordinates
     cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);
     hm.set_coordinates = true;
+    hm.waiting_for_motion_end = false;
 
     // clear rotation matrix
     canonical_machine_reset_rotation(cm);
@@ -217,9 +218,41 @@ stat_t cm_homing_cycle_callback(void) {
         return (STAT_NOOP);
     }
     if (hm.waiting_for_motion_end) {        // sync to planner move ends (using callback)
+        // check for alarm or shutdown and recover
+        // expect the alarm or shutdown to flush the queue, so don't worry about that
+        if (cm->machine_state == MACHINE_ALARM || cm->machine_state == MACHINE_SHUTDOWN) {
+            cm_abort_homing(cm);
+            return (STAT_OK);
+        }
         return (STAT_EAGAIN);
     }
     return (hm.func(hm.axis));              // execute the current homing move
+}
+
+/***********************************************************************************
+ * cm_abort_homing() - something big happened, the queue is flushing, reset to non-homing state
+ *
+ *  Note: No need to worry about resetting states we saved (if we are actually homig), since
+ *  when this is called everything is being reset anyway.
+ *
+ *  The task here is to stop sending homing moves to the planner, and ensure we can re-enter
+ *  homing fresh without issue.
+ *
+ */
+
+void cm_abort_homing(cmMachine_t *_cm) {
+    // The queue has been emptied, the callback is lost, and all of the states we saved are reset
+    hm.waiting_for_motion_end = false;
+
+    // The cycle_type may have already been changed, but if it hasn't do so now
+    if (_cm->cycle_type == CYCLE_HOMING) {
+        _cm->cycle_type = CYCLE_NONE;
+    }
+
+    // This is idempotent - if it's not there, no worries
+    din_handlers[INPUT_ACTION_INTERNAL].deregisterHandler(&_homing_handler);  // end homing mode
+
+    hm.func = nullptr;
 }
 
 /***********************************************************************************
