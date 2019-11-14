@@ -126,12 +126,13 @@ void _actually_set_spindle_speed() {
         if (spindle.speed < speed_lo) {
             spindle.speed = speed_lo;
         }
-        if (spindle.speed_actual < speed_lo) {
-            spindle.speed_actual = speed_lo;
-        }
+
+        // allow spindle.speed_actual to start at 0 to match physical spinup
+
         if (spindle.speed > speed_hi) {
             spindle.speed = speed_hi;
         }
+
         if (spindle.speed_actual > speed_hi) {
             spindle.speed_actual = speed_hi;
         }
@@ -422,6 +423,9 @@ bool spindle_speed_ramp_from_systick() {
                 done = true;
             }
         }
+        pwm_set_duty(PWM_1, _get_spindle_pwm(spindle, pwm));
+    } else {
+        spindle.speed_actual = 0;
         pwm_set_duty(PWM_1, _get_spindle_pwm(spindle, pwm));
     }
     return done;
