@@ -39,27 +39,27 @@
 #include "xio.h"
 
 //static void _start_feedhold(void);
-static void _start_cycle_restart(void);
-static void _start_queue_flush(void);
-static void _start_job_kill(void);
+void _start_cycle_restart(void);
+void _start_queue_flush(void);
+void _start_job_kill(void);
 
 // Feedhold actions
-static stat_t _feedhold_skip(void);
-static stat_t _feedhold_no_actions(void);
-static stat_t _feedhold_with_actions(void);
-static stat_t _feedhold_restart_with_actions(void);
-static stat_t _feedhold_restart_no_actions(void);
+stat_t _feedhold_skip(void);
+stat_t _feedhold_no_actions(void);
+stat_t _feedhold_with_actions(void);
+stat_t _feedhold_restart_with_actions(void);
+stat_t _feedhold_restart_no_actions(void);
 
 // Feedhold exits (finalization)
-static stat_t _run_restart_cycle(void);
-static stat_t _run_queue_flush(void);
-static stat_t _run_program_stop(void);
-static stat_t _run_program_end(void);
-static stat_t _run_alarm(void);
-static stat_t _run_shutdown(void);
-static stat_t _run_interlock_started(void);
-static stat_t _run_interlock_ended(void);
-static stat_t _run_reset_position(void);
+stat_t _run_restart_cycle(void);
+stat_t _run_queue_flush(void);
+stat_t _run_program_stop(void);
+stat_t _run_program_end(void);
+stat_t _run_alarm(void);
+stat_t _run_shutdown(void);
+stat_t _run_interlock_started(void);
+stat_t _run_interlock_ended(void);
+stat_t _run_reset_position(void);
 
 /****************************************************************************************
  * OPERATIONS AND ACTIONS
@@ -304,19 +304,19 @@ stat_t cm_feedhold_command_blocker()
  * end state functions and helpers
  */
 
-static stat_t _run_program_stop()
+stat_t _run_program_stop()
 {
     cm_cycle_end();                         // end cycle and run program stop
     return (STAT_OK);
 }
 
-static stat_t _run_program_end()
+stat_t _run_program_end()
 {
     cm_program_end();
     return (STAT_OK);
 }
 
-static stat_t _run_reset_position()
+stat_t _run_reset_position()
 {
     cm_reset_position_to_absolute_position(cm);
     return (STAT_OK);
@@ -343,11 +343,11 @@ stat_t _run_shutdown() {
     return (STAT_OK);
 }
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
-static stat_t _run_interlock_started() {
+stat_t _run_interlock_started() {
     cm1.machine_state = MACHINE_INTERLOCK;
     return (STAT_OK);
 }
-static stat_t _run_interlock_ended() {
+stat_t _run_interlock_ended() {
     if (cm1.cycle_type != CYCLE_NONE) {
         cm1.machine_state = MACHINE_CYCLE;
     } else {
@@ -356,12 +356,12 @@ static stat_t _run_interlock_ended() {
     return (_run_restart_cycle());
 }
 #else
-static stat_t _run_interlock_started() {
+stat_t _run_interlock_started() {
     cm1.safety_interlock_state = SAFETY_INTERLOCK_DISENGAGED;
     cm1.machine_state = MACHINE_INTERLOCK;
     return (STAT_OK);
 }
-static stat_t _run_interlock_ended() {
+stat_t _run_interlock_ended() {
     cm1.safety_interlock_state = SAFETY_INTERLOCK_ENGAGED;
     if (cm1.cycle_type != CYCLE_NONE) {
         cm1.machine_state = MACHINE_CYCLE;
@@ -393,7 +393,7 @@ void cm_request_cycle_start()
     }
 }
 
-static void _start_cycle_restart()
+void _start_cycle_restart()
 {
     // Feedhold cycle restart builds an operation to complete multiple actions
     if (cm1.hold_state == FEEDHOLD_HOLD) {
@@ -437,7 +437,7 @@ void cm_request_queue_flush()
     }
 }
 
-static void _start_queue_flush()
+void _start_queue_flush()
 {
     devflags_t flags = DEV_IS_DATA;
 
@@ -458,7 +458,7 @@ static void _start_queue_flush()
 // It is completely synchronous so it can be called directly;
 // it does not need to be part of an operation().
 
-static stat_t _run_queue_flush()            // typically runs from cm1 planner
+stat_t _run_queue_flush()            // typically runs from cm1 planner
 {
     cm_abort_arc(cm);                       // kill arcs so they don't just create more alines
     cm_abort_homing(cm);                    // kill homing so it can reset cleanly
@@ -499,7 +499,7 @@ void cm_request_job_kill()
 // It is completely synchronous so it can be called directly;
 // it does not need to be part of an operation().
 
-static stat_t _run_job_kill()
+stat_t _run_job_kill()
 {
     // if in p2 switch to p1 and copy actual position back to p1
     if (cm == &cm2) {
@@ -530,7 +530,7 @@ static stat_t _run_job_kill()
 
 // _start_job_kill() will be entered multiple times until the REQUEST is reset to OFF
 
-static void _start_job_kill()
+void _start_job_kill()
 {
     switch (cm1.machine_state) {
         case MACHINE_ALARM:                             // Case 0's - nothing to do. turn off the request
@@ -614,7 +614,7 @@ void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit)
 
 }
 /*
-static void _start_p2_feedhold()
+void _start_p2_feedhold()
 {
     // P2 feedholds only allow skip types
     if ((cm2.hold_state == FEEDHOLD_REQUESTED) && (cm2.motion_state == MOTION_RUN)) {
@@ -631,7 +631,7 @@ static void _start_p2_feedhold()
  * Encapsulate entering and exiting p2, as this is tricky and must be done exactly right
  */
 
-static void _enter_p2()
+void _enter_p2()
 {
     // Copy the primary canonical machine to the secondary. Here it's OK to co a memcpy.
     // Set parameters in cm, gm and gmx so you can actually use it
@@ -668,14 +668,14 @@ static void _enter_p2()
     mr = mp2.mr;
 }
 
-static void _exit_p2()
+void _exit_p2()
 {
     cm = &cm1;                          // return to primary planner (p1)
     mp = (mpPlanner_t *)cm1.mp;         // cm->mp is a void pointer
     mr = mp1.mr;
 }
 
-static void _check_motion_stopped()
+void _check_motion_stopped()
 {
     if (mp_runtime_is_idle()) {                         // wait for steppers to actually finish
 
@@ -702,7 +702,7 @@ static void _check_motion_stopped()
     }
 }
 
-static stat_t _feedhold_skip()
+stat_t _feedhold_skip()
 {
     // check for actual motion to stop
     if (cm1.machine_state != MACHINE_CYCLE) {
@@ -722,7 +722,7 @@ static stat_t _feedhold_skip()
     return (STAT_OK);
 }
 
-static stat_t _feedhold_no_actions()
+stat_t _feedhold_no_actions()
 {
     // initiate the feedhold
     if (cm1.hold_state == FEEDHOLD_OFF) {       // start a feedhold
@@ -749,13 +749,13 @@ static stat_t _feedhold_no_actions()
     return (STAT_OK);
 }
 
-static void _feedhold_actions_done_callback(float* vect, bool* flag)
+void _feedhold_actions_done_callback(float* vect, bool* flag)
 {
     cm1.hold_state = FEEDHOLD_HOLD_ACTIONS_COMPLETE; // penultimate state before transitioning to FEEDHOLD_HOLD
     sr_request_status_report(SR_REQUEST_IMMEDIATE);
 }
 
-static stat_t _feedhold_with_actions()          // Execute Case (5)
+stat_t _feedhold_with_actions()          // Execute Case (5)
 {
     // if entered while OFF start a feedhold
     if (cm1.hold_state == FEEDHOLD_OFF) {
@@ -810,14 +810,14 @@ static stat_t _feedhold_with_actions()          // Execute Case (5)
  *  _feedhold_restart_actions_done_callback()
  */
 
-static void _feedhold_restart_actions_done_callback(float* vect, bool* flag)
+void _feedhold_restart_actions_done_callback(float* vect, bool* flag)
 {
     cm1.hold_state = FEEDHOLD_EXIT_ACTIONS_COMPLETE;    // penultimate state before transitioning to FEEDHOLD_OFF
     sr_request_status_report(SR_REQUEST_IMMEDIATE);
 }
 
 //+++++ Make this more robust so it handles being called before reaching HOLD state
-static stat_t _feedhold_restart_no_actions()
+stat_t _feedhold_restart_no_actions()
 {
     if (cm1.hold_state == FEEDHOLD_OFF) {
         return (STAT_OK);                       // was called erroneously. Can happen for !%~
@@ -828,7 +828,7 @@ static stat_t _feedhold_restart_no_actions()
     return (STAT_OK);
 }
 
-static stat_t _feedhold_restart_with_actions()   // Execute Cases (6) and (7)
+stat_t _feedhold_restart_with_actions()   // Execute Cases (6) and (7)
 {
     if (cm1.hold_state == FEEDHOLD_OFF) {
         return (STAT_OK);                       // was called erroneously. Can happen for !%~
@@ -866,7 +866,7 @@ static stat_t _feedhold_restart_with_actions()   // Execute Cases (6) and (7)
     return (STAT_EAGAIN);                   // still waiting
 }
 
-static stat_t _run_restart_cycle(void)
+stat_t _run_restart_cycle(void)
 {
     cm1.hold_state = FEEDHOLD_OFF;          // must precede st_request_exec_move()
     if (mp_has_runnable_buffer(&mp1)) {
