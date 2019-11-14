@@ -1660,6 +1660,12 @@ stat_t cm_tro_control(const float P_word, const bool P_flag) // M50.1
  *  Note that the stop occurs at the end of the immediately preceding command
  *  (i.e. the stop is queued behind the last command).
  *
+ *  It is vital that cm_program_end, cm_program_stop etc. do NOT queue _exec_program_finalize!
+ *
+ *  It is also equally important that _exec_program_finalize execut anything that effects
+ *  interpretation of commands following it (IOW, manipulating the gcode model) be done immediately,
+ *  and anything that is to happen syncronous with motion/other queued commands be queued.
+ *
  *  cm_program_end is a stop that also resets the machine to initial state
  *
  *  cm_program_end() implements M2 and M30
@@ -1689,12 +1695,20 @@ stat_t cm_tro_control(const float P_word, const bool P_flag) // M50.1
  *   10.  Turn off all heaters and fans
  */
 
-static void _exec_program_finalize(cmMachineState machine_state)
-{
+static void _exec_program_finalize(float* value, bool* flag) {
     // cmMachineState machine_state = (cmMachineState)value[0];
     cm_set_motion_state(MOTION_STOP);                       // also changes active model back to MODEL
 
-    if ((cm->cycle_type == CYCLE_MACHINING || cm->cycle_type == CYCLE_NONE) &&
+    sr_request_status_report(SR_REQUEST_IMMEDIATE);         // request a final and full status report (not filtered)
+}
+
+static void _exec_program_stop_end(cmMachineState machine_state)
+{
+    // Repeat from above:
+    // If it effects cm->gm or cm->gmx (GM), do it NOW (don't queue it), otherwise queue it (Q).
+
+    // If we are already out of cycle, then adjust the machine state
+    if ((cm->cycle_type == CYCLE_NONE) && // cm->cycle_type == CYCLE_MACHINING ||
         (cm->machine_state != MACHINE_ALARM) &&
         (cm->machine_state != MACHINE_SHUTDOWN)) {
         cm->machine_state = machine_state;                  // don't update macs/cycs if we're in the middle of a canned cycle,
@@ -1702,25 +1716,30 @@ static void _exec_program_finalize(cmMachineState machine_state)
     }
 
     // reset the rest of the states
-    cm->hold_state = FEEDHOLD_OFF;
-    mp_zero_segment_velocity();                             // for reporting purposes
+    // DISABLED - too dangerous
+    // cm->hold_state = FEEDHOLD_OFF;
+    // mp_zero_segment_velocity();                             // for reporting purposes
 
     // perform the following resets if it's a program END
     if (machine_state == MACHINE_PROGRAM_END) {
-        cm_suspend_g92_offsets();                           // G92.2 - as per NIST
-        cm_set_coord_system(cm->default_coord_system);      // reset to default coordinate system
-        cm_select_plane(cm->default_select_plane);          // reset to default arc plane
-        cm_set_distance_mode(cm->default_distance_mode);    // reset to default distance mode
-        cm_set_arc_distance_mode(INCREMENTAL_DISTANCE_MODE);// always the default
-//        toolhead.control_immediate(TOOLHEAD_OFF);         // M5
-        spindle_control_immediate(SPINDLE_OFF);             // M5
-        coolant_control_immediate(COOLANT_OFF,COOLANT_BOTH);// M9
-        cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);       // G94
-        cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);// NIST specifies G1 (MOTION_MODE_STRAIGHT_FEED), but we cancel motion mode. Safer.
-        cm_reset_overrides();                               // enable G48, reset feed rate, traverse and spindle overrides
-        temperature_reset();                                // turn off all heaters and fans
+        // (Q) means it queus something, and (GM) means it manipulates the gode model
+        cm_suspend_g92_offsets();                           // (Q) G92.2 - as per NIST
+        cm_set_coord_system(cm->default_coord_system);      // (Q) reset to default coordinate system
+        cm_select_plane(cm->default_select_plane);          // (GM) reset to default arc plane
+        cm_set_distance_mode(cm->default_distance_mode);    // (GM) reset to default distance mode
+        cm_set_arc_distance_mode(INCREMENTAL_DISTANCE_MODE);// (GM) always the default
+//        toolhead.control_sync(TOOLHEAD_OFF);              // (Q) M5
+        spindle_control_sync(SPINDLE_OFF);                  // (Q) M5
+        coolant_control_sync(COOLANT_OFF,COOLANT_BOTH);     // (Q) M9
+        cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);       // (Q) G94
+        cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);// (GM) NIST specifies G1 (MOTION_MODE_STRAIGHT_FEED), but we cancel motion mode. Safer.
+        cm_reset_overrides();                               // (GM) enable G48, reset feed rate, traverse and spindle overrides
+
+        /* FIXME */ temperature_reset();                    // (IMMEDIATE - should me Q) turn off all heaters and fans
     }
-    sr_request_status_report(SR_REQUEST_IMMEDIATE);         // request a final and full status report (not filtered)
+
+    float value[] = { (float)machine_state };
+    mp_queue_command(_exec_program_finalize, value, nullptr);
 }
 
 // Will start a cycle regardless of whether the planner has moves or not
@@ -1736,29 +1755,29 @@ void cm_cycle_start()
 void cm_cycle_end()
 {
     if (cm->cycle_type == CYCLE_MACHINING) {
-        _exec_program_finalize(MACHINE_PROGRAM_STOP);
+        _exec_program_stop_end(MACHINE_PROGRAM_STOP);
     }
 }
 
 void cm_canned_cycle_end()
 {
     cm->cycle_type = CYCLE_NONE;
-    _exec_program_finalize(MACHINE_PROGRAM_STOP);
+    _exec_program_stop_end(MACHINE_PROGRAM_STOP);
 }
 
 void cm_program_stop()
 {
-    _exec_program_finalize(MACHINE_PROGRAM_STOP);
+    _exec_program_stop_end(MACHINE_PROGRAM_STOP);
 }
 
 void cm_optional_program_stop()
 {
-    _exec_program_finalize(MACHINE_PROGRAM_STOP);
+    _exec_program_stop_end(MACHINE_PROGRAM_STOP);
 }
 
 void cm_program_end()
 {
-    _exec_program_finalize(MACHINE_PROGRAM_END);
+    _exec_program_stop_end(MACHINE_PROGRAM_END);
 }
 
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
