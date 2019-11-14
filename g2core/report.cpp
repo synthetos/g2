@@ -267,7 +267,7 @@ stat_t sr_request_status_report(cmStatusReportRequest request_type)
         return (STAT_OK);
    }
 
-    sr.status_report_systick.set(0);
+    sr.status_report_systick.set(1);
     if (request_type == SR_REQUEST_IMMEDIATE) {
         sr.status_report_request = SR_FILTERED;     // will trigger a filtered or verbose report depending on verbosity setting
 
@@ -298,8 +298,6 @@ stat_t sr_status_report_callback()         // called by controller dispatcher
         return (STAT_NOOP);
     }
 
-    sr.status_report_systick.clear();
-
    // don't send an SR if you the planner is experiencing a time constraint
    if (!mp_is_phat_city_time()) {
         if (++sr.throttle_counter != SR_THROTTLE_COUNT) {
@@ -309,6 +307,7 @@ stat_t sr_status_report_callback()         // called by controller dispatcher
     }
 
     sr.status_report_request = SR_OFF;
+    sr.status_report_systick.clear();
     if ((sr.status_report_request == SR_VERBOSE) ||
         (sr.status_report_verbosity == SR_VERBOSE)) {
         _populate_unfiltered_status_report();
