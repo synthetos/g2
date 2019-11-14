@@ -21,7 +21,7 @@
 #ifndef G2CORE_INFO_H_ONCE
 #define G2CORE_INFO_H_ONCE
 
-#define G2CORE_FIRMWARE_BUILD			101.03  // Issue #320, #354 - Added stepper polarity {1pl:n},  Fixed SR setting bug
+#define G2CORE_FIRMWARE_BUILD			101.05  // PRIVATE BUILD
 #define G2CORE_FIRMWARE_VERSION         0.99
 
 #ifdef GIT_VERSION
