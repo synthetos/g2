@@ -876,11 +876,9 @@ void st_prep_dwell(float milliseconds)
 
 void st_prep_out_of_band_dwell(float milliseconds)
 {
-    if (!st_runtime_isbusy()) {
-        st_prep_dwell(milliseconds);
-        st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;    // signal that prep buffer is ready
-        st_request_load_move();
-    }
+    st_prep_dwell(milliseconds);
+    st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;    // signal that prep buffer is ready
+    st_request_load_move();
 }
 
 /*
