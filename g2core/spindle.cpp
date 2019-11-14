@@ -336,7 +336,7 @@ stat_t spindle_control_sync(spControl control)  // uses spControl arg: OFF, CW, 
         return (STAT_OK);
     }
 
-    if (!spindle_ready_to_resume()) {
+    if (spindle.speed > 0.0 && !spindle_ready_to_resume()) {
         // request a feedhold immediately
         cm_request_feedhold(FEEDHOLD_TYPE_ACTIONS, FEEDHOLD_EXIT_CYCLE);
     }
