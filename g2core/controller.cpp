@@ -155,13 +155,12 @@ void controller_init()
     din_handlers[INPUT_ACTION_SHUTDOWN].registerHandler(&_shutdown_input_handler);
     din_handlers[INPUT_ACTION_LIMIT].registerHandler(&_limit_input_handler);
     din_handlers[INPUT_ACTION_INTERLOCK].registerHandler(&_interlock_input_handler);
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
     if (gpio_read_input(INTERLOCK_SWITCH_INPUT) == INPUT_ACTIVE) {
         // cm1.safety_interlock_disengaged = INTERLOCK_SWITCH_INPUT;
         cm1.safety_state |= SAFETY_INTERLOCK_OPEN;
     }
-    // if (gpio_read_input(ESTOP_SWITCH_INPUT) == INPUT_ACTIVE) {
-    //     cm1.estop_state = ESTOP_PRESSED | ESTOP_UNACKED | ESTOP_ACTIVE;
-    // }
+#endif
 }
 
 void controller_request_enquiry()
