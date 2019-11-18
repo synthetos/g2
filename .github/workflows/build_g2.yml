@@ -1,0 +1,20 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches:
+      - edge-private
+  pull_request:
+    branches:
+      - p*-*
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: make
+      working-directory: ./g2core
+      run: make CONFIG=OthermillPro VERBOSE=2
