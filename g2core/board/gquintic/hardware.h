@@ -33,13 +33,24 @@
 #include "settings.h"
 #include "error.h"
 
+#include "MotatePins.h" // QUINTIC_REVISION comes from the pintout file
+
+
 #ifndef HARDWARE_H_ONCE
 #define HARDWARE_H_ONCE
 
 /*--- Hardware platform enumerations ---*/
 
 #define G2CORE_HARDWARE_PLATFORM    "gQuintic"
-#define G2CORE_HARDWARE_VERSION     "b"
+#define G2CORE_HARDWARE_VERSION_from_QUINTIC_REVISION(x)  "" #x ""
+#define G2CORE_HARDWARE_VERSION G2CORE_HARDWARE_VERSION_from_QUINTIC_REVISION(QUINTIC_REVISION)
+
+
+// Save some space ... we're tight
+#undef __HELP_SCREENS
+#undef __USER_DATA
+#define TOOLS 5        // number of entries in tool table (index starts at 1)
+
 
 /***** Motors & PWM channels supported by this hardware *****/
 // These must be defines (not enums) so expressions like this:

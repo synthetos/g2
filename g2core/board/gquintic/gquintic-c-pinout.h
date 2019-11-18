@@ -65,9 +65,6 @@
  *      Please look in <Motate>/platform/atmel_sam/motate_chip_pin_functions.h
  */
 
-
-// #include <MotateTimers.h>
-
 // We don't have all of the inputs, so we have to indicate as much:
 #define INPUT1_AVAILABLE 1
 #define INPUT2_AVAILABLE 1
