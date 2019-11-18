@@ -105,7 +105,7 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
                    const cmMotionMode motion_mode)                  // defined motion mode
 {
     // Start setting up the arc and trapping arc specification errors
-    
+
     // Trap some precursor cases. Since motion mode (MODAL_GROUP_G1) persists from the
     // previous move it's possible for non-modal commands such as F or P to arrive here
     // when no motion has actually been specified. It's also possible to run an arc as
@@ -216,8 +216,8 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],     // target en
 
     // *** now get down to the rest of the work setting up the arc for execution ***
     cm->gm.motion_mode = motion_mode;
-    cm_set_display_offsets(&cm->gm);                        // capture the fully resolved offsets to gm
-    memcpy(&(cm->arc.gm), &cm->gm, sizeof(GCodeState_t));   // copy GCode context to arc singleton - some will be overwritten to run segments
+    cm_set_display_offsets(MODEL);                        // capture the fully resolved offsets to gm
+    memcpy(&(cm->arc.gm), MODEL, sizeof(GCodeState_t));   // copy GCode context to arc singleton - some will be overwritten to run segments
     copy_vector(cm->arc.position, cm->gmx.position);        // set initial arc position from gcode model
 
     // setup offsets if in center format mode
@@ -290,14 +290,14 @@ static stat_t _compute_arc(const bool radius_f)
     //  center by more than (.05 inch/.5 mm) OR ((.0005 inch/.005mm) AND .1% of radius)."
 
     // Compute end radius from the center of circle (offsets) to target endpoint
-    float end_0 = cm->arc.gm.target[cm->arc.plane_axis_0] - 
-                  cm->arc.position[cm->arc.plane_axis_0] - 
+    float end_0 = cm->arc.gm.target[cm->arc.plane_axis_0] -
+                  cm->arc.position[cm->arc.plane_axis_0] -
                   cm->arc.ijk_offset[cm->arc.plane_axis_0];
-                  
-    float end_1 = cm->arc.gm.target[cm->arc.plane_axis_1] - 
-                  cm->arc.position[cm->arc.plane_axis_1] - 
+
+    float end_1 = cm->arc.gm.target[cm->arc.plane_axis_1] -
+                  cm->arc.position[cm->arc.plane_axis_1] -
                   cm->arc.ijk_offset[cm->arc.plane_axis_1];
-                  
+
     float err = std::abs(hypotf(end_0, end_1) - cm->arc.radius);   // end radius - start radius
     if ((err > ARC_RADIUS_ERROR_MAX) ||
        ((err > ARC_RADIUS_ERROR_MIN) && (err > cm->arc.radius * ARC_RADIUS_TOLERANCE))) {
@@ -322,7 +322,7 @@ static stat_t _compute_arc(const bool radius_f)
         // add in travel for rotations
         if (cm->arc.angular_travel >= 0) { cm->arc.angular_travel += 2*M_PI * cm->arc.rotations; }
         else                             { cm->arc.angular_travel -= 2*M_PI * cm->arc.rotations; }
-    } 
+    }
     // Compute full-circle arcs
     else {
         if (cm->arc.gm.motion_mode == MOTION_MODE_CCW_ARC) { cm->arc.rotations *= -1; }

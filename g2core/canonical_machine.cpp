@@ -564,6 +564,12 @@ void cm_set_display_offsets(GCodeState_t *gcode_state)
             }
         }
     }
+
+    // If we're not in cycle, then no moves are queued to update the runtime offsets
+    // So let's do that
+    if ((gcode_state == MODEL) && (cm->machine_state != MACHINE_CYCLE)) {
+        mp_set_runtime_display_offset(gcode_state->display_offset);
+    }
 }
 
 /*
@@ -1035,19 +1041,7 @@ stat_t cm_set_g10_data(const uint8_t P_word, const bool P_flag,
  * cm_set_tl_offset()    - G43
  * cm_cancel_tl_offset() - G49
  * cm_set_coord_system() - G54-G59
- * _exec_offset()        - callback from planner command
  */
-
-static void _exec_offset(float *value, bool *flag)
-{
-    uint8_t coord_system = ((uint8_t)value[0]);         // coordinate system is passed in value[0] element
-    float offsets[AXES];
-    for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-        offsets[axis] = cm->coord_offset[coord_system][axis] + cm->tool_offset[axis] +
-        (cm->gmx.g92_offset[axis] * cm->gmx.g92_offset_enable);
-    }
-    mp_set_runtime_display_offset(offsets);
-}
 
 stat_t cm_set_tl_offset(const uint8_t H_word, const bool H_flag, const bool apply_additional)
 {
@@ -1074,9 +1068,6 @@ stat_t cm_set_tl_offset(const uint8_t H_word, const bool H_flag, const bool appl
         }
     }
     cm_set_display_offsets(MODEL);                      // display new offsets in the model right now
-
-    float value[] = { (float)cm->gm.coord_system };     // pass coordinate system in value[0] element
-    mp_queue_command(_exec_offset, value, nullptr);     // second vector (flags) is not used, so fake it
     return (STAT_OK);
 }
 
@@ -1086,19 +1077,13 @@ stat_t cm_cancel_tl_offset()
         cm->tool_offset[axis] = 0;
     }
     cm_set_display_offsets(MODEL);                      // display new offsets in the model right now
-
-    float value[] = { (float)cm->gm.coord_system };
-    mp_queue_command(_exec_offset, value, nullptr);     // changes it in the runtime when executed
-    return (STAT_OK);
+   return (STAT_OK);
 }
 
 stat_t cm_set_coord_system(const uint8_t coord_system)  // set coordinate system sync'd with planner
 {
     cm->gm.coord_system = (cmCoordSystem)coord_system;
     cm_set_display_offsets(MODEL);                      // must reset display offsets if you change coordinate system
-
-    float value[] = { (float)coord_system };
-    mp_queue_command(_exec_offset, value, nullptr);
     return (STAT_OK);
 }
 
@@ -1205,8 +1190,6 @@ stat_t cm_set_g92_offsets(const float offset[], const bool flag[])
         }
     }
     // now pass the offset to the callback - setting the coordinate system also applies the offsets
-    float value[] = { (float)cm->gm.coord_system }; // pass coordinate system in value[0] element
-    mp_queue_command(_exec_offset, value, nullptr);
     cm_set_display_offsets(MODEL);
     return (STAT_OK);
 }
@@ -1217,8 +1200,6 @@ stat_t cm_reset_g92_offsets()
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         cm->gmx.g92_offset[axis] = 0;
     }
-    float value[] = { (float)cm->gm.coord_system };
-    mp_queue_command(_exec_offset, value, nullptr);
     cm_set_display_offsets(MODEL);
     return (STAT_OK);
 }
@@ -1226,8 +1207,6 @@ stat_t cm_reset_g92_offsets()
 stat_t cm_suspend_g92_offsets()
 {
     cm->gmx.g92_offset_enable = false;
-    float value[] = { (float)cm->gm.coord_system };
-    mp_queue_command(_exec_offset, value, nullptr);
     cm_set_display_offsets(MODEL);
     return (STAT_OK);
 }
@@ -1235,8 +1214,6 @@ stat_t cm_suspend_g92_offsets()
 stat_t cm_resume_g92_offsets()
 {
     cm->gmx.g92_offset_enable = true;
-    float value[] = { (float)cm->gm.coord_system };
-    mp_queue_command(_exec_offset, value, nullptr);
     cm_set_display_offsets(MODEL);
     return (STAT_OK);
 }
@@ -1262,9 +1239,9 @@ stat_t cm_straight_traverse(const float *target, const bool *flags, const uint8_
     }
     cm_set_model_target(target, flags);
     ritorno (cm_test_soft_limits(cm->gm.target));   // test soft limits; exit if thrown
-    cm_set_display_offsets(&cm->gm);                // capture the fully resolved offsets to the state
+    cm_set_display_offsets(MODEL);                // capture the fully resolved offsets to the state
     cm_cycle_start();                               // required here for homing & other cycles
-    stat_t status = mp_aline(&cm->gm);              // send the move to the planner
+    stat_t status = mp_aline(MODEL);              // send the move to the planner
     cm_update_model_position();                     // update gmx.position to ready for next incoming move
 
     if (status == STAT_MINIMUM_LENGTH_MOVE) {
@@ -1424,9 +1401,9 @@ stat_t cm_straight_feed(const float *target, const bool *flags, const uint8_t mo
 
     cm_set_model_target(target, flags);
     ritorno (cm_test_soft_limits(cm->gm.target));   // test soft limits; exit if thrown
-    cm_set_display_offsets(&cm->gm);                // capture the fully resolved offsets to the state
+    cm_set_display_offsets(MODEL);                // capture the fully resolved offsets to the state
     cm_cycle_start();                               // required for homing & other cycles
-    stat_t status = mp_aline(&cm->gm);              // send the move to the planner
+    stat_t status = mp_aline(MODEL);              // send the move to the planner
     cm_update_model_position();                     // <-- ONLY safe because we don't care about status...
 
     if (status == STAT_MINIMUM_LENGTH_MOVE) {
@@ -1668,12 +1645,6 @@ stat_t cm_tro_control(const float P_word, const bool P_flag) // M50.1
  *  Note that the stop occurs at the end of the immediately preceding command
  *  (i.e. the stop is queued behind the last command).
  *
- *  It is vital that cm_program_end, cm_program_stop etc. do NOT queue _exec_program_finalize!
- *
- *  It is also equally important that _exec_program_finalize execut anything that effects
- *  interpretation of commands following it (IOW, manipulating the gcode model) be done immediately,
- *  and anything that is to happen syncronous with motion/other queued commands be queued.
- *
  *  cm_program_end is a stop that also resets the machine to initial state
  *
  *  cm_program_end() implements M2 and M30
@@ -1704,13 +1675,20 @@ stat_t cm_tro_control(const float P_word, const bool P_flag) // M50.1
  */
 
 static void _exec_program_finalize(float* value, bool* flag) {
+    // perform the following resets if it's a program END
+    if (cm->machine_state == MACHINE_PROGRAM_END) {
+        spindle_control_immediate(SPINDLE_OFF);             // immediate M5
+        coolant_control_immediate(COOLANT_OFF,COOLANT_BOTH);// immediate M9
+        temperature_reset();                                // turn off all heaters and fans
+    }
+
     sr_request_status_report(SR_REQUEST_IMMEDIATE);         // request a final and full status report (not filtered)
 }
 
 static void _exec_program_stop_end(cmMachineState machine_state)
 {
-    // Repeat from above:
-    // If it effects cm->gm or cm->gmx (GM), do it NOW (don't queue it), otherwise queue it (Q).
+    // WARNING: We must not queue more than four things here, or we'll use up all the spare queue slots and crash the system
+    // The good news is we shouldn't need to queue much
 
     // If we are already out of cycle, then adjust the machine state
     if ((cm->cycle_type == CYCLE_NONE) && // cm->cycle_type == CYCLE_MACHINING ||
@@ -1725,26 +1703,21 @@ static void _exec_program_stop_end(cmMachineState machine_state)
 
     // perform the following resets if it's a program END
     if (machine_state == MACHINE_PROGRAM_END) {
-        // (Q) means it queus something, and (GM) means it manipulates the gode model
-        cm_suspend_g92_offsets();                           // (Q) G92.2 - as per NIST
-        cm_set_coord_system(cm->default_coord_system);      // (Q) reset to default coordinate system
-        cm_select_plane(cm->default_select_plane);          // (GM) reset to default arc plane
-        cm_set_distance_mode(cm->default_distance_mode);    // (GM) reset to default distance mode
-        cm_set_arc_distance_mode(INCREMENTAL_DISTANCE_MODE);// (GM) always the default
-//        toolhead.control_sync(TOOLHEAD_OFF);              // (Q) M5
-        spindle_control_sync(SPINDLE_OFF);                  // (Q) M5
-        coolant_control_sync(COOLANT_OFF,COOLANT_BOTH);     // (Q) M9
-        cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);       // (Q) G94
-        cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);// (GM) NIST specifies G1 (MOTION_MODE_STRAIGHT_FEED), but we cancel motion mode. Safer.
-        cm_reset_overrides();                               // (GM) enable G48, reset feed rate, traverse and spindle overrides
+        cm_suspend_g92_offsets();                           //  G92.2 - as per NIST
+        cm_set_coord_system(cm->default_coord_system);      //  reset to default coordinate system
+        cm_select_plane(cm->default_select_plane);          //  reset to default arc plane
+        cm_set_distance_mode(cm->default_distance_mode);    //  reset to default distance mode
+        cm_set_arc_distance_mode(INCREMENTAL_DISTANCE_MODE);//  always the default
+        cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);       //  G94
+        cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE); // NIST specifies G1 (MOTION_MODE_STRAIGHT_FEED), but we cancel motion mode. Safer.
+        cm_reset_overrides();                               // enable G48, reset feed rate, traverse and spindle overrides
 
-        /* FIXME */ temperature_reset();                    // (IMMEDIATE - should me Q) turn off all heaters and fans
+        // the rest will be queued and executed in _exec_program_finalize()
     }
 
     cm_set_motion_state(MOTION_STOP);                       // also changes active model back to MODEL
 
-    float value[] = { (float)machine_state };
-    mp_queue_command(_exec_program_finalize, value, nullptr);
+    mp_queue_command(_exec_program_finalize, nullptr, nullptr);
 }
 
 // Will start a cycle regardless of whether the planner has moves or not
