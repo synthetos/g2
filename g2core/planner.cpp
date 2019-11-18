@@ -593,15 +593,19 @@ bool mp_is_phat_city_time()
 
 stat_t mp_planner_callback()
 {
-    // Edgge case: If there's no runnable buffer, FEEDHOLD_SYNC will never exit
-    if (cm->hold_state == FEEDHOLD_SYNC && cm->cycle_type == CYCLE_NONE) {
-        cm->hold_state = FEEDHOLD_MOTION_STOPPED;
-    }
     // Test if the planner has transitioned to an IDLE state
-    if ((mp_get_planner_buffers(mp) == mp->q.queue_size) &&     // detect and set IDLE state
-        (cm->motion_state == MOTION_STOP) && (cm->hold_state == FEEDHOLD_OFF)) {
-        mp->planner_state = PLANNER_IDLE;
-        return (STAT_OK);
+    if (mp_get_planner_buffers(mp) == mp->q.queue_size) {
+
+        // Edgge case: If there's no runnable buffer, FEEDHOLD_SYNC will never exit
+        if (cm->hold_state == FEEDHOLD_SYNC) {
+            cm->hold_state = FEEDHOLD_MOTION_STOPPED;
+        }
+
+        // detect and set IDLE state
+        if ((cm->motion_state == MOTION_STOP) && (cm->hold_state == FEEDHOLD_OFF)) {
+            mp->planner_state = PLANNER_IDLE;
+            return (STAT_OK);
+        }
     }
 
     bool _timed_out = mp->block_timeout.isPast();
