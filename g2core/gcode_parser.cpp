@@ -862,9 +862,11 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
             case 'A': SET_NON_MODAL (target[AXIS_A], value);
             case 'B': SET_NON_MODAL (target[AXIS_B], value);
             case 'C': SET_NON_MODAL (target[AXIS_C], value);
+#if (AXES == 9)
             case 'U': SET_NON_MODAL (target[AXIS_U], value);
             case 'V': SET_NON_MODAL (target[AXIS_V], value);
             case 'W': SET_NON_MODAL (target[AXIS_W], value);
+#endif
             case 'H': SET_NON_MODAL (H_word, value);
             case 'I': SET_NON_MODAL (arc_offset[0], value);
             case 'J': SET_NON_MODAL (arc_offset[1], value);

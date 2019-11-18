@@ -953,7 +953,11 @@ static float _set_motor_steps_per_unit(nvObj_t *nv)
  */
 stat_t st_get_ma(nvObj_t *nv)
 {
+#if (AXES == 9)
     uint8_t remap_axis[9] = { 0,1,2,6,7,8,3,4,5 };
+#else
+    uint8_t remap_axis[6] = { 0,1,2,3,4,5 };
+#endif
     ritorno(get_integer(nv, st_cfg.mot[_motor(nv->index)].motor_map));
     nv->value_int = remap_axis[nv->value_int];
     return(STAT_OK);
@@ -980,7 +984,11 @@ stat_t st_set_ma(nvObj_t *nv)
         return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
     uint8_t external_axis = nv->value_int;
+#if (AXES == 9)
     uint8_t remap_axis[9] = { 0,1,2,6,7,8,3,4,5 };
+#else
+    uint8_t remap_axis[6] = { 0,1,2,3,4,5 };
+#endif
     nv->value_int = remap_axis[nv->value_int];
     ritorno(set_integer(nv, st_cfg.mot[_motor(nv->index)].motor_map, 0, AXES));
     nv->value_int = external_axis;

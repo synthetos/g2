@@ -581,7 +581,7 @@ float cm_get_display_position(const GCodeState_t *gcode_state, const uint8_t axi
     } else {
         position = mp_get_runtime_display_position(axis);
     }
-    if (axis <= AXIS_W) {   // linears
+    if (axis <= LAST_LINEAR_AXIS) {   // linears
         if (gcode_state->units_mode == INCHES) {
             position /= MM_PER_INCH;
         }
@@ -639,7 +639,11 @@ stat_t cm_deferred_write_callback()
         nvObj_t nv;
         for (uint8_t i=1; i<=COORDS; i++) {
             for (uint8_t j=0; j<AXES; j++) {
+#if (AXES == 9)
                 sprintf((char *)nv.token, "g%2d%c", 53+i, ("xyzuvwabc")[j]);
+#else
+                sprintf((char *)nv.token, "g%2d%c", 53+i, ("xyzabc")[j]);
+#endif
                 nv.index = nv_get_index((const char *)"", nv.token);
                 nv.value_flt = cm->coord_offset[i][j];
                 nv_persist(&nv);    // Note: nv_persist() only writes values that have changed
@@ -827,7 +831,7 @@ void cm_set_model_target(const float target[], const bool flags[])
     copy_vector(cm->gm.target, cm->gmx.position);
 
     // process linear axes (XYZUVW) first
-    for (axis=AXIS_X; axis<=AXIS_W; axis++) {
+    for (axis=AXIS_X; axis<=LAST_LINEAR_AXIS; axis++) {
         if (!flags[axis] || cm->a[axis].axis_mode == AXIS_DISABLED) {
             continue;        // skip axis if not flagged for update or its disabled
         } else if ((cm->a[axis].axis_mode == AXIS_STANDARD) || (cm->a[axis].axis_mode == AXIS_INHIBITED)) {
@@ -1250,7 +1254,9 @@ stat_t cm_straight_traverse(const float *target, const bool *flags, const uint8_
 
     // it's legal for a G0 to have no axis words but we don't want to process it
     if (!(flags[AXIS_X] | flags[AXIS_Y] | flags[AXIS_Z] |
+#if (AXES == 9)
           flags[AXIS_U] | flags[AXIS_V] | flags[AXIS_W] |
+#endif
           flags[AXIS_A] | flags[AXIS_B] | flags[AXIS_C])) {
         return(STAT_OK);
     }
@@ -1409,7 +1415,9 @@ stat_t cm_straight_feed(const float *target, const bool *flags, const uint8_t mo
 
     // it's legal for a G0 to have no axis words but we don't want to process it
     if (!(flags[AXIS_X] | flags[AXIS_Y] | flags[AXIS_Z] |
+#if (AXES == 9)
           flags[AXIS_U] | flags[AXIS_V] | flags[AXIS_W] |
+#endif
           flags[AXIS_A] | flags[AXIS_B] | flags[AXIS_C])) {
         return(STAT_OK);
     }
@@ -1908,8 +1916,11 @@ static int8_t _axis(const nvObj_t *nv)
 
     // otherwise it's an axis. Or undefined, which is usually a global.
     char *ptr;
+#if (AXES == 9)
     char axes[] = {"xyzuvwabc"};
-
+#else
+    char axes[] = {"xyzabc"};
+#endif
     if ((ptr = strchr(axes, c)) == NULL) {      // not NULL indicates a prefixed axis
         c = *(cfgArray[nv->index].token + strlen(cfgArray[nv->index].token) -1); // get the last character
         if ((ptr = strchr(axes, c)) == NULL) {  // test for a postfixed axis
@@ -1933,7 +1944,11 @@ cmAxisType cm_get_axis_type(const nvObj_t *nv)
 
 char cm_get_axis_char(const int8_t axis)    // Uses internal axis numbering
 {
+#if (AXES == 9)
     char axis_char[] = "XYZUVWABC";
+#else
+    char axis_char[] = "XYZABC";
+#endif
     if ((axis < 0) || (axis > AXES)) return (' ');
     return (axis_char[axis]);
 }

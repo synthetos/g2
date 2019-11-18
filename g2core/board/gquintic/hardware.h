@@ -45,12 +45,17 @@
 // These must be defines (not enums) so expressions like this:
 //  #if (MOTORS >= 6)  will work
 
-#if QUINTIC_REVISION == 'C'
-#define MOTORS      5               // number of motors on the board - 4 Trinamics + 1 servo
+#ifndef HAS_HOBBY_SERVO_MOTOR
+#define HAS_HOBBY_SERVO_MOTOR 0
+#endif
+
+#if QUINTIC_REVISION == 'C' or !HAS_HOBBY_SERVO_MOTOR
+#define MOTORS      5               // number of motors on the board - 5Trinamics OR 4 Trinamics + 1 servo
 #else
 #define MOTORS      6               // number of motors on the board - 5 Trinamics + 1 servo
 #endif
 #define PWMS 2                      // number of PWM channels supported the hardware
+#define AXES 6                      // axes to support -- must be 6 or 9
 
 #define MOTOR_1_IS_TRINAMIC
 #define MOTOR_2_IS_TRINAMIC
@@ -127,7 +132,7 @@ using Motate::OutputPin;
 // #define MIN_SEGMENT_MS ((float)0.125)       // S70 can handle much much smaller segements
 #define MIN_SEGMENT_MS ((float)0.5)       // S70 can handle much much smaller segements
 
-#define PLANNER_QUEUE_SIZE (60)
+// #define PLANNER_QUEUE_SIZE (60)
 
 /**** Motate Definitions ****/
 

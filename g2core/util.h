@@ -78,8 +78,13 @@ float *set_vector_by_axis(float value, uint8_t axis);
 #define INIT_AXES_ONES   {1,1,1,1,1,1,1,1,1}
 #define INIT_AXES_FALSE  INIT_AXES_ZEROES
 #define INIT_AXES_TRUE   INIT_AXES_ONES
+#elif (AXES == 6)
+#define INIT_AXES_ZEROES {0,0,0,0,0,0}
+#define INIT_AXES_ONES   {1,1,1,1,1,1}
+#define INIT_AXES_FALSE  INIT_AXES_ZEROES
+#define INIT_AXES_TRUE   INIT_AXES_ONES
 #else
-#warning UNSUPPORTED AXES SETTING!
+#error UNSUPPORTED AXES SETTING!
 #endif
 
 //*** math utilities ***

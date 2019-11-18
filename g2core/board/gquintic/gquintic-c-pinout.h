@@ -66,7 +66,7 @@
  */
 
 
-#include <MotateTimers.h>
+// #include <MotateTimers.h>
 
 // We don't have all of the inputs, so we have to indicate as much:
 #define INPUT1_AVAILABLE 1

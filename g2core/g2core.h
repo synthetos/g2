@@ -34,7 +34,6 @@
 #include <string.h>
 #include <math.h>
 
-#include "MotatePins.h"             // comment in if Motate / ARM
 #include "error.h"                  // Status code definitions and strings
 #include "g2core_info.h"            // see this file for build number and other identifying information
 
@@ -60,18 +59,28 @@ typedef uint16_t magic_t;		        // magic number size
 
 // Note: If you change COORDS you must adjust the entries in cfgArray table in config.c
 
-#define AXES 9          // number of axes supported in this version
+#include "hardware.h"                  // Status code definitions and strings
+#ifndef AXES
+    #define AXES 9      // number of axes supported in this version
+#elif (AXES != 6 && AXES != 9)
+#error AXES must be undefined (defaulting to 9) or defined as 6 or 9
+#endif
 #define HOMING_AXES 4   // number of axes that can be homed (assumes Zxyabc sequence)
 #define COORDS 6        // number of supported coordinate systems (index starts at 1)
-#define TOOLS 32        // number of entries in tool table (index starts at 1)
+#ifndef TOOLS
+    #warning Defining tools
+    #define TOOLS 32        // number of entries in tool table (index starts at 1)
+#endif
 
 typedef enum {
     AXIS_X = 0,
     AXIS_Y,
     AXIS_Z,
+#if (AXES == 9)
     AXIS_U,
     AXIS_V,
     AXIS_W,
+#endif
     AXIS_A,
     AXIS_B,
     AXIS_C,
@@ -84,6 +93,12 @@ typedef enum {
     AXIS_4WIRE_Z = AXIS_B, // 4Wire uses A, B, C, D
 } cmAxes;
 
+#if (AXES == 9)
+constexpr cmAxes LAST_LINEAR_AXIS = AXIS_W;
+#else
+constexpr cmAxes LAST_LINEAR_AXIS = AXIS_Z;
+#endif
+
 typedef enum {  // external representation of axes (used in initialization)
     AXIS_X_EXTERNAL = 0,
     AXIS_Y_EXTERNAL,
@@ -91,9 +106,11 @@ typedef enum {  // external representation of axes (used in initialization)
     AXIS_A_EXTERNAL,
     AXIS_B_EXTERNAL,
     AXIS_C_EXTERNAL,
+#if (AXES == 9)
     AXIS_U_EXTERNAL,
     AXIS_V_EXTERNAL,
     AXIS_W_EXTERNAL
+#endif
 } cmAxesExternal;
 
 typedef enum {

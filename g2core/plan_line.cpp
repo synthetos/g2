@@ -182,10 +182,12 @@ stat_t mp_aline(GCodeState_t* _gm)
                              _gm->target[AXIS_Z] * cm->rotation_matrix[2][2] +
                              cm->rotation_z_offset;
 
+#if (AXES == 9)
     // copy rotation axes for UVW (no changes)
     target_rotated[AXIS_U] = _gm->target[AXIS_U];
     target_rotated[AXIS_V] = _gm->target[AXIS_V];
     target_rotated[AXIS_W] = _gm->target[AXIS_W];
+#endif
 
     // copy rotation axes for ABC (no changes)
     target_rotated[AXIS_A] = _gm->target[AXIS_A];
