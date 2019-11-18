@@ -2,8 +2,8 @@
  * trinamic/tmc2130.h - control over a Trinamic TMC2130 stepper motor driver
  * This file is part of the G2 project
  *
- * Copyright (c) 2016 Alden S. Hart, Jr.
- * Copyright (c) 2016 Robert Giseburt
+ * Copyright (c) 2016-2019 Alden S. Hart, Jr.
+ * Copyright (c) 2016-2019 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -152,13 +152,11 @@ struct Trinamic2130 final : Stepper {
         }
     };
 
-    void setPowerLevel(float new_pl) override
+    void setPowerLevels(float active_pl, float idle_pl) override
     {
         // scale the 0.0-1.0 to 0-31
-        IHOLD_IRUN.IRUN = (new_pl * 31.0);
-
-        // for now, we'll have the holding be the same
-        IHOLD_IRUN.IHOLD = (new_pl * 31.0);
+        IHOLD_IRUN.IRUN = (active_pl * 31.0);
+        IHOLD_IRUN.IHOLD = (idle_pl * 31.0);
 
         IHOLD_IRUN_needs_written = true;
         _startNextReadWrite();

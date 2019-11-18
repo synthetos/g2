@@ -2,8 +2,8 @@
  * step_dir_hobbyservo.cpp - control over a hobby servo (PWM-driven) using steper Step/Direction/Enable from software
  * This file is part of G2 project
  *
- * Copyright (c) 2016 Alden S. Hart, Jr.
- * Copyright (c) 2016 Robert Giseburt
+ * Copyright (c) 2016-2019 Alden S. Hart, Jr.
+ * Copyright (c) 2016-2019 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -145,7 +145,7 @@ struct StepDirHobbyServo final : Stepper {
         _step_is_forward = new_direction;
     };
 
-    void setPowerLevel(float new_pl) override {
+    void setPowerLevels(float active_pl, float idle_pl) override {
         ; // ignore this
     };
 };
