@@ -46,6 +46,7 @@
 
 #define MOTORS 4                    // number of motors supported the hardware
 #define PWMS 2                      // number of PWM channels supported the hardware
+#define AXES 6                      // axes to support -- must be 6 or 9
 
 /*************************
  * Global System Defines *
