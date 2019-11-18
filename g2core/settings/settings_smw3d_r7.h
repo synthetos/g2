@@ -43,14 +43,20 @@
 #define HARD_LIMIT_ENABLE           0                       // 0=off, 1=on
 #define SAFETY_INTERLOCK_ENABLE     1                       // 0=off, 1=on
 
+#define SPINDLE_ENABLE_OUTPUT_NUMBER 4
 #define SPINDLE_ENABLE_POLARITY     1                       // 0=active low, 1=active high
+#define SPINDLE_DIRECTION_OUTPUT_NUMBER 5
 #define SPINDLE_DIR_POLARITY        0                       // 0=clockwise is low, 1=clockwise is high
 #define SPINDLE_PAUSE_ON_HOLD       true
 #define SPINDLE_SPINUP_DELAY        1.0
+#define SPINDLE_PWM_NUMBER          6
+#define SECONDARY_PWM_OUTPUT_NUMBER 0                       // disabled
 
 #define COOLANT_MIST_POLARITY       1                       // 0=active low, 1=active high
 #define COOLANT_FLOOD_POLARITY      1                       // 0=active low, 1=active high
 #define COOLANT_PAUSE_ON_HOLD       false
+#define FLOOD_ENABLE_OUTPUT_NUMBER  0                       // disabled
+#define MIST_ENABLE_OUTPUT_NUMBER 0                         // disabled
 
 // Communications and reporting settings
 
@@ -171,66 +177,52 @@
     IO_ACTIVE_HIGH   aka NORMALLY_CLOSED
 
     INPUT_ACTION_NONE
-    INPUT_ACTION_STOP
-    INPUT_ACTION_FAST_STOP
-    INPUT_ACTION_HALT
-    INPUT_ACTION_RESET
+    INPUT_ACTION_STOP         =  1 - stop at normal jerk - preserves positional accuracy
+    INPUT_ACTION_FAST_STOP    =  2 - stop at high jerk - preserves positional accuracy
+    INPUT_ACTION_HALT         =  3 - stop immediately - not guaranteed to preserve position
+    INPUT_ACTION_CYCLE_START  =  4 - start / restart cycle after feedhold (RESERVED)
+    INPUT_ACTION_ALARM        =  5 - initiate an alarm. stops everything immediately - preserves position
+    INPUT_ACTION_SHUTDOWN     =  6 - initiate a shutdown. stops everything immediately - does not preserve position
+    INPUT_ACTION_PANIC        =  7 - initiate a panic. stops everything immediately - does not preserve position
+    INPUT_ACTION_RESET        =  8 - reset system
 
-    INPUT_FUNCTION_NONE
-    INPUT_FUNCTION_LIMIT
-    INPUT_FUNCTION_INTERLOCK
-    INPUT_FUNCTION_SHUTDOWN
-    INPUT_FUNCTION_PANIC
+    INPUT_ACTION_LIMIT        =  9 - limit switch processing
+    INPUT_ACTION_INTERLOCK    = 10 - interlock processing
 */
-// Xmin on v9 board
-#define DI1_POLARITY                NORMALLY_CLOSED
-//#define DI1_ACTION                  INPUT_ACTION_STOP
+
+#define PROBING_INPUT 5
+
+#define DI1_POLARITY                IO_ACTIVE_HIGH
+// #define DI1_ACTION                  INPUT_ACTION_LIMIT
 #define DI1_ACTION                  INPUT_ACTION_NONE
-#define DI1_FUNCTION                INPUT_FUNCTION_LIMIT
 
-// Xmax
-#define DI2_POLARITY                NORMALLY_CLOSED
-//#define DI2_ACTION                  INPUT_ACTION_STOP
+#define DI2_POLARITY                IO_ACTIVE_HIGH
+// #define DI2_ACTION                  INPUT_ACTION_LIMIT
 #define DI2_ACTION                  INPUT_ACTION_NONE
-#define DI2_FUNCTION                INPUT_FUNCTION_LIMIT
 
-// Ymin
-#define DI3_POLARITY                NORMALLY_CLOSED
-//#define DI3_ACTION                  INPUT_ACTION_STOP
+#define DI3_POLARITY                IO_ACTIVE_HIGH
+//#define DI3_ACTION                  INPUT_ACTION_LIMIT
 #define DI3_ACTION                  INPUT_ACTION_NONE
-#define DI3_FUNCTION                INPUT_FUNCTION_LIMIT
 
-// Ymax
-#define DI4_POLARITY                NORMALLY_CLOSED
-//#define DI4_ACTION                  INPUT_ACTION_STOP
+#define DI4_POLARITY                IO_ACTIVE_HIGH
+//#define DI4_ACTION                  INPUT_ACTION_LIMIT
 #define DI4_ACTION                  INPUT_ACTION_NONE
-#define DI4_FUNCTION                INPUT_FUNCTION_PROBE
 
-// Zmin
 #define DI5_POLARITY                IO_ACTIVE_HIGH   // Z probe
 #define DI5_ACTION                  INPUT_ACTION_NONE
-#define DI5_FUNCTION                INPUT_FUNCTION_NONE
 
-// Zmax
-#define DI6_POLARITY                NORMALLY_CLOSED
-//#define DI6_ACTION                  INPUT_ACTION_STOP
+#define DI6_POLARITY                IO_ACTIVE_HIGH
+//#define DI6_ACTION                  INPUT_ACTION_LIMIT
 #define DI6_ACTION                  INPUT_ACTION_NONE
-#define DI6_FUNCTION                INPUT_FUNCTION_LIMIT
 
-// Amin
 #define DI7_ENABLED                 IO_DISABLED
 #define DI7_ACTION                  INPUT_ACTION_NONE
-#define DI7_FUNCTION                INPUT_FUNCTION_NONE
 
-// Amax
 #define DI8_ENABLED                 IO_DISABLED
 #define DI8_ACTION                  INPUT_ACTION_NONE
-#define DI8_FUNCTION                INPUT_FUNCTION_NONE
 
-// Hardware interlock input
 #define DI9_ENABLED                 IO_DISABLED
 #define DI9_ACTION                  INPUT_ACTION_NONE
-#define DI9_FUNCTION                INPUT_FUNCTION_NONE
 
 
 // *** PWM SPINDLE CONTROL ***
