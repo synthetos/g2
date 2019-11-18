@@ -277,6 +277,7 @@ void cm_abort_probing(cmMachine_t *_cm) {
     // The cycle_type may have already been changed, but if it hasn't do so now
     if (_cm->cycle_type == CYCLE_PROBE) {
         _cm->cycle_type = CYCLE_NONE;
+        _cm->machine_state = MACHINE_PROGRAM_STOP;
     }
 
     // Also clean up the latest probe record

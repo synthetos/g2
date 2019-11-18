@@ -247,6 +247,7 @@ void cm_abort_homing(cmMachine_t *_cm) {
     // The cycle_type may have already been changed, but if it hasn't do so now
     if (_cm->cycle_type == CYCLE_HOMING) {
         _cm->cycle_type = CYCLE_NONE;
+        _cm->machine_state = MACHINE_PROGRAM_STOP;
     }
 
     // This is idempotent - if it's not there, no worries
