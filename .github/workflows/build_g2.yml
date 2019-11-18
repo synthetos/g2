@@ -21,7 +21,7 @@ jobs:
         key: ${{ runner.os }}-tools-01 # Change the number to invalidate the tools caches
 
   build_othermill:
-    needs: checkout
+    needs: [checkout]
     name: build for Othermill
     runs-on: ubuntu-latest
     steps:
@@ -30,7 +30,7 @@ jobs:
       run: make CONFIG=Othermill VERBOSE=2
 
   build_othermill_pro:
-    needs: checkout
+    needs: [checkout]
     name: build for OthermillPro
     runs-on: ubuntu-latest
     steps:
