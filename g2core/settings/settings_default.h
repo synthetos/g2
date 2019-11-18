@@ -266,6 +266,9 @@
 #ifndef M1_POWER_LEVEL
 #define M1_POWER_LEVEL              0.0                     // {1pl:   0.0=no power, 1.0=max power
 #endif
+#ifndef M1_POWER_LEVEL_IDLE
+#define M1_POWER_LEVEL_IDLE         (M1_POWER_LEVEL/2.0)
+#endif
 
 // MOTOR 2
 #ifndef M2_MOTOR_MAP
@@ -297,6 +300,9 @@
 #endif
 #ifndef M2_POWER_LEVEL
 #define M2_POWER_LEVEL              0.0
+#endif
+#ifndef M2_POWER_LEVEL_IDLE
+#define M2_POWER_LEVEL_IDLE         (M2_POWER_LEVEL/2.0)
 #endif
 
 // MOTOR 3
@@ -330,6 +336,9 @@
 #ifndef M3_POWER_LEVEL
 #define M3_POWER_LEVEL              0.0
 #endif
+#ifndef M3_POWER_LEVEL_IDLE
+#define M3_POWER_LEVEL_IDLE         (M3_POWER_LEVEL/2.0)
+#endif
 
 // MOTOR 4
 #ifndef M4_MOTOR_MAP
@@ -361,6 +370,9 @@
 #endif
 #ifndef M4_POWER_LEVEL
 #define M4_POWER_LEVEL              0.0
+#endif
+#ifndef M4_POWER_LEVEL_IDLE
+#define M4_POWER_LEVEL_IDLE         (M4_POWER_LEVEL/2.0)
 #endif
 
 // MOTOR 5
@@ -394,6 +406,9 @@
 #ifndef M5_POWER_LEVEL
 #define M5_POWER_LEVEL              0.0
 #endif
+#ifndef M5_POWER_LEVEL_IDLE
+#define M5_POWER_LEVEL_IDLE         (M5_POWER_LEVEL/2.0)
+#endif
 
 // MOTOR 6
 #ifndef M6_MOTOR_MAP
@@ -425,6 +440,9 @@
 #endif
 #ifndef M6_POWER_LEVEL
 #define M6_POWER_LEVEL              0.0
+#endif
+#ifndef M6_POWER_LEVEL_IDLE
+#define M6_POWER_LEVEL_IDLE         (M6_POWER_LEVEL/2.0)
 #endif
 
 // TMC2130 config defaults
