@@ -4,9 +4,9 @@ on:
   push:
     branches:
       - edge-private
-  pull_request:
-    branches:
       - p-[0-9]+-*
+  # pull_request:
+  #   branches:
 
 jobs:
   checkout:
