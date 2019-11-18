@@ -1,8 +1,9 @@
 /*
- * persistence.h - persistence code
+ * sd_persistence.h - persistence code for SD cards
  * This file is part of the g2code project
  *
- * Copyright (c) 2013 - 2018 Alden S. Hart Jr.
+ * Copyright (c) 2019 Matt Staniszewski
+ * Copyright (c) 2019 Robert Giseburt
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -25,35 +26,9 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PERSISTENCE_H_ONCE
-#define PERSISTENCE_H_ONCE
+#ifndef SD_PERSISTENCE_H_ONCE
+#define SD_PERSISTENCE_H_ONCE
 
-#include "config.h"  // needed for nvObj_t definition
+void setup_sd_persistence();
 
-#define NVM_VALUE_LEN 4             // NVM value length (float, fixed length)
-#define NVM_BASE_ADDR 0x0000        // base address of usable NVM
-
-#define IO_BUFFER_SIZE 512          // this should be evenly divisible by NVM_VALUE_LEN, and <=512 until multi-block reads are fixed (right now they are hanging...)
-#define MIN_WRITE_INTERVAL 1000     // minimum interval between persistence file writes
-#define MAX_WRITE_FAILURES 3
-#define MAX_WRITE_CHANGES IO_BUFFER_SIZE    // maximum number of write values that change - ms: TODO
-
-//**** persistence function prototypes ****
-
-class Persistence {
-   public:
-    virtual void init();
-    virtual stat_t read(nvObj_t *nv);
-    virtual stat_t write(nvObj_t *nv);
-    virtual stat_t periodic();
-};
-
-extern Persistence *persistence;
-
-void persistence_init(void);
-stat_t read_persistent_value(nvObj_t *nv);
-stat_t write_persistent_value(nvObj_t *nv);
-stat_t write_persistent_values_callback();
-
-#endif  // End of include guard: PERSISTENCE_H_ONCE
-//
+#endif  // End of include guard: SD_PERSISTENCE_H_ONCE

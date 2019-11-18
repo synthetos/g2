@@ -38,6 +38,7 @@
 #include "MotateUniqueID.h"
 #include "MotatePower.h"
 #include "board_spi.h"
+#include "sd_persistence.h"
 
 /*
  * hardware_init() - lowest level hardware init
@@ -48,10 +49,12 @@ SPIBus_used_t spiBus;
 Motate::SPIChipSelectPin<Motate::kSD_ChipSelectPinNumber> sdcs{};
 SDCard_used_t sd_card{spiBus, sdcs};
 
+
 void hardware_init()
 {
     spiBus.init();
     sd_card.init();
+    setup_sd_persistence();
     board_hardware_init();
 	return;
 }
