@@ -10,6 +10,9 @@ on:
 
 jobs:
   checkout:
+    name: checkout the repo with submodules
+    runs-on: ubuntu-latest
+    steps:
     - uses: actions/checkout@v1
       with:
         submodules: recursive
