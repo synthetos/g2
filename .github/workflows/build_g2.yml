@@ -30,7 +30,7 @@ jobs:
     steps:
     - name: make CONFIG=Othermill
       run: make CONFIG=Othermill VERBOSE=2
-      working-directory: ${{ GITHUB_WORKSPACE }}/g2core/
+      working-directory: ${{ github.workspace }}/g2core/
 
   build_othermill_pro:
     needs: [checkout]
@@ -39,4 +39,4 @@ jobs:
     steps:
     - name: make CONFIG=OthermillPro
       run: make CONFIG=OthermillPro VERBOSE=2
-      working-directory: ${{ GITHUB_WORKSPACE }}/g2core/
+      working-directory: ${{ github.workspace }}/g2core/
