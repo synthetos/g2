@@ -9,12 +9,20 @@ on:
       - p*-*
 
 jobs:
-  build:
-
+  build_othermill:
+    name: build for Othermill
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v1
-    - name: make
+    - name: make CONFIG=Othermill
+      working-directory: ./g2core
+      run: make CONFIG=Othermill VERBOSE=2
+
+  build_othermill_pro:
+    name: build for OthermillPro
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: make CONFIG=OthermillPro
       working-directory: ./g2core
       run: make CONFIG=OthermillPro VERBOSE=2
