@@ -47,8 +47,6 @@
 
 
 // Save some space ... we're tight
-#undef __HELP_SCREENS
-#undef __USER_DATA
 #define TOOLS 5        // number of entries in tool table (index starts at 1)
 
 
