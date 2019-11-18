@@ -9,20 +9,31 @@ on:
       - p-[0-9]+-*
 
 jobs:
+  checkout:
+    - uses: actions/checkout@v1
+      with:
+        submodules: recursive
+    - name: Cache Tools
+      id: cache-tools
+      uses: actions/cache@v1
+      with:
+        path: Motate/Tools/
+        key: ${{ runner.os }}-tools-01 # Change the number to invalidate the tools caches
+
   build_othermill:
+    needs: checkout
     name: build for Othermill
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
     - name: make CONFIG=Othermill
       working-directory: ./g2core
       run: make CONFIG=Othermill VERBOSE=2
 
   build_othermill_pro:
+    needs: checkout
     name: build for OthermillPro
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
     - name: make CONFIG=OthermillPro
       working-directory: ./g2core
       run: make CONFIG=OthermillPro VERBOSE=2
