@@ -52,10 +52,11 @@ ifeq ("$(BASE_BOARD)","g2v9")
 		CUSTOM_LINKER_SCRIPT := board/G2v9/bantam-checksum-flash.ld
 		ALL_ADDITIONS += $(OUTPUT_BIN)-summed.bin
 define ADDITIONAL_RECIPES
+# Note the use of $$$$
 $(OUTPUT_BIN)-summed.bin: $(OUTPUT_BIN).bin
 	$(QUIET)cp $(OUTPUT_BIN).bin $(OUTPUT_BIN)-summed.bin; \
-	printf "%08x" `cksum $(OUTPUT_BIN).bin | awk '{print $1}'` | xxd -r -p | dd of=$(OUTPUT_BIN)-summed.bin bs=1 count=4 seek=256 conv=notrunc; \
-	printf "%08x" `wc -c "$(OUTPUT_BIN).bin" |  awk '{print $1}'` | xxd -r -p | dd of=$(OUTPUT_BIN)-summed.bin bs=1 count=4 seek=260 conv=notrunc
+	printf "%08x" `cksum $(OUTPUT_BIN).bin | awk '{print $$$$1}'` | xxd -r -p | dd of=$(OUTPUT_BIN)-summed.bin bs=1 count=4 seek=256 conv=notrunc; \
+	printf "%08x" `wc -c "$(OUTPUT_BIN).bin" |  awk '{print $$$$1}'` | xxd -r -p | dd of=$(OUTPUT_BIN)-summed.bin bs=1 count=4 seek=260 conv=notrunc
 endef
 endif
 
