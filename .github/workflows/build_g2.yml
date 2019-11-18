@@ -29,8 +29,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: make CONFIG=Othermill
-      working-directory: ./g2core
       run: make CONFIG=Othermill VERBOSE=2
+      working-directory: ${{ GITHUB_WORKSPACE }}/g2core/
 
   build_othermill_pro:
     needs: [checkout]
@@ -38,5 +38,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: make CONFIG=OthermillPro
-      working-directory: ./g2core
       run: make CONFIG=OthermillPro VERBOSE=2
+      working-directory: ${{ GITHUB_WORKSPACE }}/g2core/
