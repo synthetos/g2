@@ -20,7 +20,7 @@ jobs:
       id: cache-tools
       uses: actions/cache@v1
       with:
-        path: ./Motate/Tools/
+        path: ./Motate/Tools/linux
         key: ${{ runner.os }}-tools-01 # Change the number to invalidate the tools caches
 
     - name: prepare
@@ -44,4 +44,4 @@ jobs:
       uses: actions/upload-artifact@v1
       with:
         name: binaries
-        path: ./bin/ARTIFACTS
+        path: ./g2core/bin/ARTIFACTS
