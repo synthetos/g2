@@ -87,7 +87,7 @@ stat_t _run_reset_position(void);
  *
  *  Current constraints to keep this simple (at least for now):
  *    - Operations run to completion. They cannot be canceled, or preempted by other operations
- *    - Actions cannot be added to an operation once it is being run
+ *    - Actions cannot be added to an operation once it is being run (without explicitly declaring it will)
  *    - Actions do not have parameters. Use the CM context if needed (e.g. hold_type)
  */
 
@@ -107,13 +107,12 @@ typedef struct cmAction {                   // struct to manage execution of ope
 } cmAction_t;
 
 typedef struct cmOperation {                // operation runner object
-    uint32_t check = 0xBEFE;
     cmAction action[ACTION_MAX];            // singly linked list of action structures
     cmAction *add;                          // pointer to next action to be added
     cmAction *run;                          // pointer to action being executed
     bool in_operation;                      // set true when an operation is running
 
-    void reset(void) {
+    void reset() {
         for (uint8_t i=0; i < ACTION_MAX; i++) {
             action[i].reset();              // reset the action controller object
             action[i].number = i;           // DIAGNOSTIC only. Otherwise not used
@@ -125,9 +124,42 @@ typedef struct cmOperation {                // operation runner object
         in_operation = false;
     };
 
-    stat_t add_action(stat_t(*action_exec)()) {
-        if (in_operation) { return (STAT_COMMAND_NOT_ACCEPTED); }       // can't add
-        if (add == nullptr)  { return (STAT_INPUT_EXCEEDS_MAX_LENGTH); }   // no more room
+    stat_t repack() {
+        if (run == action) {
+            // nothing has been run, and there's no more room, bail
+            return (STAT_INPUT_EXCEEDS_MAX_LENGTH);
+        }
+        cmAction *old_add = add; // may be nullptr
+        add = action;
+
+        // Move the running and upcoming actions to the front
+        while (run != old_add) {
+            add->func = run->func;
+            add = add->nx;
+            run = run->nx;
+        }
+        cmAction *cleanup = run;
+        run = action;
+
+        // reset any remaining actions
+        while (cleanup != nullptr) {
+            cleanup->reset();
+            cleanup = cleanup->nx;
+        }
+
+        return (STAT_OK);
+    };
+
+    stat_t add_action(stat_t(*action_exec)(), bool allow_add_from_operation = false) {
+        if (in_operation) {
+            if (!allow_add_from_operation) {
+                return (STAT_COMMAND_NOT_ACCEPTED); // can't add
+            }
+        }
+        if (add == nullptr)  {
+            // no more room, try to repack
+            ritorno(repack());
+        }
         add->func = action_exec;
         add = add->nx;
         return (STAT_OK);
@@ -600,9 +632,23 @@ void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit)
         return;
     }
 
+    // Look for feedhols while exiting feedhold
+
+    if (cm1.hold_state == FEEDHOLD_EXIT_ACTIONS_PENDING) {
+        // re-load a hold
+        cm1.hold_type = type;
+        switch (cm1.hold_type) {
+            case FEEDHOLD_TYPE_HOLD:     { op.add_action(_feedhold_no_actions, true); break; }
+            case FEEDHOLD_TYPE_ACTIONS:  { op.add_action(_feedhold_with_actions, true); break; }
+            case FEEDHOLD_TYPE_SKIP:     { op.add_action(_feedhold_skip, true); break; }
+            default: {}
+        }
+    }
+
     // Look for p2 feedhold (feedhold in a feedhold)
     if ((cm1.hold_state == FEEDHOLD_HOLD) &&
         (cm2.hold_state == FEEDHOLD_OFF) && (cm2.machine_state == MACHINE_CYCLE)) {
+        // FIXME: Nothing catches this signal -- however, there's no way to get here ATM either
         cm2.hold_state = FEEDHOLD_REQUESTED;
         return;
     }
@@ -869,6 +915,7 @@ stat_t _feedhold_restart_with_actions()   // Execute Cases (6) and (7)
 stat_t _run_restart_cycle(void)
 {
     cm1.hold_state = FEEDHOLD_OFF;          // must precede st_request_exec_move()
+
     if (mp_has_runnable_buffer(&mp1)) {
         cm_cycle_start();
         st_request_exec_move();
