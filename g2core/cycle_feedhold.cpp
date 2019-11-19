@@ -761,7 +761,7 @@ stat_t _feedhold_with_actions()          // Execute Case (5)
     if (cm1.hold_state == FEEDHOLD_OFF) {
         cm1.hold_type = FEEDHOLD_TYPE_ACTIONS;
 //      cm1.hold_exit = FEEDHOLD_EXIT_STOP;     // default exit for ACTIONS is STOP...
-        if (cm1.motion_state == MOTION_STOP) {  // if motion has already stopped declare that you are in a feedhold
+        if (mp_runtime_is_idle()) {  // if motion has already stopped declare that you are in a feedhold
             _check_motion_stopped();
             cm1.hold_state = FEEDHOLD_HOLD;
             cm1.hold_type = FEEDHOLD_TYPE_HOLD; // no actions will be performed, don't try to undo them
