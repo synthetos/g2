@@ -463,8 +463,8 @@ static float _get_spindle_pwm (spSpindle_t &_spindle, pwmControl_t &_pwm)
             _spindle.speed_actual = speed_hi;
         }
         // normalize speed to [0..1]
-        float speed = (_spindle.speed_actual - speed_lo) / (speed_hi - speed_lo);
-        return ((speed * (phase_hi - phase_lo)) + phase_lo);
+        float speed = std::max(0.0f, (_spindle.speed_actual - speed_lo)) / (speed_hi - speed_lo);
+        return (speed * (phase_hi - phase_lo)) + phase_lo;
     } else {
         return (_pwm.c[PWM_1].phase_off);
     }
