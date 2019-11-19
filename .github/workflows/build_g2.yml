@@ -21,7 +21,7 @@ jobs:
       uses: actions/cache@v1
       with:
         path: ./Motate/Tools/linux
-        key: ${{ runner.os }}-tools-01 # Change the number to invalidate the tools caches
+        key: ${{ runner.os }}-tools-02 # Change the number to invalidate the tools caches
 
     - name: prepare
       working-directory: ${{ github.workspace }}/g2core/
