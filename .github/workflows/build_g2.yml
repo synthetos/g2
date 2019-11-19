@@ -23,30 +23,10 @@ jobs:
         path: Motate/Tools/
         key: ${{ runner.os }}-tools-01 # Change the number to invalidate the tools caches
 
-  sanity_check:
-    needs: [checkout]
-    name: check the sanity of the action
-    runs-on: ubuntu-latest
-    steps:
-      - working-directory: ${{ github.workspace }}
-        run: ls -la
-      - working-directory: ${{ github.workspace }}/g2core/
-        run: ls -la
-
-  build_othermill:
-    needs: [checkout]
-    name: build for Othermill
-    runs-on: ubuntu-latest
-    steps:
     - name: make CONFIG=Othermill
       run: make CONFIG=Othermill VERBOSE=2
       working-directory: ${{ github.workspace }}/g2core/
 
-  build_othermill_pro:
-    needs: [checkout]
-    name: build for OthermillPro
-    runs-on: ubuntu-latest
-    steps:
     - name: make CONFIG=OthermillPro
       run: make CONFIG=OthermillPro VERBOSE=2
       working-directory: ${{ github.workspace }}/g2core/
