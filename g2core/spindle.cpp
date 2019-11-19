@@ -427,6 +427,7 @@ bool spindle_speed_ramp_from_systick() {
     } else {
         spindle.speed_actual = 0;
         pwm_set_duty(PWM_1, _get_spindle_pwm(spindle, pwm));
+        done = cm->hold_state != FEEDHOLD_OFF;
     }
     return done;
 #else
