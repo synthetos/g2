@@ -20,13 +20,28 @@ jobs:
       id: cache-tools
       uses: actions/cache@v1
       with:
-        path: Motate/Tools/
+        path: ./Motate/Tools/
         key: ${{ runner.os }}-tools-01 # Change the number to invalidate the tools caches
 
-    - name: make CONFIG=Othermill
-      run: make CONFIG=Othermill VERBOSE=2
+    - name: prepare
       working-directory: ${{ github.workspace }}/g2core/
+      run: |
+        mkdir -p ./bin/ARTIFACTS/
+
+    - name: make CONFIG=Othermill
+      working-directory: ${{ github.workspace }}/g2core/
+      run: |
+        make CONFIG=Othermill VERBOSE=2 COLOR=0
+        cp ./bin/Othermill-g2v9k/g2core-summed.bin ./bin/ARTIFACTS/g2core-Othermill-g2v9k-`git describe --abbrev=4 --dirty --always --tags`.bin
 
     - name: make CONFIG=OthermillPro
-      run: make CONFIG=OthermillPro VERBOSE=2
       working-directory: ${{ github.workspace }}/g2core/
+      run: |
+        make CONFIG=OthermillPro VERBOSE=2 COLOR=0
+        cp ./bin/OthermillPro-g2v9k/g2core-summed.bin ./bin/ARTIFACTS/g2core-OthermillPro-g2v9k-`git describe --abbrev=4 --dirty --always --tags`.bin
+
+    - name: Archive binaries
+      uses: actions/upload-artifact@v1
+      with:
+        name: binaries
+        path: ./bin/ARTIFACTS
