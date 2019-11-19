@@ -74,12 +74,22 @@ exec_timer_type exec_timer;         // triggers calculation of next+1 stepper se
 fwd_plan_timer_type fwd_plan_timer; // triggers planning of next block
 
 // SystickEvent for handling dwells (must be registered before it is active)
-Motate::SysTickEvent dwell_systick_event {[&] {
-    if (spindle_speed_ramp_from_systick() && (--st_run.dwell_ticks_downcount == 0)) {
-        SysTickTimer.unregisterEvent(&dwell_systick_event);
-        _load_move();       // load the next move at the current interrupt level
-    }
-}, nullptr};
+Motate::SysTickEvent dwell_systick_event{
+    [&] {
+        // we're either in a dewll or a spindle speed ramp "dwell"
+        // in either case, if a feedhold comes in, we need to bail, and since the dwell *is* the motion
+        // move the state machine along from here
+        if (cm->hold_state == FEEDHOLD_SYNC) {
+            st_run.dwell_ticks_downcount = 1; // this'll decerement to zero shortly
+            cm->hold_state = FEEDHOLD_MOTION_STOPPED;
+        }
+        if (spindle_speed_ramp_from_systick() && (--st_run.dwell_ticks_downcount == 0)) {
+            st_run.dwell_ticks_downcount = 0;  // in the case of stop==true, this is needed
+            SysTickTimer.unregisterEvent(&dwell_systick_event);
+            _load_move();  // load the next move at the current interrupt level
+        }
+    },
+    nullptr};
 
 /* Note on the above:
 It's a lambda function creating a closure function.
