@@ -825,9 +825,16 @@ stat_t _feedhold_with_actions()          // Execute Case (5)
 
         // execute feedhold actions
         if (fp_NOT_ZERO(cm->feedhold_z_lift)) {                 // optional Z lift
-            cm_set_distance_mode(INCREMENTAL_DISTANCE_MODE);
             bool flags[] = { 0,0,1,0,0,0 };
-            float target[] = { 0,0, _to_inches(cm->feedhold_z_lift), 0,0,0 };   // convert to inches if in inches mode
+            float target[] = { 0,0,0,0,0,0 };   // convert to inches if in inches mode
+            if (cm->feedhold_z_lift < 0) { // if the value is negative, we want to go to Z-max position with G53
+                cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_ON_DISPLAY_WITH_OFFSETS);  // Position stored in abs coords
+                cm_set_distance_mode(ABSOLUTE_DISTANCE_MODE);           // Must run in absolute distance mode
+                target[AXIS_Z] = _to_inches(cm->a[AXIS_Z].travel_max);
+            } else {
+            cm_set_distance_mode(INCREMENTAL_DISTANCE_MODE);
+                target[AXIS_Z] = _to_inches(cm->feedhold_z_lift);
+            }
             cm_straight_traverse(target, flags, PROFILE_NORMAL);
             cm_set_distance_mode(cm1.gm.distance_mode);         // restore distance mode to p1 setting
         }
