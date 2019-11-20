@@ -55,7 +55,7 @@
 #define COOLANT_FLOOD_POLARITY      1       // 0=active low, 1=active high
 #define COOLANT_PAUSE_ON_HOLD       true
 
-#define FEEDHOLD_Z_LIFT             3       // mm to lift Z on feedhold
+#define FEEDHOLD_Z_LIFT             -1       // mm to lift Z on feedhold, or -1 to go to Z-max
 #define PROBE_REPORT_ENABLE         true
 
 // WARNING: Very old, pre-release Othermills may have a 15deg can stack for their Z axis.
