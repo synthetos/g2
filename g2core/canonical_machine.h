@@ -133,7 +133,7 @@ typedef enum {                      // feedhold final operation
 
 typedef enum {                      // feedhold state machine
     FEEDHOLD_OFF = 0,               //  0 - no feedhold in effect
-    FEEDHOLD_REQUESTED,             //  1 - feedhold has been requested but not started yet
+    FEEDHOLD_REQUESTED,             //  1 - feedhold has been requested but not started yet (NOT USED)
     FEEDHOLD_SYNC,                  //  2 - start hold - sync to latest aline segment
     FEEDHOLD_DECEL_CONTINUE,        //  3 - in deceleration that will not end at zero
     FEEDHOLD_DECEL_TO_ZERO,         //  4 - in deceleration that will go to zero

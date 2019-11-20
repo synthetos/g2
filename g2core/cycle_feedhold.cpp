@@ -600,15 +600,7 @@ void _start_job_kill()
 void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit)
 {
     // Can only initiate a feedhold if not already in a feedhold
-    if ((cm1.hold_state == FEEDHOLD_OFF)
-// #ifdef ENABLE_INTERLOCK_AND_ESTOP
-//         && (cm1.estop_state == 0)
-// #endif
-        ) {
-        // OLD: Can only initiate a feedhold if you are in a machining cycle, running, and not already in a feedhold
-        // OLD: && (cm1.machine_state == MACHINE_CYCLE) && (cm1.motion_state == MOTION_RUN)
-        // NEW: Will run the operations even if not moving, they will each need to handle cycle/running state correctly
-
+    if ((cm1.hold_state == FEEDHOLD_OFF)) {
         cm1.hold_type = type;
         cm1.hold_exit = exit;
         cm1.hold_profile =
@@ -646,10 +638,9 @@ void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit)
     }
 
     // Look for p2 feedhold (feedhold in a feedhold)
-    if ((cm1.hold_state == FEEDHOLD_HOLD) &&
+    if ((cm1.hold_state >= FEEDHOLD_HOLD) &&
         (cm2.hold_state == FEEDHOLD_OFF) && (cm2.machine_state == MACHINE_CYCLE)) {
-        // FIXME: Nothing catches this signal -- however, there's no way to get here ATM either
-        cm2.hold_state = FEEDHOLD_REQUESTED;
+        cm2.hold_state = FEEDHOLD_SYNC;
         return;
     }
 
@@ -805,8 +796,6 @@ stat_t _feedhold_with_actions()          // Execute Case (5)
 {
     // if entered while OFF start a feedhold
     if (cm1.hold_state == FEEDHOLD_OFF) {
-        cm1.hold_type = FEEDHOLD_TYPE_ACTIONS;
-//      cm1.hold_exit = FEEDHOLD_EXIT_STOP;     // default exit for ACTIONS is STOP...
         if (mp_runtime_is_idle()) {  // if motion has already stopped declare that you are in a feedhold
             _check_motion_stopped();
             cm1.hold_state = FEEDHOLD_HOLD;
@@ -819,24 +808,36 @@ stat_t _feedhold_with_actions()          // Execute Case (5)
 
     // Code to run once motion has stopped
     if (cm1.hold_state == FEEDHOLD_MOTION_STOPPED) {
-        cm->hold_state = FEEDHOLD_HOLD_ACTIONS_PENDING;         // next state
-        _enter_p2();                                            // enter p2 correctly
-        cm_set_g30_position();                                  // set position to return to on exit
+        cm1.hold_state = FEEDHOLD_HOLD_ACTIONS_PENDING;         // next state
+
+        // check for re-entry into feedhold from a cancelled resume
+        if (cm != &cm2) {
+            _enter_p2();                                        // enter p2 correctly
+            cm_set_g30_position();                              // set position to return to on exit
+        }
 
         // execute feedhold actions
-        if (fp_NOT_ZERO(cm->feedhold_z_lift)) {                 // optional Z lift
+        if (fp_NOT_ZERO(cm->feedhold_z_lift)) {// optional Z lift
             bool flags[] = { 0,0,1,0,0,0 };
             float target[] = { 0,0,0,0,0,0 };   // convert to inches if in inches mode
-            if (cm->feedhold_z_lift < 0) { // if the value is negative, we want to go to Z-max position with G53
-                cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_ON_DISPLAY_WITH_OFFSETS);  // Position stored in abs coords
-                cm_set_distance_mode(ABSOLUTE_DISTANCE_MODE);           // Must run in absolute distance mode
-                target[AXIS_Z] = _to_inches(cm->a[AXIS_Z].travel_max);
+            bool skip_move = false;
+            if (cm->feedhold_z_lift < 0) {  // if the value is negative, we want to go to Z-max position with G53
+                if (cm->homed[AXIS_Z]) {    // ONLY IF HOMED
+                    cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_ON_DISPLAY_WITH_OFFSETS);  // Position stored in abs coords
+                    cm_set_distance_mode(ABSOLUTE_DISTANCE_MODE);           // Must run in absolute distance mode
+                    target[AXIS_Z] = _to_inches(cm->a[AXIS_Z].travel_max);
+                } else {
+                    skip_move = true;
+                }
             } else {
-            cm_set_distance_mode(INCREMENTAL_DISTANCE_MODE);
+                cm_set_distance_mode(INCREMENTAL_DISTANCE_MODE);
                 target[AXIS_Z] = _to_inches(cm->feedhold_z_lift);
             }
-            cm_straight_traverse(target, flags, PROFILE_NORMAL);
-            cm_set_distance_mode(cm1.gm.distance_mode);         // restore distance mode to p1 setting
+
+            if (!skip_move) {
+                cm_straight_traverse(target, flags, PROFILE_NORMAL);
+                cm_set_distance_mode(cm1.gm.distance_mode);         // restore distance mode to p1 setting
+            }
         }
         spindle_control_sync(SPINDLE_PAUSE);                    // optional spindle pause
         coolant_control_sync(COOLANT_PAUSE, COOLANT_BOTH);      // optional coolant pause
@@ -907,6 +908,21 @@ stat_t _feedhold_restart_with_actions()   // Execute Cases (6) and (7)
 
     // wait for exit actions to complete
     if (cm1.hold_state == FEEDHOLD_EXIT_ACTIONS_PENDING) {
+
+        if (cm2.hold_state == FEEDHOLD_MOTION_STOPPED) {
+            if (!mp_runtime_is_idle()) {  // if there's still motion, wait
+                return (STAT_EAGAIN);
+            }
+
+            cm2.hold_state = FEEDHOLD_OFF;            // "inner" feedhold is now done, clear it as off
+            cm1.hold_state = FEEDHOLD_MOTION_STOPPED; // pass back the state as motion has stopped for clean re-entry
+
+            // flush the queue of moves and commands for the exit, return cm2 to STOPPED
+            _run_queue_flush();
+
+            // now done with exiting
+            return (STAT_OK);
+        }
         return (STAT_EAGAIN);
     }
 
@@ -921,6 +937,10 @@ stat_t _feedhold_restart_with_actions()   // Execute Cases (6) and (7)
 
 stat_t _run_restart_cycle(void)
 {
+    if (cm1.hold_state == FEEDHOLD_MOTION_STOPPED) {
+        // the restart was cancelled, move along, nothing to see here...
+        return (STAT_OK);
+    }
     cm1.hold_state = FEEDHOLD_OFF;          // must precede st_request_exec_move()
 
     if (mp_has_runnable_buffer(&mp1)) {
