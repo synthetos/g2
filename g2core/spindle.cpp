@@ -528,9 +528,6 @@ void spindle_end_override(const float ramp_time)
  **** Spindle Settings ******************************************************************
  ****************************************************************************************/
 
-stat_t sp_get_spmo(nvObj_t *nv) { return(get_integer(nv, spindle.mode)); }
-stat_t sp_set_spmo(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)spindle.mode, SPINDLE_DISABLED, SPINDLE_MODE_MAX)); }
-
 stat_t sp_get_spep(nvObj_t *nv) { return(get_integer(nv, spindle.enable_polarity)); }
 stat_t sp_set_spep(nvObj_t *nv) {
     stat_t status = set_integer(nv, (uint8_t &)spindle.enable_polarity, 0, 1);

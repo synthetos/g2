@@ -1018,7 +1018,7 @@ const cfgItem_t cfgArray[] = {
     { "fxa","fxa4y",_fipc, 3, tx_print_nul, get_flt, set_flt, &cfg.fx_coords_a[3][1], 0 },
 
     // Spindle functions
-    { "sp","spmo", _iip, 0, sp_print_spmo, sp_get_spmo, sp_set_spmo, nullptr, SPINDLE_MODE },
+    { "sp","spmo", _i0,  0, sp_print_spmo, get_nul,     set_nul,     nullptr, 0 }, // keeping this key around, but it returns null and does nothing
     { "sp","spph", _bip, 0, sp_print_spph, sp_get_spph, sp_set_spph, nullptr, SPINDLE_PAUSE_ON_HOLD },
     { "sp","spde", _fip, 2, sp_print_spde, sp_get_spde, sp_set_spde, nullptr, SPINDLE_SPINUP_DELAY },
     { "sp","spsn", _fip, 2, sp_print_spsn, sp_get_spsn, sp_set_spsn, nullptr, SPINDLE_SPEED_MIN},

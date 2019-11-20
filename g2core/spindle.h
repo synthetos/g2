@@ -80,7 +80,6 @@ typedef enum {                  // electronic speed controller for some spindles
 
 typedef struct spSpindle {
 
-    spMode      mode;               // {spm:} spindle operating mode
     spControl   state;              // {spc:} OFF, ON, PAUSE, RESUME, WAIT
     spControl   direction;          //        1=CW, 2=CCW (subset of above state)
 
@@ -121,8 +120,6 @@ stat_t spindle_override_control(const float P_word, const bool P_flag);  // M51
 void spindle_start_override(const float ramp_time, const float override_factor);
 void spindle_end_override(const float ramp_time);
 
-stat_t sp_get_spmo(nvObj_t *nv);
-stat_t sp_set_spmo(nvObj_t *nv);
 stat_t sp_get_spep(nvObj_t *nv);
 stat_t sp_set_spep(nvObj_t *nv);
 stat_t sp_get_spdp(nvObj_t *nv);
