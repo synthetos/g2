@@ -351,7 +351,7 @@ stat_t write_persistent_values()
        DEBUG_PRINT("io_buffer populated with %i bytes total\n", br);
 
       // update the values in the buffer from the changes indexes in the current range
-      for (nv->index = cnt; nv->index < (cnt + step); nv->index++) {
+      for (nv->index = cnt; nv->index < std::min(nv_index_max(), cnt + step); nv->index++) {
 
         // Found an entry that needs to be written
         if (nv->index == 0 || cfgArray[nv->index].flags & F_PERSIST) {

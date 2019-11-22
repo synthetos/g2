@@ -103,8 +103,110 @@ static stat_t get_tick(nvObj_t *nv);        // get system tick count
  *    and convert_outgoing_float(). Apply conversion flags to all axes, not just linear,
  *    as rotary axes may be treated as linear if in radius mode, so the flag is needed.
  */
-const cfgItem_t cfgArray[] = {
 
+class configSubtable {
+   public:
+    virtual const cfgItem_t * const get(std::size_t idx) const;
+    virtual const size_t length() const;
+};
+
+class cfgSubtableFromStaticArray : public configSubtable {
+    const size_t array_length;
+    const cfgItem_t *items;
+
+   public:
+   template<typename T, size_t length>
+    constexpr cfgSubtableFromStaticArray(T (&i)[length]) : array_length{length}, items{i} {};
+
+    const cfgItem_t * const get(std::size_t idx) const override {
+        return &items[idx];
+    }
+
+    const size_t length() const override {
+        return array_length;
+    }
+};
+
+class configSubtableNode {
+    const configSubtable * const subtable;
+   public:
+    const configSubtableNode * const next;
+    constexpr configSubtableNode(const configSubtable * const s) : subtable{s}, next{nullptr} {};
+    constexpr configSubtableNode(const configSubtable * const s, const configSubtableNode * const n) : subtable{s}, next{n} {};
+
+    // The following is to optimize for linear table searches
+    static const configSubtableNode *search_node_cache; // keep track of the last place we were searching
+    static std::size_t idx_cache;                       // and the last index we were searching for
+    static std::size_t idx_cache_offset;                // and how much we had to remove from it for this search node
+
+    const cfgItem_t * const get(std::size_t idx) const {
+        if (!search_node_cache || idx_cache > idx) {
+            idx_cache_offset = 0;
+            search_node_cache = this;
+        }
+
+        const configSubtableNode *search_node = search_node_cache;
+        idx_cache = idx;
+        idx -= idx_cache_offset;
+
+        while (idx >= search_node->subtable->length()) {
+            if (!search_node->next) {
+                idx_cache = 0;
+                search_node_cache = nullptr;
+                return nullptr;
+            }
+            idx_cache_offset += search_node->subtable->length();
+            idx -= search_node->subtable->length();
+            search_node = search_node->next;
+        }
+
+        search_node_cache = search_node;
+        return search_node->subtable->get(idx);
+    }
+
+    const size_t length() const {
+        size_t l = subtable->length();
+        if (next) {
+            l += next->length();
+        }
+        return l;
+    }
+};
+
+const configSubtableNode *configSubtableNode::search_node_cache = nullptr; // keep track of the last place we were searching
+std::size_t configSubtableNode::idx_cache = 0;                             // and the last index we were searching for
+std::size_t configSubtableNode::idx_cache_offset = 0;                      // and how much we had to remove from it for this search node
+
+// make a compile-time linked list of subtables
+template <typename... following_nodes_t>
+class configSubtableNodes;
+
+template <typename... following_nodes_t>
+class configSubtableNodes<const configSubtable *, following_nodes_t...> {
+    configSubtableNodes<following_nodes_t...> next_nodes;
+public:
+    configSubtableNode this_node;
+    constexpr configSubtableNodes(const configSubtable * this_subtable, following_nodes_t... following_nodes) :
+    next_nodes{following_nodes...}, this_node{this_subtable, &next_nodes.this_node}
+    {}
+};
+
+template <>
+class configSubtableNodes<const configSubtable * > {
+public:
+    configSubtableNode this_node;
+
+    constexpr configSubtableNodes(const configSubtable * this_subtable) :
+    this_node{this_subtable}
+    {}
+};
+
+template <typename... following_nodes_t>
+constexpr configSubtableNodes<following_nodes_t...> makeSubtableNodes(following_nodes_t... following_nodes) {
+    return {following_nodes...};
+}
+
+constexpr cfgItem sys_config_items_1[] = {
     // group token flags p, print_func,   get_func,   set_func, get/set target,    default value
     { "sys", "fb", _fn,  2, hw_print_fb,  hw_get_fb,  set_ro, nullptr, 0 },   // MUST BE FIRST for persistence checking!
     { "sys", "fv", _fn,  2, hw_print_fv,  hw_get_fv,  set_ro, nullptr, 0 },
@@ -113,7 +215,11 @@ const cfgItem_t cfgArray[] = {
     { "sys", "hp", _sn,  0, hw_print_hp,  hw_get_hp,  set_ro, nullptr, 0 },
     { "sys", "hv", _sn,  0, hw_print_hv,  hw_get_hv,  set_ro, nullptr, 0 },
     { "sys", "id", _sn,  0, hw_print_id,  hw_get_id,  set_ro, nullptr, 0 },   // device ID (ASCII signature)
+};
+constexpr cfgSubtableFromStaticArray sys_config_1 {sys_config_items_1};
+constexpr const configSubtable * const getSysConfig_1() { return &sys_config_1; }
 
+constexpr cfgItem cm_config_items_1[] = {
     // dynamic model attributes for reporting purposes (up front for speed)
     { "", "stat", _i0, 0, cm_print_stat, cm_get_stat,  set_ro,       nullptr, 0 },    // combined machine state
     { "","stat2", _i0, 0, cm_print_stat, cm_get_stat2, set_ro,       nullptr, 0 },    // combined machine state
@@ -143,7 +249,11 @@ const cfgItem_t cfgArray[] = {
 #ifdef TEMPORARY_HAS_LEDS
     { "", "_leds",_i0, 0, tx_print_nul, _get_leds,_set_leds, nullptr, 0 },    // TEMPORARY - change LEDs
 #endif
+};
+constexpr cfgSubtableFromStaticArray cm_config_1 {cm_config_items_1};
+constexpr const configSubtable * const getCmConfig_1() { return &cm_config_1; }
 
+constexpr cfgItem mpo_config_items[] = {
     { "mpo","mpox",_f0, 5, cm_print_mpo, cm_get_mpo, set_ro, nullptr, 0 },    // X machine position
     { "mpo","mpoy",_f0, 5, cm_print_mpo, cm_get_mpo, set_ro, nullptr, 0 },    // Y machine position
     { "mpo","mpoz",_f0, 5, cm_print_mpo, cm_get_mpo, set_ro, nullptr, 0 },    // Z machine position
@@ -153,7 +263,11 @@ const cfgItem_t cfgArray[] = {
     { "mpo","mpoa",_f0, 5, cm_print_mpo, cm_get_mpo, set_ro, nullptr, 0 },    // A machine position
     { "mpo","mpob",_f0, 5, cm_print_mpo, cm_get_mpo, set_ro, nullptr, 0 },    // B machine position
     { "mpo","mpoc",_f0, 5, cm_print_mpo, cm_get_mpo, set_ro, nullptr, 0 },    // C machine position
+};
+constexpr cfgSubtableFromStaticArray mpo_config {mpo_config_items};
+constexpr const configSubtable * const getMpoConfig_1() { return &mpo_config; }
 
+constexpr cfgItem pos_config_items_1[] = {
     { "pos","posx",_f0, 5, cm_print_pos, cm_get_pos, set_ro, nullptr, 0 },    // X work position
     { "pos","posy",_f0, 5, cm_print_pos, cm_get_pos, set_ro, nullptr, 0 },    // Y work position
     { "pos","posz",_f0, 5, cm_print_pos, cm_get_pos, set_ro, nullptr, 0 },    // Z work position
@@ -163,7 +277,11 @@ const cfgItem_t cfgArray[] = {
     { "pos","posa",_f0, 5, cm_print_pos, cm_get_pos, set_ro, nullptr, 0 },    // A work position
     { "pos","posb",_f0, 5, cm_print_pos, cm_get_pos, set_ro, nullptr, 0 },    // B work position
     { "pos","posc",_f0, 5, cm_print_pos, cm_get_pos, set_ro, nullptr, 0 },    // C work position
+};
+constexpr cfgSubtableFromStaticArray pos_config_1 {pos_config_items_1};
+constexpr const configSubtable * const getPosConfig_1() { return &pos_config_1; }
 
+constexpr cfgItem ofs_config_items_1[] = {
     { "ofs","ofsx",_f0, 5, cm_print_ofs, cm_get_ofs, set_ro, nullptr, 0 },    // X work offset
     { "ofs","ofsy",_f0, 5, cm_print_ofs, cm_get_ofs, set_ro, nullptr, 0 },    // Y work offset
     { "ofs","ofsz",_f0, 5, cm_print_ofs, cm_get_ofs, set_ro, nullptr, 0 },    // Z work offset
@@ -173,7 +291,11 @@ const cfgItem_t cfgArray[] = {
     { "ofs","ofsa",_f0, 5, cm_print_ofs, cm_get_ofs, set_ro, nullptr, 0 },    // A work offset
     { "ofs","ofsb",_f0, 5, cm_print_ofs, cm_get_ofs, set_ro, nullptr, 0 },    // B work offset
     { "ofs","ofsc",_f0, 5, cm_print_ofs, cm_get_ofs, set_ro, nullptr, 0 },    // C work offset
+};
+constexpr cfgSubtableFromStaticArray ofs_config_1 {ofs_config_items_1};
+constexpr const configSubtable * const getOfsConfig_1() { return &ofs_config_1; }
 
+constexpr cfgItem hom_config_items_1[] = {
     { "hom","home",_i0, 0, cm_print_home,cm_get_home,cm_set_home,nullptr,0 }, // homing state, invoke homing cycle
     { "hom","homx",_i0, 0, cm_print_hom, cm_get_hom, set_ro, nullptr, 0 },    // X homed - Homing status group
     { "hom","homy",_i0, 0, cm_print_hom, cm_get_hom, set_ro, nullptr, 0 },    // Y homed
@@ -184,7 +306,11 @@ const cfgItem_t cfgArray[] = {
     { "hom","homa",_i0, 0, cm_print_hom, cm_get_hom, set_ro, nullptr, 0 },    // A homed
     { "hom","homb",_i0, 0, cm_print_hom, cm_get_hom, set_ro, nullptr, 0 },    // B homed
     { "hom","homc",_i0, 0, cm_print_hom, cm_get_hom, set_ro, nullptr, 0 },    // C homed
+};
+constexpr cfgSubtableFromStaticArray hom_config_1 {hom_config_items_1};
+constexpr const configSubtable * const getHomConfig_1() { return &hom_config_1; }
 
+constexpr cfgItem prb_config_items_1[] = {
     { "prb","prbe",_i0, 0, tx_print_nul, cm_get_prob,set_ro, nullptr, 0 },    // probing state
     { "prb","prbx",_f0, 5, tx_print_nul, cm_get_prb, set_ro, nullptr, 0 },    // X probe results
     { "prb","prby",_f0, 5, tx_print_nul, cm_get_prb, set_ro, nullptr, 0 },    // Y probe results
@@ -198,7 +324,11 @@ const cfgItem_t cfgArray[] = {
     { "prb","prbs",_i0, 0, tx_print_nul, get_nul, cm_set_probe, nullptr,0 },  // store probe
     { "prb","prbr",_bip, 0, tx_print_nul, cm_get_prbr, cm_set_prbr, nullptr, PROBE_REPORT_ENABLE },                  // enable probe report. Init in cm_init
     { "prb","prbin",_iip, 0, tx_print_nul, cm_get_probe_input, cm_set_probe_input, nullptr, PROBING_INPUT }, // probing input
+};
+constexpr cfgSubtableFromStaticArray prb_config_1 {prb_config_items_1};
+constexpr const configSubtable * const getPrbConfig_1() { return &prb_config_1; }
 
+constexpr cfgItem jog_config_items_1[] = {
     { "jog","jogx",_f0, 0, tx_print_nul, get_nul, cm_run_jog, nullptr, 0},    // jog in X axis
     { "jog","jogy",_f0, 0, tx_print_nul, get_nul, cm_run_jog, nullptr, 0},    // jog in Y axis
     { "jog","jogz",_f0, 0, tx_print_nul, get_nul, cm_run_jog, nullptr, 0},    // jog in Z axis
@@ -208,7 +338,11 @@ const cfgItem_t cfgArray[] = {
     { "jog","joga",_f0, 0, tx_print_nul, get_nul, cm_run_jog, nullptr, 0},    // jog in A axis
     { "jog","jogb",_f0, 0, tx_print_nul, get_nul, cm_run_jog, nullptr, 0},    // jog in B axis
     { "jog","jogc",_f0, 0, tx_print_nul, get_nul, cm_run_jog, nullptr, 0},    // jog in C axis
+};
+constexpr cfgSubtableFromStaticArray jog_config_1 {jog_config_items_1};
+constexpr const configSubtable * const getJogConfig_1() { return &jog_config_1; }
 
+constexpr cfgItem pwr_config_items_1[] = {
 	{ "pwr","pwr1",_f0, 3, st_print_pwr, st_get_pwr, set_ro, nullptr, 0},	  // motor power readouts
 	{ "pwr","pwr2",_f0, 3, st_print_pwr, st_get_pwr, set_ro, nullptr, 0},
 #if (MOTORS > 2)
@@ -223,9 +357,11 @@ const cfgItem_t cfgArray[] = {
 #if (MOTORS > 5)
 	{ "pwr","pwr6",_f0, 3, st_print_pwr, st_get_pwr, set_ro, nullptr, 0},
 #endif
+};
+constexpr cfgSubtableFromStaticArray pwr_config_1 {pwr_config_items_1};
+constexpr const configSubtable * const getPwrConfig_1() { return &pwr_config_1; }
 
-
-
+constexpr cfgItem motor_config_items_1[] = {
   // Motor parameters
   // generated with ${PROJECT_ROOT}/Resources/generate_motors_cfgArray.js
 
@@ -435,7 +571,11 @@ const cfgItem_t cfgArray[] = {
 #endif
 
   // END generated with ${PROJECT_ROOT}/Resources/generate_motors_cfgArray.js
+};
+constexpr cfgSubtableFromStaticArray motor_config_1 {motor_config_items_1};
+constexpr const configSubtable * const getMotorConfig_1() { return &motor_config_1; }
 
+constexpr cfgItem axis_config_items_1[] = {
     // Axis parameters
     { "x","xam",_iip,  0, cm_print_am, cm_get_am, cm_set_am, nullptr, X_AXIS_MODE },
     { "x","xvm",_fipc, 0, cm_print_vm, cm_get_vm, cm_set_vm, nullptr, X_VELOCITY_MAX },
@@ -567,9 +707,11 @@ const cfgItem_t cfgArray[] = {
     { "c","clv",_fipc, 2, cm_print_lv, cm_get_lv, cm_set_lv, nullptr, C_LATCH_VELOCITY },
     { "c","clb",_fipc, 5, cm_print_lb, cm_get_lb, cm_set_lb, nullptr, C_LATCH_BACKOFF },
     { "c","czb",_fipc, 5, cm_print_zb, cm_get_zb, cm_set_zb, nullptr, C_ZERO_BACKOFF },
+};
+constexpr cfgSubtableFromStaticArray axis_config_1 {axis_config_items_1};
+constexpr const configSubtable * const getAxisConfig_1() { return &axis_config_1; }
 
-
-
+constexpr cfgItem di_config_items_1[] = {
     // Digital input configs
     // generated with ${PROJECT_ROOT}/Resources/generate_dins_cfgArray.js
 
@@ -659,8 +801,11 @@ const cfgItem_t cfgArray[] = {
 #endif
 
     // END generated with ${PROJECT_ROOT}/Resources/generate_dins_cfgArray.js
+};
+constexpr cfgSubtableFromStaticArray di_config_1 {di_config_items_1};
+constexpr const configSubtable * const getDIConfig_1() { return &di_config_1; }
 
-
+constexpr cfgItem in_config_items_1[] = {
     // Digital input state readers
     { "in","in1", _i0, 0,  din_print_state, din_get_input, set_ro,  &in1,  0 },
     { "in","in2", _i0, 0,  din_print_state, din_get_input, set_ro,  &in2,  0 },
@@ -678,7 +823,11 @@ const cfgItem_t cfgArray[] = {
     { "in","in14", _i0, 0, din_print_state, din_get_input, set_ro,  &in14, 0 },
     { "in","in15", _i0, 0, din_print_state, din_get_input, set_ro,  &in15, 0 },
     { "in","in16", _i0, 0, din_print_state, din_get_input, set_ro,  &in16, 0 },
+};
+constexpr cfgSubtableFromStaticArray in_config_1 {in_config_items_1};
+constexpr const configSubtable * const getINConfig_1() { return &in_config_1; }
 
+constexpr cfgItem do_config_items_1[] = {
     // digital output configs
     { "do1", "do1en", _iip, 0,   dout_print_en,  dout_get_en,  dout_set_en,  &dout1,  DO1_ENABLED },
     { "do1", "do1po", _iip, 0,   dout_print_po,  dout_get_po,  dout_set_po,  &dout1,  DO1_POLARITY },
@@ -748,6 +897,11 @@ const cfgItem_t cfgArray[] = {
     { "do14", "do14po", _iip, 0, dout_print_po,  dout_get_po,  dout_set_po,  &dout14, DO14_POLARITY },
     { "do14", "do14out",_iip, 0, dout_print_out, dout_get_out, dout_set_out, &dout14, DO14_EXTERNAL_NUMBER },
 #endif
+};
+constexpr cfgSubtableFromStaticArray do_config_1 {do_config_items_1};
+constexpr const configSubtable * const getDOConfig_1() { return &do_config_1; }
+
+constexpr cfgItem out_config_items_1[] = {
     // Digital output state readers (default to non-active)
     { "out","out1",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, &out1,  0 },
     { "out","out2",  _f0, 2, dout_print_out, dout_get_output, dout_set_output, &out2,  0 },
@@ -765,7 +919,11 @@ const cfgItem_t cfgArray[] = {
     { "out","out14", _f0, 2, dout_print_out, dout_get_output, dout_set_output, &out14, 0 },
     { "out","out15", _f0, 2, dout_print_out, dout_get_output, dout_set_output, &out15, 0 },
     { "out","out16", _f0, 2, dout_print_out, dout_get_output, dout_set_output, &out16, 0 },
+};
+constexpr cfgSubtableFromStaticArray out_config_1 {out_config_items_1};
+constexpr const configSubtable * const getOUTConfig_1() { return &out_config_1; }
 
+constexpr cfgItem ai_config_items_1[] = {
     // Analog input configs
 #if (A_IN_CHANNELS >= 1)
     { "ai1","ai1en",_iip, 0, ai_print_en,         ai_get_en,         ai_set_en,      &ai1,  AI1_ENABLED },
@@ -811,7 +969,9 @@ const cfgItem_t cfgArray[] = {
     { "ai4","ai4p4",_fip, 4, ai_print_p,          ai_get_p4,         ai_set_p4,      &ai4,  AI4_P4 },
     { "ai4","ai4p5",_fip, 4, ai_print_p,          ai_get_p5,         ai_set_p5,      &ai4,  AI4_P5 },
 #endif
+};
 
+constexpr cfgItem ain_config_items_1[] = {
     { "ain1","ain1vv",_f0,  4, ain_print_value,      ain_get_value,      set_ro,         &ain1,  0 },
     { "ain1","ain1rv",_f0,  2, ain_print_resistance, ain_get_resistance, set_ro,         &ain1,  0 },
     { "ain2","ain2vv",_f0,  4, ain_print_value,      ain_get_value,      set_ro,         &ain2,  0 },
@@ -828,7 +988,11 @@ const cfgItem_t cfgArray[] = {
     { "ain7","ain7rv",_f0,  2, ain_print_resistance, ain_get_resistance, set_ro,         &ain7,  0 },
     { "ain8","ain8vv",_f0,  4, ain_print_value,      ain_get_value,      set_ro,         &ain8,  0 },
     { "ain8","ain8rv",_f0,  2, ain_print_resistance, ain_get_resistance, set_ro,         &ain8,  0 },
+};
+constexpr cfgSubtableFromStaticArray ain_config_1 {ain_config_items_1};
+constexpr const configSubtable * const getAINConfig_1() { return &ain_config_1; }
 
+constexpr cfgItem p1_config_items_1[] = {
     // PWM settings
     { "p1","p1frq",_fip, 0, pwm_print_p1frq, get_flt, pwm_set_pwm,&pwm.c[PWM_1].frequency,    P1_PWM_FREQUENCY },
     { "p1","p1csl",_fip, 0, pwm_print_p1csl, get_flt, pwm_set_pwm,&pwm.c[PWM_1].cw_speed_lo,  P1_CW_SPEED_LO },
@@ -840,7 +1004,11 @@ const cfgItem_t cfgArray[] = {
     { "p1","p1wpl",_fip, 3, pwm_print_p1wpl, get_flt, pwm_set_pwm,&pwm.c[PWM_1].ccw_phase_lo, P1_CCW_PHASE_LO },
     { "p1","p1wph",_fip, 3, pwm_print_p1wph, get_flt, pwm_set_pwm,&pwm.c[PWM_1].ccw_phase_hi, P1_CCW_PHASE_HI },
     { "p1","p1pof",_fip, 3, pwm_print_p1pof, get_flt, pwm_set_pwm,&pwm.c[PWM_1].phase_off,    P1_PWM_PHASE_OFF },
+};
+constexpr cfgSubtableFromStaticArray p1_config_1 {p1_config_items_1};
+constexpr const configSubtable * const getP1Config_1() { return &p1_config_1; }
 
+constexpr cfgItem pid_config_items_1[] = {
     // temperature configs - pid active values (read-only)
     // NOTICE: If you change these PID group keys, you MUST change the get/set functions too!
     { "pid1","pid1p",_fip, 3, tx_print_nul, cm_get_pid_p, set_ro, nullptr, 0 },
@@ -854,7 +1022,11 @@ const cfgItem_t cfgArray[] = {
     { "pid3","pid3p",_fip, 3, tx_print_nul, cm_get_pid_p, set_ro, nullptr, 0 },
     { "pid3","pid3i",_fip, 5, tx_print_nul, cm_get_pid_i, set_ro, nullptr, 0 },
     { "pid3","pid3d",_fip, 5, tx_print_nul, cm_get_pid_d, set_ro, nullptr, 0 },
+};
+constexpr cfgSubtableFromStaticArray pid_config_1 {pid_config_items_1};
+constexpr const configSubtable * const getPIDConfig_1() { return &pid_config_1; }
 
+constexpr cfgItem he_config_items_1[] = {
     // temperature configs - heater set values (read-write)
     // NOTICE: If you change these heater group keys, you MUST change the get/set functions too!
     { "he1","he1e", _bip, 0, tx_print_nul, cm_get_heater_enable,   cm_set_heater_enable,   nullptr, H1_DEFAULT_ENABLE },
@@ -907,7 +1079,11 @@ const cfgItem_t cfgArray[] = {
     { "he3","he3fm",_fi,  1, tx_print_nul, cm_get_fan_min_power,   cm_set_fan_min_power,   nullptr, 0 },
     { "he3","he3fl",_fi,  1, tx_print_nul, cm_get_fan_low_temp,    cm_set_fan_low_temp,    nullptr, 0 },
     { "he3","he3fh",_fi,  1, tx_print_nul, cm_get_fan_high_temp,   cm_set_fan_high_temp,   nullptr, 0 },
+};
+constexpr cfgSubtableFromStaticArray he_config_1 {he_config_items_1};
+constexpr const configSubtable * const getHEConfig_1() { return &he_config_1; }
 
+constexpr cfgItem cm_coor_config_items_1[] = {
     // Coordinate system offsets (G54-G59 and G92)
     { "g54","g54x",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G54_X_OFFSET },
     { "g54","g54y",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G54_Y_OFFSET },
@@ -999,13 +1175,21 @@ const cfgItem_t cfgArray[] = {
     { "g30","g30a",_fic, 5, cm_print_cpos, cm_get_g30, set_ro, nullptr, 0 },
     { "g30","g30b",_fic, 5, cm_print_cpos, cm_get_g30, set_ro, nullptr, 0 },
     { "g30","g30c",_fic, 5, cm_print_cpos, cm_get_g30, set_ro, nullptr, 0 },
+};
+constexpr cfgSubtableFromStaticArray cm_coor_config_1 {cm_coor_config_items_1};
+constexpr const configSubtable * const getCoorConfig_1() { return &cm_coor_config_1; }
 
+constexpr cfgItem jobid_config_items_1[] = {
     // this is a 128bit UUID for identifying a previously committed job state
     { "jid","jida",_d0, 0, tx_print_nul, get_data, set_data, &cfg.job_id[0], 0 },
     { "jid","jidb",_d0, 0, tx_print_nul, get_data, set_data, &cfg.job_id[1], 0 },
     { "jid","jidc",_d0, 0, tx_print_nul, get_data, set_data, &cfg.job_id[2], 0 },
     { "jid","jidd",_d0, 0, tx_print_nul, get_data, set_data, &cfg.job_id[3], 0 },
+};
+constexpr cfgSubtableFromStaticArray jobid_config_1 {jobid_config_items_1};
+constexpr const configSubtable * const getJobIDConfig_1() { return &jobid_config_1; }
 
+constexpr cfgItem fixturing_config_items_1[] = {
     // fixturing information
     { "fxa","fxast",_fipc, 0, tx_print_nul, get_flt, set_flt, &cfg.fx_state_a, 0 },
     { "fxa","fxa1x",_fipc, 3, tx_print_nul, get_flt, set_flt, &cfg.fx_coords_a[0][0], 0 },
@@ -1016,7 +1200,11 @@ const cfgItem_t cfgArray[] = {
     { "fxa","fxa3y",_fipc, 3, tx_print_nul, get_flt, set_flt, &cfg.fx_coords_a[2][1], 0 },
     { "fxa","fxa4x",_fipc, 3, tx_print_nul, get_flt, set_flt, &cfg.fx_coords_a[3][0], 0 },
     { "fxa","fxa4y",_fipc, 3, tx_print_nul, get_flt, set_flt, &cfg.fx_coords_a[3][1], 0 },
+};
+constexpr cfgSubtableFromStaticArray fixturing_config_1 {fixturing_config_items_1};
+constexpr const configSubtable * const getFixturingConfig_1() { return &fixturing_config_1; }
 
+constexpr cfgItem spindle_config_items_1[] = {
     // Spindle functions
     { "sp","spmo", _i0,  0, sp_print_spmo, get_nul,     set_nul,     nullptr, 0 }, // keeping this key around, but it returns null and does nothing
     { "sp","spph", _bip, 0, sp_print_spph, sp_get_spph, sp_set_spph, nullptr, SPINDLE_PAUSE_ON_HOLD },
@@ -1029,14 +1217,22 @@ const cfgItem_t cfgArray[] = {
     { "sp","spo",  _fip, 3, sp_print_spo,  sp_get_spo,  sp_set_spo,  nullptr, SPINDLE_OVERRIDE_FACTOR},
     { "sp","spc",  _i0,  0, sp_print_spc,  sp_get_spc,  sp_set_spc,  nullptr, 0 },   // spindle state
     { "sp","sps",  _f0,  0, sp_print_sps,  sp_get_sps,  sp_set_sps,  nullptr, 0 },   // spindle speed
+};
+constexpr cfgSubtableFromStaticArray spindle_config_1 {spindle_config_items_1};
+constexpr const configSubtable * const getSpindleConfig_1() { return &spindle_config_1; }
 
+constexpr cfgItem coolant_config_items_1[] = {
     // Coolant functions
     { "co","coph", _bip, 0, co_print_coph, co_get_coph, co_set_coph, nullptr, COOLANT_PAUSE_ON_HOLD },
     { "co","comp", _iip, 0, co_print_comp, co_get_comp, co_set_comp, nullptr, COOLANT_MIST_POLARITY },
     { "co","cofp", _iip, 0, co_print_cofp, co_get_cofp, co_set_cofp, nullptr, COOLANT_FLOOD_POLARITY },
     { "co","com",  _i0,  0, co_print_com,  co_get_com,  co_set_com,  nullptr, 0 },   // mist coolant enable
     { "co","cof",  _i0,  0, co_print_cof,  co_get_cof,  co_set_cof,  nullptr, 0 },   // flood coolant enable
+};
+constexpr cfgSubtableFromStaticArray coolant_config_1 {coolant_config_items_1};
+constexpr const configSubtable * const getCoolantConfig_1() { return &coolant_config_1; }
 
+constexpr cfgItem sys_config_items_2[] = {
     // General system parameters
     { "sys","jt",  _fipn, 2, cm_print_jt,  cm_get_jt,  cm_set_jt,  nullptr, JUNCTION_INTEGRATION_TIME },
     { "sys","ct",  _fipnc,4, cm_print_ct,  cm_get_ct,  cm_set_ct,  nullptr, CHORDAL_TOLERANCE },
@@ -1107,7 +1303,11 @@ const cfgItem_t cfgArray[] = {
     { "", "help",_b0, 0, tx_print_nul, help_config, set_nul, nullptr, 0 },  // prints config help screen
     { "", "h",   _b0, 0, tx_print_nul, help_config, set_nul, nullptr, 0 },  // alias for "help"
 #endif
+};
+constexpr cfgSubtableFromStaticArray sys_config_2 {sys_config_items_2};
+constexpr const configSubtable * const getSysConfig_2() { return &sys_config_2; }
 
+constexpr cfgItem user_data_config_items_1[] = {
 #ifdef __USER_DATA
     // User defined data groups
     { "uda","uda0", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_a[0], USER_DATA_A0 },
@@ -1130,7 +1330,11 @@ const cfgItem_t cfgArray[] = {
     { "udd","udd2", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_d[2], USER_DATA_D2 },
     { "udd","udd3", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_d[3], USER_DATA_D3 },
 #endif
+};
+constexpr cfgSubtableFromStaticArray user_data_config_1 {user_data_config_items_1};
+constexpr const configSubtable * const getUserDataConfig_1() { return &user_data_config_1; }
 
+constexpr cfgItem tool_config_items_1[] = {
     // Tool table offsets
     { "tof","tofx",_fipc, 5, cm_print_cofs, cm_get_tof, cm_set_tof, nullptr, 0 },
     { "tof","tofy",_fipc, 5, cm_print_cofs, cm_get_tof, cm_set_tof, nullptr, 0 },
@@ -1530,77 +1734,88 @@ const cfgItem_t cfgArray[] = {
     { "tt32","tt32b",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT32_B_OFFSET },
     { "tt32","tt32c",_fipc, 5, cm_print_cofs, cm_get_tt, cm_set_tt, nullptr, TT32_C_OFFSET },
 #endif // TOOLS > 5
+};
+constexpr cfgSubtableFromStaticArray tool_config_1 {tool_config_items_1};
+constexpr const configSubtable * const getToolConfig_1() { return &tool_config_1; }
 
-    // Diagnostic parameters
 #ifdef __DIAGNOSTIC_PARAMETERS
+// Diagnostic parameters
+constexpr cfgItem diagnostic_config_items_1[] = {
     { "",    "clc",_f0, 0, tx_print_nul, st_clc,  st_clc, nullptr, 0 },  // clear diagnostic step counters
 
-    { "_te","_tex",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->target[AXIS_X], 0 }, // X target endpoint
-    { "_te","_tey",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->target[AXIS_Y], 0 },
-    { "_te","_tez",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->target[AXIS_Z], 0 },
-    { "_te","_tea",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->target[AXIS_A], 0 },
-    { "_te","_teb",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->target[AXIS_B], 0 },
-    { "_te","_tec",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->target[AXIS_C], 0 },
+    { "_te","_tex",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.target[AXIS_X], 0 }, // X target endpoint
+    { "_te","_tey",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.target[AXIS_Y], 0 },
+    { "_te","_tez",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.target[AXIS_Z], 0 },
+    { "_te","_tea",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.target[AXIS_A], 0 },
+    { "_te","_teb",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.target[AXIS_B], 0 },
+    { "_te","_tec",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.target[AXIS_C], 0 },
 
-    { "_tr","_trx",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->gm.target[AXIS_X], 0 },  // X target runtime
-    { "_tr","_try",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->gm.target[AXIS_Y], 0 },
-    { "_tr","_trz",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->gm.target[AXIS_Z], 0 },
-    { "_tr","_tra",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->gm.target[AXIS_A], 0 },
-    { "_tr","_trb",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->gm.target[AXIS_B], 0 },
-    { "_tr","_trc",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->gm.target[AXIS_C], 0 },
+    { "_tr","_trx",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.gm.target[AXIS_X], 0 },  // X target runtime
+    { "_tr","_try",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.gm.target[AXIS_Y], 0 },
+    { "_tr","_trz",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.gm.target[AXIS_Z], 0 },
+    { "_tr","_tra",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.gm.target[AXIS_A], 0 },
+    { "_tr","_trb",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.gm.target[AXIS_B], 0 },
+    { "_tr","_trc",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.gm.target[AXIS_C], 0 },
+};
+constexpr cfgSubtableFromStaticArray diagnostic_config_1 {diagnostic_config_items_1};
+constexpr const configSubtable * const getDiagnosticConfig_1() { return &diagnostic_config_1; }
 
+constexpr cfgItem motor_diagnostic_config_items_1[] = {
 #if (MOTORS >= 1)
-    { "_ts","_ts1",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->target_steps[MOTOR_1], 0 },      // Motor 1 target steps
-    { "_ps","_ps1",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->position_steps[MOTOR_1], 0 },    // Motor 1 position steps
-    { "_cs","_cs1",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->commanded_steps[MOTOR_1], 0 },   // Motor 1 commanded steps (delayed steps)
-    { "_es","_es1",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->encoder_steps[MOTOR_1], 0 },     // Motor 1 encoder steps
+    { "_ts","_ts1",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.target_steps[MOTOR_1], 0 },      // Motor 1 target steps
+    { "_ps","_ps1",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.position_steps[MOTOR_1], 0 },    // Motor 1 position steps
+    { "_cs","_cs1",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.commanded_steps[MOTOR_1], 0 },   // Motor 1 commanded steps (delayed steps)
+    { "_es","_es1",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.encoder_steps[MOTOR_1], 0 },     // Motor 1 encoder steps
     { "_xs","_xs1",_f0, 2, tx_print_flt, get_flt, set_nul, &st_pre.mot[MOTOR_1].corrected_steps, 0 }, // Motor 1 correction steps applied
-    { "_fe","_fe1",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->following_error[MOTOR_1], 0 },   // Motor 1 following error in steps
+    { "_fe","_fe1",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.following_error[MOTOR_1], 0 },   // Motor 1 following error in steps
 #endif
 #if (MOTORS >= 2)
-    { "_ts","_ts2",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->target_steps[MOTOR_2], 0 },
-    { "_ps","_ps2",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->position_steps[MOTOR_2], 0 },
-    { "_cs","_cs2",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->commanded_steps[MOTOR_2], 0 },
-    { "_es","_es2",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->encoder_steps[MOTOR_2], 0 },
+    { "_ts","_ts2",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.target_steps[MOTOR_2], 0 },
+    { "_ps","_ps2",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.position_steps[MOTOR_2], 0 },
+    { "_cs","_cs2",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.commanded_steps[MOTOR_2], 0 },
+    { "_es","_es2",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.encoder_steps[MOTOR_2], 0 },
     { "_xs","_xs2",_f0, 2, tx_print_flt, get_flt, set_nul, &st_pre.mot[MOTOR_2].corrected_steps, 0 },
-    { "_fe","_fe2",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->following_error[MOTOR_2], 0 },
+    { "_fe","_fe2",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.following_error[MOTOR_2], 0 },
 #endif
 #if (MOTORS >= 3)
-    { "_ts","_ts3",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->target_steps[MOTOR_3], 0 },
-    { "_ps","_ps3",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->position_steps[MOTOR_3], 0 },
-    { "_cs","_cs3",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->commanded_steps[MOTOR_3], 0 },
-    { "_es","_es3",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->encoder_steps[MOTOR_3], 0 },
+    { "_ts","_ts3",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.target_steps[MOTOR_3], 0 },
+    { "_ps","_ps3",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.position_steps[MOTOR_3], 0 },
+    { "_cs","_cs3",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.commanded_steps[MOTOR_3], 0 },
+    { "_es","_es3",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.encoder_steps[MOTOR_3], 0 },
     { "_xs","_xs3",_f0, 2, tx_print_flt, get_flt, set_nul, &st_pre.mot[MOTOR_3].corrected_steps, 0 },
-    { "_fe","_fe3",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->following_error[MOTOR_3], 0 },
+    { "_fe","_fe3",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.following_error[MOTOR_3], 0 },
 #endif
 #if (MOTORS >= 4)
-    { "_ts","_ts4",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->target_steps[MOTOR_4], 0 },
-    { "_ps","_ps4",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->position_steps[MOTOR_4], 0 },
-    { "_cs","_cs4",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->commanded_steps[MOTOR_4], 0 },
-    { "_es","_es4",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->encoder_steps[MOTOR_4], 0 },
+    { "_ts","_ts4",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.target_steps[MOTOR_4], 0 },
+    { "_ps","_ps4",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.position_steps[MOTOR_4], 0 },
+    { "_cs","_cs4",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.commanded_steps[MOTOR_4], 0 },
+    { "_es","_es4",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.encoder_steps[MOTOR_4], 0 },
     { "_xs","_xs4",_f0, 2, tx_print_flt, get_flt, set_nul, &st_pre.mot[MOTOR_4].corrected_steps, 0 },
-    { "_fe","_fe4",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->following_error[MOTOR_4], 0 },
+    { "_fe","_fe4",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.following_error[MOTOR_4], 0 },
 #endif
 #if (MOTORS >= 5)
-    { "_ts","_ts5",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->target_steps[MOTOR_5], 0 },
-    { "_ps","_ps5",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->position_steps[MOTOR_5], 0 },
-    { "_cs","_cs5",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->commanded_steps[MOTOR_5], 0 },
-    { "_es","_es5",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->encoder_steps[MOTOR_5], 0 },
+    { "_ts","_ts5",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.target_steps[MOTOR_5], 0 },
+    { "_ps","_ps5",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.position_steps[MOTOR_5], 0 },
+    { "_cs","_cs5",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.commanded_steps[MOTOR_5], 0 },
+    { "_es","_es5",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.encoder_steps[MOTOR_5], 0 },
     { "_xs","_xs6",_f0, 2, tx_print_flt, get_flt, set_nul, &st_pre.mot[MOTOR_5].corrected_steps, 0 },
-    { "_fe","_fe5",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->following_error[MOTOR_5], 0 },
+    { "_fe","_fe5",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.following_error[MOTOR_5], 0 },
 #endif
 #if (MOTORS >= 6)
-    { "_ts","_ts6",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->target_steps[MOTOR_6], 0 },
-    { "_ps","_ps6",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->position_steps[MOTOR_6], 0 },
-    { "_cs","_cs6",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->commanded_steps[MOTOR_6], 0 },
-    { "_es","_es6",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->encoder_steps[MOTOR_6], 0 },
+    { "_ts","_ts6",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.target_steps[MOTOR_6], 0 },
+    { "_ps","_ps6",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.position_steps[MOTOR_6], 0 },
+    { "_cs","_cs6",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.commanded_steps[MOTOR_6], 0 },
+    { "_es","_es6",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.encoder_steps[MOTOR_6], 0 },
     { "_xs","_xs5",_f0, 2, tx_print_flt, get_flt, set_nul, &st_pre.mot[MOTOR_6].corrected_steps, 0 },
-    { "_fe","_fe6",_f0, 2, tx_print_flt, get_flt, set_nul, &mr->following_error[MOTOR_6], 0 },
+    { "_fe","_fe6",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.following_error[MOTOR_6], 0 },
 #endif
-
+};
 #endif  //  __DIAGNOSTIC_PARAMETERS
+constexpr cfgSubtableFromStaticArray motor_diagnostic_config_1 {motor_diagnostic_config_items_1};
+constexpr const configSubtable * const getMotorDiagnosticConfig_1() { return &motor_diagnostic_config_1; }
 
-    // Persistence for status report - must be in sequence
+constexpr cfgItem sr_presistence_config_items_1[] = {
+  // Persistence for status report - must be in sequence
     // *** Count must agree with NV_STATUS_REPORT_LEN in report.h ***
     { "","se00",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[0],0 }, // 950
     { "","se01",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[1],0 },
@@ -1643,13 +1858,16 @@ const cfgItem_t cfgArray[] = {
     { "","se38",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[38],0 },
     { "","se39",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[39],0 },
     // Count is 40, since se00 counts as one.
-
+};
+constexpr cfgSubtableFromStaticArray sr_presistence_config_1 {sr_presistence_config_items_1};
+constexpr const configSubtable * const getSrPersistenceConfig_1() { return &sr_presistence_config_1; }
 
     // Group lookups - must follow the single-valued entries for proper sub-string matching
     // *** Must agree with NV_COUNT_GROUPS below ***
     // *** If you adjust the number of entries in a group you must also adjust the count for that group ***
     // *** COUNT STARTS FROM HERE ***
 
+constexpr cfgItem groups_config_items_1[] = {
 #define FIXED_GROUPS 4
     { "","sys",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // system group
     { "","p1", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // PWM 1 group
@@ -1838,7 +2056,11 @@ const cfgItem_t cfgArray[] = {
     { "","_xs",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // correction steps group
     { "","_fe",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // following error group
 #endif
+};
+constexpr cfgSubtableFromStaticArray groups_config_1 {groups_config_items_1};
+constexpr const configSubtable * const getGroupsConfig_1() { return &groups_config_1; }
 
+constexpr cfgItem uber_groups_config_items_1[] = {
 #define NV_COUNT_UBER_GROUPS 6
     // Uber-group (groups of groups, for text-mode displays only)
     // *** Must agree with NV_COUNT_UBER_GROUPS below ****
@@ -1849,6 +2071,41 @@ const cfgItem_t cfgArray[] = {
     { "", "do", _f0, 0, tx_print_nul,_do_outputs,set_nul, nullptr, 0 },
     { "", "$", _f0, 0, tx_print_nul, _do_all,    set_nul, nullptr, 0 }
 };
+constexpr cfgSubtableFromStaticArray uber_groups_config_1 {uber_groups_config_items_1};
+constexpr const configSubtable * const getUberGroupsConfig_1() { return &uber_groups_config_1; }
+auto nodes = makeSubtableNodes(
+    getSysConfig_1(), getCmConfig_1(), getMpoConfig_1(), getPosConfig_1(), getOfsConfig_1(), getHomConfig_1(),
+    getPrbConfig_1(), getJogConfig_1(), getPwrConfig_1(), getMotorConfig_1(), getAxisConfig_1(), getDIConfig_1(),
+    getINConfig_1(), getDOConfig_1(), getOUTConfig_1(), getAINConfig_1(), getP1Config_1(), getPIDConfig_1(),
+    getHEConfig_1(), getCoorConfig_1(), getJobIDConfig_1(), getFixturingConfig_1(), getSpindleConfig_1(),
+    getCoolantConfig_1(), getSysConfig_2(), getUserDataConfig_1(), getToolConfig_1(), getDiagnosticConfig_1(),
+    getMotorDiagnosticConfig_1(), getSrPersistenceConfig_1(), getGroupsConfig_1(), getUberGroupsConfig_1());
+
+
+// template <typename T, size_t length>
+// constexpr size_t size_of_array(T(&)[length]) {
+//     return length;
+// }
+
+
+configSubtableNode *configSubtableHead = &nodes.this_node;
+
+// Dummy config item for when there's an error
+constexpr cfgItem_t nullCfg = {"", "", _f0, 0, tx_print_nul, get_nul, set_nul, nullptr, 0};
+
+// Sythesize the old cfgArray[...] operator, must return SOMETHING
+const cfgItem_t &cfgArraySynthesizer::operator[](std::size_t idx) const {
+    if (!configSubtableHead) {
+        return nullCfg;
+    }
+    const cfgItem * const c = configSubtableHead->get(idx);
+    if (!c) {
+        return nullCfg;
+    }
+    return *c;
+}
+
+cfgArraySynthesizer cfgArray {};
 
 /***** Make sure these defines line up with any changes in the above table *****/
 
@@ -1866,7 +2123,7 @@ const cfgItem_t cfgArray[] = {
                         + DIAGNOSTIC_GROUPS)
 
 /* <DO NOT MESS WITH THESE DEFINES> */
-#define NV_INDEX_MAX (sizeof(cfgArray) / sizeof(cfgItem_t))
+#define NV_INDEX_MAX (nodes.this_node.length())
 #define NV_INDEX_END_SINGLES    (NV_INDEX_MAX - NV_COUNT_UBER_GROUPS - NV_COUNT_GROUPS - NV_STATUS_REPORT_LEN)
 #define NV_INDEX_START_GROUPS    (NV_INDEX_MAX - NV_COUNT_UBER_GROUPS - NV_COUNT_GROUPS)
 #define NV_INDEX_START_UBER_GROUPS (NV_INDEX_MAX - NV_COUNT_UBER_GROUPS)

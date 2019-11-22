@@ -333,7 +333,14 @@ typedef struct cfgItem {
 
 extern nvStr_t nvStr;
 extern nvList_t nvl;
-extern const cfgItem_t cfgArray[];
+
+class cfgArraySynthesizer {
+    public:
+    const cfgItem_t& operator[](std::size_t idx) const;
+};
+
+extern cfgArraySynthesizer cfgArray;
+
 
 //#define nv_header nv.list
 #define nv_header (&nvl.list[0])
