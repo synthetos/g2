@@ -1372,7 +1372,8 @@ stat_t cm_change_tool(const uint8_t tool_change)
 
 bool cm_is_laser_tool(void)
 {
-    // Tool 32 is always a laser.  Later we can use a different qualified.
+    // Tool 32 is always a laser.  Later we can use a different qualifier,
+    // possibly a new field in the tool db which indicates tool type.
     return (32 == cm->gm.tool_select);
 }
 
