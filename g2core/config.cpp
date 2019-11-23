@@ -406,36 +406,37 @@ stat_t set_grp(nvObj_t *nv)
  */
 index_t nv_get_index(const char *group, const char *token)
 {
-    char c;
-    char str[TOKEN_LEN + GROUP_LEN+1];    // should actually never be more than TOKEN_LEN+1
-    strncpy(str, group, GROUP_LEN+1);
-    strncat(str, token, TOKEN_LEN+1);
+    return cfgArray.getIndex(group, token);
+    // char c;
+    // char str[TOKEN_LEN + GROUP_LEN+1];    // should actually never be more than TOKEN_LEN+1
+    // strncpy(str, group, GROUP_LEN+1);
+    // strncat(str, token, TOKEN_LEN+1);
 
-    index_t i;
-    index_t index_max = nv_index_max();
+    // index_t i;
+    // index_t index_max = nv_index_max();
 
-    for (i=0; i < index_max; i++) {
-        auto config = cfgArray[i];
-        if ((c = config.token[0]) != str[0]) { continue; }                  // 1st character mismatch
-        if ((c = config.token[1]) == NUL) { if (str[1] == NUL) return(i); } // one character match
-        if (c != str[1]) continue;                                          // 2nd character mismatch
-        if ((c = config.token[2]) == NUL) { if (str[2] == NUL) return(i); } // two character match
-        if (c != str[2]) continue;                                          // 3rd character mismatch
-        if ((c = config.token[3]) == NUL) { if (str[3] == NUL) return(i); } // three character match
-        if (c != str[3]) continue;                                          // 4th character mismatch
-        if ((c = config.token[4]) == NUL) { if (str[4] == NUL) return(i); } // four character match
-        if (c != str[4]) continue;                                          // 5th character mismatch
-        if ((c = config.token[5]) == NUL) { if (str[5] == NUL) return(i); } // four character match
-        if (c != str[5]) continue;                                          // 6th character mismatch
-        if ((c = config.token[6]) == NUL) { if (str[6] == NUL) return(i); } // four character match
-        if (c != str[6]) continue;                                          // 7th character mismatch
-        if ((c = config.token[7]) == NUL) { if (str[7] == NUL) return(i); } // four character match
-        if (c != str[7]) continue;                                          // 8th character mismatch
-        if ((c = config.token[8]) == NUL) { if (str[8] == NUL) return(i); } // four character match
-        if (c != str[8]) continue;                                          // 9th character mismatch
-        return (i);                                                         // five character match
-    }
-    return (NO_MATCH);
+    // for (i=0; i < index_max; i++) {
+    //     auto config = cfgArray[i];
+    //     if ((c = config.token[0]) != str[0]) { continue; }                  // 1st character mismatch
+    //     if ((c = config.token[1]) == NUL) { if (str[1] == NUL) return(i); } // one character match
+    //     if (c != str[1]) continue;                                          // 2nd character mismatch
+    //     if ((c = config.token[2]) == NUL) { if (str[2] == NUL) return(i); } // two character match
+    //     if (c != str[2]) continue;                                          // 3rd character mismatch
+    //     if ((c = config.token[3]) == NUL) { if (str[3] == NUL) return(i); } // three character match
+    //     if (c != str[3]) continue;                                          // 4th character mismatch
+    //     if ((c = config.token[4]) == NUL) { if (str[4] == NUL) return(i); } // four character match
+    //     if (c != str[4]) continue;                                          // 5th character mismatch
+    //     if ((c = config.token[5]) == NUL) { if (str[5] == NUL) return(i); } // four character match
+    //     if (c != str[5]) continue;                                          // 6th character mismatch
+    //     if ((c = config.token[6]) == NUL) { if (str[6] == NUL) return(i); } // four character match
+    //     if (c != str[6]) continue;                                          // 7th character mismatch
+    //     if ((c = config.token[7]) == NUL) { if (str[7] == NUL) return(i); } // four character match
+    //     if (c != str[7]) continue;                                          // 8th character mismatch
+    //     if ((c = config.token[8]) == NUL) { if (str[8] == NUL) return(i); } // four character match
+    //     if (c != str[8]) continue;                                          // 9th character mismatch
+    //     return (i);                                                         // five character match
+    // }
+    // return (NO_MATCH);
 }
 
 /*

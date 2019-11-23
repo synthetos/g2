@@ -2470,6 +2470,394 @@ stat_t cm_set_gpa(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)cm->default_p
 stat_t cm_get_gdi(nvObj_t *nv) { return(get_integer(nv, cm->default_distance_mode)); }
 stat_t cm_set_gdi(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)cm->default_distance_mode, ABSOLUTE_DISTANCE_MODE, INCREMENTAL_DISTANCE_MODE)); }
 
+/*** Canonical Machine Global Settings Table Additions ***/
+/*
+ * The following functions are called by config_app.cpp to retrieve the relevant portions of the config table
+ * getCmConfig_1() - general cononical machine info
+ * getMpoConfig_1() - machine-coordinate position
+ * getPosConfig_1() - external (gcode model) position
+ * getOfsConfig_1() - offsets in play
+ * getHomConfig_1() - homing info (should be in cycle_home)
+ * getPrbConfig_1() - probing info (should in in cycle_probe)
+ * getJogConfig_1() - control jogging (should be in cycle_jog)
+ * getAxisConfig_1() - axis specific info
+ */
+
+struct grouplessCfgItem_t {
+    const char * token;            // token - stripped of group prefix (w/NUL termination)
+    uint8_t flags;                      // operations flags - see defines below
+    int8_t precision;                   // decimal precision for display (JSON)
+    fptrPrint print;                    // print binding: aka void (*print)(nvObj_t *nv);
+    fptrCmd get;                        // GET binding aka uint8_t (*get)(nvObj_t *nv)
+    fptrCmd set;                        // SET binding aka uint8_t (*set)(nvObj_t *nv)
+};
+
+class cfgSubtableFromGrouplessStaticArray : public configSubtable {
+    const size_t array_length;
+    const grouplessCfgItem_t *items;
+
+    // hold on to a reloadable full cfgItem_t to setup and return
+    static char tmpToken[TOKEN_LEN + 1];
+    static cfgItem_t cfgTmp;
+
+   public:
+   template<typename T, size_t length>
+    constexpr cfgSubtableFromGrouplessStaticArray(T (&i)[length]) : array_length{length}, items{i} {};
+
+    const cfgItem_t * const get(std::size_t idx) const override {
+        // group is ""
+        strcpy(tmpToken, items[idx].token);
+        cfgTmp.flags = items[idx].flags;
+        cfgTmp.precision = items[idx].precision;
+        cfgTmp.print = items[idx].print;
+        cfgTmp.get = items[idx].get;
+        cfgTmp.set = items[idx].set;
+        return &cfgTmp;
+    }
+
+    index_t find(const char *token) const override {
+        std::size_t idx = 0;
+        while (idx < array_length) {
+            if (strcmp(token, items[idx].token) == 0) {
+                return idx;
+            }
+            idx++;
+        }
+        return NO_MATCH;
+    }
+
+    const size_t length() const override {
+        return array_length;
+    }
+};
+char cfgSubtableFromGrouplessStaticArray::tmpToken[TOKEN_LEN + 1];
+cfgItem_t cfgSubtableFromGrouplessStaticArray::cfgTmp = {"", &tmpToken[0], _i0, 0, nullptr, nullptr, nullptr, nullptr, 0};
+
+constexpr grouplessCfgItem_t cm_config_items_1[] = {
+    // dynamic model attributes for reporting purposes (up front for speed)
+    { "stat", _i0, 0, cm_print_stat, cm_get_stat,  set_ro   },  // combined machine state
+    {"stat2", _i0, 0, cm_print_stat, cm_get_stat2, set_ro   },  // combined machine state
+    { "n",    _ii, 0, cm_print_line, cm_get_mline, set_noop },  // Model line number
+    { "line", _ii, 0, cm_print_line, cm_get_line,  set_ro   },  // Active line number - model or runtime line number
+    { "vel",  _f0, 2, cm_print_vel,  cm_get_vel,   set_ro   },  // current velocity
+    { "feed", _f0, 2, cm_print_feed, cm_get_feed,  set_ro   },  // feed rate
+    { "macs", _i0, 0, cm_print_macs, cm_get_macs,  set_ro   },  // raw machine state
+    { "cycs", _i0, 0, cm_print_cycs, cm_get_cycs,  set_ro   },  // cycle state
+    { "mots", _i0, 0, cm_print_mots, cm_get_mots,  set_ro   },  // motion state
+    { "hold", _i0, 0, cm_print_hold, cm_get_hold,  set_ro   },  // feedhold state
+    { "unit", _i0, 0, cm_print_unit, cm_get_unit,  set_ro   },  // units mode
+    { "coor", _i0, 0, cm_print_coor, cm_get_coor,  set_ro   },  // coordinate system
+    { "momo", _i0, 0, cm_print_momo, cm_get_momo,  set_ro   },  // motion mode
+    { "plan", _i0, 0, cm_print_plan, cm_get_plan,  set_ro   },  // plane select
+    { "path", _i0, 0, cm_print_path, cm_get_path,  set_ro   },  // path control mode
+    { "dist", _i0, 0, cm_print_dist, cm_get_dist,  set_ro   },  // distance mode
+    { "admo", _i0, 0, cm_print_admo, cm_get_admo,  set_ro   },  // arc distance mode
+    { "frmo", _i0, 0, cm_print_frmo, cm_get_frmo,  set_ro   },  // feed rate mode
+    { "tool", _i0, 0, cm_print_tool, cm_get_toolv, set_ro   },  // active tool
+#ifdef ENABLE_INTERLOCK_AND_ESTOP
+    {"safe", _i0, 0, cm_print_safe, cm_get_safe,  set_ro       }, // interlock status
+    {"estp", _i0, 0, cm_print_estp, cm_get_estp,  cm_ack_estop }, // E-stop status (SET to ack)
+    {"estpc",_i0, 0, cm_print_estp, cm_ack_estop, cm_ack_estop }, // E-stop status clear (GET to ack)
+#endif
+    {"g92e", _i0, 0, cm_print_g92e, cm_get_g92e,  set_ro       }, // G92 enable state
+#ifdef TEMPORARY_HAS_LEDS
+    {"_leds",_i0, 0, tx_print_nul, _get_leds,_set_leds         }, // TEMPORARY - change LEDs
+#endif
+};
+const cfgSubtableFromGrouplessStaticArray cm_config_1 {cm_config_items_1};
+const configSubtable * const getCmConfig_1() { return &cm_config_1; }
+
+class cfgSubtableFromTokenList : public configSubtable {
+    const char *group_name;
+    const size_t group_name_length;
+    const char * const * subkeys; // read it backward: "pointer to const pointers to const chars"
+    const size_t subkeys_length;
+
+    const uint8_t flags;                      // operations flags - see defines below
+    const int8_t precision;                   // decimal precision for display (JSON)
+    const fptrPrint print;                    // print binding: aka void (*print)(nvObj_t *nv);
+    const fptrCmd get_fn;                        // GET binding aka uint8_t (*get)(nvObj_t *nv)
+    const fptrCmd set_fn;                        // SET binding aka uint8_t (*set)(nvObj_t *nv)
+
+
+    // hold on to a reloadable full cfgItem_t to setup and return
+    static char tmpToken[TOKEN_LEN + 1];
+    static cfgItem_t cfgTmp;
+
+   public:
+    template <size_t group_length, size_t subkey_count>
+    constexpr cfgSubtableFromTokenList(const char (&new_group_name)[group_length], const char *const (&i)[subkey_count],
+                                       const uint8_t new_flags, const int8_t new_precision, const fptrPrint new_print,
+                                       const fptrCmd new_get_fn, const fptrCmd new_set_fn)
+        : group_name{new_group_name},
+          group_name_length{group_length-1}, // string lengths include the null
+          subkeys{i},
+          subkeys_length{subkey_count},
+          flags{new_flags},
+          precision{new_precision},
+          print{new_print},
+          get_fn{new_get_fn},
+          set_fn{new_set_fn} {};
+
+    const cfgItem_t * const get(std::size_t idx) const override {
+        cfgTmp.group = group_name;
+        char *dst = tmpToken;
+        strcpy(dst, group_name);
+        strcpy(dst+group_name_length, subkeys[idx]);
+        cfgTmp.flags = flags;
+        cfgTmp.precision = precision;
+        cfgTmp.print = print;
+        cfgTmp.get = get_fn;
+        cfgTmp.set = set_fn;
+        return &cfgTmp;
+    }
+
+    index_t find(const char *token) const override {
+        std::size_t idx = 0;
+        if (strncmp(token, group_name, group_name_length) != 0 || *(token+group_name_length) == 0) {
+            // wrong group or looking for just the group
+            return NO_MATCH;
+        }
+        while (idx < subkeys_length) {
+            if (strcmp(subkeys[idx], token+group_name_length) == 0) {
+                return idx;
+            }
+            idx++;
+        }
+        return NO_MATCH;
+    }
+
+    const size_t length() const override {
+        return subkeys_length;
+    }
+};
+char cfgSubtableFromTokenList::tmpToken[TOKEN_LEN + 1];
+cfgItem_t cfgSubtableFromTokenList::cfgTmp = {nullptr, &tmpToken[0], _i0, 0, nullptr, nullptr, nullptr, nullptr, 0};
+
+#if (AXES == 9)
+const char * const axis_keys[] = {"x", "y", "z", "u", "v", "w", "a", "b", "c"};
+#else
+const char * const axis_keys[] = {"x", "y", "z", "a", "b", "c"};
+#endif
+cfgSubtableFromTokenList mpo_config{"mpo", axis_keys, _f0, 5, cm_print_mpo, cm_get_mpo, set_ro};  // machine position
+const configSubtable *const getMpoConfig_1() { return &mpo_config; }
+
+// constexpr cfgItem_t pos_config_items_1[] = {
+//     {"pos", "posx", _f0, 5, cm_print_pos, cm_get_pos, set_ro, nullptr, 0},  // X work position
+//     {"pos", "posy", _f0, 5, cm_print_pos, cm_get_pos, set_ro, nullptr, 0},  // Y work position
+//     {"pos", "posz", _f0, 5, cm_print_pos, cm_get_pos, set_ro, nullptr, 0},  // Z work position
+//     {"pos", "posu", _f0, 5, cm_print_pos, cm_get_pos, set_ro, nullptr, 0},  // U work position
+//     {"pos", "posv", _f0, 5, cm_print_pos, cm_get_pos, set_ro, nullptr, 0},  // V work position
+//     {"pos", "posw", _f0, 5, cm_print_pos, cm_get_pos, set_ro, nullptr, 0},  // W work position
+//     {"pos", "posa", _f0, 5, cm_print_pos, cm_get_pos, set_ro, nullptr, 0},  // A work position
+//     {"pos", "posb", _f0, 5, cm_print_pos, cm_get_pos, set_ro, nullptr, 0},  // B work position
+//     {"pos", "posc", _f0, 5, cm_print_pos, cm_get_pos, set_ro, nullptr, 0},  // C work position
+// };
+// constexpr cfgSubtableFromStaticArray pos_config_1{pos_config_items_1};
+cfgSubtableFromTokenList pos_config_1{"pos", axis_keys, _f0, 5, cm_print_pos, cm_get_pos, set_ro};  // work position
+const configSubtable *const getPosConfig_1() { return &pos_config_1; }
+
+// constexpr cfgItem_t ofs_config_items_1[] = {
+//     {"ofs", "ofsx", _f0, 5, cm_print_ofs, cm_get_ofs, set_ro, nullptr, 0},  // X work offset
+//     {"ofs", "ofsy", _f0, 5, cm_print_ofs, cm_get_ofs, set_ro, nullptr, 0},  // Y work offset
+//     {"ofs", "ofsz", _f0, 5, cm_print_ofs, cm_get_ofs, set_ro, nullptr, 0},  // Z work offset
+//     {"ofs", "ofsu", _f0, 5, cm_print_ofs, cm_get_ofs, set_ro, nullptr, 0},  // U work offset
+//     {"ofs", "ofsv", _f0, 5, cm_print_ofs, cm_get_ofs, set_ro, nullptr, 0},  // V work offset
+//     {"ofs", "ofsw", _f0, 5, cm_print_ofs, cm_get_ofs, set_ro, nullptr, 0},  // W work offset
+//     {"ofs", "ofsa", _f0, 5, cm_print_ofs, cm_get_ofs, set_ro, nullptr, 0},  // A work offset
+//     {"ofs", "ofsb", _f0, 5, cm_print_ofs, cm_get_ofs, set_ro, nullptr, 0},  // B work offset
+//     {"ofs", "ofsc", _f0, 5, cm_print_ofs, cm_get_ofs, set_ro, nullptr, 0},  // C work offset
+// };
+// constexpr cfgSubtableFromStaticArray ofs_config_1{ofs_config_items_1};
+cfgSubtableFromTokenList ofs_config_1{"ofs", axis_keys, _f0, 5, cm_print_ofs, cm_get_ofs, set_ro};  // work offsets
+const configSubtable *const getOfsConfig_1() { return &ofs_config_1; }
+
+constexpr cfgItem_t hom_config_items_1[] = {
+    {"hom", "home", _i0, 0, cm_print_home, cm_get_home, cm_set_home, nullptr, 0},  // homing state, invoke homing cycle
+    {"hom", "homx", _i0, 0, cm_print_hom, cm_get_hom, set_ro, nullptr, 0},         // X homed - Homing status group
+    {"hom", "homy", _i0, 0, cm_print_hom, cm_get_hom, set_ro, nullptr, 0},         // Y homed
+    {"hom", "homz", _i0, 0, cm_print_hom, cm_get_hom, set_ro, nullptr, 0},         // Z homed
+    {"hom", "homu", _i0, 0, cm_print_hom, cm_get_hom, set_ro, nullptr, 0},         // U homed
+    {"hom", "homv", _i0, 0, cm_print_hom, cm_get_hom, set_ro, nullptr, 0},         // V homed
+    {"hom", "homw", _i0, 0, cm_print_hom, cm_get_hom, set_ro, nullptr, 0},         // W homed
+    {"hom", "homa", _i0, 0, cm_print_hom, cm_get_hom, set_ro, nullptr, 0},         // A homed
+    {"hom", "homb", _i0, 0, cm_print_hom, cm_get_hom, set_ro, nullptr, 0},         // B homed
+    {"hom", "homc", _i0, 0, cm_print_hom, cm_get_hom, set_ro, nullptr, 0},         // C homed
+};
+constexpr cfgSubtableFromStaticArray hom_config_1{hom_config_items_1};
+const configSubtable *const getHomConfig_1() { return &hom_config_1; }
+
+constexpr cfgItem_t prb_config_items_1[] = {
+    {"prb", "prbe", _i0, 0, tx_print_nul, cm_get_prob, set_ro, nullptr, 0},    // probing state
+    {"prb", "prbx", _f0, 5, tx_print_nul, cm_get_prb, set_ro, nullptr, 0},     // X probe results
+    {"prb", "prby", _f0, 5, tx_print_nul, cm_get_prb, set_ro, nullptr, 0},     // Y probe results
+    {"prb", "prbz", _f0, 5, tx_print_nul, cm_get_prb, set_ro, nullptr, 0},     // Z probe results
+    {"prb", "prbu", _f0, 5, tx_print_nul, cm_get_prb, set_ro, nullptr, 0},     // U probe results
+    {"prb", "prbv", _f0, 5, tx_print_nul, cm_get_prb, set_ro, nullptr, 0},     // V probe results
+    {"prb", "prbw", _f0, 5, tx_print_nul, cm_get_prb, set_ro, nullptr, 0},     // W probe results
+    {"prb", "prba", _f0, 5, tx_print_nul, cm_get_prb, set_ro, nullptr, 0},     // A probe results
+    {"prb", "prbb", _f0, 5, tx_print_nul, cm_get_prb, set_ro, nullptr, 0},     // B probe results
+    {"prb", "prbc", _f0, 5, tx_print_nul, cm_get_prb, set_ro, nullptr, 0},     // C probe results
+    {"prb", "prbs", _i0, 0, tx_print_nul, get_nul, cm_set_probe, nullptr, 0},  // store probe
+    {"prb", "prbr", _bip, 0, tx_print_nul, cm_get_prbr, cm_set_prbr, nullptr,
+     PROBE_REPORT_ENABLE},  // enable probe report. Init in cm_init
+    {"prb", "prbin", _iip, 0, tx_print_nul, cm_get_probe_input, cm_set_probe_input, nullptr,
+     PROBING_INPUT},  // probing input
+};
+constexpr cfgSubtableFromStaticArray prb_config_1{prb_config_items_1};
+const configSubtable *const getPrbConfig_1() { return &prb_config_1; }
+
+// constexpr cfgItem_t jog_config_items_1[] = {
+//     {"jog", "jogx", _f0, 0, tx_print_nul, get_nul, cm_run_jog, nullptr, 0},  // jog in X axis
+//     {"jog", "jogy", _f0, 0, tx_print_nul, get_nul, cm_run_jog, nullptr, 0},  // jog in Y axis
+//     {"jog", "jogz", _f0, 0, tx_print_nul, get_nul, cm_run_jog, nullptr, 0},  // jog in Z axis
+//     {"jog", "jogu", _f0, 0, tx_print_nul, get_nul, cm_run_jog, nullptr, 0},  // jog in U axis
+//     {"jog", "jogv", _f0, 0, tx_print_nul, get_nul, cm_run_jog, nullptr, 0},  // jog in V axis
+//     {"jog", "jogw", _f0, 0, tx_print_nul, get_nul, cm_run_jog, nullptr, 0},  // jog in W axis
+//     {"jog", "joga", _f0, 0, tx_print_nul, get_nul, cm_run_jog, nullptr, 0},  // jog in A axis
+//     {"jog", "jogb", _f0, 0, tx_print_nul, get_nul, cm_run_jog, nullptr, 0},  // jog in B axis
+//     {"jog", "jogc", _f0, 0, tx_print_nul, get_nul, cm_run_jog, nullptr, 0},  // jog in C axis
+// };
+// constexpr cfgSubtableFromStaticArray jog_config_1{jog_config_items_1};
+cfgSubtableFromTokenList jog_config_1{"jog", axis_keys, _f0, 0, tx_print_nul, get_nul, cm_run_jog};  // job
+const configSubtable *const getJogConfig_1() { return &jog_config_1; }
+
+constexpr cfgItem_t axis_config_items_1[] = {
+    // Axis parameters
+    {"x", "xam", _iip, 0, cm_print_am, cm_get_am, cm_set_am, nullptr, X_AXIS_MODE},
+    {"x", "xvm", _fipc, 0, cm_print_vm, cm_get_vm, cm_set_vm, nullptr, X_VELOCITY_MAX},
+    {"x", "xfr", _fipc, 0, cm_print_fr, cm_get_fr, cm_set_fr, nullptr, X_FEEDRATE_MAX},
+    {"x", "xtn", _fipc, 5, cm_print_tn, cm_get_tn, cm_set_tn, nullptr, X_TRAVEL_MIN},
+    {"x", "xtm", _fipc, 5, cm_print_tm, cm_get_tm, cm_set_tm, nullptr, X_TRAVEL_MAX},
+    {"x", "xjm", _fipc, 0, cm_print_jm, cm_get_jm, cm_set_jm, nullptr, X_JERK_MAX},
+    {"x", "xjh", _fipc, 0, cm_print_jh, cm_get_jh, cm_set_jh, nullptr, X_JERK_HIGH_SPEED},
+    {"x", "xhi", _iip, 0, cm_print_hi, cm_get_hi, cm_set_hi, nullptr, X_HOMING_INPUT},
+    {"x", "xhd", _iip, 0, cm_print_hd, cm_get_hd, cm_set_hd, nullptr, X_HOMING_DIRECTION},
+    {"x", "xsv", _fipc, 0, cm_print_sv, cm_get_sv, cm_set_sv, nullptr, X_SEARCH_VELOCITY},
+    {"x", "xlv", _fipc, 2, cm_print_lv, cm_get_lv, cm_set_lv, nullptr, X_LATCH_VELOCITY},
+    {"x", "xlb", _fipc, 5, cm_print_lb, cm_get_lb, cm_set_lb, nullptr, X_LATCH_BACKOFF},
+    {"x", "xzb", _fipc, 5, cm_print_zb, cm_get_zb, cm_set_zb, nullptr, X_ZERO_BACKOFF},
+
+    {"y", "yam", _iip, 0, cm_print_am, cm_get_am, cm_set_am, nullptr, Y_AXIS_MODE},
+    {"y", "yvm", _fipc, 0, cm_print_vm, cm_get_vm, cm_set_vm, nullptr, Y_VELOCITY_MAX},
+    {"y", "yfr", _fipc, 0, cm_print_fr, cm_get_fr, cm_set_fr, nullptr, Y_FEEDRATE_MAX},
+    {"y", "ytn", _fipc, 5, cm_print_tn, cm_get_tn, cm_set_tn, nullptr, Y_TRAVEL_MIN},
+    {"y", "ytm", _fipc, 5, cm_print_tm, cm_get_tm, cm_set_tm, nullptr, Y_TRAVEL_MAX},
+    {"y", "yjm", _fipc, 0, cm_print_jm, cm_get_jm, cm_set_jm, nullptr, Y_JERK_MAX},
+    {"y", "yjh", _fipc, 0, cm_print_jh, cm_get_jh, cm_set_jh, nullptr, Y_JERK_HIGH_SPEED},
+    {"y", "yhi", _iip, 0, cm_print_hi, cm_get_hi, cm_set_hi, nullptr, Y_HOMING_INPUT},
+    {"y", "yhd", _iip, 0, cm_print_hd, cm_get_hd, cm_set_hd, nullptr, Y_HOMING_DIRECTION},
+    {"y", "ysv", _fipc, 0, cm_print_sv, cm_get_sv, cm_set_sv, nullptr, Y_SEARCH_VELOCITY},
+    {"y", "ylv", _fipc, 2, cm_print_lv, cm_get_lv, cm_set_lv, nullptr, Y_LATCH_VELOCITY},
+    {"y", "ylb", _fipc, 5, cm_print_lb, cm_get_lb, cm_set_lb, nullptr, Y_LATCH_BACKOFF},
+    {"y", "yzb", _fipc, 5, cm_print_zb, cm_get_zb, cm_set_zb, nullptr, Y_ZERO_BACKOFF},
+
+    {"z", "zam", _iip, 0, cm_print_am, cm_get_am, cm_set_am, nullptr, Z_AXIS_MODE},
+    {"z", "zvm", _fipc, 0, cm_print_vm, cm_get_vm, cm_set_vm, nullptr, Z_VELOCITY_MAX},
+    {"z", "zfr", _fipc, 0, cm_print_fr, cm_get_fr, cm_set_fr, nullptr, Z_FEEDRATE_MAX},
+    {"z", "ztn", _fipc, 5, cm_print_tn, cm_get_tn, cm_set_tn, nullptr, Z_TRAVEL_MIN},
+    {"z", "ztm", _fipc, 5, cm_print_tm, cm_get_tm, cm_set_tm, nullptr, Z_TRAVEL_MAX},
+    {"z", "zjm", _fipc, 0, cm_print_jm, cm_get_jm, cm_set_jm, nullptr, Z_JERK_MAX},
+    {"z", "zjh", _fipc, 0, cm_print_jh, cm_get_jm, cm_set_jh, nullptr, Z_JERK_HIGH_SPEED},
+    {"z", "zhi", _iip, 0, cm_print_hi, cm_get_hi, cm_set_hi, nullptr, Z_HOMING_INPUT},
+    {"z", "zhd", _iip, 0, cm_print_hd, cm_get_hd, cm_set_hd, nullptr, Z_HOMING_DIRECTION},
+    {"z", "zsv", _fipc, 0, cm_print_sv, cm_get_sv, cm_set_sv, nullptr, Z_SEARCH_VELOCITY},
+    {"z", "zlv", _fipc, 2, cm_print_lv, cm_get_lv, cm_set_lv, nullptr, Z_LATCH_VELOCITY},
+    {"z", "zlb", _fipc, 5, cm_print_lb, cm_get_lb, cm_set_lb, nullptr, Z_LATCH_BACKOFF},
+    {"z", "zzb", _fipc, 5, cm_print_zb, cm_get_zb, cm_set_zb, nullptr, Z_ZERO_BACKOFF},
+
+#if (AXES == 9)
+    {"u", "uam", _iip, 0, cm_print_am, cm_get_am, cm_set_am, nullptr, U_AXIS_MODE},
+    {"u", "uvm", _fipc, 0, cm_print_vm, cm_get_vm, cm_set_vm, nullptr, U_VELOCITY_MAX},
+    {"u", "ufr", _fipc, 0, cm_print_fr, cm_get_fr, cm_set_fr, nullptr, U_FEEDRATE_MAX},
+    {"u", "utn", _fipc, 5, cm_print_tn, cm_get_tn, cm_set_tn, nullptr, U_TRAVEL_MIN},
+    {"u", "utm", _fipc, 5, cm_print_tm, cm_get_tm, cm_set_tm, nullptr, U_TRAVEL_MAX},
+    {"u", "ujm", _fipc, 0, cm_print_jm, cm_get_jm, cm_set_jm, nullptr, U_JERK_MAX},
+    {"u", "ujh", _fipc, 0, cm_print_jh, cm_get_jh, cm_set_jh, nullptr, U_JERK_HIGH_SPEED},
+    {"u", "uhi", _iip, 0, cm_print_hi, cm_get_hi, cm_set_hi, nullptr, U_HOMING_INPUT},
+    {"u", "uhd", _iip, 0, cm_print_hd, cm_get_hd, cm_set_hd, nullptr, U_HOMING_DIRECTION},
+    {"u", "usv", _fipc, 0, cm_print_sv, cm_get_sv, cm_set_sv, nullptr, U_SEARCH_VELOCITY},
+    {"u", "ulv", _fipc, 2, cm_print_lv, cm_get_lv, cm_set_lv, nullptr, U_LATCH_VELOCITY},
+    {"u", "ulb", _fipc, 5, cm_print_lb, cm_get_lb, cm_set_lb, nullptr, U_LATCH_BACKOFF},
+    {"u", "uzb", _fipc, 5, cm_print_zb, cm_get_zb, cm_set_zb, nullptr, U_ZERO_BACKOFF},
+
+    {"v", "vam", _iip, 0, cm_print_am, cm_get_am, cm_set_am, nullptr, V_AXIS_MODE},
+    {"v", "vvm", _fipc, 0, cm_print_vm, cm_get_vm, cm_set_vm, nullptr, V_VELOCITY_MAX},
+    {"v", "vfr", _fipc, 0, cm_print_fr, cm_get_fr, cm_set_fr, nullptr, V_FEEDRATE_MAX},
+    {"v", "vtn", _fipc, 5, cm_print_tn, cm_get_tn, cm_set_tn, nullptr, V_TRAVEL_MIN},
+    {"v", "vtm", _fipc, 5, cm_print_tm, cm_get_tm, cm_set_tm, nullptr, V_TRAVEL_MAX},
+    {"v", "vjm", _fipc, 0, cm_print_jm, cm_get_jm, cm_set_jm, nullptr, V_JERK_MAX},
+    {"v", "vjh", _fipc, 0, cm_print_jh, cm_get_jh, cm_set_jh, nullptr, V_JERK_HIGH_SPEED},
+    {"v", "vhi", _iip, 0, cm_print_hi, cm_get_hi, cm_set_hi, nullptr, V_HOMING_INPUT},
+    {"v", "vhd", _iip, 0, cm_print_hd, cm_get_hd, cm_set_hd, nullptr, V_HOMING_DIRECTION},
+    {"v", "vsv", _fipc, 0, cm_print_sv, cm_get_sv, cm_set_sv, nullptr, V_SEARCH_VELOCITY},
+    {"v", "vlv", _fipc, 2, cm_print_lv, cm_get_lv, cm_set_lv, nullptr, V_LATCH_VELOCITY},
+    {"v", "vlb", _fipc, 5, cm_print_lb, cm_get_lb, cm_set_lb, nullptr, V_LATCH_BACKOFF},
+    {"v", "vzb", _fipc, 5, cm_print_zb, cm_get_zb, cm_set_zb, nullptr, V_ZERO_BACKOFF},
+
+    {"w", "wam", _iip, 0, cm_print_am, cm_get_am, cm_set_am, nullptr, W_AXIS_MODE},
+    {"w", "wvm", _fipc, 0, cm_print_vm, cm_get_vm, cm_set_vm, nullptr, W_VELOCITY_MAX},
+    {"w", "wfr", _fipc, 0, cm_print_fr, cm_get_fr, cm_set_fr, nullptr, W_FEEDRATE_MAX},
+    {"w", "wtn", _fipc, 5, cm_print_tn, cm_get_tn, cm_set_tn, nullptr, W_TRAVEL_MIN},
+    {"w", "wtm", _fipc, 5, cm_print_tm, cm_get_tm, cm_set_tm, nullptr, W_TRAVEL_MAX},
+    {"w", "wjm", _fipc, 0, cm_print_jm, cm_get_jm, cm_set_jm, nullptr, W_JERK_MAX},
+    {"w", "wjh", _fipc, 0, cm_print_jh, cm_get_jh, cm_set_jh, nullptr, W_JERK_HIGH_SPEED},
+    {"w", "whi", _iip, 0, cm_print_hi, cm_get_hi, cm_set_hi, nullptr, W_HOMING_INPUT},
+    {"w", "whd", _iip, 0, cm_print_hd, cm_get_hd, cm_set_hd, nullptr, W_HOMING_DIRECTION},
+    {"w", "wsv", _fipc, 0, cm_print_sv, cm_get_sv, cm_set_sv, nullptr, W_SEARCH_VELOCITY},
+    {"w", "wlv", _fipc, 2, cm_print_lv, cm_get_lv, cm_set_lv, nullptr, W_LATCH_VELOCITY},
+    {"w", "wlb", _fipc, 5, cm_print_lb, cm_get_lb, cm_set_lb, nullptr, W_LATCH_BACKOFF},
+    {"w", "wzb", _fipc, 5, cm_print_zb, cm_get_zb, cm_set_zb, nullptr, W_ZERO_BACKOFF},
+#endif
+
+    {"a", "aam", _iip, 0, cm_print_am, cm_get_am, cm_set_am, nullptr, A_AXIS_MODE},
+    {"a", "avm", _fipc, 0, cm_print_vm, cm_get_vm, cm_set_vm, nullptr, A_VELOCITY_MAX},
+    {"a", "afr", _fipc, 0, cm_print_fr, cm_get_fr, cm_set_fr, nullptr, A_FEEDRATE_MAX},
+    {"a", "atn", _fipc, 5, cm_print_tn, cm_get_tn, cm_set_tn, nullptr, A_TRAVEL_MIN},
+    {"a", "atm", _fipc, 5, cm_print_tm, cm_get_tm, cm_set_tm, nullptr, A_TRAVEL_MAX},
+    {"a", "ajm", _fipc, 0, cm_print_jm, cm_get_jm, cm_set_jm, nullptr, A_JERK_MAX},
+    {"a", "ajh", _fipc, 0, cm_print_jh, cm_get_jh, cm_set_jh, nullptr, A_JERK_HIGH_SPEED},
+    {"a", "ara", _fipc, 5, cm_print_ra, cm_get_ra, cm_set_ra, nullptr, A_RADIUS},
+    {"a", "ahi", _iip, 0, cm_print_hi, cm_get_hi, cm_set_hi, nullptr, A_HOMING_INPUT},
+    {"a", "ahd", _iip, 0, cm_print_hd, cm_get_hd, cm_set_hd, nullptr, A_HOMING_DIRECTION},
+    {"a", "asv", _fipc, 0, cm_print_sv, cm_get_sv, cm_set_sv, nullptr, A_SEARCH_VELOCITY},
+    {"a", "alv", _fipc, 2, cm_print_lv, cm_get_lv, cm_set_lv, nullptr, A_LATCH_VELOCITY},
+    {"a", "alb", _fipc, 5, cm_print_lb, cm_get_lb, cm_set_lb, nullptr, A_LATCH_BACKOFF},
+    {"a", "azb", _fipc, 5, cm_print_zb, cm_get_zb, cm_set_zb, nullptr, A_ZERO_BACKOFF},
+
+    {"b", "bam", _iip, 0, cm_print_am, cm_get_am, cm_set_am, nullptr, B_AXIS_MODE},
+    {"b", "bvm", _fipc, 0, cm_print_vm, cm_get_vm, cm_set_vm, nullptr, B_VELOCITY_MAX},
+    {"b", "bfr", _fipc, 0, cm_print_fr, cm_get_fr, cm_set_fr, nullptr, B_FEEDRATE_MAX},
+    {"b", "btn", _fipc, 5, cm_print_tn, cm_get_tn, cm_set_tn, nullptr, B_TRAVEL_MIN},
+    {"b", "btm", _fipc, 5, cm_print_tm, cm_get_tm, cm_set_tm, nullptr, B_TRAVEL_MAX},
+    {"b", "bjm", _fipc, 0, cm_print_jm, cm_get_jm, cm_set_jm, nullptr, B_JERK_MAX},
+    {"b", "bjh", _fipc, 0, cm_print_jh, cm_get_jh, cm_set_jh, nullptr, B_JERK_HIGH_SPEED},
+    {"b", "bra", _fipc, 5, cm_print_ra, cm_get_ra, cm_set_ra, nullptr, B_RADIUS},
+    {"b", "bhi", _iip, 0, cm_print_hi, cm_get_hi, cm_set_hi, nullptr, B_HOMING_INPUT},
+    {"b", "bhd", _iip, 0, cm_print_hd, cm_get_hd, cm_set_hd, nullptr, B_HOMING_DIRECTION},
+    {"b", "bsv", _fipc, 0, cm_print_sv, cm_get_sv, cm_set_sv, nullptr, B_SEARCH_VELOCITY},
+    {"b", "blv", _fipc, 2, cm_print_lv, cm_get_lv, cm_set_lv, nullptr, B_LATCH_VELOCITY},
+    {"b", "blb", _fipc, 5, cm_print_lb, cm_get_lb, cm_set_lb, nullptr, B_LATCH_BACKOFF},
+    {"b", "bzb", _fipc, 5, cm_print_zb, cm_get_zb, cm_set_zb, nullptr, B_ZERO_BACKOFF},
+
+    {"c", "cam", _iip, 0, cm_print_am, cm_get_am, cm_set_am, nullptr, C_AXIS_MODE},
+    {"c", "cvm", _fipc, 0, cm_print_vm, cm_get_vm, cm_set_vm, nullptr, C_VELOCITY_MAX},
+    {"c", "cfr", _fipc, 0, cm_print_fr, cm_get_fr, cm_set_fr, nullptr, C_FEEDRATE_MAX},
+    {"c", "ctn", _fipc, 5, cm_print_tn, cm_get_tn, cm_set_tn, nullptr, C_TRAVEL_MIN},
+    {"c", "ctm", _fipc, 5, cm_print_tm, cm_get_tm, cm_set_tm, nullptr, C_TRAVEL_MAX},
+    {"c", "cjm", _fipc, 0, cm_print_jm, cm_get_jm, cm_set_jm, nullptr, C_JERK_MAX},
+    {"c", "cjh", _fipc, 0, cm_print_jh, cm_get_jh, cm_set_jh, nullptr, C_JERK_HIGH_SPEED},
+    {"c", "cra", _fipc, 5, cm_print_ra, cm_get_ra, cm_set_ra, nullptr, C_RADIUS},
+    {"c", "chi", _iip, 0, cm_print_hi, cm_get_hi, cm_set_hi, nullptr, C_HOMING_INPUT},
+    {"c", "chd", _iip, 0, cm_print_hd, cm_get_hd, cm_set_hd, nullptr, C_HOMING_DIRECTION},
+    {"c", "csv", _fipc, 0, cm_print_sv, cm_get_sv, cm_set_sv, nullptr, C_SEARCH_VELOCITY},
+    {"c", "clv", _fipc, 2, cm_print_lv, cm_get_lv, cm_set_lv, nullptr, C_LATCH_VELOCITY},
+    {"c", "clb", _fipc, 5, cm_print_lb, cm_get_lb, cm_set_lb, nullptr, C_LATCH_BACKOFF},
+    {"c", "czb", _fipc, 5, cm_print_zb, cm_get_zb, cm_set_zb, nullptr, C_ZERO_BACKOFF},
+};
+constexpr cfgSubtableFromStaticArray axis_config_1 {axis_config_items_1};
+const configSubtable * const getAxisConfig_1() { return &axis_config_1; }
+
 /***********************************************************************************
  * Debugging Commands
  ***********************************************************************************/

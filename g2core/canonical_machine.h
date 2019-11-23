@@ -586,14 +586,23 @@ void cm_request_job_kill(void);                                 // control-D han
 char cm_get_axis_char(const int8_t axis);
 cmAxisType cm_get_axis_type(const nvObj_t *nv);
 
-stat_t cm_get_mline(nvObj_t *nv);       // get model line number
-stat_t cm_get_line(nvObj_t *nv);        // get active (model or runtime) line number
-stat_t cm_get_stat(nvObj_t *nv);        // get combined machine state as value and string
-stat_t cm_get_stat2(nvObj_t *nv);       // get combined machine state as value and string
-stat_t cm_get_macs(nvObj_t *nv);        // get raw machine state as value and string
-stat_t cm_get_cycs(nvObj_t *nv);        // get raw cycle state
-stat_t cm_get_mots(nvObj_t *nv);        // get raw motion state
-stat_t cm_get_hold(nvObj_t *nv);        // get raw hold state
+const configSubtable *const getCmConfig_1();
+const configSubtable *const getMpoConfig_1();
+const configSubtable *const getPosConfig_1();
+const configSubtable *const getOfsConfig_1();
+const configSubtable * const getHomConfig_1();
+const configSubtable * const getPrbConfig_1();
+const configSubtable * const getJogConfig_1();
+const configSubtable *const getAxisConfig_1();
+
+// stat_t cm_get_mline(nvObj_t *nv);       // get model line number
+// stat_t cm_get_line(nvObj_t *nv);        // get active (model or runtime) line number
+// stat_t cm_get_stat(nvObj_t *nv);        // get combined machine state as value and string
+// stat_t cm_get_stat2(nvObj_t *nv);       // get combined machine state as value and string
+// stat_t cm_get_macs(nvObj_t *nv);        // get raw machine state as value and string
+// stat_t cm_get_cycs(nvObj_t *nv);        // get raw cycle state
+// stat_t cm_get_mots(nvObj_t *nv);        // get raw motion state
+// stat_t cm_get_hold(nvObj_t *nv);        // get raw hold state
 
 stat_t cm_get_home(nvObj_t *nv);        // get machine homing state
 stat_t cm_set_home(nvObj_t *nv);        // set machine homing state
@@ -642,40 +651,40 @@ stat_t cm_set_tof(nvObj_t *nv);         // set tool offset
 stat_t cm_get_tt(nvObj_t *nv);          // get tool table value
 stat_t cm_set_tt(nvObj_t *nv);          // set tool table value
 
-stat_t cm_get_am(nvObj_t *nv);          // get axis mode
-stat_t cm_set_am(nvObj_t *nv);          // set axis mode
-stat_t cm_get_tn(nvObj_t *nv);          // get travel minimum
-stat_t cm_set_tn(nvObj_t *nv);          // set travel minimum
-stat_t cm_get_tm(nvObj_t *nv);          // get travel maximum
-stat_t cm_set_tm(nvObj_t *nv);          // set travel maximum
-stat_t cm_get_ra(nvObj_t *nv);          // get radius
-stat_t cm_set_ra(nvObj_t *nv);          // set radius
+// stat_t cm_get_am(nvObj_t *nv);          // get axis mode
+// stat_t cm_set_am(nvObj_t *nv);          // set axis mode
+// stat_t cm_get_tn(nvObj_t *nv);          // get travel minimum
+// stat_t cm_set_tn(nvObj_t *nv);          // set travel minimum
+// stat_t cm_get_tm(nvObj_t *nv);          // get travel maximum
+// stat_t cm_set_tm(nvObj_t *nv);          // set travel maximum
+// stat_t cm_get_ra(nvObj_t *nv);          // get radius
+// stat_t cm_set_ra(nvObj_t *nv);          // set radius
 
 float cm_get_axis_jerk(const uint8_t axis);
 void cm_set_axis_max_jerk(const uint8_t axis, const float jerk);
 void cm_set_axis_high_jerk(const uint8_t axis, const float jerk);
 
-stat_t cm_get_vm(nvObj_t *nv);          // get velocity max
-stat_t cm_set_vm(nvObj_t *nv);          // set velocity max and reciprocal
-stat_t cm_get_fr(nvObj_t *nv);          // get feedrate max
-stat_t cm_set_fr(nvObj_t *nv);          // set feedrate max and reciprocal
-stat_t cm_get_jm(nvObj_t *nv);          // get jerk max with 1,000,000 correction
-stat_t cm_set_jm(nvObj_t *nv);          // set jerk max with 1,000,000 correction
-stat_t cm_get_jh(nvObj_t *nv);          // get jerk high with 1,000,000 correction
-stat_t cm_set_jh(nvObj_t *nv);          // set jerk high with 1,000,000 correction
+// stat_t cm_get_vm(nvObj_t *nv);          // get velocity max
+// stat_t cm_set_vm(nvObj_t *nv);          // set velocity max and reciprocal
+// stat_t cm_get_fr(nvObj_t *nv);          // get feedrate max
+// stat_t cm_set_fr(nvObj_t *nv);          // set feedrate max and reciprocal
+// stat_t cm_get_jm(nvObj_t *nv);          // get jerk max with 1,000,000 correction
+// stat_t cm_set_jm(nvObj_t *nv);          // set jerk max with 1,000,000 correction
+// stat_t cm_get_jh(nvObj_t *nv);          // get jerk high with 1,000,000 correction
+// stat_t cm_set_jh(nvObj_t *nv);          // set jerk high with 1,000,000 correction
 
-stat_t cm_get_hi(nvObj_t *nv);          // get homing input
-stat_t cm_set_hi(nvObj_t *nv);          // set homing input
-stat_t cm_get_hd(nvObj_t *nv);          // get homing direction
-stat_t cm_set_hd(nvObj_t *nv);          // set homing direction
-stat_t cm_get_sv(nvObj_t *nv);          // get homing search velocity
-stat_t cm_set_sv(nvObj_t *nv);          // set homing search velocity
-stat_t cm_get_lv(nvObj_t *nv);          // get homing latch velocity
-stat_t cm_set_lv(nvObj_t *nv);          // set homing latch velocity
-stat_t cm_get_lb(nvObj_t *nv);          // get homing latch backoff
-stat_t cm_set_lb(nvObj_t *nv);          // set homing latch backoff
-stat_t cm_get_zb(nvObj_t *nv);          // get homing zero backoff
-stat_t cm_set_zb(nvObj_t *nv);          // set homing zero backoff
+// stat_t cm_get_hi(nvObj_t *nv);          // get homing input
+// stat_t cm_set_hi(nvObj_t *nv);          // set homing input
+// stat_t cm_get_hd(nvObj_t *nv);          // get homing direction
+// stat_t cm_set_hd(nvObj_t *nv);          // set homing direction
+// stat_t cm_get_sv(nvObj_t *nv);          // get homing search velocity
+// stat_t cm_set_sv(nvObj_t *nv);          // set homing search velocity
+// stat_t cm_get_lv(nvObj_t *nv);          // get homing latch velocity
+// stat_t cm_set_lv(nvObj_t *nv);          // set homing latch velocity
+// stat_t cm_get_lb(nvObj_t *nv);          // get homing latch backoff
+// stat_t cm_set_lb(nvObj_t *nv);          // set homing latch backoff
+// stat_t cm_get_zb(nvObj_t *nv);          // get homing zero backoff
+// stat_t cm_set_zb(nvObj_t *nv);          // set homing zero backoff
 
 stat_t cm_get_jt(nvObj_t *nv);          // get junction integration time constant
 stat_t cm_set_jt(nvObj_t *nv);          // set junction integration time constant
