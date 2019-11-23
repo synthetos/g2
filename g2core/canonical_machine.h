@@ -463,6 +463,8 @@ stat_t cm_arc_feed(const float target[], const bool target_f[],             // G
 stat_t cm_select_tool(const uint8_t tool);                      // T parameter
 stat_t cm_change_tool(const uint8_t tool);                      // M6
 
+bool cm_is_laser_tool(void);                                    // True if tool is a laser
+
 // Miscellaneous Functions (4.3.9)
 // see coolant.h for coolant functions - which would go right here
 
