@@ -180,6 +180,11 @@ static void _exec_spindle_control(float *value, bool *flag)
             spindle.direction = control;
             spindle.state = control;
             spinup_delay = true;
+            if (cm_is_laser_tool() && spindle.direction == SPINDLE_CCW) {
+                // Since dynamic laser mode relies on spindle override to scale
+                // the power, ensure it is initialize when transitioning into this state.
+                spindle.override_factor = 0.0;
+            }
             break; 
         }
         case SPINDLE_PAUSE : { 
