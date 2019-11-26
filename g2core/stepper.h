@@ -328,7 +328,7 @@ enum stPowerMode {
  *  There are 5 main structures involved in stepper operations;
  *
  *  data structure:                   found in:      runs primarily at:
- *    mpBuffer planning buffers (bf)    planner.c       main loop
+ *    mpBuf_t planning buffers (bf)    planner.c       main loop
  *    mrRuntimeSingleton (mr)           planner.c      MED ISR
  *    stConfig (st_cfg)                 stepper.c      write=bkgd, read=ISRs
  *    stPrepSingleton (st_pre)          stepper.c      MED ISR
@@ -404,7 +404,7 @@ typedef struct stPrepMotor {
 typedef struct stPrepSingleton {
     magic_t magic_start;                    // magic number to test memory integrity
     volatile prepBufferState buffer_state;  // prep buffer state - owned by exec or loader
-    struct mpBuffer *bf;                    // static pointer to relevant buffer
+    struct mpBuf_t *bf;                    // static pointer to relevant buffer
     blockType block_type;                   // move type (requires planner.h)
 
     uint32_t dda_ticks;                     // DDA ticks for the move

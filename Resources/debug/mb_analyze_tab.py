@@ -26,7 +26,7 @@ def load_pool(filename):
             pool[TUMBLER[tumbler_pos]] = current_buffer
             tumbler_pos += 1
 
-        buf = re.search('\(mpBuffer\s\*\)\s(0x[0-9a-fA-F]+)', line)
+        buf = re.search('\(mpBuf_t\s\*\)\s(0x[0-9a-fA-F]+)', line)
         if buf:
             current_buffer = int(buf.groups()[0], 16)
             pool[current_buffer] = {}

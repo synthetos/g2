@@ -318,14 +318,14 @@ typedef enum {                      // code blocks for planning and trapezoid ge
 
 //**** Planner Queue Structures ****
 
-typedef struct mpBuffer {
+struct mpBuf_t { // mpBuf_t
 
     // *** CAUTION *** These two pointers are not reset by _clear_buffer()
-    struct mpBuffer *pv;                // static pointer to previous buffer
-    struct mpBuffer *nx;                // static pointer to next buffer
+    struct mpBuf_t *pv;                // static pointer to previous buffer
+    struct mpBuf_t *nx;                // static pointer to next buffer
     uint8_t buffer_number;              // DIAGNOSTIC for easier debugging
 
-    stat_t (*bf_func)(struct mpBuffer *bf); // callback to buffer exec function
+    stat_t (*bf_func)(struct mpBuf_t *bf); // callback to buffer exec function
     cm_exec_t cm_func;                  // callback to canonical machine execution function
 
 #ifdef __PLANNER_DIAGNOSTICS
@@ -421,7 +421,7 @@ typedef struct mpBuffer {
         q_recip_2_sqrt_j = 0.0;
         gm.reset();
     }
-} mpBuf_t;
+};
 
 typedef struct mpPlannerQueue {         // control structure for queue
     magic_t magic_start;                // magic number to test memory integrity
