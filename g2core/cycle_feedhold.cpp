@@ -890,7 +890,7 @@ stat_t _feedhold_restart_with_actions()   // Execute Cases (6) and (7)
 
     // Check to run first-time code
     if (cm1.hold_state == FEEDHOLD_HOLD) {
-        if (!coolant_ready() || (spindle_is_on_or_paused() && !spindle_ready_to_resume())) {
+        if (!coolant_ready() || (is_spindle_on_or_paused() && !is_spindle_ready_to_resume())) {
             return (STAT_EAGAIN);
         }
 

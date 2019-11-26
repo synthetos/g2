@@ -83,7 +83,7 @@ Motate::SysTickEvent dwell_systick_event{
             st_run.dwell_ticks_downcount = 1; // this'll decerement to zero shortly
             cm->hold_state = FEEDHOLD_MOTION_STOPPED;
         }
-        if (spindle_speed_ramp_from_systick() && (--st_run.dwell_ticks_downcount == 0)) {
+        if (do_spindle_speed_ramp_from_systick() && (--st_run.dwell_ticks_downcount == 0)) {
             st_run.dwell_ticks_downcount = 0;  // in the case of stop==true, this is needed
             SysTickTimer.unregisterEvent(&dwell_systick_event);
             _load_move();  // load the next move at the current interrupt level

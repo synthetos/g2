@@ -579,11 +579,10 @@ static stat_t _interlock_estop_handler(void) {
         cm1.safety_state |= SAFETY_INTERLOCK_OPEN;
 
         // Check if the spindle is on
-        if (spindle.state != SPINDLE_OFF) {
+        if (is_spindle_on_or_paused()) {
             if (cm1.machine_state == MACHINE_CYCLE) {
                 cm_request_feedhold(FEEDHOLD_TYPE_ACTIONS, FEEDHOLD_EXIT_CYCLE);
             } else {
-                // cm_request_cycle_start();  // proper way to restart the cycle
                 spindle_control_immediate(SPINDLE_OFF);
             }
         }

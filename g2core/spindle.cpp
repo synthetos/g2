@@ -39,6 +39,61 @@
 
 /**** Allocate structures ****/
 
+#define SPINDLE_OVERRIDE_ENABLE false
+#define SPINDLE_OVERRIDE_FACTOR 1.00
+#define SPINDLE_OVERRIDE_MIN 0.05       // 5%
+#define SPINDLE_OVERRIDE_MAX 2.00       // 200%
+#define SPINDLE_OVERRIDE_RAMP_TIME 1    // change sped in seconds
+
+enum spMode {
+    SPINDLE_DISABLED = 0,       // spindle will not operate
+    SPINDLE_PLAN_TO_STOP,       // spindle operating, plans to stop
+    SPINDLE_CONTINUOUS,         // spindle operating, does not plan to stop
+};
+#define SPINDLE_MODE_MAX SPINDLE_CONTINUOUS
+
+// *** NOTE: The spindle polarity active hi/low values currently agree with ioMode in gpio.h
+// These will all need to be changed to ACTIVE_HIGH = 0, ACTIVE_LOW = 1
+// See: https://github.com/synthetos/g2_private/wiki/GPIO-Design-Discussion#settings-common-to-all-io-types
+
+enum spPolarity {                  // Note: These values agree with
+    SPINDLE_ACTIVE_LOW = 0,     // Will set output to 0 to enable the spindle or CW direction
+    SPINDLE_ACTIVE_HIGH = 1,    // Will set output to 1 to enable the spindle or CW direction
+};
+
+enum ESCState {                  // electronic speed controller for some spindles
+    ESC_ONLINE = 0,
+    ESC_OFFLINE,
+    ESC_LOCKOUT,
+    ESC_REBOOTING,
+    ESC_LOCKOUT_AND_REBOOTING,
+};
+
+/*
+ * Spindle control structure
+ */
+
+struct spSpindle_t {
+
+    spControl   state;              // {spc:} OFF, ON, PAUSE, RESUME, WAIT
+    spControl   direction;          //        1=CW, 2=CCW (subset of above state)
+
+    float       speed;              // {sps:}  S in RPM
+    float       speed_min;          // {spsn:} minimum settable spindle speed
+    float       speed_max;          // {spsm:} maximum settable spindle speed
+    float       speed_actual;       // hidden internal value used in speed ramping
+    float    speed_change_per_tick; // hidden internal value used in speed ramping
+
+    spPolarity  enable_polarity;    // {spep:} 0=active low, 1=active high
+    spPolarity  dir_polarity;       // {spdp:} 0=clockwise low, 1=clockwise high
+    bool        pause_enable;       // {spph:} pause on feedhold
+    float       spinup_delay;       // {spde:} optional delay on spindle start (set to 0 to disable)
+//    float       spindown_delay;     // {spds:} optional delay on spindle stop (set to 0 to disable)
+
+    bool        override_enable;    // {spoe:} TRUE = spindle speed override enabled (see also m48_enable in canonical machine)
+    float       override_factor;    // {spo:}  1.0000 x S spindle speed. Go up or down from there
+};
+
 spSpindle_t spindle;
 
 
@@ -336,7 +391,7 @@ stat_t spindle_control_sync(spControl control)  // uses spControl arg: OFF, CW, 
         return (STAT_OK);
     }
 
-    if (spindle.speed > 0.0 && !spindle_ready_to_resume()) {
+    if (spindle.speed > 0.0 && !is_spindle_ready_to_resume()) {
         // request a feedhold immediately
         cm_request_feedhold(FEEDHOLD_TYPE_ACTIONS, FEEDHOLD_EXIT_CYCLE);
     }
@@ -386,7 +441,7 @@ stat_t spindle_speed_sync(float speed)
     return (STAT_OK);
 }
 
-bool spindle_ready_to_resume() {
+bool is_spindle_ready_to_resume() {
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
     if ((cm1.estop_state != 0) || (cm1.safety_state != 0)) {
         return false;
@@ -395,7 +450,7 @@ bool spindle_ready_to_resume() {
     return true;
 }
 
-bool spindle_is_on_or_paused() {
+bool is_spindle_on_or_paused() {
     if (spindle.state != SPINDLE_OFF) {
         return true;
     }
@@ -403,7 +458,7 @@ bool spindle_is_on_or_paused() {
 }
 
 // returns if it's done
-bool spindle_speed_ramp_from_systick() {
+bool do_spindle_speed_ramp_from_systick() {
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
     bool done = false;
     if ((cm1.estop_state == 0) && (cm1.safety_state == 0)) {
@@ -598,3 +653,21 @@ void sp_print_spoe(nvObj_t *nv) { text_print(nv, fmt_spoe);}    // TYPE INT
 void sp_print_spo(nvObj_t *nv)  { text_print(nv, fmt_spo);}     // TYPE FLOAT
 
 #endif // __TEXT_MODE
+
+
+constexpr cfgItem_t spindle_config_items_1[] = {
+    // Spindle functions
+    { "sp","spmo", _i0,  0, sp_print_spmo, get_nul,     set_nul,     nullptr, 0 }, // keeping this key around, but it returns null and does nothing
+    { "sp","spph", _bip, 0, sp_print_spph, sp_get_spph, sp_set_spph, nullptr, SPINDLE_PAUSE_ON_HOLD },
+    { "sp","spde", _fip, 2, sp_print_spde, sp_get_spde, sp_set_spde, nullptr, SPINDLE_SPINUP_DELAY },
+    { "sp","spsn", _fip, 2, sp_print_spsn, sp_get_spsn, sp_set_spsn, nullptr, SPINDLE_SPEED_MIN},
+    { "sp","spsm", _fip, 2, sp_print_spsm, sp_get_spsm, sp_set_spsm, nullptr, SPINDLE_SPEED_MAX},
+    { "sp","spep", _iip, 0, sp_print_spep, sp_get_spep, sp_set_spep, nullptr, SPINDLE_ENABLE_POLARITY },
+    { "sp","spdp", _iip, 0, sp_print_spdp, sp_get_spdp, sp_set_spdp, nullptr, SPINDLE_DIR_POLARITY },
+    { "sp","spoe", _bip, 0, sp_print_spoe, sp_get_spoe, sp_set_spoe, nullptr, SPINDLE_OVERRIDE_ENABLE},
+    { "sp","spo",  _fip, 3, sp_print_spo,  sp_get_spo,  sp_set_spo,  nullptr, SPINDLE_OVERRIDE_FACTOR},
+    { "sp","spc",  _i0,  0, sp_print_spc,  sp_get_spc,  sp_set_spc,  nullptr, 0 },   // spindle state
+    { "sp","sps",  _f0,  0, sp_print_sps,  sp_get_sps,  sp_set_sps,  nullptr, 0 },   // spindle speed
+};
+constexpr cfgSubtableFromStaticArray spindle_config_1 {spindle_config_items_1};
+const configSubtable * const getSpindleConfig_1() { return &spindle_config_1; }
