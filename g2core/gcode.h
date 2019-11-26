@@ -127,12 +127,12 @@ typedef enum {              // axis modes (ordered: see _cm_get_feed_time())
 /****************************************************************************************
  * GCODE MODEL - The following GCodeModel/GCodeInput structs are used:
  *
- * - gm is the core Gcode model state. It keeps the internal gcode state model in 
- *   normalized canonical form. All values are unit converted (to mm) and in the 
- *   machine coordinate system (absolute coordinate system). Gm is owned by the 
+ * - gm is the core Gcode model state. It keeps the internal gcode state model in
+ *   normalized canonical form. All values are unit converted (to mm) and in the
+ *   machine coordinate system (absolute coordinate system). Gm is owned by the
  *   canonical machine layer and should be accessed only through cm_ routines.
  *
- *   The gm core struct is copied and passed as context to the runtime where it is used 
+ *   The gm core struct is copied and passed as context to the runtime where it is used
  *   for planning, move execution, feedholds, and reporting.
  *
  * - gmx is the extended gcode model variables that are only used by the canonical
@@ -142,19 +142,19 @@ typedef enum {              // axis modes (ordered: see _cm_get_feed_time())
  *   spindle, coolant, and others (i.e. not ALL gcode global state is in gmx)
  *
  * - gn is used by the gcode interpreter and is re-initialized for each gcode block.
- *   It accepts data in the new gcode block in the formats present in the block 
- *   (pre-normalized forms). During initialization some state elements are necessarily 
+ *   It accepts data in the new gcode block in the formats present in the block
+ *   (pre-normalized forms). During initialization some state elements are necessarily
  *    restored from gm.
  *
- * - gf is used by the gcode parser interpreter to hold flags for any data that has 
- *   changed in gn during the parse. gf.target[] values are also used by the canonical 
+ * - gf is used by the gcode parser interpreter to hold flags for any data that has
+ *   changed in gn during the parse. gf.target[] values are also used by the canonical
  *   machine during set_target().
  *
  * - cfg (config struct in config.h) is also used heavily and contains some values that
- *   might be considered to be Gcode model values. The distinction is that all values 
- *   in the config are persisted and restored, whereas the gm structs are transient. 
- *   So cfg has the G54 - G59 offsets, but gm has the G92 offsets. cfg has the power-on / 
- *   reset gcode default values, but gm has the operating state for the values 
+ *   might be considered to be Gcode model values. The distinction is that all values
+ *   in the config are persisted and restored, whereas the gm structs are transient.
+ *   So cfg has the G54 - G59 offsets, but gm has the G92 offsets. cfg has the power-on /
+ *   reset gcode default values, but gm has the operating state for the values
  *   (which may have changed).
  */
 
@@ -209,8 +209,6 @@ typedef struct GCodeState {             // Gcode model state - used by model, pl
 
 typedef struct GCodeStateExtended {     // Gcode dynamic state extensions - used by model and arcs
     uint16_t magic_start;               // magic number to test memory integrity
-    uint8_t next_action;                // handles G modal group 1 moves & non-modals
-    uint8_t program_flow;               // used only by the gcode_parser
     int32_t last_line_number;           // used with line checksums
 
     float position[AXES];               // XYZABC model position (Note: not used in gn or gf)
