@@ -348,16 +348,19 @@ class configSubtable {
    public:
     virtual const cfgItem_t * const get(std::size_t idx) const;
     virtual index_t find(const char *token) const;
-    virtual const size_t length() const;
+
+    constexpr configSubtable(const size_t l) : length{l} {};
+
+    const size_t length;
 };
 
 class cfgSubtableFromStaticArray : public configSubtable {
-    const size_t array_length;
+    // const size_t array_length;
     const cfgItem_t *items;
 
    public:
    template<typename T, size_t length>
-    constexpr cfgSubtableFromStaticArray(T (&i)[length]) : array_length{length}, items{i} {};
+    constexpr cfgSubtableFromStaticArray(T (&i)[length]) : configSubtable{length}, items{i} {};
 
     const cfgItem_t * const get(std::size_t idx) const override {
         return &items[idx];
@@ -366,7 +369,7 @@ class cfgSubtableFromStaticArray : public configSubtable {
     index_t find(const char *token) const override {
         std::size_t idx = 0;
 
-        while (idx < array_length) {
+        while (idx < length) {
             if (strcmp(token, items[idx].token) == 0) {
                 return idx;
             }
@@ -375,9 +378,9 @@ class cfgSubtableFromStaticArray : public configSubtable {
         return NO_MATCH;
     }
 
-    const size_t length() const override {
-        return array_length;
-    }
+    // const size_t length() const override {
+    //     return array_length;
+    // }
 };
 
 

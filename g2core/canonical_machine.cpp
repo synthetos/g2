@@ -1875,17 +1875,19 @@ static int8_t _coord(nvObj_t *nv)   // extract coordinate system from 3rd charac
 
 static int8_t _axis(const nvObj_t *nv)
 {
-    // test if this is a SYS parameter (global), in which case there will be no axis
-    if (strcmp("sys", cfgArray[nv->index].group) == 0) {
-        return (AXIS_TYPE_SYSTEM);
-    }
+    auto &cfgTmp = cfgArray[nv->index];
+
+    // // test if this is a SYS parameter (global), in which case there will be no axis
+    // if (strcmp("sys", cfgTmp.group) == 0) {
+    //     return (AXIS_TYPE_SYSTEM);
+    // }
 
     // if the leading character of the token is a number it's a motor
-    char c = cfgArray[nv->index].token[0];
+    char c = cfgTmp.token[0];
 
-    if (isdigit(c)) {
-        return(st_cfg.mot[c-0x31].motor_map);   // return the axis associated with the motor
-    }
+    // if (isdigit(c)) {
+    //     return(st_cfg.mot[c-0x31].motor_map);   // return the axis associated with the motor
+    // }
 
     // otherwise it's an axis. Or undefined, which is usually a global.
     char *ptr;
@@ -1895,7 +1897,7 @@ static int8_t _axis(const nvObj_t *nv)
     char axes[] = {"xyzabc"};
 #endif
     if ((ptr = strchr(axes, c)) == NULL) {      // not NULL indicates a prefixed axis
-        c = *(cfgArray[nv->index].token + strlen(cfgArray[nv->index].token) -1); // get the last character
+        c = *(cfgTmp.token + strlen(cfgTmp.token) -1); // get the last character
         if ((ptr = strchr(axes, c)) == NULL) {  // test for a postfixed axis
             return (AXIS_TYPE_UNDEFINED);
         }
@@ -2492,154 +2494,138 @@ struct grouplessCfgItem_t {
     fptrCmd set;                        // SET binding aka uint8_t (*set)(nvObj_t *nv)
 };
 
-class cfgSubtableFromGrouplessStaticArray : public configSubtable {
-    const size_t array_length;
-    const grouplessCfgItem_t *items;
+// class cfgSubtableFromGrouplessStaticArray : public configSubtable {
+//     // const size_t array_length;
+//     const grouplessCfgItem_t *items;
 
-    // hold on to a reloadable full cfgItem_t to setup and return
-    static char tmpToken[TOKEN_LEN + 1];
-    static cfgItem_t cfgTmp;
+//     // hold on to a reloadable full cfgItem_t to setup and return
+//     static char tmpToken[TOKEN_LEN + 1];
+//     static cfgItem_t cfgTmp;
 
-   public:
-   template<typename T, size_t length>
-    constexpr cfgSubtableFromGrouplessStaticArray(T (&i)[length]) : array_length{length}, items{i} {};
+//    public:
+//    template<typename T, size_t length>
+//     constexpr cfgSubtableFromGrouplessStaticArray(T (&i)[length]) : configSubtable{length}, items{i} {};
 
-    const cfgItem_t * const get(std::size_t idx) const override {
-        // group is ""
-        strcpy(tmpToken, items[idx].token);
-        cfgTmp.flags = items[idx].flags;
-        cfgTmp.precision = items[idx].precision;
-        cfgTmp.print = items[idx].print;
-        cfgTmp.get = items[idx].get;
-        cfgTmp.set = items[idx].set;
-        return &cfgTmp;
-    }
+//     const cfgItem_t * const get(std::size_t idx) const override {
+//         // group is ""
+//         strcpy(tmpToken, items[idx].token);
+//         cfgTmp.flags = items[idx].flags;
+//         cfgTmp.precision = items[idx].precision;
+//         cfgTmp.print = items[idx].print;
+//         cfgTmp.get = items[idx].get;
+//         cfgTmp.set = items[idx].set;
+//         return &cfgTmp;
+//     }
 
-    index_t find(const char *token) const override {
-        std::size_t idx = 0;
-        while (idx < array_length) {
-            if (strcmp(token, items[idx].token) == 0) {
-                return idx;
-            }
-            idx++;
-        }
-        return NO_MATCH;
-    }
+//     index_t find(const char *token) const override {
+//         std::size_t idx = 0;
+//         while (idx < length) {
+//             if (strcmp(token, items[idx].token) == 0) {
+//                 return idx;
+//             }
+//             idx++;
+//         }
+//         return NO_MATCH;
+//     }
 
-    const size_t length() const override {
-        return array_length;
-    }
-};
-char cfgSubtableFromGrouplessStaticArray::tmpToken[TOKEN_LEN + 1];
-cfgItem_t cfgSubtableFromGrouplessStaticArray::cfgTmp = {"", &tmpToken[0], _i0, 0, nullptr, nullptr, nullptr, nullptr, 0};
+//     // const size_t length() const override {
+//     //     return array_length;
+//     // }
+// };
+// char cfgSubtableFromGrouplessStaticArray::tmpToken[TOKEN_LEN + 1];
+// cfgItem_t cfgSubtableFromGrouplessStaticArray::cfgTmp = {"", &tmpToken[0], _i0, 0, nullptr, nullptr, nullptr, nullptr, 0};
 
-constexpr grouplessCfgItem_t cm_config_items_1[] = {
+constexpr cfgItem_t cm_config_items_1[] = {
     // dynamic model attributes for reporting purposes (up front for speed)
-    { "stat", _i0, 0, cm_print_stat, cm_get_stat,  set_ro   },  // combined machine state
-    {"stat2", _i0, 0, cm_print_stat, cm_get_stat2, set_ro   },  // combined machine state
-    { "n",    _ii, 0, cm_print_line, cm_get_mline, set_noop },  // Model line number
-    { "line", _ii, 0, cm_print_line, cm_get_line,  set_ro   },  // Active line number - model or runtime line number
-    { "vel",  _f0, 2, cm_print_vel,  cm_get_vel,   set_ro   },  // current velocity
-    { "feed", _f0, 2, cm_print_feed, cm_get_feed,  set_ro   },  // feed rate
-    { "macs", _i0, 0, cm_print_macs, cm_get_macs,  set_ro   },  // raw machine state
-    { "cycs", _i0, 0, cm_print_cycs, cm_get_cycs,  set_ro   },  // cycle state
-    { "mots", _i0, 0, cm_print_mots, cm_get_mots,  set_ro   },  // motion state
-    { "hold", _i0, 0, cm_print_hold, cm_get_hold,  set_ro   },  // feedhold state
-    { "unit", _i0, 0, cm_print_unit, cm_get_unit,  set_ro   },  // units mode
-    { "coor", _i0, 0, cm_print_coor, cm_get_coor,  set_ro   },  // coordinate system
-    { "momo", _i0, 0, cm_print_momo, cm_get_momo,  set_ro   },  // motion mode
-    { "plan", _i0, 0, cm_print_plan, cm_get_plan,  set_ro   },  // plane select
-    { "path", _i0, 0, cm_print_path, cm_get_path,  set_ro   },  // path control mode
-    { "dist", _i0, 0, cm_print_dist, cm_get_dist,  set_ro   },  // distance mode
-    { "admo", _i0, 0, cm_print_admo, cm_get_admo,  set_ro   },  // arc distance mode
-    { "frmo", _i0, 0, cm_print_frmo, cm_get_frmo,  set_ro   },  // feed rate mode
-    { "tool", _i0, 0, cm_print_tool, cm_get_toolv, set_ro   },  // active tool
+    {"",  "stat",  _i0, 0, cm_print_stat, cm_get_stat,  set_ro,        nullptr, 0},  // combined machine state
+    {"",  "stat2", _i0, 0, cm_print_stat, cm_get_stat2, set_ro,        nullptr, 0},  // combined machine state
+    {"",  "n",     _ii, 0, cm_print_line, cm_get_mline, set_noop,      nullptr, 0},  // Model line number
+    {"",  "line",  _ii, 0, cm_print_line, cm_get_line,  set_ro,        nullptr, 0},  // Active line number - model or runtime line number
+    {"",  "vel",   _f0, 2, cm_print_vel,  cm_get_vel,   set_ro,        nullptr, 0},  // current velocity
+    {"",  "feed",  _f0, 2, cm_print_feed, cm_get_feed,  set_ro,        nullptr, 0},  // feed rate
+    {"",  "macs",  _i0, 0, cm_print_macs, cm_get_macs,  set_ro,        nullptr, 0},  // raw machine state
+    {"",  "cycs",  _i0, 0, cm_print_cycs, cm_get_cycs,  set_ro,        nullptr, 0},  // cycle state
+    {"",  "mots",  _i0, 0, cm_print_mots, cm_get_mots,  set_ro,        nullptr, 0},  // motion state
+    {"",  "hold",  _i0, 0, cm_print_hold, cm_get_hold,  set_ro,        nullptr, 0},  // feedhold state
+    {"",  "unit",  _i0, 0, cm_print_unit, cm_get_unit,  set_ro,        nullptr, 0},  // units mode
+    {"",  "coor",  _i0, 0, cm_print_coor, cm_get_coor,  set_ro,        nullptr, 0},  // coordinate system
+    {"",  "momo",  _i0, 0, cm_print_momo, cm_get_momo,  set_ro,        nullptr, 0},  // motion mode
+    {"",  "plan",  _i0, 0, cm_print_plan, cm_get_plan,  set_ro,        nullptr, 0},  // plane select
+    {"",  "path",  _i0, 0, cm_print_path, cm_get_path,  set_ro,        nullptr, 0},  // path control mode
+    {"",  "dist",  _i0, 0, cm_print_dist, cm_get_dist,  set_ro,        nullptr, 0},  // distance mode
+    {"",  "admo",  _i0, 0, cm_print_admo, cm_get_admo,  set_ro,        nullptr, 0},  // arc distance mode
+    {"",  "frmo",  _i0, 0, cm_print_frmo, cm_get_frmo,  set_ro,        nullptr, 0},  // feed rate mode
+    {"",  "tool",  _i0, 0, cm_print_tool, cm_get_toolv, set_ro,        nullptr, 0},  // active tool
 #ifdef ENABLE_INTERLOCK_AND_ESTOP
-    {"safe", _i0, 0, cm_print_safe, cm_get_safe,  set_ro       }, // interlock status
-    {"estp", _i0, 0, cm_print_estp, cm_get_estp,  cm_ack_estop }, // E-stop status (SET to ack)
-    {"estpc",_i0, 0, cm_print_estp, cm_ack_estop, cm_ack_estop }, // E-stop status clear (GET to ack)
+    {"",  "safe",  _i0, 0, cm_print_safe, cm_get_safe,  set_ro,        nullptr, 0}, // interlock status
+    {"",  "estp",  _i0, 0, cm_print_estp, cm_get_estp,  cm_ack_estop,  nullptr, 0}, // E-stop status (SET to ack)
+    {"",  "estpc", _i0, 0, cm_print_estp, cm_ack_estop, cm_ack_estop,  nullptr, 0}, // E-stop status clear (GET to ack)
 #endif
-    {"g92e", _i0, 0, cm_print_g92e, cm_get_g92e,  set_ro       }, // G92 enable state
+    {"",  "g92e",  _i0, 0, cm_print_g92e, cm_get_g92e,  set_ro,        nullptr, 0}, // G92 enable state
 #ifdef TEMPORARY_HAS_LEDS
-    {"_leds",_i0, 0, tx_print_nul, _get_leds,_set_leds         }, // TEMPORARY - change LEDs
+    {"",  "_leds", _i0, 0, tx_print_nul, _get_leds,_set_leds,          nullptr, 0}, // TEMPORARY - change LEDs
 #endif
 };
-const cfgSubtableFromGrouplessStaticArray cm_config_1 {cm_config_items_1};
+const cfgSubtableFromStaticArray cm_config_1 {cm_config_items_1};
 const configSubtable * const getCmConfig_1() { return &cm_config_1; }
 
 class cfgSubtableFromTokenList : public configSubtable {
     const char *group_name;
     const size_t group_name_length;
     const char * const * subkeys; // read it backward: "pointer to const pointers to const chars"
-    const size_t subkeys_length;
-
-    const uint8_t flags;                      // operations flags - see defines below
-    const int8_t precision;                   // decimal precision for display (JSON)
-    const fptrPrint print;                    // print binding: aka void (*print)(nvObj_t *nv);
-    const fptrCmd get_fn;                        // GET binding aka uint8_t (*get)(nvObj_t *nv)
-    const fptrCmd set_fn;                        // SET binding aka uint8_t (*set)(nvObj_t *nv)
-
+    // const size_t subkeys_length;
 
     // hold on to a reloadable full cfgItem_t to setup and return
     static char tmpToken[TOKEN_LEN + 1];
-    static cfgItem_t cfgTmp;
+    cfgItem_t cfgTmp;
 
    public:
     template <size_t group_length, size_t subkey_count>
     constexpr cfgSubtableFromTokenList(const char (&new_group_name)[group_length], const char *const (&i)[subkey_count],
                                        const uint8_t new_flags, const int8_t new_precision, const fptrPrint new_print,
                                        const fptrCmd new_get_fn, const fptrCmd new_set_fn)
-        : group_name{new_group_name},
-          group_name_length{group_length-1}, // string lengths include the null
+        : configSubtable{subkey_count},
+          group_name{new_group_name},
+          group_name_length{group_length - 1},  // string lengths include the null
           subkeys{i},
-          subkeys_length{subkey_count},
-          flags{new_flags},
-          precision{new_precision},
-          print{new_print},
-          get_fn{new_get_fn},
-          set_fn{new_set_fn} {};
+          //   subkeys_length{subkey_count},
+          cfgTmp{&new_group_name[0], tmpToken, new_flags, new_precision, new_print, new_get_fn, new_set_fn, nullptr, 0}
+        {};
 
     const cfgItem_t * const get(std::size_t idx) const override {
-        cfgTmp.group = group_name;
         char *dst = tmpToken;
-        strcpy(dst, group_name);
-        strcpy(dst+group_name_length, subkeys[idx]);
-        cfgTmp.flags = flags;
-        cfgTmp.precision = precision;
-        cfgTmp.print = print;
-        cfgTmp.get = get_fn;
-        cfgTmp.set = set_fn;
+        // strcpy(dst, group_name);
+        // strcpy(dst+group_name_length, subkeys[idx]);
+        // groupname is incorporated into tokens
+        strcpy(dst, subkeys[idx]);
         return &cfgTmp;
     }
 
     index_t find(const char *token) const override {
         std::size_t idx = 0;
-        if (strncmp(token, group_name, group_name_length) != 0 || *(token+group_name_length) == 0) {
+        if (*(token+group_name_length) == 0 || strncmp(token, group_name, group_name_length) != 0) {
             // wrong group or looking for just the group
             return NO_MATCH;
         }
-        while (idx < subkeys_length) {
-            if (strcmp(subkeys[idx], token+group_name_length) == 0) {
+        while (idx < length) {
+            // groupname is incorporated into tokens
+            if (strcmp(subkeys[idx]+group_name_length, token+group_name_length) == 0) {
                 return idx;
             }
             idx++;
         }
         return NO_MATCH;
     }
-
-    const size_t length() const override {
-        return subkeys_length;
-    }
 };
 char cfgSubtableFromTokenList::tmpToken[TOKEN_LEN + 1];
-cfgItem_t cfgSubtableFromTokenList::cfgTmp = {nullptr, &tmpToken[0], _i0, 0, nullptr, nullptr, nullptr, nullptr, 0};
+// cfgItem_t cfgSubtableFromTokenList::cfgTmp = {nullptr, &tmpToken[0], _i0, 0, nullptr, nullptr, nullptr, nullptr, 0};
 
 #if (AXES == 9)
-const char * const axis_keys[] = {"x", "y", "z", "u", "v", "w", "a", "b", "c"};
+const char * const mpo_axis_keys[] = {"mpox", "mpoy", "mpoz", "mpou", "mpov", "mpow", "mpoa", "mpob", "mpoc"};
 #else
-const char * const axis_keys[] = {"x", "y", "z", "a", "b", "c"};
+const char * const mpo_axis_keys[] = {"mpox", "mpoy", "mpoz", "mpoa", "mpob", "mpoc"};
 #endif
-cfgSubtableFromTokenList mpo_config{"mpo", axis_keys, _f0, 5, cm_print_mpo, cm_get_mpo, set_ro};  // machine position
+cfgSubtableFromTokenList mpo_config{"mpo", mpo_axis_keys, _f0, 5, cm_print_mpo, cm_get_mpo, set_ro};  // machine position
 const configSubtable *const getMpoConfig_1() { return &mpo_config; }
 
 // constexpr cfgItem_t pos_config_items_1[] = {
@@ -2654,7 +2640,12 @@ const configSubtable *const getMpoConfig_1() { return &mpo_config; }
 //     {"pos", "posc", _f0, 5, cm_print_pos, cm_get_pos, set_ro, nullptr, 0},  // C work position
 // };
 // constexpr cfgSubtableFromStaticArray pos_config_1{pos_config_items_1};
-cfgSubtableFromTokenList pos_config_1{"pos", axis_keys, _f0, 5, cm_print_pos, cm_get_pos, set_ro};  // work position
+#if (AXES == 9)
+const char * const pos_axis_keys[] = {"posx", "posy", "posz", "posu", "posv", "posw", "posa", "posb", "posc"};
+#else
+const char * const pos_axis_keys[] = {"posx", "posy", "posz", "posa", "posb", "posc"};
+#endif
+cfgSubtableFromTokenList pos_config_1{"pos", pos_axis_keys, _f0, 5, cm_print_pos, cm_get_pos, set_ro};  // work position
 const configSubtable *const getPosConfig_1() { return &pos_config_1; }
 
 // constexpr cfgItem_t ofs_config_items_1[] = {
@@ -2669,7 +2660,12 @@ const configSubtable *const getPosConfig_1() { return &pos_config_1; }
 //     {"ofs", "ofsc", _f0, 5, cm_print_ofs, cm_get_ofs, set_ro, nullptr, 0},  // C work offset
 // };
 // constexpr cfgSubtableFromStaticArray ofs_config_1{ofs_config_items_1};
-cfgSubtableFromTokenList ofs_config_1{"ofs", axis_keys, _f0, 5, cm_print_ofs, cm_get_ofs, set_ro};  // work offsets
+#if (AXES == 9)
+const char * const ofs_axis_keys[] = {"ofsx", "ofsy", "ofsz", "ofsu", "ofsv", "ofsw", "ofsa", "ofsb", "ofsc"};
+#else
+const char * const ofs_axis_keys[] = {"ofsx", "ofsy", "ofsz", "ofsa", "ofsb", "ofsc"};
+#endif
+cfgSubtableFromTokenList ofs_config_1{"ofs", ofs_axis_keys, _f0, 5, cm_print_ofs, cm_get_ofs, set_ro};  // work offsets
 const configSubtable *const getOfsConfig_1() { return &ofs_config_1; }
 
 constexpr cfgItem_t hom_config_items_1[] = {
@@ -2719,7 +2715,12 @@ const configSubtable *const getPrbConfig_1() { return &prb_config_1; }
 //     {"jog", "jogc", _f0, 0, tx_print_nul, get_nul, cm_run_jog, nullptr, 0},  // jog in C axis
 // };
 // constexpr cfgSubtableFromStaticArray jog_config_1{jog_config_items_1};
-cfgSubtableFromTokenList jog_config_1{"jog", axis_keys, _f0, 0, tx_print_nul, get_nul, cm_run_jog};  // job
+#if (AXES == 9)
+const char * const jog_axis_keys[] = {"jogx", "jogy", "jogz", "jogu", "jogv", "jogw", "joga", "jogb", "jogc"};
+#else
+const char * const jog_axis_keys[] = {"jogx", "jogy", "jogz", "joga", "jogb", "jogc"};
+#endif
+cfgSubtableFromTokenList jog_config_1{"jog", jog_axis_keys, _f0, 0, tx_print_nul, get_nul, cm_run_jog};  // job
 const configSubtable *const getJogConfig_1() { return &jog_config_1; }
 
 constexpr cfgItem_t axis_config_items_1[] = {

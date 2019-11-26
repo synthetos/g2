@@ -108,46 +108,54 @@ class configSubtableNode {
     const configSubtable * const subtable;
    public:
     const configSubtableNode * const next;
-    configSubtableNode(const configSubtable *const s)
-        : subtable{s}, next{nullptr}, length_cache{subtable->length()}, length_cache_valid{true} {};
-    configSubtableNode(const configSubtable *const s, const configSubtableNode *const n)
-        : subtable{s},
-          next{n},
-          length_cache(subtable->length() + next->length()),
-          length_cache_valid{true} {};
+
+    configSubtableNode(size_t new_start_idx, const configSubtable *const s)
+        : subtable{s}, next{nullptr}, start_idx(new_start_idx), end_idx(new_start_idx+subtable->length), length{subtable->length} {};
+
+    configSubtableNode(size_t new_start_idx, const configSubtable *const s, const configSubtableNode *const n)
+        : subtable{s}, next{n}, start_idx(new_start_idx), end_idx(new_start_idx+subtable->length), length(subtable->length + next->length) {};
 
     // The following is to optimize for linear table searches
     static const configSubtableNode *search_node_cache; // keep track of the last place we were searching
     static std::size_t idx_cache;                       // and the last index we were searching for
     static std::size_t idx_cache_offset;                // and how much we had to remove from it for this search node
 
-    size_t length_cache;
-    bool length_cache_valid = false;
+    const size_t start_idx;
+    const size_t end_idx;
+    const size_t length;
 
     const cfgItem_t * const get(std::size_t idx) const {
         if (!search_node_cache || idx_cache > idx) {
-            idx_cache_offset = 0;
             search_node_cache = this;
         }
 
         const configSubtableNode *search_node = search_node_cache;
         idx_cache = idx;
-        idx -= idx_cache_offset;
 
-        while (idx >= search_node->subtable->length()) {
+        while (idx >= (search_node->end_idx)) {
             if (!search_node->next) {
                 idx_cache = 0;
                 search_node_cache = nullptr;
                 return nullptr;
             }
-            idx_cache_offset += search_node->subtable->length();
-            idx -= search_node->subtable->length();
             search_node = search_node->next;
         }
 
         search_node_cache = search_node;
-        return search_node->subtable->get(idx);
+        return search_node->subtable->get(idx - search_node->start_idx);
     }
+
+    // const cfgItem_t * const get(std::size_t idx) const {
+    //     const configSubtableNode *search_node = this;
+    //     while (idx >= search_node->subtable->length()) {
+    //         if (!search_node->next) {
+    //             return nullptr;
+    //         }
+    //         idx -= search_node->subtable->length();
+    //         search_node = search_node->next;
+    //     }
+    //     return search_node->subtable->get(idx);
+    // }
 
     index_t find(const char *token) {
         const configSubtableNode *search_node = this;
@@ -160,8 +168,8 @@ class configSubtableNode {
                 search_node_cache = nullptr;
                 return NO_MATCH;
             }
-            auto length = search_node->subtable->length();
-            idx_cache_offset += length;
+            auto l = search_node->subtable->length;
+            idx_cache_offset += l;
             search_node = search_node->next;
         }
 
@@ -169,37 +177,6 @@ class configSubtableNode {
         idx_cache = idx + idx_cache_offset;
 
         return idx_cache;
-    }
-
-    const size_t length() {
-        if (length_cache_valid) {
-            return length_cache;
-        }
-        const configSubtableNode *length_node = this;
-
-        size_t l = 0;
-        while (length_node) {
-            l += length_node->subtable->length();
-            length_node = length_node->next;
-        }
-
-        length_cache = l;
-        length_cache_valid = true;
-        return l;
-    }
-
-    const size_t length() const {
-        if (length_cache_valid) {
-            return length_cache;
-        }
-        const configSubtableNode *length_node = this;
-
-        size_t l = 0;
-        while (length_node) {
-            l += length_node->subtable->length();
-            length_node = length_node->next;
-        }
-        return l;
     }
 };
 
@@ -216,8 +193,8 @@ class configSubtableNodes<const configSubtable *, following_nodes_t...> {
     configSubtableNodes<following_nodes_t...> next_nodes;
 public:
     configSubtableNode this_node;
-    constexpr configSubtableNodes(const configSubtable * this_subtable, following_nodes_t... following_nodes) :
-    next_nodes{following_nodes...}, this_node{this_subtable, &next_nodes.this_node}
+    constexpr configSubtableNodes(const size_t start_index, const configSubtable * this_subtable, following_nodes_t... following_nodes) :
+    next_nodes{start_index + this_subtable->length, following_nodes...}, this_node{start_index, this_subtable, &next_nodes.this_node}
     {}
 };
 
@@ -226,14 +203,14 @@ class configSubtableNodes<const configSubtable * > {
 public:
     configSubtableNode this_node;
 
-    configSubtableNodes(const configSubtable * this_subtable) :
-    this_node{this_subtable}
+    configSubtableNodes(const size_t start_index, const configSubtable * this_subtable) :
+    this_node{start_index, this_subtable}
     {}
 };
 
 template <typename... following_nodes_t>
-constexpr configSubtableNodes<following_nodes_t...> makeSubtableNodes(following_nodes_t... following_nodes) {
-    return {following_nodes...};
+constexpr configSubtableNodes<following_nodes_t...> makeSubtableNodes(const size_t start_index, following_nodes_t... following_nodes) {
+    return {start_index, following_nodes...};
 }
 
 constexpr cfgItem_t sys_config_items_1[] = {
@@ -869,9 +846,11 @@ constexpr cfgItem_t cm_coor_config_items_1[] = {
     { "g54","g54x",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G54_X_OFFSET },
     { "g54","g54y",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G54_Y_OFFSET },
     { "g54","g54z",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G54_Z_OFFSET },
+#if (AXES == 9)
     { "g54","g54u",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G54_U_OFFSET },
     { "g54","g54v",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G54_V_OFFSET },
     { "g54","g54w",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G54_W_OFFSET },
+#endif
     { "g54","g54a",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G54_A_OFFSET },
     { "g54","g54b",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G54_B_OFFSET },
     { "g54","g54c",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G54_C_OFFSET },
@@ -879,9 +858,11 @@ constexpr cfgItem_t cm_coor_config_items_1[] = {
     { "g55","g55x",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G55_X_OFFSET },
     { "g55","g55y",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G55_Y_OFFSET },
     { "g55","g55z",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G55_Z_OFFSET },
+#if (AXES == 9)
     { "g55","g55u",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G55_U_OFFSET },
     { "g55","g55v",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G55_V_OFFSET },
     { "g55","g55w",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G55_W_OFFSET },
+#endif
     { "g55","g55a",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G55_A_OFFSET },
     { "g55","g55b",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G55_B_OFFSET },
     { "g55","g55c",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G55_C_OFFSET },
@@ -889,9 +870,11 @@ constexpr cfgItem_t cm_coor_config_items_1[] = {
     { "g56","g56x",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G56_X_OFFSET },
     { "g56","g56y",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G56_Y_OFFSET },
     { "g56","g56z",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G56_Z_OFFSET },
+#if (AXES == 9)
     { "g56","g56u",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G56_U_OFFSET },
     { "g56","g56v",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G56_V_OFFSET },
     { "g56","g56w",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G56_W_OFFSET },
+#endif
     { "g56","g56a",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G56_A_OFFSET },
     { "g56","g56b",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G56_B_OFFSET },
     { "g56","g56c",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G56_C_OFFSET },
@@ -899,9 +882,11 @@ constexpr cfgItem_t cm_coor_config_items_1[] = {
     { "g57","g57x",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G57_X_OFFSET },
     { "g57","g57y",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G57_Y_OFFSET },
     { "g57","g57z",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G57_Z_OFFSET },
+#if (AXES == 9)
     { "g57","g57u",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G57_U_OFFSET },
     { "g57","g57v",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G57_V_OFFSET },
     { "g57","g57w",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G57_W_OFFSET },
+#endif
     { "g57","g57a",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G57_A_OFFSET },
     { "g57","g57b",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G57_B_OFFSET },
     { "g57","g57c",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G57_C_OFFSET },
@@ -909,9 +894,11 @@ constexpr cfgItem_t cm_coor_config_items_1[] = {
     { "g58","g58x",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G58_X_OFFSET },
     { "g58","g58y",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G58_Y_OFFSET },
     { "g58","g58z",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G58_Z_OFFSET },
+#if (AXES == 9)
     { "g58","g58u",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G58_U_OFFSET },
     { "g58","g58v",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G58_V_OFFSET },
     { "g58","g58w",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G58_W_OFFSET },
+#endif
     { "g58","g58a",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G58_A_OFFSET },
     { "g58","g58b",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G58_B_OFFSET },
     { "g58","g58c",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G58_C_OFFSET },
@@ -919,9 +906,11 @@ constexpr cfgItem_t cm_coor_config_items_1[] = {
     { "g59","g59x",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G59_X_OFFSET },
     { "g59","g59y",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G59_Y_OFFSET },
     { "g59","g59z",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G59_Z_OFFSET },
+#if (AXES == 9)
     { "g59","g59u",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G59_U_OFFSET },
     { "g59","g59v",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G59_V_OFFSET },
     { "g59","g59w",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G59_W_OFFSET },
+#endif
     { "g59","g59a",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G59_A_OFFSET },
     { "g59","g59b",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G59_B_OFFSET },
     { "g59","g59c",_fipc, 5, cm_print_cofs, cm_get_coord, cm_set_coord, nullptr, G59_C_OFFSET },
@@ -929,9 +918,11 @@ constexpr cfgItem_t cm_coor_config_items_1[] = {
     { "g92","g92x",_fic, 5, cm_print_cofs, cm_get_g92, set_ro, nullptr, 0 },// G92 handled differently
     { "g92","g92y",_fic, 5, cm_print_cofs, cm_get_g92, set_ro, nullptr, 0 },
     { "g92","g92z",_fic, 5, cm_print_cofs, cm_get_g92, set_ro, nullptr, 0 },
+#if (AXES == 9)
     { "g92","g92u",_fic, 5, cm_print_cofs, cm_get_g92, set_ro, nullptr, 0 },
     { "g92","g92v",_fic, 5, cm_print_cofs, cm_get_g92, set_ro, nullptr, 0 },
     { "g92","g92w",_fic, 5, cm_print_cofs, cm_get_g92, set_ro, nullptr, 0 },
+#endif
     { "g92","g92a",_fic, 5, cm_print_cofs, cm_get_g92, set_ro, nullptr, 0 },
     { "g92","g92b",_fic, 5, cm_print_cofs, cm_get_g92, set_ro, nullptr, 0 },
     { "g92","g92c",_fic, 5, cm_print_cofs, cm_get_g92, set_ro, nullptr, 0 },
@@ -940,9 +931,11 @@ constexpr cfgItem_t cm_coor_config_items_1[] = {
     { "g28","g28x",_fic, 5, cm_print_cpos, cm_get_g28, set_ro, nullptr, 0 },// g28 handled differently
     { "g28","g28y",_fic, 5, cm_print_cpos, cm_get_g28, set_ro, nullptr, 0 },
     { "g28","g28z",_fic, 5, cm_print_cpos, cm_get_g28, set_ro, nullptr, 0 },
+#if (AXES == 9)
     { "g28","g28u",_fic, 5, cm_print_cpos, cm_get_g28, set_ro, nullptr, 0 },
     { "g28","g28v",_fic, 5, cm_print_cpos, cm_get_g28, set_ro, nullptr, 0 },
     { "g28","g28w",_fic, 5, cm_print_cpos, cm_get_g28, set_ro, nullptr, 0 },
+#endif
     { "g28","g28a",_fic, 5, cm_print_cpos, cm_get_g28, set_ro, nullptr, 0 },
     { "g28","g28b",_fic, 5, cm_print_cpos, cm_get_g28, set_ro, nullptr, 0 },
     { "g28","g28c",_fic, 5, cm_print_cpos, cm_get_g28, set_ro, nullptr, 0 },
@@ -950,9 +943,11 @@ constexpr cfgItem_t cm_coor_config_items_1[] = {
     { "g30","g30x",_fic, 5, cm_print_cpos, cm_get_g30, set_ro, nullptr, 0 },// g30 handled differently
     { "g30","g30y",_fic, 5, cm_print_cpos, cm_get_g30, set_ro, nullptr, 0 },
     { "g30","g30z",_fic, 5, cm_print_cpos, cm_get_g30, set_ro, nullptr, 0 },
+#if (AXES == 9)
     { "g30","g30u",_fic, 5, cm_print_cpos, cm_get_g30, set_ro, nullptr, 0 },
     { "g30","g30v",_fic, 5, cm_print_cpos, cm_get_g30, set_ro, nullptr, 0 },
     { "g30","g30w",_fic, 5, cm_print_cpos, cm_get_g30, set_ro, nullptr, 0 },
+#endif
     { "g30","g30a",_fic, 5, cm_print_cpos, cm_get_g30, set_ro, nullptr, 0 },
     { "g30","g30b",_fic, 5, cm_print_cpos, cm_get_g30, set_ro, nullptr, 0 },
     { "g30","g30c",_fic, 5, cm_print_cpos, cm_get_g30, set_ro, nullptr, 0 },
@@ -1598,46 +1593,46 @@ constexpr const configSubtable * const getMotorDiagnosticConfig_1() { return &mo
 constexpr cfgItem_t sr_presistence_config_items_1[] = {
   // Persistence for status report - must be in sequence
     // *** Count must agree with NV_STATUS_REPORT_LEN in report.h ***
-    { "","se00",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[0],0 }, // 950
-    { "","se01",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[1],0 },
-    { "","se02",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[2],0 },
-    { "","se03",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[3],0 },
-    { "","se04",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[4],0 },
-    { "","se05",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[5],0 },
-    { "","se06",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[6],0 },
-    { "","se07",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[7],0 },
-    { "","se08",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[8],0 },
-    { "","se09",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[9],0 },
-    { "","se10",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[10],0 },
-    { "","se11",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[11],0 },
-    { "","se12",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[12],0 },
-    { "","se13",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[13],0 },
-    { "","se14",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[14],0 },
-    { "","se15",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[15],0 },
-    { "","se16",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[16],0 },
-    { "","se17",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[17],0 },
-    { "","se18",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[18],0 },
-    { "","se19",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[19],0 },
-    { "","se20",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[20],0 },
-    { "","se21",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[21],0 },
-    { "","se22",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[22],0 },
-    { "","se23",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[23],0 },
-    { "","se24",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[24],0 },
-    { "","se25",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[25],0 },
-    { "","se26",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[26],0 },
-    { "","se27",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[27],0 },
-    { "","se28",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[28],0 },
-    { "","se29",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[29],0 },
-    { "","se30",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[30],0 },
-    { "","se31",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[31],0 },
-    { "","se32",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[32],0 },
-    { "","se33",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[33],0 },
-    { "","se34",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[34],0 },
-    { "","se35",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[35],0 },
-    { "","se36",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[36],0 },
-    { "","se37",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[37],0 },
-    { "","se38",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[38],0 },
-    { "","se39",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[39],0 },
+    { "","se00",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[0].index,0 }, // 950
+    { "","se01",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[1].index,0 },
+    { "","se02",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[2].index,0 },
+    { "","se03",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[3].index,0 },
+    { "","se04",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[4].index,0 },
+    { "","se05",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[5].index,0 },
+    { "","se06",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[6].index,0 },
+    { "","se07",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[7].index,0 },
+    { "","se08",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[8].index,0 },
+    { "","se09",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[9].index,0 },
+    { "","se10",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[10].index,0 },
+    { "","se11",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[11].index,0 },
+    { "","se12",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[12].index,0 },
+    { "","se13",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[13].index,0 },
+    { "","se14",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[14].index,0 },
+    { "","se15",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[15].index,0 },
+    { "","se16",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[16].index,0 },
+    { "","se17",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[17].index,0 },
+    { "","se18",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[18].index,0 },
+    { "","se19",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[19].index,0 },
+    { "","se20",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[20].index,0 },
+    { "","se21",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[21].index,0 },
+    { "","se22",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[22].index,0 },
+    { "","se23",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[23].index,0 },
+    { "","se24",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[24].index,0 },
+    { "","se25",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[25].index,0 },
+    { "","se26",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[26].index,0 },
+    { "","se27",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[27].index,0 },
+    { "","se28",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[28].index,0 },
+    { "","se29",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[29].index,0 },
+    { "","se30",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[30].index,0 },
+    { "","se31",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[31].index,0 },
+    { "","se32",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[32].index,0 },
+    { "","se33",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[33].index,0 },
+    { "","se34",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[34].index,0 },
+    { "","se35",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[35].index,0 },
+    { "","se36",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[36].index,0 },
+    { "","se37",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[37].index,0 },
+    { "","se38",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[38].index,0 },
+    { "","se39",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[39].index,0 },
     // Count is 40, since se00 counts as one.
 };
 constexpr cfgSubtableFromStaticArray sr_presistence_config_1 {sr_presistence_config_items_1};
@@ -1855,7 +1850,7 @@ constexpr cfgItem_t uber_groups_config_items_1[] = {
 constexpr cfgSubtableFromStaticArray uber_groups_config_1 {uber_groups_config_items_1};
 constexpr const configSubtable * const getUberGroupsConfig_1() { return &uber_groups_config_1; }
 auto nodes = makeSubtableNodes(
-    getSysConfig_1(), getCmConfig_1(), getMpoConfig_1(), getPosConfig_1(), getOfsConfig_1(), getHomConfig_1(),
+    0, getSysConfig_1(), getCmConfig_1(), getMpoConfig_1(), getPosConfig_1(), getOfsConfig_1(), getHomConfig_1(),
     getPrbConfig_1(), getJogConfig_1(), getPwrConfig_1(), getMotorConfig_1(), getAxisConfig_1(), getDIConfig_1(),
     getINConfig_1(), getDOConfig_1(), getOUTConfig_1(), getAINConfig_1(), getP1Config_1(), getPIDConfig_1(),
     getHEConfig_1(), getCoorConfig_1(), getJobIDConfig_1(), getFixturingConfig_1(), getSpindleConfig_1(),
@@ -1941,7 +1936,7 @@ cfgArraySynthesizer cfgArray {};
                         + DIAGNOSTIC_GROUPS)
 
 /* <DO NOT MESS WITH THESE DEFINES> */
-#define NV_INDEX_MAX (nodes.this_node.length())
+#define NV_INDEX_MAX (nodes.this_node.length)
 #define NV_INDEX_END_SINGLES    (NV_INDEX_MAX - NV_COUNT_UBER_GROUPS - NV_COUNT_GROUPS - NV_STATUS_REPORT_LEN)
 #define NV_INDEX_START_GROUPS    (NV_INDEX_MAX - NV_COUNT_UBER_GROUPS - NV_COUNT_GROUPS)
 #define NV_INDEX_START_UBER_GROUPS (NV_INDEX_MAX - NV_COUNT_UBER_GROUPS)
