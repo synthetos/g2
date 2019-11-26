@@ -1617,7 +1617,7 @@ constexpr cfgItem_t sr_presistence_config_items_1[] = {
     { "","se36",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[36].index,0 },
     { "","se37",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[37].index,0 },
     { "","se38",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[38].index,0 },
-    { "","se39",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[39].index,0 },
+    // { "","se39",_ip, 0, tx_print_nul, get_int32, set_int32, &sr.status_report_list[39].index,0 },
     // Count is 40, since se00 counts as one.
 };
 constexpr cfgSubtableFromStaticArray sr_presistence_config_1 {sr_presistence_config_items_1};
