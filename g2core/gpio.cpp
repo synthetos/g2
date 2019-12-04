@@ -384,15 +384,15 @@ stat_t ai_set_p5(nvObj_t *nv) { return ai_set_parameter(nv, 4); };
 
 #ifdef __TEXT_MODE
 
-    static const char fmt_gpio_in_en[] = "[%smo] input enabled%13d [-1=unavailable,0=disabled,1=enabled]\n";
-    static const char fmt_gpio_in_po[] = "[%smo] input polarity%13d [0=normal/active-high,1=inverted/active-low]\n";
+    static const char fmt_gpio_in_en[] = "[%sen] input enabled%13d [-1=unavailable,0=disabled,1=enabled]\n";
+    static const char fmt_gpio_in_po[] = "[%spo] input polarity%13d [0=normal/active-high,1=inverted/active-low]\n";
     static const char fmt_gpio_ac[] = "[%sac] input action%15d [0=none,1=stop,2=fast_stop,3=halt,4=alarm,5=shutdown,6=panic,7=reset]\n";
     static const char fmt_gpio_fn[] = "[%sfn] input function%13d [0=none,1=limit,2=interlock,3=shutdown,4=probe]\n";
     static const char fmt_gpio_in[] = "[%sin] input external number%6d [0=none,1-16=inX shows the value of this din]\n";
     static const char fmt_gpio_state[] = "Input %s state: %5d\n";
 
-    static const char fmt_gpio_out_en[] = "[%smo] output enabled%12d [-1=unavailable,0=disabled,1=enabled]\n";
-    static const char fmt_gpio_out_po[] = "[%smo] output polarity%12d [0=normal/active-high,1=inverted/active-low]\n";
+    static const char fmt_gpio_out_en[] = "[%sen] output enabled%12d [-1=unavailable,0=disabled,1=enabled]\n";
+    static const char fmt_gpio_out_po[] = "[%spo] output polarity%12d [0=normal/active-high,1=inverted/active-low]\n";
     static const char fmt_gpio_out_out[] = "[%sout] output external number%5d [0=none,1-16=outX shows the value of this dout]\n";
     static const char fmt_gpio_out_state[] = "Output %s state: %5d\n";
 
