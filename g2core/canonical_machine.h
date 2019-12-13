@@ -175,42 +175,6 @@ typedef enum {                      // applies to cm->probe_state
     PROBE_WAITING = 2               // probe is waiting to be started or is running
 } cmProbeState;
 
-#ifdef ENABLE_INTERLOCK_AND_ESTOP
- typedef enum {
-    ESTOP_RELEASED = 0,             // pressed/released is physical state, acked/unacked is machine control state, active/inactive is whether we're currently in estop mode
-    ESTOP_ACKED    = 0,
-    ESTOP_INACTIVE = 0,
-    ESTOP_PRESSED  = 0x1,
-    ESTOP_UNACKED  = 0x2,
-    ESTOP_ACTIVE   = 0x4,
-
-    ESTOP_ACTIVE_MASK = 0x4,
-    ESTOP_ACK_MASK = 0x2,
-    ESTOP_PRESSED_MASK = 0x1,
-} cmEstopState;
-#endif
-
-typedef enum {
-#ifdef ENABLE_INTERLOCK_AND_ESTOP
-    SAFETY_INTERLOCK_CLOSED = 0,
-    SAFETY_INTERLOCK_OPEN = 0x1,
-
-    SAFETY_ESC_ONLINE = 0,
-    SAFETY_ESC_OFFLINE = 0x2,
-    SAFETY_ESC_LOCKOUT = 0x4,
-    SAFETY_ESC_REBOOTING = 0x8,
-    SAFETY_ESC_LOCKOUT_AND_REBOOTING = 0xC,
-
-    SAFETY_INTERLOCK_MASK = 0x1,
-    SAFETY_ESC_MASK = 0xE,
-#else
-    SAFETY_INTERLOCK_ENGAGED = 0,   // meaning the interlock input is CLOSED (low)
-    SAFETY_INTERLOCK_DISENGAGING,   // meaning the interlock opened and we're dealing with it
-    SAFETY_INTERLOCK_DISENGAGED,
-    SAFETY_INTERLOCK_ENGAGING
-#endif
-} cmSafetyState;
-
 typedef enum {                      // feed override state machine
     MFO_OFF = 0,
     MFO_REQUESTED,
@@ -332,15 +296,7 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     bool return_flags[AXES];                // flags for recording which axes moved - used in feedhold exit move
 
     uint8_t limit_requested;                // set non-zero to request limit switch processing (value is input number)
-    uint8_t shutdown_requested;             // set non-zero to request shutdown in support of external estop (value is input number)
     bool deferred_write_flag;               // G10 data has changed (e.g. offsets) - flag to persist them
-
-    bool safety_interlock_enable;           // true to enable safety interlock system
-    bool request_interlock;                 // enter interlock
-    bool request_interlock_exit;            // exit interlock
-    uint8_t safety_interlock_disengaged;    // set non-zero to start interlock processing (value is input number)
-    uint8_t safety_interlock_reengaged;     // set non-zero to end interlock processing (value is input number)
-    cmSafetyState safety_interlock_state;   // safety interlock state
 
     cmHomingState homing_state;             // home: homing cycle sub-state machine
     uint8_t homed[AXES];                    // individual axis homing flags
@@ -359,13 +315,6 @@ typedef struct cmMachine {                  // struct to manage canonical machin
     void *mp;                               // linked mpPlanner_t - use a void pointer to avoid circular header files
     cmArc_t arc;                            // arc parameters
     GCodeState_t *am;                       // active Gcode model is maintained by state management
-
-#ifdef ENABLE_INTERLOCK_AND_ESTOP
-    uint8_t safety_state;               // Tracks whether interlock has been triggered, whether esc is rebooting, etc
-    uint8_t estop_state;                // Whether estop has been triggered
-    Motate::Timeout esc_boot_timer;     // When the ESC last booted up
-    Motate::Timeout esc_lockout_timer;  // When the ESC lockout last triggered
-#endif
 
     GCodeState_t  gm;                       // core gcode model state
     GCodeStateX_t gmx;                      // extended gcode model state
@@ -521,11 +470,6 @@ void cm_program_stop(void);                                     // M0
 void cm_optional_program_stop(void);                            // M1
 void cm_program_end(void);                                      // M2
 
-// E-Stop
-#ifdef ENABLE_INTERLOCK_AND_ESTOP
-stat_t cm_ack_estop(nvObj_t *nv);
-#endif
-
 stat_t cm_json_command(char *json_string);                      // M100
 stat_t cm_json_command_immediate(char *json_string);            // M100.1
 stat_t cm_json_wait(char *json_string);                         // M102
@@ -631,10 +575,6 @@ stat_t cm_get_mpo(nvObj_t *nv);         // get runtime machine position
 stat_t cm_get_ofs(nvObj_t *nv);         // get runtime work offset
 stat_t cm_get_coord(nvObj_t *nv);       // get coordinate offset
 stat_t cm_set_coord(nvObj_t *nv);       // set coordinate offset
-#ifdef ENABLE_INTERLOCK_AND_ESTOP
-stat_t cm_get_safe(nvObj_t *nv);        // get interlock state
-stat_t cm_get_estp(nvObj_t *nv);        // get E-stop state
-#endif
 
 stat_t cm_get_g92e(nvObj_t *nv);        // get g92 enable state
 stat_t cm_get_g92(nvObj_t *nv);         // get g92 offset
@@ -696,8 +636,6 @@ stat_t cm_get_sl(nvObj_t *nv);          // get soft limit enable
 stat_t cm_set_sl(nvObj_t *nv);          // set soft limit enable
 stat_t cm_get_lim(nvObj_t *nv);         // get hard limit enable
 stat_t cm_set_lim(nvObj_t *nv);         // set hard limit enable
-stat_t cm_get_saf(nvObj_t *nv);         // get safety interlock enable
-stat_t cm_set_saf(nvObj_t *nv);         // set safety interlock enable
 
 stat_t cm_get_m48(nvObj_t *nv);         // get M48 value (enable/disable overrides)
 stat_t cm_set_m48(nvObj_t *nv);         // set M48 value (enable/disable overrides)
@@ -754,10 +692,6 @@ stat_t cm_set_gdi(nvObj_t *nv);         // set gcode default distance mode
     void cm_print_admo(nvObj_t *nv);
     void cm_print_frmo(nvObj_t *nv);
     void cm_print_tool(nvObj_t *nv);
-#ifdef ENABLE_INTERLOCK_AND_ESTOP
-    void cm_print_safe(nvObj_t *nv);
-    void cm_print_estp(nvObj_t *nv);
-#endif
     void cm_print_g92e(nvObj_t *nv);
 
     void cm_print_gpl(nvObj_t *nv);         // Gcode defaults
@@ -827,10 +761,6 @@ stat_t cm_set_gdi(nvObj_t *nv);         // set gcode default distance mode
     #define cm_print_admo tx_print_stub
     #define cm_print_frmo tx_print_stub
     #define cm_print_tool tx_print_stub
-#ifdef ENABLE_INTERLOCK_AND_ESTOP
-    #define cm_print_safe tx_print_stub
-    #define cm_print_estp tx_print_stub
-#endif
     #define cm_print_g92e tx_print_stub
 
     #define cm_print_gpl tx_print_stub      // Gcode defaults

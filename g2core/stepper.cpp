@@ -83,7 +83,7 @@ Motate::SysTickEvent dwell_systick_event{
             st_run.dwell_ticks_downcount = 1; // this'll decerement to zero shortly
             cm->hold_state = FEEDHOLD_MOTION_STOPPED;
         }
-        if (do_spindle_speed_ramp_from_systick() && (--st_run.dwell_ticks_downcount == 0)) {
+        if ((--st_run.dwell_ticks_downcount == 0)) { // do_spindle_speed_ramp_from_systick() &&
             st_run.dwell_ticks_downcount = 0;  // in the case of stop==true, this is needed
             SysTickTimer.unregisterEvent(&dwell_systick_event);
             _load_move();  // load the next move at the current interrupt level
@@ -216,11 +216,13 @@ stat_t stepper_test_assertions()
  *  Busy conditions:
  *  - motors are running
  *  - dwell is running
+ *  - an toolhead is busy in a way that should prevent motion (spinup, etc.)
  */
 
 bool st_runtime_isbusy()
 {
-    return (st_run.dda_ticks_downcount || st_run.dwell_ticks_downcount);    // returns false if down count is zero
+    // note: zero is false, anything else is true
+    return (st_run.dda_ticks_downcount || st_run.dwell_ticks_downcount || is_a_toolhead_busy());
 }
 
 /*
@@ -489,6 +491,11 @@ static void _load_move()
         return;
     } // if (st_pre.buffer_state != PREP_BUFFER_OWNED_BY_LOADER)
 
+    // give the toolhead a chance to react to the upcoming move
+    if (st_pre.bf) {
+        spindle_engage(st_pre.bf->gm);
+    }
+
     // handle aline loads first (most common case)
     if (st_pre.block_type == BLOCK_TYPE_ALINE) {
 
@@ -719,7 +726,7 @@ stat_t st_prep_line(const float start_velocity, const float end_velocity, const 
             steps -= correction_steps;
         }
 
-        // Compute substeb increment. The accumulator must be *exactly* the incoming
+        // Compute substep increment. The accumulator must be *exactly* the incoming
         // fractional steps times the substep multiplier or positional drift will occur.
         // Rounding is performed to eliminate a negative bias in the uint32 conversion
         // that results in long-term negative drift. (std::abs/round order doesn't matter)

@@ -30,6 +30,7 @@
 #include "config.h"     // #2
 #include "gcode.h"      // #3
 #include "canonical_machine.h"
+#include "safety_manager.h"
 #include "planner.h"
 #include "report.h"
 #include "spindle.h"
@@ -95,11 +96,7 @@ void cm_clear()
 
 void cm_parse_clear(const char *s)
 {
-// #ifdef ENABLE_INTERLOCK_AND_ESTOP
-//     if (cm->machine_state == MACHINE_ALARM || (cm->machine_state == MACHINE_SHUTDOWN && cm1.estop_state != 0)) {
-// #else
-    if ((cm->machine_state == MACHINE_ALARM) || (cm->machine_state == MACHINE_SHUTDOWN)) {
-// #endif
+    if (safety_manager->can_clear()) {
         if (toupper(s[0]) == 'M') {
             if (( (s[1]=='3') && (s[2]=='0') && (s[3]==0)) || ((s[1]=='2') && (s[2]==0) )) {
                 cm_clear();
@@ -114,13 +111,7 @@ void cm_parse_clear(const char *s)
 
 stat_t cm_is_alarmed()
 {
-    if (cm->machine_state == MACHINE_ALARM)    { return (STAT_COMMAND_REJECTED_BY_ALARM); }
-#ifdef ENABLE_INTERLOCK_AND_ESTOP
-    if (cm1.estop_state != 0)                  { return (STAT_COMMAND_REJECTED_BY_SHUTDOWN); }
-#endif
-    if (cm->machine_state == MACHINE_SHUTDOWN) { return (STAT_COMMAND_REJECTED_BY_SHUTDOWN); }
-    if (cm->machine_state == MACHINE_PANIC)    { return (STAT_COMMAND_REJECTED_BY_PANIC); }
-    return (STAT_OK);
+    return safety_manager->is_system_alarmed();
 }
 
 /****************************************************************************************
@@ -135,7 +126,7 @@ stat_t cm_is_alarmed()
 void cm_halt(void)
 {
     cm_halt_motion();
-    spindle_control_immediate(SPINDLE_OFF);
+    spindle_stop();
     coolant_control_immediate(COOLANT_OFF, COOLANT_BOTH);
     temperature_init();
 }

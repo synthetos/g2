@@ -104,7 +104,6 @@ void application_init_machine(void)
     stepper_init();                     // stepper subsystem
     encoder_init();                     // virtual encoders
     gpio_init();                        // inputs and outputs
-    pwm_init();                         // pulse width modulation drivers
     canonical_machine_inits();          // combined inits for CMs and planner
 }
 

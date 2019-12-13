@@ -145,7 +145,7 @@ typedef struct GCodeInputValue {    // Gcode inputs - meaning depends on context
     uint8_t coolant_mist;           // TRUE = mist on (M7)
     uint8_t coolant_flood;          // TRUE = flood on (M8)
     uint8_t coolant_off;            // TRUE = turn off all coolants (M9)
-    uint8_t spindle_control;        // 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
+    spDirection spindle_control;    // 0=OFF (M5), 1=CW (M3), 2=CCW (M4)
 
     bool m48_enable;                // M48/M49 input (enables for feed and spindle)
     bool fro_control;               // M50 feedrate override control
@@ -958,12 +958,12 @@ stat_t _execute_gcode_block(char *active_comment)
         ritorno(cm_check_linenum());
     }
 
-    EXEC_FUNC(spindle_speed_sync, S_word);                  // S
+    EXEC_FUNC(spindle_set_speed, S_word);                  // S
     EXEC_FUNC(cm_select_tool, tool_select);                 // T - tool_select is where it's written
     EXEC_FUNC(cm_change_tool, tool_change);                 // M6 - is where it's effected
 
     if (gf.spindle_control) {                               // M3, M4, M5 (spindle OFF, CW, CCW)
-        ritorno(spindle_control_sync((spControl)gv.spindle_control));
+        ritorno(spindle_set_direction(gv.spindle_control));
     }
     if (gf.coolant_mist) {
         ritorno(coolant_control_sync((coControl)gv.coolant_mist, COOLANT_MIST));    // M7

@@ -49,7 +49,9 @@ struct KinematicsBase {
     // must be as fast as possible while retaining precision
     // the other information is for the sake of tracking and intelligent error correction
     // the derivatives (acceleration, jerk) or other considerations
-    virtual void inverse_kinematics(const float target[axes], const float position[axes], const float start_velocity, const float end_velocity, const float segment_time, float steps[motors]) {
+    // the gcode model is passed in for additional context, and may be ignored
+    // the target is in the gcode model, but may be modified, so it's passed separately
+    virtual void inverse_kinematics(const GCodeState_t &gm, const float target[axes], const float position[axes], const float start_velocity, const float end_velocity, const float segment_time, float steps[motors]) {
     }
 
     // if the planner buffer is empty, the idel_task will be given the opportunity to drive the runtime

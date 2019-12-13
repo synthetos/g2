@@ -30,6 +30,7 @@
 #include "config.h"     // #2
 #include "gcode.h"      // #3
 #include "canonical_machine.h"
+#include "safety_manager.h"
 #include "planner.h"
 #include "plan_arc.h"
 #include "stepper.h"
@@ -374,9 +375,9 @@ stat_t _run_shutdown() {
     cm1.machine_state = MACHINE_SHUTDOWN;
     return (STAT_OK);
 }
-#ifdef ENABLE_INTERLOCK_AND_ESTOP
 stat_t _run_interlock_started() {
     cm1.machine_state = MACHINE_INTERLOCK;
+    safety_manager->start_interlock_after_feedhold();
     return (STAT_OK);
 }
 stat_t _run_interlock_ended() {
@@ -385,24 +386,10 @@ stat_t _run_interlock_ended() {
     } else {
         cm1.machine_state = MACHINE_PROGRAM_END;
     }
+    safety_manager->end_interlock_after_feedhold();
     return (_run_restart_cycle());
 }
-#else
-stat_t _run_interlock_started() {
-    cm1.safety_interlock_state = SAFETY_INTERLOCK_DISENGAGED;
-    cm1.machine_state = MACHINE_INTERLOCK;
-    return (STAT_OK);
-}
-stat_t _run_interlock_ended() {
-    cm1.safety_interlock_state = SAFETY_INTERLOCK_ENGAGED;
-    if (cm1.cycle_type != CYCLE_NONE) {
-        cm1.machine_state = MACHINE_CYCLE;
-    } else {
-        cm1.machine_state = MACHINE_PROGRAM_END;
-    }
-    return (_run_restart_cycle());
-}
-#endif
+
 /****************************************************************************************
  * cm_request_cycle_start() - set request enum only
  * _start_cycle_start()  - run the cycle start
@@ -458,11 +445,7 @@ void _start_cycle_restart()
 void cm_request_queue_flush()
 {
     // Can only initiate a queue flush if in a feedhold and e-stop not pressed
-#ifdef ENABLE_INTERLOCK_AND_ESTOP
-    if ((cm1.hold_state != FEEDHOLD_OFF) && (cm1.estop_state == 0)) {
-#else
-    if (cm1.hold_state != FEEDHOLD_OFF) {
-#endif
+    if ((cm1.hold_state != FEEDHOLD_OFF) && safety_manager->can_queue_flush()) {
         cm1.queue_flush_state = QUEUE_FLUSH_REQUESTED;
     } else {
         cm1.queue_flush_state = QUEUE_FLUSH_OFF;
@@ -548,7 +531,7 @@ stat_t _run_job_kill()
     _run_queue_flush();
 
     coolant_control_immediate(COOLANT_OFF, COOLANT_BOTH); // stop coolant
-    spindle_control_immediate(SPINDLE_OFF);               // stop spindle
+    spindle_stop();               // stop spindle
 
     cm_set_motion_state(MOTION_STOP);                     // set to stop and set the active model
     cm->hold_state = FEEDHOLD_OFF;
@@ -839,7 +822,7 @@ stat_t _feedhold_with_actions()          // Execute Case (5)
                 cm_set_distance_mode(cm1.gm.distance_mode);         // restore distance mode to p1 setting
             }
         }
-        spindle_control_sync(SPINDLE_PAUSE);                    // optional spindle pause
+        spindle_pause();                    // optional spindle pause
         coolant_control_sync(COOLANT_PAUSE, COOLANT_BOTH);      // optional coolant pause
         mp_queue_command(_feedhold_actions_done_callback, nullptr, nullptr);
         return (STAT_EAGAIN);
@@ -896,7 +879,7 @@ stat_t _feedhold_restart_with_actions()   // Execute Cases (6) and (7)
 
         // perform end-hold actions --- while still in secondary machine
         coolant_control_sync(COOLANT_RESUME, COOLANT_BOTH); // resume coolant if paused
-        spindle_control_sync(SPINDLE_RESUME);               // resume spindle if paused
+        spindle_resume();               // resume spindle if paused
 
         // do return move though an intermediate point; queue a wait
         cm2.return_flags[AXIS_Z] = false;

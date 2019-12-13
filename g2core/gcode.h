@@ -21,6 +21,7 @@
 #define GCODE_H_ONCE
 
 #include "hardware.h"
+#include "spindle.h"
 
 /**** Gcode-specific definitions ****/
 
@@ -158,7 +159,7 @@ typedef enum {              // axis modes (ordered: see _cm_get_feed_time())
  *   (which may have changed).
  */
 
-typedef struct GCodeState {             // Gcode model state - used by model, planning and runtime
+struct GCodeState_t {             // Gcode model state - used by model, planning and runtime
     int32_t linenum;                    // Gcode block line number
     cmMotionMode motion_mode;           // Group1: G0, G1, G2, G3, G38.2, G80, G81, G82
                                         //         G83, G84, G85, G86, G87, G88, G89
@@ -180,6 +181,9 @@ typedef struct GCodeState {             // Gcode model state - used by model, pl
     cmCoordSystem coord_system;         // G54-G59 - select coordinate system 1-9
     uint8_t tool;               // G    // M6 tool change - moves "tool_select" to "tool"
     uint8_t tool_select;        // G    // T value - T sets this value
+
+    float spindle_speed;                // S - spindle "speed" in arbitrary units, often RPM
+    spDirection spindle_direction;      // M3/M4/M5 - spindle on CW, on CCW, off setting
 
     void reset() {
         linenum = 0;
@@ -205,7 +209,7 @@ typedef struct GCodeState {             // Gcode model state - used by model, pl
         tool_select = 0;
 
     };
-} GCodeState_t;
+};
 
 typedef struct GCodeStateExtended {     // Gcode dynamic state extensions - used by model and arcs
     uint16_t magic_start;               // magic number to test memory integrity

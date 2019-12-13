@@ -45,10 +45,8 @@
 #include "util.h"
 #include "xio.h"
 #include "settings.h"
-#ifdef ENABLE_INTERLOCK_AND_ESTOP
-#include "spindle.h"
-#endif
 #include "persistence.h"
+#include "safety_manager.h"
 
 #include "MotatePower.h"
 
@@ -68,12 +66,7 @@ controller_t cs;        // controller state structure
 
 static void _controller_HSM(void);
 static stat_t _led_indicator(void);             // twiddle the LED indicator
-static stat_t _shutdown_handler(void);          // new (replaces _interlock_estop_handler)
-#ifdef ENABLE_INTERLOCK_AND_ESTOP
-static stat_t _interlock_estop_handler(void);
-#else
-static stat_t _interlock_handler(void);         // new (replaces _interlock_estop_handler)
-#endif
+static stat_t _safety_handler(void);          // new (replaces _interlock_estop_handler)
 static stat_t _limit_switch_handler(void);      // revised for new GPIO code
 
 static void _init_assertions(void);
@@ -89,18 +82,6 @@ static stat_t _controller_state(void);          // manage controller state trans
 
 static Motate::OutputPin<Motate::kOutputSAFE_PinNumber> safe_pin;
 
-gpioDigitalInputHandler _shutdown_input_handler {
-    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
-        if (edge != INPUT_EDGE_LEADING) { return GPIO_NOT_HANDLED; }
-
-        cm->shutdown_requested = triggering_pin_number;
-
-        return GPIO_HANDLED;
-    },
-    5,    // priority
-    nullptr // next - nullptr to start with
-};
-
 gpioDigitalInputHandler _limit_input_handler {
     [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
         if (edge != INPUT_EDGE_LEADING) { return GPIO_NOT_HANDLED; }
@@ -113,19 +94,6 @@ gpioDigitalInputHandler _limit_input_handler {
     nullptr // next - nullptr to start with
 };
 
-gpioDigitalInputHandler _interlock_input_handler{
-    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
-        if (edge != INPUT_EDGE_LEADING) {
-            cm1.safety_interlock_disengaged = triggering_pin_number;
-        } else { // edge == INPUT_EDGE_TRAILING
-            cm1.safety_interlock_reengaged = triggering_pin_number;
-        }
-
-        return GPIO_HANDLED;
-    },
-    5,       // priority
-    nullptr  // next - nullptr to start with
-};
 
 /***********************************************************************************
  **** CODE *************************************************************************
@@ -152,15 +120,9 @@ void controller_init()
     }
 //  IndicatorLed.setFrequency(100000);
 
-    din_handlers[INPUT_ACTION_SHUTDOWN].registerHandler(&_shutdown_input_handler);
     din_handlers[INPUT_ACTION_LIMIT].registerHandler(&_limit_input_handler);
-    din_handlers[INPUT_ACTION_INTERLOCK].registerHandler(&_interlock_input_handler);
-#ifdef ENABLE_INTERLOCK_AND_ESTOP
-    if (gpio_read_input(INTERLOCK_SWITCH_INPUT) == INPUT_ACTIVE) {
-        // cm1.safety_interlock_disengaged = INTERLOCK_SWITCH_INPUT;
-        cm1.safety_state |= SAFETY_INTERLOCK_OPEN;
-    }
-#endif
+
+    safety_manager->init();
 }
 
 void controller_request_enquiry()
@@ -207,12 +169,7 @@ static void _controller_HSM()
 
     DISPATCH(hardware_periodic());              // give the hardware a chance to do stuff
     DISPATCH(_led_indicator());                 // blink LEDs at the current rate
-    DISPATCH(_shutdown_handler());              // invoke shutdown
-#ifdef ENABLE_INTERLOCK_AND_ESTOP
-    DISPATCH(_interlock_estop_handler());       // interlock or estop have been thrown
-#else
-    DISPATCH(_interlock_handler());             // invoke / remove safety interlock
-#endif
+    DISPATCH(_safety_handler());              // invoke shutdown
     DISPATCH(temperature_callback());           // makes sure temperatures are under control
     DISPATCH(_limit_switch_handler());          // invoke limit switch
     DISPATCH(_controller_state());              // controller state management
@@ -530,9 +487,8 @@ static stat_t _sync_to_planner()
 /****************************************************************************************
  * ALARM STATE HANDLERS
  *
- * _shutdown_handler() - put system into shutdown state
+ * _safety_handler() - handle safety stuff like shutdown and interlock
  * _limit_switch_handler() - shut down system if limit switch fired
- * _interlock_handler() - feedhold and resume depending on edge
  *
  *    Some handlers return EAGAIN causing the control loop to never advance beyond that point.
  *
@@ -541,14 +497,9 @@ static stat_t _sync_to_planner()
  *   - safety_interlock_requested == INPUT_EDGE_LEADING is interlock onset
  *   - safety_interlock_requested == INPUT_EDGE_TRAILING is interlock offset
  */
-static stat_t _shutdown_handler(void)
+static stat_t _safety_handler(void)
 {
-    if (cm->shutdown_requested != 0) {  // request may contain the (non-zero) input number
-        char msg[10];
-        sprintf(msg, "input %d", (int)cm->shutdown_requested);
-        cm->shutdown_requested = false; // clear limit request used here ^
-        cm_shutdown(STAT_SHUTDOWN, msg);
-    }
+    safety_manager->periodic_handler();
     return(STAT_OK);
 }
 
@@ -568,112 +519,6 @@ static stat_t _limit_switch_handler(void)
     }
     return (STAT_OK);
 }
-
-#ifdef ENABLE_INTERLOCK_AND_ESTOP
-static stat_t _interlock_estop_handler(void) {
-    bool report = false;
-    // Process E-Stop and Interlock signals
-
-    // Door opened and was closed
-    if ((cm1.safety_state & SAFETY_INTERLOCK_MASK) == SAFETY_INTERLOCK_CLOSED && (gpio_read_input(INTERLOCK_SWITCH_INPUT) == INPUT_ACTIVE)) {
-        cm1.safety_state |= SAFETY_INTERLOCK_OPEN;
-
-        // Check if the spindle is on
-        if (is_spindle_on_or_paused()) {
-            if (cm1.machine_state == MACHINE_CYCLE) {
-                cm_request_feedhold(FEEDHOLD_TYPE_ACTIONS, FEEDHOLD_EXIT_CYCLE);
-            } else {
-                spindle_control_immediate(SPINDLE_OFF);
-            }
-        }
-
-        // If we just entered interlock and we're not off, start the lockout timer
-        if ((cm1.safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_ONLINE ||
-            (cm1.safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_REBOOTING) {
-            cm->esc_lockout_timer.set(ESC_LOCKOUT_TIME);
-            cm1.safety_state |= SAFETY_ESC_LOCKOUT;
-        }
-        report = true;
-
-    // Door closed and was open
-    } else if ((cm1.safety_state & SAFETY_INTERLOCK_MASK) == SAFETY_INTERLOCK_OPEN && (gpio_read_input(INTERLOCK_SWITCH_INPUT) == INPUT_INACTIVE)) {
-        cm1.safety_state &= ~SAFETY_INTERLOCK_OPEN;
-        // If we just left interlock, stop the lockout timer
-        if ((cm1.safety_state & SAFETY_ESC_LOCKOUT) == SAFETY_ESC_LOCKOUT) {
-            cm1.safety_state &= ~SAFETY_ESC_LOCKOUT;
-            cm->esc_lockout_timer.clear();
-        }
-        report = true;
-    }
-
-    // EStop was pressed
-    if ((cm1.estop_state & ESTOP_PRESSED_MASK) == ESTOP_RELEASED && gpio_read_input(ESTOP_SWITCH_INPUT) == INPUT_ACTIVE) {
-        cm1.estop_state = ESTOP_PRESSED | ESTOP_UNACKED | ESTOP_ACTIVE;
-        cm_shutdown(STAT_SHUTDOWN, "e-stop pressed");
-
-        // E-stop always sets the ESC to off
-        cm1.safety_state &= ~SAFETY_ESC_MASK;
-        cm1.safety_state |= SAFETY_ESC_OFFLINE;
-        report = true;
-
-    // EStop was released
-    } else if ((cm1.estop_state & ESTOP_PRESSED_MASK) == ESTOP_PRESSED && gpio_read_input(ESTOP_SWITCH_INPUT) == INPUT_INACTIVE) {
-        cm1.estop_state &= ~ESTOP_PRESSED;
-        report = true;
-    }
-
-    // if E-Stop and Interlock are both 0, and we're off, go into "ESC Reboot"
-    if ((cm1.safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_OFFLINE && (cm1.estop_state & ESTOP_PRESSED) == 0 && (cm1.safety_state & SAFETY_INTERLOCK_OPEN) == 0) {
-        cm1.safety_state &= ~SAFETY_ESC_MASK;
-        cm1.safety_state |= SAFETY_ESC_REBOOTING;
-        cm->esc_boot_timer.set(ESC_BOOT_TIME);
-        report = true;
-    }
-
-    // Check if ESC lockout timer or reboot timer have expired
-    if ((cm1.safety_state & SAFETY_ESC_LOCKOUT) != 0 && cm->esc_lockout_timer.isPast()) {
-        cm1.safety_state &= ~SAFETY_ESC_MASK;
-        cm1.safety_state |= SAFETY_ESC_OFFLINE;
-        report = true;
-    }
-    if ((cm1.safety_state & SAFETY_ESC_MASK) == SAFETY_ESC_REBOOTING && cm->esc_boot_timer.isPast()) {
-        cm1.safety_state &= ~SAFETY_ESC_MASK;
-        report = true;
-    }
-
-    // If we've successfully ended all the ESTOP conditions, then end ESTOP
-    if (cm1.estop_state == ESTOP_ACTIVE) {
-        cm1.estop_state = 0;
-        report = true;
-    }
-
-    if (report) {
-        sr_request_status_report(SR_REQUEST_IMMEDIATE);
-    }
-    return (STAT_OK);
-}
-#else
-static stat_t _interlock_handler(void)
-{
-    // NOTE: Always use cm1. directly for interlock state!
-    if (cm1.safety_interlock_enable) {
-        // interlock broken
-        if ((cm1.safety_interlock_disengaged != 0) && (cm1.safety_interlock_state == SAFETY_INTERLOCK_ENGAGED)) {
-            cm1.safety_interlock_disengaged = 0;
-            cm1.safety_interlock_state = SAFETY_INTERLOCK_DISENGAGING;
-            cm_request_feedhold(FEEDHOLD_TYPE_ACTIONS, FEEDHOLD_EXIT_INTERLOCK);  // may have already requested STOP as INPUT_ACTION
-        }
-
-        // interlock restored
-        if ((cm1.safety_interlock_reengaged != 0) && mp_runtime_is_idle() && (cm1.safety_interlock_state == SAFETY_INTERLOCK_DISENGAGED)) {
-            cm1.safety_interlock_reengaged = 0;
-            cm1.safety_interlock_state = SAFETY_INTERLOCK_ENGAGING;  // interlock restored
-            cm_request_cycle_start();                               // proper way to restart the cycle
-        }
-    }
-    return(STAT_OK);
-}
-#endif
 
 /****************************************************************************************
  * _init_assertions() - initialize controller memory integrity assertions

@@ -40,6 +40,26 @@
 #include "board_spi.h"
 #include "sd_persistence.h"
 
+#include "board_gpio.h"
+
+#ifndef SPINDLE_ENABLE_OUTPUT_NUMBER
+#warning SPINDLE_ENABLE_OUTPUT_NUMBER is defaulted to 4!
+#warning SPINDLE_ENABLE_OUTPUT_NUMBER should be defined in settings or a board file!
+#define SPINDLE_ENABLE_OUTPUT_NUMBER 4
+#endif
+
+#ifndef SPINDLE_DIRECTION_OUTPUT_NUMBER
+#warning SPINDLE_DIRECTION_OUTPUT_NUMBER is defaulted to 5!
+#warning SPINDLE_DIRECTION_OUTPUT_NUMBER should be defined in settings or a board file!
+#define SPINDLE_DIRECTION_OUTPUT_NUMBER 5
+#endif
+
+#ifndef SPINDLE_PWM_NUMBER
+#warning SPINDLE_PWM_NUMBER is defaulted to 6!
+#warning SPINDLE_PWM_NUMBER should be defined in settings or a board file!
+#define SPINDLE_PWM_NUMBER 6
+#endif
+
 /*
  * hardware_init() - lowest level hardware init
  */
@@ -48,6 +68,37 @@ SPIBus_used_t spiBus;
 
 Motate::SPIChipSelectPin<Motate::kSD_ChipSelectPinNumber> sdcs{};
 SDCard_used_t sd_card{spiBus, sdcs};
+
+#ifdef BANTAM
+
+#include "bantam_safety_manager.h"
+
+BantamSafetyManager sm{};
+SafetyManager *safety_manager = &sm;
+
+#include "esc_spindle.h"
+ESCSpindle esc_spindle {SPINDLE_PWM_NUMBER, SPINDLE_ENABLE_OUTPUT_NUMBER, SPINDLE_DIRECTION_OUTPUT_NUMBER, SPINDLE_SPEED_CHANGE_PER_MS};
+
+ToolHead *toolhead_for_tool(uint8_t tool) {
+    return &esc_spindle;
+}
+
+#else
+
+SafetyManager sm{};
+SafetyManager *safety_manager = &sm;
+
+constexpr cfgItem_t sys_config_items_3[] = {};
+constexpr cfgSubtableFromStaticArray sys_config_3{sys_config_items_3};
+const configSubtable * const getSysConfig_3() { return &sys_config_3; }
+
+#error No toolhead setup yet
+ToolHead *toolhead_for_tool(uint8_t tool) {
+    return nullptr;
+}
+
+#endif
+
 
 
 void hardware_init()

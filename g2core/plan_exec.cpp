@@ -248,11 +248,11 @@ stat_t mp_exec_move()
     // Run an out of band dwell. It was probably set in the previous st_load_move()
     // TODO: Find a better place for this - we shouldn't be concerned with dwells or othermove types here,
     //       MORE: Dwells shouldn't hold planning hostage.
-    if (mr->out_of_band_dwell_flag) {
-        mr->out_of_band_dwell_flag = false;
-        st_prep_out_of_band_dwell(mr->out_of_band_dwell_seconds * 1000);
-        return (STAT_OK);
-    }
+    // if (mr->out_of_band_dwell_flag) {
+    //     mr->out_of_band_dwell_flag = false;
+    //     st_prep_out_of_band_dwell(mr->out_of_band_dwell_seconds * 1000);
+    //     return (STAT_OK);
+    // }
 
     // NULL means nothing's running - this is OK
     // If something is MP_BUFFER_BACK_PLANNED, we don't want to idle or prep_null()
@@ -913,7 +913,7 @@ static stat_t _exec_aline_segment()
     }
 
     // Convert target position to steps
-    kn->inverse_kinematics(mr->gm.target, mr->position, mr->segment_velocity, mr->target_velocity, mr->segment_time, exec_target_steps);
+    kn->inverse_kinematics(mr->gm, mr->gm.target, mr->position, mr->segment_velocity, mr->target_velocity, mr->segment_time, exec_target_steps);
 
     // Update the mb->run_time_remaining -- we know it's missing the current segment's time before it's loaded, that's ok.
     mp->run_time_remaining -= mr->segment_time;

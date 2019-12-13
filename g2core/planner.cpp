@@ -358,7 +358,7 @@ stat_t mp_set_target_steps(const float target_steps[MOTORS], const float start_v
  *  and makes keeping the queue full much easier - therefore avoiding Q starvation
  */
 
-void mp_queue_command(void(*cm_exec)(float *, bool *), float *value, bool *flag)
+void mp_queue_command(cm_exec_t cm_exec, float *value, bool *flag)
 {
     mpBuf_t *bf;
 
@@ -370,6 +370,7 @@ void mp_queue_command(void(*cm_exec)(float *, bool *), float *value, bool *flag)
     bf->block_type = BLOCK_TYPE_COMMAND;
     bf->bf_func = _exec_command;      // callback to planner queue exec function
     bf->cm_func = cm_exec;            // callback to canonical machine exec function
+    memcpy(&bf->gm, &cm->gm, sizeof(GCodeState_t)); // snapshot the active gcode state
 
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         bf->unit[axis] = value[axis];               // use the unit vector to store command values

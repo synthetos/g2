@@ -25,6 +25,7 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#if 0
 #include "g2core.h"  // #1
 #include "config.h"  // #2
 #include "hardware.h"
@@ -184,3 +185,4 @@ void pwm_print_p1wph(nvObj_t *nv) { text_print(nv, fmt_p1wph);}
 void pwm_print_p1pof(nvObj_t *nv) { text_print(nv, fmt_p1pof);}
 
 #endif //__TEXT_MODE
+#endif // 0

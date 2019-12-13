@@ -127,7 +127,7 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
         needs_sync_encoders = true;
     }
 
-    void inverse_kinematics(const float target[axes], const float position[axes], const float start_velocity,
+    void inverse_kinematics(const GCodeState_t &gm, const float target[axes], const float position[axes], const float start_velocity,
                             const float end_velocity, const float segment_time, float steps[motors]) override
     {
         // joint == axis in cartesian kinematics
@@ -206,7 +206,7 @@ struct CoreXYKinematics final : CartesianKinematics<axes, motors> {
     //  7 = V (maybe)
     //  8 = W (maybe)
 
-    void inverse_kinematics(const float target[axes], const float position[axes], const float start_velocity,
+    void inverse_kinematics(const GCodeState_t &gm, const float target[axes], const float position[axes], const float start_velocity,
                             const float end_velocity, const float segment_time, float steps[motors]) override
     {
         // need to have a place to store the adjusted COREXY A and B
@@ -222,7 +222,7 @@ struct CoreXYKinematics final : CartesianKinematics<axes, motors> {
         }
 
         // just use the cartesian method from here on
-        parent::inverse_kinematics(axes_target, position, start_velocity, end_velocity, segment_time, steps);
+        parent::inverse_kinematics(gm, axes_target, position, start_velocity, end_velocity, segment_time, steps);
     }
 
     void forward_kinematics(const float steps[motors], float position[axes]) override
@@ -558,7 +558,7 @@ struct FourCableKinematics : KinematicsBase<axes, motors> {
     double prev_cable_vel[4];
     double prev_cable_accel[4];
 
-    void inverse_kinematics(const float target[axes], const float position[axes], const float start_velocity,
+    void inverse_kinematics(const GCodeState_t &gm, const float target[axes], const float position[axes], const float start_velocity,
                             const float end_velocity, const float segment_time, float steps[motors]) override {
 
         // read_sensors() also calls compute_encoder_error() which adjusts cable_position() incorporating the error
@@ -679,20 +679,20 @@ struct FourCableKinematics : KinematicsBase<axes, motors> {
         last_segment_was_idle = false;
     }
 
-    void inverse_kinematics(const float target[axes], float steps[motors]) override
-    {
-        compute_cable_position(target);
+    // void inverse_kinematics(const float target[axes], float steps[motors]) override
+    // {
+    //     compute_cable_position(target);
 
-        for (uint8_t joint = 0; joint < 4; joint++) {
-            cable_vel[joint] = 0.0;
-            cable_accel[joint] = 0.0;
-            cable_jerk[joint] = 0.0;
-        }
+    //     for (uint8_t joint = 0; joint < 4; joint++) {
+    //         cable_vel[joint] = 0.0;
+    //         cable_accel[joint] = 0.0;
+    //         cable_jerk[joint] = 0.0;
+    //     }
 
-        cables_to_steps(steps);
+    //     cables_to_steps(steps);
 
-        last_segment_was_idle = false;
-    }
+    //     last_segment_was_idle = false;
+    // }
 
     float best_steps_per_unit[joints];
 
