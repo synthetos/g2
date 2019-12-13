@@ -55,6 +55,7 @@ struct pbProbingSingleton {             // persistent probing runtime variables
     bool trip_sense;                    // true if contact CLOSURE trips probe  (true for G38.2 and G38.3)
     bool alarm_flag;                    // true if failure triggers alarm       (true for G38.2 and G38.4)
     bool waiting_for_motion_complete;   // true if waiting for a motion to complete
+    bool probe_tripped;                 // record if we saw the probe tripped (in case it bounces)
     stat_t (*func)();                   // binding for callback function state machine
 
     // saved gcode model state
@@ -133,6 +134,8 @@ gpioDigitalInputHandler _probing_handler {
         if (cm->cycle_type != CYCLE_PROBE) { return GPIO_NOT_HANDLED; }
         if (triggering_pin_number != pb.probe_input) { return GPIO_NOT_HANDLED; }
 
+        // If the probe tripped, and the pin changes again, don't unset it! So, use |=
+        pb.probe_tripped |= (state == pb.trip_sense);
         en_take_encoder_snapshot();
         cm_request_feedhold(FEEDHOLD_TYPE_SKIP, FEEDHOLD_EXIT_STOP);
 
@@ -230,6 +233,7 @@ uint8_t cm_straight_probe(float target[], bool flags[], bool trip_sense, bool al
     // queue a function to let us know when we can start probing
     cm->probe_state[0] = PROBE_WAITING;      // wait until planner queue empties before starting movement
     pb.waiting_for_motion_complete = true;
+    pb.probe_tripped = false;
     mp_queue_command(_motion_end_callback, nullptr, nullptr);  // note: these args are ignored
     return (STAT_OK);
 }
@@ -347,13 +351,13 @@ static uint8_t _probing_start()
         return(_probing_exception_exit(STAT_PROBE_TRAVEL_TOO_SMALL));
     }
 
-    din_handlers[INPUT_ACTION_INTERNAL].registerHandler(&_probing_handler);
-
     // Get initial probe state, and don't probe if we're already tripped.
     // If the initial input is the same as the trip_sense it's an error.
     if (pb.trip_sense == gpio_read_input(pb.probe_input)) {     // == is exclusive nor for booleans
         return(_probing_exception_exit(STAT_PROBE_IS_ALREADY_TRIPPED));
     }
+
+    din_handlers[INPUT_ACTION_INTERNAL].registerHandler(&_probing_handler);
 
     // Everything checks out. Run the probe move
     _probe_move(pb.target, pb.flags);
@@ -373,7 +377,7 @@ static stat_t _probing_backoff()
     // captured from the encoder in step space to steps to mm. The encoder snapshot
     // was taken by input interrupt at the time of closure.
 
-    if (pb.trip_sense == gpio_read_input(pb.probe_input)) {  // exclusive or for booleans
+    if (pb.probe_tripped) {
         cm->probe_state[0] = PROBE_SUCCEEDED;
         float contact_position[AXES];
         kn_forward_kinematics(en_get_encoder_snapshot_vector(), contact_position);
