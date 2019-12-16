@@ -447,6 +447,12 @@ static int8_t _get_next_axis(int8_t axis) {
         if (hm.axis_flags[AXIS_A]) {
             return (AXIS_A);
         }
+        if (hm.axis_flags[AXIS_B]) {
+            return (AXIS_B);
+        }
+        if (hm.axis_flags[AXIS_C]) {
+            return (AXIS_C);
+        }
         return (-2);  // error
     } else if (axis == AXIS_Z) {
         if (hm.axis_flags[AXIS_X]) {
@@ -458,6 +464,12 @@ static int8_t _get_next_axis(int8_t axis) {
         if (hm.axis_flags[AXIS_A]) {
             return (AXIS_A);
         }
+        if (hm.axis_flags[AXIS_B]) {
+            return (AXIS_B);
+        }
+        if (hm.axis_flags[AXIS_C]) {
+            return (AXIS_C);
+        }
     } else if (axis == AXIS_X) {
         if (hm.axis_flags[AXIS_Y]) {
             return (AXIS_Y);
@@ -465,9 +477,24 @@ static int8_t _get_next_axis(int8_t axis) {
         if (hm.axis_flags[AXIS_A]) {
             return (AXIS_A);
         }
+        if (hm.axis_flags[AXIS_B]) {
+            return (AXIS_B);
+        }
+        if (hm.axis_flags[AXIS_C]) {
+            return (AXIS_C);
+        }
     } else if (axis == AXIS_Y) {
         if (hm.axis_flags[AXIS_A]) {
             return (AXIS_A);
+        }
+        if (hm.axis_flags[AXIS_A]) {
+            return (AXIS_A);
+        }
+        if (hm.axis_flags[AXIS_B]) {
+            return (AXIS_B);
+        }
+        if (hm.axis_flags[AXIS_C]) {
+            return (AXIS_C);
         }
     }
     return (-1);  // done
