@@ -541,9 +541,6 @@ static int8_t _get_next_axis(int8_t axis) {
         if (hm.axis_flags[AXIS_A]) {
             return (AXIS_A);
         }
-        if (hm.axis_flags[AXIS_A]) {
-            return (AXIS_A);
-        }
         if (hm.axis_flags[AXIS_B]) {
             return (AXIS_B);
         }
