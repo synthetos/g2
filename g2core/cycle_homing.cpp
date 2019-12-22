@@ -337,7 +337,13 @@ static stat_t _homing_axis_setpoint_backoff(int8_t axis)  //
 static stat_t _homing_axis_set_position(int8_t axis)
 {
     if (hm.set_coordinates) {
-        cm_set_position_by_axis(axis, hm.setpoint);
+        if (((cm->a[axis].travel_max - cm->a[axis].travel_min) < EPSILON) && (cm->a[axis].axis_mode == AXIS_RADIUS)) {
+            // Cyclic rotary axes should be set to position 0.0 at the end of homing
+            cm_set_position_by_axis(axis, 0.0);
+        } else {
+            // All other axes should be set to the set point (travel min) at the end of homing
+            cm_set_position_by_axis(axis, hm.setpoint);
+        }
         cm->homed[axis] = true;
 
     } else {  // handle G28.4 cycle - set position to the point of switch closure
