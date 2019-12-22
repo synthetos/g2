@@ -147,7 +147,7 @@ void _get_id(char *id)
     char *p = id;
     const char *uuid = Motate::UUID;
 
-    Motate::strncpy(p, uuid, Motate::strlen(uuid));
+    Motate::strncpy(p, uuid, Motate::strlen(uuid)+1);
 }
 
 /***** END OF SYSTEM FUNCTIONS *****/
