@@ -337,7 +337,7 @@ static stat_t _homing_axis_setpoint_backoff(int8_t axis)  //
 static stat_t _homing_axis_set_position(int8_t axis)
 {
     if (hm.set_coordinates) {
-        if (((cm->a[axis].travel_max - cm->a[axis].travel_min) < EPSILON) && (cm->a[axis].axis_mode == AXIS_RADIUS)) {
+        if ((fabs(cm->a[axis].travel_max - cm->a[axis].travel_min) < EPSILON) && (cm->a[axis].axis_mode == AXIS_RADIUS)) {
             // Cyclic rotary axes should be set to position 0.0 at the end of homing
             cm_set_position_by_axis(axis, 0.0);
         } else {
