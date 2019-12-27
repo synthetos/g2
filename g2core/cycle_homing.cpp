@@ -290,7 +290,7 @@ static stat_t _homing_axis_start(int8_t axis) {
 
     // Calculate and test travel distance
     float travel_distance;
-    if (((cm->a[axis].travel_max - cm->a[axis].travel_min) < EPSILON) && (cm->a[axis].axis_mode == AXIS_RADIUS)) {
+    if ((fabs(cm->a[axis].travel_max - cm->a[axis].travel_min) < EPSILON) && (cm->a[axis].axis_mode == AXIS_RADIUS)) {
         // For cyclic rotary axes, we set the travel distance to one full rotation
         travel_distance = 360.0;
     } else {
