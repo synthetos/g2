@@ -234,8 +234,15 @@ static stat_t _homing_axis_start(int8_t axis) {
         return (_homing_error_exit(axis, STAT_HOMING_ERROR_ZERO_LATCH_VELOCITY));
     }
 
-    // calculate and test travel distance
-    float travel_distance = fabs(cm->a[axis].travel_max - cm->a[axis].travel_min) + cm->a[axis].latch_backoff;
+    // Calculate and test travel distance
+    float travel_distance;
+    if ((fabs(cm->a[axis].travel_max - cm->a[axis].travel_min) < EPSILON) && (cm->a[axis].axis_mode == AXIS_RADIUS)) {
+        // For cyclic rotary axes, we set the travel distance to one full rotation
+        travel_distance = 360.0;
+    } else {
+        // All other axes use a calculated value
+        travel_distance = fabs(cm->a[axis].travel_max - cm->a[axis].travel_min) + cm->a[axis].latch_backoff;
+    }
     if (fp_ZERO(travel_distance)) {
         return (_homing_error_exit(axis, STAT_HOMING_ERROR_TRAVEL_MIN_MAX_IDENTICAL));
     }
