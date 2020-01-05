@@ -194,7 +194,7 @@ endif
 
 ##########
 # SMW3D r7 config:
-# https://www.smw3d.com/r7-cnc-diy-kit/
+# https://sites.google.com/site/smw3dr7/
 
 ifeq ("$(CONFIG)","r7")
     ifeq ("$(BOARD)","NONE")
