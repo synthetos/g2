@@ -107,7 +107,9 @@ void hardware_init()
     sd_card.init();
     setup_sd_persistence();
     board_hardware_init();
-	return;
+    toolhead_for_tool(0)->init();
+    spindle_set_toolhead(toolhead_for_tool(0));
+    return;
 }
 
 /*
