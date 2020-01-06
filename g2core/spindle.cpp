@@ -70,6 +70,7 @@ void spindle_reset() {
 
 stat_t spindle_stop() {
     cm->gm.spindle_direction = SPINDLE_OFF;
+    cm->gm.spindle_speed = 0;
     if (active_toolhead) {
         return active_toolhead->stop();
     }

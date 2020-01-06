@@ -135,6 +135,8 @@ class ESCSpindle : public ToolHead {
     // DON'T override set_direction - use engage instead
     spDirection get_direction() override;
 
+    stat_t stop() override;
+
     // called from the loader right before a move, with the gcode model to use
     void engage(const GCodeState_t &gm) override;
 
@@ -232,6 +234,16 @@ float ESCSpindle::get_speed() { return speed_actual; }
 
 // DON'T override set_direction - use engage instead
 spDirection ESCSpindle::get_direction() { return direction; }
+
+stat_t ESCSpindle::stop() {
+    paused = false;
+    speed = 0;
+    direction = SPINDLE_OFF;
+
+    this->complete_change();
+
+    return (STAT_OK);
+}
 
 // called from a command that was queued when the default set_speed and set_direction returned STAT_EAGAIN
 // ALSO called from the loader right before a move
