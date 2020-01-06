@@ -771,6 +771,7 @@ stat_t st_prep_line(const float start_velocity, const float end_velocity, const 
         st_pre.mot[motor].substep_increment_increment = round(((s_double*(end_velocity-start_velocity))/(((double)st_pre.dda_ticks-1.0)*t_v0_v1)) * (double)DDA_SUBSTEPS);
     }
     st_pre.block_type = BLOCK_TYPE_ALINE;
+    st_pre.bf = nullptr;
     st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;    // signal that prep buffer is ready
 
     return (STAT_OK);
@@ -847,6 +848,7 @@ stat_t st_prep_line(const float start_velocities[], const float end_velocities[]
         st_pre.mot[motor].substep_increment_increment = round(((s_double*(end_velocities[motor]-start_velocities[motor]))/(((double)st_pre.dda_ticks-1.0)*t_v0_v1)) * (double)DDA_SUBSTEPS);
     }
     st_pre.block_type = BLOCK_TYPE_ALINE;
+    st_pre.bf = nullptr;
     st_pre.buffer_state = PREP_BUFFER_OWNED_BY_LOADER;    // signal that prep buffer is ready
     return (STAT_OK);
 }
