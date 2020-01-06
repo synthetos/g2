@@ -368,9 +368,9 @@ void mp_queue_command(cm_exec_t cm_exec, float *value, bool *flag)
         return;
     }
     bf->block_type = BLOCK_TYPE_COMMAND;
+    memcpy(&bf->gm, &cm->gm, sizeof(GCodeState_t)); // snapshot the active gcode state
     bf->bf_func = _exec_command;      // callback to planner queue exec function
     bf->cm_func = cm_exec;            // callback to canonical machine exec function
-    memcpy(&bf->gm, &cm->gm, sizeof(GCodeState_t)); // snapshot the active gcode state
 
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         bf->unit[axis] = value[axis];               // use the unit vector to store command values
