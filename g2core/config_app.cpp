@@ -1827,7 +1827,7 @@ auto nodes = makeSubtableNodes(
     getPrbConfig_1(), getJogConfig_1(), getPwrConfig_1(), getMotorConfig_1(), getAxisConfig_1(), getDIConfig_1(),
     getINConfig_1(), getDOConfig_1(), getOUTConfig_1(), getAINConfig_1(), getP1Config_1(), getPIDConfig_1(),
     getHEConfig_1(), getCoorConfig_1(), getJobIDConfig_1(), getFixturingConfig_1(), getSpindleConfig_1(),
-    getCoolantConfig_1(), getSysConfig_2(), getUserDataConfig_1(), getToolConfig_1(), getDiagnosticConfig_1(),
+    getCoolantConfig_1(), getSysConfig_2(), getSysConfig_3(), getUserDataConfig_1(), getToolConfig_1(), getDiagnosticConfig_1(),
     getMotorDiagnosticConfig_1(), getSrPersistenceConfig_1(), getGroupsConfig_1(), getUberGroupsConfig_1());
 
 
