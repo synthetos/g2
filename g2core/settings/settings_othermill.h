@@ -173,7 +173,7 @@
 // *** axis settings **********************************************************************************
 
 #define JERK_MAX                    500                 // 500 million mm/(min^3)
-#define JERK_HIGH_SPEED             1000                // 1000 million mm/(min^3) // Jerk during homing needs to stop *fast*
+#define JERK_HIGH_SPEED             800                 // 1000 million mm/(min^3) // Jerk during homing needs to stop *fast*
 #define VELOCITY_MAX                1500
 #define SEARCH_VELOCITY             500
 #define LATCH_VELOCITY              25                  // reeeeally slow for accuracy
