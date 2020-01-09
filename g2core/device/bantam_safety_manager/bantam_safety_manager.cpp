@@ -39,7 +39,6 @@ stat_t _bt_get_msg_helper(nvObj_t *nv, const char *const msg_array[], int32_t va
     return(nv_copy_string(nv, (const char *)GET_TEXT_ITEM(msg_array, value)));
 }
 
-
 #ifdef __TEXT_MODE
 
 static const char msg_safe0[] = "Interlock Circuit Closed/ESC nominal";
@@ -55,10 +54,19 @@ static const char msg_estp3[] = "E-Stop Circuit Broken and unacked";
 // Don't worry about indicating the "Active" state
 static const char *const msg_estp[] = { msg_estp0, msg_estp1, msg_estp2, msg_estp3 };
 
+static const char fmt_safe[] = "Safety System Flags: %s\n";
+static const char fmt_estp[] = "Emergency Stop:      %s\n";
+
+void cm_print_safe(nvObj_t *nv) { text_print_str(nv, fmt_safe);}
+void cm_print_estp(nvObj_t *nv) { text_print_str(nv, fmt_estp);}
+
 #else
 
 #define msg_safe NULL
 #define msg_estp NULL
+
+#define cm_print_safe tx_print_stub
+#define cm_print_estp tx_print_stub
 
 #endif // __TEXT_MODE
 
@@ -93,9 +101,3 @@ constexpr cfgItem_t sys_config_items_3[] = {
 };
 constexpr cfgSubtableFromStaticArray sys_config_3{sys_config_items_3};
 const configSubtable * const getSysConfig_3() { return &sys_config_3; }
-
-static const char fmt_safe[] = "Safety System Flags: %s\n";
-static const char fmt_estp[] = "Emergency Stop:      %s\n";
-
-void cm_print_safe(nvObj_t *nv) { text_print_str(nv, fmt_safe);}
-void cm_print_estp(nvObj_t *nv) { text_print_str(nv, fmt_estp);}

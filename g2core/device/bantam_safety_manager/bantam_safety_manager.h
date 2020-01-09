@@ -207,23 +207,4 @@ class BantamSafetyManager : public SafetyManager {
     uint8_t get_esc_safety_state() { return (safety_state & BantamSafetyManager::SAFETY_ESC_MASK) != 0; }
 };
 
-stat_t cm_get_safe(nvObj_t *nv);        // get interlock state
-stat_t cm_get_estp(nvObj_t *nv);        // get E-stop state
-
-#ifdef __TEXT_MODE
-
-void cm_print_safe(nvObj_t *nv);
-void cm_print_estp(nvObj_t *nv);
-
-#else
-
-#define cm_print_safe tx_print_stub
-#define cm_print_estp tx_print_stub
-
-#endif // __TEXT_MODE
-
-// E-Stop
-stat_t cm_ack_estop(nvObj_t *nv);
-const configSubtable *const getSysConfig_3();
-
 #endif //BANTAM_SAFETY_MANAGER_H_ONCE
