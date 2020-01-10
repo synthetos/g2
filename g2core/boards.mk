@@ -50,10 +50,17 @@ ifeq ("$(CONFIG)","OthermillPro")
     SETTINGS_FILE="settings_othermill_pro.h"
 endif
 
-ifeq ("$(CONFIG)","MiniMill")
+ifeq ("$(CONFIG)","MiniMillv9")
     ifeq ("$(BOARD)","NONE")
         BOARD=g2v9k
         BANTAM=1
+    endif
+    SETTINGS_FILE="settings_minimill.h"
+endif
+
+ifeq ("$(CONFIG)","MiniMill")
+    ifeq ("$(BOARD)","NONE")
+        BOARD=gquintic-d
     endif
     SETTINGS_FILE="settings_minimill.h"
 endif

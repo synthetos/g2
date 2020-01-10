@@ -2,8 +2,8 @@
  * esc_spindle.h - toolhead driver for a ESC-driven brushless spindle
  * This file is part of the g2core project
  *
- * Copyright (c) 2019 Robert Giseburt
- * Copyright (c) 2019 Alden S. Hart, Jr.
+ * Copyright (c) 2020 Robert Giseburt
+ * Copyright (c) 2020 Alden S. Hart, Jr.
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -122,8 +122,8 @@ class ESCSpindle : public ToolHead {
     // ToolHead overrides
     void init() override;
 
-    stat_t pause() override;          // soft-stop the toolhead (usually for a feedhold) - retain all state for resume
-    stat_t resume() override;         // resume from the pause - return STAT_EAGAIN if it's not yet ready
+    void pause() override;          // soft-stop the toolhead (usually for a feedhold) - retain all state for resume
+    void resume() override;         // resume from the pause - return STAT_EAGAIN if it's not yet ready
     bool ready_to_resume() override;  // return true if paused and resume would not result in an error
     bool busy() override;             // return true if motion should continue waiting for this toolhead
 
@@ -135,7 +135,7 @@ class ESCSpindle : public ToolHead {
     // DON'T override set_direction - use engage instead
     spDirection get_direction() override;
 
-    stat_t stop() override;
+    void stop() override;
 
     // called from the loader right before a move, with the gcode model to use
     void engage(const GCodeState_t &gm) override;
@@ -198,26 +198,22 @@ void ESCSpindle::init()
     set_direction_output(direction_output_num);
 }
 
-stat_t ESCSpindle::pause() {
+void ESCSpindle::pause() {
     if (paused) {
-        return (STAT_OK);
+        return;
     }
 
     paused = true;
     this->complete_change();
-
-    return (STAT_OK);
 }
 
-stat_t ESCSpindle::resume() {
+void ESCSpindle::resume() {
     if (!paused) {
-        return (STAT_OK);
+        return;
     }
 
     paused = false;
     this->complete_change();
-
-    return (STAT_OK);
 }
 
 bool ESCSpindle::ready_to_resume() { return paused && safety_manager->ok_to_spindle(); }
@@ -235,14 +231,12 @@ float ESCSpindle::get_speed() { return speed_actual; }
 // DON'T override set_direction - use engage instead
 spDirection ESCSpindle::get_direction() { return direction; }
 
-stat_t ESCSpindle::stop() {
+void ESCSpindle::stop() {
     paused = false;
     speed = 0;
     direction = SPINDLE_OFF;
 
     this->complete_change();
-
-    return (STAT_OK);
 }
 
 // called from a command that was queued when the default set_speed and set_direction returned STAT_EAGAIN
@@ -342,14 +336,14 @@ void ESCSpindle::complete_change() {
         return;
     } else if (direction == SPINDLE_CW) {
         if (enable_output != nullptr) {
-            enable_output->setValue(false);
+            enable_output->setValue(true);
         }
         if (direction_output != nullptr) {
             direction_output->setValue(true);
         }
     } else if (direction == SPINDLE_CCW) {
         if (enable_output != nullptr) {
-            enable_output->setValue(false);
+            enable_output->setValue(true);
         }
         if (direction_output != nullptr) {
             direction_output->setValue(false);

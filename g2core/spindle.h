@@ -45,28 +45,26 @@ class ToolHead  // TODO: Move to a toolhead file
          stop();
     }
 
-    virtual stat_t stop()    // stop - loses state - called when a job ends or is killed, even if outside a "job"
+    virtual void stop()    // stop - loses state - called when a job ends or is killed, even if outside a "job"
     {
         // default to setting the spindle to OFF and speed to 0
         set_direction(SPINDLE_OFF);
         set_speed(0);
-
-        return (STAT_OK);
     }
 
-    virtual stat_t pause();   // soft-stop the toolhead (usually for a feedhold) - retain all state for resume
-    virtual stat_t resume();  // resume from the pause - return STAT_EAGAIN if it's not yet ready
+    virtual void pause();   // soft-stop the toolhead (usually for a feedhold) - retain all state for resume
+    virtual void resume();  // resume from the pause - return STAT_EAGAIN if it's not yet ready
     virtual bool ready_to_resume() { return true; } // return true if paused and resume would not result in an error
     virtual bool busy() { return false; } // return true if motion should continue waiting for this toolhead
 
     // the result of an S word
-    // return STAT_EAGAIN if a command (and plan-to-stop) is needed, and STAT_OK if not
-    virtual stat_t set_speed(float speed) { return (STAT_EAGAIN); }
+    // return true if a command (and plan-to-stop) is needed, and false if not
+    virtual bool set_speed(float speed) { return (true); }
     virtual float get_speed();
 
     // the result of an M3/M4/M5
-    // return STAT_EAGAIN if a command (and plan-to-stop) is needed, and STAT_OK if not
-    virtual stat_t set_direction(spDirection direction) { return (STAT_EAGAIN); }
+    // return true if a command (and plan-to-stop) is needed, and false if not
+    virtual bool set_direction(spDirection direction) { return (true); }
     virtual spDirection get_direction();
 
     // called from the loader right before a move, with the gcode model to use
@@ -125,9 +123,9 @@ void spindle_init();   // init all known toolheads
 void spindle_set_toolhead(ToolHead *toolhead); // set the active toolhead
 void spindle_reset();  // reset the current toolhead
 
-stat_t spindle_stop();
-stat_t spindle_pause();
-stat_t spindle_resume();
+void spindle_stop();
+void spindle_pause();
+void spindle_resume();
 stat_t spindle_set_speed(float speed);                // S parameter - returns STAT_EAGAIN if a command should be queued
 float  spindle_get_speed();                           // return current speed - in the same units as the S parameter
 stat_t spindle_set_direction(spDirection direction);  // M3/M4/M5 - returns STAT_EAGAIN if a command should be queued

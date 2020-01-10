@@ -33,6 +33,7 @@
 #include "text_parser.h"
 #include "board_xio.h"
 #include "board_gpio.h"
+#include "safety_manager.h"
 
 #include "MotateUtilities.h"
 #include "MotateUniqueID.h"
@@ -55,6 +56,62 @@ HOT_DATA SPIBus_used_t spiBus;
 // alignas(4) uint8_t eeprom_buffer[128] HOT_DATA = "TestinglyABCDEFGHIJKLmnop";
 // alignas(4) uint8_t eeprom_in_buffer[128] HOT_DATA = "";
 
+
+SafetyManager sm{};
+SafetyManager *safety_manager = &sm;
+
+
+#ifndef SPINDLE_ENABLE_OUTPUT_NUMBER
+#warning SPINDLE_ENABLE_OUTPUT_NUMBER is defaulted to 4!
+#warning SPINDLE_ENABLE_OUTPUT_NUMBER should be defined in settings or a board file!
+#define SPINDLE_ENABLE_OUTPUT_NUMBER 4
+#endif
+
+#ifndef SPINDLE_DIRECTION_OUTPUT_NUMBER
+#warning SPINDLE_DIRECTION_OUTPUT_NUMBER is defaulted to 5!
+#warning SPINDLE_DIRECTION_OUTPUT_NUMBER should be defined in settings or a board file!
+#define SPINDLE_DIRECTION_OUTPUT_NUMBER 5
+#endif
+
+#ifndef SPINDLE_PWM_NUMBER
+#warning SPINDLE_PWM_NUMBER is defaulted to 6!
+#warning SPINDLE_PWM_NUMBER should be defined in settings or a board file!
+#define SPINDLE_PWM_NUMBER 6
+#endif
+
+#ifndef SPINDLE_SPEED_CHANGE_PER_MS
+#warning SPINDLE_SPEED_CHANGE_PER_MS is defaulted to 5!
+#warning SPINDLE_SPEED_CHANGE_PER_MS should be defined in settings or a board file!
+#define SPINDLE_SPEED_CHANGE_PER_MS 5
+#endif
+
+#include "esc_spindle.h"
+ESCSpindle esc_spindle {SPINDLE_PWM_NUMBER, SPINDLE_ENABLE_OUTPUT_NUMBER, SPINDLE_DIRECTION_OUTPUT_NUMBER, SPINDLE_SPEED_CHANGE_PER_MS};
+
+
+#ifndef LASER_ENABLE_OUTPUT_NUMBER
+#warning LASER_ENABLE_OUTPUT_NUMBER is defaulted to 7!
+#warning LASER_ENABLE_OUTPUT_NUMBER should be defined in settings or a board file!
+#define LASER_ENABLE_OUTPUT_NUMBER 7
+#endif
+
+#ifndef LASER_PWM_NUMBER
+#warning LASER_PWM_NUMBER is defaulted to 8!
+#warning LASER_PWM_NUMBER should be defined in settings or a board file!
+#define LASER_PWM_NUMBER 8
+#endif
+
+#include "laser_toolhead.h"
+LaserTool laser_tool {LASER_PWM_NUMBER, LASER_PWM_NUMBER};
+
+ToolHead *toolhead_for_tool(uint8_t tool) {
+    if (tool != 7) {
+        return &esc_spindle;
+    } else {
+        return &laser_tool;
+    }
+}
+
 /*
  * hardware_init() - lowest level hardware init
  */
@@ -65,6 +122,10 @@ void hardware_init()
     // twiBus.init();
     board_hardware_init();
     external_clk_pin = 0; // Force external clock to 0 for now.
+
+    esc_spindle.init();
+    laser_tool.init();
+    spindle_set_toolhead(toolhead_for_tool(0));
 }
 
 /*
@@ -246,6 +307,10 @@ stat_t hw_flash(nvObj_t *nv)
     return(STAT_OK);
 }
 
+// Stub in getSysConfig_3
+// constexpr cfgItem_t sys_config_items_3[] = {};
+constexpr cfgSubtableFromStaticArray sys_config_3{};
+const configSubtable * const getSysConfig_3() { return &sys_config_3; }
 
 /***********************************************************************************
  * TEXT MODE SUPPORT

@@ -40,7 +40,7 @@ ifeq ("$(BASE_BOARD)","gquadratic")
     CHIP_LOWERCASE = sams70n19
 
     BOARD_PATH = ./board/gquadratic
-    SOURCE_DIRS += ${BOARD_PATH} device/trinamic device/step_dir_hobbyservo device/max31865 device/neopixel
+    SOURCE_DIRS += ${BOARD_PATH} device/trinamic device/step_dir_hobbyservo device/max31865 device/neopixel device/esc_spindle device/laser_toolhead
 
     PLATFORM_BASE = ${MOTATE_PATH}/platform/atmel_sam
     include $(PLATFORM_BASE).mk

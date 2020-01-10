@@ -68,25 +68,22 @@ void spindle_reset() {
  * bool is_spindle_on_or_paused(); // returns if the spindle is on or paused - IOW would it try to resume from feedhold
 */
 
-stat_t spindle_stop() {
+void spindle_stop() {
     cm->gm.spindle_direction = SPINDLE_OFF;
     cm->gm.spindle_speed = 0;
     if (active_toolhead) {
-        return active_toolhead->stop();
+        active_toolhead->stop();
     }
-    return (STAT_OK);
 }
-stat_t spindle_pause() {
+void spindle_pause() {
     if (spindle_pause_enabled && active_toolhead) {
-        return active_toolhead->pause();
+        active_toolhead->pause();
     }
-    return (STAT_OK);
 }
-stat_t spindle_resume() {
+void spindle_resume() {
     if (spindle_pause_enabled && active_toolhead) {
-        return active_toolhead->resume();
+        active_toolhead->resume();
     }
-    return (STAT_OK);
 }
 
 // A command for placing in the queue, which forces a PTS (plan-to-stop) as well as calls active_toolhead->engage()
@@ -97,7 +94,7 @@ static void _exec_spindle_control(float *, bool *) {
 stat_t spindle_set_speed(float speed) {
     cm->gm.spindle_speed = speed;
 
-    if (active_toolhead && active_toolhead->set_speed(speed) == STAT_EAGAIN) {
+    if (active_toolhead && active_toolhead->set_speed(speed) == true) {
         mp_queue_command(_exec_spindle_control, nullptr, nullptr);
     }
 
@@ -112,7 +109,7 @@ stat_t spindle_set_direction(spDirection direction)
 {
     cm->gm.spindle_direction = direction;
 
-    if (active_toolhead && active_toolhead->set_direction(direction) == STAT_EAGAIN) {
+    if (active_toolhead && active_toolhead->set_direction(direction) == true) {
         mp_queue_command(_exec_spindle_control, nullptr, nullptr);
     }
 

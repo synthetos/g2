@@ -359,8 +359,10 @@ class cfgSubtableFromStaticArray : public configSubtable {
     const cfgItem_t *items;
 
    public:
-   template<typename T, size_t length>
+    template<typename T, size_t length>
     constexpr cfgSubtableFromStaticArray(T (&i)[length]) : configSubtable{length}, items{i} {};
+
+    constexpr cfgSubtableFromStaticArray() : configSubtable{0}, items{} {};
 
     const cfgItem_t * const get(std::size_t idx) const override {
         return &items[idx];

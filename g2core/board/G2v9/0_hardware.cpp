@@ -60,10 +60,6 @@
 #define SPINDLE_PWM_NUMBER 6
 #endif
 
-/*
- * hardware_init() - lowest level hardware init
- */
-
 SPIBus_used_t spiBus;
 
 Motate::SPIChipSelectPin<Motate::kSD_ChipSelectPinNumber> sdcs{};
@@ -76,6 +72,13 @@ SDCard_used_t sd_card{spiBus, sdcs};
 BantamSafetyManager sm{};
 SafetyManager *safety_manager = &sm;
 
+#else
+
+SafetyManager sm{};
+SafetyManager *safety_manager = &sm;
+
+#endif
+
 #include "esc_spindle.h"
 ESCSpindle esc_spindle {SPINDLE_PWM_NUMBER, SPINDLE_ENABLE_OUTPUT_NUMBER, SPINDLE_DIRECTION_OUTPUT_NUMBER, SPINDLE_SPEED_CHANGE_PER_MS};
 
@@ -83,23 +86,9 @@ ToolHead *toolhead_for_tool(uint8_t tool) {
     return &esc_spindle;
 }
 
-#else
-
-SafetyManager sm{};
-SafetyManager *safety_manager = &sm;
-
-constexpr cfgItem_t sys_config_items_3[] = {};
-constexpr cfgSubtableFromStaticArray sys_config_3{sys_config_items_3};
-const configSubtable * const getSysConfig_3() { return &sys_config_3; }
-
-#error No toolhead setup yet
-ToolHead *toolhead_for_tool(uint8_t tool) {
-    return nullptr;
-}
-
-#endif
-
-
+/*
+ * hardware_init() - lowest level hardware init
+ */
 
 void hardware_init()
 {

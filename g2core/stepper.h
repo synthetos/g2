@@ -424,7 +424,7 @@ struct Stepper {
     /* stepper default values */
 public:
     // sets default pwm freq for all motor vrefs (commented line below also sets HiZ)
-    Stepper(const uint32_t frequency = 500000)
+    Stepper()
     {
     };
 
