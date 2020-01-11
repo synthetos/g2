@@ -58,10 +58,18 @@
 #define HAS_HOBBY_SERVO_MOTOR 0
 #endif
 
-#if QUINTIC_REVISION == 'C' or !HAS_HOBBY_SERVO_MOTOR
+#ifndef HAS_LASER
+#if HAS_HOBBY_SERVO_MOTOR
+#error Can NOT have a laser and a hobby servo at the same time, sorry
+#endif
+#define HAS_LASER 0
+#endif
+
+
+#if QUINTIC_REVISION == 'C' or (!HAS_HOBBY_SERVO_MOTOR && !HAS_LASER)
 #define MOTORS      5               // number of motors on the board - 5Trinamics OR 4 Trinamics + 1 servo
 #else
-#define MOTORS      6               // number of motors on the board - 5 Trinamics + 1 servo
+#define MOTORS      6               // number of motors on the board - 5 Trinamics + 1 servo or laser
 #endif
 #define PWMS 2                      // number of PWM channels supported the hardware
 #define AXES 6                      // axes to support -- must be 6 or 9

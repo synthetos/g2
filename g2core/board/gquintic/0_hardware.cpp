@@ -88,7 +88,7 @@ SafetyManager *safety_manager = &sm;
 #include "esc_spindle.h"
 ESCSpindle esc_spindle {SPINDLE_PWM_NUMBER, SPINDLE_ENABLE_OUTPUT_NUMBER, SPINDLE_DIRECTION_OUTPUT_NUMBER, SPINDLE_SPEED_CHANGE_PER_MS};
 
-
+#if HAS_LASER
 #ifndef LASER_ENABLE_OUTPUT_NUMBER
 #warning LASER_ENABLE_OUTPUT_NUMBER is defaulted to 7!
 #warning LASER_ENABLE_OUTPUT_NUMBER should be defined in settings or a board file!
@@ -103,13 +103,18 @@ ESCSpindle esc_spindle {SPINDLE_PWM_NUMBER, SPINDLE_ENABLE_OUTPUT_NUMBER, SPINDL
 
 #include "laser_toolhead.h"
 LaserTool laser_tool {LASER_PWM_NUMBER, LASER_PWM_NUMBER};
+#endif
 
 ToolHead *toolhead_for_tool(uint8_t tool) {
+#if !HAS_LASER
+    return &esc_spindle;
+#else
     if (tool != 7) {
         return &esc_spindle;
     } else {
         return &laser_tool;
     }
+#endif
 }
 
 /*

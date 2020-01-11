@@ -28,6 +28,9 @@
 #ifndef SPINDLE_H_ONCE
 #define SPINDLE_H_ONCE
 
+#include "error.h" // for stat_t
+#include "config.h" // for configSubtable
+
 enum spDirection {                  // how spindle controls are presented by the Gcode parser
     SPINDLE_OFF = 0,            // M5
     SPINDLE_CW = 1,             // M3 and store CW to spindle.direction

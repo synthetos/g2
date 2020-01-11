@@ -92,6 +92,9 @@ extern Trinamic2130<SPIBus_used_t::SPIBusDevice,
     motor_5;
 #if HAS_HOBBY_SERVO_MOTOR
 extern StepDirHobbyServo<Motate::kServo1_PinNumber> motor_6;
+#elif HAS_LASER
+#include "laser_toolhead.h"
+extern LaserTool &motor_6;
 #endif
 #endif // 'D'
 

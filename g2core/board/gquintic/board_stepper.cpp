@@ -90,10 +90,16 @@ HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
 #if HAS_HOBBY_SERVO_MOTOR
 HOT_DATA StepDirHobbyServo<Motate::kServo1_PinNumber> motor_6;
 Stepper* const Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5, &motor_6};
+#elif HAS_LASER
+// laser_tool is defined over in hardware.cpp
+extern LaserTool laser_tool;
+LaserTool &motor_6 = laser_tool;
+Stepper* const Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5, &laser_tool};
 #else
 Stepper* const Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5};
 #endif
 #endif // 'D'
+
 
 #if (KINEMATICS == KINE_FOUR_CABLE)
 HOT_DATA encoder_0_t encoder_0{plex0, M1_ENCODER_INPUT_A, M1_ENCODER_INPUT_B, 1 << 0};

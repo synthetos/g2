@@ -29,8 +29,10 @@
 #ifndef LASER_TOOLHEAD_H_ONCE
 #define LASER_TOOLHEAD_H_ONCE
 
+class LaserTool; // Need to forward declare since stepper.h may (eventually) include this file
+
 #include "spindle.h"
-#include "stepper.h" // for st_request_load_move
+#include "stepper.h" // for Stepper and st_request_load_move
 #include "util.h" // for fp_NE
 #include "safety_manager.h" // for safety_manager
 
@@ -46,7 +48,7 @@
 
 // class declaration
 // note implementation is after
-class LaserTool : public ToolHead {
+class LaserTool : public ToolHead, virtual public Stepper {
     spDirection direction;        // direction
     float speed;                  // S in RPM
     // float speed_actual;           // actual speed (during speed ramping)
@@ -62,9 +64,13 @@ class LaserTool : public ToolHead {
     uint8_t enable_output_num;
     gpioDigitalOutput *enable_output = nullptr;
 
+    // For "Stepper" enabled control
+    bool enabled = false;
+
     void complete_change();
 
    public:
+// ToolHead functions ----
     // constructor - provide it with the default output pins - 0 means no pin
     LaserTool(const uint8_t pwm_pin_number, const uint8_t enable_pin_number);
 
@@ -129,137 +135,15 @@ class LaserTool : public ToolHead {
 
     // void set_phase_off(float new_phase_off) override { phase_off = new_phase_off; }
     // float get_phase_off() override { return phase_off; }
+
+// Stepper functions ----
+
+    void _enableImpl() override;
+    void _disableImpl() override;
+    void stepStart() override;
+    void stepEnd() override;
+    void setDirection(uint8_t new_direction) override;
+    void setPowerLevels(float active_pl, float idle_pl) override;
 };
-
-// method implementations follow
-
-LaserTool::LaserTool(const uint8_t pwm_pin_number, const uint8_t enable_pin_number)
-    : pwm_output_num{pwm_pin_number},
-      enable_output_num{enable_pin_number} {}
-
-void LaserTool::init()
-{
-    // TODO - ensure outputs are within range
-    set_pwm_output(pwm_output_num);
-    set_enable_output(enable_output_num);
-}
-
-void LaserTool::pause() {
-    if (paused) {
-        return;
-    }
-
-    paused = true;
-    this->complete_change();
-}
-
-void LaserTool::resume() {
-    if (!paused) {
-        return;
-    }
-
-    paused = false;
-    this->complete_change();
-}
-
-bool LaserTool::ready_to_resume() { return paused && safety_manager->ok_to_spindle(); }
-// bool LaserTool::busy() {
-//     // return true when not paused, on, and ramping up to speed
-//     if (paused || (direction == SPINDLE_OFF)) {
-//         return false;
-//     }
-//     return true;
-// }
-
-float LaserTool::get_speed() { return speed; }
-
-spDirection LaserTool::get_direction() { return direction; }
-
-void LaserTool::stop() {
-    paused = false;
-    speed = 0;
-    direction = SPINDLE_OFF;
-
-    this->complete_change();
-}
-
-// called from a command that was queued when the default set_speed and set_direction returned true
-// ALSO called from the loader right before a move
-// we are handed the gcode model to use
-void LaserTool::engage(const GCodeState_t &gm) {
-    if ((direction == gm.spindle_direction) && fp_EQ(speed, gm.spindle_speed)) {
-        // nothing changed
-        return;
-    }
-
-    // // special handling for reversals - we set the speed to zero and ramp up
-    // if ((gm.spindle_direction != direction) && (direction != SPINDLE_OFF) && (gm.spindle_direction != SPINDLE_OFF)) {
-    //     speed_actual = 0;
-    // }
-
-    speed = gm.spindle_speed;
-    direction = gm.spindle_direction;
-
-    // handle the rest
-    this->complete_change();
-}
-
-bool LaserTool::is_on() { return (direction != SPINDLE_OFF); }
-
-// LaserTool-specific functions
-void LaserTool::set_pwm_output(const uint8_t pwm_pin_number) {
-    if (pwm_pin_number == 0) {
-        pwm_output = nullptr;
-    } else {
-        pwm_output = d_out[pwm_pin_number - 1];
-        pwm_output->setEnabled(IO_ENABLED);
-        // set the frequency on the output -- not here
-        // set the polarity on the output -- not here
-    }
-}
-void LaserTool::set_enable_output(const uint8_t enable_pin_number) {
-    if (enable_pin_number == 0) {
-        enable_output = nullptr;
-    } else {
-        enable_output = d_out[enable_pin_number - 1];
-        enable_output->setEnabled(IO_ENABLED);
-        // set the polarity on the output -- not here
-    }
-}
-
-void LaserTool::set_frequency(float new_frequency)
-{
-    if (pwm_output) {
-        pwm_output->setFrequency(new_frequency);
-    }
-}
-float LaserTool::get_frequency()
-{
-    if (pwm_output) {
-        return pwm_output->getFrequency();
-    }
-    return 0.0;
-}
-
-// Private functions
-
-void LaserTool::complete_change() {
-    // if the spindle is not on (or paused), make sure we stop it
-    if (paused || direction == SPINDLE_OFF) {
-        if (enable_output != nullptr) {
-            enable_output->setValue(false);
-        }
-
-        return;
-    } else if (direction == SPINDLE_CW) {
-        if (enable_output != nullptr) {
-            enable_output->setValue(true);
-        }
-    } else if (direction == SPINDLE_CCW) {
-        if (enable_output != nullptr) {
-            enable_output->setValue(true);
-        }
-    }
-}
 
 #endif  // End of include guard: LASER_TOOLHEAD_H_ONCE
