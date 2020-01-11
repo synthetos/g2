@@ -66,6 +66,76 @@
       }
     },
     {
+      "label": "Build CONFIG=AxiDrawv3 Debug",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=AxiDrawv3", "VERBOSE=2", "COLOR=0", "DEBUG=2",
+         "RECORD=1"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
+      "label": "Build CONFIG=AxiDrawv3 Production",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=AxiDrawv3", "VERBOSE=2", "COLOR=0",
+         "RECORD=1"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
+      "label": "Clean CONFIG=AxiDrawv3",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=AxiDrawv3", "clean"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
+      "label": "Build CONFIG=AxiDrawv3-quint Debug",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=AxiDrawv3-quint", "VERBOSE=2", "COLOR=0", "DEBUG=2",
+         "RECORD=1"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
+      "label": "Build CONFIG=AxiDrawv3-quint Production",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=AxiDrawv3-quint", "VERBOSE=2", "COLOR=0",
+         "RECORD=1"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
+      "label": "Clean CONFIG=AxiDrawv3-quint",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=AxiDrawv3-quint", "clean"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
       "label": "Build CONFIG=Othermill Debug",
       "type": "process",
       "command": "make",

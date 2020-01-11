@@ -208,6 +208,12 @@ ifeq ("$(CONFIG)","AxiDrawv3")
     endif
     SETTINGS_FILE="settings_axidraw_v3.h"
 endif
+ifeq ("$(CONFIG)","AxiDrawv3-quint")
+    ifeq ("$(BOARD)","NONE")
+        BOARD=gquintic-d
+    endif
+    SETTINGS_FILE="settings_axidraw_v3.h"
+endif
 
 ##########
 # Ender config:
