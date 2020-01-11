@@ -129,7 +129,9 @@ void hardware_init()
     external_clk_pin = 0; // Force external clock to 0 for now.
 
     esc_spindle.init();
+#if HAS_LASER
     laser_tool.init();
+#endif
     spindle_set_toolhead(toolhead_for_tool(0));
 }
 
