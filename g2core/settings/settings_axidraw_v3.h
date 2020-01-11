@@ -198,10 +198,13 @@
 #define DI3_POLARITY                IO_ACTIVE_HIGH
 #define DI3_ACTION                  INPUT_ACTION_NONE
 
-#define DI4_MODE                    IO_ACTIVE_HIGH
+#define DI4_POLARITY                IO_ACTIVE_HIGH
 #define DI4_ACTION                  INPUT_ACTION_NONE
 
-#define DO1_MODE                    IO_ACTIVE_HIGH
-#define DO2_MODE                    IO_ACTIVE_HIGH
-#define DO3_MODE                    IO_ACTIVE_HIGH
-#define DO4_MODE                    IO_ACTIVE_HIGH
+// TODO - correct these to reasonable values - needs to switch between quint and quad
+#define SPINDLE_ENABLE_OUTPUT_NUMBER 0 // off
+#define SPINDLE_DIRECTION_OUTPUT_NUMBER 0 // off
+#define SPINDLE_PWM_NUMBER 0 // off
+#define SPINDLE_SPEED_CHANGE_PER_MS 0 // off
+#define MIST_ENABLE_OUTPUT_NUMBER 0 // off
+#define FLOOD_ENABLE_OUTPUT_NUMBER 0 // off
