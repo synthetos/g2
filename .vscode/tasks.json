@@ -66,6 +66,41 @@
       }
     },
     {
+      "label": "Build CONFIG=MiniMillv9 Debug",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=MiniMillv9", "VERBOSE=2", "COLOR=0", "DEBUG=2",
+         "RECORD=1"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
+      "label": "Build CONFIG=MiniMillv9 Production",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=MiniMillv9", "VERBOSE=2", "COLOR=0",
+         "RECORD=1"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
+      "label": "Clean CONFIG=MiniMillv9",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=MiniMillv9", "clean"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
       "label": "Build CONFIG=AxiDrawv3 Debug",
       "type": "process",
       "command": "make",
