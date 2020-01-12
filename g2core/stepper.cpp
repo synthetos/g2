@@ -156,12 +156,13 @@ void stepper_init()
     // setup software interrupt forward plan timer & initial condition
     fwd_plan_timer.setInterrupts(kInterruptOnSoftwareTrigger | kInterruptPriorityMedium);
 
+    board_stepper_init();
+    stepper_reset();                            // reset steppers to known state
+
     // setup motor power levels and apply power level to stepper drivers
     for (uint8_t motor=0; motor<MOTORS; motor++) {
         Motors[motor]->setPowerLevels(st_cfg.mot[motor].power_level, st_cfg.mot[motor].power_level_idle);
     }
-    board_stepper_init();
-    stepper_reset();                            // reset steppers to known state
 
     dda_timer.start();                          // start the DDA timer if not already running
 }
