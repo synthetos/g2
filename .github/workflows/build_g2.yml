@@ -3,8 +3,9 @@ name: C/C++ CI
 on:
   push:
     branches:
-      - edge-private
-      - p-[0-9]+-*
+      - edge
+      - edge-preview
+      - dev-*
   # pull_request:
   #   branches:
 
