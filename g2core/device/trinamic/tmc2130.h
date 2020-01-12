@@ -65,15 +65,23 @@ struct Trinamic2130 final : Stepper {
     // Create the type of a buffer
     struct trinamic_buffer_t {
         volatile union {
-            uint8_t addr;
-            uint8_t status;
+            volatile char raw_data[16];
+            volatile struct {
+                volatile union {
+                    uint8_t addr;
+                    uint8_t status;
+                };
+                volatile uint32_t value;
+            };
         };
-        volatile uint32_t value;
-    } __attribute__ ((packed));
+    } __attribute__((packed));
 
     // And make two statically allocated buffers
-    volatile trinamic_buffer_t out_buffer;
-    volatile trinamic_buffer_t in_buffer;
+    alignas(4) volatile trinamic_buffer_t out_buffer;
+    alignas(4) volatile trinamic_buffer_t in_buffer;
+
+    // For debugging ovewrites:
+    // char end_guard[9] = "DEADBEEF";
 
     // Record if we're transmitting to prevent altering the buffers while they
     // are being transmitted still.
@@ -525,7 +533,6 @@ struct Trinamic2130 final : Stepper {
 
     void _doneReadingCallback()
     {
-        //        for (uint16_t i = 10; i>0; i--) { __NOP(); }
         status = in_buffer.status;
         if (_register_thats_reading != -1) {
             switch(_register_thats_reading) {
@@ -693,8 +700,8 @@ struct Trinamic2130 final : Stepper {
             CHOPCONF_needs_read = true;
             DRV_STATUS_needs_read = true;
             TSTEP_needs_read = true;
-            _startNextReadWrite();
         }
+        _startNextReadWrite();
     };
 
     // helper to create functions that retrieve the object from the cfgArray[...].target
