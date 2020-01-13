@@ -48,12 +48,12 @@
       "preLaunchTask": "Build CONFIG=ShapeokoDualY"
     },
     {
-      "name": "Debug CONFIG=Minimillv9 (J-Link)",
+      "name": "Debug CONFIG=MiniMillv9 (J-Link)",
       "type": "cortex-debug",
       "request": "launch",
       "servertype": "jlink",
       "cwd": "${workspaceRoot}/g2core/",
-      "executable": "./bin/Minimillv9-g2v9k/g2core.elf",
+      "executable": "./bin/MiniMillv9-g2v9k/g2core.elf",
       "device": "ATSAM3X8E",
       "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sam3x/ATSAM3X8E.svd",
       "interface": "swd",
@@ -62,18 +62,18 @@
       "preLaunchTask": "Build CONFIG=Minimillv9 Debug"
     },
     {
-      "name": "Debug CONFIG=Minimill (J-Link)",
+      "name": "Debug CONFIG=MiniMill (J-Link)",
       "type": "cortex-debug",
       "request": "launch",
       "servertype": "jlink",
       "cwd": "${workspaceRoot}/g2core/",
-      "executable": "./bin/Minimill-g2v9k/g2core.elf",
+      "executable": "./bin/MiniMill-gquintic-d/g2core.elf",
       "device": "ATSAMS70N19",
       "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sams70/ATSAMS70N19.svd",
       "interface": "swd",
       "showDevDebugOutput": false,
       "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/",
-      "preLaunchTask": "Build CONFIG=Minimill Debug"
+      "preLaunchTask": "Build CONFIG=MiniMill Debug"
     },
     {
       "name": "Debug CONFIG=OthermillPro (J-Link)",
