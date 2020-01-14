@@ -53,6 +53,15 @@ template <typename device_t,
 struct Trinamic2130 final : Stepper {
     typedef Trinamic2130<device_t, step_num, dir_num, enable_num> type;
 
+    Timeout _motor_activity_timeout;         // this is the timeout object that will let us know when time is up
+    uint32_t _motor_activity_timeout_ms;     // the number of ms that the timeout is reset to
+    enum stPowerState {                          // used w/start and stop flags to sequence motor power
+        MOTOR_OFF = 0,                      // motor is stopped and deenergized
+        MOTOR_IDLE,                         // motor is stopped and may be partially energized for torque maintenance
+        MOTOR_RUNNING,                      // motor is running (and fully energized)
+        MOTOR_POWER_TIMEOUT_START,          // transitional state to start power-down timeout
+        MOTOR_POWER_TIMEOUT_COUNTDOWN       // count down the time to de-energizing motor
+    } _power_state;              // state machine for managing motor power
     stPowerMode _power_mode;                // See stPowerMode for values
 
     // Pins that are directly managed
@@ -145,9 +154,46 @@ struct Trinamic2130 final : Stepper {
         _startNextReadWrite();
     };
 
-    void _enableImpl() override { _enable.clear(); };
+    void enableWithTimeout(float timeout_ms) override
+    {
+        if (_power_mode == MOTOR_DISABLED || _power_state == MOTOR_RUNNING) {
+            return;
+        }
 
-    void _disableImpl() override { _enable.set(); };
+        if (timeout_ms < 0.1) {
+            timeout_ms = _motor_activity_timeout_ms;
+        }
+
+        _power_state = MOTOR_POWER_TIMEOUT_COUNTDOWN;
+        if (_power_mode == MOTOR_POWERED_IN_CYCLE || _power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE) {
+            _motor_activity_timeout.set(timeout_ms);
+        }
+
+        if (!_enable.isNull()) {
+            _enable.clear();
+        }
+    };
+
+    void _enableImpl() override {
+        if (_power_mode == MOTOR_DISABLED || _power_state == MOTOR_RUNNING) {
+            return;
+        }
+
+        _enable.clear();
+
+        _power_state = MOTOR_RUNNING;
+    };
+
+    void _disableImpl() override {
+        if (this->getPowerMode() == MOTOR_ALWAYS_POWERED) {
+            return;
+        }
+
+        _enable.set();
+
+        _motor_activity_timeout.clear();
+        _power_state = MOTOR_OFF;
+    };
 
     void stepStart() override { _step.set(); };
 
@@ -185,6 +231,28 @@ struct Trinamic2130 final : Stepper {
 
         IHOLD_IRUN_needs_written = true;
         _startNextReadWrite();
+    };
+
+
+    // turn off motor is only powered when moving
+    // HOT - called from the DDA interrupt
+    void motionStopped() override //HOT_FUNC
+    {
+        if (_power_mode == MOTOR_POWERED_IN_CYCLE) {
+            this->enable();
+        } else if (_power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE) {
+            _power_state = MOTOR_POWER_TIMEOUT_START;
+        } else if (_power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
+            if (_power_state == MOTOR_RUNNING) {
+                // flag for periodicCheck - not actually using a timeout
+                _power_state = MOTOR_POWER_TIMEOUT_START;
+            }
+        }
+    };
+
+    virtual void setActivityTimeout(float idle_milliseconds) override
+    {
+        _motor_activity_timeout_ms = idle_milliseconds;
     };
 
     // Note that init() and periodicCheck(bool have_actually_stopped) are both below

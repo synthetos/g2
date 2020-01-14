@@ -493,7 +493,7 @@ public:
 
     // turn off motor is only powered when moving
     // HOT - called from the DDA interrupt
-    void motionStopped() {};
+    virtual void motionStopped() {};
 
     virtual void periodicCheck(bool have_actually_stopped) {}; // can be overridden
     virtual void setActivityTimeout(float idle_milliseconds) {}; // can be overridden
