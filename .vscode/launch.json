@@ -31,7 +31,7 @@
       "interface": "swd",
       "showDevDebugOutput": false,
       "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/",
-      "preLaunchTask": "Build CONFIG=r7"
+      "preLaunchTask": "Build CONFIG=r7 Debug"
     },
     {
       "name": "Debug CONFIG=ShapeokoDualY (J-Link)",

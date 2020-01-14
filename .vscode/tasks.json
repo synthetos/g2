@@ -241,7 +241,18 @@
       }
     },
     {
-      "label": "Build CONFIG=r7",
+      "label": "Build CONFIG=r7 Debug",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=r7", "VERBOSE=2", "COLOR=0", "DEBUG=2", "RECORD=1"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
+      "label": "Build CONFIG=r7 Production",
       "type": "process",
       "command": "make",
       "args": ["CONFIG=r7", "VERBOSE=2", "COLOR=0", "RECORD=1"],
