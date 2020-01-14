@@ -107,21 +107,17 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
     float steps_per_unit[motors];
     float offset[motors];
     bool needs_sync_encoders = true; // if true, we need to update the steps_offset
-    uint8_t joint_map[joints];  // for each joint, which motor or -1
+    int8_t motor_map[motors];  // for each motor, which joint it maps from
 
     float joint_position[joints];
 
-    void configure(const float new_steps_per_unit[motors], const int8_t motor_map[motors]) override
+    void configure(const float new_steps_per_unit[motors], const int8_t new_motor_map[motors]) override
     {
         for (uint8_t joint = 0; joint < joints; joint++) {
-            joint_map[joint] = -1;
             joint_position[joint] = 0;
         }
         for (uint8_t motor = 0; motor < motors; motor++) {
-            auto joint = motor_map[motor];
-            if (joint >= 0) {
-                joint_map[joint] = motor;
-            }
+            motor_map[motor] = new_motor_map[motor];
             steps_per_unit[motor] = new_steps_per_unit[motor];
         }
         needs_sync_encoders = true;
@@ -131,13 +127,14 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
                             const float end_velocity, const float segment_time, float steps[motors]) override
     {
         // joint == axis in cartesian kinematics
-        for (uint8_t joint = 0; joint < joints; joint++) {
-            uint8_t motor = joint_map[joint];
-            if (motor == -1) { continue; }
-
+        for (uint8_t motor = 0; motor < motors; motor++) {
+            int8_t joint = motor_map[motor];
+            if (joint == -1) {
+                continue;
+            }
             // if (needs_sync_encoders) {
-                // put the difference in offset
-                offset[motor] += (joint_position[joint] - position[joint]);
+            // put the difference in offset
+            offset[motor] += (joint_position[joint] - position[joint]);
             // }
 
             steps[motor] = (target[joint]+offset[motor]) * steps_per_unit[motor];
@@ -163,13 +160,12 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
         }
         for (uint8_t motor = 0; motor < motors; motor++) {
             best_steps_per_unit[motor] = -1.0;
-        }
+            int8_t joint = motor_map[motor];
+            if (joint == -1) {
+                continue;
+            }
 
-        // joint == motor in cartesian kinematics
-        for (uint8_t joint = 0; joint < joints; joint++) {
-            auto axis = joint; // cartesian, baby!
-            auto motor = joint_map[joint];
-            if (motor == -1) { continue; }
+            auto axis = joint; // it's cartesian, baby!
 
             // If this motor has a better (or the only) resolution, then we use this motor's value
             if (best_steps_per_unit[axis] < steps_per_unit[motor]) {
@@ -182,7 +178,7 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
             }
 
             joint_position[joint] = position[joint];
-        } // for joint
+        }
     }
 
     void sync_encoders() override { needs_sync_encoders = true; }
