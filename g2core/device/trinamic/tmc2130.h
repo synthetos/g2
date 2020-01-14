@@ -53,6 +53,8 @@ template <typename device_t,
 struct Trinamic2130 final : Stepper {
     typedef Trinamic2130<device_t, step_num, dir_num, enable_num> type;
 
+    stPowerMode _power_mode;                // See stPowerMode for values
+
     // Pins that are directly managed
     OutputPin<step_num> _step;
     OutputPin<dir_num> _dir;
@@ -65,7 +67,7 @@ struct Trinamic2130 final : Stepper {
     // Create the type of a buffer
     struct trinamic_buffer_t {
         volatile union {
-            volatile char raw_data[16];
+            volatile char raw_data[8];
             volatile struct {
                 volatile union {
                     uint8_t addr;
@@ -80,7 +82,7 @@ struct Trinamic2130 final : Stepper {
     alignas(4) volatile trinamic_buffer_t out_buffer;
     alignas(4) volatile trinamic_buffer_t in_buffer;
 
-    // For debugging ovewrites:
+    // For debugging overwrites:
     // char end_guard[9] = "DEADBEEF";
 
     // Record if we're transmitting to prevent altering the buffers while they
@@ -158,6 +160,21 @@ struct Trinamic2130 final : Stepper {
         } else {
             _dir.set(); // set the bit for CCW motion
         }
+    };
+
+    virtual void setPowerMode(stPowerMode new_pm)
+    {
+        _power_mode = new_pm;
+        if (_power_mode == MOTOR_ALWAYS_POWERED) {
+            enable();
+        } else if (_power_mode == MOTOR_DISABLED) {
+            disable();
+        }
+    };
+
+    stPowerMode getPowerMode() override
+    {
+         return _power_mode;
     };
 
     void setPowerLevels(float active_pl, float idle_pl) override
