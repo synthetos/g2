@@ -83,7 +83,7 @@ struct Trinamic2130 final : Stepper {
                     uint8_t status;
                 };
                 volatile uint32_t value;
-            };
+            } __attribute__((packed));
         };
     } __attribute__((packed));
 
