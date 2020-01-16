@@ -905,7 +905,7 @@ void st_prep_out_of_band_dwell(float milliseconds)
  * _set_hw_microsteps() - set microsteps in hardware
  */
 
-static void _set_hw_microsteps(const uint8_t motor, const uint8_t microsteps)
+static void _set_hw_microsteps(const uint8_t motor, const uint16_t microsteps)
 {
     if (motor >= MOTORS) { return; }
 
@@ -1041,12 +1041,12 @@ stat_t st_set_mi(nvObj_t *nv)
         return (STAT_INPUT_LESS_THAN_MIN_VALUE);
     }
 
-    uint8_t mi = (uint8_t)nv->value_int;
+    uint16_t mi = (uint16_t)nv->value_int;
     if ((mi != 1) && (mi != 2) && (mi != 4) && (mi != 8) && (mi != 16) && (mi != 32)) {
         nv_add_conditional_message((const char *)"*** WARNING *** Setting non-standard microstep value");
     }
     // set it anyway, even if it's unsupported
-    ritorno(set_uint32(nv, st_cfg.mot[_motor(nv->index)].microsteps, 1, 255));
+    ritorno(set_uint32(nv, st_cfg.mot[_motor(nv->index)].microsteps, 1, 256));
     _set_motor_steps_per_unit(nv);
     _set_hw_microsteps(_motor(nv->index), nv->value_int);
     return (STAT_OK);
