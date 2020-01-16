@@ -105,7 +105,7 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
     //  8 = W (maybe)
 
     float steps_per_unit[motors];
-    float offset[motors];
+    float joint_offset[joints];
     bool needs_sync_encoders = true; // if true, we need to update the steps_offset
     int8_t motor_map[motors];  // for each motor, which joint it maps from
 
@@ -126,18 +126,24 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
     void inverse_kinematics(const GCodeState_t &gm, const float target[axes], const float position[axes], const float start_velocity,
                             const float end_velocity, const float segment_time, float steps[motors]) override
     {
+        if (needs_sync_encoders) {
+            for (uint8_t joint = 0; joint < joints; joint++) {
+                // put the difference in offset
+                joint_offset[joint] = (joint_position[joint] - position[joint]);
+            }
+        }
+
         // joint == axis in cartesian kinematics
         for (uint8_t motor = 0; motor < motors; motor++) {
             int8_t joint = motor_map[motor];
             if (joint == -1) {
                 continue;
             }
-            // if (needs_sync_encoders) {
-            // put the difference in offset
-            offset[motor] += (joint_position[joint] - position[joint]);
-            // }
 
-            steps[motor] = (target[joint]+offset[motor]) * steps_per_unit[motor];
+            steps[motor] = (target[joint]+joint_offset[joint]) * steps_per_unit[motor];
+        }
+
+        for (uint8_t joint = 0; joint < joints; joint++) {
             joint_position[joint] = target[joint];
         }
         needs_sync_encoders = false;
@@ -170,11 +176,11 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
             // If this motor has a better (or the only) resolution, then we use this motor's value
             if (best_steps_per_unit[axis] < steps_per_unit[motor]) {
                 best_steps_per_unit[axis] = steps_per_unit[motor];
-                position[axis]            = (steps[motor] / steps_per_unit[motor])- offset[motor];
+                position[axis]            = (steps[motor] / steps_per_unit[motor])-joint_offset[joint];
 
                 // If a second motor has the same resolution for the same axis, we'll average their values
             } else if (fp_EQ(best_steps_per_unit[axis], steps_per_unit[motor])) {
-                position[axis] = (position[axis] + (steps[motor] / steps_per_unit[axis])- offset[motor]) / 2.0;
+                position[axis] = (position[axis] + (steps[motor] / steps_per_unit[axis])-joint_offset[joint]) / 2.0;
             }
 
             joint_position[joint] = position[joint];
