@@ -117,8 +117,8 @@ struct Trinamic2130 final : Stepper {
     Trinamic2130(SPIBus_t &spi_bus, const chipSelect_t &_cs) :
         _device{spi_bus.getDevice(_cs,
                                   4000000, //4MHz
-                                  SPIDeviceMode::kSPIMode1 | SPIDeviceMode::kSPI8Bit,
-                                  0, // min_between_cs_delay_ns
+                                  SPIDeviceMode::kSPIMode0 | SPIDeviceMode::kSPI8Bit,
+                                  1, // min_between_cs_delay_ns
                                   10, // cs_to_sck_delay_ns
                                   1  // between_word_delay_ns
                                   )}
@@ -574,6 +574,8 @@ struct Trinamic2130 final : Stepper {
         int16_t next_reg;
 
         // We write before we read -- so we don't lose what we set in the registers when writing
+
+        in_buffer.value = 0xdeadbeaf;
 
         // check if we need to write registers
         if (GCONF_needs_written)      { next_reg = 0x80 | GCONF_reg;      GCONF_needs_written = false;      _prepWriteGConf();      } else
