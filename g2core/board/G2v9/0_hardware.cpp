@@ -74,8 +74,15 @@ SafetyManager *safety_manager = &sm;
 
 #else
 
+#include "safety_manager.h"
+
 SafetyManager sm{};
 SafetyManager *safety_manager = &sm;
+
+// Stub in getSysConfig_3
+// constexpr cfgItem_t sys_config_items_3[] = {};
+constexpr cfgSubtableFromStaticArray sys_config_3{};
+const configSubtable * const getSysConfig_3() { return &sys_config_3; }
 
 #endif
 

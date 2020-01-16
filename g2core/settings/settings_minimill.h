@@ -54,6 +54,8 @@
 #define FEEDHOLD_Z_LIFT             3       // mm to lift Z on feedhold
 #define PROBE_REPORT_ENABLE         true
 
+#define SPINDLE_SPEED_CHANGE_PER_MS 7       // external non-speed-controlled spindle, but we can use this as a built-in delay
+
 /*
 // Switch definitions for interlock & E-stop
 #define ENABLE_INTERLOCK_AND_ESTOP

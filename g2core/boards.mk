@@ -53,7 +53,7 @@ endif
 ifeq ("$(CONFIG)","MiniMillv9")
     ifeq ("$(BOARD)","NONE")
         BOARD=g2v9k
-        BANTAM=1
+        # BANTAM=1
     endif
     SETTINGS_FILE="settings_minimill.h"
 endif

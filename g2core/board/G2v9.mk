@@ -40,7 +40,7 @@ ifeq ("$(BASE_BOARD)","g2v9")
 	CHIP_LOWERCASE = sam3x8c
 
 	BOARD_PATH = ./board/G2v9
-	SOURCE_DIRS += ${BOARD_PATH} device/step_dir_driver device/esc_spindle
+	SOURCE_DIRS += ${BOARD_PATH} device/step_dir_driver device/esc_spindle device/sd_card
 
 	PLATFORM_BASE = ${MOTATE_PATH}/platform/atmel_sam
 
@@ -48,7 +48,7 @@ ifeq ("$(BASE_BOARD)","g2v9")
 
 	ifeq ("$(BANTAM)", "1")
 		DEVICE_DEFINES += BANTAM=1
-		SOURCE_DIRS += device/sd_card device/bantam_safety_manager
+		SOURCE_DIRS += device/bantam_safety_manager
 		CUSTOM_LINKER_SCRIPT := board/G2v9/bantam-checksum-flash.ld
 		ALL_ADDITIONS += $(OUTPUT_BIN)-summed.bin
 define ADDITIONAL_RECIPES
