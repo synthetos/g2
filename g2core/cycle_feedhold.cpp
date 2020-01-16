@@ -339,6 +339,7 @@ stat_t cm_feedhold_command_blocker()
 
 stat_t _run_program_stop()
 {
+    cm1.hold_state = FEEDHOLD_OFF;          // clear the feedhold
     cm_cycle_end();                         // end cycle and run program stop
     return (STAT_OK);
 }
