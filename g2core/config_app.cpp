@@ -1058,25 +1058,25 @@ constexpr const configSubtable * const getSysConfig_2() { return &sys_config_2; 
 constexpr cfgItem_t user_data_config_items_1[] = {
 #ifdef __USER_DATA
     // User defined data groups
-    { "uda","uda0", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_a[0], USER_DATA_A0 },
-    { "uda","uda1", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_a[1], USER_DATA_A1 },
-    { "uda","uda2", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_a[2], USER_DATA_A2 },
-    { "uda","uda3", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_a[3], USER_DATA_A3 },
+    { "uda","uda0", _dip, 0, tx_print_int, get_data, set_data, &cfg.user_data_a[0], USER_DATA_A0 },
+    { "uda","uda1", _dip, 0, tx_print_int, get_data, set_data, &cfg.user_data_a[1], USER_DATA_A1 },
+    { "uda","uda2", _dip, 0, tx_print_int, get_data, set_data, &cfg.user_data_a[2], USER_DATA_A2 },
+    { "uda","uda3", _dip, 0, tx_print_int, get_data, set_data, &cfg.user_data_a[3], USER_DATA_A3 },
 
-    { "udb","udb0", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_b[0], USER_DATA_B0 },
-    { "udb","udb1", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_b[1], USER_DATA_B1 },
-    { "udb","udb2", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_b[2], USER_DATA_B2 },
-    { "udb","udb3", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_b[3], USER_DATA_B3 },
+    { "udb","udb0", _dip, 0, tx_print_int, get_data, set_data, &cfg.user_data_b[0], USER_DATA_B0 },
+    { "udb","udb1", _dip, 0, tx_print_int, get_data, set_data, &cfg.user_data_b[1], USER_DATA_B1 },
+    { "udb","udb2", _dip, 0, tx_print_int, get_data, set_data, &cfg.user_data_b[2], USER_DATA_B2 },
+    { "udb","udb3", _dip, 0, tx_print_int, get_data, set_data, &cfg.user_data_b[3], USER_DATA_B3 },
 
-    { "udc","udc0", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_c[0], USER_DATA_C0 },
-    { "udc","udc1", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_c[1], USER_DATA_C1 },
-    { "udc","udc2", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_c[2], USER_DATA_C2 },
-    { "udc","udc3", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_c[3], USER_DATA_C3 },
+    { "udc","udc0", _dip, 0, tx_print_int, get_data, set_data, &cfg.user_data_c[0], USER_DATA_C0 },
+    { "udc","udc1", _dip, 0, tx_print_int, get_data, set_data, &cfg.user_data_c[1], USER_DATA_C1 },
+    { "udc","udc2", _dip, 0, tx_print_int, get_data, set_data, &cfg.user_data_c[2], USER_DATA_C2 },
+    { "udc","udc3", _dip, 0, tx_print_int, get_data, set_data, &cfg.user_data_c[3], USER_DATA_C3 },
 
-    { "udd","udd0", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_d[0], USER_DATA_D0 },
-    { "udd","udd1", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_d[1], USER_DATA_D1 },
-    { "udd","udd2", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_d[2], USER_DATA_D2 },
-    { "udd","udd3", _fip, 0, tx_print_int, get_data, set_data, &cfg.user_data_d[3], USER_DATA_D3 },
+    { "udd","udd0", _dip, 0, tx_print_int, get_data, set_data, &cfg.user_data_d[0], USER_DATA_D0 },
+    { "udd","udd1", _dip, 0, tx_print_int, get_data, set_data, &cfg.user_data_d[1], USER_DATA_D1 },
+    { "udd","udd2", _dip, 0, tx_print_int, get_data, set_data, &cfg.user_data_d[2], USER_DATA_D2 },
+    { "udd","udd3", _dip, 0, tx_print_int, get_data, set_data, &cfg.user_data_d[3], USER_DATA_D3 },
 #endif
 };
 constexpr cfgSubtableFromStaticArray user_data_config_1 {user_data_config_items_1};

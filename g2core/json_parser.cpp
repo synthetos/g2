@@ -330,7 +330,7 @@ static stat_t _get_nv_pair(nvObj_t *nv, char **pstr, int8_t *depth)
         // if string begins with 0x it might be data, needs to be at least 3 chars long
         if( strlen(*pstr)>=3 && (*pstr)[0]=='0' && (*pstr)[1]=='x')
         {
-            uint32_t *v = (uint32_t*)&nv->value_flt;
+            uint32_t *v = (uint32_t*)&nv->value_int;
             *v = strtoul((const char *)*pstr, 0L, 0);
             nv->valuetype = TYPE_DATA;
         } else {
@@ -458,7 +458,7 @@ uint16_t json_serialize(nvObj_t *nv, char *out_buf, uint16_t size)
                                         }
                                         break;
                                     }
-                case (TYPE_DATA):   {   uint32_t *v = (uint32_t*)&nv->value_flt;
+                case (TYPE_DATA):   {   uint32_t *v = (uint32_t*)&nv->value_int;
                                         str += sprintf(str, "\"0x%lx\"", *v);
                                         break;
                                     }

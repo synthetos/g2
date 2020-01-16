@@ -143,11 +143,12 @@ stat_t SD_Persistence::read(nvObj_t *nv)
         return (STAT_PERSISTENCE_ERROR);
     }
 
-    if (cfgArray[nv->index].flags & TYPE_INTEGER) {
+    auto type = cfgArray[nv->index].flags & F_TYPE_MASK;
+    if ((type == TYPE_INTEGER) || (type == TYPE_DATA)) {
         nv->valuetype = TYPE_INTEGER;
         nv->value_int = *(int32_t *)nvm.io_buffer;
         DEBUG_PRINT("value (i) copied from address %l in file: %l\n", nv->index * NVM_VALUE_LEN, nv->value_int);
-    } else if (cfgArray[nv->index].flags & TYPE_BOOLEAN) {
+    } else if (type == TYPE_BOOLEAN) {
         nv->valuetype = TYPE_BOOLEAN;
         nv->value_int = *(int32_t *)nvm.io_buffer;
         DEBUG_PRINT("value (b) copied from address %l in file: %l\n", nv->index * NVM_VALUE_LEN, nv->value_int);
@@ -361,7 +362,7 @@ stat_t write_persistent_values()
           index_t index = (nv->index - cnt) * NVM_VALUE_LEN;
 
           // Write out based on the value type
-          if (nv->valuetype == TYPE_INTEGER || nv->valuetype == TYPE_BOOLEAN) {
+          if (nv->valuetype == TYPE_INTEGER || nv->valuetype == TYPE_BOOLEAN || nv->valuetype == TYPE_DATA) {
             memcpy(nvm.io_buffer + index, &nv->value_int, NVM_VALUE_LEN);
             DEBUG_PRINT("item index: %l , write index: %l (cnt: %l), value: %i\n", nv->index, index, cnt, nv->value_int);
           } else if (nv->valuetype == TYPE_FLOAT) {

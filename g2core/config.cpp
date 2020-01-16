@@ -144,7 +144,7 @@ static void _set_defa(nvObj_t *nv, bool print)
     cm_set_units_mode(MILLIMETERS);             // must do inits in MM mode
     for (nv->index=0; nv_index_is_single(nv->index); nv->index++) {
         if (cfgArray[nv->index].flags & F_INITIALIZE) {
-            if (cfgArray[nv->index].flags & TYPE_INTEGER) {
+            if (cfgArray[nv->index].flags & (TYPE_INTEGER|TYPE_DATA)) {
                 nv->valuetype = TYPE_INTEGER;
                 nv->value_int = cfgArray[nv->index].def_value;
             } else if (cfgArray[nv->index].flags & TYPE_BOOLEAN) {
@@ -244,8 +244,7 @@ stat_t get_flt(nvObj_t *nv)
 
 stat_t get_data(nvObj_t *nv)
 {
-    uint32_t *v = (uint32_t*)&nv->value_flt;
-    *v = *((uint32_t *)GET_TABLE_WORD(target));
+    nv->value_int = *((uint32_t *)GET_TABLE_WORD(target));
     nv->valuetype = TYPE_DATA;
     return (STAT_OK);
 }
@@ -300,7 +299,7 @@ stat_t set_flt(nvObj_t *nv)
 
 stat_t set_data(nvObj_t *nv)
 {
-    uint32_t *v = (uint32_t*)&nv->value_flt;
+    uint32_t *v = (uint32_t*)&nv->value_int;
     *((uint32_t *)GET_TABLE_WORD(target)) = *v;
     nv->valuetype = TYPE_DATA;
     return(STAT_OK);
@@ -463,20 +462,19 @@ uint8_t nv_get_type(nvObj_t *nv)
 
 void nv_coerce_types(nvObj_t *nv)
 {
-    if (nv->valuetype == TYPE_NULL) {               // don't change type if it's a GET query
+    if (nv->valuetype == TYPE_NULL) {  // don't change type if it's a GET query
         return;
     }
     valueType type = (valueType)(cfgArray[nv->index].flags & F_TYPE_MASK);
     if (type == TYPE_INTEGER) {
-        nv->valuetype = TYPE_INTEGER;               // will pay attention to the int value, not the float
-    } else if (type == TYPE_BOOLEAN) {              // it may have been marked as a boolean, but if it's not...
-        nv->valuetype = TYPE_BOOLEAN;
+        nv->valuetype = TYPE_INTEGER;   // will pay attention to the int value, not the float
+    } else if (type == TYPE_BOOLEAN) {  // it may have been marked as a boolean, but if it's not...
         if (nv->valuetype == TYPE_INTEGER) {
             nv->value_int = nv->value_int ? true : false;
-    } else
-        if (nv->valuetype == TYPE_FLOAT) {
+        } else if (nv->valuetype == TYPE_FLOAT) {
             nv->value_int = (fp_ZERO(nv->value_flt)) ? true : false;
         }
+        nv->valuetype = TYPE_BOOLEAN;
     }
 }
 
@@ -639,7 +637,7 @@ nvObj_t *nv_add_integer(const char *token, const int32_t value) // add an intege
     return (NULL);
 }
 
-nvObj_t *nv_add_data(const char *token, const uint32_t value)// add an integer object to the body
+nvObj_t *nv_add_data(const char *token, const uint32_t value)// add an data object to the body
 {
     nvObj_t *nv = nv_body;
     for (uint8_t i=0; i<NV_BODY_LEN; i++) {
@@ -650,8 +648,7 @@ nvObj_t *nv_add_data(const char *token, const uint32_t value)// add an integer o
             continue;
         }
         strcpy(nv->token, token);
-        float *v = (float*)&value;
-        nv->value_flt = *v;
+        nv->value_int = value;
         nv->valuetype = TYPE_DATA;
         return (nv);
     }
