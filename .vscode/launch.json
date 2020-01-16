@@ -59,7 +59,7 @@
       "interface": "swd",
       "showDevDebugOutput": false,
       "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/",
-      "preLaunchTask": "Build CONFIG=Minimillv9 Debug"
+      "preLaunchTask": "Build CONFIG=MiniMillv9 Debug"
     },
     {
       "name": "Debug CONFIG=MiniMill (J-Link)",
