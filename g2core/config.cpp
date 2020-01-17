@@ -144,10 +144,11 @@ static void _set_defa(nvObj_t *nv, bool print)
     cm_set_units_mode(MILLIMETERS);             // must do inits in MM mode
     for (nv->index=0; nv_index_is_single(nv->index); nv->index++) {
         if (cfgArray[nv->index].flags & F_INITIALIZE) {
-            if (cfgArray[nv->index].flags & (TYPE_INTEGER|TYPE_DATA)) {
+            auto type = cfgArray[nv->index].flags & F_TYPE_MASK;
+            if ((type == TYPE_INTEGER) || (type == TYPE_DATA)) {
                 nv->valuetype = TYPE_INTEGER;
                 nv->value_int = cfgArray[nv->index].def_value;
-            } else if (cfgArray[nv->index].flags & TYPE_BOOLEAN) {
+            } else if (type == TYPE_BOOLEAN) {
                 nv->valuetype = TYPE_BOOLEAN;
                 nv->value_int = cfgArray[nv->index].def_value;
             } else {
