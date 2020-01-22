@@ -1143,9 +1143,10 @@ stat_t st_set_pi(nvObj_t *nv) {
  */
 stat_t st_get_pwr(nvObj_t *nv)
 {
-    // this is kind of a hack to extract the motor number from the table
-    uint8_t motor = (cfgArray[nv->index].token[3] & 0x0F) - 1;
-    if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
+    // extract the motor number from the table
+    uint8_t c = cfgArray[nv->index].token[3]; // example: pwr1
+    int8_t motor = (isdigit(c) ? c-0x31 : -1 ); // 0x30 + 1 offsets motor 1 to == 0
+    if (motor < 0 || motor >= MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
 
     nv->value_flt = Motors[motor]->getCurrentPowerLevel();
 	nv->valuetype = TYPE_FLOAT;
@@ -1159,7 +1160,7 @@ stat_t st_set_ep(nvObj_t *nv)            // set motor enable polarity
     if (nv->value_int > IO_ACTIVE_HIGH) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
 
     uint8_t motor = _motor(nv->index);
-    if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
+    if (motor >= MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
 
     Motors[motor]->setEnablePolarity((ioPolarity)nv->value_int);
     return (STAT_OK);
@@ -1171,7 +1172,7 @@ stat_t st_get_ep(nvObj_t *nv)            // get motor enable polarity
     if (nv->value_int > IO_ACTIVE_HIGH) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
 
     uint8_t motor = _motor(nv->index);
-    if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
+    if (motor >= MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
 
     nv->value_int = (float)Motors[motor]->getEnablePolarity();
     nv->valuetype = TYPE_INTEGER;
@@ -1184,7 +1185,7 @@ stat_t st_set_sp(nvObj_t *nv)            // set motor step polarity
     if (nv->value_int > IO_ACTIVE_HIGH) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
 
     uint8_t motor = _motor(nv->index);
-    if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
+    if (motor >= MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
 
     Motors[motor]->setStepPolarity((ioPolarity)nv->value_int);
     return (STAT_OK);
@@ -1196,7 +1197,7 @@ stat_t st_get_sp(nvObj_t *nv)            // get motor step polarity
     if (nv->value_int > IO_ACTIVE_HIGH) { return (STAT_INPUT_EXCEEDS_MAX_VALUE); }
 
     uint8_t motor = _motor(nv->index);
-    if (motor > MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
+    if (motor >= MOTORS) { return STAT_INPUT_VALUE_RANGE_ERROR; };
 
     nv->value_int = (float)Motors[motor]->getStepPolarity();
     nv->valuetype = TYPE_INTEGER;
@@ -1254,7 +1255,7 @@ stat_t st_set_md(nvObj_t *nv)
             Motors[motor]->disable();
         }
     } else {                            // otherwise it's just one motor
-         Motors[(uint8_t)nv->value_int -1]->disable();
+         Motors[(uint8_t)nv->value_int-1]->disable();
     }
     return (STAT_OK);
 }
