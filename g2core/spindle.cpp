@@ -269,80 +269,140 @@ stat_t sp_set_sps(nvObj_t *nv) { return(spindle_set_speed(nv->value_flt)); }
  */
 
 stat_t pwm_get_p1frq(nvObj_t *nv) {
-    if (active_toolhead) { return active_toolhead->get_frequency(); }
-    else { return (STAT_OK); }
+    if (active_toolhead) {
+        nv->value_flt = active_toolhead->get_frequency();
+        nv->valuetype = TYPE_FLOAT;
+    }
+    else {
+        nv->valuetype = TYPE_NULL;
+    }
+    return (STAT_OK);
 }
 stat_t pwm_set_p1frq(nvObj_t *nv) {
     if (active_toolhead) { active_toolhead->set_frequency(nv->value_flt); }
     return (STAT_OK);
 }
 stat_t pwm_get_p1csl(nvObj_t *nv) {
-    if (active_toolhead) { return active_toolhead->get_cw_speed_lo(); }
-    else { return (STAT_OK); }
+    if (active_toolhead) {
+        nv->value_flt = active_toolhead->get_cw_speed_lo();
+        nv->valuetype = TYPE_FLOAT;
+    }
+    else {
+        nv->valuetype = TYPE_NULL;
+    }
+    return (STAT_OK);
 }
 stat_t pwm_set_p1csl(nvObj_t *nv) {
     if (active_toolhead) { active_toolhead->set_cw_speed_lo(nv->value_flt); }
     return (STAT_OK);
 }
 stat_t pwm_get_p1csh(nvObj_t *nv) {
-    if (active_toolhead) { return active_toolhead->get_cw_speed_hi(); }
-    else { return (STAT_OK); }
+    if (active_toolhead) {
+        nv->value_flt = active_toolhead->get_cw_speed_hi();
+        nv->valuetype = TYPE_FLOAT;
+    }
+    else {
+        nv->valuetype = TYPE_NULL;
+    }
+    return (STAT_OK);
 }
 stat_t pwm_set_p1csh(nvObj_t *nv) {
     if (active_toolhead) { active_toolhead->set_cw_speed_hi(nv->value_flt); }
     return (STAT_OK);
 }
 stat_t pwm_get_p1cpl(nvObj_t *nv) {
-    if (active_toolhead) { return active_toolhead->get_cw_phase_lo(); }
-    else { return (STAT_OK); }
+    if (active_toolhead) {
+        nv->value_flt = active_toolhead->get_cw_phase_lo();
+        nv->valuetype = TYPE_FLOAT;
+    }
+    else {
+        nv->valuetype = TYPE_NULL;
+    }
+    return (STAT_OK);
 }
 stat_t pwm_set_p1cpl(nvObj_t *nv) {
     if (active_toolhead) { active_toolhead->set_cw_phase_lo(nv->value_flt); }
     return (STAT_OK);
 }
 stat_t pwm_get_p1cph(nvObj_t *nv) {
-    if (active_toolhead) { return active_toolhead->get_cw_phase_hi(); }
-    else { return (STAT_OK); }
+    if (active_toolhead) {
+        nv->value_flt = active_toolhead->get_cw_phase_hi();
+        nv->valuetype = TYPE_FLOAT;
+    }
+    else {
+        nv->valuetype = TYPE_NULL;
+    }
+    return (STAT_OK);
 }
 stat_t pwm_set_p1cph(nvObj_t *nv) {
     if (active_toolhead) { active_toolhead->set_cw_phase_hi(nv->value_flt); }
     return (STAT_OK);
 }
 stat_t pwm_get_p1wsl(nvObj_t *nv) {
-    if (active_toolhead) { return active_toolhead->get_ccw_speed_lo(); }
-    else { return (STAT_OK); }
+    if (active_toolhead) {
+        nv->value_flt = active_toolhead->get_ccw_speed_lo();
+        nv->valuetype = TYPE_FLOAT;
+    }
+    else {
+        nv->valuetype = TYPE_NULL;
+    }
+    return (STAT_OK);
 }
 stat_t pwm_set_p1wsl(nvObj_t *nv) {
     if (active_toolhead) { active_toolhead->set_ccw_speed_lo(nv->value_flt); }
     return (STAT_OK);
 }
 stat_t pwm_get_p1wsh(nvObj_t *nv) {
-    if (active_toolhead) { return active_toolhead->get_ccw_speed_hi(); }
-    else { return (STAT_OK); }
+    if (active_toolhead) {
+        nv->value_flt = active_toolhead->get_ccw_speed_hi();
+        nv->valuetype = TYPE_FLOAT;
+    }
+    else {
+        nv->valuetype = TYPE_NULL;
+    }
+    return (STAT_OK);
 }
 stat_t pwm_set_p1wsh(nvObj_t *nv) {
     if (active_toolhead) { active_toolhead->set_ccw_speed_hi(nv->value_flt); }
     return (STAT_OK);
 }
 stat_t pwm_get_p1wpl(nvObj_t *nv) {
-    if (active_toolhead) { return active_toolhead->get_ccw_phase_lo(); }
-    else { return (STAT_OK); }
+    if (active_toolhead) {
+        nv->value_flt = active_toolhead->get_ccw_phase_lo();
+        nv->valuetype = TYPE_FLOAT;
+    }
+    else {
+        nv->valuetype = TYPE_NULL;
+    }
+    return (STAT_OK);
 }
 stat_t pwm_set_p1wpl(nvObj_t *nv) {
     if (active_toolhead) { active_toolhead->set_ccw_phase_lo(nv->value_flt); }
     return (STAT_OK);
 }
 stat_t pwm_get_p1wph(nvObj_t *nv) {
-    if (active_toolhead) { return active_toolhead->get_ccw_phase_hi(); }
-    else { return (STAT_OK); }
+    if (active_toolhead) {
+        nv->value_flt = active_toolhead->get_ccw_phase_hi();
+        nv->valuetype = TYPE_FLOAT;
+    }
+    else {
+        nv->valuetype = TYPE_NULL;
+    }
+    return (STAT_OK);
 }
 stat_t pwm_set_p1wph(nvObj_t *nv) {
     if (active_toolhead) { active_toolhead->set_ccw_phase_hi(nv->value_flt); }
     return (STAT_OK);
 }
 stat_t pwm_get_p1pof(nvObj_t *nv) {
-    if (active_toolhead) { return active_toolhead->get_phase_off(); }
-    else { return (STAT_OK); }
+    if (active_toolhead) {
+        nv->value_flt = active_toolhead->get_phase_off();
+        nv->valuetype = TYPE_FLOAT;
+    }
+    else {
+        nv->valuetype = TYPE_NULL;
+    }
+    return (STAT_OK);
 }
 stat_t pwm_set_p1pof(nvObj_t *nv) {
     if (active_toolhead) { active_toolhead->set_phase_off(nv->value_flt); }

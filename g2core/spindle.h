@@ -144,7 +144,7 @@ stat_t spindle_override_control(const float P_word, const bool P_flag);  // M51
 void spindle_start_override(const float ramp_time, const float override_factor);
 void spindle_end_override(const float ramp_time);
 
-const configSubtable * const getSpindleConfig_1();
+const configSubtable *const getSpindleConfig_1();
 const configSubtable *const getP1Config_1();
 
 #endif  // End of include guard: SPINDLE_H_ONCE
