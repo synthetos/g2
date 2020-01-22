@@ -56,7 +56,7 @@ extern Trinamic2130<SPIBus_used_t::SPIBusDevice,
                     Motate::kSocket5_EnablePinNumber>
     motor_4;
 #if HAS_HOBBY_SERVO_MOTOR
-extern StepDirHobbyServo<Motate::kServo1_PinNumber> motor_5;
+extern StepDirHobbyServo<Motate::kOutput10_PinNumber> motor_5;
 #endif
 #endif // 'C'
 
@@ -91,10 +91,14 @@ extern Trinamic2130<SPIBus_used_t::SPIBusDevice,
                     Motate::kSocket5_EnablePinNumber>
     motor_5;
 #if HAS_HOBBY_SERVO_MOTOR
-extern StepDirHobbyServo<Motate::kServo1_PinNumber> motor_6;
+extern StepDirHobbyServo<Motate::kOutput10_PinNumber> motor_6;
 #elif HAS_LASER
+
 #include "laser_toolhead.h"
-extern LaserTool &motor_6;
+#include "kinematics_cartesian.h"
+typedef LaserTool<BASE_KINEMATICS, LASER_FIRE_PIN_NUMBER> LaserTool_used_t;
+extern LaserTool_used_t &motor_6;
+
 #endif
 #endif // 'D'
 

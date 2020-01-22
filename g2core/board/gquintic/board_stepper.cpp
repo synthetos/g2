@@ -54,7 +54,7 @@ HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
              Motate::kSocket5_EnablePinNumber>
     motor_4 {spiBus, spiCSPinMux.getCS(0)};
 #if HAS_HOBBY_SERVO_MOTOR
-HOT_DATA StepDirHobbyServo<Motate::kServo1_PinNumber> motor_5;
+HOT_DATA StepDirHobbyServo<Motate::kOutput10_PinNumber> motor_5;
 Stepper* const Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5};
 #else
 Stepper* const Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4};
@@ -88,13 +88,14 @@ HOT_DATA Trinamic2130<SPIBus_used_t::SPIBusDevice,
              Motate::kSocket5_EnablePinNumber>
     motor_5 {spiBus, spiCSPinMux.getCS(0)};
 #if HAS_HOBBY_SERVO_MOTOR
-HOT_DATA StepDirHobbyServo<Motate::kServo1_PinNumber> motor_6;
+HOT_DATA StepDirHobbyServo<Motate::kOutput10_PinNumber> motor_6;
 Stepper* const Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5, &motor_6};
 #elif HAS_LASER
 // laser_tool is defined over in hardware.cpp
-extern LaserTool laser_tool;
-LaserTool &motor_6 = laser_tool;
-Stepper* const Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5, &laser_tool};
+extern LaserTool_used_t laser_tool;
+LaserTool_used_t &motor_6 = laser_tool;
+Stepper* const Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5, &motor_6};
+#warning here
 #else
 Stepper* const Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5};
 #endif
