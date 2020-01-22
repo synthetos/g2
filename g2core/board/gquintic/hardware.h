@@ -71,6 +71,7 @@
 #else
 #define MOTORS      6               // number of motors on the board - 5 Trinamics + 1 servo or laser
 #endif
+
 #define PWMS 2                      // number of PWM channels supported the hardware
 #define AXES 6                      // axes to support -- must be 6 or 9
 
@@ -191,12 +192,8 @@ static OutputPin<Motate::kGRBL_CommonEnablePinNumber> motor_common_enable_pin;
 //static OutputPin<Motate::kSpindle_EnablePinNumber> spindle_enable_pin;
 //static OutputPin<Motate::kSpindle_DirPinNumber> spindle_dir_pin;
 
-// NOTE: In the v9 and the Due the flood and mist coolants are mapped to a the same pin
-//static OutputPin<kCoolant_EnablePinNumber> coolant_enable_pin;
-//static OutputPin<Motate::kCoolant_EnablePinNumber> flood_enable_pin;
-//static OutputPin<Motate::kCoolant_EnablePinNumber> mist_enable_pin;
-
 // Input pins are defined in gpio.cpp
+
 
 /********************************
  * Function Prototypes (Common) *

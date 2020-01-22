@@ -88,7 +88,7 @@
 #define XIO_HAS_SPI 0
 #define XIO_HAS_I2C 0
 
-#define TEMPERATURE_OUTPUT_ON 1  // NO ADC yet
+#define TEMPERATURE_OUTPUT_ON 0 // needs more testing
 
 // Some pins, if the PWM capability is turned on, it will cause timer conflicts.
 // So we have to explicitly enable them as PWM pins.
@@ -123,11 +123,11 @@ namespace Motate {
 //
 
 _MAKE_MOTATE_PIN(kLED_RGBWPixelPinNumber,          'A',  0); //
-_MAKE_MOTATE_PIN(kHeaterOutput1_PinNumber,         'A',  1); // TC  0,1
-_MAKE_MOTATE_PIN(kHeaterOutput2_PinNumber,         'A',  2); // PWM 0,1
+_MAKE_MOTATE_PIN(kOutput1_PinNumber,               'A',  1); // TC  0,1
+_MAKE_MOTATE_PIN(kOutput2_PinNumber,               'A',  2); // PWM 0,1
 _MAKE_MOTATE_PIN(kI2C1_SDAPinNumber,               'A',  3); //
 _MAKE_MOTATE_PIN(kI2C1_SCLPinNumber,               'A',  4); //
-_MAKE_MOTATE_PIN(kHeaterOutput11_PinNumber,        'A',  5); // PWM 1,3
+_MAKE_MOTATE_PIN(kOutput11_PinNumber,              'A',  5); // PWM 1,3
 _MAKE_MOTATE_PIN(kExternalClock1_PinNumber,        'A',  6); // CPU_CLK
 _MAKE_MOTATE_PIN(kOutput7_PinNumber,               'A',  7); // PWM 0,3
 _MAKE_MOTATE_PIN(kSerial_RTSPinNumber,             'A',  8); //
@@ -145,8 +145,8 @@ _MAKE_MOTATE_PIN(kADC2_PinNumber,                  'A', 19); // AFEC0,8
 _MAKE_MOTATE_PIN(kADC1_PinNumber,                  'A', 20); // AFEC0,9
 _MAKE_MOTATE_PIN(kUnassigned1,                     'A', 21); // AFEC0,1
 _MAKE_MOTATE_PIN(kSocket1_EnablePinNumber,         'A', 22); //
-//_MAKE_MOTATE_PIN(kOutput10_PinNumber,            'A', 23); // PWM 1,2
-_MAKE_MOTATE_PIN(kServo1_PinNumber,                'A', 23); //
+_MAKE_MOTATE_PIN(kOutput10_PinNumber,            'A', 23); // PWM 1,2
+// _MAKE_MOTATE_PIN(kServo1_PinNumber,                'A', 23); //
 _MAKE_MOTATE_PIN(kSocket3_EnablePinNumber,         'A', 24); //
 _MAKE_MOTATE_PIN(kSocket2_DirPinNumber,            'A', 25); //
 _MAKE_MOTATE_PIN(kOutput5_PinNumber,               'A', 26); // TC 2,0

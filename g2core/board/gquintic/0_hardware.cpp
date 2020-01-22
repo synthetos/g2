@@ -193,6 +193,7 @@ stat_t hardware_periodic()
 {
     // for all of the analog inputs that are enabled, request status reports
     // when they change beyond the threshold
+    #if TEMPERATURE_OUTPUT_ON
     for (uint8_t a = 0; a < A_IN_CHANNELS; a++) {
         if (a_in[a]->getEnabled() == IO_ENABLED) {
             float new_vv = a_in[a]->getValue();
@@ -202,6 +203,7 @@ stat_t hardware_periodic()
             }
         }
     }
+    #endif
 
     // static uint8_t sent = false;
     // if (!sent) {
