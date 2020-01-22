@@ -264,6 +264,12 @@ void mp_set_runtime_position(uint8_t axis, const float position) { mr->position[
 
 void mp_set_steps_to_runtime_position()
 {
+    if (mr == nullptr) {
+#if IN_DEBUGGER
+        __asm__ volatile("BKPT 1"); // mp_set_steps_to_runtime_position called with null mr!
+#endif
+        return;
+    }
     float step_position[MOTORS];
     // There use to be a call to kn_inverse_kinematics here, but we don't do that now, instead we call kn->sync_encoders()
     // after handling the steps, allowing the kinematics to intelligently handle the offset of step and position.

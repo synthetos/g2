@@ -100,11 +100,11 @@ void application_init_machine(void)
 {
     cm = &cm1;                          // set global canonical machine pointer to primary machine
     cm->machine_state = MACHINE_INITIALIZING;
+    canonical_machine_inits();          // combined inits for CMs and planner - do before anything might use cm or mr!
 
     stepper_init();                     // stepper subsystem
     encoder_init();                     // virtual encoders
     gpio_init();                        // inputs and outputs
-    canonical_machine_inits();          // combined inits for CMs and planner
 }
 
 void application_init_startup(void)
