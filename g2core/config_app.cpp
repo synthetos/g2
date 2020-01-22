@@ -1546,7 +1546,7 @@ constexpr cfgItem_t motor_diagnostic_config_items_1[] = {
     { "_ps","_ps5",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.position_steps[MOTOR_5], 0 },
     { "_cs","_cs5",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.commanded_steps[MOTOR_5], 0 },
     { "_es","_es5",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.encoder_steps[MOTOR_5], 0 },
-    { "_xs","_xs6",_f0, 2, tx_print_flt, get_flt, set_nul, &st_pre.mot[MOTOR_5].corrected_steps, 0 },
+    { "_xs","_xs5",_f0, 2, tx_print_flt, get_flt, set_nul, &st_pre.mot[MOTOR_5].corrected_steps, 0 },
     { "_fe","_fe5",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.following_error[MOTOR_5], 0 },
 #endif
 #if (MOTORS >= 6)
@@ -1554,7 +1554,7 @@ constexpr cfgItem_t motor_diagnostic_config_items_1[] = {
     { "_ps","_ps6",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.position_steps[MOTOR_6], 0 },
     { "_cs","_cs6",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.commanded_steps[MOTOR_6], 0 },
     { "_es","_es6",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.encoder_steps[MOTOR_6], 0 },
-    { "_xs","_xs5",_f0, 2, tx_print_flt, get_flt, set_nul, &st_pre.mot[MOTOR_6].corrected_steps, 0 },
+    { "_xs","_xs6",_f0, 2, tx_print_flt, get_flt, set_nul, &st_pre.mot[MOTOR_6].corrected_steps, 0 },
     { "_fe","_fe6",_f0, 2, tx_print_flt, get_flt, set_nul, &mr1.following_error[MOTOR_6], 0 },
 #endif
 };
