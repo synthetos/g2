@@ -154,14 +154,49 @@ void loop() {
 
 /*
  * Traps for debugging. These must be in main.cpp for proper linker ordering
+ * WARNING: These are horribly ARM-specific, and should be moved to Motate!
  */
+
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
 
 // void MemManage_Handler  ( void ) { __asm__("BKPT"); }
 __attribute((naked)) void MemManage_Handler(void){
-__asm volatile (
- " bkpt 10 \n"
- " bx lr \n"
-);
+
+#ifndef SCB_CFSR_IACCVIOL
+#define  SCB_CFSR_IACCVIOL                   ((uint32_t)0x00000001)        /*!< Instruction access violation */
+#define  SCB_CFSR_DACCVIOL                   ((uint32_t)0x00000002)        /*!< Data access violation */
+#define  SCB_CFSR_MUNSTKERR                  ((uint32_t)0x00000008)        /*!< Unstacking error */
+#define  SCB_CFSR_MSTKERR                    ((uint32_t)0x00000010)        /*!< Stacking error */
+#define  SCB_CFSR_MLSPERR                    ((uint32_t)0x00000020)        /*!< floating-point lazy state preservation error */
+#define  SCB_CFSR_MMARVALID                  ((uint32_t)0x00000080)        /*!< Memory Manage Address Register address valid flag */
+#endif
+
+    // Notes for use in a debugger:
+    // This is a "naked" function, so no stack can be used.
+    // This means that these values below are held in registers.
+    // This also means that, in spite of the optimization being disabled here, fault_address will be "optimized out"
+    // But that's okay, it lets us keep SCB->MMFAR here where it's handy to view.
+
+    uint32_t fault = (SCB->CFSR >> SCB_CFSR_MEMFAULTSR_Pos) & SCB_CFSR_MEMFAULTSR_Msk;
+    if (fault & SCB_CFSR_MMARVALID) {
+        // SCB->MMFAR holds the address that was accessed (read or written -- likely written) that caused this fault.
+        // The stack trace will likely have some garbage in it, but the last few frames *might* be valid.
+        [[maybe_unused]] void *fault_address = (void *)SCB->MMFAR;
+    }
+
+    if (fault & SCB_CFSR_IACCVIOL) {
+        __asm__ volatile("BKPT 1"); // invalid instruction access
+    } else
+    if (fault & SCB_CFSR_DACCVIOL) {
+        __asm__ volatile("BKPT 2"); // invalid data access
+    } else {
+        __asm__ volatile("BKPT 3"); // other memory access violation
+    }
+
+    // __asm volatile(
+    //     " bkpt 10 \n"
+    //     " bx lr \n");
 }
 
 // void BusFault_Handler   ( void ) { __asm__("BKPT"); }
@@ -187,3 +222,5 @@ __asm volatile (
  " bx lr \n"
 );
 }
+
+#pragma GCC reset_options
