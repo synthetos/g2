@@ -226,6 +226,7 @@
 //*****************************************************************************
 
 // KINEMATICS (which may later change the following values)
+#define KINE_OTHER -1
 #define KINE_CARTESIAN 0
 #define KINE_CORE_XY 1
 #define KINE_FOUR_CABLE 2

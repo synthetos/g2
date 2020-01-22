@@ -29,6 +29,7 @@
 #define KINEMATICS_H_ONCE
 
 #include "util.h"
+#include "gcode.h" // for GCodeState_t
 
 /* Generic Functions
  *
@@ -42,7 +43,7 @@
 template <uint8_t axes, uint8_t motors>
 struct KinematicsBase {
     // configure each joint (steps-per-unit, joint mapping)
-    virtual void configure(const float steps_per_unit[motors], const int8_t motor_map[]);
+    virtual void configure(const float steps_per_unit[motors], const int8_t motor_map[motors]);
 
     // take the target (in cartesian coordinates in mm), and convert them to steps for each joints
     // taking the joint_map into consideration, and returning the values in the provided array steps[]
