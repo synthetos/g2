@@ -274,6 +274,39 @@
       }
     },
     {
+      "label": "Build CONFIG=CheapoLaser Debug",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=CheapoLaser", "VERBOSE=2", "COLOR=0", "DEBUG=2", "RECORD=1"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
+      "label": "Build CONFIG=CheapoLaser Production",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=CheapoLaser", "VERBOSE=2", "COLOR=0", "RECORD=1"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
+      "label": "Clean CONFIG=CheapoLaser",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=CheapoLaser", "clean"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
       "label": "Build CONFIG=fourcable",
       "type": "process",
       "command": "make",

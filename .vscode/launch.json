@@ -76,6 +76,20 @@
       "preLaunchTask": "Build CONFIG=MiniMill Debug"
     },
     {
+      "name": "Debug CONFIG=CheapoLaser (J-Link)",
+      "type": "cortex-debug",
+      "request": "launch",
+      "servertype": "jlink",
+      "cwd": "${workspaceRoot}/g2core/",
+      "executable": "./bin/CheapoLaser-gquintic-d/g2core.elf",
+      "device": "ATSAMS70N19",
+      "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sams70/ATSAMS70N19.svd",
+      "interface": "swd",
+      "showDevDebugOutput": false,
+      "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/",
+      "preLaunchTask": "Build CONFIG=CheapoLaser Debug"
+    },
+    {
       "name": "Debug CONFIG=OthermillPro (J-Link)",
       "type": "cortex-debug",
       "request": "launch",
