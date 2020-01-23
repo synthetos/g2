@@ -286,7 +286,7 @@ void mp_set_steps_to_runtime_position()
         mr->following_error[motor] = 0;
         st_pre.mot[motor].corrected_steps = 0;
     }
-    kn->sync_encoders();
+    kn->sync_encoders(step_position, mr->position);
 }
 
 

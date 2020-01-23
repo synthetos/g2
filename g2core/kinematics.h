@@ -74,7 +74,7 @@ struct KinematicsBase {
     virtual void get_position(float position[axes]);
 
     // sync any external sensors with the current step position
-    virtual void sync_encoders();
+    virtual void sync_encoders(float step_position[motors], float position[axes]);
 };
 
 extern KinematicsBase<AXES, MOTORS> *kn;

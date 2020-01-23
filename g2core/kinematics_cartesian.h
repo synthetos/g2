@@ -80,12 +80,12 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
     void inverse_kinematics(const GCodeState_t &gm, const float target[axes], const float position[axes], const float start_velocity,
                             const float end_velocity, const float segment_time, float steps[motors]) override
     {
-        if (needs_sync_encoders) {
-            for (uint8_t joint = 0; joint < joints; joint++) {
-                // put the difference in offset
-                joint_offset[joint] = (joint_position[joint] - position[joint]);
-            }
-        }
+        // if (needs_sync_encoders) {
+        //     for (uint8_t joint = 0; joint < joints; joint++) {
+        //         // put the difference in offset
+        //         joint_offset[joint] = (joint_position[joint] - position[joint]);
+        //     }
+        // }
 
         // joint == axis in cartesian kinematics
         for (uint8_t motor = 0; motor < motors; motor++) {
@@ -141,7 +141,30 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
         }
     }
 
-    void sync_encoders() override { needs_sync_encoders = true; }
+    void sync_encoders(float step_position[motors], float position[axes]) override {
+        // We need to make joint_offset[joint] adjust any given position so that if it's given as a target
+        // to inverse_kinematics then step_position[motor] will be given as the return steps[motor]
+
+        // Why? Externally position[] may be unrelated to step_position[], so we need to adjust.
+
+        float new_unadjusted_position[axes];
+
+        for (uint8_t joint = 0; joint < joints; joint++) {
+            joint_offset[joint] = 0.0;
+        }
+
+        // note that forward_kinematics uses joint_offset
+        forward_kinematics(step_position, joint_position);
+
+        for (uint8_t joint = 0; joint < joints; joint++) {
+            // put the difference in offset
+            // (position[joint]+joint_offset[joint]) * steps_per_unit[motor] = step_position[motor]
+            // (position[joint]+joint_offset[joint]) = new_unadjusted_position[join]
+            // joint_offset[joint] = new_unadjusted_position[join] - position[joint]
+            joint_offset[joint] = new_unadjusted_position[joint] - position[joint];
+            joint_position[joint] = position[joint];
+        }
+    }
 };
 
 
