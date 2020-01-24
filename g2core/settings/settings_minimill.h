@@ -35,6 +35,8 @@
 #define JUNCTION_INTEGRATION_TIME   0.15     // cornering - between 0.10 and 2.00 (higher is faster)
 #define CHORDAL_TOLERANCE           0.01    // chordal accuracy for arc drawing (in mm)
 
+#define HAS_LASER                   1                       // We have a laser, but no shark (yet)
+
 #define SOFT_LIMIT_ENABLE           0       // 0=off, 1=on
 #define HARD_LIMIT_ENABLE           1       // 0=off, 1=on
 #define SAFETY_INTERLOCK_ENABLE     1       // 0=off, 1=on
@@ -44,12 +46,44 @@
 #define SPINDLE_PAUSE_ON_HOLD       true
 #define SPINDLE_SPINUP_DELAY        1.5     // after unpausing and turning the spindle on, dwell for 1.5s
 
+#if HAS_LASER
+// #define LASER_FIRE_PIN_NUMBER       Motate::kOutput3_PinNumber      // note this is a MOTATE pin number, NOT a GPIO pin number
+#define LASER_FIRE_PIN_NUMBER       Motate::kOutput7_PinNumber      // note this is a MOTATE pin number, NOT a GPIO pin number
+#define LASER_ENABLE_OUTPUT_NUMBER  4
+#define LASER_TOOL                  5      // default tool is 5 - note that TOOLS may be limited to 5!
+#define LASER_MIN_S                 0.0001 // {th2mns:0.0001}
+#define LASER_MAX_S                 255.0  // {th2mxs:1000.0}
+#define LASER_MIN_PPM               0.1    // {th2mnp:0.001}
+#define LASER_MAX_PPM               20     // {th2mxp:10}
+
+#define LASER_PULSE_DURATION        15      // in microseconds {th2pd:60} - 15 is 50% duty cycle for 30khz
+
+#define KINEMATICS                  KINE_OTHER // Due to it having the laser
+#define BASE_KINEMATICS             CartesianKinematics<AXES, MOTORS>
+// Another option is CoreXY:
+// #define BASE_KINEMATICS          CoreXYKinematics<AXES, MOTORS>
+
+// Ensure that we set these - these should match the LASER_FIRE_PIN_NUMBER !!!
+#define DO7_ENABLED                 IO_ENABLED
+#define DO7_POLARITY                IO_ACTIVE_HIGH
+#define DO7_EXTERNAL_NUMBER         7
+
+#endif // HAS_LASER
+
+// Only used in Bantam mode
 #define ESC_BOOT_TIME               5000    // how long the ESC takes to boot, in milliseconds
 #define ESC_LOCKOUT_TIME            900     // how long the interlock needs to be engaged before killing power... actually 1s, but be conservative
 
 #define COOLANT_MIST_POLARITY       1       // 0=active low, 1=active high
 #define COOLANT_FLOOD_POLARITY      1       // 0=active low, 1=active high
 #define COOLANT_PAUSE_ON_HOLD       true
+
+#define MIST_ENABLE_OUTPUT_NUMBER   0
+#define FLOOD_ENABLE_OUTPUT_NUMBER  0
+
+#define SPINDLE_ENABLE_OUTPUT_NUMBER    4
+#define SPINDLE_DIRECTION_OUTPUT_NUMBER 5
+#define SPINDLE_PWM_NUMBER              6
 
 #define FEEDHOLD_Z_LIFT             3       // mm to lift Z on feedhold
 #define PROBE_REPORT_ENABLE         true
@@ -173,7 +207,7 @@
 #define X_VELOCITY_MAX              VELOCITY_MAX        // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX      // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                   // xtn  minimum travel for soft limits
-#define X_TRAVEL_MAX                122                 // xtr  travel between switches or crashes
+#define X_TRAVEL_MAX                120                 // xtr  travel between switches or crashes
 #define X_JERK_MAX                  JERK_MAX            // xjm
 #define X_JERK_HIGH_SPEED           JERK_HIGH_SPEED     // xjh
 #define X_HOMING_INPUT              1                   // xhi  input used for homing or 0 to disable
@@ -187,10 +221,10 @@
 #define Y_VELOCITY_MAX              VELOCITY_MAX
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
-#define Y_TRAVEL_MAX                200
+#define Y_TRAVEL_MAX                195
 #define Y_JERK_MAX                  JERK_MAX
 #define Y_JERK_HIGH_SPEED           JERK_HIGH_SPEED
-#define Y_HOMING_INPUT              3
+#define Y_HOMING_INPUT              2
 #define Y_HOMING_DIRECTION          1
 #define Y_SEARCH_VELOCITY           1000
 #define Y_LATCH_VELOCITY            LATCH_VELOCITY
@@ -204,7 +238,7 @@
 #define Z_TRAVEL_MAX                87
 #define Z_JERK_MAX                  1000
 #define Z_JERK_HIGH_SPEED           Z_JERK_MAX
-#define Z_HOMING_INPUT              5
+#define Z_HOMING_INPUT              3
 #define Z_HOMING_DIRECTION          1
 #define Z_SEARCH_VELOCITY           500
 #define Z_LATCH_VELOCITY            LATCH_VELOCITY
