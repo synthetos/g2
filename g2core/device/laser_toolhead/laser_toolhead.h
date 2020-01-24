@@ -60,7 +60,7 @@ class LaserTool : public ToolHead, public Stepper, public KinematicsParent {
 
     bool paused;                  // true if paused, false is not
 
-    OutputPin<fire_num> fire;
+    PWMOutputPin<fire_num> fire;
 
     uint8_t enable_output_num;
     gpioDigitalOutput *enable_output = nullptr;
@@ -74,6 +74,8 @@ class LaserTool : public ToolHead, public Stepper, public KinematicsParent {
     int16_t ticks_per_pulse;
     int16_t next_ticks_per_pulse;
     int16_t pulse_duration_us;
+
+    uint32_t raw_fire_duty_cycle = 0;
 
     float min_s;
     float max_s;
@@ -98,12 +100,12 @@ class LaserTool : public ToolHead, public Stepper, public KinematicsParent {
 
     // the result of an S word
     // override this to return false - "don't add a command to the buffer"
-    bool set_speed(float) override { return (false); }
+    bool set_speed(float) override;
     float get_speed() override;
 
     // the result of an M3/M4/M5
     // override this to return false - "don't add a command to the buffer"
-    bool set_direction(spDirection) override { return (false); }
+    bool set_direction(spDirection) override;
     spDirection get_direction() override;
 
     void stop() override;
@@ -188,7 +190,7 @@ LaserTool<KinematicsParent,fire_num>::LaserTool(const uint8_t enable_pin_number,
     : ToolHead{},
       Stepper{},
       KinematicsParent{},
-      fire{kStartLow}, // fire_polarity==IO_ACTIVE_LOW?kStartHigh:kStartLow
+      fire{}, // fire_polarity==IO_ACTIVE_LOW?kStartHigh:kStartLow
       enable_output_num{enable_pin_number},
       laser_motor{laser_motor_number} {}
 
@@ -236,7 +238,32 @@ template <typename KinematicsParent, Motate::pin_number fire_num>
 float LaserTool<KinematicsParent,fire_num>::get_speed() { return speed; }
 
 template <typename KinematicsParent, Motate::pin_number fire_num>
+bool LaserTool<KinematicsParent,fire_num>::set_speed(float new_speed) {
+    speed = new_speed;
+
+    float s = std::min(1.0f, std::max(0.0f, ((speed - min_s) / (max_s - min_s))));
+
+    if (direction == /*M3*/SPINDLE_CW) {
+        uint32_t top_value = fire.getTopValue();
+        raw_fire_duty_cycle = std::floor(s * (float)top_value);
+        fire.writeRaw(raw_fire_duty_cycle);
+    }
+
+    return false; // we don't need no stinkin' commands in our buffers!
+}
+
+template <typename KinematicsParent, Motate::pin_number fire_num>
 spDirection LaserTool<KinematicsParent,fire_num>::get_direction() { return direction; }
+
+template <typename KinematicsParent, Motate::pin_number fire_num>
+bool LaserTool<KinematicsParent,fire_num>::set_direction(spDirection new_direction) {
+    direction = new_direction;
+    if (direction == /*M3*/ SPINDLE_CW) {
+        set_speed(speed); // use the set_speed() function to update the pin PWM
+    }
+
+    return false; // we don't need no stinkin' commands in our buffers!
+}
 
 template <typename KinematicsParent, Motate::pin_number fire_num>
 void LaserTool<KinematicsParent,fire_num>::stop() {
@@ -304,18 +331,21 @@ float LaserTool<KinematicsParent,fire_num>::get_frequency()
 template <typename KinematicsParent, Motate::pin_number fire_num>
 void LaserTool<KinematicsParent,fire_num>::_enableImpl() {
     ticks_per_pulse =  next_ticks_per_pulse;
+    // fire.writeRaw(raw_fire_duty_cycle);
     enabled = true;
 };
 
 template <typename KinematicsParent, Motate::pin_number fire_num>
 void LaserTool<KinematicsParent,fire_num>::_disableImpl() {
+    fire.writeRaw(0);
     enabled = false;
 };
 
 template <typename KinematicsParent, Motate::pin_number fire_num>
 void LaserTool<KinematicsParent,fire_num>::stepStart() {
     if (!enabled) return;
-    fire.set();
+
+    fire.writeRaw(raw_fire_duty_cycle);
     pulse_tick_counter = ticks_per_pulse;
 };
 
@@ -325,7 +355,7 @@ void LaserTool<KinematicsParent,fire_num>::stepEnd() {
         return;
     }
     if (--pulse_tick_counter == 0) {
-        fire.clear();
+        fire.writeRaw(0);
     }
 };
 
@@ -435,37 +465,44 @@ void LaserTool<KinematicsParent,fire_num>::inverse_kinematics(const GCodeState_t
     next_ticks_per_pulse = 0;
 
     // ONLY fire the laser for G1, G2, or G3, when M3 is on, and S > 0
-    if (!paused && ((gm.motion_mode == MOTION_MODE_STRAIGHT_FEED) || (gm.motion_mode == MOTION_MODE_CW_ARC) || (gm.motion_mode == MOTION_MODE_CCW_ARC)) && (gm.spindle_speed > min_s)) {
-        // temporary ticks per pulse
-        float ticks_in_move = segment_time * (60 * FREQUENCY_DDA);
-        float tpp = pulse_duration_us / (1000000 / FREQUENCY_DDA);
+    if (!paused && (gm.tool == LASER_TOOL) && ((gm.motion_mode == /*G1*/MOTION_MODE_STRAIGHT_FEED) || (gm.motion_mode == /*G2*/MOTION_MODE_CW_ARC) || (gm.motion_mode == /*G3*/MOTION_MODE_CCW_ARC)) && (gm.spindle_speed > min_s)) {
+        // translate "spindle_speed" into a percentage of requested power, from 0.0 to 1.0
+        float s = std::min(1.0f, std::max(0.0f, ((gm.spindle_speed - min_s)/(max_s-min_s)) ));
 
-        if ((gm.spindle_direction == /*M4*/ SPINDLE_CCW) ||
-            (gm.spindle_direction == /*M3*/ SPINDLE_CW && gm.tool == 1)) {
-            // "Constant power" - the whole move will have the same rate of power, and it'll be a % from 0 to 100
-            // Assume X/Y plane for now, also assume we don't need to worry about any encoder compensation that was done in the parent kinematics
-            float s = std::min(1.0f, std::max(0.0f, ((gm.spindle_speed - min_s)/(max_s-min_s)) ));
+        if (gm.spindle_direction == /*M4*/ SPINDLE_CCW) {
+            // temporary ticks per pulse
+            float tpp = pulse_duration_us / (1000000 / FREQUENCY_DDA);
 
-            // TODO: Here we would apply some dot-gain curve to s
-
-            move_length = (ticks_in_move/tpp) * s;
-        } else if ((gm.spindle_direction == /*M3*/SPINDLE_CW)) {
             // Assume X/Y plane for now, also assume we don't need to worry about any encoder compensation that was done in the parent kinematics
             float x_len = position[AXIS_X] - target[AXIS_X];
             float y_len = position[AXIS_Y] - target[AXIS_Y];
 
-            float s = ((gm.spindle_speed - min_s)/(max_s-min_s)) * (max_ppm - min_ppm)  + min_ppm;
+            move_length = sqrt((x_len * x_len) + (y_len * y_len)) * s * (max_ppm - min_ppm)  + min_ppm;
 
-            move_length = sqrt((x_len * x_len) + (y_len * y_len)) * s;
-            // NOTE: segment_time is in minutes
-            // Ensure that it can only pulse as many pulses as are availabable in the segment time
-            move_length = std::min(move_length, ticks_in_move);
+            //compute the pulse duration, and ensure that it can't be longer than 100% of the time available for each pulse, plus 1 (to ensure it stays on)
+            next_ticks_per_pulse = std::ceil(tpp);
+
+            uint32_t top_value = fire.getTopValue();
+            raw_fire_duty_cycle = top_value; // 100%!
         }
+        // else if ((gm.spindle_direction == /*M3*/SPINDLE_CW)) {
+        //     // Assume X/Y plane for now, also assume we don't need to worry about any encoder compensation that was done in the parent kinematics
+        //     // float x_len = position[AXIS_X] - target[AXIS_X];
+        //     // float y_len = position[AXIS_Y] - target[AXIS_Y];
 
-        //compute the pulse duration, and ensure that it can't be longer than 100% of the time available for each pulse, plus 1 (to ensure it stays on)
-        next_ticks_per_pulse = std::min((uint16_t)tpp, ((uint16_t)(move_length/ticks_in_move+1)));
+        //     // float s = ((gm.spindle_speed - min_s)/(max_s-min_s)) * (max_ppm - min_ppm)  + min_ppm;
+
+        //     // move_length = sqrt((x_len * x_len) + (y_len * y_len)) * s;
+        //     // // NOTE: segment_time is in minutes
+        //     // // Ensure that it can only pulse as many pulses as are availabable in the segment time
+        //     // move_length = std::min(move_length, ticks_in_move);
+
+        //     uint32_t top_value = fire.getTopValue();
+        //     raw_fire_duty_cycle = std::floor(s * (float)top_value);
+
+        //     move_length = 1;  // don't individually pulse the fire
+        // }
     }
-
 
     // Reminder: steps is *continous* it's moved to from the stepr returned the last time this was called
     laser_step_position += move_length;
