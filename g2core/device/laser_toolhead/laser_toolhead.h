@@ -477,7 +477,7 @@ void LaserTool<KinematicsParent,fire_num>::inverse_kinematics(const GCodeState_t
             float x_len = position[AXIS_X] - target[AXIS_X];
             float y_len = position[AXIS_Y] - target[AXIS_Y];
 
-            move_length = sqrt((x_len * x_len) + (y_len * y_len)) * s * (max_ppm - min_ppm)  + min_ppm;
+            move_length = sqrt((x_len * x_len) + (y_len * y_len)) * (s * (max_ppm - min_ppm)  + min_ppm);
 
             //compute the pulse duration, and ensure that it can't be longer than 100% of the time available for each pulse, plus 1 (to ensure it stays on)
             next_ticks_per_pulse = std::ceil(tpp);
