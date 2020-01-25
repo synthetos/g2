@@ -52,11 +52,11 @@
 #define LASER_ENABLE_OUTPUT_NUMBER  4
 #define LASER_TOOL                  5      // default tool is 5 - note that TOOLS may be limited to 5!
 #define LASER_MIN_S                 0.0001 // {th2mns:0.0001}
-#define LASER_MAX_S                 255.0  // {th2mxs:1000.0}
-#define LASER_MIN_PPM               0.1    // {th2mnp:0.001}
-#define LASER_MAX_PPM               20     // {th2mxp:10}
+#define LASER_MAX_S                 255.0  // {th2mxs:255.0}
+#define LASER_MIN_PPM               15     // {th2mnp:15}
+#define LASER_MAX_PPM               100     // {th2mxp:200}
 
-#define LASER_PULSE_DURATION        15      // in microseconds {th2pd:60} - 15 is 50% duty cycle for 30khz
+#define LASER_PULSE_DURATION        240    // in microseconds {th2pd:240} - 15 is 50% duty cycle for 30khz
 
 #define KINEMATICS                  KINE_OTHER // Due to it having the laser
 #define BASE_KINEMATICS             CartesianKinematics<AXES, MOTORS>
