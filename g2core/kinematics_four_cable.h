@@ -238,7 +238,7 @@ struct FourCableKinematics : KinematicsBase<axes, motors> {
 
     bool inited_ = false;
 
-    void sync_encoders() override {
+    void sync_encoders(const float step_position[motors], const float position[axes]) override {
         for (uint8_t cable = 0; cable < 4; cable++) {
             encoder_synced[cable] = false; // need to re-sync encoders to the cable
         }
