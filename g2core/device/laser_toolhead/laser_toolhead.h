@@ -469,7 +469,7 @@ void LaserTool<KinematicsParent,fire_num>::inverse_kinematics(const GCodeState_t
         // translate "spindle_speed" into a percentage of requested power, from 0.0 to 1.0
         float s = std::min(1.0f, std::max(0.0f, ((gm.spindle_speed - min_s)/(max_s-min_s)) ));
 
-        if (gm.spindle_direction == /*M4*/ SPINDLE_CCW) {
+        if (gm.spindle_direction == /*M4*/ SPINDLE_CCW || gm.spindle_direction == /*M3*/ SPINDLE_CW) {
             // temporary ticks per pulse
             float tpp = pulse_duration_us / (1000000 / FREQUENCY_DDA);
 
