@@ -184,6 +184,9 @@ stat_t cm_homing_cycle_start(const float axes[], const bool flags[]) {
 
     copy_vector(hm.axis_flags, flags);
 
+    // stop the spindle
+    spindle_stop();
+
     // set working values
     cm_set_units_mode(MILLIMETERS);
     cm_set_distance_mode(INCREMENTAL_DISTANCE_MODE);
@@ -248,6 +251,9 @@ void cm_abort_homing(cmMachine_t *_cm) {
     if (_cm->cycle_type == CYCLE_HOMING) {
         _cm->cycle_type = CYCLE_NONE;
         _cm->machine_state = MACHINE_PROGRAM_STOP;
+
+        // the distance mode (incremental/absolute) is not normally reset, so reset it
+        cm_set_distance_mode(hm.saved_distance_mode);
     }
 
     // This is idempotent - if it's not there, no worries
