@@ -1439,7 +1439,7 @@ stat_t cm_select_tool(const uint8_t tool_select)
 
 static void _exec_change_tool(float *value, bool *flag)
 {
-    cm->gm.tool = (uint8_t)value[0];
+    cm->gm.tool = cm->gm.tool_select;
 
     spindle_set_toolhead(toolhead_for_tool(cm->gm.tool));
     // TODO - change tool offsets and update display offsets
@@ -1447,8 +1447,7 @@ static void _exec_change_tool(float *value, bool *flag)
 
 stat_t cm_change_tool(const uint8_t tool_change)
 {
-    float value[] = { (float)cm->gm.tool_select };
-    mp_queue_command(_exec_change_tool, value, nullptr);
+    mp_queue_command(_exec_change_tool, nullptr, nullptr);
     return (STAT_OK);
 }
 
