@@ -50,13 +50,19 @@
 // #define LASER_FIRE_PIN_NUMBER       Motate::kOutput3_PinNumber      // note this is a MOTATE pin number, NOT a GPIO pin number
 #define LASER_FIRE_PIN_NUMBER       Motate::kOutput7_PinNumber      // note this is a MOTATE pin number, NOT a GPIO pin number
 #define LASER_ENABLE_OUTPUT_NUMBER  4
-#define LASER_TOOL                  5      // default tool is 5 - note that TOOLS may be limited to 5!
-#define LASER_MIN_S                 0.0001 // {th2mns:0.0001}
-#define LASER_MAX_S                 255.0  // {th2mxs:255.0}
-#define LASER_MIN_PPM               15     // {th2mnp:15}
-#define LASER_MAX_PPM               100     // {th2mxp:200}
+#define LASER_TOOL                  5        // default tool is 5 - note that TOOLS may be limited to 5!
+#define LASER_MIN_S                 0.0001   // {th2mns:0.0001}
+#define LASER_MAX_S                 255.0    // {th2mxs:255.0}
+#define LASER_MIN_PPM               100      // {th2mnp:100}
+#define LASER_MAX_PPM               1500     // {th2mxp:1500}
 
-#define LASER_PULSE_DURATION        240    // in microseconds {th2pd:240} - 15 is 50% duty cycle for 30khz
+#define LASER_PULSE_DURATION        150      // in microseconds {th2pd:150}
+
+/*
+M100 ({th2pd:150})    ; laser on period
+M100 ({th2mnp:100})   ; laser min pulses per mm
+M100 ({th2mxp:1500}) ; laser max pulses per mm
+*/
 
 #define KINEMATICS                  KINE_OTHER // Due to it having the laser
 #define BASE_KINEMATICS             CartesianKinematics<AXES, MOTORS>
