@@ -96,10 +96,20 @@ class ESCSpindle : public ToolHead {
                                                        speed_actual = 0; // just in case there was a race condition
                                                        done = true;
                                                    } else if (fp_NE(speed, speed_actual)) {
-                                                       speed_actual += speed_change_per_tick;
-                                                       if (speed_actual > speed) {
-                                                           speed_actual = speed;
-                                                           done = true;
+                                                       if (speed_actual < speed) {
+                                                           // spin up
+                                                           speed_actual += speed_change_per_tick;
+                                                           if (speed_actual > speed) {
+                                                               speed_actual = speed;
+                                                               done = true;
+                                                           }
+                                                       } else {
+                                                           // spin down
+                                                           speed_actual -= speed_change_per_tick;
+                                                           if (speed_actual < speed) {
+                                                               speed_actual = speed;
+                                                               done = true;
+                                                           }
                                                        }
                                                    } else {
                                                        done = true;
@@ -313,7 +323,7 @@ void ESCSpindle::set_pwm_value() {
         return;
     }
     float value = phase_off;
-    if (paused) {
+    if (paused || fp_ZERO(speed)) {
         // nothing - leave it at phase_off
     } else if (direction == SPINDLE_CW) {
         value = cw.speed_to_phase(speed_actual);
