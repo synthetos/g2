@@ -253,21 +253,21 @@ stat_t sr_set_status_report(nvObj_t *nv)
         if (nv->value_int) {
             auto &cfgTmp = cfgArray[nv->value_int];
 
-            sr.status_report_list[i].index = nv->index;
-            sr.status_report_list[i].get = cfgTmp.get;
-            // sr.status_report_list[i].flags = cfgTmp.flags;
-            sr.status_report_list[i].precision = cfgTmp.precision;
-            strcpy(sr.status_report_list[i].group, cfgTmp.group);
-            strcpy(sr.status_report_list[i].token, cfgTmp.token);
+            status_report_list[i].index = nv->index;
+            status_report_list[i].get = cfgTmp.get;
+            // status_report_list[i].flags = cfgTmp.flags;
+            status_report_list[i].precision = cfgTmp.precision;
+            strcpy(status_report_list[i].group, cfgTmp.group);
+            strcpy(status_report_list[i].token, cfgTmp.token);
 
             // special processing for system groups and stripping tokens for groups
             if (cfgTmp.group[0] != NUL) {
                 if (cfgArray[nv->index].flags & F_NOSTRIP) {
-                    sr.status_report_list[i].group[0] = NUL;
-                    strcpy(sr.status_report_list[i].token, cfgTmp.token);
+                    status_report_list[i].group[0] = NUL;
+                    strcpy(status_report_list[i].token, cfgTmp.token);
                 } else {
-                    strcpy(sr.status_report_list[i].group, cfgTmp.group);
-                    strcpy(sr.status_report_list[i].token, &cfgTmp.token[strlen(cfgTmp.group)]); // strip group from the token
+                    strcpy(status_report_list[i].group, cfgTmp.group);
+                    strcpy(status_report_list[i].token, &cfgTmp.token[strlen(cfgTmp.group)]); // strip group from the token
                 }
             }
             nv->value_int = nv->index;                      // persist the index as the value
