@@ -251,7 +251,7 @@ stat_t sr_set_status_report(nvObj_t *nv)
         }
         // Note: valuetype may have been coerced from boolean to something else, so just treat value_int as a bool
         if (nv->value_int) {
-            auto &cfgTmp = cfgArray[nv->value_int];
+            auto &cfgTmp = cfgArray[nv->index];
 
             status_report_list[i].index = nv->index;
             status_report_list[i].get = cfgTmp.get;
