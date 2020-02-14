@@ -337,17 +337,18 @@ stat_t sr_status_report_callback()         // called by controller dispatcher
         return (STAT_NOOP);
     }
 
-   // don't send an SR if you the planner is experiencing a time constraint
-   if (!mp_is_phat_city_time()) {
+    // don't send an SR if you the planner is experiencing a time constraint
+    if (!mp_is_phat_city_time()) {
         if (++sr.throttle_counter != SR_THROTTLE_COUNT) {
             return (STAT_NOOP);
         }
         sr.throttle_counter = 0;
     }
 
-    sr.status_report_request = SR_OFF;
+    srVerbosity req_sr_verbosity = sr.status_report_request;
     sr.status_report_systick.clear();
-    if ((sr.status_report_request == SR_VERBOSE) ||
+    sr.status_report_request = SR_OFF;
+    if ((req_sr_verbosity == SR_VERBOSE) ||
         (sr.status_report_verbosity == SR_VERBOSE)) {
         _populate_unfiltered_status_report();
     } else {
