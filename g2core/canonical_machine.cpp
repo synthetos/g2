@@ -132,7 +132,7 @@ static int8_t _axis(const nvObj_t *nv);     // return axis number from token/gro
  *   Will be registered at init
  */
 gpioDigitalInputHandler _hold_input_handler {
-    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+    [](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
         if (edge != INPUT_EDGE_LEADING) { return false; }
 
         // any action = d_in[triggering_pin_number]->getAction();
@@ -156,7 +156,7 @@ gpioDigitalInputHandler _hold_input_handler {
  *   Will be registered at init
  */
 gpioDigitalInputHandler _halt_input_handler {
-    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+    [](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
         if (edge != INPUT_EDGE_LEADING) { return false; }
 
         cm_halt();                              // hard stop, including spindle, coolant and heaters
@@ -173,7 +173,7 @@ gpioDigitalInputHandler _halt_input_handler {
  *   Will be registered at init
  */
 gpioDigitalInputHandler _alarm_input_handler {
-    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+    [](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
         if (edge != INPUT_EDGE_LEADING) { return false; }
 
         char msg[10];
@@ -191,7 +191,7 @@ gpioDigitalInputHandler _alarm_input_handler {
  *   Will be registered at init
  */
 gpioDigitalInputHandler _panic_input_handler {
-    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+    [](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
         if (edge != INPUT_EDGE_LEADING) { return false; }
 
         char msg[10];
@@ -209,7 +209,7 @@ gpioDigitalInputHandler _panic_input_handler {
  *   Will be registered at init
  */
 gpioDigitalInputHandler _reset_input_handler {
-    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+    [](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
         if (edge != INPUT_EDGE_LEADING) { return false; }
 
         hw_hard_reset();

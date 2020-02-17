@@ -75,7 +75,7 @@ fwd_plan_timer_type fwd_plan_timer; // triggers planning of next block
 
 // SystickEvent for handling dwells (must be registered before it is active)
 Motate::SysTickEvent dwell_systick_event{
-    [&] {
+    [] {
         // we're either in a dewll or a spindle speed ramp "dwell"
         // in either case, if a feedhold comes in, we need to bail, and since the dwell *is* the motion
         // move the state machine along from here

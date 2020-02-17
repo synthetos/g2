@@ -83,7 +83,7 @@ static stat_t _controller_state(void);          // manage controller state trans
 static Motate::OutputPin<Motate::kOutputSAFE_PinNumber> safe_pin;
 
 gpioDigitalInputHandler _limit_input_handler {
-    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+    [](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
         if (edge != INPUT_EDGE_LEADING) { return GPIO_NOT_HANDLED; }
 
         cm->limit_requested = triggering_pin_number;

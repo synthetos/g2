@@ -120,7 +120,7 @@ gpioAnalogInput*    const a_in[] = {&ai1, &ai2, &ai3, &ai4};
  // Register a SysTick event to call start_sampling every temperature_sample_freq ms
  const int16_t ain_sample_freq = 1;
  int16_t ain_sample_counter = ain_sample_freq;
- Motate::SysTickEvent ain_tick_event {[&] {
+ Motate::SysTickEvent ain_tick_event {[] {
      if (!--ain_sample_counter) {
          ai1.startSampling();
          ai2.startSampling();

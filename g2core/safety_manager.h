@@ -57,7 +57,7 @@ class SafetyManager {
     cmSafetyState safety_interlock_state;   // safety interlock state
 
     gpioDigitalInputHandler _shutdown_input_handler {
-        [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+        [](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
             if (edge != INPUT_EDGE_LEADING) { return GPIO_NOT_HANDLED; }
 
             safety_manager->shutdown_requested = triggering_pin_number;
@@ -68,7 +68,7 @@ class SafetyManager {
         nullptr // next - nullptr to start with
     };
     gpioDigitalInputHandler _interlock_input_handler {
-        [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+        [](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
             if (edge != INPUT_EDGE_LEADING) {
                 safety_manager->safety_interlock_disengaged = triggering_pin_number;
             } else { // edge == INPUT_EDGE_TRAILING
