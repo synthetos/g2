@@ -66,7 +66,7 @@ endif
 #endif
 
 TOOLS_VERSION = 7u2
-# TOOLS_VERSION = 9u1
+# TOOLS_VERSION = 9m
 
 # Now invoke the Motate compile system
 include $(MOTATE_PATH)/Motate.mk
