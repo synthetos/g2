@@ -138,9 +138,6 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
         // to inverse_kinematics then step_position[motor] will be given as the return steps[motor]
 
         // Why? Externally position[] may be unrelated to step_position[], so we need to adjust.
-
-        float new_unadjusted_position[axes];
-
         for (uint8_t motor = 0; motor < motors; motor++) {
             int8_t joint = motor_map[motor];
             if (joint == -1) {
