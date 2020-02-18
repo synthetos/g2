@@ -342,7 +342,7 @@ static stat_t _compute_arc(const bool radius_f)
 
     // Find the minimum number of segments that meet accuracy and time constraints...
     // Note: removed segment_length test as segment_time accounts for this (build 083.37)
-    float arc_time;
+    float arc_time = 0;
     float segments_for_minimum_time = _estimate_arc_time(arc_time) * (MICROSECONDS_PER_MINUTE / MIN_ARC_SEGMENT_USEC);
     float segments_for_chordal_accuracy = cm->arc.length / sqrt(4*cm->chordal_tolerance * (2 * cm->arc.radius - cm->chordal_tolerance));
     cm->arc.segments = floor(min(segments_for_chordal_accuracy, segments_for_minimum_time));
