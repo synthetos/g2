@@ -326,3 +326,7 @@ M100 ({th2mxp:1500}) ; laser max pulses per mm
 #define P1_CCW_PHASE_HI             0.1
 #define P1_PWM_PHASE_OFF            0.1
 
+// {"tt5":{"x":0,"y":35,"z":38.1,"a":0,"b":0,"c":0}}
+#define TT5_X_OFFSET                0
+#define TT5_Y_OFFSET                35
+#define TT5_Z_OFFSET                38.1
