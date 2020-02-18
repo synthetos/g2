@@ -278,16 +278,17 @@ void cm_abort_probing(cmMachine_t *_cm) {
     // The queue has been emptied, the callback is lost, and all of the states we saved are reset
     pb.waiting_for_motion_complete = false;
 
-    // The cycle_type may have already been changed, but if it hasn't do so now
-    if (_cm->cycle_type == CYCLE_PROBE) {
-        _cm->cycle_type = CYCLE_NONE;
-        _cm->machine_state = MACHINE_PROGRAM_STOP;
-    }
-
     // Also clean up the latest probe record
     if (cm->probe_state[0] == PROBE_WAITING) {
         // we can stop waiting
         cm->probe_state[0] = PROBE_FAILED;
+        // and, if we abort a probe, we report normally but do NOT alarm
+        pb.alarm_flag = false;
+    }
+
+    // The cycle_type may have already been changed, but if it hasn't do so now
+    if (_cm->cycle_type == CYCLE_PROBE) {
+        _probing_finish();
     }
 
     // This is idempotent - if it's not there, no worries

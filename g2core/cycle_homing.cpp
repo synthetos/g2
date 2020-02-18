@@ -247,17 +247,10 @@ void cm_abort_homing(cmMachine_t *_cm) {
     // The queue has been emptied, the callback is lost, and all of the states we saved are reset
     hm.waiting_for_motion_end = false;
 
-    // The cycle_type may have already been changed, but if it hasn't do so now
+    // cleanup and reset the system state IF we're still homing
     if (_cm->cycle_type == CYCLE_HOMING) {
-        _cm->cycle_type = CYCLE_NONE;
-        _cm->machine_state = MACHINE_PROGRAM_STOP;
-
-        // the distance mode (incremental/absolute) is not normally reset, so reset it
-        cm_set_distance_mode(hm.saved_distance_mode);
+        _homing_finalize_exit(/*ignored anyway:*/ 0);
     }
-
-    // This is idempotent - if it's not there, no worries
-    din_handlers[INPUT_ACTION_INTERNAL].deregisterHandler(&_homing_handler);  // end homing mode
 
     hm.func = nullptr;
 }
@@ -471,7 +464,7 @@ static stat_t _homing_error_exit(int8_t axis, stat_t status) {
 }
 
 /***********************************************************************************
- * _homing_finalize_exit() - helper to finalize homing
+ * _homing_finalize_exit() - helper to finalize homing - resets the system to pre-homing state
  */
 
 static stat_t _homing_finalize_exit(int8_t axis)  // third part of return to home
@@ -483,6 +476,10 @@ static stat_t _homing_finalize_exit(int8_t axis)  // third part of return to hom
     cm_set_feed_rate_mode(hm.saved_feed_rate_mode);
     cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);
     cm_canned_cycle_end();
+
+    // This is idempotent - if it's not there, no worries
+    din_handlers[INPUT_ACTION_INTERNAL].deregisterHandler(&_homing_handler);  // end homing mode
+
     return (STAT_OK);
 }
 
