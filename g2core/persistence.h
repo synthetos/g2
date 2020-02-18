@@ -30,14 +30,6 @@
 
 #include "config.h"  // needed for nvObj_t definition
 
-#define NVM_VALUE_LEN 4             // NVM value length (float, fixed length)
-#define NVM_BASE_ADDR 0x0000        // base address of usable NVM
-
-#define IO_BUFFER_SIZE 512          // this should be evenly divisible by NVM_VALUE_LEN, and <=512 until multi-block reads are fixed (right now they are hanging...)
-#define MIN_WRITE_INTERVAL 1000     // minimum interval between persistence file writes
-#define MAX_WRITE_FAILURES 3
-#define MAX_WRITE_CHANGES IO_BUFFER_SIZE    // maximum number of write values that change - ms: TODO
-
 //**** persistence function prototypes ****
 
 class Persistence {
