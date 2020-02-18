@@ -2698,7 +2698,7 @@ constexpr cfgItem_t axis_config_items_1[] = {
     {"z", "ztn", _fipc, 5, cm_print_tn, cm_get_tn, cm_set_tn, nullptr, Z_TRAVEL_MIN},
     {"z", "ztm", _fipc, 5, cm_print_tm, cm_get_tm, cm_set_tm, nullptr, Z_TRAVEL_MAX},
     {"z", "zjm", _fipc, 0, cm_print_jm, cm_get_jm, cm_set_jm, nullptr, Z_JERK_MAX},
-    {"z", "zjh", _fipc, 0, cm_print_jh, cm_get_jm, cm_set_jh, nullptr, Z_JERK_HIGH_SPEED},
+    {"z", "zjh", _fipc, 0, cm_print_jh, cm_get_jh, cm_set_jh, nullptr, Z_JERK_HIGH_SPEED},
     {"z", "zhi", _iip, 0, cm_print_hi, cm_get_hi, cm_set_hi, nullptr, Z_HOMING_INPUT},
     {"z", "zhd", _iip, 0, cm_print_hd, cm_get_hd, cm_set_hd, nullptr, Z_HOMING_DIRECTION},
     {"z", "zsv", _fipc, 0, cm_print_sv, cm_get_sv, cm_set_sv, nullptr, Z_SEARCH_VELOCITY},
