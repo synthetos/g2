@@ -100,6 +100,25 @@
       "preLaunchTask": "Build CONFIG=MiniMill Debug"
     },
     {
+      "name": "Debug CONFIG=MiniMill Quintic revG (J-Link)",
+      "type": "cortex-debug",
+      "request": "launch",
+      "servertype": "jlink",
+      "cwd": "${workspaceRoot}/g2core/",
+      "executable": "./bin/MiniMill-gquintic-g/g2core.elf",
+      "device": "ATSAMS70N20",
+      "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sams70/ATSAMS70N20B.svd",
+      "interface": "swd",
+      "showDevDebugOutput": false,
+      "osx": {
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/"
+      },
+      "linux": {
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-9m/bin/"
+      },
+      "preLaunchTask": "Build CONFIG=MiniMill Debug"
+    },
+    {
       "name": "Debug CONFIG=CheapoLaser (J-Link)",
       "type": "cortex-debug",
       "request": "launch",

@@ -58,12 +58,21 @@ ifeq ("$(CONFIG)","MiniMillv9")
     SETTINGS_FILE="settings_minimill.h"
 endif
 
-ifeq ("$(CONFIG)","MiniMill")
+ifeq ("$(CONFIG)","MiniMillrevD")
     ifeq ("$(BOARD)","NONE")
         BOARD=gquintic-d
     endif
     SETTINGS_FILE="settings_minimill.h"
 endif
+
+
+ifeq ("$(CONFIG)","MiniMill")
+    ifeq ("$(BOARD)","NONE")
+        BOARD=gquintic-g
+    endif
+    SETTINGS_FILE="settings_minimill.h"
+endif
+
 
 ifeq ("$(CONFIG)","CheapoLaser")
     ifeq ("$(BOARD)","NONE")

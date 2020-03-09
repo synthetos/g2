@@ -52,7 +52,7 @@ using Motate::ADCDifferentialPair;
 template<bool can_pwm, Motate::pin_number... V>
 using OutputType = typename std::conditional<can_pwm, PWMOutputPin<V...>, PWMLikeOutputPin<V...>>::type;
 
-#define D_IN_CHANNELS       9           // number of digital inputs supported
+#define D_IN_CHANNELS       10          // number of digital inputs supported
 
 extern gpioDigitalInputPin<IRQPin<Motate::kInput1_PinNumber>>  din1;
 extern gpioDigitalInputPin<IRQPin<Motate::kInput2_PinNumber>>  din2;
@@ -63,7 +63,7 @@ extern gpioDigitalInputPin<IRQPin<Motate::kInput6_PinNumber>>  din6;
 extern gpioDigitalInputPin<IRQPin<Motate::kInput7_PinNumber>>  din7;
 extern gpioDigitalInputPin<IRQPin<Motate::kInput8_PinNumber>>  din8;
 extern gpioDigitalInputPin<IRQPin<Motate::kInput9_PinNumber>>  din9;
-// extern gpioDigitalInputPin<IRQPin<Motate::kInput10_PinNumber>> din10;
+extern gpioDigitalInputPin<IRQPin<Motate::kInput10_PinNumber>> din10;
 // extern gpioDigitalInputPin<IRQPin<Motate::kInput11_PinNumber>> din11;
 // extern gpioDigitalInputPin<IRQPin<Motate::kInput12_PinNumber>> din12;
 
