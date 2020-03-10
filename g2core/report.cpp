@@ -302,24 +302,32 @@ stat_t sr_set_status_report(nvObj_t *nv)
 
 stat_t sr_request_status_report(cmStatusReportRequest request_type)
 {
-    if (sr.status_report_request != SR_OFF) {       // ignore multiple requests. First one wins.
-        return (STAT_OK);
-   }
+    // if (sr.status_report_request != SR_OFF) {       // ignore multiple requests. First one wins.
+    //     return (STAT_OK);
+    // }
 
     sr.status_report_systick.set(1);
     if (request_type == SR_REQUEST_IMMEDIATE) {
-        sr.status_report_request = SR_FILTERED;     // will trigger a filtered or verbose report depending on verbosity setting
+        // request a filtered report unless a verbose report has laready been requested
+        // verbosity setting may override and make it verbose anyway
+        sr.status_report_request = sr.status_report_request == SR_VERBOSE ? SR_VERBOSE : SR_FILTERED;
+        sr.status_report_systick.set(0, true); // immediate
 
     } else if (request_type == SR_REQUEST_IMMEDIATE_FULL) {
-        sr.status_report_request = SR_VERBOSE;      // will always trigger verbose report, regardless of verbosity setting
+         //always trigger verbose report, regardless of verbosity setting
+        sr.status_report_request = SR_VERBOSE;
+        sr.status_report_systick.set(0, true); // immediate
 
     } else if (request_type == SR_REQUEST_TIMED) {
-        sr.status_report_request = sr.status_report_verbosity;
-        sr.status_report_systick.set(sr.status_report_interval);
+        // request a filtered report unless a verbose report has laready been requested
+        // verbosity setting may override and make it verbose anyway
+        sr.status_report_request = sr.status_report_request == SR_VERBOSE ? SR_VERBOSE : SR_FILTERED;
+        sr.status_report_systick.set(sr.status_report_interval, true); // true mean to not extend the timer
 
     } else {
+         //always trigger verbose report, regardless of verbosity setting
         sr.status_report_request = SR_VERBOSE;
-        sr.status_report_systick.set(sr.status_report_interval);
+        sr.status_report_systick.set(sr.status_report_interval, true); // true mean to not extend the timer
     }
     return (STAT_OK);
 }
@@ -449,22 +457,31 @@ static uint8_t _populate_filtered_status_report()
 
         sr.status_report_list[i].get(nv);
 
+        bool changed = false;
+
         // extract the value and cast into a float, regardless of value type
         if (nv->valuetype == TYPE_FLOAT) {
             current_value = nv->value_flt;
+            if ((fabs(current_value - sr.status_report_value[i]) > precision[cfgArray[nv->index].precision])) {
+                changed = true;
+            }
         } else {
-            current_value = (float)nv->value_int;
+            auto current_value_int = nv->value_int;
+            if (((nv->index == sr.stat_index) &&
+                 ((current_value_int == COMBINED_PROGRAM_STOP) || (current_value_int == COMBINED_PROGRAM_END))) ||
+                (current_value_int != (decltype(current_value_int))sr.status_report_value[i])) {
+                changed = true;
+                current_value = current_value_int;
+            }
         }
 
         // report values that have changed by more than the indicated precision, but always stops and ends
-        if ((fabs(current_value - sr.status_report_list[i].value) > precision[sr.status_report_list[i].precision]) ||
-            ((nv->index == sr.stat_index) && (nv->value_int == COMBINED_PROGRAM_STOP)) ||
-            ((nv->index == sr.stat_index) && (nv->value_int == COMBINED_PROGRAM_END))) {
-
+        if (changed) {
             strcpy(nv->token, sr.status_report_list[i].group);            // flatten out groups
             strcat(nv->token + strlen(sr.status_report_list[i].group), sr.status_report_list[i].token);
 
             sr.status_report_list[i].value = current_value;
+
             if ((nv = nv->nx) == NULL) {        // should never be NULL unless SR length exceeds available buffer array
                 return (false);
             }
