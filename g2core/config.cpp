@@ -468,12 +468,16 @@ void nv_coerce_types(nvObj_t *nv)
     }
     valueType type = (valueType)(cfgArray[nv->index].flags & F_TYPE_MASK);
     if (type == TYPE_INTEGER) {
+        if (nv->valuetype == TYPE_FLOAT) {
+            nv->value_int = std::floor(nv->value_flt+0.5f);
+        }
+
         nv->valuetype = TYPE_INTEGER;   // will pay attention to the int value, not the float
     } else if (type == TYPE_BOOLEAN) {  // it may have been marked as a boolean, but if it's not...
         if (nv->valuetype == TYPE_INTEGER) {
             nv->value_int = nv->value_int ? true : false;
         } else if (nv->valuetype == TYPE_FLOAT) {
-            nv->value_int = (fp_ZERO(nv->value_flt)) ? true : false;
+            nv->value_int = (fp_ZERO(nv->value_flt)) ? false : true;
         }
         nv->valuetype = TYPE_BOOLEAN;
     }
