@@ -345,8 +345,8 @@ static stat_t _compute_arc(const bool radius_f)
     float arc_time = 0;
     float segments_for_minimum_time = _estimate_arc_time(arc_time) * (MICROSECONDS_PER_MINUTE / MIN_ARC_SEGMENT_USEC);
     float segments_for_chordal_accuracy = cm->arc.length / sqrt(4*cm->chordal_tolerance * (2 * cm->arc.radius - cm->chordal_tolerance));
-    cm->arc.segments = floor(min(segments_for_chordal_accuracy, segments_for_minimum_time));
-    cm->arc.segments = max(cm->arc.segments, (float)1.0);        //...but is at least 1 segment
+    cm->arc.segments = std::floor(std::min(segments_for_chordal_accuracy, segments_for_minimum_time));
+    cm->arc.segments = std::max(cm->arc.segments, (float)1.0);        //...but is at least 1 segment
 
     if (cm->arc.gm.feed_rate_mode == INVERSE_TIME_MODE) {
         cm->arc.gm.feed_rate /= cm->arc.segments;
@@ -497,10 +497,10 @@ static float _estimate_arc_time (float arc_time)
     }
 
     // Downgrade the time if there is a rate-limiting axis
-    arc_time = max(arc_time, (float)std::abs(cm->arc.planar_travel/cm->a[cm->arc.plane_axis_0].feedrate_max));
-    arc_time = max(arc_time, (float)std::abs(cm->arc.planar_travel/cm->a[cm->arc.plane_axis_1].feedrate_max));
+    arc_time = std::max(arc_time, (float)std::abs(cm->arc.planar_travel/cm->a[cm->arc.plane_axis_0].feedrate_max));
+    arc_time = std::max(arc_time, (float)std::abs(cm->arc.planar_travel/cm->a[cm->arc.plane_axis_1].feedrate_max));
     if (std::abs(cm->arc.linear_travel) > 0) {
-        arc_time = max(arc_time, (float)std::abs(cm->arc.linear_travel/cm->a[cm->arc.linear_axis].feedrate_max));
+        arc_time = std::max(arc_time, (float)std::abs(cm->arc.linear_travel/cm->a[cm->arc.linear_axis].feedrate_max));
     }
     return (arc_time);
 }

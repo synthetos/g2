@@ -110,8 +110,8 @@ char inttoa(char *str, int n);
 
 using std::isnan;
 using std::isinf;
-using std::min;
-using std::max;
+// using std::min;
+// using std::max;
 
 template <typename T>
 inline T square(const T x) { return (x)*(x); }        /* UNSAFE */

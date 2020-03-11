@@ -713,7 +713,7 @@ struct PID {
 
             if (!_rise_time_timeout.isSet() && (_set_point > (input + TEMP_MIN_RISE_DEGREES_FROM_TARGET))) {
                 _rise_time_timeout.set(TEMP_MIN_RISE_TIME);
-                _rise_time_checkpoint = min(input + _min_rise_over_time, _set_point + TEMP_SETPOINT_HYSTERESIS);
+                _rise_time_checkpoint = std::min(input + _min_rise_over_time, _set_point + TEMP_SETPOINT_HYSTERESIS);
             }
         }
 
@@ -928,7 +928,7 @@ stat_t temperature_callback()
                 sr_requested = true;
             }
         }
-        fan_temp = max(fan_temp, temp);
+        fan_temp = std::max(fan_temp, temp);
 
         heater_fan1.newTemp(fan_temp);
 
@@ -1145,9 +1145,9 @@ stat_t cm_get_set_temperature(nvObj_t *nv)
 void cm_set_set_temperature(const uint8_t heater, const float value)
 {
     switch(heater) {
-        case 1: { pid1._set_point = min(TEMP_MAX_SETPOINT, value); break; }
-        case 2: { pid2._set_point = min(TEMP_MAX_SETPOINT, value); break; }
-        case 3: { pid3._set_point = min(TEMP_MAX_SETPOINT, value); break; }
+        case 1: { pid1._set_point = std::min(TEMP_MAX_SETPOINT, value); break; }
+        case 2: { pid2._set_point = std::min(TEMP_MAX_SETPOINT, value); break; }
+        case 3: { pid3._set_point = std::min(TEMP_MAX_SETPOINT, value); break; }
 
         // default to quiet the compiler
         default: { break; }
@@ -1167,7 +1167,7 @@ stat_t cm_set_set_temperature(nvObj_t *nv)
 float cm_get_fan_power(const uint8_t heater)
 {
     switch(heater) {
-        case 1: { return min(1.0f, heater_fan1.max_value); }
+        case 1: { return std::min(1.0f, heater_fan1.max_value); }
 //      case 2: { return min(1.0f, heater_fan2.max_value); }
 //      case 3: { return min(1.0f, heater_fan3.max_value); }
         default: { break; }
@@ -1186,7 +1186,7 @@ stat_t cm_get_fan_power(nvObj_t *nv)
 void cm_set_fan_power(const uint8_t heater, const float value)
 {
     switch(heater) {
-        case 1: { heater_fan1.max_value = max(0.0f, value); break; }
+        case 1: { heater_fan1.max_value = std::max(0.0f, value); break; }
 //      case 2: { heater_fan2.max_value = max(0.0, value); break; }
 //      case 3: { heater_fan3.max_value = max(0.0, value); break; }
         default: { break; }
@@ -1220,9 +1220,9 @@ stat_t cm_get_fan_min_power(nvObj_t *nv)
 stat_t cm_set_fan_min_power(nvObj_t *nv)
 {
     switch(_get_heater_number(nv)) {
-        case '1': { heater_fan1.max_value = min(0.0f, nv->value_flt); break; }
-//      case '2': { heater_fan2.min_value = min(0.0, nv->value_flt); break; }
-//      case '3': { heater_fan3.min_value = min(0.0, nv->value_flt); break; }
+        case '1': { heater_fan1.max_value = std::min(0.0, nv->value_flt); break; }
+//      case '2': { heater_fan2.min_value = std::min(0.0, nv->value_flt); break; }
+//      case '3': { heater_fan3.min_value = std::min(0.0, nv->value_flt); break; }
         default: { break; }
     }
     return (STAT_OK);
@@ -1249,9 +1249,9 @@ stat_t cm_get_fan_low_temp(nvObj_t *nv)
 stat_t cm_set_fan_low_temp(nvObj_t *nv)
 {
     switch(_get_heater_number(nv)) {
-        case '1': { heater_fan1.low_temp = min(0.0f, nv->value_flt); break; }
-//      case '2': { heater_fan2.low_temp = min(0.0f, nv->value_flt); break; }
-//      case '3': { heater_fan3.low_temp = min(0.0f, nv->value_flt); break; }
+        case '1': { heater_fan1.low_temp = std::min(0.0, nv->value_flt); break; }
+//      case '2': { heater_fan2.low_temp = std::min(0.0, nv->value_flt); break; }
+//      case '3': { heater_fan3.low_temp = std::min(0.0, nv->value_flt); break; }
         default: { break; }
     }
     return (STAT_OK);
@@ -1278,7 +1278,7 @@ stat_t cm_get_fan_high_temp(nvObj_t *nv)
 stat_t cm_set_fan_high_temp(nvObj_t *nv)
 {
     switch(_get_heater_number(nv)) {
-        case '1': { heater_fan1.high_temp = min(0.0f, nv->value_flt); break; }
+        case '1': { heater_fan1.high_temp = std::min(0.0, nv->value_flt); break; }
 //      case '2': { heater_fan2.high_temp = min(0.0f, nv->value_flt); break; }
 //      case '3': { heater_fan3.high_temp = min(0.0f, nv->value_flt); break; }
         default: { break; }

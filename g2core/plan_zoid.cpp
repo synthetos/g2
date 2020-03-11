@@ -476,7 +476,7 @@ static float _get_meet_velocity(const float          v_0,
     const float q_recip_2_sqrt_j = bf->q_recip_2_sqrt_j;
 
     // v_1 can never be smaller than v_0 or v_2, so we keep track of this value
-    const float min_v_1 = max(v_0, v_2);
+    const float min_v_1 = std::max(v_0, v_2);
 
     // v_1 is our estimated return value.
     // We estimate with the speed obtained by L/2 traveled from the highest speed of v_0 or v_2.

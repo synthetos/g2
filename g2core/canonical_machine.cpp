@@ -1833,7 +1833,7 @@ stat_t cm_run_jog(nvObj_t *nv)
 static int8_t _coord(nvObj_t *nv)   // extract coordinate system from 3rd character
 {
     char *ptr = ((*nv->group == 0) ? &nv->token[1] : &nv->group[1]); // skip past the 'g' to the number
-    return (max ((atoi(ptr)-53), -1));  // return G54-G59 as 0-5, error as -1
+    return (std::max ((atoi(ptr)-53), -1));  // return G54-G59 as 0-5, error as -1
 }
 
 /* _axis()

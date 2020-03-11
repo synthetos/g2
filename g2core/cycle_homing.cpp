@@ -315,7 +315,7 @@ static stat_t _homing_axis_start(int8_t axis) {
     if (homing_to_max) {
         hm.search_travel = travel_distance;                     // search travels in positive direction
         hm.latch_backoff = std::abs(cm->a[axis].latch_backoff);     // latch travels in positive direction
-        hm.zero_backoff  = -max(0.0f, cm->a[axis].zero_backoff);// zero backoff is negative direction (or zero)
+        hm.zero_backoff  = -std::max(0.0f, cm->a[axis].zero_backoff);// zero backoff is negative direction (or zero)
                                                                 // will set the maximum position
                                                                 //     (plus any negative backoff)
         hm.setpoint = cm->a[axis].travel_max + (std::max(0.0f, -cm->a[axis].zero_backoff));
