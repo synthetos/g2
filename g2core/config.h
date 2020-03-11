@@ -303,7 +303,7 @@ typedef struct nvObject {               // depending on use, not all elements ma
     index_t index;                      // index of tokenized name, or -1 if no token (optional)
     valueType valuetype;                // type of value that follows: see valueType enum
     int8_t precision;                   // decimal precision for reporting floating point numbers (JSON only)
-    float value_flt;                    // floating point values
+    double value_flt;                    // floating point values
     int32_t value_int;                  // signed integer values and booleans
     char (*stringp)[];                  // string value: pointer to array of characters from shared character array
 } nvObj_t;                              // OK, so it's not REALLY an object
