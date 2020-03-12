@@ -460,14 +460,14 @@ static uint8_t _populate_filtered_status_report()
         // extract the value and cast into a float, regardless of value type
         if (nv->valuetype == TYPE_FLOAT) {
             current_value = nv->value_flt;
-            if ((fabs(current_value - sr.status_report_value[i]) > precision[cfgArray[nv->index].precision])) {
+            if ((fabs(current_value - sr.status_report_list[i].value) > precision[cfgArray[nv->index].precision])) {
                 changed = true;
             }
         } else {
             auto current_value_int = nv->value_int;
             if (((nv->index == sr.stat_index) &&
                  ((current_value_int == COMBINED_PROGRAM_STOP) || (current_value_int == COMBINED_PROGRAM_END))) ||
-                (current_value_int != (decltype(current_value_int))sr.status_report_value[i])) {
+                (current_value_int != (decltype(current_value_int))sr.status_report_list[i].value)) {
                 changed = true;
                 current_value = current_value_int;
             }

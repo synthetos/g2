@@ -334,10 +334,10 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
             bf->plannable = bf->plannable && !optimal;  // Don't accidentally enable plannable!
 
             // Let's be mindful that forward planning may change exit_vmax, and our exit velocity may be lowered
-            braking_velocity = min(braking_velocity, bf->exit_vmax);
+            braking_velocity = std::min(braking_velocity, bf->exit_vmax);
 
             // We *must* set cruise before exit, and keep it at least as high as exit.
-            bf->cruise_velocity = max(braking_velocity, bf->cruise_velocity);
+            bf->cruise_velocity = std::max(braking_velocity, bf->cruise_velocity);
             bf->exit_velocity   = braking_velocity;
 
             // We have two places where it could be a mixed decel or an asymmetric bump,
@@ -370,7 +370,7 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
             else if (VELOCITY_EQ(bf->exit_velocity, bf->cruise_vmax) &&
                      VELOCITY_EQ(bf->pv->exit_vmax, bf->cruise_vmax)) {
                 // Remember: Set cruise FIRST
-                bf->cruise_velocity = min(bf->cruise_vmax, bf->exit_vmax);  // set exactly to wash out EQ tolerances
+                bf->cruise_velocity = std::min(bf->cruise_vmax, bf->exit_vmax);  // set exactly to wash out EQ tolerances
                 bf->exit_velocity   = bf->cruise_velocity;
 
                 // Update braking_velocity for use in the top of the loop
@@ -660,10 +660,10 @@ static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const floa
             } else {// gm.motion_mode == MOTION_MODE_STRAIGHT_FEED
                 tmp_time = std::abs(axis_length[axis]) / cm->a[axis].feedrate_max;
             }
-            max_time = max(max_time, tmp_time);
+            max_time = std::max(max_time, tmp_time);
 
             if (tmp_time > 0) {  // collect minimum time if this axis is not zero
-                min_time = min(min_time, tmp_time);
+                min_time = std::min(min_time, tmp_time);
             }
         }
     }
