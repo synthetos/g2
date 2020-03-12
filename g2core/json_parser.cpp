@@ -407,8 +407,6 @@ static stat_t _get_nv_pair(nvObj_t *nv, char **pstr, int8_t *depth)
  *    - Allow self-referential elements that would otherwise cause a recursive loop
  *    - Skip over empty objects (TYPE_EMPTY)
  *    - If a JSON object is empty represent it as {}
- *      --- OR ---
- *    - If a JSON object is empty omit the object altogether (no curlies)
  */
 
 uint16_t json_serialize(nvObj_t *nv, char *out_buf, uint16_t size)
@@ -437,6 +435,7 @@ uint16_t json_serialize(nvObj_t *nv, char *out_buf, uint16_t size)
                                     }
                 case (TYPE_PARENT): {   *str++ = '{';
                                         need_a_comma = false;
+                                        prev_depth++; // make sure empty objects are closed
                                         break;
                                     }
                 case (TYPE_FLOAT):  {   convert_outgoing_float(nv);
