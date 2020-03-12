@@ -64,7 +64,7 @@ struct status_report_item { // structure to hold the cached status report items,
     index_t index;
     // uint8_t flags;                      // operations flags - see defines below
     int8_t precision;                   // decimal precision for display (JSON)
-    float value;
+    double value;
     fptrCmd get;                        // GET binding aka uint8_t (*get)(nvObj_t *nv)
 };
 
@@ -79,7 +79,6 @@ typedef struct srSingleton {
     index_t stat_index;                                 // table index value for stat - determined during initialization
     uint8_t throttle_counter;                           // slow down SRs when in a constrained time (not phat_city)
     status_report_item status_report_list[NV_STATUS_REPORT_LEN];   // status report elements to report
-    // float status_report_value[NV_STATUS_REPORT_LEN];    // previous values for filtered reporting
 } srSingleton_t;
 
 typedef struct qrSingleton {        // data for queue reports
