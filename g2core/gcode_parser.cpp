@@ -940,15 +940,15 @@ stat_t _execute_gcode_block(char *active_comment)
 
     EXEC_FUNC(cm_m48_enable, m48_enable);
 
-    if (gf.fro_control) {                                   // feedrate override
-        ritorno(cm_fro_control(gv.P_word, gf.P_word));
-    }
-    if (gf.tro_control) {                                   // traverse override
-        ritorno(cm_tro_control(gv.P_word, gf.P_word));
-    }
-    if (gf.spo_control) {                                   // spindle speed override
-        ritorno(spindle_override_control(gv.P_word, gf.P_word));
-    }
+    // if (gf.fro_control) {                                   // feedrate override
+    //     ritorno(cm_fro_control(gv.P_word, gf.P_word));
+    // }
+    // if (gf.tro_control) {                                   // traverse override
+    //     ritorno(cm_tro_control(gv.P_word, gf.P_word));
+    // }
+    // if (gf.spo_control) {                                   // spindle speed override
+    //     ritorno(spindle_override_control(gv.P_word, gf.P_word));
+    // }
 
     EXEC_FUNC(cm_set_feed_rate_mode, feed_rate_mode);       // G93, G94
     EXEC_FUNC(cm_set_feed_rate, F_word);                    // F

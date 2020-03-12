@@ -1476,9 +1476,9 @@ void cm_message(const char *message)
 void cm_reset_overrides()
 {
     cm->gmx.m48_enable = true;
-    cm->gmx.mfo_enable = false;  // feed rate overrides
+    cm->gmx.mfo_enable = true;  // feed rate overrides
     cm->gmx.mfo_factor = 1.0;
-    cm->gmx.mto_enable = false;  // traverse overrides
+    cm->gmx.mto_enable = true;  // traverse overrides
     cm->gmx.mto_factor = 1.0;
 }
 
@@ -1487,7 +1487,7 @@ void cm_reset_overrides()
  *
  * M48 is the master enable for manual feedrate override and spindle override
  * If M48 is asserted M50 (mfo), M50.1 (mto) and M51 (spo) settings are in effect
- * If M49 is asserted M50 (mfo), M501. (mto) and M51 (spo) settings are in ignored
+ * If M49 is asserted M50 (mfo), M50.1 (mto) and M51 (spo) settings are in ignored
  *
  * See http://linuxcnc.org/docs/html/gcode/m-code.html#sec:M48,-M49-Speed-and-Feed-Override-Control
  */
@@ -1554,63 +1554,63 @@ stat_t cm_m48_enable(uint8_t enable)        // M48, M49
  *                                                  (Note: new ramp will supercede any existing ramp)
  */
 
-stat_t cm_fro_control(const float P_word, const bool P_flag) // M50
-{
-    bool new_enable = true;
-    bool new_override = false;
-    if (P_flag) {                           // if parameter is present in Gcode block
-        if (fp_ZERO(P_word)) {
-            new_enable = false;             // P0 disables override
-        } else {
-            if (P_word < FEED_OVERRIDE_MIN) {
-                return (STAT_INPUT_LESS_THAN_MIN_VALUE);
-            }
-            if (P_word > FEED_OVERRIDE_MAX) {
-                return (STAT_INPUT_EXCEEDS_MAX_VALUE);
-            }
-            cm->gmx.mfo_factor = P_word;    // P word is valid, store it.
-            new_override = true;
-        }
-    }
-    if (cm->gmx.m48_enable) {               // if master enable is ON
-        if (new_enable && (new_override || !cm->gmx.mfo_enable)) {   // 3 cases to start a ramp
-            mp_start_feed_override(FEED_OVERRIDE_RAMP_TIME, cm->gmx.mfo_factor);
-        } else if (cm->gmx.mfo_enable && !new_enable) {              // case to turn off the ramp
-            mp_end_feed_override(FEED_OVERRIDE_RAMP_TIME);
-        }
-    }
-    cm->gmx.mfo_enable = new_enable;        // always update the enable state
-    return (STAT_OK);
-}
+// stat_t cm_fro_control(const float P_word, const bool P_flag) // M50
+// {
+//     bool new_enable = true;
+//     bool new_override = false;
+//     if (P_flag) {                           // if parameter is present in Gcode block
+//         if (fp_ZERO(P_word)) {
+//             new_enable = false;             // P0 disables override
+//         } else {
+//             if (P_word < FEED_OVERRIDE_MIN) {
+//                 return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+//             }
+//             if (P_word > FEED_OVERRIDE_MAX) {
+//                 return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+//             }
+//             cm->gmx.mfo_factor = P_word;    // P word is valid, store it.
+//             new_override = true;
+//         }
+//     }
+//     if (cm->gmx.m48_enable) {               // if master enable is ON
+//         if (new_enable && (new_override || !cm->gmx.mfo_enable)) {   // 3 cases to start a ramp
+//             mp_start_feed_override(FEED_OVERRIDE_RAMP_TIME, cm->gmx.mfo_factor);
+//         } else if (cm->gmx.mfo_enable && !new_enable) {              // case to turn off the ramp
+//             mp_end_feed_override(FEED_OVERRIDE_RAMP_TIME);
+//         }
+//     }
+//     cm->gmx.mfo_enable = new_enable;        // always update the enable state
+//     return (STAT_OK);
+// }
 
-stat_t cm_tro_control(const float P_word, const bool P_flag) // M50.1
-{
-    bool new_enable = true;
-    bool new_override = false;
-    if (P_flag) {                           // if parameter is present in Gcode block
-        if (fp_ZERO(P_word)) {
-            new_enable = false;             // P0 disables override
-        } else {
-            if (P_word < TRAVERSE_OVERRIDE_MIN) {
-                return (STAT_INPUT_LESS_THAN_MIN_VALUE);
-            }
-            if (P_word > TRAVERSE_OVERRIDE_MAX) {
-                return (STAT_INPUT_EXCEEDS_MAX_VALUE);
-            }
-            cm->gmx.mto_factor = P_word;    // P word is valid, store it.
-            new_override = true;
-        }
-    }
-    if (cm->gmx.m48_enable) {               // if master enable is ON
-        if (new_enable && (new_override || !cm->gmx.mfo_enable)) {   // 3 cases to start a ramp
-            mp_start_traverse_override(FEED_OVERRIDE_RAMP_TIME, cm->gmx.mto_factor);
-        } else if (cm->gmx.mto_enable && !new_enable) {              // case to turn off the ramp
-            mp_end_traverse_override(FEED_OVERRIDE_RAMP_TIME);
-        }
-    }
-    cm->gmx.mto_enable = new_enable;        // always update the enable state
-    return (STAT_OK);
-}
+// stat_t cm_tro_control(const float P_word, const bool P_flag) // M50.1
+// {
+//     bool new_enable = true;
+//     bool new_override = false;
+//     if (P_flag) {                           // if parameter is present in Gcode block
+//         if (fp_ZERO(P_word)) {
+//             new_enable = false;             // P0 disables override
+//         } else {
+//             if (P_word < TRAVERSE_OVERRIDE_MIN) {
+//                 return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+//             }
+//             if (P_word > TRAVERSE_OVERRIDE_MAX) {
+//                 return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+//             }
+//             cm->gmx.mto_factor = P_word;    // P word is valid, store it.
+//             new_override = true;
+//         }
+//     }
+//     if (cm->gmx.m48_enable) {               // if master enable is ON
+//         if (new_enable && (new_override || !cm->gmx.mfo_enable)) {   // 3 cases to start a ramp
+//             mp_start_traverse_override(FEED_OVERRIDE_RAMP_TIME, cm->gmx.mto_factor);
+//         } else if (cm->gmx.mto_enable && !new_enable) {              // case to turn off the ramp
+//             mp_end_traverse_override(FEED_OVERRIDE_RAMP_TIME);
+//         }
+//     }
+//     cm->gmx.mto_enable = new_enable;        // always update the enable state
+//     return (STAT_OK);
+// }
 
 /****************************************************************************************
  **** Program Functions (4.3.10) ********************************************************

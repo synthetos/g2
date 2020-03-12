@@ -91,7 +91,7 @@ static float _get_meet_velocity(const float          v_0,
  *  are for the current block and the next block.
  *
  *  bf values treated as constants:
- *    All except block_time and hint
+ *    All *except* cruise_vmax, override_factor, block_time, and hint
  *
  *  mr holds the current velocity, which is th entry_vlocity to the first block. The
  *  exit_vlocity of the first vlock is the entry of the next. To save having to figure
@@ -139,17 +139,39 @@ stat_t mp_calculate_ramps(mpBlockRuntimeBuf_t* block, mpBuf_t* bf, const float e
     block->body_length = 0;
     block->tail_length = 0;
 
+    // handle overrides
+    bf->override_factor = 1.0;
+    if (bf->gm.motion_mode == MOTION_MODE_STRAIGHT_TRAVERSE) {
+        bf->override_factor = cm->gmx.mto_enable ? cm->gmx.mto_factor : 1.0;
+    }
+    else if (bf->gm.motion_mode == MOTION_MODE_STRAIGHT_FEED) {
+        bf->override_factor = cm->gmx.mfo_enable ? cm->gmx.mfo_factor : 1.0;
+    }
+    // bf->cruise_vmax adjusted by override cannot go above absolute vmax,
+    //   and should stay below the back-planned cruise velocity.
+    bf->cruise_vmax = std::min(bf->absolute_vmax, std::min(bf->cruise_velocity, bf->override_factor * bf->cruise_vset));
+
+    //   also cannot go below the entry velocity, but if it does,
+    //   we have to make sure that the exit velocity reflects what we wanted cruise to be
+    if (bf->cruise_vmax < entry_velocity) {
+        // make sure the bf->exit_velocity is not higher than we wanted to cruise
+        bf->exit_velocity = std::min(bf->exit_velocity, bf->cruise_vmax);
+        // now we set the cruise to entry, since it cannot stay lower
+        bf->cruise_vmax = entry_velocity;
+    }
+
     // these conditions should have been met earlier, but if they are not trap and correct them
     debug_trap_if_true((bf->exit_velocity > bf->exit_vmax), "mp_calculate_ramps() - Vexit > Vexit_max");
     block->exit_velocity   = std::min(bf->exit_velocity, bf->exit_vmax);
 
-    // +++++ THIS WILL NEED TO CHANGE TO SUPPORT OVERRIDES
-//    debug_trap_if_true((bf->cruise_velocity, bf->cruise_vmax), "mp_calculate_ramps() - Vcruise > Vcruise_max");
-    block->cruise_velocity = std::min(bf->cruise_velocity, bf->cruise_vmax);
+    // Update the stitching with the next move, if there is one, to ensure we don't try to exit too high
+    if (bf->nx->buffer_state >= MP_BUFFER_BACK_PLANNED) {
+        auto nx_cruise_vmax = std::min(bf->nx->absolute_vmax, bf->override_factor * bf->nx->cruise_vset);
+        block->exit_velocity = std::min(block->exit_velocity, nx_cruise_vmax);
+    }
 
-    // We *might* do this exact computation later, so cache the value
-    float test_velocity = 0;
-    bool  test_velocity_valid = false;  // record if we have a validly cached value
+    // actual cruise velocity cannot be below entry or exit velocities, but can be equal to the highest
+    block->cruise_velocity = std::max(block->exit_velocity, bf->cruise_vmax);
 
     // *** Perfect-Fit Cases (1) *** Cases where curve fitting has already been done
 
@@ -194,6 +216,7 @@ stat_t mp_calculate_ramps(mpBlockRuntimeBuf_t* block, mpBuf_t* bf, const float e
         else if (bf->hint == MIXED_DECELERATION) {
             block->tail_length = mp_get_target_length(block->exit_velocity, block->cruise_velocity, bf);
             block->body_length = bf->length - block->tail_length;
+            debug_trap_if_true((block->body_length < 0), "invlaid negative body_length from MIXED_DECELERATION");
             block->head_length = 0;
 
             block->body_time = block->body_length / block->cruise_velocity;
@@ -220,13 +243,7 @@ stat_t mp_calculate_ramps(mpBlockRuntimeBuf_t* block, mpBuf_t* bf, const float e
         // Note that the hints from back-planning are ignored in this section, since back-planing can only
         // predict decelerations and cruises
 
-        float accel_velocity;
-        if (test_velocity_valid) {
-            accel_velocity      = test_velocity;
-            test_velocity_valid = false;
-        } else {
-            accel_velocity = mp_get_target_velocity(entry_velocity, bf->length, bf);
-        }
+        float accel_velocity = mp_get_target_velocity(entry_velocity, bf->length, bf);
 
         if (accel_velocity < block->exit_velocity) {  // still accelerating
 
@@ -261,8 +278,11 @@ stat_t mp_calculate_ramps(mpBlockRuntimeBuf_t* block, mpBuf_t* bf, const float e
                 bf->hint = MIXED_ACCELERATION;
 
                 // MIXED_ACCELERATION (2a) 2 segment HB acceleration move
+                // watch out for acceleration taking more than length
                 block->head_length = mp_get_target_length(entry_velocity, block->cruise_velocity, bf);
                 block->body_length = bf->length - block->head_length;
+                debug_trap_if_true((block->body_length < 0), "invlaid negative body_length from MIXED_ACCELERATION");
+
                 block->tail_length = 0;  // we just set it, now we unset it
                 block->head_time   = (block->head_length * 2.0) / (entry_velocity + block->cruise_velocity);
                 block->body_time   = block->body_length / block->cruise_velocity;

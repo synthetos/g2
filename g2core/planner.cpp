@@ -642,17 +642,28 @@ stat_t mp_planner_callback()
 /*
  *  mp_replan_queue() - reset the blocks in the planner queue and request a planner run
  *
- *  We don't actually need to invalidate back-planning. Only forward planning.
+ *  back_too: if false, then we don't actually need to invalidate back-planning. Only forward planning.
  *
  */
 
-void mp_replan_queue(mpBuf_t *bf)
+void mp_replan_queue(mpBuf_t *bf, bool back_too/*=false*/)
 {
+    // if (back_too) {
+    //     mp->p = bf; // reset the plan-start pointer for back-planning
+    // }
     do {
-        if (bf->buffer_state >= MP_BUFFER_FULLY_PLANNED) {  // revert from FULLY PLANNED state
-            bf->buffer_state = MP_BUFFER_BACK_PLANNED;
-        } else {                                            // If it's not "planned" then it's either backplanned or earlier.
-            break;                                          // We don't need to adjust it.
+        if (back_too) {
+            if (bf->buffer_state == MP_BUFFER_BACK_PLANNED) {  // mark back-planned moves as (re)plannable
+                bf->plannable = true;
+            } else {    // If it's not at least back-planned, then we can stop.
+                break;  // We don't need to adjust it.
+            }
+        } else {
+            if (bf->buffer_state >= MP_BUFFER_FULLY_PLANNED) {  // revert from FULLY PLANNED state
+                bf->buffer_state = MP_BUFFER_BACK_PLANNED;
+            } else {    // If it's not fully-planned then it's either backplanned or earlier.
+                break;  // We don't need to adjust it.
+            }
         }
     } while ((bf = mp_get_next_buffer(bf)) != mp_get_r());
 
@@ -678,42 +689,42 @@ void mp_replan_queue(mpBuf_t *bf)
  *    - Otherwise look for the "break point" at 20 ms
  */
 
-void mp_start_feed_override(const float ramp_time, const float override_factor)
-{
-    cm->mfo_state = MFO_REQUESTED;
+// void mp_start_feed_override(const float ramp_time, const float override_factor)
+// {
+//     cm->mfo_state = MFO_REQUESTED;
 
-    if (mp->planner_state == PLANNER_IDLE) {
-        mp->mfo_factor = override_factor;             // that was easy
-        return;
-    }
+//     if (mp->planner_state == PLANNER_IDLE) {
+//         mp->mfo_factor = override_factor;             // that was easy
+//         return;
+//     }
 
-    // Assume that the min and max values for override_factor have been validated upstream
-    // SUVAT: V = U+AT ==> A = (V-U)/T
-    mp->ramp_target = override_factor;
-    mp->ramp_dvdt = (override_factor - mp->c->override_factor) / ramp_time;
-    mp->mfo_active = true;
+//     // Assume that the min and max values for override_factor have been validated upstream
+//     // SUVAT: V = U+AT ==> A = (V-U)/T
+//     mp->ramp_target = override_factor;
+//     mp->ramp_dvdt = (override_factor - mp->c->override_factor) / ramp_time;
+//     mp->mfo_active = true;
 
-    if (fp_NOT_ZERO(mp->ramp_dvdt)) {    // do these things only if you actually have a ramp to run
-        mp->p = mp->c;                    // re-position the planner pointer
-        mp->ramp_active = true;
-        mp->request_planning = true;
-    }
-}
+//     if (fp_NOT_ZERO(mp->ramp_dvdt)) {    // do these things only if you actually have a ramp to run
+//         mp->p = mp->c;                    // re-position the planner pointer
+//         mp->ramp_active = true;
+//         mp->request_planning = true;
+//     }
+// }
 
-void mp_end_feed_override(const float ramp_time)
-{
-    mp_start_feed_override (FEED_OVERRIDE_RAMP_TIME, 1.00);
-}
+// void mp_end_feed_override(const float ramp_time)
+// {
+//     mp_start_feed_override (FEED_OVERRIDE_RAMP_TIME, 1.00);
+// }
 
-void mp_start_traverse_override(const float ramp_time, const float override_factor)
-{
-    return;
-}
+// void mp_start_traverse_override(const float ramp_time, const float override_factor)
+// {
+//     return;
+// }
 
-void mp_end_traverse_override(const float ramp_time)
-{
-    return;
-}
+// void mp_end_traverse_override(const float ramp_time)
+// {
+//     return;
+// }
 
 /*
  * mp_planner_time_accounting() - gather time in planner

@@ -146,44 +146,44 @@ bool is_a_toolhead_busy() {
  * spindle_end_override()
  */
 
-stat_t spindle_override_control(const float P_word, const bool P_flag) // M51
-{
-    // bool new_enable = true;
-    // bool new_override = false;
-    // if (P_flag) {                           // if parameter is present in Gcode block
-    //     if (fp_ZERO(P_word)) {
-    //         new_enable = false;             // P0 disables override
-    //     } else {
-    //         if (P_word < SPINDLE_OVERRIDE_MIN) {
-    //             return (STAT_INPUT_LESS_THAN_MIN_VALUE);
-    //         }
-    //         if (P_word > SPINDLE_OVERRIDE_MAX) {
-    //             return (STAT_INPUT_EXCEEDS_MAX_VALUE);
-    //         }
-    //         spindle.override_factor = P_word;    // P word is valid, store it.
-    //         new_override = true;
-    //     }
-    // }
-    // if (cm->gmx.m48_enable) {               // if master enable is ON
-    //     if (new_enable && (new_override || !spindle.override_enable)) {   // 3 cases to start a ramp
-    //         spindle_start_override(SPINDLE_OVERRIDE_RAMP_TIME, spindle.override_factor);
-    //     } else if (spindle.override_enable && !new_enable) {              // case to turn off the ramp
-    //         spindle_end_override(SPINDLE_OVERRIDE_RAMP_TIME);
-    //     }
-    // }
-    // spindle.override_enable = new_enable;        // always update the enable state
-    return (STAT_OK);
-}
+// stat_t spindle_override_control(const float P_word, const bool P_flag) // M51
+// {
+//     bool new_enable = true;
+//     bool new_override = false;
+//     if (P_flag) {                           // if parameter is present in Gcode block
+//         if (fp_ZERO(P_word)) {
+//             new_enable = false;             // P0 disables override
+//         } else {
+//             if (P_word < SPINDLE_OVERRIDE_MIN) {
+//                 return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+//             }
+//             if (P_word > SPINDLE_OVERRIDE_MAX) {
+//                 return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+//             }
+//             spindle.override_factor = P_word;    // P word is valid, store it.
+//             new_override = true;
+//         }
+//     }
+//     if (cm->gmx.m48_enable) {               // if master enable is ON
+//         if (new_enable && (new_override || !spindle.override_enable)) {   // 3 cases to start a ramp
+//             spindle_start_override(SPINDLE_OVERRIDE_RAMP_TIME, spindle.override_factor);
+//         } else if (spindle.override_enable && !new_enable) {              // case to turn off the ramp
+//             spindle_end_override(SPINDLE_OVERRIDE_RAMP_TIME);
+//         }
+//     }
+//     spindle.override_enable = new_enable;        // always update the enable state
+//     return (STAT_OK);
+// }
 
-void spindle_start_override(const float ramp_time, const float override_factor)
-{
-    return;
-}
+// void spindle_start_override(const float ramp_time, const float override_factor)
+// {
+//     return;
+// }
 
-void spindle_end_override(const float ramp_time)
-{
-    return;
-}
+// void spindle_end_override(const float ramp_time)
+// {
+//     return;
+// }
 
 /****************************
  * END OF SPINDLE FUNCTIONS *

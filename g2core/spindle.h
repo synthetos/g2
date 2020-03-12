@@ -140,9 +140,9 @@ bool is_spindle_ready_to_resume();  // if the spindle can resume at this time, r
 bool is_spindle_on_or_paused();     // returns if the spindle is on or paused - IOW would it try to resume from feedhold
 bool is_a_toolhead_busy();          // returns true if motion should continue to hold for ANY toolhead
 
-stat_t spindle_override_control(const float P_word, const bool P_flag);  // M51
-void spindle_start_override(const float ramp_time, const float override_factor);
-void spindle_end_override(const float ramp_time);
+// stat_t spindle_override_control(const float P_word, const bool P_flag);  // M51
+// void spindle_start_override(const float ramp_time, const float override_factor);
+// void spindle_end_override(const float ramp_time);
 
 const configSubtable *const getSpindleConfig_1();
 const configSubtable *const getP1Config_1();

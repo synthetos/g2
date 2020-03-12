@@ -458,8 +458,8 @@ void cm_message(const char *message);                           // msg to consol
 
 void cm_reset_overrides(void);
 stat_t cm_m48_enable(uint8_t enable);                           // M48, M49
-stat_t cm_fro_control(const float P_word, const bool P_flag);   // M50
-stat_t cm_tro_control(const float P_word, const bool P_flag);   // M50.1
+// stat_t cm_fro_control(const float P_word, const bool P_flag);   // M50
+// stat_t cm_tro_control(const float P_word, const bool P_flag);   // M50.1
 // See spindle.cpp for cm_spo_control()                         // M51
 
 // Program Functions (4.3.10)
