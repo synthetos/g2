@@ -54,7 +54,7 @@
 #define LASER_MIN_S                 0.0001   // {th2mns:0.0001}
 #define LASER_MAX_S                 255.0    // {th2mxs:255.0}
 #define LASER_MIN_PPM               100      // {th2mnp:100}
-#define LASER_MAX_PPM               1500     // {th2mxp:1500}
+#define LASER_MAX_PPM               2500     // {th2mxp:2500}
 
 #define LASER_PULSE_DURATION        150      // in microseconds {th2pd:150}
 
@@ -124,7 +124,7 @@ M100 ({th2mxp:1500}) ; laser max pulses per mm
                                     "unit", "stat", "coor", "momo", "dist", \
                                     "home", "vel", "plan", "line", "path", \
                                     "frmo", "hold", "macs", "cycs", "spc", \
-                                    "prbe", "in1", "in3", "in5", "in6"
+                                    "prbe", "in1", "in3", "in5", "in6", "feed"
                                     // "ofsx", "ofsy", "ofsz",
                                     // "g55x", "g55y", "g55z",
 
@@ -326,7 +326,7 @@ M100 ({th2mxp:1500}) ; laser max pulses per mm
 #define P1_CCW_PHASE_HI             0.1
 #define P1_PWM_PHASE_OFF            0.1
 
-// {"tt5":{"x":0,"y":35,"z":38.1,"a":0,"b":0,"c":0}}
+// {"tt5":{"x":0,"y":-2,"z":38.1,"a":0,"b":0,"c":0}}
 #define TT5_X_OFFSET                0
-#define TT5_Y_OFFSET                35
+#define TT5_Y_OFFSET                -2
 #define TT5_Z_OFFSET                38.1
