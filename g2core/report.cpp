@@ -306,7 +306,7 @@ stat_t sr_request_status_report(cmStatusReportRequest request_type)
     //     return (STAT_OK);
     // }
 
-    sr.status_report_systick.set(1);
+    // sr.status_report_systick.set(1);
     if (request_type == SR_REQUEST_IMMEDIATE) {
         // request a filtered report unless a verbose report has laready been requested
         // verbosity setting may override and make it verbose anyway
@@ -354,7 +354,7 @@ stat_t sr_status_report_callback()         // called by controller dispatcher
     }
 
     sr.status_report_request = SR_OFF;
-    sr.status_report_systick.clear();
+    // sr.status_report_systick.clear();
     if ((sr.status_report_request == SR_VERBOSE) ||
         (sr.status_report_verbosity == SR_VERBOSE)) {
         _populate_unfiltered_status_report();
