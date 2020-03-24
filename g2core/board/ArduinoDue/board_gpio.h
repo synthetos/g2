@@ -29,19 +29,29 @@
 #define BOARD_GPIO_H_ONCE
 
 // this file is included from the bottom of gpio.h, but we do this for completeness
-#include "../../gpio.h"
+#include "gpio.h"
+#include "hardware.h"
 
 /*
  * GPIO defines
  */
 //--- change as required for board and switch hardware ---//
 
-#define D_IN_CHANNELS       9         // v9    // number of digital inputs supported
-#define D_OUT_CHANNELS     13         // number of digital outputs supported
-#define A_IN_CHANNELS	    0           // number of analog inputs supported
-#define A_OUT_CHANNELS	    0           // number of analog outputs supported
+#define D_IN_CHANNELS      10       // v9 number of digital inputs supported
+#define D_OUT_CHANNELS     13       // number of digital outputs supported
+#define A_IN_CHANNELS	    0       // number of analog inputs supported
+#define A_OUT_CHANNELS	    0       // number of analog outputs supported
 
-#define INPUT_LOCKOUT_MS    10          // milliseconds to go dead after input firing
+#define INPUT_LOCKOUT_MS    10      // milliseconds to go dead after input firing
+
+// Setup spindle and coolant pin assignments
+#define SPINDLE_ENABLE_OUTPUT_NUMBER 1
+#define SPINDLE_DIRECTION_OUTPUT_NUMBER 2
+#define SPINDLE_PWM_NUMBER 3
+#define MIST_ENABLE_OUTPUT_NUMBER 4
+
+#define FLOOD_ENABLE_OUTPUT_NUMBER 0
+#define SECONDARY_PWM_OUTPUT_NUMBER 0
 
 /*
  * The GPIO objects themselves - this must match up with board_gpio.cpp!
@@ -68,7 +78,7 @@ extern gpioDigitalInputPin<IRQPin<Motate::kInput6_PinNumber>>  din6;
 extern gpioDigitalInputPin<IRQPin<Motate::kInput7_PinNumber>>  din7;
 extern gpioDigitalInputPin<IRQPin<Motate::kInput8_PinNumber>>  din8;
 extern gpioDigitalInputPin<IRQPin<Motate::kInput9_PinNumber>>  din9;
-// extern gpioDigitalInputPin<IRQPin<Motate::kInput10_PinNumber>> din10;
+extern gpioDigitalInputPin<IRQPin<Motate::kSocket2_SPISlaveSelectPinNumber>> din10;
 // extern gpioDigitalInputPin<IRQPin<Motate::kInput11_PinNumber>> din11;
 // extern gpioDigitalInputPin<IRQPin<Motate::kInput12_PinNumber>> din12;
 

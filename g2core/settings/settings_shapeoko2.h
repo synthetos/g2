@@ -47,6 +47,7 @@
 #define SPINDLE_DIR_POLARITY        0                       // 0=clockwise is low, 1=clockwise is high
 #define SPINDLE_PAUSE_ON_HOLD       true
 #define SPINDLE_SPINUP_DELAY        1.0
+#define SPINDLE_SPEED_CHANGE_PER_MS 7.0
 
 #define COOLANT_MIST_POLARITY       1                       // 0=active low, 1=active high
 #define COOLANT_FLOOD_POLARITY      1                       // 0=active low, 1=active high
@@ -156,70 +157,91 @@
 #define Z_LATCH_BACKOFF             4
 #define Z_ZERO_BACKOFF              2
 
-//*** Input / output settings ***
-/*
-    IO_MODE_DISABLED
+/* Legend of valid options:
+
+INPUTS
+---------------------
+  DIn_ENABLED
+    IO_UNAVAILABLE   // input/output is missing/used/unavailable
+    IO_DISABLED      // input/output is disabled
+    IO_ENABLED       // input/output enabled
+
+  DIn_POLARITY:
     IO_ACTIVE_LOW    aka NORMALLY_OPEN
     IO_ACTIVE_HIGH   aka NORMALLY_CLOSED
 
+  DIn_ACTION:
     INPUT_ACTION_NONE
-    INPUT_ACTION_STOP
-    INPUT_ACTION_FAST_STOP
-    INPUT_ACTION_HALT
-    INPUT_ACTION_RESET
+    INPUT_ACTION_STOP        - stop at normal jerk - preserves positional accuracy
+    INPUT_ACTION_FAST_STOP   - stop at high jerk - preserves positional accuracy
+    INPUT_ACTION_HALT        - stop immediately - not guaranteed to preserve position
+    INPUT_ACTION_CYCLE_START - start / restart cycle after feedhold (RESERVED)
+    INPUT_ACTION_ALARM       - initiate an alarm. stops everything immediately - preserves position
+    INPUT_ACTION_SHUTDOWN    - initiate a shutdown. stops everything immediately - does not preserve position
+    INPUT_ACTION_PANIC       - initiate a panic. stops everything immediately - does not preserve position
+    INPUT_ACTION_RESET       - reset system
 
-    INPUT_FUNCTION_NONE
-    INPUT_FUNCTION_LIMIT
-    INPUT_FUNCTION_INTERLOCK
-    INPUT_FUNCTION_SHUTDOWN
-    INPUT_FUNCTION_PANIC
+    INPUT_ACTION_LIMIT       - limit switch processing
+    INPUT_ACTION_INTERLOCK   - interlock processing
+
+OUTPUTS
+---------------------
+  DOn_ENABLED
+    IO_UNAVAILABLE   // input/output is missing/used/unavailable
+    IO_DISABLED      // input/output is disabled
+    IO_ENABLED       // input/output enabled
+
+  DOn_POLARITY:
+    IO_ACTIVE_LOW    aka NORMALLY_OPEN
+    IO_ACTIVE_HIGH   aka NORMALLY_CLOSED
+
 */
 // Xmin on v9 board
-#define DI1_MODE                    NORMALLY_CLOSED
+#define DI1_ENABLED                 IO_ENABLED
+#define DI1_POLARITY                NORMALLY_CLOSED
 //#define DI1_ACTION                  INPUT_ACTION_STOP
-#define DI1_ACTION                  INPUT_ACTION_NONE
-#define DI1_FUNCTION                INPUT_FUNCTION_LIMIT
+#define DI1_ACTION                  INPUT_ACTION_LIMIT
 
 // Xmax
-#define DI2_MODE                    NORMALLY_CLOSED
+#define DI2_ENABLED                 IO_ENABLED
+#define DI2_POLARITY                NORMALLY_CLOSED
 //#define DI2_ACTION                  INPUT_ACTION_STOP
-#define DI2_ACTION                  INPUT_ACTION_NONE
-#define DI2_FUNCTION                INPUT_FUNCTION_LIMIT
+#define DI2_ACTION                  INPUT_ACTION_LIMIT
 
 // Ymin
-#define DI3_MODE                    NORMALLY_CLOSED
+#define DI3_ENABLED                 IO_ENABLED
+#define DI3_POLARITY                NORMALLY_CLOSED
 //#define DI3_ACTION                  INPUT_ACTION_STOP
-#define DI3_ACTION                  INPUT_ACTION_NONE
-#define DI3_FUNCTION                INPUT_FUNCTION_LIMIT
+#define DI3_ACTION                  INPUT_ACTION_LIMIT
 
 // Ymax
-#define DI4_MODE                    NORMALLY_CLOSED
+#define DI4_ENABLED                 IO_ENABLED
+#define DI4_POLARITY                NORMALLY_CLOSED
 //#define DI4_ACTION                  INPUT_ACTION_STOP
-#define DI4_ACTION                  INPUT_ACTION_NONE
-#define DI4_FUNCTION                INPUT_FUNCTION_LIMIT
+#define DI4_ACTION                  INPUT_ACTION_LIMIT
 
 // Zmin
-#define DI5_MODE                    IO_ACTIVE_HIGH   // Z probe
+#define DI5_ENABLED                 IO_ENABLED
+#define DI5_POLARITY                IO_ACTIVE_HIGH   // Z probe
 #define DI5_ACTION                  INPUT_ACTION_NONE
-#define DI5_FUNCTION                INPUT_FUNCTION_NONE
 
 // Zmax
-#define DI6_MODE                    NORMALLY_CLOSED
+#define DI6_ENABLED                 IO_ENABLED
+#define DI6_POLARITY                NORMALLY_CLOSED
 //#define DI6_ACTION                  INPUT_ACTION_STOP
-#define DI6_ACTION                  INPUT_ACTION_NONE
-#define DI6_FUNCTION                INPUT_FUNCTION_LIMIT
+#define DI6_ACTION                  INPUT_ACTION_LIMIT
 
 // Amin
-#define DI7_MODE                    IO_MODE_DISABLED
+#define DI7_ENABLED                 IO_DISABLED
+#define DI7_POLARITY                IO_ACTIVE_LOW
 #define DI7_ACTION                  INPUT_ACTION_NONE
-#define DI7_FUNCTION                INPUT_FUNCTION_NONE
 
 // Amax
-#define DI8_MODE                    IO_MODE_DISABLED
+#define DI8_ENABLED                 IO_DISABLED
+#define DI8_POLARITY                IO_ACTIVE_LOW
 #define DI8_ACTION                  INPUT_ACTION_NONE
-#define DI8_FUNCTION                INPUT_FUNCTION_NONE
 
 // Hardware interlock input
-#define DI9_MODE                    IO_MODE_DISABLED
+#define DI9_ENABLED                 IO_DISABLED
+#define DI9_POLARITY                IO_ACTIVE_LOW
 #define DI9_ACTION                  INPUT_ACTION_NONE
-#define DI9_FUNCTION                INPUT_FUNCTION_NONE
