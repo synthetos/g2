@@ -196,52 +196,47 @@ OUTPUTS
     IO_ACTIVE_HIGH   aka NORMALLY_CLOSED
 
 */
-// Xmin on v9 board
 #define DI1_ENABLED                 IO_ENABLED
 #define DI1_POLARITY                NORMALLY_CLOSED
 //#define DI1_ACTION                  INPUT_ACTION_STOP
 #define DI1_ACTION                  INPUT_ACTION_LIMIT
 
-// Xmax
 #define DI2_ENABLED                 IO_ENABLED
 #define DI2_POLARITY                NORMALLY_CLOSED
 //#define DI2_ACTION                  INPUT_ACTION_STOP
 #define DI2_ACTION                  INPUT_ACTION_LIMIT
 
-// Ymin
 #define DI3_ENABLED                 IO_ENABLED
 #define DI3_POLARITY                NORMALLY_CLOSED
 //#define DI3_ACTION                  INPUT_ACTION_STOP
 #define DI3_ACTION                  INPUT_ACTION_LIMIT
 
-// Ymax
 #define DI4_ENABLED                 IO_ENABLED
 #define DI4_POLARITY                NORMALLY_CLOSED
 //#define DI4_ACTION                  INPUT_ACTION_STOP
 #define DI4_ACTION                  INPUT_ACTION_LIMIT
 
-// Zmin
 #define DI5_ENABLED                 IO_ENABLED
 #define DI5_POLARITY                IO_ACTIVE_HIGH   // Z probe
 #define DI5_ACTION                  INPUT_ACTION_NONE
 
-// Zmax
 #define DI6_ENABLED                 IO_ENABLED
 #define DI6_POLARITY                NORMALLY_CLOSED
 //#define DI6_ACTION                  INPUT_ACTION_STOP
 #define DI6_ACTION                  INPUT_ACTION_LIMIT
 
-// Amin
 #define DI7_ENABLED                 IO_DISABLED
 #define DI7_POLARITY                IO_ACTIVE_LOW
 #define DI7_ACTION                  INPUT_ACTION_NONE
 
-// Amax
 #define DI8_ENABLED                 IO_DISABLED
 #define DI8_POLARITY                IO_ACTIVE_LOW
 #define DI8_ACTION                  INPUT_ACTION_NONE
 
-// Hardware interlock input
 #define DI9_ENABLED                 IO_DISABLED
 #define DI9_POLARITY                IO_ACTIVE_LOW
 #define DI9_ACTION                  INPUT_ACTION_NONE
+
+#define DI10_ENABLED                 IO_DISABLED
+#define DI10_POLARITY                IO_ACTIVE_LOW
+#define DI10_ACTION                  INPUT_ACTION_NONE

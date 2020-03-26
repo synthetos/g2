@@ -78,7 +78,7 @@ extern gpioDigitalInputPin<IRQPin<Motate::kInput6_PinNumber>>  din6;
 extern gpioDigitalInputPin<IRQPin<Motate::kInput7_PinNumber>>  din7;
 extern gpioDigitalInputPin<IRQPin<Motate::kInput8_PinNumber>>  din8;
 extern gpioDigitalInputPin<IRQPin<Motate::kInput9_PinNumber>>  din9;
-extern gpioDigitalInputPin<IRQPin<Motate::kSocket2_SPISlaveSelectPinNumber>> din10;
+extern gpioDigitalInputPin<IRQPin<Motate::kInput10_PinNumber>> din10;
 // extern gpioDigitalInputPin<IRQPin<Motate::kInput11_PinNumber>> din11;
 // extern gpioDigitalInputPin<IRQPin<Motate::kInput12_PinNumber>> din12;
 
