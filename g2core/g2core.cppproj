@@ -5,7 +5,7 @@
     <ProjectVersion>7.0</ProjectVersion>
     <ToolchainName>com.Atmel.ARMGCC.CPP</ToolchainName>
     <ProjectGuid>{44ea8fec-55d7-4149-8a78-a574fc26bf51}</ProjectGuid>
-    <avrdevice>ATSAM3X8C</avrdevice>
+    <avrdevice>ATSAM3X8E</avrdevice>
     <avrdeviceseries>none</avrdeviceseries>
     <OutputType>Executable</OutputType>
     <Language>CPP</Language>
@@ -22,7 +22,8 @@
     <eraseonlaunchrule>1</eraseonlaunchrule>
     <AsfVersion>3.5.0</AsfVersion>
     <avrtoolinterface>SWD</avrtoolinterface>
-    <avrtool>com.atmel.avrdbg.tool.samice</avrtool>
+    <avrtool>
+    </avrtool>
     <com_atmel_avrdbg_tool_samice>
       <ToolType>com.atmel.avrdbg.tool.samice</ToolType>
       <ToolName>J-Link</ToolName>
@@ -117,6 +118,8 @@
     <UseGdbCustomPath>False</UseGdbCustomPath>
     <GdbCustomPath>
     </GdbCustomPath>
+    <ResetRule>0</ResetRule>
+    <EraseKey />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'gShield' ">
     <ToolchainSettings>
@@ -1656,7 +1659,16 @@
     <Compile Include="alarm.cpp">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="board\Archim\0_hardware.cpp">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="board\Archim\Archim-pinout.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="board\Archim\board_gpio.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="board\Archim\board_gpio.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="board\Archim\board_stepper.cpp">
@@ -1671,13 +1683,19 @@
     <Compile Include="board\Archim\board_xio.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="board\Archim\hardware.cpp">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="board\Archim\hardware.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="board\Archim\motate_pin_assignments.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="board\ArduinoDue\0_hardware.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="board\ArduinoDue\board_gpio.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="board\ArduinoDue\board_gpio.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="board\ArduinoDue\board_stepper.cpp">
@@ -1695,9 +1713,6 @@
     <Compile Include="board\ArduinoDue\gShield-pinout.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="board\ArduinoDue\hardware.cpp">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="board\ArduinoDue\hardware.h">
       <SubType>compile</SubType>
     </Compile>
@@ -1705,6 +1720,18 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="board\ArduinoDue\shopbotShield-pinout.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="board\g2v9\0_hardware.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="board\g2v9\board_gpio.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="board\g2v9\board_gpio.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="board\g2v9\board_spi.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="board\g2v9\board_stepper.cpp">
@@ -1722,13 +1749,19 @@
     <Compile Include="board\g2v9\g2v9k-pinout.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="board\g2v9\hardware.cpp">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="board\g2v9\hardware.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="board\g2v9\motate_pin_assignments.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="board\gquadratic\0_hardware.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="board\gquadratic\board_gpio.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="board\gquadratic\board_gpio.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="board\gquadratic\board_stepper.cpp">
@@ -1746,13 +1779,22 @@
     <Compile Include="board\gquadratic\gquadratic-b-pinout.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="board\gquadratic\hardware.cpp">
+    <Compile Include="board\gquadratic\gquadratic-c-pinout.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="board\gquadratic\hardware.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="board\gquadratic\motate_pin_assignments.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="board\gquintic\0_hardware.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="board\gquintic\board_gpio.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="board\gquintic\board_gpio.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="board\gquintic\board_stepper.cpp">
@@ -1770,13 +1812,25 @@
     <Compile Include="board\gquintic\gquintic-b-pinout.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="board\gquintic\hardware.cpp">
+    <Compile Include="board\gquintic\gquintic-c-pinout.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="board\gquintic\gquintic-d-pinout.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="board\gquintic\hardware.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="board\gquintic\motate_pin_assignments.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="board\printrboardg2\0_hardware.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="board\printrboardg2\board_gpio.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="board\printrboardg2\board_gpio.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="board\printrboardg2\board_stepper.cpp">
@@ -1791,9 +1845,6 @@
     <Compile Include="board\printrboardg2\board_xio.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="board\printrboardg2\hardware.cpp">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="board\printrboardg2\hardware.h">
       <SubType>compile</SubType>
     </Compile>
@@ -1801,6 +1852,15 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="board\printrboardg2\printrboardG2v3-pinout.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="board\sbv300\0_hardware.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="board\sbv300\board_gpio.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="board\sbv300\board_gpio.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="board\sbv300\board_stepper.cpp">
@@ -1815,9 +1875,6 @@
     <Compile Include="board\sbv300\board_xio.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="board\sbv300\hardware.cpp">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="board\sbv300\hardware.h">
       <SubType>compile</SubType>
     </Compile>
@@ -1828,6 +1885,33 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="cycle_feedhold.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="device\bantam_safety_manager\bantam_safety_manager.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="device\bantam_safety_manager\bantam_safety_manager.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="device\esc_spindle\esc_spindle.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="device\i2c_as5601\i2c_as5601.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="device\i2c_eeprom\i2c_eeprom.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="device\i2c_multiplexer\i2c_multiplexer.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="device\laser_toolhead\laser_toolhead.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="device\laser_toolhead\laser_toolhead.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="device\max31865\max31865.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="device\neopixel\neopixel.h">
@@ -1851,6 +1935,12 @@
     <Compile Include="device\sd_card\sd_card.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="device\sd_card\sd_persistence.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="device\sd_card\sd_persistence.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="device\sd_card\syscall.c">
       <SubType>compile</SubType>
     </Compile>
@@ -1869,16 +1959,52 @@
     <Compile Include="g2core_info.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="gcode_parser.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="kinematics_cartesian.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="kinematics_four_cable.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="marlin_compatibility.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="marlin_compatibility.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="safety_manager.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="safety_manager.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_axidraw_v3.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_cheapo_laser.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_drosmm_v1.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="settings\settings_eggbot.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="settings\settings_ender.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_fourcable.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="settings\settings_makeblock.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_minimill.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_othermill_pro.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings\settings_printrbot_play.h">
@@ -1897,6 +2023,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings\settings_shapeoko375_Dual.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_smw3d_r7.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_synthetos_pendulum_v2.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings\settings_ultimaker.h">
@@ -2049,7 +2181,13 @@
     <Compile Include="settings\settings_test.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="settings\settings_Ultimaker_2_Plus.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="settings\settings_watercolorbot_v2.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="settings\settings_xcarve_extended.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="settings\settings_zen7x12.h">
@@ -2102,6 +2240,13 @@
     <Folder Include="board\printrboardg2\" />
     <Folder Include="board\sbv300\" />
     <Folder Include="device\" />
+    <Folder Include="device\bantam_safety_manager\" />
+    <Folder Include="device\esc_spindle\" />
+    <Folder Include="device\i2c_as5601\" />
+    <Folder Include="device\i2c_eeprom\" />
+    <Folder Include="device\i2c_multiplexer\" />
+    <Folder Include="device\laser_toolhead\" />
+    <Folder Include="device\max31865\" />
     <Folder Include="device\neopixel" />
     <Folder Include="device\sd_card" />
     <Folder Include="device\step_dir_hobbyservo" />
@@ -2135,6 +2280,9 @@
       <SubType>compile</SubType>
     </None>
     <None Include="board\g2v9.mk">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="board\g2v9\bantam-checksum-flash.ld">
       <SubType>compile</SubType>
     </None>
     <None Include="board\g2_default.gdb">
