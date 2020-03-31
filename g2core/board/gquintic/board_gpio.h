@@ -194,4 +194,10 @@ extern gpioAnalogInputPin<ADCPin<Motate::kADC4_PinNumber>> ai4;
 
 extern gpioAnalogInput*    const a_in[A_IN_CHANNELS];
 
+// #include "bme280.h"
+// extern BME280<SPIBus_used_t::SPIBusDevice> pressure_sensor;
+
+#include "honeywell-trustability-ssc.h"
+extern TruStabilitySSC<SPIBus_used_t::SPIBusDevice> pressure_sensor;
+
 #endif // End of include guard: BOARD_GPIO_H_ONCE

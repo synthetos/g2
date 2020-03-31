@@ -1006,6 +1006,11 @@ constexpr cfgItem_t sys_config_items_2[] = {
     { "sys","knpc", _f0, 4, tx_print_nul, kn_get_pos_c,    set_nul,         nullptr,       0 },
     { "sys","knpd", _f0, 4, tx_print_nul, kn_get_pos_d,    set_nul,         nullptr,       0 },
 #endif
+#if KINEMATICS==KINE_PRESSURE
+    { "sys","knfc", _f0, 4, tx_print_nul, kn_get_force,    kn_set_force,    nullptr,       0 },
+    { "sys","knan", _f0, 0, tx_print_nul, kn_get_anchored, kn_set_anchored, nullptr,       0 },
+#endif
+
 
     // Communications and reporting parameters
 #ifdef __TEXT_MODE

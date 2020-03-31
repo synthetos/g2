@@ -189,7 +189,7 @@
 #endif
 
 #ifndef STATUS_REPORT_DEFAULTS                              // {sr: See Status Reports wiki page
-#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","admo","frmo","momo","stat"
+#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","feed","vel","unit","coor","dist","admo","frmo","momo","stat","prs1"
 // Alternate SRs that report in drawable units
 //#define STATUS_REPORT_DEFAULTS "line","vel","mpox","mpoy","mpoz","mpoa","coor","ofsa","ofsx","ofsy","ofsz","dist","unit","stat","homz","homy","homx","momo"
 #endif
@@ -230,6 +230,7 @@
 #define KINE_CARTESIAN 0
 #define KINE_CORE_XY 1
 #define KINE_FOUR_CABLE 2
+#define KINE_PRESSURE 3
 
 #ifndef KINEMATICS
 #define KINEMATICS KINE_CARTESIAN

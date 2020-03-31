@@ -111,6 +111,19 @@ gpioAnalogInput*    const a_in[] = {&ai1, &ai2, &ai3, &ai4};
 
 #endif // 'D'
 
+// About chip selects: 0-4 are motors, 5-8 are skipped
+// 8 is "CS1" on the board silk
+// 9 is "CS2" on the board silk
+// 12 is "CS3" on the board silk
+
+// BME280<SPIBus_used_t::SPIBusDevice> pressure_sensor{spiBus, spiCSPinMux.getCS(8)};
+TruStabilitySSC<SPIBus_used_t::SPIBusDevice> pressure_sensor{spiBus,
+                                                             spiCSPinMux.getCS(8),
+                                                             /*min_output:*/  1638, // 10% of 2^12
+                                                             /*max_output:*/ 14745, // 90% of 2^12
+                                                             /*min_value:*/ 0.0,    // 0psi
+                                                             /*max_value:*/ 15.0,   // 15psi
+                                                             PressureUnits::PSI};
 
 /************************************************************************************
  **** CODE **************************************************************************
@@ -120,22 +133,24 @@ gpioAnalogInput*    const a_in[] = {&ai1, &ai2, &ai3, &ai4};
  // Register a SysTick event to call start_sampling every temperature_sample_freq ms
  const int16_t ain_sample_freq = 1;
  int16_t ain_sample_counter = ain_sample_freq;
- Motate::SysTickEvent ain_tick_event {[] {
-     if (!--ain_sample_counter) {
-         ai1.startSampling();
-         ai2.startSampling();
-         ai3.startSampling();
-         ai4.startSampling();
-         ain_sample_counter = ain_sample_freq;
-     }
- }, nullptr};
+ Motate::SysTickEvent ain_tick_event{[] {
+                                         //  if (!--ain_sample_counter) {
+                                         //      ai1.startSampling();
+                                         //      ai2.startSampling();
+                                         //      ai3.startSampling();
+                                         //      ai4.startSampling();
+                                         //      ain_sample_counter = ain_sample_freq;
+                                         //  }
+                                         pressure_sensor.startSampling(); // has a timeout built in to prevent over-calling
+                                     },
+                                     nullptr};
 
-/*
- * gpio_reset() - reset inputs and outputs (no initialization)
- */
+ /*
+  * gpio_reset() - reset inputs and outputs (no initialization)
+  */
 
-void outputs_reset(void) {
-    // nothing to do
+ void outputs_reset(void) {
+     // nothing to do
 }
 
 void inputs_reset(void) {

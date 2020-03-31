@@ -39,6 +39,8 @@
 #include "MotateUniqueID.h"
 #include "MotatePower.h"
 
+#include "settings.h"
+
 //Motate::ClockOutputPin<Motate::kExternalClock1_PinNumber> external_clk_pin {16000000}; // 16MHz optimally
 Motate::OutputPin<Motate::kExternalClock1_PinNumber> external_clk_pin {Motate::kStartLow};
 
@@ -139,11 +141,16 @@ void hardware_init()
  */
 
 // previous values of analog voltages
+#if TEMPERATURE_OUTPUT_ON
 float ai_vv[A_IN_CHANNELS];
 const float analog_change_threshold = 0.01;
+#endif
 
 float angle_0 = 0.0;
 float angle_1 = 0.0;
+
+float pressure = 0;
+float pressure_threshold = 0.01;
 
 // void read_encoder_0(bool worked /* = false*/, float angle /* = 0.0*/) {
 //     if (worked) {
@@ -203,6 +210,15 @@ stat_t hardware_periodic()
         }
     }
     #endif
+
+    #if HAS_PRESSURE
+    float new_pressure = pressure_sensor.getPressure(PressureUnits::cmH2O);
+    if (std::abs(pressure - new_pressure) >= pressure_threshold) {
+        pressure = new_pressure;  // only record if goes past threshold!
+        sr_request_status_report(SR_REQUEST_TIMED);
+    }
+    #endif
+
 
     // static uint8_t sent = false;
     // if (!sent) {
@@ -317,9 +333,17 @@ stat_t hw_flash(nvObj_t *nv)
 
 #if !HAS_LASER
 
-// Stub in getSysConfig_3
-// constexpr cfgItem_t sys_config_items_3[] = {};
-constexpr cfgSubtableFromStaticArray sys_config_3{};
+stat_t get_ppressure(nvObj_t *nv)
+{
+    nv->value_flt = pressure_sensor.getPressure(PressureUnits::cmH2O);
+    nv->valuetype = TYPE_FLOAT;
+    return (STAT_OK);
+}
+
+constexpr cfgItem_t sys_config_items_3[] = {
+    { "prs","prs1", _f0,  5, tx_print_nul, get_ppressure, set_nul, nullptr, 0 },
+};
+constexpr cfgSubtableFromStaticArray sys_config_3{sys_config_items_3};
 const configSubtable * const getSysConfig_3() { return &sys_config_3; }
 
 #else

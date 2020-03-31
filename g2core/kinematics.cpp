@@ -130,6 +130,43 @@ stat_t kn_get_pos_d(nvObj_t *nv)
     return (STAT_OK);
 };
 #endif // KINEMATICS==KINE_FOUR_CABLE
+#if KINEMATICS==KINE_PRESSURE
+#include "kinematics_pressure.h"
+PressureKinematics<AXES, MOTORS> pressure_kinematics;
+KinematicsBase<AXES, MOTORS> *kn = &pressure_kinematics;
+
+// force
+stat_t kn_get_force(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_FLOAT;
+    nv->precision = 4;
+    nv->value_flt = pressure_kinematics.sensor_zero_target; // read it as a float
+
+    return (STAT_OK);
+};
+stat_t kn_set_force(nvObj_t *nv)
+{
+    float value = nv->value_flt; // read it as a float
+    pressure_kinematics.sensor_zero_target = value;
+    return (STAT_OK);
+};
+
+// anchored
+
+stat_t kn_get_anchored(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_BOOLEAN;
+    nv->value_flt = pressure_kinematics.anchored();
+
+    return (STAT_OK);
+};
+stat_t kn_set_anchored(nvObj_t *nv)
+{
+    bool value = std::fabs(nv->value_flt) > 0.1;
+    pressure_kinematics.anchored(value);
+    return (STAT_OK);
+};
+#endif // KINEMATICS==KINE_PRESSURE
 
 
 // Concrete functions that involve kinematics

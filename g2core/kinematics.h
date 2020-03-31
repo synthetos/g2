@@ -97,6 +97,15 @@ stat_t kn_get_pos_b(nvObj_t *nv);
 stat_t kn_get_pos_c(nvObj_t *nv);
 stat_t kn_get_pos_d(nvObj_t *nv);
 #endif
+#if KINEMATICS==KINE_PRESSURE
+// force
+stat_t kn_get_force(nvObj_t *nv);
+stat_t kn_set_force(nvObj_t *nv);
+
+// anchored
+stat_t kn_get_anchored(nvObj_t *nv);
+stat_t kn_set_anchored(nvObj_t *nv);
+#endif // KINEMATICS==KINE_PRESSURE
 
 void kn_config_changed();
 void kn_forward_kinematics(const float steps[], float travel[]);
