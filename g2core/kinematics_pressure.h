@@ -60,8 +60,8 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
 
     const float sensor_skip_detection_jump = 10000;
 
-    float friction_loss_normal = 0.75;        // percentage of loss due to friction per segment, parked
-    float friction_midpoint_normal   = 200.0; // velocity (mm/min) at the midpoint for friction per segment, parked
+    float friction_loss_normal = 30;        // percentage of loss due to friction per segment, parked
+    float friction_midpoint_normal   = 10.0; // velocity (mm/min) at the midpoint for friction per segment, parked
 
     float friction_loss_slowed    = 150;   // percentage of loss due to friction per segment, NOT parked
     float friction_midpoint_slowed = 5.0;   // velocity (mm/min) at the midpoint for friction per segment, NOT parked
@@ -289,7 +289,11 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
 
         for (uint8_t joint = 0; joint < pressure_sensor_count; joint++) {
             bool switch_state = anchor_inputs[joint]->getState();
-            bool overpressure_detected = (raw_sensor_value[joint] > sensor_zero_target) && (sensor_zero_target > 1);
+            if (switch_state && (sensor_zero_target > 7)) {
+                // ignore the switch state and head toward making pressure!
+                switch_state = false;
+            }
+            bool overpressure_detected = (raw_sensor_value[joint] > sensor_zero_target) && (sensor_zero_target > 7);
             if (over_pressure && at_pressure_timer.isPast()) {
                 sensor_zero_target = -4;
                 over_pressure = false;

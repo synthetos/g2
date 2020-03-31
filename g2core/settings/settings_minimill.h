@@ -160,7 +160,7 @@ M100 ({th2mxp:1500}) ; laser max pulses per mm
 #define M1_MOTOR_MAP                AXIS_X_EXTERNAL         // 1ma
 #define M1_STEP_ANGLE               1.8                     // 1sa
 #define M1_TRAVEL_PER_REV           8                       // 1tr
-#define M1_MICROSTEPS               16                       // 1mi  1,2,4,8,16,32
+#define M1_MICROSTEPS               8                       // 1mi  1,2,4,8,16,32
 #define M1_POLARITY                 1                       // 1po  0=normal, 1=reversed
 #define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm  See enum cmMotorPowerMode in stepper.h
 #define M1_POWER_LEVEL              MOTOR_POWER_LEVEL_XY    // 0.00=off, 1.00=max
@@ -214,8 +214,8 @@ M100 ({th2mxp:1500}) ; laser max pulses per mm
 // *** axis settings **********************************************************************************
 
 #define JERK_MAX                    400                 // 500 million mm/(min^3)
-#define JERK_HIGH_SPEED             30000                // 1000 million mm/(min^3) // Jerk during homing needs to stop *fast*
-#define VELOCITY_MAX                4500
+#define JERK_HIGH_SPEED             10000                // 1000 million mm/(min^3) // Jerk during homing needs to stop *fast*
+#define VELOCITY_MAX                2200
 #define LATCH_VELOCITY              25                  // reeeeally slow for accuracy
 
 #define X_AXIS_MODE                 AXIS_STANDARD       // xam  see canonical_machine.h cmAxisMode for valid values
