@@ -999,16 +999,24 @@ constexpr cfgItem_t sys_config_items_2[] = {
 
     // kinematics controls
 #if KINEMATICS==KINE_FOUR_CABLE
-    { "sys","knfc", _f0, 4, tx_print_nul, kn_get_force,    kn_set_force,    nullptr,       0 },
-    { "sys","knan", _f0, 0, tx_print_nul, kn_get_anchored, kn_set_anchored, nullptr,       0 },
-    { "sys","knpa", _f0, 4, tx_print_nul, kn_get_pos_a,    set_nul,         nullptr,       0 },
-    { "sys","knpb", _f0, 4, tx_print_nul, kn_get_pos_b,    set_nul,         nullptr,       0 },
-    { "sys","knpc", _f0, 4, tx_print_nul, kn_get_pos_c,    set_nul,         nullptr,       0 },
-    { "sys","knpd", _f0, 4, tx_print_nul, kn_get_pos_d,    set_nul,         nullptr,       0 },
+    { "kn","knfc", _f0, 4, tx_print_nul, kn_get_force,    kn_set_force,    nullptr,       0 },
+    { "kn","knan", _f0, 0, tx_print_nul, kn_get_anchored, kn_set_anchored, nullptr,       0 },
+    { "kn","knpa", _f0, 4, tx_print_nul, kn_get_pos_a,    set_nul,         nullptr,       0 },
+    { "kn","knpb", _f0, 4, tx_print_nul, kn_get_pos_b,    set_nul,         nullptr,       0 },
+    { "kn","knpc", _f0, 4, tx_print_nul, kn_get_pos_c,    set_nul,         nullptr,       0 },
+    { "kn","knpd", _f0, 4, tx_print_nul, kn_get_pos_d,    set_nul,         nullptr,       0 },
 #endif
 #if KINEMATICS==KINE_PRESSURE
-    { "sys","knfc", _f0, 4, tx_print_nul, kn_get_force,    kn_set_force,    nullptr,       0 },
-    { "sys","knan", _f0, 0, tx_print_nul, kn_get_anchored, kn_set_anchored, nullptr,       0 },
+    { "kn","knfc",  _f0, 4, tx_print_nul, kn_get_force,             kn_set_force,             nullptr, 0 },
+    { "kn","knft",  _f0, 4, tx_print_nul, kn_get_target,            kn_set_target,            nullptr, 0 },
+    { "kn","knan",  _b0, 0, tx_print_nul, kn_get_anchored,          kn_set_anchored,          nullptr, 0 },
+    { "kn","knfl",  _f0, 4, tx_print_nul, kn_get_friction_loss,     kn_set_friction_loss,     nullptr, 0 },
+    { "kn","knfm",  _f0, 4, tx_print_nul, kn_get_friction_midpoint, kn_set_friction_midpoint, nullptr, 0 },
+    { "kn","knepm", _f0, 4, tx_print_nul, kn_get_epm,               kn_set_epm,               nullptr, 0 },
+    { "kn","knht",  _f0, 4, tx_print_nul, kn_get_hold_time,         kn_set_hold_time,         nullptr, 0 },
+    { "kn","knp",   _f0, 4, tx_print_nul, kn_get_p_factor,          kn_set_p_factor,          nullptr, 0 },
+    { "kn","kni",   _f0, 4, tx_print_nul, kn_get_i_factor,          kn_set_i_factor,          nullptr, 0 },
+    { "kn","knd",   _f0, 4, tx_print_nul, kn_get_d_factor,          kn_set_d_factor,          nullptr, 0 },
 #endif
 
 

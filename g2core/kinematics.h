@@ -102,9 +102,33 @@ stat_t kn_get_pos_d(nvObj_t *nv);
 stat_t kn_get_force(nvObj_t *nv);
 stat_t kn_set_force(nvObj_t *nv);
 
+stat_t kn_get_target(nvObj_t *nv);
+stat_t kn_set_target(nvObj_t *nv);
+
+stat_t kn_get_epm(nvObj_t *nv);
+stat_t kn_set_epm(nvObj_t *nv);
+
+stat_t kn_get_hold_time(nvObj_t *nv);
+stat_t kn_set_hold_time(nvObj_t *nv);
+
+stat_t kn_get_p_factor(nvObj_t *nv);
+stat_t kn_set_p_factor(nvObj_t *nv);
+stat_t kn_get_i_factor(nvObj_t *nv);
+stat_t kn_set_i_factor(nvObj_t *nv);
+stat_t kn_get_d_factor(nvObj_t *nv);
+stat_t kn_set_d_factor(nvObj_t *nv);
+
 // anchored
 stat_t kn_get_anchored(nvObj_t *nv);
 stat_t kn_set_anchored(nvObj_t *nv);
+
+
+stat_t kn_get_friction_loss(nvObj_t *nv);
+stat_t kn_set_friction_loss(nvObj_t *nv);
+
+stat_t kn_get_friction_midpoint(nvObj_t *nv);
+stat_t kn_set_friction_midpoint(nvObj_t *nv);
+
 #endif // KINEMATICS==KINE_PRESSURE
 
 void kn_config_changed();
