@@ -56,17 +56,17 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
 
 
     double sensor_zero_target = 0.0;
-    double sensor_proportional_factor = 20;
+    double sensor_proportional_factor = 80;
     double sensor_inetgral_store = 0;
-    double sensor_inetgral_factor = 0.0001;
+    double sensor_inetgral_factor = 0.001;
     double sensor_error_store = 0;
-    double sensor_derivative_factor = 20;
+    double sensor_derivative_factor = 0;
 
-    double reverse_target_pressure = -10;
+    double reverse_target_pressure = -20;
 
     const float sensor_skip_detection_jump = 10000;
 
-    double friction_loss_normal     = 45;       // percentage of loss due to friction per segment, parked
+    double friction_loss_normal     = 5;       // percentage of loss due to friction per segment, parked
     double friction_midpoint_normal = 15.0; // velocity (mm/min) at the midpoint for friction per segment, parked
 
     double friction_loss_slowed     = 300;   // percentage of loss due to friction per segment, NOT parked
@@ -243,10 +243,10 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
             // new_sensor_value at -1 is max under presure, 1 is max over pressure, and 0 is goldilocks
             double e = (raw_sensor_value[joint] - sensor_zero_target);
             sensor_inetgral_store += e;
-            if (sensor_inetgral_store > 50) {
-                sensor_inetgral_store = 50;
-            } else if (sensor_inetgral_store < 50) {
-                sensor_inetgral_store = -50;
+            if (sensor_inetgral_store > 100) {
+                sensor_inetgral_store = 100;
+            } else if (sensor_inetgral_store < -100) {
+                sensor_inetgral_store = -100;
             }
 
             double p_v = e * sensor_proportional_factor;
@@ -371,8 +371,24 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
             //     joint_vel[joint] = 50.0; // it's already stopped, back it off some
             // }
 
-            // float diff_or_guide = sensor_zero_target > 0 ? sensor_diff[joint] : 0.1;
+            // float diff_or_guide = sensor_zero_target > 0 ? sensor_diff[joint] : 1;
             double diff_or_guide = sensor_diff[joint];
+
+            // if (sensor_zero_target < 0) {
+            //     if (!switch_state) {
+            //         diff_or_guide = 1; // head for the switch
+            //     } else {
+            //         // if there's motion, stop as fast as possible
+            //         if (joint_vel[joint] > 10) {
+            //             diff_or_guide = -0.1;
+            //         } else {
+            //             // stop
+            //             diff_or_guide = 0;
+            //             joint_accel[joint] = 0;
+            //             joint_vel[joint] = 0;
+            //         }
+            //     }
+            // }
 
             // static friction
             // auto friction = (((switch_state || over_pressure) ? friction_loss_slowed : friction_loss_normal)/100.0);
@@ -405,10 +421,10 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
             const double vmax = cm->a[AXIS_X].velocity_max;
             if (joint_vel[joint] < -vmax) {
                 joint_vel[joint] = -vmax;
-                // error_offset = 0; // none of it was applied
+                joint_accel[joint] = (old_joint_vel - joint_vel[joint])/segment_time;
             } else if (joint_vel[joint] > vmax) {
                 joint_vel[joint] = vmax;
-                // error_offset = 0; // none of it was applied
+                joint_accel[joint] = (old_joint_vel - joint_vel[joint])/segment_time;
             }
 
             end_velocities[joint] = std::abs(joint_vel[joint]);
