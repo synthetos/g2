@@ -111,6 +111,10 @@ stat_t kn_set_epm(nvObj_t *nv);
 stat_t kn_get_hold_time(nvObj_t *nv);
 stat_t kn_set_hold_time(nvObj_t *nv);
 
+stat_t kn_get_e_value(nvObj_t *nv);
+stat_t kn_get_i_value(nvObj_t *nv);
+stat_t kn_get_d_value(nvObj_t *nv);
+
 stat_t kn_get_p_factor(nvObj_t *nv);
 stat_t kn_set_p_factor(nvObj_t *nv);
 stat_t kn_get_i_factor(nvObj_t *nv);
@@ -128,6 +132,9 @@ stat_t kn_set_friction_loss(nvObj_t *nv);
 
 stat_t kn_get_friction_midpoint(nvObj_t *nv);
 stat_t kn_set_friction_midpoint(nvObj_t *nv);
+
+stat_t kn_get_backoff_pressure(nvObj_t *nv);
+stat_t kn_set_backoff_pressure(nvObj_t *nv);
 
 #endif // KINEMATICS==KINE_PRESSURE
 

@@ -227,20 +227,20 @@ struct TruStabilitySSC final : virtual public PressureSensor {
 
     void startSampling()
     {
-        if (_check_timer.isPast()) {
-            if (INITING == _state) {
-                _data_needs_read = true;
-                _check_timer.set(7);
-                _state = WAITING_FOR_SAMPLE;
-                _startNextReadWrite();
+        // if (_check_timer.isPast()) {
+        //     // if (INITING == _state) {
+        //     //     _data_needs_read = true;
+        //     //     _check_timer.set(1);
+        //     //     _state = WAITING_FOR_SAMPLE;
+        //     //     _startNextReadWrite();
 
-            } else if (WAITING_FOR_SAMPLE == _state) {
-                _check_timer.set(7);
+        //     // } else if (WAITING_FOR_SAMPLE == _state) {
+        //         _check_timer.set(1);
 
                 _data_needs_read = true;
                 _startNextReadWrite();
-            }
-        }
+            // }
+        // }
     };
 
     double getPressure(const PressureUnits output_units) const override {

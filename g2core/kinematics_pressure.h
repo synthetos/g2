@@ -56,20 +56,22 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
 
 
     double sensor_zero_target = 0.0;
-    double sensor_proportional_factor = 80;
+    double sensor_proportional_factor = 10;
     double sensor_inetgral_store = 0;
-    double sensor_inetgral_factor = 0.001;
+    double sensor_inetgral_factor = 0.006;
     double sensor_error_store = 0;
-    double sensor_derivative_factor = 0;
+    double sensor_derivative_factor = 3000;
+    double sensor_derivative_store = 0;
+    double derivative_contribution = 1.0/10.0;
 
-    double reverse_target_pressure = -20;
+    double reverse_target_pressure = -2;
 
     const float sensor_skip_detection_jump = 10000;
 
-    double friction_loss_normal     = 5;       // percentage of loss due to friction per segment, parked
+    double friction_loss_normal     = 30;       // percentage of loss due to friction per segment, parked
     double friction_midpoint_normal = 15.0; // velocity (mm/min) at the midpoint for friction per segment, parked
 
-    double friction_loss_slowed     = 300;   // percentage of loss due to friction per segment, NOT parked
+    double friction_loss_slowed     = 500;   // percentage of loss due to friction per segment, NOT parked
     double friction_midpoint_slowed = 20.0;   // velocity (mm/min) at the midpoint for friction per segment, NOT parked
 
     double pressure_target = 0;
@@ -81,7 +83,8 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
     double prev_joint_position[4];
     double prev_joint_vel[4];
     double prev_joint_accel[4];
-    double joint_limit[motors];
+    double joint_min_limit[motors];
+    double joint_max_limit[motors];
 
     float start_velocities[motors];
     float end_velocities[motors];
@@ -242,24 +245,29 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
 
             // new_sensor_value at -1 is max under presure, 1 is max over pressure, and 0 is goldilocks
             double e = (raw_sensor_value[joint] - sensor_zero_target);
+            e = (e * e) * (e > 0 ? 1 : -1);
             sensor_inetgral_store += e;
-            if (sensor_inetgral_store > 100) {
-                sensor_inetgral_store = 100;
-            } else if (sensor_inetgral_store < -100) {
-                sensor_inetgral_store = -100;
+            if (sensor_inetgral_store > 10000) {
+                sensor_inetgral_store = 10000;
+            } else if (sensor_inetgral_store < -10000) {
+                sensor_inetgral_store = -10000;
             }
+
+            const float segment_time = MIN_SEGMENT_TIME; // time in MINUTES
 
             double p_v = e * sensor_proportional_factor;
             double i_v = sensor_inetgral_store * sensor_inetgral_factor;
-            double d_v = (e - sensor_error_store) * sensor_derivative_factor;
+            sensor_derivative_store = (e - sensor_error_store)*(derivative_contribution) + (sensor_derivative_store * (1.0-derivative_contribution));
+            double d_v = sensor_derivative_store * sensor_derivative_factor;
             sensor_error_store = e;
 
-            double new_sensor_value = p_v + i_v - d_v;
+            double new_sensor_value = p_v + i_v + d_v;
 
             // new_sensor_diff is literally the change of the sensor value since we last read it
-            sensor_diff[joint]  = (new_sensor_value - sensor_value[joint]);
+            double new_diff  = (new_sensor_value - sensor_value[joint]);
 
             sensor_value[joint] = new_sensor_value;
+            sensor_diff[joint] = new_diff;
         }
         return true;
     }
@@ -326,11 +334,7 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
 
         for (uint8_t joint = 0; joint < pressure_sensor_count; joint++) {
             bool switch_state = anchor_inputs[joint]->getState();
-            if (switch_state && (sensor_zero_target > 7)) {
-                // ignore the switch state and head toward making pressure!
-                switch_state = false;
-            }
-            bool overpressure_detected = (raw_sensor_value[joint] > (sensor_zero_target*0.75)) && (sensor_zero_target > 7);
+            bool overpressure_detected = (raw_sensor_value[joint] > (sensor_zero_target*0.9)) && (sensor_zero_target > 7);
             if (over_pressure && at_pressure_timer.isPast()) {
                 sensor_zero_target = reverse_target_pressure;
                 over_pressure = false;
@@ -346,13 +350,13 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
                     // stop the motion
                     sensor_zero_target = 0.1;
                 }
+                joint_max_limit[joint] = joint_position[joint] + 5;
 
-                // cable_stepper_offset[joint] = joint_position[joint] - cable_zero_offsets[joint];
             } else if (!switch_state) {
                 if (last_switch_state[joint]) {
-                    joint_limit[joint] = joint_position[joint] - 130;
+                    joint_min_limit[joint] = joint_position[joint] - 85;
                 } else {
-                    if ((sensor_zero_target > 0) && (joint_position[joint] < joint_limit[joint])) {
+                    if ((sensor_zero_target > 0) && (joint_position[joint] < joint_min_limit[joint])) {
                         sensor_zero_target = reverse_target_pressure;
                     }
                 }
@@ -360,47 +364,23 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
 
             // prev_joint_accel[joint] = joint_accel[joint];
             start_velocities[joint] = std::abs(joint_vel[joint]);
-            // prev_joint_vel[joint] = joint_vel[joint];
-
-            // heiristic to detect skips
-            // if the pressure rises the 80% of the full range in a segment
-
-            // if (sensor_diff[joint] > sensor_skip_detection_jump) {
-            //     joint_jerk[joint] = 0.0; // clear it out
-            //     joint_accel[joint] = 0.0; // same
-            //     joint_vel[joint] = 50.0; // it's already stopped, back it off some
-            // }
-
-            // float diff_or_guide = sensor_zero_target > 0 ? sensor_diff[joint] : 1;
-            double diff_or_guide = sensor_diff[joint];
-
-            // if (sensor_zero_target < 0) {
-            //     if (!switch_state) {
-            //         diff_or_guide = 1; // head for the switch
-            //     } else {
-            //         // if there's motion, stop as fast as possible
-            //         if (joint_vel[joint] > 10) {
-            //             diff_or_guide = -0.1;
-            //         } else {
-            //             // stop
-            //             diff_or_guide = 0;
-            //             joint_accel[joint] = 0;
-            //             joint_vel[joint] = 0;
-            //         }
-            //     }
-            // }
 
             // static friction
-            // auto friction = (((switch_state || over_pressure) ? friction_loss_slowed : friction_loss_normal)/100.0);
-            // auto friction_midpoint = ((switch_state || over_pressure) ? friction_midpoint_slowed : friction_midpoint_normal);
             auto friction = ((switch_state ? friction_loss_slowed : friction_loss_normal)/100.0);
             auto friction_midpoint = (switch_state ? friction_midpoint_slowed : friction_midpoint_normal);
 
             double jmax = cm->a[AXIS_X].jerk_max * JERK_MULTIPLIER;
-            double jhigh = cm->a[AXIS_X].jerk_high * JERK_MULTIPLIER;
+            // double jhigh = cm->a[AXIS_X].jerk_high * JERK_MULTIPLIER;
 
-            joint_jerk[joint] = diff_or_guide * jmax;
-            joint_accel[joint] = joint_accel[joint] + joint_jerk[joint]*segment_time;
+            /*
+            joint_jerk[joint] = sensor_value[joint] * jmax;
+            if (joint_jerk[joint] > jhigh) {
+                joint_jerk[joint] = jhigh;
+            } else if (joint_jerk[joint] < -jhigh) {
+                joint_jerk[joint] = -jhigh;
+            }
+
+             = joint_accel[joint] + joint_jerk[joint]*segment_time;
 
             double old_joint_vel = joint_vel[joint];
 
@@ -416,19 +396,44 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
                     joint_vel[joint] = old_joint_vel - vmax_diff;
                 }
             }
+            */
+
+            double old_joint_vel = joint_vel[joint];
+            prev_joint_position[joint] = joint_position[joint];
+
+            // treat sensor_value[joint] as velocity, but we have to jerk-control it
+
+            double requested_velocity = sensor_value[joint];
+
+            joint_accel[joint] =
+                std::min(jmax * segment_time, std::abs(old_joint_vel - requested_velocity) / segment_time) * (requested_velocity > 0 ? 1 : -1);
+
+            // only apply friction is we're within 2 (sqrt(4)) of the target value
+            if (std::abs(sensor_diff[joint]) < 4) {
+                auto friction_loss_vel = (friction * friction_midpoint) / (std::abs(joint_vel[joint]) + friction_midpoint);
+                joint_vel[joint] = joint_vel[joint] - joint_vel[joint] * friction_loss_vel;
+            }
+            joint_vel[joint] = joint_vel[joint] + joint_accel[joint]*segment_time;
 
             // limit velocity
             const double vmax = cm->a[AXIS_X].velocity_max;
             if (joint_vel[joint] < -vmax) {
                 joint_vel[joint] = -vmax;
-                joint_accel[joint] = (old_joint_vel - joint_vel[joint])/segment_time;
             } else if (joint_vel[joint] > vmax) {
                 joint_vel[joint] = vmax;
-                joint_accel[joint] = (old_joint_vel - joint_vel[joint])/segment_time;
+            }
+
+            joint_accel[joint] = (old_joint_vel - joint_vel[joint])/segment_time;
+
+            // stop driving past the switch or too far out
+            auto proposed_position = joint_position[joint] + (joint_vel[joint] * segment_time);
+            if ((proposed_position < joint_min_limit[joint]) || (proposed_position > joint_max_limit[joint])) {
+                // prevent the integral from winding up positive, pushing past the switch
+                sensor_inetgral_store = 0;
+                joint_vel[joint] = joint_vel[joint] * 0.75; // drop the velocity hard
             }
 
             end_velocities[joint] = std::abs(joint_vel[joint]);
-            prev_joint_position[joint] = joint_position[joint];
             joint_position[joint] = joint_position[joint] + (joint_vel[joint] * segment_time);
 
             last_switch_state[joint] = switch_state;

@@ -237,6 +237,48 @@ stat_t kn_set_hold_time(nvObj_t *nv)
 };
 
 
+stat_t kn_get_backoff_pressure(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_FLOAT;
+    nv->precision = 4;
+    nv->value_flt = pressure_kinematics.reverse_target_pressure;
+
+    return (STAT_OK);
+};
+stat_t kn_set_backoff_pressure(nvObj_t *nv)
+{
+    float value = nv->value_flt; // read it as a float
+    nv->precision = 4;
+    pressure_kinematics.reverse_target_pressure = value;
+    return (STAT_OK);
+};
+
+
+stat_t kn_get_e_value(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_FLOAT;
+    nv->precision = 4;
+    nv->value_flt = pressure_kinematics.sensor_error_store;
+
+    return (STAT_OK);
+};
+stat_t kn_get_i_value(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_FLOAT;
+    nv->precision = 4;
+    nv->value_flt = pressure_kinematics.sensor_inetgral_store;
+
+    return (STAT_OK);
+};
+stat_t kn_get_d_value(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_FLOAT;
+    nv->precision = 4;
+    nv->value_flt = pressure_kinematics.sensor_derivative_store;
+
+    return (STAT_OK);
+};
+
 stat_t kn_get_p_factor(nvObj_t *nv)
 {
     nv->valuetype = TYPE_FLOAT;

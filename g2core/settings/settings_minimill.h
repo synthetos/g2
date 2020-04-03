@@ -127,7 +127,7 @@ M100 ({th2mxp:1500}) ; laser max pulses per mm
 #define STATUS_REPORT_VERBOSITY     SR_FILTERED         // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 #define STATUS_REPORT_MIN_MS        100                 // milliseconds - enforces a viable minimum
 #define STATUS_REPORT_INTERVAL_MS   250                 // milliseconds - set $SV=0 to disable
-#define STATUS_REPORT_DEFAULTS      "knfc", "stat", "knft", "prs1", "feed"
+#define STATUS_REPORT_DEFAULTS      "knfc", "stat", "knft", "prs1", "feed", "knev", "kniv", "kndv"
 // #define STATUS_REPORT_DEFAULTS      "posx", "posy", "posz",
 //                                     "unit", "stat", "coor", "momo", "dist",
 //                                     "home", "vel", "plan", "line", "path",
@@ -213,10 +213,10 @@ M100 ({th2mxp:1500}) ; laser max pulses per mm
 
 // *** axis settings **********************************************************************************
 
-#define JERK_MAX                    1000                 // 500 million mm/(min^3)
-#define JERK_HIGH_SPEED             100000                // 1000 million mm/(min^3) // Jerk during homing needs to stop *fast*
-#define VELOCITY_MAX                6000
-#define LATCH_VELOCITY              25                  // reeeeally slow for accuracy
+#define JERK_MAX                    200000                 // 500 million mm/(min^3)
+#define JERK_HIGH_SPEED             4000                // 1000 million mm/(min^3) // Jerk during homing needs to stop *fast*
+#define VELOCITY_MAX                6500
+#define LATCH_VELOCITY              500                  // reeeeally slow for accuracy
 
 #define X_AXIS_MODE                 AXIS_STANDARD       // xam  see canonical_machine.h cmAxisMode for valid values
 #define X_VELOCITY_MAX              VELOCITY_MAX        // xvm  G0 max velocity in mm/min
