@@ -213,16 +213,16 @@ M100 ({th2mxp:1500}) ; laser max pulses per mm
 
 // *** axis settings **********************************************************************************
 
-#define JERK_MAX                    200000                 // 500 million mm/(min^3)
+#define JERK_MAX                    400                 // 500 million mm/(min^3)
 #define JERK_HIGH_SPEED             4000                // 1000 million mm/(min^3) // Jerk during homing needs to stop *fast*
-#define VELOCITY_MAX                6500
+#define VELOCITY_MAX                4000
 #define LATCH_VELOCITY              500                  // reeeeally slow for accuracy
 
 #define X_AXIS_MODE                 AXIS_STANDARD       // xam  see canonical_machine.h cmAxisMode for valid values
 #define X_VELOCITY_MAX              VELOCITY_MAX        // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX      // xfr  G1 max feed rate in mm/min
-#define X_TRAVEL_MIN                0                   // xtn  minimum travel for soft limits
-#define X_TRAVEL_MAX                120                 // xtr  travel between switches or crashes
+#define X_TRAVEL_MIN                -90                 // xtn  minimum travel for soft limits
+#define X_TRAVEL_MAX                5                   // xtr  travel between switches or crashes
 #define X_JERK_MAX                  JERK_MAX            // xjm
 #define X_JERK_HIGH_SPEED           JERK_HIGH_SPEED     // xjh
 #define X_HOMING_INPUT              1                   // xhi  input used for homing or 0 to disable

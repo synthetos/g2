@@ -266,7 +266,7 @@ stat_t kn_get_i_value(nvObj_t *nv)
 {
     nv->valuetype = TYPE_FLOAT;
     nv->precision = 4;
-    nv->value_flt = pressure_kinematics.sensor_inetgral_store;
+    nv->value_flt = pressure_kinematics.sensor_integral_store;
 
     return (STAT_OK);
 };
