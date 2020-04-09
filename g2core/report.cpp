@@ -322,12 +322,12 @@ stat_t sr_request_status_report(cmStatusReportRequest request_type)
         // request a filtered report unless a verbose report has laready been requested
         // verbosity setting may override and make it verbose anyway
         sr.status_report_request = sr.status_report_request == SR_VERBOSE ? SR_VERBOSE : SR_FILTERED;
-        sr.status_report_systick.set(sr.status_report_interval, true); // true mean to not extend the timer
+        sr.status_report_systick.set(sr.status_report_interval, true); // true means to not extend the timer
 
     } else {
          //always trigger verbose report, regardless of verbosity setting
         sr.status_report_request = SR_VERBOSE;
-        sr.status_report_systick.set(sr.status_report_interval, true); // true mean to not extend the timer
+        sr.status_report_systick.set(sr.status_report_interval, true); // true means to not extend the timer
     }
     return (STAT_OK);
 }
