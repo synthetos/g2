@@ -1015,10 +1015,16 @@ constexpr cfgItem_t sys_config_items_2[] = {
     { "kn","knp",   _f0, 4, tx_print_nul, kn_get_p_factor,          kn_set_p_factor,          nullptr, 0 },
     { "kn","kni",   _f0, 4, tx_print_nul, kn_get_i_factor,          kn_set_i_factor,          nullptr, 0 },
     { "kn","knd",   _f0, 4, tx_print_nul, kn_get_d_factor,          kn_set_d_factor,          nullptr, 0 },
+    { "kn","knp",   _f0, 4, tx_print_nul, kn_get_p_factor,          kn_set_p_factor,          nullptr, 0 },
+    { "kn","kni",   _f0, 4, tx_print_nul, kn_get_i_factor,          kn_set_i_factor,          nullptr, 0 },
+    { "kn","knd",   _f0, 4, tx_print_nul, kn_get_d_factor,          kn_set_d_factor,          nullptr, 0 },
     { "kn","knev",  _f0, 4, tx_print_nul, kn_get_e_value,           set_nul,                  nullptr, 0 },
     { "kn","kniv",  _f0, 4, tx_print_nul, kn_get_i_value,           set_nul,                  nullptr, 0 },
     { "kn","kndv",  _f0, 4, tx_print_nul, kn_get_d_value,           set_nul,                  nullptr, 0 },
     { "kn","knbf",  _f0, 4, tx_print_nul, kn_get_backoff_pressure,  kn_set_backoff_pressure,  nullptr, 0 },
+    { "kn","knec",  _i0, 0, tx_print_nul, kn_get_ec_value,          set_nul,                  nullptr, 0 },
+    { "kn","knuoc", _i0, 0, tx_print_nul, kn_get_uoc_value,         set_nul,                  nullptr, 0 },
+    { "kn","knumc", _i0, 0, tx_print_nul, kn_get_umc_value,         set_nul,                  nullptr, 0 },
 #endif
 
 

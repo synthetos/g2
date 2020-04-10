@@ -57,11 +57,11 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
 
 
     double sensor_zero_target = 0.0;
-    double sensor_proportional_factor = 250;
+    double sensor_proportional_factor = 200;
     double sensor_integral_store = 0;
-    double sensor_inetgral_factor = 0.005;
+    double sensor_inetgral_factor = 0.01;
     double sensor_error_store = 0;
-    double sensor_derivative_factor = 50;
+    double sensor_derivative_factor = 500;
     double sensor_derivative_store = 0;
     double derivative_contribution = 1.0/10.0;
 
@@ -293,6 +293,67 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
         // nothing to do yet
     }
 
+    // control and handle state machine changes
+
+    void change_state_to_start() {
+        // this means the EPM timer expired - this shoutd be on an Idle -> Start transition
+        // we'll also accept a Release -> Start transition
+        // if not, we have an error to deal with
+
+        if ((PressureState::Idle != pressure_state) && (PressureState::Release != pressure_state)) {
+            // we were unable to hold or obtain pressure - we need to move to release
+            change_state_to_release();
+        } else {
+            pressure_state = PressureState::Start;
+
+            sensor_zero_target = pressure_target;
+        }
+
+        // wipe out the PID integral, as in all the cases we reverse directions
+        sensor_integral_store = 0;
+
+        // restart the timer
+        inter_event_timer.set(seconds_between_events * 1000.0);
+        event_counter++;
+    }
+
+    void change_state_to_hold() {
+        // this should only go into hold if called from Start
+        if (PressureState::Start == pressure_state) {
+            pressure_state = PressureState::Hold;
+            hold_pressure_timer.set(seconds_to_hold_event*1000.0);
+        }
+
+
+        // Other possibilities:
+        // * Already in Hold: Still holding
+        // * In Release: pressure still high from Hold state
+        // * In Idle: Negative pressue used to Release is still in effect
+    }
+
+    void change_state_to_release() {
+        // we have an error of some sort
+        if (PressureState::Start == pressure_state) {
+            unable_to_obtian_error_counter++;
+        }
+        else if (PressureState::Hold == pressure_state) {
+            if (!hold_pressure_timer.isPast()) {
+                unable_to_maintian_error_counter++;
+            }
+        }
+
+        pressure_state = PressureState::Release;
+        sensor_zero_target = reverse_target_pressure;
+    }
+
+    void change_state_to_idle() {
+        if (PressureState::Release != pressure_state) {
+            // shouldn't happen?
+        }
+
+        pressure_state = PressureState::Idle;
+    }
+
     // if we requested a move, return true, otherwise false
     bool last_segment_was_idle = false;
     bool over_pressure = false;
@@ -335,10 +396,7 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
         */
 
         if (!inter_event_timer.isSet() || inter_event_timer.isPast()) {
-            if ()
-            sensor_zero_target = pressure_target;
-            sensor_integral_store = 0;
-            inter_event_timer.set(seconds_between_events * 1000.0);
+            change_state_to_start();
         }
 
         // check inputs to be sure we aren't anchored
@@ -357,30 +415,29 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
             bool over_pressure_detected = (raw_sensor_value[joint] > (sensor_zero_target*0.95));
 
             if ((PressureState::Hold == pressure_state) && hold_pressure_timer.isPast()) {
-                hold_pressure_timer.clear();
-                sensor_zero_target = reverse_target_pressure;
-                pressure_state = PressureState::Release;
-            } else if (over_pressure_detected && !hold_pressure_timer.isSet()) {
-                over_pressure = true;
-                hold_pressure_timer.set(seconds_to_hold_event*1000.0);
+                change_state_to_release();
+            } else if (over_pressure_detected) {
+                change_state_to_hold(); // detects if already in hold, or not in Start
             }
 
-            // bool switch_state = false; // ignore switches
             if (switch_state && !last_switch_state[joint]) {
-                if (sensor_zero_target < 0) {
+                if (PressureState::Release == pressure_state) {
                     // stop the motion
-                    sensor_zero_target = 0.1;
+                    // sensor_zero_target = 0.1;
                     sensor_integral_store = 0;
+
+                    change_state_to_idle();
                 }
                 joint_min_limit[joint] = joint_position[joint] + cm->a[AXIS_X].travel_min;
 
             } else if (!switch_state) {
                 if (last_switch_state[joint]) {
+                    // just left the switch, record how far we can go
                     joint_max_limit[joint] = joint_position[joint] + cm->a[AXIS_X].travel_max;
                 } else {
-                    if ((sensor_zero_target > 0) && (joint_position[joint] < joint_min_limit[joint])) {
-                        sensor_zero_target = reverse_target_pressure;
-                        sensor_integral_store = 0;
+                    // check to make sure we haven't gone too far
+                    if (joint_position[joint] > joint_max_limit[joint]) {
+                        change_state_to_release();
                     }
                 }
             }
@@ -439,17 +496,21 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
             // now that everything is done adjusting joint_vel[joint], we can recompute joint_accel[joint]
             joint_accel[joint] = (joint_vel[joint] - old_joint_vel) / segment_time - jmax * segment_time * 0.5;
 
-            // stop driving past the switch or too far out
+            // we check if we'll violate min or max position with the next position - last-change to stop driving into the wall
             auto proposed_position = joint_position[joint] + ((old_joint_vel + joint_vel[joint]) * 0.5 * segment_time);
+
+            // if the switch is closed, we may still have some room to stop cleanly
             if (((switch_state) && (proposed_position < joint_min_limit[joint]) && (joint_vel[joint] < 0)) ||
                 ((proposed_position > joint_max_limit[joint]) && (joint_vel[joint] > 0))) {
 
                 if (joint_vel[joint] > 0) {
-                    sensor_zero_target = reverse_target_pressure;
+                    // we moved too far, give up on this pass
+                    change_state_to_release();
                 }
 
                 // prevent the integral from winding up positive, pushing past the switch
                 sensor_integral_store = 0;
+
                 joint_vel[joint] = joint_vel[joint] * 0.5;  // drop the velocity hard -- we should probably do this more intelligently
 
                 // this is a lie - we've certainly violated jerk, so don't punish the acceleration counter

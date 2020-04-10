@@ -244,6 +244,28 @@ stat_t kn_get_d_value(nvObj_t *nv)
     return (STAT_OK);
 };
 
+stat_t kn_get_uoc_value(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_INTEGER;
+    nv->value_int = pressure_kinematics.unable_to_obtian_error_counter;
+
+    return (STAT_OK);
+};
+stat_t kn_get_umc_value(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_INTEGER;
+    nv->value_int = pressure_kinematics.unable_to_maintian_error_counter;
+
+    return (STAT_OK);
+};
+stat_t kn_get_ec_value(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_INTEGER;
+    nv->value_int = pressure_kinematics.event_counter;
+
+    return (STAT_OK);
+};
+
 stat_t kn_get_p_factor(nvObj_t *nv)
 {
     nv->valuetype = TYPE_FLOAT;

@@ -115,6 +115,10 @@ stat_t kn_get_e_value(nvObj_t *nv);
 stat_t kn_get_i_value(nvObj_t *nv);
 stat_t kn_get_d_value(nvObj_t *nv);
 
+stat_t kn_get_uoc_value(nvObj_t *nv);
+stat_t kn_get_umc_value(nvObj_t *nv);
+stat_t kn_get_ec_value(nvObj_t *nv);
+
 stat_t kn_get_p_factor(nvObj_t *nv);
 stat_t kn_set_p_factor(nvObj_t *nv);
 stat_t kn_get_i_factor(nvObj_t *nv);
