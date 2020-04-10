@@ -1,6 +1,6 @@
 /*
  * hardware.cpp - general hardware support functions
- * For: /board/g2v9
+ * For: /board/ArduinoDue
  * This file is part of the g2core project
  *
  * Copyright (c) 2010 - 2018 Alden S. Hart, Jr.
@@ -38,6 +38,42 @@
 #include "MotateUniqueID.h"
 #include "MotatePower.h"
 
+#include "board_gpio.h"
+
+#ifndef SPINDLE_ENABLE_OUTPUT_NUMBER
+#warning SPINDLE_ENABLE_OUTPUT_NUMBER is defaulted to 4!
+#warning SPINDLE_ENABLE_OUTPUT_NUMBER should be defined in settings or a board file!
+#define SPINDLE_ENABLE_OUTPUT_NUMBER 4
+#endif
+
+#ifndef SPINDLE_DIRECTION_OUTPUT_NUMBER
+#warning SPINDLE_DIRECTION_OUTPUT_NUMBER is defaulted to 5!
+#warning SPINDLE_DIRECTION_OUTPUT_NUMBER should be defined in settings or a board file!
+#define SPINDLE_DIRECTION_OUTPUT_NUMBER 5
+#endif
+
+#ifndef SPINDLE_PWM_NUMBER
+#warning SPINDLE_PWM_NUMBER is defaulted to 6!
+#warning SPINDLE_PWM_NUMBER should be defined in settings or a board file!
+#define SPINDLE_PWM_NUMBER 6
+#endif
+
+#include "safety_manager.h"
+
+SafetyManager sm{};
+SafetyManager *safety_manager = &sm;
+
+// Stub in getSysConfig_3
+// constexpr cfgItem_t sys_config_items_3[] = {};
+constexpr cfgSubtableFromStaticArray sys_config_3{};
+const configSubtable * const getSysConfig_3() { return &sys_config_3; }
+
+#include "esc_spindle.h"
+ESCSpindle esc_spindle {SPINDLE_PWM_NUMBER, SPINDLE_ENABLE_OUTPUT_NUMBER, SPINDLE_DIRECTION_OUTPUT_NUMBER, SPINDLE_SPEED_CHANGE_PER_MS};
+
+ToolHead *toolhead_for_tool(uint8_t tool) {
+    return &esc_spindle;
+}
 
 /*
  * hardware_init() - lowest level hardware init
@@ -46,7 +82,9 @@
 void hardware_init()
 {
     board_hardware_init();
-	return;
+    toolhead_for_tool(0)->init();
+    spindle_set_toolhead(toolhead_for_tool(0));
+    return;
 }
 
 /*
@@ -65,12 +103,12 @@ stat_t hardware_periodic()
 
 void hw_hard_reset(void)
 {
-    Motate::System::reset(/*boootloader: */ false); // arg=0 resets the system
+    Motate::System::reset(/*bootloader: */ false);  // arg=0 resets the system
 }
 
 void hw_flash_loader(void)
 {
-    Motate::System::reset(/*boootloader: */ true);  // arg=1 erases FLASH and enters FLASH loader
+    Motate::System::reset(/*bootloader: */ true);   // arg=1 erases FLASH and enters FLASH loader
 }
 
 /*
@@ -85,7 +123,7 @@ void _get_id(char *id)
     char *p = id;
     const char *uuid = Motate::UUID;
 
-    Motate::strncpy(p, uuid, Motate::strlen(uuid));
+    Motate::strncpy(p, uuid, Motate::strlen(uuid)+1);
 }
 
 /***** END OF SYSTEM FUNCTIONS *****/
@@ -124,7 +162,7 @@ stat_t hw_get_fbc(nvObj_t *nv)
 #undef settings_file_string2
 #else
     ritorno(nv_copy_string(nv, "<default-settings>"));
- #endif
+#endif
 
     return (STAT_OK);
 }
@@ -145,11 +183,13 @@ stat_t hw_get_id(nvObj_t *nv)
 /*
  * hw_flash() - invoke FLASH loader from command input
  */
+
 stat_t hw_flash(nvObj_t *nv)
 {
     hw_flash_loader();
 	return(STAT_OK);
 }
+
 
 /***********************************************************************************
  * TEXT MODE SUPPORT
