@@ -91,9 +91,35 @@ gpioDigitalOutput* const d_out[] = {&dout1, &dout2, &dout3, &dout4, &dout5, &dou
  gpioAnalogInput*    a_in[] = {};
 // gpioAnalogOutput*   a_out[A_OUT_CHANNELS];
 
+Motate::SPIChipSelectPin<Motate::kPressure_ChipSelectPinNumber> pressure_cs{};
+// BME280<SPIBus_used_t::SPIBusDevice> pressure_sensor{spiBus, pressure_cs};
+TruStabilitySSC<SPIBus_used_t::SPIBusDevice> pressure_sensor{spiBus,
+                                                             pressure_cs,
+                                                             /*min_output:*/  1638, // 10% of 2^12
+                                                             /*max_output:*/ 14745, // 90% of 2^12
+                                                             /*min_value:*/ 0.0,    // 0psi
+                                                             /*max_value:*/ 15.0,   // 15psi
+                                                             PressureUnits::PSI};
+
 /************************************************************************************
  **** CODE **************************************************************************
  ************************************************************************************/
+
+ // Register a SysTick event to call start_sampling every temperature_sample_freq ms
+ const int16_t ain_sample_freq = 1;
+ int16_t ain_sample_counter = ain_sample_freq;
+ Motate::SysTickEvent ain_tick_event{[] {
+                                         //  if (!--ain_sample_counter) {
+                                         //      ai1.startSampling();
+                                         //      ai2.startSampling();
+                                         //      ai3.startSampling();
+                                         //      ai4.startSampling();
+                                         //      ain_sample_counter = ain_sample_freq;
+                                         //  }
+                                         pressure_sensor.startSampling(); // has a timeout built in to prevent over-calling
+                                     },
+                                     nullptr};
+
 /*
  * gpio_reset() - reset inputs and outputs (no initialization)
  */

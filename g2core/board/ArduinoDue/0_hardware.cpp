@@ -58,6 +58,8 @@
 #define SPINDLE_PWM_NUMBER 6
 #endif
 
+SPIBus_used_t spiBus;
+
 #include "safety_manager.h"
 
 SafetyManager sm{};
@@ -91,8 +93,20 @@ void hardware_init()
  * hardware_periodic() - callback from the controller loop - TIME CRITICAL.
  */
 
+float pressure = 0;
+float pressure_threshold = 0.01;
+
 stat_t hardware_periodic()
 {
+
+    #if HAS_PRESSURE
+    float new_pressure = pressure_sensor.getPressure(PressureUnits::cmH2O);
+    if (std::abs(pressure - new_pressure) >= pressure_threshold) {
+        pressure = new_pressure;  // only record if goes past threshold!
+        sr_request_status_report(SR_REQUEST_TIMED);
+    }
+    #endif
+
     return STAT_OK;
 }
 

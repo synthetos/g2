@@ -45,13 +45,13 @@
 #define INPUT_LOCKOUT_MS    10      // milliseconds to go dead after input firing
 
 // Setup spindle and coolant pin assignments
-#define SPINDLE_ENABLE_OUTPUT_NUMBER 1
-#define SPINDLE_DIRECTION_OUTPUT_NUMBER 2
-#define SPINDLE_PWM_NUMBER 3
-#define MIST_ENABLE_OUTPUT_NUMBER 4
+// #define SPINDLE_ENABLE_OUTPUT_NUMBER 1
+// #define SPINDLE_DIRECTION_OUTPUT_NUMBER 2
+// #define SPINDLE_PWM_NUMBER 3
+// #define MIST_ENABLE_OUTPUT_NUMBER 4
 
-#define FLOOD_ENABLE_OUTPUT_NUMBER 0
-#define SECONDARY_PWM_OUTPUT_NUMBER 0
+// #define FLOOD_ENABLE_OUTPUT_NUMBER 0
+// #define SECONDARY_PWM_OUTPUT_NUMBER 0
 
 /*
  * The GPIO objects themselves - this must match up with board_gpio.cpp!
@@ -96,5 +96,10 @@ extern gpioDigitalOutputPin<OutputType<OUTPUT11_PWM, Motate::kOutput11_PinNumber
 extern gpioDigitalOutputPin<OutputType<OUTPUT12_PWM, Motate::kOutput12_PinNumber>> dout12;
 extern gpioDigitalOutputPin<OutputType<OUTPUT13_PWM, Motate::kOutput13_PinNumber>> dout13;
 
+// #include "bme280.h"
+// extern BME280<SPIBus_used_t::SPIBusDevice> pressure_sensor;
+
+#include "honeywell-trustability-ssc.h"
+extern TruStabilitySSC<SPIBus_used_t::SPIBusDevice> pressure_sensor;
 
 #endif // End of include guard: BOARD_GPIO_H_ONCE

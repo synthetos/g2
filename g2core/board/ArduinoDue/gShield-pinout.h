@@ -213,6 +213,8 @@ pin_number kSD_CardDetectPinNumber = -1;
 pin_number kInterlock_InPinNumber  = -1;
 pin_number kOutputSAFE_PinNumber   = -1;  // SAFE signal
 
+pin_number kPressure_ChipSelectPinNumber = kSocket2_SPISlaveSelectPinNumber;
+
 pin_number kLED_USBRXPinNumber = 72;
 pin_number kLED_USBTXPinNumber = 73;
 
