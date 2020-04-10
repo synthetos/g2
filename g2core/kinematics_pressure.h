@@ -69,12 +69,6 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
 
     const float sensor_skip_detection_jump = 10000;
 
-    double friction_loss_normal     = 0;       // percentage of loss due to friction per segment, parked
-    double friction_midpoint_normal = 15.0; // velocity (mm/min) at the midpoint for friction per segment, parked
-
-    double friction_loss_slowed     = 1;   // percentage of loss due to friction per segment, NOT parked
-    double friction_midpoint_slowed = 20.0;   // velocity (mm/min) at the midpoint for friction per segment, NOT parked
-
     double pressure_target = 0;
     double seconds_between_events = 6.0;
     double seconds_to_hold_event = 2;
@@ -93,9 +87,16 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
     double sensor_diff[4] = {0.0, 0.0, 0.0, 0.0};
     bool last_switch_state[4];
 
+    enum class PressureState { Idle, Start, Hold, Release };
+    PressureState pressure_state = PressureState::Idle;
+
+    int32_t unable_to_obtian_error_counter = 0;
+    int32_t unable_to_maintian_error_counter = 0;
+    int32_t event_counter = 0;
+
     // use a timer to let the sensors be initied and their readings settle
     Motate::Timeout sensor_settle_timer;
-    Motate::Timeout at_pressure_timer;
+    Motate::Timeout hold_pressure_timer;
     Motate::Timeout inter_event_timer;
 
     #define ANCHOR_A_INPUT 1
@@ -120,7 +121,7 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
 
     PressureKinematics() {
         sensor_settle_timer.set(5000);
-        at_pressure_timer.clear();
+        hold_pressure_timer.clear();
     }
 
     // Joints are defined as these axes in order:
@@ -334,6 +335,7 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
         */
 
         if (!inter_event_timer.isSet() || inter_event_timer.isPast()) {
+            if ()
             sensor_zero_target = pressure_target;
             sensor_integral_store = 0;
             inter_event_timer.set(seconds_between_events * 1000.0);
@@ -348,15 +350,19 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
         // const double segment_time_3 = segment_time * segment_time * segment_time; // time in MINUTES
 
         for (uint8_t joint = 0; joint < pressure_sensor_count; joint++) {
+            // capture the switch state
             bool switch_state = anchor_inputs[joint]->getState();
-            bool overpressure_detected = (raw_sensor_value[joint] > (sensor_zero_target*0.95)) && (sensor_zero_target > 7);
-            if (over_pressure && at_pressure_timer.isPast()) {
+
+            // determine if we're NOW at or over pressure - we just call it "over_pressure" for brevity
+            bool over_pressure_detected = (raw_sensor_value[joint] > (sensor_zero_target*0.95));
+
+            if ((PressureState::Hold == pressure_state) && hold_pressure_timer.isPast()) {
+                hold_pressure_timer.clear();
                 sensor_zero_target = reverse_target_pressure;
-                over_pressure = false;
-                at_pressure_timer.clear();
-            } else if (overpressure_detected && !at_pressure_timer.isSet()) {
+                pressure_state = PressureState::Release;
+            } else if (over_pressure_detected && !hold_pressure_timer.isSet()) {
                 over_pressure = true;
-                at_pressure_timer.set(seconds_to_hold_event*1000.0);
+                hold_pressure_timer.set(seconds_to_hold_event*1000.0);
             }
 
             // bool switch_state = false; // ignore switches
@@ -382,10 +388,6 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
             // prev_joint_accel[joint] = joint_accel[joint];
             start_velocities[joint] = std::abs(joint_vel[joint]);
 
-            // static friction
-            auto friction = (((switch_state && sensor_zero_target < 3) ? friction_loss_slowed : friction_loss_normal)/100.0);
-            auto friction_midpoint = ((switch_state && sensor_zero_target < 3) ? friction_midpoint_slowed : friction_midpoint_normal);
-
             double jmax = cm->a[AXIS_X].jerk_max * JERK_MULTIPLIER;
             const double vmax = cm->a[AXIS_X].velocity_max;
 
@@ -402,11 +404,6 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
             } else if (requested_velocity > vmax) {
                 requested_velocity = vmax;
             }
-
-            // if (((old_joint_vel < -10) && (requested_velocity > 0)) || ((old_joint_vel > 10) && (requested_velocity < 0))) {
-            //     // limit zero crossings to be to zero
-            //     requested_velocity = 0;
-            // }
 
             // double requested_accel = (requested_velocity - old_joint_vel) / segment_time - (jmax * segment_time)/2;
 
@@ -430,12 +427,6 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
                 joint_accel[joint] = (std::abs(old_joint_accel) - jmax * segment_time) * sign;
                 joint_jerk[joint] = -jmax * sign;
             }
-
-            // only apply friction if we're within 2 (sqrt(4)) of the target value of the target is near zero
-            // if ((std::abs(sensor_diff[joint]) < 4) || (sensor_zero_target < 3)) {
-            // auto friction_loss_vel = (friction * friction_midpoint) / (std::abs(joint_vel[joint]) + friction_midpoint);
-            // joint_vel[joint] = joint_vel[joint] - joint_vel[joint] * friction_loss_vel;
-            // }
             joint_vel[joint] = joint_vel[joint] + joint_accel[joint]*segment_time + jmax*segment_time*segment_time*0.5;
 
             // limit velocity
@@ -444,9 +435,6 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
             } else if (joint_vel[joint] > vmax) {
                 joint_vel[joint] = vmax;
             }
-            // if (((old_joint_vel < 0) && (joint_vel[joint] > 0)) || ((old_joint_vel > 0) && (joint_vel[joint] < 0))) {
-            //     joint_vel[joint] = 0;
-            // }
 
             // now that everything is done adjusting joint_vel[joint], we can recompute joint_accel[joint]
             joint_accel[joint] = (joint_vel[joint] - old_joint_vel) / segment_time - jmax * segment_time * 0.5;

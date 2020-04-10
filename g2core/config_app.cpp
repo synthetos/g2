@@ -1010,8 +1010,6 @@ constexpr cfgItem_t sys_config_items_2[] = {
     { "kn","knfc",  _f0, 4, tx_print_nul, kn_get_force,             kn_set_force,             nullptr, 0 },
     { "kn","knft",  _f0, 4, tx_print_nul, kn_get_target,            kn_set_target,            nullptr, 0 },
     { "kn","knan",  _b0, 0, tx_print_nul, kn_get_anchored,          kn_set_anchored,          nullptr, 0 },
-    { "kn","knfl",  _f0, 4, tx_print_nul, kn_get_friction_loss,     kn_set_friction_loss,     nullptr, 0 },
-    { "kn","knfm",  _f0, 4, tx_print_nul, kn_get_friction_midpoint, kn_set_friction_midpoint, nullptr, 0 },
     { "kn","knepm", _f0, 4, tx_print_nul, kn_get_epm,               kn_set_epm,               nullptr, 0 },
     { "kn","knht",  _f0, 4, tx_print_nul, kn_get_hold_time,         kn_set_hold_time,         nullptr, 0 },
     { "kn","knp",   _f0, 4, tx_print_nul, kn_get_p_factor,          kn_set_p_factor,          nullptr, 0 },

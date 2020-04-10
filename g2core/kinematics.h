@@ -126,13 +126,6 @@ stat_t kn_set_d_factor(nvObj_t *nv);
 stat_t kn_get_anchored(nvObj_t *nv);
 stat_t kn_set_anchored(nvObj_t *nv);
 
-
-stat_t kn_get_friction_loss(nvObj_t *nv);
-stat_t kn_set_friction_loss(nvObj_t *nv);
-
-stat_t kn_get_friction_midpoint(nvObj_t *nv);
-stat_t kn_set_friction_midpoint(nvObj_t *nv);
-
 stat_t kn_get_backoff_pressure(nvObj_t *nv);
 stat_t kn_set_backoff_pressure(nvObj_t *nv);
 

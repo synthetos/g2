@@ -168,41 +168,6 @@ stat_t kn_set_target(nvObj_t *nv)
     return (STAT_OK);
 };
 
-
-stat_t kn_get_friction_loss(nvObj_t *nv)
-{
-    nv->valuetype = TYPE_FLOAT;
-    nv->precision = 4;
-    nv->value_flt = pressure_kinematics.friction_loss_normal;
-
-    return (STAT_OK);
-};
-stat_t kn_set_friction_loss(nvObj_t *nv)
-{
-    float value = nv->value_flt; // read it as a float
-    nv->precision = 4;
-    pressure_kinematics.friction_loss_normal = value;
-    return (STAT_OK);
-};
-
-
-stat_t kn_get_friction_midpoint(nvObj_t *nv)
-{
-    nv->valuetype = TYPE_FLOAT;
-    nv->precision = 4;
-    nv->value_flt = pressure_kinematics.friction_midpoint_normal;
-
-    return (STAT_OK);
-};
-stat_t kn_set_friction_midpoint(nvObj_t *nv)
-{
-    float value = nv->value_flt; // read it as a float
-    nv->precision = 4;
-    pressure_kinematics.friction_midpoint_normal = value;
-    return (STAT_OK);
-};
-
-
 stat_t kn_get_epm(nvObj_t *nv)
 {
     nv->valuetype = TYPE_FLOAT;
