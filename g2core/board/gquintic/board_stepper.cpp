@@ -95,7 +95,6 @@ Stepper* const Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_
 extern LaserTool_used_t laser_tool;
 LaserTool_used_t &motor_6 = laser_tool;
 Stepper* const Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5, &motor_6};
-#warning here
 #else
 Stepper* const Motors[MOTORS] = {&motor_1, &motor_2, &motor_3, &motor_4, &motor_5};
 #endif

@@ -66,6 +66,41 @@
       }
     },
     {
+      "label": "Build CONFIG=MiniMillgShield Debug",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=MiniMillgShield", "VERBOSE=2", "COLOR=0", "DEBUG=2",
+         "RECORD=1"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
+      "label": "Build CONFIG=MiniMillgShield Production",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=MiniMillgShield", "VERBOSE=2", "COLOR=0",
+         "RECORD=1"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
+      "label": "Clean CONFIG=MiniMillgShield",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=MiniMillgShield", "clean"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
       "label": "Build CONFIG=MiniMillv9 Debug",
       "type": "process",
       "command": "make",

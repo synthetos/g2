@@ -63,16 +63,35 @@
 SafetyManager sm{};
 SafetyManager *safety_manager = &sm;
 
-// Stub in getSysConfig_3
-// constexpr cfgItem_t sys_config_items_3[] = {};
-constexpr cfgSubtableFromStaticArray sys_config_3{};
-const configSubtable * const getSysConfig_3() { return &sys_config_3; }
-
 #include "esc_spindle.h"
 ESCSpindle esc_spindle {SPINDLE_PWM_NUMBER, SPINDLE_ENABLE_OUTPUT_NUMBER, SPINDLE_DIRECTION_OUTPUT_NUMBER, SPINDLE_SPEED_CHANGE_PER_MS};
 
+#if HAS_LASER
+#ifndef LASER_ENABLE_OUTPUT_NUMBER
+#error LASER_ENABLE_OUTPUT_NUMBER should be defined in settings or a board file!
+#endif
+
+#ifndef LASER_FIRE_PIN_NUMBER
+#error LASER_FIRE_PIN_NUMBER should be defined in settings or a board file!
+#endif
+
+#include "laser_toolhead.h"
+LaserTool_used_t laser_tool {LASER_ENABLE_OUTPUT_NUMBER, MOTOR_5};
+
+// CartesianKinematics<AXES, MOTORS> cartesian_kinematics;
+KinematicsBase<AXES, MOTORS> *kn = &laser_tool;
+#endif
+
 ToolHead *toolhead_for_tool(uint8_t tool) {
+#if !HAS_LASER
     return &esc_spindle;
+#else
+    if (tool != LASER_TOOL) {
+        return &esc_spindle;
+    } else {
+        return &laser_tool;
+    }
+#endif
 }
 
 /*
@@ -82,8 +101,13 @@ ToolHead *toolhead_for_tool(uint8_t tool) {
 void hardware_init()
 {
     board_hardware_init();
-    toolhead_for_tool(0)->init();
-    spindle_set_toolhead(toolhead_for_tool(0));
+
+    esc_spindle.init();
+#if HAS_LASER
+    laser_tool.init();
+#endif
+    spindle_set_toolhead(toolhead_for_tool(1));
+
     return;
 }
 
@@ -190,6 +214,78 @@ stat_t hw_flash(nvObj_t *nv)
 	return(STAT_OK);
 }
 
+#if !HAS_LASER
+// Stub in getSysConfig_3
+// constexpr cfgItem_t sys_config_items_3[] = {};
+constexpr cfgSubtableFromStaticArray sys_config_3{};
+const configSubtable * const getSysConfig_3() { return &sys_config_3; }
+
+#else
+
+stat_t set_pulse_duration(nvObj_t *nv)
+{
+    laser_tool.set_pulse_duration_us(nv->valuetype == TYPE_FLOAT ? nv->value_flt : nv->value_int);
+    return (STAT_OK);
+}
+stat_t get_pulse_duration(nvObj_t *nv)
+{
+    nv->value_int = laser_tool.get_pulse_duration_us();
+    nv->valuetype = TYPE_INTEGER;
+    return (STAT_OK);
+}
+
+stat_t get_min_s(nvObj_t *nv) {
+    nv->value_flt = laser_tool.get_min_s();
+    nv->valuetype = TYPE_FLOAT;
+    return (STAT_OK);
+}
+stat_t set_min_s(nvObj_t *nv) {
+    laser_tool.set_min_s(nv->value_flt);
+    return (STAT_OK);
+}
+
+stat_t get_max_s(nvObj_t *nv) {
+    nv->value_flt = laser_tool.get_max_s();
+    nv->valuetype = TYPE_FLOAT;
+    return (STAT_OK);
+}
+stat_t set_max_s(nvObj_t *nv) {
+    laser_tool.set_max_s(nv->value_flt);
+    return (STAT_OK);
+}
+
+stat_t get_min_ppm(nvObj_t *nv) {
+    nv->value_flt = laser_tool.get_min_ppm();
+    nv->valuetype = TYPE_FLOAT;
+    return (STAT_OK);
+}
+stat_t set_min_ppm(nvObj_t *nv) {
+    laser_tool.set_min_ppm(nv->value_flt);
+    return (STAT_OK);
+}
+
+stat_t get_max_ppm(nvObj_t *nv) {
+    nv->value_flt = laser_tool.get_max_ppm();
+    nv->valuetype = TYPE_FLOAT;
+    return (STAT_OK);
+}
+stat_t set_max_ppm(nvObj_t *nv) {
+    laser_tool.set_max_ppm(nv->value_flt);
+    return (STAT_OK);
+}
+
+constexpr cfgItem_t sys_config_items_3[] = {
+    { "th2","th2pd", _iip,  0, tx_print_nul, get_pulse_duration, set_pulse_duration, nullptr, LASER_PULSE_DURATION },
+    { "th2","th2mns", _fip,  0, tx_print_nul, get_min_s, set_min_s, nullptr, LASER_MIN_S },
+    { "th2","th2mxs", _fip,  0, tx_print_nul, get_max_s, set_max_s, nullptr, LASER_MAX_S },
+    { "th2","th2mnp", _fip,  0, tx_print_nul, get_min_ppm, set_min_ppm, nullptr, LASER_MIN_PPM },
+    { "th2","th2mxp", _fip,  0, tx_print_nul, get_max_ppm, set_max_ppm, nullptr, LASER_MAX_PPM },
+};
+
+constexpr cfgSubtableFromStaticArray sys_config_3{sys_config_items_3};
+const configSubtable * const getSysConfig_3() { return &sys_config_3; }
+
+#endif
 
 /***********************************************************************************
  * TEXT MODE SUPPORT

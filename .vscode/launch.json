@@ -43,6 +43,25 @@
       "preLaunchTask": "Build CONFIG=r7 Debug"
     },
     {
+      "name": "Debug CONFIG=MiniMillgShield (J-Link)",
+      "type": "cortex-debug",
+      "request": "launch",
+      "servertype": "jlink",
+      "cwd": "${workspaceRoot}/g2core/",
+      "executable": "./bin/MiniMillgShield-gShield/g2core.elf",
+      "device": "ATSAMS3X8E",
+      "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sam3x/ATSAM3X8E.svd",
+      "interface": "swd",
+      "showDevDebugOutput": false,
+      "osx": {
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/"
+      },
+      "linux": {
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-9m/bin/"
+      },
+      "preLaunchTask": "Build CONFIG=MiniMillgShield Debug"
+    },
+    {
       "name": "Debug CONFIG=ShapeokoDualY (J-Link)",
       "type": "cortex-debug",
       "request": "launch",

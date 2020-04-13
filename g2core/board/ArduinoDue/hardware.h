@@ -30,7 +30,10 @@
  */
 
 #include "config.h"
+#include "settings.h"
 #include "error.h"
+
+#include "MotateUtilities.h" // for HOT_FUNC and HOT_DATA
 
 #ifndef HARDWARE_H_ONCE
 #define HARDWARE_H_ONCE
@@ -40,11 +43,22 @@
 #define G2CORE_HARDWARE_PLATFORM    "ArduinoDue"
 #define G2CORE_HARDWARE_VERSION     "na"
 
+#ifndef HAS_LASER
+#if HAS_HOBBY_SERVO_MOTOR
+#error Can NOT have a laser and a hobby servo at the same time, sorry
+#endif
+#define HAS_LASER 0
+#endif
+
 /***** Motors & PWM channels supported by this hardware *****/
 // These must be defines (not enums) so expressions like this:
 //  #if (MOTORS >= 6)  will work
 
+#if HAS_LASER
+#define MOTORS 5                    // number of motors + one "laser" motor (used for pulsing the laser in sync)
+#else
 #define MOTORS 4                    // number of motors supported the hardware
+#endif
 #define PWMS 2                      // number of PWM channels supported the hardware
 #define AXES 6                      // axes to support -- must be 6 or 9
 
