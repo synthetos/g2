@@ -111,6 +111,9 @@ stat_t kn_set_epm(nvObj_t *nv);
 stat_t kn_get_hold_time(nvObj_t *nv);
 stat_t kn_set_hold_time(nvObj_t *nv);
 
+stat_t kn_get_hold_ratio(nvObj_t *nv);
+stat_t kn_set_hold_ratio(nvObj_t *nv);
+
 stat_t kn_get_e_value(nvObj_t *nv);
 stat_t kn_get_i_value(nvObj_t *nv);
 stat_t kn_get_d_value(nvObj_t *nv);

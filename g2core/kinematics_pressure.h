@@ -57,21 +57,22 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
 
 
     double sensor_zero_target = 0.0;
-    double sensor_proportional_factor = 200;
+    double sensor_proportional_factor = 170;
     double sensor_integral_store = 0;
     double sensor_inetgral_factor = 0.01;
     double sensor_error_store = 0;
-    double sensor_derivative_factor = 500;
+    double sensor_derivative_factor = 900;
     double sensor_derivative_store = 0;
     double derivative_contribution = 1.0/10.0;
 
-    double reverse_target_pressure = -5;
+    double reverse_target_pressure = 0;
 
     const float sensor_skip_detection_jump = 10000;
 
     double pressure_target = 0;
     double seconds_between_events = 6.0;
     double seconds_to_hold_event = 2;
+    double pressure_hold_release_ratio = 3;
 
     bool is_anchored = false;
 
@@ -303,6 +304,9 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
         if ((PressureState::Idle != pressure_state) && (PressureState::Release != pressure_state)) {
             // we were unable to hold or obtain pressure - we need to move to release
             change_state_to_release();
+        } else if (fp_ZERO(pressure_target)) {
+            // no target pressure, go to (or stay in) idle instead
+            return change_state_to_idle();
         } else {
             pressure_state = PressureState::Start;
 
@@ -456,7 +460,22 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
 
             double requested_velocity = sensor_value[joint];
 
-            if (requested_velocity < -vmax) {
+            // if we're releasing, target -vmax
+            if (PressureState::Release == pressure_state) {
+                requested_velocity = -vmax;
+            }
+            // if we're idle, target no velocity
+            else if (PressureState::Idle == pressure_state) {
+                requested_velocity = 0;
+            }
+            // limit velocity to stop at zero for polarity changes, and then limit to +- max
+            else if ((old_joint_vel < -1) && (requested_velocity > 1)) {
+                requested_velocity = 0;
+            }
+            else if ((old_joint_vel > 1) && (requested_velocity < -1)) {
+                requested_velocity = 0;
+            }
+            else if (requested_velocity < -vmax) {
                 requested_velocity = -vmax;
             } else if (requested_velocity > vmax) {
                 requested_velocity = vmax;
@@ -477,7 +496,7 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
                 sign = -1.0;
             }
 
-            if ((std::abs(old_joint_accel) + jmax * segment_time * 3.0) < max_accel) {
+            if ((std::abs(old_joint_accel) + jmax * segment_time * 4.0) < max_accel) {
                 joint_accel[joint] = (std::abs(old_joint_accel) + jmax * segment_time) * sign;
                 joint_jerk[joint] = jmax * sign;
             } else {

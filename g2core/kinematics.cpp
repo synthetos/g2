@@ -181,6 +181,9 @@ stat_t kn_set_epm(nvObj_t *nv)
     float value = nv->value_flt; // read it as a float
     nv->precision = 4;
     pressure_kinematics.seconds_between_events = 60.0 / value;
+    pressure_kinematics.seconds_to_hold_event =
+        pressure_kinematics.seconds_between_events / (pressure_kinematics.pressure_hold_release_ratio + 1);
+
     return (STAT_OK);
 };
 
@@ -198,6 +201,28 @@ stat_t kn_set_hold_time(nvObj_t *nv)
     float value = nv->value_flt; // read it as a float
     nv->precision = 4;
     pressure_kinematics.seconds_to_hold_event = value;
+    pressure_kinematics.pressure_hold_release_ratio =
+        (pressure_kinematics.seconds_between_events / pressure_kinematics.seconds_to_hold_event) - 1;
+
+    return (STAT_OK);
+};
+
+
+stat_t kn_get_hold_ratio(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_FLOAT;
+    nv->precision = 4;
+    nv->value_flt = pressure_kinematics.pressure_hold_release_ratio;
+
+    return (STAT_OK);
+};
+stat_t kn_set_hold_ratio(nvObj_t *nv)
+{
+    float value = nv->value_flt; // read it as a float
+    nv->precision = 4;
+    pressure_kinematics.pressure_hold_release_ratio = value;
+    pressure_kinematics.seconds_to_hold_event =
+        pressure_kinematics.seconds_between_events / (pressure_kinematics.pressure_hold_release_ratio + 1);
     return (STAT_OK);
 };
 

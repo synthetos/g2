@@ -1012,6 +1012,7 @@ constexpr cfgItem_t sys_config_items_2[] = {
     { "kn","knan",  _b0, 0, tx_print_nul, kn_get_anchored,          kn_set_anchored,          nullptr, 0 },
     { "kn","knepm", _f0, 4, tx_print_nul, kn_get_epm,               kn_set_epm,               nullptr, 0 },
     { "kn","knht",  _f0, 4, tx_print_nul, kn_get_hold_time,         kn_set_hold_time,         nullptr, 0 },
+    { "kn","knhr",  _f0, 4, tx_print_nul, kn_get_hold_ratio,        kn_set_hold_ratio,        nullptr, 0 },
     { "kn","knp",   _f0, 4, tx_print_nul, kn_get_p_factor,          kn_set_p_factor,          nullptr, 0 },
     { "kn","kni",   _f0, 4, tx_print_nul, kn_get_i_factor,          kn_set_i_factor,          nullptr, 0 },
     { "kn","knd",   _f0, 4, tx_print_nul, kn_get_d_factor,          kn_set_d_factor,          nullptr, 0 },
@@ -1737,6 +1738,13 @@ constexpr cfgItem_t groups_config_items_1[] = {
     { "","ain7", _f0, 0, tx_print_nul, get_grp, set_grp,nullptr,0 },
     { "","ain8", _f0, 0, tx_print_nul, get_grp, set_grp,nullptr,0 },
 
+#if KINEMATICS==KINE_PRESSURE || KINEMATICS==KINE_FOUR_CABLE
+#define KINEMATICS_GROUPS 1
+    { "","kn", _f0, 0, tx_print_nul, get_grp, set_grp,nullptr,0 },
+#else
+#define KINEMATICS_GROUPS 0
+#endif
+
 #define COORDINATE_OFFSET_GROUPS 9
     { "","g54",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // coord offset groups
     { "","g55",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
@@ -1922,6 +1930,7 @@ cfgArraySynthesizer cfgArray {};
                         + DIGITAL_IN_GROUPS \
                         + DIGITAL_OUT_GROUPS \
                         + ANALOG_IN_GROUPS \
+                        + KINEMATICS_GROUPS \
                         + COORDINATE_OFFSET_GROUPS \
                         + TOOL_OFFSET_GROUPS \
                         + MACHINE_STATE_GROUPS \
