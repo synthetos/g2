@@ -1,5 +1,5 @@
 /*
- * honeywell-trustability-ssc.h - suppport for talking to the Honeywll TruStability SSC line of pressure/temperature sensors
+ * honeywell-trustability-ssc.h - suppport for talking to the Honeywell TruStability SSC line of pressure/temperature sensors
  * This file is part of the G2 project
  *
  * Copyright (c) 2020 Robert Giseburt
@@ -25,10 +25,6 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-// Many thanks to Adafruit!
-// More specifically, for their driver at
-//   https://github.com/adafruit/Adafruit_TruStabilitySSC_Library
-// and their breakout board at https://adafru.it/2652
 
 #ifndef honeywell_trustability_ssc_h
 #define honeywell_trustability_ssc_h
