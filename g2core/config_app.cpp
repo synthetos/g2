@@ -1026,6 +1026,11 @@ constexpr cfgItem_t sys_config_items_2[] = {
     { "kn","knec",  _i0, 0, tx_print_nul, kn_get_ec_value,          set_nul,                  nullptr, 0 },
     { "kn","knuoc", _i0, 0, tx_print_nul, kn_get_uoc_value,         set_nul,                  nullptr, 0 },
     { "kn","knumc", _i0, 0, tx_print_nul, kn_get_umc_value,         set_nul,                  nullptr, 0 },
+    { "kn","knpos1",_i0, 0, tx_print_nul, kn_get_pos_1,             set_nul,                  nullptr, 0 },
+    { "kn","knpos2",_i0, 0, tx_print_nul, kn_get_pos_2,             set_nul,                  nullptr, 0 },
+    { "kn","knpos3",_i0, 0, tx_print_nul, kn_get_pos_3,             set_nul,                  nullptr, 0 },
+    { "kn","knpos4",_i0, 0, tx_print_nul, kn_get_pos_4,             set_nul,                  nullptr, 0 },
+    { "kn","knpos5",_i0, 0, tx_print_nul, kn_get_pos_5,             set_nul,                  nullptr, 0 },
 #endif
 
 

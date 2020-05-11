@@ -51,17 +51,22 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
     double joint_jerk[4];
 
     static constexpr uint8_t pressure_sensor_count = 1;
-    double raw_sensor_value[pressure_sensor_count];  // stored from last time they were read
-    double sensor_value[pressure_sensor_count];  // stored from last time they were read
-    double prev_sensor_value[pressure_sensor_count];  // stored from last time they were read
+    double raw_pressure_value[pressure_sensor_count];  // filtered value as read off the sensor
+    double zero_pressure_value[pressure_sensor_count];  // stored zero value for pressure
+    double pressure_pid_output[pressure_sensor_count];      // value after PID
+    double prev_pressure_pid_output[pressure_sensor_count]; // previous value after PID
 
+    static constexpr uint8_t flow_sensor_count = 1;
+    double flow_value[flow_sensor_count];  // stored from last time they were read
+    double volume_value[flow_sensor_count];  // stored from last time they were read
+    double prev_volume_value[flow_sensor_count];  // stored from last time they were read
 
-    double sensor_zero_target = 0.0;
-    double sensor_proportional_factor = 170;
+    double immediate_pressure_target = 0.0;
+    double sensor_proportional_factor = 550;
     double sensor_integral_store = 0;
-    double sensor_inetgral_factor = 0.01;
+    double sensor_inetgral_factor = 0.005;
     double sensor_error_store = 0;
-    double sensor_derivative_factor = 900;
+    double sensor_derivative_factor = 3000;
     double sensor_derivative_store = 0;
     double derivative_contribution = 1.0/10.0;
 
@@ -69,7 +74,7 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
 
     const float sensor_skip_detection_jump = 10000;
 
-    double pressure_target = 0;
+    double event_pressure_target = 0;
     double seconds_between_events = 6.0;
     double seconds_to_hold_event = 2;
     double pressure_hold_release_ratio = 3;
@@ -85,7 +90,6 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
     float start_velocities[motors];
     float end_velocities[motors];
     double target_accel[4] = {0.0, 0.0, 0.0, 0.0};
-    double sensor_diff[4] = {0.0, 0.0, 0.0, 0.0};
     bool last_switch_state[4];
 
     enum class PressureState { Idle, Start, Hold, Release };
@@ -113,7 +117,8 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
         in_r[ANCHOR_D_INPUT-1],
     };
 
-    PressureSensor *const pressure_sensors[pressure_sensor_count] = {&pressure_sensor};
+    PressureSensor *const pressure_sensors[pressure_sensor_count] = {&pressure_sensor1};
+    FlowSensor *const flow_sensors[flow_sensor_count] = {&flow_sensor1};
 
     // 1 - let the sensors settle
     // 2 - back the motors off 10mm (SKIP for now)
@@ -121,7 +126,7 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
     // 4 - start normal idle activity
 
     PressureKinematics() {
-        sensor_settle_timer.set(5000);
+        sensor_settle_timer.clear();
         hold_pressure_timer.clear();
     }
 
@@ -178,6 +183,8 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
         for (uint8_t joint = 0; joint < joints; joint++) {
             joint_position[joint] = target[joint];
         }
+
+        last_segment_was_idle = false;
     }
 
     void get_position(float position[axes]) override
@@ -234,27 +241,11 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
     }
 
     bool read_sensors() {
-        // do nothing until the settle timer is past
-        if (!sensor_settle_timer.isPast()) {
-            // let the sensors settle
-            // for (uint8_t joint = 0; joint < 4; joint++) {
-            //     sensor_zero_value[joint] = (sensor_zero_value[joint] * 0.2) + ((sensor_inputs[joint]->getValue()/* - sensor_zero_target*/) * 0.8);
-            //
-            //     // it's VITAL that these be zero until we have valid readings
-            //     sensor_value[joint] = 0.0;
-            //     sensor_diff[joint] = 0.0;
-            // }
-            return false; // let the caller know
-        }
+        for (uint8_t joint = 0; joint < pressure_sensor_count; joint++) {
+            raw_pressure_value[joint] =
+                pressure_sensors[joint]->getPressure(PressureUnits::cmH2O) - zero_pressure_value[joint];
 
-        for (uint8_t joint = 0; joint < pressure_sensor_count; joint++)
-        {
-            // note we invert and zero the values
-            raw_sensor_value[joint] = pressure_sensors[joint]->getPressure(PressureUnits::cmH2O);
-
-            // new_sensor_value at -1 is max under presure, 1 is max over pressure, and 0 is goldilocks
-            double e = (sensor_zero_target - raw_sensor_value[joint]);
-            // e = (e * e) * (e > 0 ? 1 : -1);
+            double e = (immediate_pressure_target - raw_pressure_value[joint]);
 
             sensor_integral_store += e;
             // if (sensor_integral_store > 10000) {
@@ -269,15 +260,15 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
             double d_v = sensor_derivative_store * sensor_derivative_factor;
             sensor_error_store = e;
 
-            double new_sensor_value = p_v + i_v - d_v;
-            // double new_sensor_value = p_v + i_v;
+            double new_pressure_pid_output = p_v + i_v - d_v;
 
-            // new_sensor_diff is literally the change of the sensor value since we last read it
-            double new_diff  = (new_sensor_value - sensor_value[joint]);
+            prev_pressure_pid_output[joint] = pressure_pid_output[joint];
+            pressure_pid_output[joint] = new_pressure_pid_output;
+      //      *0.1 + prev_pressure_pid_output[joint] * 0.9;
 
-            prev_sensor_value[joint] = sensor_value[joint];
-            sensor_value[joint] = new_sensor_value * 0.1 + prev_sensor_value[joint] * 0.9;
-            sensor_diff[joint] = new_diff;
+            // read differential pressure from the volume sensors
+            flow_value[joint] = flow_sensors[joint]->getFlow(FlowUnits::SLM);
+            volume_value[joint] = volume_value[joint] + flow_value[joint] * MIN_SEGMENT_TIME; // SLM and MIN_SEGMENT_TIME are both in minutes - nice!
         }
         return true;
     }
@@ -304,13 +295,13 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
         if ((PressureState::Idle != pressure_state) && (PressureState::Release != pressure_state)) {
             // we were unable to hold or obtain pressure - we need to move to release
             change_state_to_release();
-        } else if (fp_ZERO(pressure_target)) {
+        } else if (fp_ZERO(event_pressure_target)) {
             // no target pressure, go to (or stay in) idle instead
-            return change_state_to_idle();
+            return change_state_to_release();
         } else {
             pressure_state = PressureState::Start;
 
-            sensor_zero_target = pressure_target;
+            immediate_pressure_target = event_pressure_target;
         }
 
         // wipe out the PID integral, as in all the cases we reverse directions
@@ -347,7 +338,7 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
         }
 
         pressure_state = PressureState::Release;
-        sensor_zero_target = reverse_target_pressure;
+        immediate_pressure_target = reverse_target_pressure;
     }
 
     void change_state_to_idle() {
@@ -382,18 +373,18 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
                 joint_vel[joint] = 0.0;
                 joint_accel[joint] = 0.0;
                 joint_jerk[joint] = 0.0;
-                sensor_value[joint] = 0.0;
-                sensor_diff[joint] = 0.0;
+                pressure_pid_output[joint] = 0.0;
 
                 sensor_error_store = 0.0;
                 sensor_integral_store = 0.0;
                 sensor_derivative_store = 0.0;
             }
+            // change_state_to_calibrating();
         }
         last_segment_was_idle = true;
 
         /*
-        pressure_target
+        immediate_pressure_target
             float seconds_between_events = 6.0;
             float seconds_to_hold_event = 2;
             inter_event_timer
@@ -416,23 +407,25 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
             bool switch_state = anchor_inputs[joint]->getState();
 
             // determine if we're NOW at or over pressure - we just call it "over_pressure" for brevity
-            bool over_pressure_detected = (raw_sensor_value[joint] > (sensor_zero_target*0.95));
+            bool at_pressure_detected = (raw_pressure_value[joint] > (immediate_pressure_target*0.80));
 
             if ((PressureState::Hold == pressure_state) && hold_pressure_timer.isPast()) {
                 change_state_to_release();
-            } else if (over_pressure_detected) {
+            } else if (at_pressure_detected) {
                 change_state_to_hold(); // detects if already in hold, or not in Start
             }
 
-            if (switch_state && !last_switch_state[joint]) {
+            if (switch_state) {
                 if (PressureState::Release == pressure_state) {
                     // stop the motion
-                    // sensor_zero_target = 0.1;
+                    // immediate_pressure_target = 0.1;
                     sensor_integral_store = 0;
 
                     change_state_to_idle();
                 }
-                joint_min_limit[joint] = joint_position[joint] + cm->a[AXIS_X].travel_min;
+                if (!last_switch_state[joint]) {
+                    joint_min_limit[joint] = joint_position[joint] + cm->a[AXIS_X].travel_min;
+                }
 
             } else if (!switch_state) {
                 if (last_switch_state[joint]) {
@@ -456,9 +449,9 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
             double old_joint_vel = joint_vel[joint];
             double old_joint_accel = joint_accel[joint];
 
-            // treat sensor_value[joint] as velocity, but we have to jerk-control it
+            // treat pressure_pid_output[joint] as velocity, but we have to jerk-control it
 
-            double requested_velocity = sensor_value[joint];
+            double requested_velocity = pressure_pid_output[joint];
 
             // if we're releasing, target -vmax
             if (PressureState::Release == pressure_state) {

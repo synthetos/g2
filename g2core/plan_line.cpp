@@ -48,7 +48,6 @@ extern OutputPin<Motate::kDebug3_PinNumber> debug_pin3;
 
 // planner helper functions
 static mpBuf_t* _plan_block(mpBuf_t* bf);
-static void _calculate_override(mpBuf_t* bf);
 static void _calculate_jerk(mpBuf_t* bf);
 static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const float axis_square[]);
 static void _calculate_junction_vmax(mpBuf_t* bf);
@@ -437,25 +436,11 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
 }
 
 /***** ALINE HELPERS *****
- * _calculate_override() - calculate cruise_vmax given cruise_vset and feed rate factor
  * _calculate_jerk()
  * _calculate_vmaxes()
  * _calculate_junction_vmax()
  * _calculate_decel_time()
  */
-
-static void _calculate_override(mpBuf_t* bf)  // execute ramp to adjust cruise velocity
-{
-    if (bf->gm.motion_mode == MOTION_MODE_STRAIGHT_TRAVERSE) {
-        bf->override_factor = cm->gmx.mto_enable ? cm->gmx.mto_factor : 1.0;
-    }
-
-    else if (bf->gm.motion_mode == MOTION_MODE_STRAIGHT_FEED) {
-        bf->override_factor = cm->gmx.mfo_enable ? cm->gmx.mfo_factor : 1.0;
-    }
-
-    bf->cruise_vmax = std::min(bf->absolute_vmax, bf->override_factor * bf->cruise_vset);
-}
 
 /****************************************************************************************
  * _calculate_jerk() - calculate jerk given the dynamic state

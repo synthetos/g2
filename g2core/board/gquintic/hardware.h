@@ -101,7 +101,6 @@
 #include "MotateTimers.h"           // for TimerChanel<> and related...
 
 // Temporarily disabled:
-// #include "i2c_eeprom.h"
 // #include "i2c_multiplexer.h"
 // #include "i2c_as5601.h" // For AS5601
 
@@ -167,8 +166,8 @@ typedef Motate::SPIChipSelectPinMux<Motate::kSocket1_SPISlaveSelectPinNumber, Mo
 extern SPI_CS_PinMux_used_t spiCSPinMux;
 
 /**** TWI Setup ****/
-// typedef Motate::TWIBus<Motate::kI2C_SCLPinNumber, Motate::kI2C_SDAPinNumber> TWIBus_used_t;
-// extern TWIBus_used_t twiBus;
+typedef Motate::TWIBus<Motate::kI2C_SCLPinNumber, Motate::kI2C_SDAPinNumber> TWIBus_used_t;
+extern TWIBus_used_t twiBus;
 
 // using plex0_t = decltype(I2C_Multiplexer{twiBus, 0x0070L});
 // extern HOT_DATA plex0_t plex0;

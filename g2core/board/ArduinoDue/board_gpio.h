@@ -100,6 +100,6 @@ extern gpioDigitalOutputPin<OutputType<OUTPUT13_PWM, Motate::kOutput13_PinNumber
 // extern BME280<SPIBus_used_t::SPIBusDevice> pressure_sensor;
 
 #include "honeywell-trustability-ssc.h"
-extern TruStabilitySSC<SPIBus_used_t::SPIBusDevice> pressure_sensor;
+extern HoneywellTruStability<SPIBus_used_t::SPIBusDevice> pressure_sensor;
 
 #endif // End of include guard: BOARD_GPIO_H_ONCE

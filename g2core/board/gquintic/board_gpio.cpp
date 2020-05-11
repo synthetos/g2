@@ -117,13 +117,27 @@ gpioAnalogInput*    const a_in[] = {&ai1, &ai2, &ai3, &ai4};
 // 12 is "CS3" on the board silk
 
 // BME280<SPIBus_used_t::SPIBusDevice> pressure_sensor{spiBus, spiCSPinMux.getCS(8)};
-TruStabilitySSC<SPIBus_used_t::SPIBusDevice> pressure_sensor{spiBus,
+HoneywellTruStability<SPIBus_used_t::SPIBusDevice> pressure_sensor1{spiBus,
                                                              spiCSPinMux.getCS(8),
-                                                             /*min_output:*/  1638, // 10% of 2^12
-                                                             /*max_output:*/ 14745, // 90% of 2^12
+                                                             /*min_output:*/  1638, // 10% of 2^14
+                                                             /*max_output:*/ 14745, // 90% of 2^14
                                                              /*min_value:*/ 0.0,    // 0psi
                                                              /*max_value:*/ 15.0,   // 15psi
                                                              PressureUnits::PSI};
+
+HoneywellTruStability<TWIBus_used_t::TWIBusDevice> flow_pressure_sensor1{twiBus,
+                                                             0x28,
+                                                             /*min_output:*/  1638, // 10% of 2^14
+                                                             /*max_output:*/ 14745, // 90% of 2^14
+                                                             /*min_value:*/ -1.0,    // 0psi
+                                                             /*max_value:*/ 1.0,   // 15psi
+                                                             PressureUnits::PSI};
+
+VenturiFlowSensor flow_sensor1{
+    &flow_pressure_sensor1,
+    20,
+    10,
+};
 
 /************************************************************************************
  **** CODE **************************************************************************
@@ -131,17 +145,17 @@ TruStabilitySSC<SPIBus_used_t::SPIBusDevice> pressure_sensor{spiBus,
 
 
  // Register a SysTick event to call start_sampling every temperature_sample_freq ms
- const int16_t ain_sample_freq = 1;
+ const int16_t ain_sample_freq = 2;
  int16_t ain_sample_counter = ain_sample_freq;
  Motate::SysTickEvent ain_tick_event{[] {
-                                         //  if (!--ain_sample_counter) {
-                                         //      ai1.startSampling();
-                                         //      ai2.startSampling();
-                                         //      ai3.startSampling();
-                                         //      ai4.startSampling();
-                                         //      ain_sample_counter = ain_sample_freq;
-                                         //  }
-                                         pressure_sensor.startSampling(); // has a timeout built in to prevent over-calling
+                                         ain_sample_counter--;
+
+                                         if (ain_sample_counter == 1) {
+                                             pressure_sensor1.startSampling();
+                                         } else if (ain_sample_counter <= 0) {
+                                             flow_pressure_sensor1.startSampling();
+                                             ain_sample_counter = ain_sample_freq;
+                                         }
                                      },
                                      nullptr};
 

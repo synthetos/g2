@@ -136,6 +136,15 @@ stat_t kn_set_anchored(nvObj_t *nv);
 stat_t kn_get_backoff_pressure(nvObj_t *nv);
 stat_t kn_set_backoff_pressure(nvObj_t *nv);
 
+// joint positions
+stat_t kn_get_pos_1(nvObj_t *nv);
+stat_t kn_get_pos_2(nvObj_t *nv);
+stat_t kn_get_pos_3(nvObj_t *nv);
+stat_t kn_get_pos_4(nvObj_t *nv);
+stat_t kn_get_pos_5(nvObj_t *nv);
+
+stat_t get_flow_volume(nvObj_t *nv);
+
 #endif // KINEMATICS==KINE_PRESSURE
 
 void kn_config_changed();

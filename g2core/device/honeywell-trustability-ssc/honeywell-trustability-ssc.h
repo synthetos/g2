@@ -1,6 +1,6 @@
 /*
- * honeywell-trustability-ssc.h - suppport for talking to the Honeywell TruStability SSC line of pressure/temperature sensors
- * This file is part of the G2 project
+ * honeywell-trustability-ssc.h - suppport for talking to the Honeywell TruStability SSC line of pressure/temperature
+ * sensors This file is part of the G2 project
  *
  * Copyright (c) 2020 Robert Giseburt
  *
@@ -25,43 +25,103 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 #ifndef honeywell_trustability_ssc_h
 #define honeywell_trustability_ssc_h
 
-#include "MotateSPI.h"
 #include "MotateBuffer.h"
-#include "MotateUtilities.h" // for to/fromLittle/BigEndian
-#include "util.h" // for fp_ZERO
+#include "MotateSPI.h"
+#include "MotateTWI.h"
+#include "MotateUtilities.h"  // for to/fromLittle/BigEndian
+#include "util.h"             // for fp_ZERO
 
 enum class PressureUnits { PSI, cmH2O, inH20, Pa, kPa };
 
+// ToDo - move this to somewhere that is can be used by other pressure sensors
 struct PressureSensor {
     virtual double getPressure(const PressureUnits output_units) const;
 };
 
-// Complete class for TruStabilitySSC drivers.
-template <typename device_t>
-struct TruStabilitySSC final : virtual public PressureSensor {
-    using SPIMessage = Motate::SPIMessage;
-    using SPIInterrupt = Motate::SPIInterrupt;
-    using SPIDeviceMode = Motate::SPIDeviceMode;
+// See https://en.wikipedia.org/wiki/Standard_litre_per_minute
+enum class FlowUnits { LPM, SLM, NLPM };
+struct FlowSensor {
+    // get the pressure value from the underlying pressure sensor, if any
+    virtual double getPressure(const PressureUnits output_units) const;
 
-    // SPI and message handling properties
-    device_t _device;
-    SPIMessage _message;
+    // get the flow value in the units requested
+    virtual double getFlow(const FlowUnits output_units) const;
+};
 
-    // Record if we're transmitting to prevent altering the buffers while they
-    // are being transmitted still.
-    volatile bool _transmitting = false;
+/* VenturiFlowSensor
+ * Takes a differentail PressureSensor and some base parameters for a venturi tube and outputs flow values.
+ */
+class VenturiFlowSensor : public FlowSensor {
+    PressureSensor* ps;
 
-    // We don't want to transmit until we're inited
-    bool _inited = false;
+    double upstream_diameter_mm;
+    double throat_diameter_mm;
+    double air_density;            // kg / m^2
+    double discharge_coeffiecient; // percent/100, IOW 0.0-1.0
 
-    // Record what register we just requested, so we know what register the
-    // the response is for (and to read the response.)
-    int16_t _active_register = -1;
+    double K; // computed from the above
 
+    void compute_k() {
+        // "don't just do something, stand there" - we'll be verbose and let the compiler optimize it
+        double upstream_radius_m = (upstream_diameter_mm / 1000.0) / 2.0; // radius in meters
+        double area_upstream = upstream_radius_m * upstream_radius_m * M_PI; // area in m^2
+
+        double throat_radius_m = (throat_diameter_mm / 1000.0) / 2.0; // radius in meters
+        double area_throat = throat_radius_m * throat_radius_m * M_PI; // area in m^2
+
+        double area_ratio = area_upstream / area_throat;
+
+        // K = C_disc * SQRT( 2 / dens ) * area_A/SQRT( (area_A/area_B)^2 - 1 ) * 1000
+
+        K = discharge_coeffiecient * sqrt(2.0 / air_density) * area_upstream / sqrt((area_ratio * area_ratio) - 1) *
+            1000.0;
+    }
+
+   public:
+    VenturiFlowSensor(PressureSensor *ps_, double upstream_diameter_mm_, double throat_diameter_mm_,
+                      double air_density_ = 1.2431, double discharge_coeffiecient_ = 0.95)
+        : ps{ps_},
+          upstream_diameter_mm{upstream_diameter_mm_},
+          throat_diameter_mm{throat_diameter_mm_},
+          air_density{air_density_},
+          discharge_coeffiecient{discharge_coeffiecient_} {
+        compute_k();
+    }
+
+    double getFlow(const FlowUnits output_units) const override {
+        double pressure_diff = ps->getPressure(PressureUnits::Pa);
+        double flow = K * sqrt(std::abs(pressure_diff)) * (pressure_diff < 0 ? -1 : 1);
+
+        // is SLM right?
+        if (output_units == FlowUnits::LPM || output_units == FlowUnits::SLM) {
+            return flow * 60.0;
+        }
+
+        // this is WRONG, but shuts the compiler up:
+        return 0.0;
+    }
+
+    double getPressure(const PressureUnits output_units) const override { return ps->getPressure(output_units); }
+};
+
+
+class HoneywellTruStabilityBase : virtual public PressureSensor {
+   public:
+    HoneywellTruStabilityBase(const uint16_t min_output, const uint16_t max_output, const double min_value,
+                        const double max_value, const PressureUnits base_units)
+        : _min_output{min_output},
+          _max_output{max_output},
+          _min_value{min_value},
+          _max_value{max_value},
+          _base_units{base_units} {};
+
+    // Prevent copying, and prevent moving (so we know if it happens)
+    HoneywellTruStabilityBase(const HoneywellTruStabilityBase &) = delete;
+
+   protected:
     // Timer to keep track of when we need to do another periodic update
     Motate::Timeout _check_timer;
 
@@ -72,52 +132,17 @@ struct TruStabilitySSC final : virtual public PressureSensor {
     const double _max_value;
     const PressureUnits _base_units;
 
-    // Constructor - this is the only time we directly use the SBIBus
-    template <typename SPIBus_t, typename chipSelect_t>
-    TruStabilitySSC(SPIBus_t &spi_bus, const chipSelect_t &_cs, const uint16_t min_output, const uint16_t max_output,
-                    const double min_value, const double max_value, const PressureUnits base_units)
-        : _device{spi_bus.getDevice(_cs, 5000000, SPIDeviceMode::kSPIMode0 | SPIDeviceMode::kSPI8Bit,
-                                    400,  // min_between_cs_delay_ns
-                                    400,  // cs_to_sck_delay_ns
-                                    80    // between_word_delay_ns
-                                    )},
-          _min_output{min_output},
-          _max_output{max_output},
-          _min_value{min_value},
-          _max_value{max_value},
-          _base_units{base_units} {
-        init();
-    };
-
-    template <typename SPIBus_t, typename chipSelect_t>
-    TruStabilitySSC(const Motate::PinOptions_t options,  // completely ignored, but for compatibility with ADCPin
-                    std::function<void(bool)> &&_interrupt, SPIBus_t &spi_bus, const chipSelect_t &_cs,
-                    const uint16_t min_output, const uint16_t max_output, const double min_value,
-                    const double max_value, const PressureUnits base_units)
-        : _device{spi_bus.getDevice(_cs, 5000000, SPIDeviceMode::kSPIMode1 | SPIDeviceMode::kSPI8Bit,
-                                    400,  // min_between_cs_delay_ns
-                                    400,  // cs_to_sck_delay_ns
-                                    80    // between_word_delay_ns
-                                    )},
-          _min_output{min_output},
-          _max_output{max_output},
-          _min_value{min_value},
-          _max_value{max_value},
-          _base_units{base_units},
-          _interrupt_handler{std::move(_interrupt)} {
-        init();
-    };
-
-    // Prevent copying, and prevent moving (so we know if it happens)
-    TruStabilitySSC(const TruStabilitySSC &) = delete;
-    TruStabilitySSC(TruStabilitySSC &&other) : _device{std::move(other._device)} {};
-
+    double zero_offset;
 
     // ###########
-    // The HoneyWell TruStability SSC devices are really simple to talk to:
-    // See https://sensing.honeywell.com/spi-comms-digital-ouptu-pressure-sensors-tn-008202-3-en-final-30may12.pdf
+    // The HoneyWell TruStability SSC devices are really simple to talk to, and can be in SPI or I2C configurations:
+
+    // SPI: See https://sensing.honeywell.com/spi-comms-digital-ouptu-pressure-sensors-tn-008202-3-en-final-30may12.pdf
     // Read from 2 to 4 byts of data, interpret it, repeat.
     // The bytes are: Status_and_BridgeData_MSB, BridgeData_LSB, TemperatureData_MSB, TemperatureData_LSB
+
+    // I2C: See https://sensing.honeywell.com/i2c-comms-digital-output-pressure-sensors-tn-008201-3-en-final-30may12.pdf
+    // Same data as SPI
 
     enum {
         INITING,
@@ -129,7 +154,7 @@ struct TruStabilitySSC final : virtual public PressureSensor {
     static const size_t _data_size = 4;
     struct data_t {
         union {
-            uint8_t raw_data[4];
+            uint8_t raw_data[8];
             struct {
                 uint8_t bridge_msb : 6;
                 uint8_t status : 2;
@@ -161,301 +186,187 @@ struct TruStabilitySSC final : virtual public PressureSensor {
         // Formula
         // ((ouput - output_min)*(pressure_max-pressure_min))/(outout_max-output_min)+pressure_min
 
-        // const uint16_t _min_output, _max_output;
-        // const double _min_value, _max_value;
-
         if (bridge_output < _min_output || bridge_output > _max_output) {
             pressure = 0.0;
             // error condition
         }
 
-        double temp_pressure = ((double)(bridge_output - _min_output)*(double)(_max_value-_min_value))/(_max_output-_min_output)+_min_value;
+        double temp_pressure =
+            ((double)(bridge_output - _min_output) * (double)(_max_value - _min_value)) / (_max_output - _min_output) +
+            _min_value;
 
-        if (temp_pressure < _min_value || bridge_output > _max_value) {
-            pressure = 0.0;
-            // error condition
+        const double noise_min = ((_max_value - _min_value) * 0.01);
+
+        // if we're within 0.25% of zero, adjust the zero offset - slowly
+         if ((temp_pressure > -noise_min) && (temp_pressure < noise_min)) {
+            zero_offset = (zero_offset * 0.25) + (temp_pressure * 0.75);
         }
 
-        pressure = temp_pressure;
+        pressure = (pressure * 0.9) + ((temp_pressure - zero_offset) * 0.1);
     };
 
-    alignas(4) uint8_t _scribble_buffer[8];
-
-    void _startNextReadWrite()
-    {
-        if (_transmitting || !_inited) { return; }
-        _transmitting = true; // preemptively say we're transmitting .. as a mutex
-
-        // check if we need to read reagisters
-        if (!_data_needs_read)
-        {
-            _transmitting = false; // we're not really transmitting.
-            return;
-        }
-        _data_needs_read = false;
-
-        // reading, prepare the address in the scribble buffer
-        _message.setup(_scribble_buffer, (uint8_t*)&_data.raw_data, 4, SPIMessage::DeassertAfter, SPIMessage::EndTransaction);
-        _device.queueMessage(&_message);
-    };
-
-    void _doneReadingCallback()
-    {
-        _transmitting = false;
-
-        _postReadSampleData();
-    };
-
-    void init()
-    {
-        _message.message_done_callback = [&] { this->_doneReadingCallback(); };
-
-        // Establish default values, and then prepare to read the registers we can to establish starting values
-
-        _inited = true;
-        //_startNextReadWrite();
-        _check_timer.set(0);
-    };
-
-    // interface to make this a drop-in replacement (after init) for an ADCPin
-
-    std::function<void(bool)> _interrupt_handler;
-
-    void startSampling()
-    {
-        // if (_check_timer.isPast()) {
-        //     // if (INITING == _state) {
-        //     //     _data_needs_read = true;
-        //     //     _check_timer.set(1);
-        //     //     _state = WAITING_FOR_SAMPLE;
-        //     //     _startNextReadWrite();
-
-        //     // } else if (WAITING_FOR_SAMPLE == _state) {
-        //         _check_timer.set(1);
-
-                _data_needs_read = true;
-                _startNextReadWrite();
-            // }
-        // }
-    };
-
+   public:
     double getPressure(const PressureUnits output_units) const override {
         if (output_units != _base_units) {
             if (_base_units == PressureUnits::PSI && output_units == PressureUnits::cmH2O) {
                 // the only currently supported configuration
                 return pressure / 0.014223343334285;
             }
+
+            if (_base_units == PressureUnits::PSI && output_units == PressureUnits::Pa) {
+                // the only currently supported configuration
+                return pressure * 6894.75729;
+            }
         }
 
+        return pressure;
     };
-
-    //     // getRaw is to return the last sampled value
-    //     int32_t getRaw() {
-    //         if (_fault_status.value) {
-    //             return -_fault_status.value;
-    //         }
-    //         return _rtd_value;
-    //     };
-
-    //     float getPullupResistance() {
-    //         return _pullup_resistance;
-    //     }
-    //     void setPullupResistance(const float r) {
-    //         _pullup_resistance = r;
-    //     }
-
-    //     // getValue is supposed to request a new value, block, and then return the result
-    //     // PUNT - return the same as getRaw()
-    //     int32_t getValue() {
-    //         return getRaw();
-    //     };
-    // //    int32_t getBottom() {
-    // //        return 0;
-    // //    };
-    // //    float getBottomVoltage() {
-    // //        return 0;
-    // //    };
-    // //    int32_t getTop() {
-    // //        return 32767;
-    // //    };
-    // //    float getTopVoltage() {
-    // //        return _vref;
-    // //    };
-
-    //     void setVoltageRange(const float vref,
-    //                          const float min_expected = 0,
-    //                          const float max_expected = -1,
-    //                          const float ideal_steps = 1)
-    //     {
-    // //        _vref = vref;
-
-    //         // All of the rest are ignored, but here for compatibility of interface
-    //     };
-    //     float getVoltage() {
-    //         float r = getRaw();
-    //         if (r < 0) {
-    //             return r*1000.0;
-    //         }
-    //         return ((r*_pullup_resistance)/32768.0);
-    //     };
-    //     operator float() { return getVoltage(); };
-
-    //     float getResistance() {
-    //         float r = getRaw();
-    //         if (r < 0) {
-    //             return r*1000.0;
-    //         }
-    //         return (r*_pullup_resistance)/32768.0;
-    //     }
-
-    //     void setInterrupts(const uint32_t interrupts) {
-    //         // ignore this -- it's too dangerous to accidentally change the SPI interrupts
-    //     };
-
-    //     // We can only support interrupt inferface option 2: a function with a closure or function pointer
-    //     void setInterruptHandler(std::function<void(bool)> &&handler) {
-    //         _interrupt_handler = std::move(handler);
-    //     };
-    //     void setInterruptHandler(const std::function<void(bool)> &handler) {
-    //         _interrupt_handler = handler;
-    //     };
 };
 
-// A gpioAnalogInputPin subclass for the MAX31865
+// empty template
 
-// template <typename device_t>
-// struct gpioAnalogInputPin<MAX31865<device_t>> : gpioAnalogInput {
-// protected: // so we know if anyone tries to reach in
-//     ioEnabled enabled;                  // -1=unavailable, 0=disabled, 1=enabled
-//     AnalogInputType_t type;
+template <typename device_t, typename enable = void>
+struct HoneywellTruStability : private HoneywellTruStabilityBase {}; // marked private to force an error
 
-//     const uint8_t ext_pin_number;       // external number to configure this pin ("ai" + ext_pin_number)
-//     uint8_t proxy_pin_number;           // optional external number to access this pin ("ain" + proxy_pin_number)
+// Final SPI class
+template <typename device_t>
+struct HoneywellTruStability<device_t, std::enable_if_t<std::is_base_of_v<Motate::SPIBusDeviceBase, device_t>>> : public HoneywellTruStabilityBase {
+    using SPIMessage = Motate::SPIMessage;
+    using SPIInterrupt = Motate::SPIInterrupt;
+    using SPIDeviceMode = Motate::SPIDeviceMode;
 
-//     using ADCPin_t = MAX31865<device_t>;
+    // SPI and message handling properties
+    device_t _device;
+    SPIMessage _message;
 
-//     ADCPin_t pin;                        // the actual pin object itself
+    // Record if we're transmitting to prevent altering the buffers while they
+    // are being transmitted still.
+    volatile bool _transmitting = false;
 
-// public:
-//     // In constructor, simply forward all values to the pin
-//     // To get a different behavior, override this object.
-//     template <typename... T>
-//     gpioAnalogInputPin(const ioEnabled _enabled, const AnalogInputType_t _type, const uint8_t _ext_pin_number, const uint8_t _proxy_pin_number, T&&... additional_values) :
-//     gpioAnalogInput{},
-//     enabled{_enabled},
-//     type{_type},
-//     ext_pin_number{_ext_pin_number},
-//     proxy_pin_number{ _proxy_pin_number },
-//     pin{Motate::kNormal, [&](bool e){this->adc_has_new_value(e);}, additional_values...}
-//     {
-//         // nothing to do here
-//     };
+    // We don't want to transmit until we're inited
+    bool _inited = false;
 
-//     // functions for use by other parts of the code, and are overridden
+    // Constructor - this is the only time we directly use the SBIBus
+    template <typename SPIBus_t, typename chipSelect_t>
+    HoneywellTruStability(SPIBus_t &spi_bus, const chipSelect_t &_cs, const uint16_t min_output, const uint16_t max_output,
+                    const double min_value, const double max_value, const PressureUnits base_units)
+        : HoneywellTruStabilityBase{min_output, max_output, min_value, max_value, base_units},
+          _device{spi_bus.getDevice(_cs, 5000000, SPIDeviceMode::kSPIMode0 | SPIDeviceMode::kSPI8Bit,
+                                    400,  // min_between_cs_delay_ns
+                                    400,  // cs_to_sck_delay_ns
+                                    80    // between_word_delay_ns
+                                    )} {
+        init();
+    };
 
-//     ioEnabled getEnabled() override
-//     {
-//         return enabled;
-//     };
-//     bool setEnabled(const ioEnabled m) override
-//     {
-//         if (enabled == IO_UNAVAILABLE) {
-//             return false;
-//         }
-//         enabled = m;
-//         return true;
-//     };
+    // Prevent copying, and prevent moving (so we know if it happens)
+    HoneywellTruStability(const HoneywellTruStability &) = delete;
+    HoneywellTruStability(HoneywellTruStability &&other) : _device{std::move(other._device)} {};
 
-//     float getValue() override
-//     {
-//         if (enabled != IO_ENABLED) {
-//             return 0;
-//         }
-//         return pin.getVoltage();
-//     };
-//     float getResistance() override
-//     {
-//         if (enabled != IO_ENABLED) {
-//             return -1;
-//         }
-//         return pin.getResistance();
-//     };
+    alignas(4) uint8_t _scribble_buffer[8];
 
-//     AnalogInputType_t getType() override
-//     {
-//         return type;
-//     };
-//     bool setType(const AnalogInputType_t t) override
-//     {
-//         // NOTE: Allow setting type to AIN_TYPE_EXTERNAL
-//         if (t == AIN_TYPE_INTERNAL) {
-//             return false;
-//         }
-//         type = t;
-//         return true;
-//     };
+    void _startNextReadWrite() {
+        if (_transmitting || !_inited) {
+            return;
+        }
+        _transmitting = true;  // preemptively say we're transmitting .. as a mutex
 
-//     AnalogCircuit_t getCircuit() override
-//     {
-//         return AIN_CIRCUIT_EXTERNAL;
-//     };
-//     bool setCircuit(const AnalogCircuit_t c) override
-//     {
-//         // prevent setting circuit to anything but AIN_CIRCUIT_EXTERNAL
-//         if (c == AIN_CIRCUIT_EXTERNAL) {
-//             return true;
-//         }
-//         return false;
-//     };
+        // check if we need to read reagisters
+        if (!_data_needs_read) {
+            _transmitting = false;  // we're not really transmitting.
+            return;
+        }
+        _data_needs_read = false;
 
-//     float getParameter(const uint8_t p) override
-//     {
-//         if (p == 0) {
-//             return pin.getPullupResistance();
-//         }
-//         return 0;
-//     };
-//     bool setParameter(const uint8_t p, const float v) override
-//     {
-//         if (p == 0) {
-//             pin.setPullupResistance(v);
-//             return true;
-//         }
-//         return false;
-//     };
+        // reading, prepare the address in the scribble buffer
+        _message.setup(_scribble_buffer, (uint8_t *)&_data.raw_data, 4, SPIMessage::DeassertAfter, SPIMessage::EndTransaction);
+        _device.queueMessage(&_message);
+    };
 
+    void _doneReadingCallback() {
+        _transmitting = false;
+        _postReadSampleData();
+    };
 
-//     void startSampling() override {
-//         pin.startSampling();
-//     };
+    void init() {
+        _message.message_done_callback = [&] { this->_doneReadingCallback(); };
 
+        _inited = true;
+        _check_timer.set(0);
+    };
 
-//     bool setExternalNumber(const uint8_t e) override
-//     {
-//         if (e == proxy_pin_number) { return true; }
-//         if (proxy_pin_number > 0) {
-//             // clear the old pin
-//             ain_r[proxy_pin_number-1]->setPin(nullptr);
-//         }
-//         proxy_pin_number = e;
-//         if (proxy_pin_number > 0) {
-//             // set the new pin
-//             ain_r[proxy_pin_number-1]->setPin(this);
-//         }
-//         return true;
-//     };
+    void startSampling() {
+        _data_needs_read = true;
+        _startNextReadWrite();
+    };
+};
 
-//     const uint8_t getExternalNumber() override
-//     {
-//         return proxy_pin_number;
-//     };
+// Final TWI class
+template <typename device_t>
+struct HoneywellTruStability<device_t, std::enable_if_t<std::is_base_of_v<Motate::TWIBusDeviceBase, device_t>>> : public HoneywellTruStabilityBase {
+    using TWIMessage = Motate::TWIMessage;
+    using TWIInterrupt = Motate::TWIInterrupt;
 
-//     // support function for pin value update interrupt handling
+    // SPI and message handling properties
+    device_t _device;
+    TWIMessage _message;
 
-//     void adc_has_new_value(bool err) {
-// //        float raw_adc_value = pin.getRaw();
-// //        history.add_sample(raw_adc_value);
-//     };
-// };
+    // Record if we're transmitting to prevent altering the buffers while they
+    // are being transmitted still.
+    volatile bool _transmitting = false;
 
-#endif // honeywell_trustability_ssc_h
+    // We don't want to transmit until we're inited
+    bool _inited = false;
+
+    // Constructor - this is the only time we directly use the TWIBus
+    template <typename TWIBus_t, typename... Ts>
+    HoneywellTruStability(TWIBus_t &twi_bus, const uint8_t &address, Ts... v, const uint16_t min_output, const uint16_t max_output,
+                    const double min_value, const double max_value, const PressureUnits base_units)
+        : HoneywellTruStabilityBase{min_output, max_output, min_value, max_value, base_units},
+          _device{twi_bus.getDevice({address, Motate::TWIDeviceAddressSize::k7Bit}, v...)} {
+        init();
+    };
+
+    // Prevent copying, and prevent moving (so we know if it happens)
+    HoneywellTruStability(const HoneywellTruStability &) = delete;
+    HoneywellTruStability(HoneywellTruStability &&other) : _device{std::move(other._device)} {};
+
+    void _startNextReadWrite() {
+        if (_transmitting || !_inited) {
+            return;
+        }
+        _transmitting = true;  // preemptively say we're transmitting .. as a mutex
+
+        // check if we need to read reagisters
+        if (!_data_needs_read) {
+            _transmitting = false;  // we're not really transmitting.
+            return;
+        }
+        _data_needs_read = false;
+
+        using dir = TWIMessage::Direction;
+
+        // reading, prepare the address in the scribble buffer
+        _message.setup((uint8_t *)&_data.raw_data, 4, dir::kRX);
+        _device.queueMessage(&_message);
+    };
+
+    void _doneReadingCallback() {
+        _transmitting = false;
+        _postReadSampleData();
+    };
+
+    void init() {
+        _message.message_done_callback = [&](bool){ this->_doneReadingCallback(); };
+
+        _inited = true;
+        _check_timer.set(0);
+    };
+
+    void startSampling() {
+        _data_needs_read = true;
+        _startNextReadWrite();
+    };
+};
+
+#endif  // honeywell_trustability_ssc_h
