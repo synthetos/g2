@@ -165,9 +165,6 @@ void stepper_init()
     }
 
     dda_timer.start();                          // start the DDA timer if not already running
-
-    // start the exec subsystem
-    st_request_exec_move();
 }
 
 /*
