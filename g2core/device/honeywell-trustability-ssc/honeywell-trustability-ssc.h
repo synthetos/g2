@@ -57,14 +57,15 @@ struct FlowSensor {
 class VenturiFlowSensor : public FlowSensor {
     PressureSensor* ps;
 
+    double K; // computed from the above
+
+/*
     double upstream_diameter_mm;
     double throat_diameter_mm;
     double air_density;            // kg / m^2
     double discharge_coeffiecient; // percent/100, IOW 0.0-1.0
-
-    double K; // computed from the above
-
-    void compute_k() {
+*/
+    static double compute_k(double upstream_diameter_mm, double throat_diameter_mm, double air_density = 1.2431, double discharge_coeffiecient = 0.95) {
         // "don't just do something, stand there" - we'll be verbose and let the compiler optimize it
         double upstream_radius_m = (upstream_diameter_mm / 1000.0) / 2.0; // radius in meters
         double area_upstream = upstream_radius_m * upstream_radius_m * M_PI; // area in m^2
@@ -76,19 +77,14 @@ class VenturiFlowSensor : public FlowSensor {
 
         // K = C_disc * SQRT( 2 / dens ) * area_A/SQRT( (area_A/area_B)^2 - 1 ) * 1000
 
-        K = discharge_coeffiecient * sqrt(2.0 / air_density) * area_upstream / sqrt((area_ratio * area_ratio) - 1) *
+        return  discharge_coeffiecient * sqrt(2.0 / air_density) * area_upstream / sqrt((area_ratio * area_ratio) - 1) *
             1000.0;
     }
 
    public:
-    VenturiFlowSensor(PressureSensor *ps_, double upstream_diameter_mm_, double throat_diameter_mm_,
-                      double air_density_ = 1.2431, double discharge_coeffiecient_ = 0.95)
+    VenturiFlowSensor(PressureSensor *ps_, double K_)
         : ps{ps_},
-          upstream_diameter_mm{upstream_diameter_mm_},
-          throat_diameter_mm{throat_diameter_mm_},
-          air_density{air_density_},
-          discharge_coeffiecient{discharge_coeffiecient_} {
-        compute_k();
+          K{K_} {
     }
 
     double getFlow(const FlowUnits output_units) const override {
@@ -122,8 +118,7 @@ class HoneywellTruStabilityBase : virtual public PressureSensor {
     HoneywellTruStabilityBase(const HoneywellTruStabilityBase &) = delete;
 
    protected:
-    // Timer to keep track of when we need to do another periodic update
-    Motate::Timeout _check_timer;
+    std::function<void(bool)> _interrupt_handler;
 
     // Parameters of the sensor - for now, compile-time
     const uint16_t _min_output;
@@ -175,7 +170,6 @@ class HoneywellTruStabilityBase : virtual public PressureSensor {
     void _postReadSampleData() {
         if (INITING != _state && _data.status == STALE_DATA) {
             // we requested data too soon, the data is stale, try again sooner
-            _check_timer.set(0);
             _data_needs_read = true;
             return;
         }
@@ -195,14 +189,20 @@ class HoneywellTruStabilityBase : virtual public PressureSensor {
             ((double)(bridge_output - _min_output) * (double)(_max_value - _min_value)) / (_max_output - _min_output) +
             _min_value;
 
-        const double noise_min = ((_max_value - _min_value) * 0.01);
+        const double noise_min = ((_max_value - _min_value) * 0.0025);
 
         // if we're within 0.25% of zero, adjust the zero offset - slowly
-         if ((temp_pressure > -noise_min) && (temp_pressure < noise_min)) {
-            zero_offset = (zero_offset * 0.25) + (temp_pressure * 0.75);
+        if ((temp_pressure > -noise_min) && (temp_pressure < noise_min)) {
+            zero_offset = (zero_offset * 0.999) + (temp_pressure * 0.001);
         }
 
         pressure = (pressure * 0.9) + ((temp_pressure - zero_offset) * 0.1);
+        // pressure = temp_pressure - zero_offset;
+
+        if (_interrupt_handler) {
+            _interrupt_handler(true);
+            _interrupt_handler = nullptr;
+        }
     };
 
    public:
@@ -210,7 +210,7 @@ class HoneywellTruStabilityBase : virtual public PressureSensor {
         if (output_units != _base_units) {
             if (_base_units == PressureUnits::PSI && output_units == PressureUnits::cmH2O) {
                 // the only currently supported configuration
-                return pressure / 0.014223343334285;
+                return pressure * 70.3069578296;
             }
 
             if (_base_units == PressureUnits::PSI && output_units == PressureUnits::Pa) {
@@ -292,10 +292,12 @@ struct HoneywellTruStability<device_t, std::enable_if_t<std::is_base_of_v<Motate
         _message.message_done_callback = [&] { this->_doneReadingCallback(); };
 
         _inited = true;
-        _check_timer.set(0);
     };
 
-    void startSampling() {
+
+    void startSampling(std::function<void(bool)> &&handler) {
+        _interrupt_handler = std::move(handler);
+
         _data_needs_read = true;
         _startNextReadWrite();
     };
@@ -360,10 +362,10 @@ struct HoneywellTruStability<device_t, std::enable_if_t<std::is_base_of_v<Motate
         _message.message_done_callback = [&](bool){ this->_doneReadingCallback(); };
 
         _inited = true;
-        _check_timer.set(0);
     };
 
-    void startSampling() {
+    void startSampling(std::function<void(bool)> &&handler) {
+        _interrupt_handler = std::move(handler);
         _data_needs_read = true;
         _startNextReadWrite();
     };

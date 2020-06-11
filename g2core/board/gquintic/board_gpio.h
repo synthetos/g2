@@ -198,7 +198,8 @@ extern gpioAnalogInput*    const a_in[A_IN_CHANNELS];
 // extern BME280<SPIBus_used_t::SPIBusDevice> pressure_sensor1;
 
 #include "honeywell-trustability-ssc.h"
-extern HoneywellTruStability<SPIBus_used_t::SPIBusDevice> pressure_sensor1;
+// extern HoneywellTruStability<SPIBus_used_t::SPIBusDevice> pressure_sensor1;
+extern HoneywellTruStability<TWIBus_used_t::TWIBusDevice> pressure_sensor1;
 extern HoneywellTruStability<TWIBus_used_t::TWIBusDevice> flow_pressure_sensor1; // pressure sensor, used for flow measurement
 
 extern VenturiFlowSensor flow_sensor1;

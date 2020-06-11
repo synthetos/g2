@@ -117,14 +117,36 @@ gpioAnalogInput*    const a_in[] = {&ai1, &ai2, &ai3, &ai4};
 // 12 is "CS3" on the board silk
 
 // BME280<SPIBus_used_t::SPIBusDevice> pressure_sensor{spiBus, spiCSPinMux.getCS(8)};
-HoneywellTruStability<SPIBus_used_t::SPIBusDevice> pressure_sensor1{spiBus,
-                                                             spiCSPinMux.getCS(8),
+// HoneywellTruStability<SPIBus_used_t::SPIBusDevice> pressure_sensor1{spiBus,
+//                                                              spiCSPinMux.getCS(8),
+//                                                              /*min_output:*/  1638, // 10% of 2^14
+//                                                              /*max_output:*/ 14745, // 90% of 2^14
+//                                                              /*min_value:*/ 0.0,    // 0psi
+//                                                              /*max_value:*/ 15.0,   // 15psi
+//                                                              PressureUnits::PSI};
+
+// ABPDANT030PG0D3
+// Last 8 translation:
+// Source: https://sensing.honeywell.com/honeywell-sensing-basic-board-mount-pressure-abp-series-datasheet-32305128.pdf
+//   030PG -> 0-30 PSI Gauge
+//   0 -> I2C, Address 0x08
+//   D -> 10% to 90% of 2^14 counts (digital only) temperature output enabled, sleep mode enabled
+//   3 -> 3.3V version
+HoneywellTruStability<TWIBus_used_t::TWIBusDevice> pressure_sensor1{twiBus,
+                                                             0x08,
                                                              /*min_output:*/  1638, // 10% of 2^14
                                                              /*max_output:*/ 14745, // 90% of 2^14
                                                              /*min_value:*/ 0.0,    // 0psi
-                                                             /*max_value:*/ 15.0,   // 15psi
+                                                             /*max_value:*/ 30.0,   // 15psi
                                                              PressureUnits::PSI};
 
+// HSCMRRV001PD2A3
+// Last 8 translation:
+// Source: https://sensing.honeywell.com/honeywell-sensing-trustability-hsc-series-high-accuracy-board-mount-pressure-sensors-50099148-a-en.pdf
+//   001PD -> ±1 PSI Differential
+//   2 -> I2C, Address 0x28
+//   A -> 10% to 90% of 2^14 counts (digital)
+//   3 -> 3.3V version
 HoneywellTruStability<TWIBus_used_t::TWIBusDevice> flow_pressure_sensor1{twiBus,
                                                              0x28,
                                                              /*min_output:*/  1638, // 10% of 2^14
@@ -133,10 +155,14 @@ HoneywellTruStability<TWIBus_used_t::TWIBusDevice> flow_pressure_sensor1{twiBus,
                                                              /*max_value:*/ 1.0,   // 15psi
                                                              PressureUnits::PSI};
 
+//    upstream_diameter_mm = 20,
+//    throat_diameter_mm = 7.25,
+//    air_density = 1.2431,
+//    discharge_coeffiecient = 0.7337153909
+
 VenturiFlowSensor flow_sensor1{
     &flow_pressure_sensor1,
-    20,
-    10,
+    /* K= */ 0.03875590222
 };
 
 /************************************************************************************
@@ -147,17 +173,14 @@ VenturiFlowSensor flow_sensor1{
  // Register a SysTick event to call start_sampling every temperature_sample_freq ms
  const int16_t ain_sample_freq = 2;
  int16_t ain_sample_counter = ain_sample_freq;
- Motate::SysTickEvent ain_tick_event{[] {
-                                         ain_sample_counter--;
-
-                                         if (ain_sample_counter == 1) {
-                                             pressure_sensor1.startSampling();
-                                         } else if (ain_sample_counter <= 0) {
-                                             flow_pressure_sensor1.startSampling();
-                                             ain_sample_counter = ain_sample_freq;
-                                         }
-                                     },
-                                     nullptr};
+ Motate::SysTickEvent ain_tick_event{
+     [] {
+         if (ain_sample_counter-- <= 0) {
+             pressure_sensor1.startSampling([](bool) { flow_pressure_sensor1.startSampling([](bool) { ; }); });
+             ain_sample_counter = ain_sample_freq;
+         }
+     },
+     nullptr};
 
  /*
   * gpio_reset() - reset inputs and outputs (no initialization)
