@@ -269,6 +269,9 @@ struct PressureKinematics : KinematicsBase<axes, motors> {
             // read differential pressure from the volume sensors
             flow_value[joint] = flow_sensors[joint]->getFlow(FlowUnits::SLM);
             volume_value[joint] = volume_value[joint] + flow_value[joint] * MIN_SEGMENT_TIME; // SLM and MIN_SEGMENT_TIME are both in minutes - nice!
+            if ((raw_pressure_value[joint] < 0.1 && abs(flow_value[joint])<5.0) || volume_value[joint] < 0) {
+                volume_value[joint] = 0;
+            }
         }
         return true;
     }
