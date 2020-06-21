@@ -43,16 +43,13 @@
 #define G2CORE_HARDWARE_PLATFORM    "ArduinoDue"
 #define G2CORE_HARDWARE_VERSION     "na"
 
-#ifndef HAS_LASER
-#if HAS_HOBBY_SERVO_MOTOR
-#error Can NOT have a laser and a hobby servo at the same time, sorry
-#endif
-#define HAS_LASER 0
-#endif
-
 /***** Motors & PWM channels supported by this hardware *****/
 // These must be defines (not enums) so expressions like this:
 //  #if (MOTORS >= 6)  will work
+
+#ifndef HAS_LASER
+#define HAS_LASER 0
+#endif
 
 #if HAS_LASER
 #define MOTORS 5                    // number of motors + one "laser" motor (used for pulsing the laser in sync)
