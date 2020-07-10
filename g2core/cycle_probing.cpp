@@ -302,7 +302,7 @@ static void _probe_restore_settings()
     gpio_set_probing_mode(pb.probe_input, false);       // set input back to normal operation
 
     for (uint8_t axis = 0; axis < AXES; axis++) {       // restore axis jerks
-        cm->a[axis].jerk_max = pb.saved_jerk[axis]; 
+        cm_set_axis_max_jerk(axis, pb.saved_jerk[axis]);
     }
     cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_OFF); // release abs override and restore work offsets
     cm_set_distance_mode(pb.saved_distance_mode);
