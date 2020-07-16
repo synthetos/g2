@@ -917,6 +917,10 @@ static stat_t _exec_aline_segment()
         }
     }
 
+    if (cm_is_laser_tool() && spindle.direction == SPINDLE_CCW) {
+        spindle_update_laser_override(mr->segment_velocity);
+    }
+
     // Convert target position to steps
     // Bucket-brigade the old target down the chain before getting the new target from kinematics
     //

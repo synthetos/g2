@@ -120,6 +120,7 @@ stat_t spindle_speed_sync(float speed);         // S parameter
 stat_t spindle_override_control(const float P_word, const bool P_flag); // M51
 void spindle_start_override(const float ramp_time, const float override_factor);
 void spindle_end_override(const float ramp_time);
+void spindle_update_laser_override(float current_velocity);
 
 stat_t sp_get_spmo(nvObj_t *nv);
 stat_t sp_set_spmo(nvObj_t *nv);
