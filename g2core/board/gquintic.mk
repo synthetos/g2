@@ -3,10 +3,10 @@
 
 
 # To compile:
-#   make BOARD=gquintic-a
+#   make BOARD=gquintic-d
 
 # You can also choose a CONFIG from boards.mk:
-#   make CONFIG=PrintrbotPlus BOARD=gquintic-b
+#   make CONFIG=PrintrbotPlus BOARD=gquintic-d
 
 
 ##########
@@ -25,16 +25,16 @@ ifeq ("$(BOARD)","gquintic-c")
 endif
 
 ifeq ("$(BOARD)","gquintic-d")
-BASE_BOARD=gquintic
-DEVICE_DEFINES += MOTATE_BOARD="gquintic-d"
-DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
+    BASE_BOARD=gquintic
+    DEVICE_DEFINES += MOTATE_BOARD="gquintic-d"
+    DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
 endif
 
 ifeq ("$(BOARD)","gquintic-g")
-BASE_BOARD=gquintic
-QUINTIC_N20=1
-DEVICE_DEFINES += MOTATE_BOARD="gquintic-d"
-DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
+    BASE_BOARD=gquintic
+    QUINTIC_N20=1
+    DEVICE_DEFINES += MOTATE_BOARD="gquintic-d"
+    DEVICE_DEFINES += SETTINGS_FILE=${SETTINGS_FILE}
 endif
 
 ##########
