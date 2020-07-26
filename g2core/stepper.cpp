@@ -1006,8 +1006,10 @@ stat_t st_set_ma(nvObj_t *nv)
     uint8_t external_axis = nv->value_int;
 #if (AXES == 9)
     uint8_t remap_axis[9] = { 0,1,2,6,7,8,3,4,5 };
-    nv->value_int = remap_axis[nv->value_int];
+#else
+    uint8_t remap_axis[6] = { 0,1,2,3,4,5 };
 #endif
+    nv->value_int = remap_axis[nv->value_int];
     ritorno(set_integer(nv, st_cfg.mot[_motor(nv->index)].motor_map, 0, AXES));
     nv->value_int = external_axis;
     kn_config_changed();
