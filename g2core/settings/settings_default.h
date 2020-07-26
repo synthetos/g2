@@ -106,6 +106,22 @@
 #endif
 #endif
 
+#ifndef SPINDLE_OVERRIDE_ENABLE
+#define SPINDLE_OVERRIDE_ENABLE 1
+#endif
+
+#ifndef SPINDLE_OVERRIDE_FACTOR
+#define SPINDLE_OVERRIDE_FACTOR 1.0
+#endif
+
+#ifndef SPINDLE_OVERRIDE_MIN
+#define SPINDLE_OVERRIDE_MIN FEED_OVERRIDE_MIN
+#endif
+
+#ifndef SPINDLE_OVERRIDE_MAX
+#define SPINDLE_OVERRIDE_MAX FEED_OVERRIDE_MAX
+#endif
+
 #ifndef SPINDLE_DWELL_MAX
 #define SPINDLE_DWELL_MAX   10000000.0      // maximum allowable dwell time. May be overridden in settings files
 #endif
