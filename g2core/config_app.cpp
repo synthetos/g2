@@ -2011,6 +2011,8 @@ stat_t set_float_range(nvObj_t *nv, float &value, float low, float high) {
         return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
     value = nv->value_flt;
+    nv->precision = GET_TABLE_WORD(precision);
+    nv->valuetype = TYPE_FLOAT;
     return (STAT_OK);
 }
 
