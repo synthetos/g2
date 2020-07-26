@@ -452,6 +452,9 @@ stat_t get_float(nvObj_t *nv, const float value);   // boilerplate for retrievin
 stat_t set_float(nvObj_t *nv, float &value);        // boilerplate for setting a floating point value w/conversion
 stat_t set_float_range(nvObj_t *nv, float &value, float low, float high);
 
+stat_t get_boolean(nvObj_t *nv, const bool value);   // boilerplate for retrieving 1 bit integer value
+stat_t set_boolean(nvObj_t *nv, bool &value);   // boilerplate for retrieving 1 bit integer value
+
 stat_t get_integer(nvObj_t *nv, const int32_t value);   // boilerplate for retrieving 8 bit integer value
 stat_t set_integer(nvObj_t *nv, uint8_t &value, uint8_t low, uint8_t high);
 stat_t set_int32(nvObj_t *nv, int32_t &value, int32_t low, int32_t high);

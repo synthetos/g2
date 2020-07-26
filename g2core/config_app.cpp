@@ -2041,6 +2041,19 @@ static stat_t _set_int_tests(nvObj_t *nv, int32_t low, int32_t high)
     return (STAT_OK);
 }
 
+stat_t get_boolean(nvObj_t *nv, const bool value)
+{
+    nv->value_int = value;
+    nv->valuetype = TYPE_BOOLEAN;
+    return STAT_OK;
+}
+stat_t set_boolean(nvObj_t *nv, bool &value)
+{
+    value = !!nv->value_int;
+    nv->valuetype = TYPE_BOOLEAN;
+    return STAT_OK;
+}
+
 stat_t get_integer(nvObj_t *nv, const int32_t value)
 {
     nv->value_int = value;
