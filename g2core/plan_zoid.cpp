@@ -144,9 +144,10 @@ stat_t mp_calculate_ramps(mpBlockRuntimeBuf_t* block, mpBuf_t* bf, const float e
     if (bf->gm.motion_mode == MOTION_MODE_STRAIGHT_TRAVERSE) {
         bf->override_factor = cm->gmx.mto_enable ? cm->gmx.mto_factor : 1.0;
     }
-    else if (bf->gm.motion_mode == MOTION_MODE_STRAIGHT_FEED) {
+    else if ((bf->gm.motion_mode == MOTION_MODE_STRAIGHT_FEED) || (bf->gm.motion_mode == MOTION_MODE_CW_ARC) || (bf->gm.motion_mode == MOTION_MODE_CCW_ARC)) {
         bf->override_factor = cm->gmx.mfo_enable ? cm->gmx.mfo_factor : 1.0;
     }
+
     // bf->cruise_vmax adjusted by override cannot go above absolute vmax,
     //   and should stay below the back-planned cruise velocity.
     bf->cruise_vmax = std::min(bf->absolute_vmax, std::min(bf->cruise_velocity, bf->override_factor * bf->cruise_vset));
@@ -216,13 +217,19 @@ stat_t mp_calculate_ramps(mpBlockRuntimeBuf_t* block, mpBuf_t* bf, const float e
         else if (bf->hint == MIXED_DECELERATION) {
             block->tail_length = mp_get_target_length(block->exit_velocity, block->cruise_velocity, bf);
             block->body_length = bf->length - block->tail_length;
-            debug_trap_if_true((block->body_length < 0), "invlaid negative body_length from MIXED_DECELERATION");
-            block->head_length = 0;
+            if (block->body_length < 0) {
+                debug_trap_if_true((block->body_length < 0), "invlaid negative body_length from MIXED_DECELERATION");
 
-            block->body_time = block->body_length / block->cruise_velocity;
-            block->tail_time = block->tail_length * 2 / (block->exit_velocity + block->cruise_velocity);
-            bf->block_time   = block->body_time + block->tail_time;
-            return (_ramp_exit_logger(bf, "2d"));
+                // something went wrong and we missed it, try for an asymetric bump
+                bf->hint = ASYMMETRIC_BUMP;
+            } else {
+                block->head_length = 0;
+
+                block->body_time = block->body_length / block->cruise_velocity;
+                block->tail_time = block->tail_length * 2 / (block->exit_velocity + block->cruise_velocity);
+                bf->block_time   = block->body_time + block->tail_time;
+                return (_ramp_exit_logger(bf, "2d"));
+            }
         }
 
         // PERFECT_DECELERATION (1d) single tail segment (deltaV == delta_vmax)
