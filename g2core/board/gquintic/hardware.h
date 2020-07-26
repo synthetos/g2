@@ -59,10 +59,11 @@
 #endif
 
 #ifndef HAS_LASER
-#if HAS_HOBBY_SERVO_MOTOR
+#define HAS_LASER 0
+#else
+#if HAS_HOBBY_SERVO_MOTOR && HAS_LASER
 #error Can NOT have a laser and a hobby servo at the same time, sorry
 #endif
-#define HAS_LASER 0
 #endif
 
 
