@@ -100,7 +100,7 @@ static stat_t _set_homing_func(stat_t (*func)(int8_t axis)) {
  *   Will be registered only during homing mode - see gpio.h for more info
  */
 gpioDigitalInputHandler _homing_handler {
-    [](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
         if (cm->cycle_type != CYCLE_HOMING) { return GPIO_NOT_HANDLED; }
         if (triggering_pin_number != hm.homing_input) { return GPIO_NOT_HANDLED; }
         if (edge != INPUT_EDGE_LEADING) { return GPIO_NOT_HANDLED; }
@@ -292,7 +292,7 @@ static stat_t _homing_axis_start(int8_t axis) {
         travel_distance = 360.0;
     } else {
         // All other axes use a calculated value
-        travel_distance = fabs(cm->a[axis].travel_max - cm->a[axis].travel_min) + cm->a[axis].latch_backoff;
+        travel_distance = std::abs(cm->a[axis].travel_max - cm->a[axis].travel_min) + cm->a[axis].latch_backoff;
     }
     if (fp_ZERO(travel_distance)) {
         return (_homing_error_exit(axis, STAT_HOMING_ERROR_TRAVEL_MIN_MAX_IDENTICAL));

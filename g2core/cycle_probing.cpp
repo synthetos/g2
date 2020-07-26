@@ -129,7 +129,7 @@ static void _motion_end_callback(float* vect, bool* flag)
  *   Will be registered only during homing mode - see gpio.h for more info
  */
 gpioDigitalInputHandler _probing_handler {
-    [](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
         if (cm->cycle_type != CYCLE_PROBE) { return GPIO_NOT_HANDLED; }
         if (triggering_pin_number != pb.probe_input) { return GPIO_NOT_HANDLED; }
 
@@ -199,6 +199,10 @@ gpioDigitalInputHandler _probing_handler {
 
 uint8_t cm_straight_probe(float target[], bool flags[], bool trip_sense, bool alarm_flag)
 {
+    if (cm->cycle_type == CYCLE_PROBE) {
+        return(cm_alarm(STAT_PROBE_CYCLE_FAILED, "Already probing - cannot start another probe"));
+    }
+
     // error if zero feed rate
     if (fp_ZERO(cm->gm.feed_rate)) {
         return(cm_alarm(STAT_FEEDRATE_NOT_SPECIFIED, "Feedrate is zero"));

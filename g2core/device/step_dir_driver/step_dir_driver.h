@@ -67,12 +67,12 @@ struct StepDirStepper final : Stepper  {
     OutputPin<ms2_num>     _ms2;
     PWMOutputPin<vref_num> _vref;
 
-    ioPolarity _step_polarity;                   // IO_ACTIVE_LOW or IO_ACTIVE_HIGH
-    ioPolarity _enable_polarity;                 // IO_ACTIVE_LOW or IO_ACTIVE_HIGH
+    ioPolarity _step_polarity;              // IO_ACTIVE_LOW or IO_ACTIVE_HIGH
+    ioPolarity _enable_polarity;            // IO_ACTIVE_LOW or IO_ACTIVE_HIGH
 
-    Timeout _motor_activity_timeout;         // this is the timeout object that will let us know when time is up
-    uint32_t _motor_activity_timeout_ms;     // the number of ms that the timeout is reset to
-    enum stPowerState {                          // used w/start and stop flags to sequence motor power
+    Timeout _motor_activity_timeout;        // this is the timeout object that will let us know when time is up
+    uint32_t _motor_activity_timeout_ms;    // the number of ms that the timeout is reset to
+    enum stPowerState {                     // used w/start and stop flags to sequence motor power
         MOTOR_OFF = 0,                      // motor is stopped and deenergized
         MOTOR_IDLE,                         // motor is stopped and may be partially energized for torque maintenance
         MOTOR_RUNNING,                      // motor is running (and fully energized)

@@ -83,7 +83,7 @@ Motate::SysTickEvent dwell_systick_event{
             st_run.dwell_ticks_downcount = 1; // this'll decerement to zero shortly
             cm->hold_state = FEEDHOLD_MOTION_STOPPED;
         }
-        if ((--st_run.dwell_ticks_downcount == 0)) { // do_spindle_speed_ramp_from_systick() &&
+        if ((--st_run.dwell_ticks_downcount == 0)) {
             st_run.dwell_ticks_downcount = 0;  // in the case of stop==true, this is needed
             SysTickTimer.unregisterEvent(&dwell_systick_event);
             _load_move();  // load the next move at the current interrupt level
@@ -217,7 +217,7 @@ stat_t stepper_test_assertions()
  *  Busy conditions:
  *  - motors are running
  *  - dwell is running
- *  - an toolhead is busy in a way that should prevent motion (spinup, etc.)
+ *  - a toolhead is busy in a way that should prevent motion (spinup, etc.)
  */
 
 bool st_runtime_isbusy()
@@ -1041,7 +1041,7 @@ stat_t st_set_mi(nvObj_t *nv)
         return (STAT_INPUT_LESS_THAN_MIN_VALUE);
     }
 
-    uint16_t mi = (uint16_t)nv->value_int;
+    uint16_t mi = nv->value_int;
     if ((mi != 1) && (mi != 2) && (mi != 4) && (mi != 8) && (mi != 16) && (mi != 32)) {
         nv_add_conditional_message((const char *)"*** WARNING *** Setting non-standard microstep value");
     }

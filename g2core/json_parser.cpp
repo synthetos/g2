@@ -302,7 +302,7 @@ static stat_t _get_nv_pair(nvObj_t *nv, char **pstr, int8_t *depth)
     // numbers
     } else if (isdigit(**pstr) || (**pstr == '-')) {    // value is a number
         nv->value_int = atol(*pstr);                    // get the number as an integer
-        nv->value_flt = strtod(*pstr, &tmp);     // get the number as a float - tmp is the end pointer
+        nv->value_flt = strtod(*pstr, &tmp);            // get the number as a float - tmp is the end pointer
 
         if ((tmp == *pstr) ||                           // if start pointer equals end the conversion failed
             (strchr(terminators, *tmp) == NULL)) {      // terminators are the only legal chars at the end of a number
