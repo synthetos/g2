@@ -30,8 +30,6 @@
 /**** AxiDraw v3 Configuration *****************************************/
 /***********************************************************************/
 
-#include "hardware.h"
-
 // ***> NOTE: The init message must be a single line with no CRs or LFs
 #define INIT_MESSAGE "Initializing configs to AxiDraw v3 settings"
 
@@ -90,6 +88,7 @@
 #define MOTOR_POWER_TIMEOUT         2.00                    // motor power timeout in seconds
 
 #define KINEMATICS KINE_CORE_XY                             // X and Y MUST use the same settings!
+#define HAS_HOBBY_SERVO_MOTOR 1
 
 #define A_B_POWER_LEVEL 0.7
 #define A_B_MICROSTEPS 64
@@ -110,6 +109,8 @@
 #define M2_POLARITY                 0
 #define M2_POWER_MODE               MOTOR_POWER_MODE
 #define M2_POWER_LEVEL              A_B_POWER_LEVEL
+
+#include "hardware.h"
 
 #if MOTORS == 3
 // gQuadratic
