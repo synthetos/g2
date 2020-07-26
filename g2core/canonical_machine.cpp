@@ -1214,9 +1214,14 @@ stat_t cm_resume_g92_offsets()
  * cm_straight_traverse() - G0 linear rapid
  */
 
-stat_t cm_straight_traverse(const float *target, const bool *flags, const uint8_t motion_profile)
+stat_t cm_straight_traverse(const float *target, const bool *flags, const cmMotionProfile motion_profile)
 {
     cm->gm.motion_mode = MOTION_MODE_STRAIGHT_TRAVERSE;
+#ifdef TRAVERSE_AT_HIGH_JERK
+    cm->gm.motion_profile = PROFILE_FAST; // override to make all traverses use high jerk
+#else
+    cm->gm.motion_profile = motion_profile;
+#endif
 
     // it's legal for a G0 to have no axis words but we don't want to process it
     if (!(flags[AXIS_X] | flags[AXIS_Y] | flags[AXIS_Z] |
@@ -1371,7 +1376,7 @@ stat_t cm_dwell(const float seconds)
  * cm_straight_feed() - G1
  */
 
-stat_t cm_straight_feed(const float *target, const bool *flags, const uint8_t motion_profile)
+stat_t cm_straight_feed(const float *target, const bool *flags, const cmMotionProfile motion_profile)
 {
     // trap zero feed rate condition
     if (fp_ZERO(cm->gm.feed_rate)) {

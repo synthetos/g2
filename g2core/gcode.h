@@ -90,6 +90,11 @@ typedef enum {
     UNITS_PER_REVOLUTION_MODE// G95 (unimplemented)
 } cmFeedRateMode;
 
+typedef enum {                      // Motion profiles
+    PROFILE_NORMAL = 0,             // Normal jerk in effect
+    PROFILE_FAST                    // High speed jerk in effect
+} cmMotionProfile;
+
 typedef enum {
     ORIGIN_OFFSET_SET=0,    // G92 - set origin offsets
     ORIGIN_OFFSET_CANCEL,   // G92.1 - zero out origin offsets
@@ -179,6 +184,7 @@ struct GCodeState_t {             // Gcode model state - used by model, planning
     cmDistanceMode arc_distance_mode;   // G90.1=use absolute IJK offsets, G91.1=incremental IJK offsets
     cmAbsoluteOverride absolute_override;// G53 TRUE = move using machine coordinates - this block only
     cmCoordSystem coord_system;         // G54-G59 - select coordinate system 1-9
+    cmMotionProfile motion_profile;     // NORMAL or FAST - controls what jerk is used when
     uint8_t tool;               // G    // M6 tool change - moves "tool_select" to "tool"
     uint8_t tool_select;        // G    // T value - T sets this value
 
@@ -205,6 +211,7 @@ struct GCodeState_t {             // Gcode model state - used by model, planning
         arc_distance_mode = ABSOLUTE_DISTANCE_MODE;
         absolute_override = ABSOLUTE_OVERRIDE_OFF;
         coord_system = ABSOLUTE_COORDS;
+        motion_profile = PROFILE_NORMAL;
         tool = 0;
         tool_select = 0;
 

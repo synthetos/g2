@@ -587,8 +587,6 @@ void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit)
     if ((cm1.hold_state == FEEDHOLD_OFF)) {
         cm1.hold_type = type;
         cm1.hold_exit = exit;
-        cm1.hold_profile =
-            ((type == FEEDHOLD_TYPE_ACTIONS) || (type == FEEDHOLD_TYPE_HOLD)) ? PROFILE_NORMAL : PROFILE_FAST;
 
         switch (cm1.hold_type) {
             case FEEDHOLD_TYPE_HOLD:     { op.add_action(_feedhold_no_actions); break; }

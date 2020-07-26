@@ -147,11 +147,6 @@ typedef enum {                      // feedhold state machine
     FEEDHOLD_EXIT_ACTIONS_COMPLETE  // completed exit actions
 } cmFeedholdState;
 
-typedef enum {                      // Motion profiles
-    PROFILE_NORMAL = 0,             // Normal jerk in effect
-    PROFILE_FAST                    // High speed jerk in effect
-} cmMotionProfile;
-
 typedef enum {                      // state machine for cycle start
     CYCLE_START_OFF = 0,            // not requested
     CYCLE_START_REQUESTED,
@@ -285,7 +280,6 @@ typedef struct cmMachine {                  // struct to manage canonical machin
 
     cmFeedholdType  hold_type;              // hold: type of feedhold requested
     cmFeedholdExit  hold_exit;              // hold: final state of hold on exit
-    cmMotionProfile hold_profile;           // hold: motion profile to use for deceleration
     cmFeedholdState hold_state;             // hold: feedhold state machine
 
     cmFlushState    queue_flush_state;      // queue flush state machine
@@ -422,7 +416,7 @@ stat_t cm_suspend_g92_offsets(void);                                        // G
 stat_t cm_resume_g92_offsets(void);                                         // G92.3
 
 // Free Space Motion (4.3.4)
-stat_t cm_straight_traverse(const float *target, const bool *flags, const uint8_t motion_profile); // G0
+stat_t cm_straight_traverse(const float *target, const bool *flags, const cmMotionProfile motion_profile); // G0
 stat_t cm_set_g28_position(void);                                           // G28.1
 stat_t cm_goto_g28_position(const float target[], const bool flags[]);      // G28
 stat_t cm_set_g30_position(void);                                           // G30.1
@@ -434,7 +428,7 @@ stat_t cm_set_feed_rate_mode(const uint8_t mode);                           // G
 stat_t cm_set_path_control(GCodeState_t *gcode_state, const uint8_t mode);  // G61, G61.1, G64
 
 // Machining Functions (4.3.6)
-stat_t cm_straight_feed(const float *target, const bool *flags, const uint8_t motion_profile); //G1
+stat_t cm_straight_feed(const float *target, const bool *flags, const cmMotionProfile motion_profile); //G1
 stat_t cm_dwell(const float seconds);                                       // G4, P parameter
 
 stat_t cm_arc_feed(const float target[], const bool target_f[],             // G2/G3 - target endpoint

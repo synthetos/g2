@@ -48,7 +48,6 @@ extern OutputPin<Motate::kDebug3_PinNumber> debug_pin3;
 
 // planner helper functions
 static mpBuf_t* _plan_block(mpBuf_t* bf);
-static void _calculate_override(mpBuf_t* bf);
 static void _calculate_jerk(mpBuf_t* bf);
 static void _calculate_vmaxes(mpBuf_t* bf, const float axis_length[], const float axis_square[]);
 static void _calculate_junction_vmax(mpBuf_t* bf);
@@ -455,18 +454,10 @@ static mpBuf_t* _plan_block(mpBuf_t* bf)
 
 static float _get_axis_jerk(mpBuf_t* bf, uint8_t axis)
 {
-    #ifdef TRAVERSE_AT_HIGH_JERK
-    switch (bf->gm.motion_mode) {
-        case MOTION_MODE_STRAIGHT_TRAVERSE:
-            //case MOTION_MODE_STRAIGHT_PROBE: // <-- not sure on this one
-            return cm->a[axis].jerk_high;
-            break;
-        default:
-            return cm->a[axis].jerk_max;
+    if (bf->gm.motion_profile == PROFILE_FAST) {
+        return cm->a[axis].jerk_high;
     }
-    #else
-   return cm->a[axis].jerk_max;
-    #endif
+    return cm->a[axis].jerk_max;
 }
 
 static void _calculate_jerk(mpBuf_t* bf)

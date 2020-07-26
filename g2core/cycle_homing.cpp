@@ -67,7 +67,6 @@ struct hmHomingSingleton {          // persistent homing runtime variables
     cmDistanceMode saved_distance_mode;   // G90, G91 global setting
     cmFeedRateMode saved_feed_rate_mode;  // G93, G94 global setting
     float          saved_feed_rate;       // F setting
-    float          saved_jerk;            // saved and restored for each axis homed
 };
 static struct hmHomingSingleton hm;
 
@@ -235,11 +234,10 @@ stat_t cm_homing_cycle_callback(void) {
 /***********************************************************************************
  * cm_abort_homing() - something big happened, the queue is flushing, reset to non-homing state
  *
- *  Note: No need to worry about resetting states we saved (if we are actually homig), since
- *  when this is called everything is being reset anyway.
- *
  *  The task here is to stop sending homing moves to the planner, and ensure we can re-enter
  *  homing fresh without issue.
+ *
+ *  Note that this should always be called after any feedhold and planner reset.
  *
  */
 
@@ -329,7 +327,6 @@ static stat_t _homing_axis_start(int8_t axis) {
     }
 
     // if homing is disabled for the axis then skip to the next axis
-    hm.saved_jerk = cm_get_axis_jerk(axis);                     // save the max jerk value
     return (_set_homing_func(_homing_axis_clear_init));         // perform an initial clear
 }
 
@@ -360,7 +357,6 @@ static stat_t _homing_axis_clear_init(int8_t axis)  // first clear move
  */
 static stat_t _homing_axis_search(int8_t axis)  // drive to switch
 {
-    cm_set_axis_max_jerk(axis, cm->a[axis].jerk_high);  // use the high-speed jerk for search onward
     _homing_axis_move(axis, hm.search_travel, hm.search_velocity);
     return (_set_homing_func(_homing_axis_clear));
 }
@@ -406,7 +402,6 @@ static stat_t _homing_axis_set_position(int8_t axis)
         kn_forward_kinematics(en_get_encoder_snapshot_vector(), contact_position);
         _homing_axis_move(axis, contact_position[AXIS_Z], hm.search_velocity);
     }
-    cm_set_axis_max_jerk(axis, hm.saved_jerk);  // restore the max jerk value
 
     din_handlers[INPUT_ACTION_INTERNAL].deregisterHandler(&_homing_handler);  // end homing mode
     return (_set_homing_func(_homing_axis_start));

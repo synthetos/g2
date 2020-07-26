@@ -62,7 +62,6 @@ struct pbProbingSingleton {             // persistent probing runtime variables
     cmUnitsMode saved_units_mode;       // G20,G21 setting
     cmDistanceMode saved_distance_mode; // G90,G91 global setting
     bool saved_soft_limits;             // turn off soft limits during probing
-    float saved_jerk[AXES];             // saved and restored for each axis
 };
 static struct pbProbingSingleton pb;
 
@@ -266,11 +265,10 @@ uint8_t cm_probing_cycle_callback(void)
 /***********************************************************************************
  * cm_abort_probing() - something big happened, the queue is flushing, reset to non-probing state
  *
- *  Note: No need to worry about resetting states we saved (if we are actually probing), since
- *  when this is called everything is being reset anyway.
- *
  *  The task here is to stop sending homing moves to the planner, and ensure we can re-enter
  *  homing fresh without issue.
+ *
+ *  Note that this should always be called after any feedhold and planner reset.
  *
  */
 
@@ -321,7 +319,6 @@ static stat_t _probe_move(const float target[], const bool flags[])
 
 static uint8_t _probing_start()
 {
-    // so optimistic... ;)
     // These initializations are required before starting the probing cycle but must
     // be done after the planner has exhausted all current moves as they affect the
     // runtime (specifically the digital input modes). Side effects would include
@@ -340,12 +337,6 @@ static uint8_t _probing_start()
     // set working values
     cm_set_distance_mode(ABSOLUTE_DISTANCE_MODE);
     cm_set_units_mode(MILLIMETERS);
-
-    // Save the current jerk settings & change to the high-speed jerk settings
-    for (uint8_t axis = 0; axis < AXES; axis++) {
-        pb.saved_jerk[axis] = cm_get_axis_jerk(axis);  // save the max jerk value
-        cm_set_axis_max_jerk(axis, cm->a[axis].jerk_high);  // use the high-speed jerk for probe
-    }
 
     // Error if the probe target is too close to the current position
     if (get_axis_vector_length(cm->gmx.position, pb.target) < MINIMUM_PROBE_TRAVEL) {
@@ -400,9 +391,6 @@ static void _probe_restore_settings()
 {
     din_handlers[INPUT_ACTION_INTERNAL].deregisterHandler(&_probing_handler);
 
-    for (uint8_t axis = 0; axis < AXES; axis++) {       // restore axis jerks
-        cm->a[axis].jerk_max = pb.saved_jerk[axis];
-    }
     cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_OFF); // release abs override and restore work offsets
     cm_set_distance_mode(pb.saved_distance_mode);
     cm_set_units_mode(pb.saved_units_mode);

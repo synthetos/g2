@@ -56,7 +56,6 @@ struct jmJoggingSingleton {         // persistent jogging runtime variables
     uint8_t saved_coord_system;     // G54 - G59 setting
     uint8_t saved_distance_mode;    // G90,G91 global setting
     uint8_t saved_feed_rate_mode;
-    float   saved_jerk;             // saved and restored for each axis jogged
 };
 static struct jmJoggingSingleton jog;
 
@@ -92,7 +91,6 @@ stat_t cm_jogging_cycle_start(uint8_t axis) {
     jog.saved_distance_mode  = cm_get_distance_mode(ACTIVE_MODEL);  // cm->gm.distance_mode;
     jog.saved_feed_rate_mode = cm_get_feed_rate_mode(ACTIVE_MODEL);
     jog.saved_feed_rate      = (ACTIVE_MODEL)->feed_rate;  // cm->gm.feed_rate;
-    jog.saved_jerk           = cm->a[axis].jerk_max;
 
     // set working values
     cm_set_units_mode(MILLIMETERS);
