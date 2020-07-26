@@ -231,7 +231,7 @@ ifeq ("$(CONFIG)","AxiDrawv3")
 endif
 ifeq ("$(CONFIG)","AxiDrawv3-quint")
     ifeq ("$(BOARD)","NONE")
-        BOARD=gquintic-d
+        BOARD=gquintic-g
     endif
     SETTINGS_FILE="settings_axidraw_v3.h"
 endif

@@ -59,3 +59,4 @@ g2core/compile_commands.json
 .vscode/.cortex-debug.registers.state.json
 .vscode/.cortex-debug.peripherals.state.json
 .vscode/ipch
+g2core.code-workspace

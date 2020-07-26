@@ -43,6 +43,18 @@
       }
     },
     {
+      "label": "Build CONFIG=MiniMill DebugSemihosting",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=MiniMill", "VERBOSE=2", "COLOR=0", "DEBUG=3",
+         "RECORD=1"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
       "label": "Build CONFIG=MiniMill Production",
       "type": "process",
       "command": "make",

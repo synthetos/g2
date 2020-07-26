@@ -119,6 +119,76 @@
       "preLaunchTask": "Build CONFIG=MiniMill Debug"
     },
     {
+      "name": "Debug CONFIG=MiniMill Quintic revG (J-Link/Semihosting)",
+      "type": "cortex-debug",
+      "request": "launch",
+      "servertype": "jlink",
+      "cwd": "${workspaceRoot}/g2core/",
+      "executable": "./bin/MiniMill-gquintic-g/g2core.elf",
+      "device": "ATSAMS70N20",
+      "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sams70/ATSAMS70N20B.svd",
+      "interface": "swd",
+      "showDevDebugOutput": false,
+      "osx": {
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/"
+      },
+      "linux": {
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-9m/bin/"
+      },
+      "swoConfig": {
+        "enabled": true,
+        "source":"probe",
+        "swoFrequency": 8000000,
+        "decoders": [
+          {
+            "port": 0,
+            "type": "console",
+            "label": "SWO output",
+            "encoding": "ascii"
+          }
+        ]
+        // "decoders": [
+        //   {
+        //     "type": "graph",
+        //     "port": 0,
+        //     "encoding": "float",
+        //     "graphId": "1",
+        //     "scale": 1
+        //   },
+        //   {
+        //     "type": "graph",
+        //     "port": 1,
+        //     "encoding": "float",
+        //     "graphId": "2",
+        //     "scale": 1
+        //   },
+        // ],
+      },
+      // "graphConfig": [
+      //   {
+      //     "label": "Graph 1",
+      //     "timespan": 5,
+      //     "type": "realtime",
+      //     "annotate": false,
+      //     "maximum": 1,
+      //     "minimum": 0,
+      //     "plots": [
+      //       {
+      //         "graphId": "1",
+      //         "label": "data 1",
+      //         "color": "#53753c"
+      //       },
+      //       {
+      //         "graphId": "2",
+      //         "label": "1.0-data 1",
+      //         "color": "#3557c3"
+      //       },
+      //     ]
+      //   },
+      // ],
+      "preLaunchTask": "Build CONFIG=MiniMill DebugSemihosting"
+    },
+    {
       "name": "Debug CONFIG=MiniMill Quintic revG (J-Link)",
       "type": "cortex-debug",
       "request": "launch",
@@ -181,9 +251,9 @@
       "request": "launch",
       "servertype": "jlink",
       "cwd": "${workspaceRoot}/g2core/",
-      "executable": "./bin/AxiDrawv3-quint-gquintic-d/g2core.elf",
-      "device": "ATSAMS70N19",
-      "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sams70/ATSAMS70N19.svd",
+      "executable": "./bin/AxiDrawv3-quint-gquintic-g/g2core.elf",
+      "device": "ATSAMS70N20",
+      "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sams70/ATSAMS70N20B.svd",
       "interface": "swd",
       "showDevDebugOutput": false,
       "osx": {
