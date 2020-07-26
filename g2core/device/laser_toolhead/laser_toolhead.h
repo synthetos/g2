@@ -53,7 +53,9 @@ template <typename KinematicsParent, Motate::pin_number fire_num>
 class LaserTool : public ToolHead, public Stepper, public KinematicsParent {
     spDirection direction;        // direction
     float speed;                  // S in RPM
-    // float speed_actual;           // actual speed (during speed ramping)
+
+    float speed_override_factor = 1;
+    bool speed_override_enable = true;
 
     float speed_min;              // minimum settable spindle speed
     float speed_max;              // maximum settable spindle speed
@@ -103,6 +105,14 @@ class LaserTool : public ToolHead, public Stepper, public KinematicsParent {
     bool set_speed(float) override;
     float get_speed() override;
 
+    // set the override value for spindle speed
+    bool set_override(float override) override;
+    float get_override() override;
+
+    // enable or disable the override
+    bool set_override_enable(bool override_enable) override;
+    bool get_override_enable() override;
+
     // the result of an M3/M4/M5
     // override this to return false - "don't add a command to the buffer"
     bool set_direction(spDirection) override;
@@ -115,10 +125,10 @@ class LaserTool : public ToolHead, public Stepper, public KinematicsParent {
 
     bool is_on() override;  // return if the current direction is anything but OFF, **even if paused**
 
-    void set_pwm_output(const uint8_t) override;
-    void set_enable_output(const uint8_t enable_pin_number) override;
+    bool set_pwm_output(const uint8_t pwm_pin_number) override;
+    bool set_enable_output(const uint8_t enable_pin_number) override;
 
-    void set_frequency(float new_frequency)override;
+    void set_frequency(float new_frequency) override;
     float get_frequency() override;
 
     // trivial getters and setters - inlined
@@ -241,7 +251,8 @@ template <typename KinematicsParent, Motate::pin_number fire_num>
 bool LaserTool<KinematicsParent,fire_num>::set_speed(float new_speed) {
     speed = new_speed;
 
-    float s = std::min(1.0f, std::max(0.0f, ((speed - min_s) / (max_s - min_s))));
+    float override_factor = speed_override_enable ? speed_override_factor : 1.0;
+    float s = std::min(1.0f, std::max(0.0f, (((speed * override_factor) - min_s) / (max_s - min_s))));
 
     if (direction == /*M3*/SPINDLE_CW) {
         uint32_t top_value = fire.getTopValue();
@@ -251,6 +262,27 @@ bool LaserTool<KinematicsParent,fire_num>::set_speed(float new_speed) {
 
     return false; // we don't need no stinkin' commands in our buffers!
 }
+
+// TODO - make these work
+// set the override value for spindle speed
+template <typename KinematicsParent, Motate::pin_number fire_num>
+bool LaserTool<KinematicsParent,fire_num>::set_override(float override) {
+    speed_override_factor = override;
+    set_speed(speed); // use the set_speed() function to update the pin PWM
+    return (true);
+}
+template <typename KinematicsParent, Motate::pin_number fire_num>
+float LaserTool<KinematicsParent,fire_num>::get_override() { return speed_override_factor; }
+
+// enable or disable the override
+template <typename KinematicsParent, Motate::pin_number fire_num>
+bool LaserTool<KinematicsParent,fire_num>::set_override_enable(bool override_enable) {
+    speed_override_enable = override_enable;
+    set_speed(speed); // use the set_speed() function to update the pin PWM
+    return (true);
+}
+template <typename KinematicsParent, Motate::pin_number fire_num>
+bool LaserTool<KinematicsParent,fire_num>::get_override_enable() { return speed_override_enable; }
 
 template <typename KinematicsParent, Motate::pin_number fire_num>
 spDirection LaserTool<KinematicsParent,fire_num>::get_direction() { return direction; }
@@ -301,18 +333,21 @@ bool LaserTool<KinematicsParent,fire_num>::is_on() { return (direction != SPINDL
 
 // LaserTool-specific functions
 template <typename KinematicsParent, Motate::pin_number fire_num>
-void LaserTool<KinematicsParent,fire_num>::set_pwm_output(const uint8_t) {
+bool LaserTool<KinematicsParent,fire_num>::set_pwm_output(const uint8_t) {
     // sometimes I whatever
+    return false;
 }
 template <typename KinematicsParent, Motate::pin_number fire_num>
-void LaserTool<KinematicsParent,fire_num>::set_enable_output(const uint8_t enable_pin_number) {
+bool LaserTool<KinematicsParent,fire_num>::set_enable_output(const uint8_t enable_pin_number) {
     if (enable_pin_number == 0) {
         enable_output = nullptr;
+        return false;
     } else {
         enable_output = d_out[enable_pin_number - 1];
         enable_output->setEnabled(IO_ENABLED);
         // set the polarity on the output -- not here
     }
+    return true;
 }
 
 template <typename KinematicsParent, Motate::pin_number fire_num>

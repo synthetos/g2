@@ -28,8 +28,9 @@
 #ifndef SPINDLE_H_ONCE
 #define SPINDLE_H_ONCE
 
-#include "error.h" // for stat_t
+#include "error.h"  // for stat_t
 #include "config.h" // for configSubtable
+#include "gpio.h"   // for ioPolarity
 
 enum spDirection {                  // how spindle controls are presented by the Gcode parser
     SPINDLE_OFF = 0,            // M5
@@ -65,6 +66,14 @@ class ToolHead  // TODO: Move to a toolhead file
     virtual bool set_speed(float speed) { return (true); }
     virtual float get_speed();
 
+    // set the override value for spindle speed
+    virtual bool set_override(float override) { return (true); }
+    virtual float get_override();
+
+    // enable or disable the override
+    virtual bool set_override_enable(bool override_enable) { return (true); }
+    virtual bool get_override_enable();
+
     // the result of an M3/M4/M5
     // return true if a command (and plan-to-stop) is needed, and false if not
     virtual bool set_direction(spDirection direction) { return (true); }
@@ -77,9 +86,20 @@ class ToolHead  // TODO: Move to a toolhead file
 
     // support for legacy interfaces, overriding is optional
 
-    virtual void set_pwm_output(const uint8_t pwm_pin_number) { /* do nothing by default */ };
-    virtual void set_enable_output(const uint8_t enable_pin_number) { /* do nothing by default */ };
-    virtual void set_direction_output(const uint8_t direction_pin_number) { /* do nothing by default */ };
+    virtual bool set_pwm_output(const uint8_t pwm_pin_number) { return false; };
+    virtual uint8_t get_pwm_output() { return 0; };
+    virtual bool set_pwm_polarity(const ioPolarity new_polarity) { return false; };
+    virtual ioPolarity get_pwm_polarity() { return IO_ACTIVE_HIGH; };
+
+    virtual bool set_enable_output(const uint8_t enable_pin_number) { return false; };
+    virtual uint8_t get_enable_output() { return 0; };
+    virtual bool set_enable_polarity(const ioPolarity new_polarity) { return false; };
+    virtual ioPolarity get_enable_polarity() { return IO_ACTIVE_HIGH; };
+
+    virtual bool set_direction_output(const uint8_t direction_pin_number) { return false; };
+    virtual uint8_t get_direction_output() { return 0; };
+    virtual bool set_direction_polarity(const ioPolarity new_polarity) { return false; };
+    virtual ioPolarity get_direction_polarity() { return IO_ACTIVE_HIGH; };
 
     // getters and setters for optional stuff - to support legacy JSON
     virtual void set_frequency(float new_frequency) { /* do nothing */ }

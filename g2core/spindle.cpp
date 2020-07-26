@@ -198,65 +198,72 @@ bool is_a_toolhead_busy() {
  **** Spindle Settings ******************************************************************
  ****************************************************************************************/
 
-stat_t sp_get_spep(nvObj_t *nv) { return(get_integer(nv, -1)); } // moved to gpio controls
-stat_t sp_set_spep(nvObj_t *nv) { // moved to gpio controls
-    // stat_t status = set_integer(nv, (uint8_t &)spindle.enable_polarity, 0, 1);
-    // spindle_enable_output->setPolarity((ioPolarity)spindle.enable_polarity);
-    // spindle_stop(); // stop spindle and apply new settings
+stat_t sp_get_spep(nvObj_t *nv) {
+    return (get_integer(nv, active_toolhead->get_enable_polarity()));
+}
+stat_t sp_set_spep(nvObj_t *nv) {
+    bool new_polarity = 0;
+    ritorno(set_boolean(nv, new_polarity));
+    active_toolhead->set_enable_polarity((ioPolarity) new_polarity);
     return (STAT_OK);
 }
 
-stat_t sp_get_spdp(nvObj_t *nv) { return(get_integer(nv, -1)); } // moved to gpio controls
-stat_t sp_set_spdp(nvObj_t *nv) { // moved to gpio controls
-    // stat_t status = set_integer(nv, (uint8_t &)spindle.dir_polarity, 0, 1);
-    // spindle_direction_output->setPolarity((ioPolarity)spindle.dir_polarity);
-    // spindle_stop(); // stop spindle and apply new settings
+stat_t sp_get_spdp(nvObj_t *nv) {
+    return (get_integer(nv, active_toolhead->get_direction_polarity()));
+}
+stat_t sp_set_spdp(nvObj_t *nv) {
+    bool new_polarity = 0;
+    ritorno(set_boolean(nv, new_polarity));
+    active_toolhead->set_direction_polarity((ioPolarity) new_polarity);
     return (STAT_OK);
 }
 
-stat_t sp_get_spph(nvObj_t *nv) { return(get_integer(nv, spindle_pause_enabled)); }
-stat_t sp_set_spph(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)spindle_pause_enabled, 0, 1)); }
+stat_t sp_get_spph(nvObj_t *nv) { return (get_boolean(nv, spindle_pause_enabled)); }
+stat_t sp_set_spph(nvObj_t *nv) { return (set_boolean(nv, spindle_pause_enabled)); }
 
-/*
-stat_t sp_get_spde(nvObj_t *nv) { return(get_float(nv, spindle.spinup_delay)); }
-stat_t sp_set_spde(nvObj_t *nv) { return(set_float_range(nv, spindle.spinup_delay, 0, SPINDLE_DWELL_MAX)); }
+stat_t sp_get_spde(nvObj_t *nv) { return (get_float(nv, active_toolhead->get_spinup_delay())); }
+stat_t sp_set_spde(nvObj_t *nv) {
+    float new_delay;
+    ritorno(set_float_range(nv, new_delay, 0, SPINDLE_DWELL_MAX));
+    active_toolhead->set_spinup_delay(new_delay);
+    return (STAT_OK);
+}
 
-stat_t sp_get_spsn(nvObj_t *nv) { return(get_float(nv, spindle.speed_min)); }
-stat_t sp_set_spsn(nvObj_t *nv) { return(set_float_range(nv, spindle.speed_min, SPINDLE_SPEED_MIN, SPINDLE_SPEED_MAX)); }
-stat_t sp_get_spsm(nvObj_t *nv) { return(get_float(nv, spindle.speed_max)); }
-stat_t sp_set_spsm(nvObj_t *nv) { return(set_float_range(nv, spindle.speed_max, SPINDLE_SPEED_MIN, SPINDLE_SPEED_MAX)); }
+stat_t sp_get_spsn(nvObj_t *nv) { return (get_float(nv, active_toolhead->get_speed_min())); }
+stat_t sp_set_spsn(nvObj_t *nv) {
+    float new_speed;
+    ritorno(set_float_range(nv, new_speed, SPINDLE_SPEED_MIN, SPINDLE_SPEED_MAX));
+    active_toolhead->set_speed_min(new_speed);
+    return (STAT_OK);
+}
+stat_t sp_get_spsm(nvObj_t *nv) { return (get_float(nv, active_toolhead->get_speed_max())); }
+stat_t sp_set_spsm(nvObj_t *nv) {
+    float new_speed;
+    ritorno(set_float_range(nv, new_speed, SPINDLE_SPEED_MIN, SPINDLE_SPEED_MAX));
+    active_toolhead->set_speed_max(new_speed);
+    return (STAT_OK);
+}
 
-stat_t sp_get_spoe(nvObj_t *nv) { return(get_integer(nv, spindle.override_enable)); }
-stat_t sp_set_spoe(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)spindle.override_enable, 0, 1)); }
-stat_t sp_get_spo(nvObj_t *nv) { return(get_float(nv, spindle.override_factor)); }
-stat_t sp_set_spo(nvObj_t *nv) { return(set_float_range(nv, spindle.override_factor, SPINDLE_OVERRIDE_MIN, SPINDLE_OVERRIDE_MAX)); }
-
-// These are provided as a way to view and control spindles without using M commands
-stat_t sp_get_spc(nvObj_t *nv) { return(get_integer(nv, spindle.state)); }
-stat_t sp_set_spc(nvObj_t *nv) { return(spindle_control_immediate((spControl)nv->value_int)); }
-stat_t sp_get_sps(nvObj_t *nv) { return(get_float(nv, spindle.speed)); }
-stat_t sp_set_sps(nvObj_t *nv) { return(spindle_speed_immediate(nv->value_flt)); }
-*/
-
-stat_t sp_get_spde(nvObj_t *nv) { return(get_float(nv, 0)); }
-stat_t sp_set_spde(nvObj_t *nv) { return(STAT_OK); }
-
-stat_t sp_get_spsn(nvObj_t *nv) { return(get_float(nv, SPINDLE_SPEED_MIN)); }
-stat_t sp_set_spsn(nvObj_t *nv) { return(STAT_OK); }
-stat_t sp_get_spsm(nvObj_t *nv) { return(get_float(nv, SPINDLE_SPEED_MAX)); }
-stat_t sp_set_spsm(nvObj_t *nv) { return(STAT_OK); }
-
-stat_t sp_get_spoe(nvObj_t *nv) { return(get_integer(nv, 0)); }
-stat_t sp_set_spoe(nvObj_t *nv) { return(STAT_OK); }
-stat_t sp_get_spo(nvObj_t *nv) { return(get_float(nv, 1.0)); }
-stat_t sp_set_spo(nvObj_t *nv) { return(STAT_OK); }
+stat_t sp_get_spoe(nvObj_t *nv) { return(get_boolean(nv, active_toolhead->get_override_enable())); }
+stat_t sp_set_spoe(nvObj_t *nv) {
+    bool override_enable;
+    ritorno (set_boolean(nv, override_enable));
+    active_toolhead->set_override_enable(override_enable);
+    return (STAT_OK);
+}
+stat_t sp_get_spo(nvObj_t *nv) { return(get_float(nv, active_toolhead->get_override())); }
+stat_t sp_set_spo(nvObj_t *nv) {
+    float override;
+    ritorno (set_float_range(nv, override, SPINDLE_OVERRIDE_MIN, SPINDLE_OVERRIDE_MAX));
+    active_toolhead->set_override(override);
+    return (STAT_OK);
+}
 
 // These are provided as a way to view and control spindles without using M commands
 stat_t sp_get_spc(nvObj_t *nv) { return(get_integer(nv, spindle_get_direction())); }
 stat_t sp_set_spc(nvObj_t *nv) { return(spindle_set_direction((spDirection)nv->value_int)); }
 stat_t sp_get_sps(nvObj_t *nv) { return(get_float(nv, spindle_get_speed())); }
 stat_t sp_set_sps(nvObj_t *nv) { return(spindle_set_speed(nv->value_flt)); }
-
 
 /***********************************************************************************
  * CONFIGURATION AND INTERFACE FUNCTIONS
@@ -475,8 +482,8 @@ constexpr cfgItem_t spindle_config_items_1[] = {
     { "sp","spsm", _fip, 2, sp_print_spsm, sp_get_spsm, sp_set_spsm, nullptr, SPINDLE_SPEED_MAX},
     { "sp","spep", _iip, 0, sp_print_spep, sp_get_spep, sp_set_spep, nullptr, SPINDLE_ENABLE_POLARITY },
     { "sp","spdp", _iip, 0, sp_print_spdp, sp_get_spdp, sp_set_spdp, nullptr, SPINDLE_DIR_POLARITY },
-    { "sp","spoe", _bip, 0, sp_print_spoe, sp_get_spoe, sp_set_spoe, nullptr, 0}, // SPINDLE_OVERRIDE_ENABLE
-    { "sp","spo",  _fip, 3, sp_print_spo,  sp_get_spo,  sp_set_spo,  nullptr, 1.0}, // SPINDLE_OVERRIDE_FACTOR
+    { "sp","spoe", _bip, 0, sp_print_spoe, sp_get_spoe, sp_set_spoe, nullptr, SPINDLE_OVERRIDE_ENABLE},
+    { "sp","spo",  _fip, 3, sp_print_spo,  sp_get_spo,  sp_set_spo,  nullptr, SPINDLE_OVERRIDE_FACTOR},
     { "sp","spc",  _i0,  0, sp_print_spc,  sp_get_spc,  sp_set_spc,  nullptr, 0 },   // spindle state
     { "sp","sps",  _f0,  0, sp_print_sps,  sp_get_sps,  sp_set_sps,  nullptr, 0 },   // spindle speed
 };

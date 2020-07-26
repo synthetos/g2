@@ -54,6 +54,11 @@ class ESCSpindle : public ToolHead {
     float speed;                  // S in RPM
     float speed_actual;           // actual speed (during speed ramping)
 
+    float speed_override_factor = 1;
+    bool speed_override_enable = true;
+
+    bool this_change_holds_motion = false;
+
     float speed_min;              // minimum settable spindle speed
     float speed_max;              // maximum settable spindle speed
 
@@ -89,41 +94,55 @@ class ESCSpindle : public ToolHead {
     uint8_t direction_output_num;
     gpioDigitalOutput *direction_output = nullptr;
 
-    Motate::SysTickEvent spindle_systick_event{[&] {
-                                                   bool done = false;
-                                                   if (paused) {
-                                                       // paused may have changed since this handler was registered
-                                                       speed_actual = 0; // just in case there was a race condition
-                                                       done = true;
-                                                   } else if (fp_NE(speed, speed_actual)) {
-                                                       if (speed_actual < speed) {
-                                                           // spin up
-                                                           speed_actual += speed_change_per_tick;
-                                                           if (speed_actual > speed) {
-                                                               speed_actual = speed;
-                                                               done = true;
-                                                           }
-                                                       } else {
-                                                           // spin down
-                                                           speed_actual -= speed_change_per_tick;
-                                                           if (speed_actual < speed) {
-                                                               speed_actual = speed;
-                                                               done = true;
-                                                           }
-                                                       }
-                                                   } else {
-                                                       done = true;
-                                                   }
-                                                   set_pwm_value();
-                                                   if (done) {
-                                                       SysTickTimer.unregisterEvent(&spindle_systick_event);
-                                                       st_request_load_move();  // request to load the next move
-                                                   }
-                                               },
-                                               nullptr};
+    Motate::SysTickEvent spindle_systick_event = {[&] { this->_handle_systick(); }, nullptr};
 
     void set_pwm_value(); // using all of the settings, set the value fo the pwm pin
     void complete_change(); // after an engage or resume, handle the rest
+
+    float _get_target_speed() {
+        // compute overridden speed
+        float target_speed = speed * (speed_override_enable ? speed_override_factor : 1.0);
+        // stay within limits
+        return std::min(speed_max, std::max(speed_min, target_speed));
+    }
+
+    void _handle_systick() {
+        bool done = false;
+
+        float target_speed = _get_target_speed();
+
+        if (paused) {
+            // paused may have changed since this handler was registered
+            speed_actual = 0;  // just in case there was a race condition
+            done = true;
+        } else if (fp_NE(target_speed, speed_actual)) {
+            if (speed_actual < target_speed) {
+                // spin up
+                speed_actual += speed_change_per_tick;
+                if (speed_actual > target_speed) {
+                    speed_actual = target_speed;
+                    done = true;
+                }
+            } else {
+                // spin down
+                speed_actual -= speed_change_per_tick;
+                if (speed_actual < target_speed) {
+                    speed_actual = target_speed;
+                    done = true;
+                }
+            }
+        } else {
+            done = true;
+        }
+        set_pwm_value();
+        if (done) {
+            SysTickTimer.unregisterEvent(&spindle_systick_event);
+            if (this_change_holds_motion) {
+                st_request_load_move();  // request to load the next move
+                this_change_holds_motion = false;
+            }
+        }
+    }
 
    public:
     // constructor - provide it with the default output pins - 0 means no pin
@@ -145,6 +164,14 @@ class ESCSpindle : public ToolHead {
     // DON'T override set_direction - use engage instead
     spDirection get_direction() override;
 
+    // set the override value for spindle speed
+    bool set_override(float override) override;
+    float get_override() override;
+
+    // enable or disable the override
+    bool set_override_enable(bool override_enable) override;
+    bool get_override_enable() override;
+
     void stop() override;
 
     // called from the loader right before a move, with the gcode model to use
@@ -152,11 +179,22 @@ class ESCSpindle : public ToolHead {
 
     bool is_on() override;  // return if the current direction is anything but OFF, **even if paused**
 
-    void set_pwm_output(const uint8_t pwm_pin_number) override;
-    void set_enable_output(const uint8_t enable_pin_number) override;
-    void set_direction_output(const uint8_t direction_pin_number) override;
+    bool set_pwm_output(const uint8_t pwm_pin_number) override;
+    uint8_t get_pwm_output() override;
+    bool set_pwm_polarity(const ioPolarity new_polarity) override;
+    ioPolarity get_pwm_polarity() override;
 
-    void set_frequency(float new_frequency)override;
+    bool set_enable_output(const uint8_t enable_pin_number) override;
+    uint8_t get_enable_output() override;
+    bool set_enable_polarity(const ioPolarity new_polarity) override;
+    ioPolarity get_enable_polarity() override;
+
+    bool set_direction_output(const uint8_t direction_pin_number) override;
+    uint8_t get_direction_output() override;
+    bool set_direction_polarity(const ioPolarity new_polarity) override;
+    ioPolarity get_direction_polarity() override;
+
+    void set_frequency(float new_frequency) override;
     float get_frequency() override;
 
     // trivial getters and setters - inlined
@@ -223,13 +261,21 @@ void ESCSpindle::resume() {
     }
 
     paused = false;
+    this_change_holds_motion = true;
+
     this->complete_change();
 }
 
 bool ESCSpindle::ready_to_resume() { return paused && safety_manager->ok_to_spindle(); }
 bool ESCSpindle::busy() {
+    bool at_speed_or_dont_care = false;
+
+    if (!this_change_holds_motion || fp_EQ(_get_target_speed(), speed_actual)) {
+        at_speed_or_dont_care = true;
+    }
+
     // return true when not paused, on, and ramping up to speed
-    if (paused || (direction == SPINDLE_OFF) || fp_EQ(speed, speed_actual)) {
+    if (paused || (direction == SPINDLE_OFF) || (at_speed_or_dont_care)) {
         return false;
     }
     return true;
@@ -238,6 +284,24 @@ bool ESCSpindle::busy() {
 // DON'T override set_speed - use engage instead
 float ESCSpindle::get_speed() { return speed_actual; }
 
+// set the override value for spindle speed
+bool ESCSpindle::set_override(float override) {
+    speed_override_factor = override;
+    // Leave this_change_holds_motion at true if it was set so and not yet cleared
+    this->complete_change();
+    return (true);
+}
+float ESCSpindle::get_override() { return speed_override_factor; }
+
+// enable or disable the override
+bool ESCSpindle::set_override_enable(bool override_enable) {
+    speed_override_enable = override_enable;
+    // Leave this_change_holds_motion at true if it was set so and not yet cleared
+    this->complete_change();
+    return (true);
+}
+bool ESCSpindle::get_override_enable() { return speed_override_enable; }
+
 // DON'T override set_direction - use engage instead
 spDirection ESCSpindle::get_direction() { return direction; }
 
@@ -245,6 +309,8 @@ void ESCSpindle::stop() {
     paused = false;
     speed = 0;
     direction = SPINDLE_OFF;
+
+    this_change_holds_motion = false;
 
     this->complete_change();
 }
@@ -265,6 +331,7 @@ void ESCSpindle::engage(const GCodeState_t &gm) {
 
     speed = gm.spindle_speed;
     direction = gm.spindle_direction;
+    this_change_holds_motion = true;
 
     // handle the rest
     this->complete_change();
@@ -273,33 +340,92 @@ void ESCSpindle::engage(const GCodeState_t &gm) {
 bool ESCSpindle::is_on() { return (direction != SPINDLE_OFF); }
 
 // ESCSpindle-specific functions
-void ESCSpindle::set_pwm_output(const uint8_t pwm_pin_number) {
+bool ESCSpindle::set_pwm_output(const uint8_t pwm_pin_number) {
     if (pwm_pin_number == 0) {
         pwm_output = nullptr;
-    } else {
-        pwm_output = d_out[pwm_pin_number - 1];
-        pwm_output->setEnabled(IO_ENABLED);
-        // set the frequency on the output -- not here
-        // set the polarity on the output -- not here
+        return false;
     }
+
+    pwm_output = d_out[pwm_pin_number - 1];
+    pwm_output->setEnabled(IO_ENABLED);
+    return true;
 }
-void ESCSpindle::set_enable_output(const uint8_t enable_pin_number) {
+uint8_t ESCSpindle::get_pwm_output() {
+    if (pwm_output) {
+        return pwm_output->getExternalNumber();
+    }
+    return 0;
+}
+bool ESCSpindle::set_pwm_polarity(const ioPolarity new_polarity) {
+    if (pwm_output) {
+        pwm_output->setPolarity(new_polarity);
+        return true;
+    }
+    return false;
+}
+ioPolarity ESCSpindle::get_pwm_polarity() {
+    if (pwm_output) {
+        return pwm_output->getPolarity();
+    }
+    return IO_ACTIVE_HIGH;
+}
+
+bool ESCSpindle::set_enable_output(const uint8_t enable_pin_number) {
     if (enable_pin_number == 0) {
         enable_output = nullptr;
-    } else {
-        enable_output = d_out[enable_pin_number - 1];
-        enable_output->setEnabled(IO_ENABLED);
-        // set the polarity on the output -- not here
+        return false;
     }
+    enable_output = d_out[enable_pin_number - 1];
+    enable_output->setEnabled(IO_ENABLED);
+    return true;
 }
-void ESCSpindle::set_direction_output(const uint8_t direction_pin_number) {
+uint8_t ESCSpindle::get_enable_output() {
+    if (enable_output) {
+        return enable_output->getExternalNumber();
+    }
+    return 0;
+}
+bool ESCSpindle::set_enable_polarity(const ioPolarity new_polarity) {
+    if (enable_output) {
+        enable_output->setPolarity(new_polarity);
+        return true;
+    }
+    return false;
+}
+ioPolarity ESCSpindle::get_enable_polarity() {
+    if (enable_output) {
+        return enable_output->getPolarity();
+    }
+    return IO_ACTIVE_HIGH;
+}
+
+bool ESCSpindle::set_direction_output(const uint8_t direction_pin_number) {
     if (direction_pin_number == 0) {
         direction_output = nullptr;
-    } else {
-        direction_output = d_out[direction_pin_number - 1];
-        direction_output->setEnabled(IO_ENABLED);
-        // set the polarity on the output -- not here
+        return false;
     }
+    direction_output = d_out[direction_pin_number - 1];
+    direction_output->setEnabled(IO_ENABLED);
+    return true;
+}
+uint8_t ESCSpindle::get_direction_output() {
+    if (direction_output) {
+        return direction_output->getExternalNumber();
+    }
+    return 0;
+}
+bool ESCSpindle::set_direction_polarity(const ioPolarity new_polarity) {
+    if (direction_output) {
+        direction_output->setPolarity(new_polarity);
+        return true;
+    }
+    return false;
+}
+ioPolarity ESCSpindle::get_direction_polarity() {
+    if (direction_output) {
+        return direction_output->getPolarity();
+    }
+    return IO_ACTIVE_HIGH;
 }
 
 void ESCSpindle::set_frequency(float new_frequency)
