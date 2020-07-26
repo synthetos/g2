@@ -476,11 +476,14 @@ void _start_queue_flush()
 
 stat_t _run_queue_flush()            // typically runs from cm1 planner
 {
+    // resetting the planner, but ALSO updating the planner position - do before aborts
+    planner_reset((mpPlanner_t *)cm->mp);   // reset primary planner. also resets the mr under the planner
+    cm_reset_position_to_absolute_position(cm);
+
+    // now that the planner is reset, if the code in these aborts uses planner position, it'll be correct(ish)
     cm_abort_arc(cm);                       // kill arcs so they don't just create more alines
     cm_abort_homing(cm);                    // kill homing so it can reset cleanly
     cm_abort_probing(cm);                   // kill probing so it can exit cleanly
-    planner_reset((mpPlanner_t *)cm->mp);   // reset primary planner. also resets the mr under the planner
-    cm_reset_position_to_absolute_position(cm);
     cm1.queue_flush_state = QUEUE_FLUSH_OFF;
     qr_request_queue_report(0);             // request a queue report, since we've changed the number of buffers available
     return (STAT_OK);
@@ -532,7 +535,7 @@ stat_t _run_job_kill()
     _run_queue_flush();
 
     coolant_control_immediate(COOLANT_OFF, COOLANT_BOTH); // stop coolant
-    spindle_stop();               // stop spindle
+    spindle_stop();                                       // stop spindle
 
     cm_set_motion_state(MOTION_STOP);                     // set to stop and set the active model
     cm->hold_state = FEEDHOLD_OFF;
@@ -821,7 +824,7 @@ stat_t _feedhold_with_actions()          // Execute Case (5)
                 cm_set_distance_mode(cm1.gm.distance_mode);         // restore distance mode to p1 setting
             }
         }
-        spindle_pause();                    // optional spindle pause
+        spindle_pause();                                        // optional spindle pause
         coolant_control_sync(COOLANT_PAUSE, COOLANT_BOTH);      // optional coolant pause
         mp_queue_command(_feedhold_actions_done_callback, nullptr, nullptr);
         return (STAT_EAGAIN);
@@ -878,7 +881,7 @@ stat_t _feedhold_restart_with_actions()   // Execute Cases (6) and (7)
 
         // perform end-hold actions --- while still in secondary machine
         coolant_control_sync(COOLANT_RESUME, COOLANT_BOTH); // resume coolant if paused
-        spindle_resume();               // resume spindle if paused
+        spindle_resume();                                   // resume spindle if paused
 
         // do return move though an intermediate point; queue a wait
         cm2.return_flags[AXIS_Z] = false;
