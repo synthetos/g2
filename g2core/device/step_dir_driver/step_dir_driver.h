@@ -86,7 +86,7 @@ struct StepDirStepper final : Stepper  {
     float _power_level; // the power level now
 
     void _updatePowerLevel() {
-        if (MOTOR_IDLE == _power_state) {
+        if ((MOTOR_IDLE == _power_state) || (MOTOR_OFF == _power_state)) {
             _power_level = _idle_power_level;
         } else {
             _power_level = _active_power_level;
@@ -166,17 +166,11 @@ struct StepDirStepper final : Stepper  {
             timeout_ms = _motor_activity_timeout_ms;
         }
 
+        this->enable(); // sets _power_state, that will be adjusted next
+
         _power_state = MOTOR_POWER_TIMEOUT_COUNTDOWN;
         if (_power_mode == MOTOR_POWERED_IN_CYCLE || _power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE) {
             _motor_activity_timeout.set(timeout_ms);
-        }
-
-        if (!_enable.isNull()) {
-            if (_enable_polarity == IO_ACTIVE_HIGH) {
-                _enable.set();
-            } else {
-                _enable.clear();
-            }
         }
     };
 
@@ -201,6 +195,7 @@ struct StepDirStepper final : Stepper  {
         if (this->getPowerMode() == MOTOR_ALWAYS_POWERED) {
             return;
         }
+
         if (!_enable.isNull()) {
             if (_enable_polarity == IO_ACTIVE_HIGH) {
                 _enable.clear();
@@ -208,8 +203,11 @@ struct StepDirStepper final : Stepper  {
                 _enable.set();
             }
         }
+
         _motor_activity_timeout.clear();
+
         _power_state = MOTOR_OFF;
+        _updatePowerLevel();
     };
 
     void stepStart() override {
@@ -291,9 +289,7 @@ struct StepDirStepper final : Stepper  {
     // HOT - called from the DDA interrupt
     void motionStopped() //HOT_FUNC
     {
-        if (_power_mode == MOTOR_POWERED_IN_CYCLE) {
-            this->enable();
-        } else if (_power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE) {
+        if ((_power_mode == MOTOR_POWERED_IN_CYCLE) || (_power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE)) {
             _power_state = MOTOR_POWER_TIMEOUT_START;
         } else if (_power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
             if (_power_state == MOTOR_RUNNING) {
@@ -311,7 +307,7 @@ struct StepDirStepper final : Stepper  {
 
     void periodicCheck(bool have_actually_stopped) override
     {
-        if (_power_state == MOTOR_POWER_TIMEOUT_START && _power_mode != MOTOR_ALWAYS_POWERED) {
+        if ((_power_state == MOTOR_POWER_TIMEOUT_START) && (_power_mode != MOTOR_ALWAYS_POWERED)) {
             if (_power_mode == MOTOR_POWERED_ONLY_WHEN_MOVING) {
                 this->disable();
                 return;
@@ -319,7 +315,7 @@ struct StepDirStepper final : Stepper  {
 
             // start timeouts initiated during a load so the loader does not need to burn these cycles
             _power_state = MOTOR_POWER_TIMEOUT_COUNTDOWN;
-            if (_power_mode == MOTOR_POWERED_IN_CYCLE || _power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE) {
+            if ((_power_mode == MOTOR_POWERED_IN_CYCLE) || (_power_mode == MOTOR_POWER_REDUCED_WHEN_IDLE)) {
                 _motor_activity_timeout.set(_motor_activity_timeout_ms);
             }
         }
