@@ -38,13 +38,13 @@
 #include "MotateBuffer.h"
 #include "MotateUtilities.h" // for to/fromLittle/BigEndian
 
-using Motate::SPIMessage;
-using Motate::SPIInterrupt;
-using Motate::SPIDeviceMode;
-
 // Complete class for MAX31865 drivers.
 template <typename device_t>
 struct MAX31865 final {
+    using SPIMessage = Motate::SPIMessage;
+    using SPIInterrupt = Motate::SPIInterrupt;
+    using SPIDeviceMode = Motate::SPIDeviceMode;
+
     // SPI and message handling properties
     device_t _device;
     SPIMessage _message;

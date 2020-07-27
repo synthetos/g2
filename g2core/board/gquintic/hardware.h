@@ -58,6 +58,10 @@
 #define HAS_HOBBY_SERVO_MOTOR 0
 #endif
 
+#ifndef HAS_PRESSURE
+#define HAS_PRESSURE 0
+#endif
+
 #ifndef HAS_LASER
 #define HAS_LASER 0
 #else
@@ -102,7 +106,6 @@
 #include "MotateTimers.h"           // for TimerChanel<> and related...
 
 // Temporarily disabled:
-// #include "i2c_eeprom.h"
 // #include "i2c_multiplexer.h"
 // #include "i2c_as5601.h" // For AS5601
 
@@ -144,8 +147,8 @@ using Motate::OutputPin;
 
 /**** Stepper DDA and dwell timer settings ****/
 
-#define FREQUENCY_DDA    200000UL    // Hz step frequency. Interrupts actually fire at 2x (400 KHz)
-// #define FREQUENCY_DDA  400000UL  // Hz step frequency. Interrupts actually fire at 2x (300 KHz)
+// #define FREQUENCY_DDA    200000UL    // Hz step frequency. Interrupts actually fire at 2x (400 KHz)
+#define FREQUENCY_DDA  400000UL  // Hz step frequency. Interrupts actually fire at 2x (300 KHz)
 #define FREQUENCY_DWELL  1000UL
 
 // #define MIN_SEGMENT_MS ((float)0.125)       // S70 can handle much much smaller segements
@@ -168,8 +171,8 @@ typedef Motate::SPIChipSelectPinMux<Motate::kSocket1_SPISlaveSelectPinNumber, Mo
 extern SPI_CS_PinMux_used_t spiCSPinMux;
 
 /**** TWI Setup ****/
-// typedef Motate::TWIBus<Motate::kI2C_SCLPinNumber, Motate::kI2C_SDAPinNumber> TWIBus_used_t;
-// extern TWIBus_used_t twiBus;
+typedef Motate::TWIBus<Motate::kI2C_SCLPinNumber, Motate::kI2C_SDAPinNumber> TWIBus_used_t;
+extern TWIBus_used_t twiBus;
 
 // using plex0_t = decltype(I2C_Multiplexer{twiBus, 0x0070L});
 // extern HOT_DATA plex0_t plex0;

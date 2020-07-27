@@ -999,13 +999,40 @@ constexpr cfgItem_t sys_config_items_2[] = {
 
     // kinematics controls
 #if KINEMATICS==KINE_FOUR_CABLE
-    { "sys","knfc", _f0, 4, tx_print_nul, kn_get_force,    kn_set_force,    nullptr,       0 },
-    { "sys","knan", _f0, 0, tx_print_nul, kn_get_anchored, kn_set_anchored, nullptr,       0 },
-    { "sys","knpa", _f0, 4, tx_print_nul, kn_get_pos_a,    set_nul,         nullptr,       0 },
-    { "sys","knpb", _f0, 4, tx_print_nul, kn_get_pos_b,    set_nul,         nullptr,       0 },
-    { "sys","knpc", _f0, 4, tx_print_nul, kn_get_pos_c,    set_nul,         nullptr,       0 },
-    { "sys","knpd", _f0, 4, tx_print_nul, kn_get_pos_d,    set_nul,         nullptr,       0 },
+    { "kn","knfc", _f0, 4, tx_print_nul, kn_get_force,    kn_set_force,    nullptr,       0 },
+    { "kn","knan", _f0, 0, tx_print_nul, kn_get_anchored, kn_set_anchored, nullptr,       0 },
+    { "kn","knpa", _f0, 4, tx_print_nul, kn_get_pos_a,    set_nul,         nullptr,       0 },
+    { "kn","knpb", _f0, 4, tx_print_nul, kn_get_pos_b,    set_nul,         nullptr,       0 },
+    { "kn","knpc", _f0, 4, tx_print_nul, kn_get_pos_c,    set_nul,         nullptr,       0 },
+    { "kn","knpd", _f0, 4, tx_print_nul, kn_get_pos_d,    set_nul,         nullptr,       0 },
 #endif
+#if KINEMATICS==KINE_PRESSURE
+    { "kn","knfc",  _f0, 4, tx_print_nul, kn_get_force,             kn_set_force,             nullptr, 0 },
+    { "kn","knft",  _f0, 4, tx_print_nul, kn_get_target,            kn_set_target,            nullptr, 0 },
+    { "kn","knan",  _b0, 0, tx_print_nul, kn_get_anchored,          kn_set_anchored,          nullptr, 0 },
+    { "kn","knepm", _f0, 4, tx_print_nul, kn_get_epm,               kn_set_epm,               nullptr, 0 },
+    { "kn","knht",  _f0, 4, tx_print_nul, kn_get_hold_time,         kn_set_hold_time,         nullptr, 0 },
+    { "kn","knhr",  _f0, 4, tx_print_nul, kn_get_hold_ratio,        kn_set_hold_ratio,        nullptr, 0 },
+    { "kn","knp",   _f0, 4, tx_print_nul, kn_get_p_factor,          kn_set_p_factor,          nullptr, 0 },
+    { "kn","kni",   _f0, 4, tx_print_nul, kn_get_i_factor,          kn_set_i_factor,          nullptr, 0 },
+    { "kn","knd",   _f0, 4, tx_print_nul, kn_get_d_factor,          kn_set_d_factor,          nullptr, 0 },
+    { "kn","knp",   _f0, 4, tx_print_nul, kn_get_p_factor,          kn_set_p_factor,          nullptr, 0 },
+    { "kn","kni",   _f0, 4, tx_print_nul, kn_get_i_factor,          kn_set_i_factor,          nullptr, 0 },
+    { "kn","knd",   _f0, 4, tx_print_nul, kn_get_d_factor,          kn_set_d_factor,          nullptr, 0 },
+    { "kn","knev",  _f0, 4, tx_print_nul, kn_get_e_value,           set_nul,                  nullptr, 0 },
+    { "kn","kniv",  _f0, 4, tx_print_nul, kn_get_i_value,           set_nul,                  nullptr, 0 },
+    { "kn","kndv",  _f0, 4, tx_print_nul, kn_get_d_value,           set_nul,                  nullptr, 0 },
+    { "kn","knbf",  _f0, 4, tx_print_nul, kn_get_backoff_pressure,  kn_set_backoff_pressure,  nullptr, 0 },
+    { "kn","knec",  _i0, 0, tx_print_nul, kn_get_ec_value,          set_nul,                  nullptr, 0 },
+    { "kn","knuoc", _i0, 0, tx_print_nul, kn_get_uoc_value,         set_nul,                  nullptr, 0 },
+    { "kn","knumc", _i0, 0, tx_print_nul, kn_get_umc_value,         set_nul,                  nullptr, 0 },
+    { "kn","knpos1",_i0, 0, tx_print_nul, kn_get_pos_1,             set_nul,                  nullptr, 0 },
+    { "kn","knpos2",_i0, 0, tx_print_nul, kn_get_pos_2,             set_nul,                  nullptr, 0 },
+    { "kn","knpos3",_i0, 0, tx_print_nul, kn_get_pos_3,             set_nul,                  nullptr, 0 },
+    { "kn","knpos4",_i0, 0, tx_print_nul, kn_get_pos_4,             set_nul,                  nullptr, 0 },
+    { "kn","knpos5",_i0, 0, tx_print_nul, kn_get_pos_5,             set_nul,                  nullptr, 0 },
+#endif
+
 
     // Communications and reporting parameters
 #ifdef __TEXT_MODE
@@ -1716,6 +1743,13 @@ constexpr cfgItem_t groups_config_items_1[] = {
     { "","ain7", _f0, 0, tx_print_nul, get_grp, set_grp,nullptr,0 },
     { "","ain8", _f0, 0, tx_print_nul, get_grp, set_grp,nullptr,0 },
 
+#if KINEMATICS==KINE_PRESSURE || KINEMATICS==KINE_FOUR_CABLE
+#define KINEMATICS_GROUPS 1
+    { "","kn", _f0, 0, tx_print_nul, get_grp, set_grp,nullptr,0 },
+#else
+#define KINEMATICS_GROUPS 0
+#endif
+
 #define COORDINATE_OFFSET_GROUPS 9
     { "","g54",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // coord offset groups
     { "","g55",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
@@ -1901,6 +1935,7 @@ cfgArraySynthesizer cfgArray {};
                         + DIGITAL_IN_GROUPS \
                         + DIGITAL_OUT_GROUPS \
                         + ANALOG_IN_GROUPS \
+                        + KINEMATICS_GROUPS \
                         + COORDINATE_OFFSET_GROUPS \
                         + TOOL_OFFSET_GROUPS \
                         + MACHINE_STATE_GROUPS \

@@ -62,7 +62,7 @@ ifeq ("$(BASE_BOARD)","g2core-due")
     # Note: we call it "g2core-due" instead of "due" since the Motate built-in provides
     # a "due" BASE_BOARD.
     BOARD_PATH = ./board/ArduinoDue
-    SOURCE_DIRS += ${BOARD_PATH} device/step_dir_driver device/esc_spindle device/laser_toolhead
+    SOURCE_DIRS += ${BOARD_PATH} device/step_dir_driver device/esc_spindle device/laser_toolhead device/bme280 device/honeywell-trustability-ssc
 
     PLATFORM_BASE = ${MOTATE_PATH}/platform/atmel_sam
 

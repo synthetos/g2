@@ -36,6 +36,7 @@
 #define CHORDAL_TOLERANCE           0.01    // chordal accuracy for arc drawing (in mm)
 
 #define HAS_LASER                   1                       // We have a laser, but no shark (yet)
+#define HAS_PRESSURE                0
 
 #define SOFT_LIMIT_ENABLE           0       // 0=off, 1=on
 #define HARD_LIMIT_ENABLE           1       // 0=off, 1=on
@@ -58,6 +59,7 @@
 
 #define LASER_PULSE_DURATION        150      // in microseconds {th2pd:150}
 
+
 /*
 M100 ({th2pd:150})    ; laser on period
 M100 ({th2mnp:100})   ; laser min pulses per mm
@@ -73,6 +75,11 @@ M100 ({th2mxp:1500}) ; laser max pulses per mm
 #define DO7_ENABLED                 IO_ENABLED
 #define DO7_POLARITY                IO_ACTIVE_HIGH
 #define DO7_EXTERNAL_NUMBER         7
+
+#else
+
+// #define KINEMATICS                  KINE_CARTESIAN
+#define KINEMATICS                  KINE_PRESSURE
 
 #endif // HAS_LASER
 
@@ -119,12 +126,14 @@ M100 ({th2mxp:1500}) ; laser max pulses per mm
 
 #define STATUS_REPORT_VERBOSITY     SR_FILTERED         // one of: SR_OFF, SR_FILTERED, SR_VERBOSE
 #define STATUS_REPORT_MIN_MS        100                 // milliseconds - enforces a viable minimum
-#define STATUS_REPORT_INTERVAL_MS   250                 // milliseconds - set $SV=0 to disable
-#define STATUS_REPORT_DEFAULTS      "posx", "posy", "posz", \
-                                    "unit", "stat", "coor", "momo", "dist", \
-                                    "home", "vel", "plan", "line", "path", \
-                                    "frmo", "hold", "macs", "cycs", "spc", \
-                                    "prbe", "in1", "in3", "in5", "in6", "feed"
+#define STATUS_REPORT_INTERVAL_MS   100                 // milliseconds - set $SV=0 to disable
+#define STATUS_REPORT_DEFAULTS      "knfc", "stat", "knft", "knht", "prs1", "flow1slm", "flow1vol", "flow1prs", "feed", "knev", "kniv", "kndv", "knec", "knuoc", "knumc", "knpos1"
+// #define STATUS_REPORT_DEFAULTS      "posx", "posy", "posz",
+//                                     "unit", "stat", "coor", "momo", "dist",
+//                                     "home", "vel", "plan", "line", "path",
+//                                     "frmo", "hold", "macs", "cycs", "spc",
+//                                     "prbe", "prs1", "feed"
+                                    // "in1", "in3", "in5", "in6"
                                     // "ofsx", "ofsy", "ofsz",
                                     // "g55x", "g55y", "g55z",
 
@@ -151,7 +160,7 @@ M100 ({th2mxp:1500}) ; laser max pulses per mm
 #define M1_MOTOR_MAP                AXIS_X_EXTERNAL         // 1ma
 #define M1_STEP_ANGLE               1.8                     // 1sa
 #define M1_TRAVEL_PER_REV           8                       // 1tr
-#define M1_MICROSTEPS               32                      // 1mi  1,2,4,8,16,32
+#define M1_MICROSTEPS               8                       // 1mi  1,2,4,8,16,32
 #define M1_POLARITY                 0                       // 1po  0=normal, 1=reversed
 #define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm  See enum cmMotorPowerMode in stepper.h
 #define M1_POWER_LEVEL              MOTOR_POWER_LEVEL_XY    // 0.00=off, 1.00=max
@@ -204,23 +213,23 @@ M100 ({th2mxp:1500}) ; laser max pulses per mm
 
 // *** axis settings **********************************************************************************
 
-#define JERK_MAX                    400                 // 500 million mm/(min^3)
-#define JERK_HIGH_SPEED             400                // 1000 million mm/(min^3) // Jerk during homing needs to stop *fast*
-#define VELOCITY_MAX                4000
-#define LATCH_VELOCITY              25                  // reeeeally slow for accuracy
+#define JERK_MAX                    800                 // 500 million mm/(min^3)
+#define JERK_HIGH_SPEED             4000                // 1000 million mm/(min^3) // Jerk during homing needs to stop *fast*
+#define VELOCITY_MAX                9000
+#define LATCH_VELOCITY              500                  // reeeeally slow for accuracy
 
 #define X_AXIS_MODE                 AXIS_STANDARD       // xam  see canonical_machine.h cmAxisMode for valid values
 #define X_VELOCITY_MAX              VELOCITY_MAX        // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX      // xfr  G1 max feed rate in mm/min
-#define X_TRAVEL_MIN                0                   // xtn  minimum travel for soft limits
-#define X_TRAVEL_MAX                120                 // xtr  travel between switches or crashes
+#define X_TRAVEL_MIN                -5                  // xtn  minimum travel for soft limits
+#define X_TRAVEL_MAX                110                  // xtr  travel between switches or crashes
 #define X_JERK_MAX                  JERK_MAX            // xjm
 #define X_JERK_HIGH_SPEED           JERK_HIGH_SPEED     // xjh
 #define X_HOMING_INPUT              1                   // xhi  input used for homing or 0 to disable
-#define X_HOMING_DIRECTION          1                   // xhd  0=search moves negative, 1= search moves positive
+#define X_HOMING_DIRECTION          0                   // xhd  0=search moves negative, 1= search moves positive
 #define X_SEARCH_VELOCITY           1000                // xsv
 #define X_LATCH_VELOCITY            LATCH_VELOCITY      // xlv  mm/min
-#define X_LATCH_BACKOFF             4                   // xlb  mm
+#define X_LATCH_BACKOFF             10                   // xlb  mm
 #define X_ZERO_BACKOFF              1                   // xzb  mm
 
 #define Y_AXIS_MODE                 AXIS_STANDARD

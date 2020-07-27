@@ -49,7 +49,7 @@
       "servertype": "jlink",
       "cwd": "${workspaceRoot}/g2core/",
       "executable": "./bin/MiniMillgShield-gShield/g2core.elf",
-      "device": "ATSAMS3X8E",
+      "device": "ATSAM3X8E",
       "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sam3x/ATSAM3X8E.svd",
       "interface": "swd",
       "showDevDebugOutput": false,

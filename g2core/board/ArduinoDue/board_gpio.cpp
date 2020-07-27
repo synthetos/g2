@@ -88,12 +88,46 @@ gpioDigitalOutputPin<OutputType<OUTPUT13_PWM, Motate::kOutput13_PinNumber>> dout
 gpioDigitalInput*  const d_in[] = {&din1, &din2, &din3, &din4, &din5, &din6, &din7, &din8, &din9};
 gpioDigitalOutput* const d_out[] = {&dout1, &dout2, &dout3, &dout4, &dout5, &dout6, &dout7, &dout8, &dout9, &dout10, &dout11, &dout12, &dout13};
 // not yet used
- gpioAnalogInput*    a_in[] = {};
+gpioAnalogInput*    a_in[] = {};
 // gpioAnalogOutput*   a_out[A_OUT_CHANNELS];
+
+#if HAS_PRESSURE
+Motate::SPIChipSelectPin<Motate::kPressure_ChipSelectPinNumber> pressure_cs{};
+// BME280<SPIBus_used_t::SPIBusDevice> pressure_sensor{spiBus, pressure_cs};
+TruStabilitySSC<SPIBus_used_t::SPIBusDevice> pressure_sensor{spiBus,
+                                                             pressure_cs,
+                                                             /*min_output:*/  1638, // 10% of 2^12
+                                                             /*max_output:*/ 14745, // 90% of 2^12
+                                                             /*min_value:*/ 0.0,    // 0psi
+                                                             /*max_value:*/ 15.0,   // 15psi
+                                                             PressureUnits::PSI};
+#endif
 
 /************************************************************************************
  **** CODE **************************************************************************
  ************************************************************************************/
+
+// Register a SysTick event to call start_sampling every temperature_sample_freq ms
+const int16_t ain_sample_freq = 2;
+int16_t ain_sample_counter = ain_sample_freq;
+Motate::SysTickEvent ain_tick_event{
+    [] {
+        if (!--ain_sample_counter) {
+            ai1.startSampling();
+            ai2.startSampling();
+            ai3.startSampling();
+            ai4.startSampling();
+
+            #if HAS_PRESSURE
+            pressure_sensor.startSampling(); // has a timeout built in to prevent over-calling
+            #endif
+
+            ain_sample_counter = ain_sample_freq;
+        }
+    },
+    nullptr
+};
+
 /*
  * gpio_reset() - reset inputs and outputs (no initialization)
  */

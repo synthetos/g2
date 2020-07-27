@@ -51,6 +51,10 @@
 #define HAS_LASER 0
 #endif
 
+#ifndef HAS_PRESSURE
+#define HAS_PRESSURE 0
+#endif
+
 #if HAS_LASER
 #define MOTORS 5                    // number of motors + one "laser" motor (used for pulsing the laser in sync)
 #else
@@ -125,6 +129,11 @@ using Motate::OutputPin;
 typedef TimerChannel<3,0> dda_timer_type;       // stepper pulse generation in stepper.cpp
 typedef TimerChannel<4,0> exec_timer_type;      // request exec timer in stepper.cpp
 typedef TimerChannel<5,0> fwd_plan_timer_type;  // request exec timer in stepper.cpp
+
+/**** SPI Setup ****/
+#include "MotateSPI.h"
+typedef Motate::SPIBus<Motate::kSPI_MISOPinNumber, Motate::kSPI_MOSIPinNumber, Motate::kSPI_SCKPinNumber> SPIBus_used_t;
+extern SPIBus_used_t spiBus;
 
 // Pin assignments
 

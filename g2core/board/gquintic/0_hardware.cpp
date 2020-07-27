@@ -35,9 +35,13 @@
 #include "board_gpio.h"
 #include "safety_manager.h"
 
+#include "kinematics.h" // for get_flow_volume
+
 #include "MotateUtilities.h"
 #include "MotateUniqueID.h"
 #include "MotatePower.h"
+
+#include "settings.h"
 
 //Motate::ClockOutputPin<Motate::kExternalClock1_PinNumber> external_clk_pin {16000000}; // 16MHz optimally
 Motate::OutputPin<Motate::kExternalClock1_PinNumber> external_clk_pin {Motate::kStartLow};
@@ -45,13 +49,13 @@ Motate::OutputPin<Motate::kExternalClock1_PinNumber> external_clk_pin {Motate::k
 HOT_DATA SPI_CS_PinMux_used_t spiCSPinMux;
 HOT_DATA SPIBus_used_t spiBus;
 
-// HOT_DATA TWIBus_used_t twiBus;
+HOT_DATA TWIBus_used_t twiBus;
 
 // // Define Multiplexers
 // HOT_DATA plex0_t plex0{twiBus, 0x0070L};
 // HOT_DATA plex1_t plex1{twiBus, 0x0071L};
 
-
+// #include "i2c_eeprom.h"
 // HOT_DATA I2C_EEPROM eeprom{twiBus, 0b01010000};
 // alignas(4) uint8_t eeprom_buffer[128] HOT_DATA = "TestinglyABCDEFGHIJKLmnop";
 // alignas(4) uint8_t eeprom_in_buffer[128] HOT_DATA = "";
@@ -123,7 +127,7 @@ ToolHead *toolhead_for_tool(uint8_t tool) {
 void hardware_init()
 {
     spiBus.init();
-    // twiBus.init();
+    twiBus.init();
     board_hardware_init();
     external_clk_pin = 0; // Force external clock to 0 for now.
 
@@ -139,11 +143,21 @@ void hardware_init()
  */
 
 // previous values of analog voltages
+#if TEMPERATURE_OUTPUT_ON
 float ai_vv[A_IN_CHANNELS];
 const float analog_change_threshold = 0.01;
+#endif
 
 float angle_0 = 0.0;
 float angle_1 = 0.0;
+
+#if HAS_PRESSURE
+float pressure = 0;
+float pressure_threshold = 0.01;
+
+float flow = 0;
+float flow_threshold = 0.01;
+#endif
 
 // void read_encoder_0(bool worked /* = false*/, float angle /* = 0.0*/) {
 //     if (worked) {
@@ -159,6 +173,7 @@ float angle_1 = 0.0;
 //     encoder_1.getAngleFraction();
 // }
 
+// Following is for testing internally
 // void first_part(bool worked = false);
 // void second_part(bool worked = false);
 // void third_part(bool worked = false);
@@ -204,17 +219,25 @@ stat_t hardware_periodic()
     }
     #endif
 
-    // static uint8_t sent = false;
-    // if (!sent) {
-    //     sent = 2;
-    //     encoder_0.getAngleFraction(read_encoder_0);
-    //     encoder_1.getAngleFraction(read_encoder_1);
-    // } else if (sent > 1 && sent < 80) {
-    //     sent++;
-    // }
+    #if HAS_PRESSURE
+    float new_pressure = pressure_sensor1.getPressure(PressureUnits::cmH2O);
+    if (std::abs(pressure - new_pressure) >= pressure_threshold) {
+        pressure = new_pressure;  // only record if goes past threshold!
+        sr_request_status_report(SR_REQUEST_TIMED);
+    }
 
-    // if (sent == 3) {
+    float new_flow = flow_sensor1.getFlow(FlowUnits::SLM);
+    if (std::abs(flow - new_flow) >= flow_threshold) {
+        flow = new_flow;  // only record if goes past threshold!
+        sr_request_status_report(SR_REQUEST_TIMED);
+    }
+    #endif
+
+
+    // static uint8_t sent = 0;
+    // if (!sent) {
     //     first_part(false);
+    //     sent = 2;
     // }
 
     return STAT_OK;
@@ -315,14 +338,39 @@ stat_t hw_flash(nvObj_t *nv)
     return(STAT_OK);
 }
 
-#if !HAS_LASER
+#if HAS_PRESSURE
 
-// Stub in getSysConfig_3
-// constexpr cfgItem_t sys_config_items_3[] = {};
-constexpr cfgSubtableFromStaticArray sys_config_3{};
-const configSubtable * const getSysConfig_3() { return &sys_config_3; }
+stat_t get_pressure(nvObj_t *nv)
+{
+    nv->value_flt = pressure_sensor1.getPressure(PressureUnits::cmH2O);
+    nv->valuetype = TYPE_FLOAT;
+    return (STAT_OK);
+}
 
-#else
+stat_t get_flow(nvObj_t *nv)
+{
+    nv->value_flt = flow_sensor1.getFlow(FlowUnits::SLM);
+    nv->valuetype = TYPE_FLOAT;
+    return (STAT_OK);
+}
+
+stat_t get_flow_pressure(nvObj_t *nv)
+{
+    nv->value_flt = flow_sensor1.getPressure(PressureUnits::cmH2O);
+    nv->valuetype = TYPE_FLOAT;
+    return (STAT_OK);
+}
+
+
+constexpr cfgItem_t sys_config_items_3[] = {
+    { "prs","prs1", _f0,  5, tx_print_nul, get_pressure, set_nul, nullptr, 0 },
+    { "flow1","flow1prs", _f0,  5, tx_print_nul, get_flow_pressure, set_nul, nullptr, 0 },
+    { "flow1","flow1slm", _f0,  5, tx_print_nul, get_flow, set_nul, nullptr, 0 },
+    { "flow1","flow1vol", _f0,  5, tx_print_nul, get_flow_volume, set_nul, nullptr, 0 },
+};
+constexpr cfgSubtableFromStaticArray sys_config_3{sys_config_items_3};
+
+#elif HAS_LASER
 
 stat_t set_pulse_duration(nvObj_t *nv)
 {
@@ -385,9 +433,14 @@ constexpr cfgItem_t sys_config_items_3[] = {
 };
 
 constexpr cfgSubtableFromStaticArray sys_config_3{sys_config_items_3};
-const configSubtable * const getSysConfig_3() { return &sys_config_3; }
 
+#else // !HAS_LASER && !HAS_PRESSURE
+
+// Stub in getSysConfig_3
+constexpr cfgSubtableFromStaticArray sys_config_3{};
 #endif
+
+const configSubtable * const getSysConfig_3() { return &sys_config_3; }
 
 /***********************************************************************************
  * TEXT MODE SUPPORT

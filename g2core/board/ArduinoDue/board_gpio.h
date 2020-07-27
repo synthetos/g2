@@ -96,5 +96,12 @@ extern gpioDigitalOutputPin<OutputType<OUTPUT11_PWM, Motate::kOutput11_PinNumber
 extern gpioDigitalOutputPin<OutputType<OUTPUT12_PWM, Motate::kOutput12_PinNumber>> dout12;
 extern gpioDigitalOutputPin<OutputType<OUTPUT13_PWM, Motate::kOutput13_PinNumber>> dout13;
 
+#if HAS_PRESSURE
+// #include "bme280.h"
+// extern BME280<SPIBus_used_t::SPIBusDevice> pressure_sensor;
+
+#include "honeywell-trustability-ssc.h"
+extern HoneywellTruStability<SPIBus_used_t::SPIBusDevice> pressure_sensor;
+#endif // HAS_PRESSURE
 
 #endif // End of include guard: BOARD_GPIO_H_ONCE

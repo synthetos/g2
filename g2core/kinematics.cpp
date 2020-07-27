@@ -130,6 +130,260 @@ stat_t kn_get_pos_d(nvObj_t *nv)
     return (STAT_OK);
 };
 #endif // KINEMATICS==KINE_FOUR_CABLE
+#if KINEMATICS==KINE_PRESSURE
+#include "kinematics_pressure.h"
+PressureKinematics<AXES, MOTORS> pressure_kinematics;
+KinematicsBase<AXES, MOTORS> *kn = &pressure_kinematics;
+
+// volume
+stat_t kn_get_force(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_FLOAT;
+    nv->precision = 4;
+    nv->value_flt = pressure_kinematics.event_pressure_target; // read it as a float
+
+    return (STAT_OK);
+};
+stat_t kn_set_force(nvObj_t *nv)
+{
+    float value = nv->value_flt; // read it as a float
+    nv->precision = 4;
+    pressure_kinematics.event_pressure_target = value;
+    return (STAT_OK);
+};
+
+stat_t kn_get_target(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_FLOAT;
+    nv->precision = 4;
+    nv->value_flt = pressure_kinematics.event_pressure_target; // read it as a float
+
+    return (STAT_OK);
+};
+stat_t kn_set_target(nvObj_t *nv)
+{
+    float value = nv->value_flt; // read it as a float
+    nv->precision = 4;
+    pressure_kinematics.event_pressure_target = value;
+    return (STAT_OK);
+};
+
+stat_t kn_get_epm(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_FLOAT;
+    nv->precision = 4;
+    nv->value_flt = 60.0 / pressure_kinematics.seconds_between_events;
+
+    return (STAT_OK);
+};
+stat_t kn_set_epm(nvObj_t *nv)
+{
+    float value = nv->value_flt; // read it as a float
+    nv->precision = 4;
+    pressure_kinematics.seconds_between_events = 60.0 / value;
+    pressure_kinematics.seconds_to_hold_event =
+        pressure_kinematics.seconds_between_events / (pressure_kinematics.pressure_hold_release_ratio + 1);
+
+    return (STAT_OK);
+};
+
+
+stat_t kn_get_hold_time(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_FLOAT;
+    nv->precision = 4;
+    nv->value_flt = pressure_kinematics.seconds_to_hold_event;
+
+    return (STAT_OK);
+};
+stat_t kn_set_hold_time(nvObj_t *nv)
+{
+    float value = nv->value_flt; // read it as a float
+    nv->precision = 4;
+    pressure_kinematics.seconds_to_hold_event = value;
+    pressure_kinematics.pressure_hold_release_ratio =
+        (pressure_kinematics.seconds_between_events / pressure_kinematics.seconds_to_hold_event) - 1;
+
+    return (STAT_OK);
+};
+
+
+stat_t kn_get_hold_ratio(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_FLOAT;
+    nv->precision = 4;
+    nv->value_flt = pressure_kinematics.pressure_hold_release_ratio;
+
+    return (STAT_OK);
+};
+stat_t kn_set_hold_ratio(nvObj_t *nv)
+{
+    float value = nv->value_flt; // read it as a float
+    nv->precision = 4;
+    pressure_kinematics.pressure_hold_release_ratio = value;
+    pressure_kinematics.seconds_to_hold_event =
+        pressure_kinematics.seconds_between_events / (pressure_kinematics.pressure_hold_release_ratio + 1);
+    return (STAT_OK);
+};
+
+
+stat_t kn_get_backoff_pressure(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_FLOAT;
+    nv->precision = 4;
+    nv->value_flt = pressure_kinematics.reverse_target_pressure;
+
+    return (STAT_OK);
+};
+stat_t kn_set_backoff_pressure(nvObj_t *nv)
+{
+    float value = nv->value_flt; // read it as a float
+    nv->precision = 4;
+    pressure_kinematics.reverse_target_pressure = value;
+    return (STAT_OK);
+};
+
+
+stat_t kn_get_e_value(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_FLOAT;
+    nv->precision = 4;
+    nv->value_flt = pressure_kinematics.sensor_error_store;
+
+    return (STAT_OK);
+};
+stat_t kn_get_i_value(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_FLOAT;
+    nv->precision = 4;
+    nv->value_flt = pressure_kinematics.sensor_integral_store;
+
+    return (STAT_OK);
+};
+stat_t kn_get_d_value(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_FLOAT;
+    nv->precision = 4;
+    nv->value_flt = pressure_kinematics.sensor_derivative_store;
+
+    return (STAT_OK);
+};
+
+stat_t kn_get_uoc_value(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_INTEGER;
+    nv->value_int = pressure_kinematics.unable_to_obtian_error_counter;
+
+    return (STAT_OK);
+};
+stat_t kn_get_umc_value(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_INTEGER;
+    nv->value_int = pressure_kinematics.unable_to_maintian_error_counter;
+
+    return (STAT_OK);
+};
+stat_t kn_get_ec_value(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_INTEGER;
+    nv->value_int = pressure_kinematics.event_counter;
+
+    return (STAT_OK);
+};
+
+stat_t kn_get_p_factor(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_FLOAT;
+    nv->precision = 4;
+    nv->value_flt = pressure_kinematics.sensor_proportional_factor;
+
+    return (STAT_OK);
+};
+stat_t kn_set_p_factor(nvObj_t *nv)
+{
+    float value = nv->value_flt; // read it as a float
+    nv->precision = 4;
+    pressure_kinematics.sensor_proportional_factor = value;
+    return (STAT_OK);
+};
+
+
+stat_t kn_get_i_factor(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_FLOAT;
+    nv->precision = 4;
+    nv->value_flt = pressure_kinematics.sensor_inetgral_factor;
+
+    return (STAT_OK);
+};
+stat_t kn_set_i_factor(nvObj_t *nv)
+{
+    float value = nv->value_flt; // read it as a float
+    nv->precision = 4;
+    pressure_kinematics.sensor_inetgral_factor = value;
+    return (STAT_OK);
+};
+
+
+stat_t kn_get_d_factor(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_FLOAT;
+    nv->precision = 4;
+    nv->value_flt = pressure_kinematics.sensor_derivative_factor;
+
+    return (STAT_OK);
+};
+stat_t kn_set_d_factor(nvObj_t *nv)
+{
+    float value = nv->value_flt; // read it as a float
+    nv->precision = 4;
+    pressure_kinematics.sensor_derivative_factor = value;
+    return (STAT_OK);
+};
+
+// anchored
+
+stat_t kn_get_anchored(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_BOOLEAN;
+    nv->value_flt = pressure_kinematics.anchored();
+
+    return (STAT_OK);
+};
+stat_t kn_set_anchored(nvObj_t *nv)
+{
+    bool value = std::fabs(nv->value_flt) > 0.1;
+    pressure_kinematics.anchored(value);
+    return (STAT_OK);
+};
+
+stat_t _kn_get_pos(uint8_t joint, nvObj_t *nv) {
+    float position[AXES];
+    pressure_kinematics.get_position(position);
+
+    nv->valuetype = TYPE_FLOAT;
+    nv->precision = 4;
+    nv->value_flt = position[joint];
+
+    return (STAT_OK);
+}
+
+stat_t kn_get_pos_1(nvObj_t *nv) { return _kn_get_pos(1-1, nv); }
+stat_t kn_get_pos_2(nvObj_t *nv) { return _kn_get_pos(2-1, nv); }
+stat_t kn_get_pos_3(nvObj_t *nv) { return _kn_get_pos(3-1, nv); }
+stat_t kn_get_pos_4(nvObj_t *nv) { return _kn_get_pos(4-1, nv); }
+stat_t kn_get_pos_5(nvObj_t *nv) { return _kn_get_pos(5-1, nv); }
+
+stat_t get_flow_volume(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_FLOAT;
+    nv->precision = 4;
+    nv->value_flt = pressure_kinematics.volume_value[0];
+
+    return (STAT_OK);
+};
+
+#endif // KINEMATICS==KINE_PRESSURE
 
 
 // Concrete functions that involve kinematics
