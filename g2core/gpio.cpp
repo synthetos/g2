@@ -507,6 +507,7 @@ stat_t gpio_set_output(uint8_t output_num, float value) {
           default: { value = 0; } // inactive
       }
   }
+  sr_request_status_report(SR_REQUEST_TIMED);
   return STAT_OK;
 }
 
