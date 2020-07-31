@@ -114,8 +114,18 @@ extern HOT_DATA encoder_2_t encoder_2;
 using encoder_3_t = decltype(I2C_AS5601{plex0, M4_ENCODER_INPUT_A, M4_ENCODER_INPUT_B, 1 << 3});
 extern HOT_DATA encoder_3_t encoder_3;
 
+extern ExternalLinearEncoder* const external_linear_encoders[0];
 extern ExternalEncoder* const ExternalEncoders[4];
+#elif HAS_HOBBY_SERVO_MOTOR
+#include "as5311.h"
+
+using linear_encoder_0_t = AS5311<SPIBus_used_t::SPIBusDevice>;
+extern HOT_DATA linear_encoder_0_t linear_encoder_0;
+
+extern ExternalLinearEncoder* const external_linear_encoders[6];
+extern ExternalEncoder* const ExternalEncoders[0];
 #else
+extern ExternalLinearEncoder* const external_linear_encoders[0];
 extern ExternalEncoder* const ExternalEncoders[0];
 #endif
 

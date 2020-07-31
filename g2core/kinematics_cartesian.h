@@ -38,6 +38,7 @@
 #include "settings.h"
 #include "gpio.h"
 #include "encoder.h" // for encoder grabbing
+#include <cmath>
 
 #include <atomic>
 
@@ -46,6 +47,7 @@
 template <uint8_t axes, uint8_t motors>
 struct CartesianKinematics : KinematicsBase<axes, motors> {
     static const uint8_t joints = axes; // For cartesian we have one joint per axis
+    const float PI = 3.1415927; // yeah, we have to do this :-/
 
     // Joints are defined as these axes in order:
     //  0 = X
@@ -64,6 +66,22 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
     int8_t motor_map[motors];  // for each motor, which joint it maps from
 
     float joint_position[joints];
+    float joint_position_encoder_max[joints];
+    float joint_position_encoder_min[joints];
+    float joint_position_offset[joints];
+
+    double joint_vel[joints];
+    double joint_accel[joints];
+    double joint_jerk[joints];
+
+    double encoder_position[motors];  // Number of rotations of the external encoders
+    double encoder_offset[motors];  // amount of error tracked by the external encoders vs the internal encoders
+    double encoder_error[motors];   // amount of error detected in this last pass (ephemeral)
+    uint8_t encoder_reads[motors];  // keep track of how many times the encoder is read before uses
+    bool encoder_needs_read[motors];               // as it says - used to know when to request another sensor read
+    bool encoder_synced[motors];  // used to know when the encoer offset is valid (false means no, and they need synced)
+
+    bool inited = false;
 
     void configure(const float new_steps_per_unit[motors], const int8_t new_motor_map[motors]) override
     {
@@ -78,11 +96,36 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
                 steps_per_unit[motor] = new_steps_per_unit[motor];
                 motor_offset[motor] = steps - (joint_position[joint] * steps_per_unit[motor]);
             }
+
+            #if HAS_HOBBY_SERVO_MOTOR
+            if (!inited && motor == 5) {
+                auto encoder = external_linear_encoders[motor];
+                encoder->setCallback([motor, this](bool worked, float new_position) {
+                    // NOTE: `this` is captured by reference
+                    // For clarity, below this-> is used explicitly when it could be left implcit
+
+                    this->encoder_needs_read[motor] = true;
+                    this->encoder_reads[motor]++;
+
+                    if (!worked) {
+                        return;  // bail early
+                    }
+
+                    this->encoder_position[motor] = -new_position; // invert, for now non-configurable FIXME
+
+                    // external_linear_encoders[motor]->requestPositionMMs();
+                });
+
+                this->encoder_needs_read[motor] = false;
+                external_linear_encoders[motor]->requestPositionMMs();
+            }  // if (!initied)
+            #endif // HAS_HOBBY_SERVO_MOTOR
         }
+
+        inited = true;
     }
 
-    void inverse_kinematics(const GCodeState_t &gm, const float target[axes], const float position[axes], const float start_velocity,
-                            const float end_velocity, const float segment_time, float steps[motors]) override
+    void inverse_kinematics(const GCodeState_t &gm, const float target[axes], const float position[axes], float start_velocities[motors], float end_velocities[motors], const float segment_time, float steps[motors]) override
     {
         // joint == axis in cartesian kinematics
         for (uint8_t motor = 0; motor < motors; motor++) {
@@ -91,12 +134,156 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
                 continue;
             }
 
+            #if HAS_HOBBY_SERVO_MOTOR
+            if (motor != 5) {
+                steps[motor] = (target[joint] * steps_per_unit[motor]) + motor_offset[motor];
+                joint_position[joint] = target[joint];
+            } else {
+                // special hobby servo handling - and this is mostly specific to the axidraw at the moment
+                // convert the requested position to a velue that represents the angle that will yield the correct position
+                // Assumptions:
+                // min position is zero, max position is motor.travel_rev
+                // min angle is -pi/2, max angle is pi/2
+                // angle 0 = motor.travel_rev/2
+
+                if (!encoder_synced[motor]) {
+                    this->encoder_offset[motor] = this->encoder_position[motor] - joint_position[joint];
+                    encoder_synced[motor] = true;
+                }
+
+                float e_pos = this->encoder_position[motor] + this->encoder_offset[motor];
+                encoder_error[motor] = e_pos - joint_position[joint];
+                Motate::debug.send(encoder_error[motor], 0);
+
+                double new_target = 0;
+                double prev_joint_position;
+                double old_joint_vel = joint_vel[joint];
+                double old_joint_accel = joint_accel[joint];
+
+                double jmax = cm->a[joint].jerk_high * JERK_MULTIPLIER;
+                const double vmax = cm->a[joint].velocity_max;
+
+                if (target[joint] > 0) {
+                    // if (e_pos < joint_position_encoder_min[joint]) {
+                    //     encoder_error[motor] = e_pos - joint_position_encoder_min[joint];
+                    // } else if (e_pos > joint_position_encoder_max[joint]) {
+                    //     encoder_error[motor] = e_pos - joint_position_encoder_max[joint];
+                    // }
+                    joint_position_offset[joint] = encoder_error[motor];
+
+
+                    // handle the error
+                    prev_joint_position = e_pos;
+                    // double prev_joint_position = joint_position[joint];
+                    // double prev_joint_position = joint_position[joint]*0.25 + e_pos*0.75;
+
+                    // adjust convept of where we *were* and track that offset
+
+                     new_target= target[joint] - joint_position_offset[joint];
+                } else {
+                    new_target = e_pos + target[joint];
+                    prev_joint_position = joint_position[joint];
+                }
+
+                // jerk-limit the new target move
+
+                // find out what velocity we'll need to end up with to get to the requested position
+                double requested_velocity = 2 / segment_time * (new_target - prev_joint_position) - old_joint_vel;
+                joint_vel[joint] = requested_velocity;
+
+                // // limit velocity to stop at zero for polarity changes, and then limit to +- max
+                // // we allow near-zero velocity changes to prevent deadlock - we'll clean up polarity change later
+                // if ((old_joint_vel < -5) && (requested_velocity > 5)) {
+                //     requested_velocity = 0;
+                // }
+                // else if ((old_joint_vel > 5) && (requested_velocity < -5)) {
+                //     requested_velocity = 0;
+                // }
+
+                // // limit the maximum accleration so that we'll stop at the target velocity and never violate jerk
+                // // note: thanks to the square root, we need to celan up the sign
+                // double max_accel = sqrt(std::abs(requested_velocity - old_joint_vel) * jmax * 2.0);
+                // double sign = 1.0;
+                // // choose a jerk value that will not violate the max_acceleration withing two time segments
+                // if ((requested_velocity - old_joint_vel) < 0.0) {
+                //     // want to accelerate in the negative direction
+                //     sign = -1.0;
+                // }
+
+                // // compute the new joint_vel to stay below max_accel with a 4x margin of error
+                // if ((std::abs(old_joint_accel) + jmax * segment_time * 4.0) < max_accel) {
+                //     joint_accel[joint] = (std::abs(old_joint_accel) + jmax * segment_time) * sign;
+                //     joint_jerk[joint] = jmax * sign;
+                // } else {
+                //     joint_accel[joint] = (std::abs(old_joint_accel) - jmax * segment_time) * sign;
+                //     joint_jerk[joint] = -jmax * sign;
+                // }
+                // joint_vel[joint] = joint_vel[joint] + joint_accel[joint]*segment_time + jmax*segment_time*segment_time*0.5;
+
+                // // limit velocity
+                // if (joint_vel[joint] < -vmax) {
+                //     joint_vel[joint] = -vmax;
+                // } else if (joint_vel[joint] > vmax) {
+                //     joint_vel[joint] = vmax;
+                // }
+
+                // now that everything is done adjusting joint_vel[joint], we can recompute joint_accel[joint] (for next time)
+                joint_accel[joint] = (joint_vel[joint] - old_joint_vel) / segment_time - jmax * segment_time * 0.5;
+
+                // and finally what our actual target position will be
+                joint_position[joint] = joint_position[joint] + ((old_joint_vel + joint_vel[joint]) * 0.5 * segment_time);
+                end_velocities[joint] = std::abs(joint_vel[joint]);
+
+                // setup start and end velocities
+                start_velocities[joint] = std::abs(old_joint_vel);
+
+                // sanity check, we can't do a reversal in the middle of a segment,
+                // so the start velocity and the end velocity have to have the same sign
+                // note: start_velocities[joint] and end_velocities[joint] are both ABS, so this sign change is lost there!
+                if (((old_joint_vel > 0) && (joint_vel[joint] < 0)) || ((old_joint_vel < 0) && (joint_vel[joint] > 0))) {
+                    // solution: since we are reversing, we are going to start from zero
+                    start_velocities[joint] = std::abs(old_joint_vel + joint_vel[joint])*0.5;
+                    end_velocities[joint] = start_velocities[joint];
+                }
+
+                // Compute the correct angular position (in steps, yeah it's weird)
+                // VIOLATION - this should NOT be using st_cfg!! FIXME
+                // const auto travel_rev = st_cfg.mot[motor].travel_rev;
+                // const auto travel_half_rev = travel_rev/2;
+                // const float target_normalized = (joint_position[joint]/travel_half_rev)-1.0;
+                // // converting value ranging from -pi/2 to pi/2 to a value range of 0 to travel_rev
+                // const float new_angular_target = (0.5+asin(target_normalized)/PI) * travel_rev;
+                // steps[motor] = (new_angular_target * steps_per_unit[motor]) + motor_offset[motor];
+                steps[motor] = (joint_position[joint] * steps_per_unit[motor]) + motor_offset[motor];
+
+
+                // setup encoder reading and stash values for next segment
+                if (this->encoder_needs_read[motor]) {
+                    external_linear_encoders[motor]->requestPositionMMs();
+                    this->encoder_needs_read[motor] = true;
+                }
+
+                float segment_min = std::min((float)prev_joint_position, joint_position[joint]);
+                float segment_max = std::max((float)prev_joint_position, joint_position[joint]);
+
+                // if (this->encoder_reads[motor] > 0) {
+                    joint_position_encoder_min[joint] = segment_min;
+                    joint_position_encoder_max[joint] = segment_max;
+                // } else {
+                //     joint_position_encoder_min[joint] = std::min(joint_position_encoder_min[joint], segment_min);
+                //     joint_position_encoder_max[joint] = std::max(joint_position_encoder_max[joint], segment_max);
+                // }
+            }
+            #else
             steps[motor] = (target[joint] * steps_per_unit[motor]) + motor_offset[motor];
+            #endif
         }
 
+        #if !HAS_HOBBY_SERVO_MOTOR
         for (uint8_t joint = 0; joint < joints; joint++) {
             joint_position[joint] = target[joint];
         }
+        #endif
     }
 
     void get_position(float position[axes]) override
@@ -146,6 +333,7 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
 
             // This, solved for motor_offset: step_position[motor] = (position[joint]] * steps_per_unit[motor]) + motor_offset[motor];
             motor_offset[motor] = step_position[motor] - (position[joint] * steps_per_unit[motor]);
+            encoder_synced[motor] = false;
         }
     }
 };
@@ -168,8 +356,7 @@ struct CoreXYKinematics final : CartesianKinematics<axes, motors> {
     //  7 = V (maybe)
     //  8 = W (maybe)
 
-    void inverse_kinematics(const GCodeState_t &gm, const float target[axes], const float position[axes], const float start_velocity,
-                            const float end_velocity, const float segment_time, float steps[motors]) override
+    void inverse_kinematics(const GCodeState_t &gm, const float target[axes], const float position[axes], float start_velocities[motors], float end_velocities[motors], const float segment_time, float steps[motors]) override
     {
         // need to have a place to store the adjusted COREXY A and B
         float axes_target[axes];
@@ -184,7 +371,7 @@ struct CoreXYKinematics final : CartesianKinematics<axes, motors> {
         }
 
         // just use the cartesian method from here on
-        parent::inverse_kinematics(gm, axes_target, position, start_velocity, end_velocity, segment_time, steps);
+        parent::inverse_kinematics(gm, axes_target, position, start_velocities, end_velocities, segment_time, steps);
     }
 
     void forward_kinematics(const float steps[motors], float position[axes]) override

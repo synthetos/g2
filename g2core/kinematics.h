@@ -55,6 +55,13 @@ struct KinematicsBase {
     virtual void inverse_kinematics(const GCodeState_t &gm, const float target[axes], const float position[axes], const float start_velocity, const float end_velocity, const float segment_time, float steps[motors]) {
     }
 
+    // version that allows returning different start and end velocities per axis
+    // by default passes them to the above version (for simpler kinematics) and returns what it was given
+    // note that assumes this default implementation assumes that the velocities are all the same across motors
+    virtual void inverse_kinematics(const GCodeState_t &gm, const float target[axes], const float position[axes], float start_velocities[motors], float end_velocities[motors], const float segment_time, float steps[motors]) {
+        inverse_kinematics(gm, target, position, start_velocities[0], end_velocities[0], segment_time, steps);
+    }
+
     // if the planner buffer is empty, the idel_task will be given the opportunity to drive the runtime
     // if motion was requested, return true.
     // the default action is to do nothing, and return false
@@ -82,6 +89,9 @@ extern KinematicsBase<AXES, MOTORS> *kn;
 /*
  * Old-style Global Scope Functions (depricated)
  */
+
+stat_t kn_get_pos_a(nvObj_t *nv);
+
 #if KINEMATICS==KINE_FOUR_CABLE
 // force
 stat_t kn_get_force(nvObj_t *nv);

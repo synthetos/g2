@@ -46,6 +46,15 @@ KinematicsBase<AXES, MOTORS> *kn = &cartesian_kinematics;
 #include "kinematics_cartesian.h"
 CoreXYKinematics<AXES, MOTORS> core_xy_kinematics;
 KinematicsBase<AXES, MOTORS> *kn = &core_xy_kinematics;
+
+stat_t kn_get_pos_a(nvObj_t *nv)
+{
+    nv->valuetype = TYPE_FLOAT;
+    nv->precision = 4;
+    nv->value_flt = core_xy_kinematics.encoder_position[5];
+
+    return (STAT_OK);
+};
 #endif
 #if KINEMATICS==KINE_FOUR_CABLE
 #include "kinematics_four_cable.h"

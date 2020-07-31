@@ -4,6 +4,7 @@
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
+
     {
       "name": "Debug CONFIG=fourcable (J-Link)",
       "type": "cortex-debug",
@@ -263,6 +264,88 @@
         "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-9m/bin/"
       },
       "preLaunchTask": "Build CONFIG=AxiDrawv3-quint Debug"
+    },
+    {
+      "name": "Debug CONFIG=AxiDrawv3-quint (J-Link/Semihosting)",
+      "type": "cortex-debug",
+      "request": "launch",
+      "servertype": "jlink",
+      "cwd": "${workspaceRoot}/g2core/",
+      "executable": "./bin/AxiDrawv3-quint-gquintic-g/g2core.elf",
+      "device": "ATSAMS70N20",
+      "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sams70/ATSAMS70N20B.svd",
+      "interface": "swd",
+      "showDevDebugOutput": false,
+      "osx": {
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/"
+      },
+      "linux": {
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-9m/bin/"
+      },
+      "swoConfig": {
+        "enabled": true,
+        "source":"probe",
+        "swoFrequency": 8000000,
+        // "decoders": [
+        //   {
+        //     "port": 0,
+        //     "type": "console",
+        //     "label": "SWO output",
+        //     "encoding": "ascii"
+        //   }
+        // ]
+        "decoders": [
+          {
+            "type": "graph",
+            "port": 0,
+            "encoding": "float",
+            "graphId": "1",
+            "scale": 1
+          },
+          {
+            "type": "graph",
+            "port": 1,
+            "encoding": "float",
+            "graphId": "2",
+            "scale": 1
+          },
+          {
+            "type": "graph",
+            "port": 2,
+            "encoding": "float",
+            "graphId": "3",
+            "scale": 1
+          },
+        ],
+      },
+      "graphConfig": [
+        {
+          "label": "Position Error",
+          "timespan": 5,
+          "type": "realtime",
+          "annotate": false,
+          "maximum": 5,
+          "minimum": -5,
+          "plots": [
+            {
+              "graphId": "1",
+              "label": "error",
+              "color": "#dd2222"
+            },
+            {
+              "graphId": "2",
+              "label": "encoder",
+              "color": "#22dd22"
+            },
+            {
+              "graphId": "3",
+              "label": "position",
+              "color": "#2222dd"
+            },
+          ]
+        },
+      ],
+      "preLaunchTask": "Build CONFIG=AxiDrawv3-quint DebugSemihosting"
     }
   ]
 }

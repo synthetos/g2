@@ -145,7 +145,7 @@ _MAKE_MOTATE_PIN(kADC2_PinNumber,                  'A', 19); // AFEC0,8
 _MAKE_MOTATE_PIN(kADC1_PinNumber,                  'A', 20); // AFEC0,9
 _MAKE_MOTATE_PIN(kUnassigned1,                     'A', 21); // AFEC0,1
 _MAKE_MOTATE_PIN(kSocket1_EnablePinNumber,         'A', 22); //
-_MAKE_MOTATE_PIN(kOutput10_PinNumber,            'A', 23); // PWM 1,2
+_MAKE_MOTATE_PIN(kOutput10_PinNumber,              'A', 23); // PWM 1,2
 // _MAKE_MOTATE_PIN(kServo1_PinNumber,                'A', 23); //
 _MAKE_MOTATE_PIN(kSocket3_EnablePinNumber,         'A', 24); //
 _MAKE_MOTATE_PIN(kSocket2_DirPinNumber,            'A', 25); //

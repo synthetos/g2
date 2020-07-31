@@ -912,8 +912,17 @@ static stat_t _exec_aline_segment()
         }
     }
 
-    // Convert target position to steps
-    kn->inverse_kinematics(mr->gm, mr->gm.target, mr->position, mr->segment_velocity, mr->target_velocity, mr->segment_time, exec_target_steps);
+    // prepare the velocities with what we computed, but the kinematics may adjust them
+    float start_velocities[MOTORS];
+    float end_velocities[MOTORS];
+    for (uint8_t motor = 0; motor < MOTORS; motor++) {
+        start_velocities[motor] = mr->segment_velocity;
+        end_velocities[motor] = mr->target_velocity;
+    }
+
+    // Convert target position to steps]
+    kn->inverse_kinematics(mr->gm, mr->gm.target, mr->position, start_velocities, end_velocities,
+                           mr->segment_time, exec_target_steps);
 
     // Update the mb->run_time_remaining -- we know it's missing the current segment's time before it's loaded, that's ok.
     mp->run_time_remaining -= mr->segment_time;
@@ -922,7 +931,7 @@ static stat_t _exec_aline_segment()
     }
 
     // Set the target steps and call the stepper prep function
-    ritorno(mp_set_target_steps(exec_target_steps));
+    ritorno(mp_set_target_steps(exec_target_steps, start_velocities, end_velocities, mr->segment_time));
 
     copy_vector(mr->position, mr->gm.target);                 // update position from target
     if (mr->segment_count == 0) {

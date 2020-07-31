@@ -55,18 +55,19 @@ struct StepDirHobbyServo final : Stepper {
     float                  _value_range;
     bool                   _enabled = false;
     PWMOutputPin<pwm_pin_num> _pwm_pin;
-    Motate::Timeout check_timer;
+    // Motate::Timeout check_timer;
 
     // sets default pwm freq for all motor vrefs (commented line below also sets HiZ)
     StepDirHobbyServo(const uint32_t frequency = 50) : Stepper{}, _pwm_pin{kNormal, frequency} {
         _pwm_pin.setFrequency(frequency); // redundant due to a bug
         uint16_t _top_value = _pwm_pin.getTopValue();
         float frequency_inv = 1.0/(float)frequency;
-        _min_value = (float)floor(_top_value / ((frequency_inv)/(750.0/1000000.0)));
-        _max_value = (float)ceil(_top_value / ((frequency_inv)/(2000.0/1000000.0)));
+        _min_value = (float)floor(_top_value / ((frequency_inv)/(700.0/1000000.0)));
+        _max_value = (float)ceil(_top_value / ((frequency_inv)/(2600.0/1000000.0)));
         _value_range = _max_value - _min_value;
         _position_computed = _min_value;
-        check_timer.set(1);
+        // check_timer.set(1);
+        _pwm_pin.setExactDutyCycle(_position_computed); // apply the initial position
     };
 
     /* Optional override of init */
@@ -123,8 +124,8 @@ struct StepDirHobbyServo final : Stepper {
             _position -= _microsteps_per_step;
         }
 
-        if (!check_timer.isPast()) { return; }
-        check_timer.set(10);
+        // if (!check_timer.isPast()) { return; }
+        // check_timer.set(10);
 
         float used_position = _position;
         if (used_position > 6400.0) {

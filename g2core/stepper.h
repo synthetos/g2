@@ -527,6 +527,18 @@ class ExternalEncoder {
     virtual float getQuadratureFraction();
 };
 
+class ExternalLinearEncoder {
+   public:
+    using callback_t = std::function<void(bool, float)>;
+    enum ReturnFormat { ReturnMMs, ReturnFraction };
+
+    virtual void setCallback(std::function<void(bool, float)> &&handler);
+    virtual void setCallback(std::function<void(bool, float)> &handler);
+
+    virtual void requestPositionMMs();
+    virtual void requestPositionFraction();
+};
+
 /**** FUNCTION PROTOTYPES ****/
 
 void stepper_init(void);

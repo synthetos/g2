@@ -63,7 +63,7 @@
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
 
 //#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","bcr","feed","vel","unit","coor","dist","admo","frmo","momo","stat"
-#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","feed","vel","momo","stat"
+#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","feed","vel","momo","stat","knpa"
 
 // Alternate SRs
 //#define STATUS_REPORT_DEFAULTS "line","vel","mpox","mpoy","mpoz","mpoa","coor","ofsa","ofsx","ofsy","ofsz","dist","unit","stat","homz","homy","homx","momo"
@@ -120,7 +120,7 @@
                                                             //   servo settings are per full servo range, instead of
                                                             //   per revolution.
 #define M3_STEP_ANGLE               1.8                     // hobby servos are simulated with 200 "full steps"
-#define M3_TRAVEL_PER_REV           26                      // this is actually the full travel of the servo, not
+#define M3_TRAVEL_PER_REV           22.05                      // this is actually the full travel of the servo, not
                                                             //   necessarily covering a revolution
 #define M3_MICROSTEPS               32                      // the max step resolution for a hobby servo is 1/32
 #define M3_POLARITY                 1
@@ -136,7 +136,7 @@
 //   servo settings are per full servo range, instead of
 //   per revolution.
 #define M6_STEP_ANGLE               1.8                     // hobby servos are simulated with 200 "full steps"
-#define M6_TRAVEL_PER_REV           26                      // this is actually the full travel of the servo, not
+#define M6_TRAVEL_PER_REV           22.05                      // this is actually the full travel of the servo, not
 //   necessarily covering a revolution
 #define M6_MICROSTEPS               32                      // the max step resolution for a hobby servo is 1/32
 #define M6_POLARITY                 1
@@ -176,12 +176,12 @@
 #define Y_ZERO_BACKOFF              2
 
 #define Z_AXIS_MODE                 AXIS_STANDARD
-#define Z_VELOCITY_MAX              10000
-#define Z_FEEDRATE_MAX              Z_VELOCITY_MAX
+#define Z_VELOCITY_MAX              2000
+#define Z_FEEDRATE_MAX              5000
 #define Z_TRAVEL_MIN                0
 #define Z_TRAVEL_MAX                75
-#define Z_JERK_MAX                  1000
-#define Z_JERK_HIGH_SPEED           Z_JERK_MAX
+#define Z_JERK_MAX                  500
+#define Z_JERK_HIGH_SPEED           Z_JERK_MAX*4
 #define Z_HOMING_INPUT              6
 #define Z_HOMING_DIRECTION          1
 #define Z_SEARCH_VELOCITY           600

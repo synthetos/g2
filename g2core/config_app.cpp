@@ -997,6 +997,8 @@ constexpr cfgItem_t sys_config_items_2[] = {
     { "",   "me",  _f0,   0, st_print_me,  get_nul,    st_set_me,  nullptr, 0 },    // SET to enable motors
     { "",   "md",  _f0,   0, st_print_md,  get_nul,    st_set_md,  nullptr, 0 },    // SET to disable motors
 
+    { "kn","knpa", _f0, 4, tx_print_nul, kn_get_pos_a,    set_nul,         nullptr,       0 },
+
     // kinematics controls
 #if KINEMATICS==KINE_FOUR_CABLE
     { "kn","knfc", _f0, 4, tx_print_nul, kn_get_force,    kn_set_force,    nullptr,       0 },

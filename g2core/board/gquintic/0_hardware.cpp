@@ -148,9 +148,6 @@ float ai_vv[A_IN_CHANNELS];
 const float analog_change_threshold = 0.01;
 #endif
 
-float angle_0 = 0.0;
-float angle_1 = 0.0;
-
 #if HAS_PRESSURE
 float pressure = 0;
 float pressure_threshold = 0.01;
@@ -158,6 +155,9 @@ float pressure_threshold = 0.01;
 float flow = 0;
 float flow_threshold = 0.01;
 #endif
+
+// float angle_0 = 0.0;
+// float angle_1 = 0.0;
 
 // void read_encoder_0(bool worked /* = false*/, float angle /* = 0.0*/) {
 //     if (worked) {

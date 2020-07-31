@@ -195,6 +195,18 @@
       }
     },
     {
+      "label": "Build CONFIG=AxiDrawv3-quint DebugSemihosting",
+      "type": "process",
+      "command": "make",
+      "args": ["CONFIG=AxiDrawv3-quint", "VERBOSE=2", "COLOR=0", "DEBUG=3",
+         "RECORD=1"],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
       "label": "Build CONFIG=AxiDrawv3-quint Production",
       "type": "process",
       "command": "make",

@@ -62,5 +62,6 @@
     "editor.rulers": [
         120
     ],
-    "C_Cpp.workspaceSymbols": "All"
+    "C_Cpp.workspaceSymbols": "All",
+    "C_Cpp.dimInactiveRegions": false
 }

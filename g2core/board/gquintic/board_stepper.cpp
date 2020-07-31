@@ -107,6 +107,7 @@ HOT_DATA encoder_1_t encoder_1{plex0, M2_ENCODER_INPUT_A, M2_ENCODER_INPUT_B, 1 
 HOT_DATA encoder_2_t encoder_2{plex0, M3_ENCODER_INPUT_A, M3_ENCODER_INPUT_B, 1 << 2};
 HOT_DATA encoder_3_t encoder_3{plex0, M4_ENCODER_INPUT_A, M4_ENCODER_INPUT_B, 1 << 3};
 
+ExternalLinearEncoder* const external_linear_encoders[0] = {};
 ExternalEncoder* const ExternalEncoders[4] = {&encoder_0, &encoder_1, &encoder_2, &encoder_3};
 
 int8_t ee_sample_counter_ = 100;
@@ -121,11 +122,44 @@ Motate::SysTickEvent external_encoders_tick_event {[&] {
     }
 }, nullptr};
 
-#else
+#elif HAS_HOBBY_SERVO_MOTOR
+#include "as5311.h"
+
+using linear_encoder_0_t = AS5311<SPIBus_used_t::SPIBusDevice>;
+HOT_DATA linear_encoder_0_t linear_encoder_0{spiBus, spiCSPinMux.getCS(8)};
+
+ExternalLinearEncoder* const external_linear_encoders[6] = {nullptr, nullptr, nullptr, nullptr, nullptr, &linear_encoder_0};
+ExternalEncoder* const ExternalEncoders[0] = {};
+
+// int8_t ee_sample_counter_ = 2;
+// Motate::SysTickEvent external_encoders_tick_event {[&] {
+//     if (!--ee_sample_counter_) {
+
+//         linear_encoder_0.requestPositionMMs();
+//         ee_sample_counter_ = 2;
+//     }
+// }, nullptr};
+
+// void linear_encoder_0_callback (bool worked /* = false*/, float value /* = 0.0*/) {
+//     // if (worked) {
+//     //     angle_0 = angle;
+//     // }
+//     // encoder_0.getAngleFraction();
+// #if DEBUG_SEMIHOSTING
+//     Motate::debug.send(-value, 0);
+//     // Motate::debug.send((float)linear_encoder_0._position, 0); // x
+// #endif
+// }
+
+#else // !HAS_HOBBY_SERVO_MOTOR
+ExternalLinearEncoder* const external_linear_encoders[0] = {};
 ExternalEncoder* const ExternalEncoders[0] = {};
 #endif
 
 void board_stepper_init() {
     for (uint8_t motor = 0; motor < MOTORS; motor++) { Motors[motor]->init(); }
+    // #if HAS_HOBBY_SERVO_MOTOR
+    // linear_encoder_0.setCallback(linear_encoder_0_callback);
     // Motate::SysTickTimer.registerEvent(&external_encoders_tick_event);
+    // #endif
 }
