@@ -120,7 +120,7 @@
                                                             //   servo settings are per full servo range, instead of
                                                             //   per revolution.
 #define M3_STEP_ANGLE               1.8                     // hobby servos are simulated with 200 "full steps"
-#define M3_TRAVEL_PER_REV           22.05                      // this is actually the full travel of the servo, not
+#define M3_TRAVEL_PER_REV           22.07                      // this is actually the full travel of the servo, not
                                                             //   necessarily covering a revolution
 #define M3_MICROSTEPS               32                      // the max step resolution for a hobby servo is 1/32
 #define M3_POLARITY                 1
@@ -136,7 +136,7 @@
 //   servo settings are per full servo range, instead of
 //   per revolution.
 #define M6_STEP_ANGLE               1.8                     // hobby servos are simulated with 200 "full steps"
-#define M6_TRAVEL_PER_REV           22.05                      // this is actually the full travel of the servo, not
+#define M6_TRAVEL_PER_REV           22.07                      // this is actually the full travel of the servo, not
 //   necessarily covering a revolution
 #define M6_MICROSTEPS               32                      // the max step resolution for a hobby servo is 1/32
 #define M6_POLARITY                 1
