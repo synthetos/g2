@@ -466,244 +466,281 @@
 // TMC2130 config defaults
 // START Generated with ${PROJECT_ROOT}/Resources/generate_motors_default_config.js
 #ifndef M1_TMC2130_TPWMTHRS
-#define M1_TMC2130_TPWMTHRS         1200                    // 1pth
+    #define M1_TMC2130_TPWMTHRS         1200                    // 1pth
 #endif
 #ifndef M1_TMC2130_TCOOLTHRS
-#define M1_TMC2130_TCOOLTHRS        1000                    // 1cth
+    #define M1_TMC2130_TCOOLTHRS        1000                    // 1cth
 #endif
 #ifndef M1_TMC2130_THIGH
-#define M1_TMC2130_THIGH            10                      // 1hth
+    #define M1_TMC2130_THIGH            10                      // 1hth
 #endif
 #ifndef M1_TMC2130_SGT
-#define M1_TMC2130_SGT              4                       // 1sgt
+    #define M1_TMC2130_SGT              4                       // 1sgt
 #endif
 #ifndef M1_TMC2130_TBL
-#define M1_TMC2130_TBL              2                       // 1tbl
+    #define M1_TMC2130_TBL              2                       // 1tbl
 #endif
 #ifndef M1_TMC2130_PWM_GRAD
-#define M1_TMC2130_PWM_GRAD         1                       // 1pgrd
+    #define M1_TMC2130_PWM_GRAD         1                       // 1pgrd
 #endif
 #ifndef M1_TMC2130_PWM_AMPL
-#define M1_TMC2130_PWM_AMPL         200                     // 1pamp
+    #define M1_TMC2130_PWM_AMPL         200                     // 1pamp
 #endif
 #ifndef M1_TMC2130_HEND
-#define M1_TMC2130_HEND             0                       // 1hend
+    #define M1_TMC2130_HEND             0                       // 1hend
 #endif
 #ifndef M1_TMC2130_HSTRT
-#define M1_TMC2130_HSTRT            0                       // 1hsrt
+    #define M1_TMC2130_HSTRT            0                       // 1hsrt
 #endif
 #ifndef M1_TMC2130_SMIN
-#define M1_TMC2130_SMIN             5                       // 1smin
+    #define M1_TMC2130_SMIN             5                       // 1smin
 #endif
 #ifndef M1_TMC2130_SMAX
-#define M1_TMC2130_SMAX             5                       // 1smax
+    #define M1_TMC2130_SMAX             5                       // 1smax
 #endif
 #ifndef M1_TMC2130_SUP
-#define M1_TMC2130_SUP              2                       // 1sup
+    #define M1_TMC2130_SUP              2                       // 1sup
 #endif
 #ifndef M1_TMC2130_SDN
-#define M1_TMC2130_SDN              1                       // 1sdn
+    #define M1_TMC2130_SDN              1                       // 1sdn
+#endif
+#ifndef M1_TMC2130_DIAG0_STALL
+    #define M1_TMC2130_DIAG0_STALL      1                       // 1d0s
+#endif
+#ifndef M1_TMC2130_DIAG1_STALL
+    #define M1_TMC2130_DIAG1_STALL      1                       // 1d1s
 #endif
 
 #ifndef M2_TMC2130_TPWMTHRS
-#define M2_TMC2130_TPWMTHRS         1200                    // 2pth
+    #define M2_TMC2130_TPWMTHRS         1200                    // 2pth
 #endif
 #ifndef M2_TMC2130_TCOOLTHRS
-#define M2_TMC2130_TCOOLTHRS        1000                    // 2cth
+    #define M2_TMC2130_TCOOLTHRS        1000                    // 2cth
 #endif
 #ifndef M2_TMC2130_THIGH
-#define M2_TMC2130_THIGH            10                      // 2hth
+    #define M2_TMC2130_THIGH            10                      // 2hth
 #endif
 #ifndef M2_TMC2130_SGT
-#define M2_TMC2130_SGT              4                       // 2sgt
+    #define M2_TMC2130_SGT              4                       // 2sgt
 #endif
 #ifndef M2_TMC2130_TBL
-#define M2_TMC2130_TBL              2                       // 2tbl
+    #define M2_TMC2130_TBL              2                       // 2tbl
 #endif
 #ifndef M2_TMC2130_PWM_GRAD
-#define M2_TMC2130_PWM_GRAD         1                       // 2pgrd
+    #define M2_TMC2130_PWM_GRAD         1                       // 2pgrd
 #endif
 #ifndef M2_TMC2130_PWM_AMPL
-#define M2_TMC2130_PWM_AMPL         200                     // 2pamp
+    #define M2_TMC2130_PWM_AMPL         200                     // 2pamp
 #endif
 #ifndef M2_TMC2130_HEND
-#define M2_TMC2130_HEND             0                       // 2hend
+    #define M2_TMC2130_HEND             0                       // 2hend
 #endif
 #ifndef M2_TMC2130_HSTRT
-#define M2_TMC2130_HSTRT            0                       // 2hsrt
+    #define M2_TMC2130_HSTRT            0                       // 2hsrt
 #endif
 #ifndef M2_TMC2130_SMIN
-#define M2_TMC2130_SMIN             5                       // 2smin
+    #define M2_TMC2130_SMIN             5                       // 2smin
 #endif
 #ifndef M2_TMC2130_SMAX
-#define M2_TMC2130_SMAX             5                       // 2smax
+    #define M2_TMC2130_SMAX             5                       // 2smax
 #endif
 #ifndef M2_TMC2130_SUP
-#define M2_TMC2130_SUP              2                       // 2sup
+    #define M2_TMC2130_SUP              2                       // 2sup
 #endif
 #ifndef M2_TMC2130_SDN
-#define M2_TMC2130_SDN              1                       // 2sdn
+    #define M2_TMC2130_SDN              1                       // 2sdn
+#endif
+#ifndef M2_TMC2130_DIAG0_STALL
+    #define M2_TMC2130_DIAG0_STALL      1                       // 2d0s
+#endif
+#ifndef M2_TMC2130_DIAG1_STALL
+    #define M2_TMC2130_DIAG1_STALL      1                       // 2d1s
 #endif
 
 #ifndef M3_TMC2130_TPWMTHRS
-#define M3_TMC2130_TPWMTHRS         1200                    // 3pth
+    #define M3_TMC2130_TPWMTHRS         1200                    // 3pth
 #endif
 #ifndef M3_TMC2130_TCOOLTHRS
-#define M3_TMC2130_TCOOLTHRS        1000                    // 3cth
+    #define M3_TMC2130_TCOOLTHRS        1000                    // 3cth
 #endif
 #ifndef M3_TMC2130_THIGH
-#define M3_TMC2130_THIGH            10                      // 3hth
+    #define M3_TMC2130_THIGH            10                      // 3hth
 #endif
 #ifndef M3_TMC2130_SGT
-#define M3_TMC2130_SGT              4                       // 3sgt
+    #define M3_TMC2130_SGT              4                       // 3sgt
 #endif
 #ifndef M3_TMC2130_TBL
-#define M3_TMC2130_TBL              2                       // 3tbl
+    #define M3_TMC2130_TBL              2                       // 3tbl
 #endif
 #ifndef M3_TMC2130_PWM_GRAD
-#define M3_TMC2130_PWM_GRAD         1                       // 3pgrd
+    #define M3_TMC2130_PWM_GRAD         1                       // 3pgrd
 #endif
 #ifndef M3_TMC2130_PWM_AMPL
-#define M3_TMC2130_PWM_AMPL         200                     // 3pamp
+    #define M3_TMC2130_PWM_AMPL         200                     // 3pamp
 #endif
 #ifndef M3_TMC2130_HEND
-#define M3_TMC2130_HEND             0                       // 3hend
+    #define M3_TMC2130_HEND             0                       // 3hend
 #endif
 #ifndef M3_TMC2130_HSTRT
-#define M3_TMC2130_HSTRT            0                       // 3hsrt
+    #define M3_TMC2130_HSTRT            0                       // 3hsrt
 #endif
 #ifndef M3_TMC2130_SMIN
-#define M3_TMC2130_SMIN             5                       // 3smin
+    #define M3_TMC2130_SMIN             5                       // 3smin
 #endif
 #ifndef M3_TMC2130_SMAX
-#define M3_TMC2130_SMAX             5                       // 3smax
+    #define M3_TMC2130_SMAX             5                       // 3smax
 #endif
 #ifndef M3_TMC2130_SUP
-#define M3_TMC2130_SUP              2                       // 3sup
+    #define M3_TMC2130_SUP              2                       // 3sup
 #endif
 #ifndef M3_TMC2130_SDN
-#define M3_TMC2130_SDN              1                       // 3sdn
+    #define M3_TMC2130_SDN              1                       // 3sdn
+#endif
+#ifndef M3_TMC2130_DIAG0_STALL
+    #define M3_TMC2130_DIAG0_STALL      1                       // 3d0s
+#endif
+#ifndef M3_TMC2130_DIAG1_STALL
+    #define M3_TMC2130_DIAG1_STALL      1                       // 3d1s
 #endif
 
 #ifndef M4_TMC2130_TPWMTHRS
-#define M4_TMC2130_TPWMTHRS         1200                    // 4pth
+    #define M4_TMC2130_TPWMTHRS         1200                    // 4pth
 #endif
 #ifndef M4_TMC2130_TCOOLTHRS
-#define M4_TMC2130_TCOOLTHRS        1000                    // 4cth
+    #define M4_TMC2130_TCOOLTHRS        1000                    // 4cth
 #endif
 #ifndef M4_TMC2130_THIGH
-#define M4_TMC2130_THIGH            10                      // 4hth
+    #define M4_TMC2130_THIGH            10                      // 4hth
 #endif
 #ifndef M4_TMC2130_SGT
-#define M4_TMC2130_SGT              4                       // 4sgt
+    #define M4_TMC2130_SGT              4                       // 4sgt
 #endif
 #ifndef M4_TMC2130_TBL
-#define M4_TMC2130_TBL              2                       // 4tbl
+    #define M4_TMC2130_TBL              2                       // 4tbl
 #endif
 #ifndef M4_TMC2130_PWM_GRAD
-#define M4_TMC2130_PWM_GRAD         1                       // 4pgrd
+    #define M4_TMC2130_PWM_GRAD         1                       // 4pgrd
 #endif
 #ifndef M4_TMC2130_PWM_AMPL
-#define M4_TMC2130_PWM_AMPL         200                     // 4pamp
+    #define M4_TMC2130_PWM_AMPL         200                     // 4pamp
 #endif
 #ifndef M4_TMC2130_HEND
-#define M4_TMC2130_HEND             0                       // 4hend
+    #define M4_TMC2130_HEND             0                       // 4hend
 #endif
 #ifndef M4_TMC2130_HSTRT
-#define M4_TMC2130_HSTRT            0                       // 4hsrt
+    #define M4_TMC2130_HSTRT            0                       // 4hsrt
 #endif
 #ifndef M4_TMC2130_SMIN
-#define M4_TMC2130_SMIN             5                       // 4smin
+    #define M4_TMC2130_SMIN             5                       // 4smin
 #endif
 #ifndef M4_TMC2130_SMAX
-#define M4_TMC2130_SMAX             5                       // 4smax
+    #define M4_TMC2130_SMAX             5                       // 4smax
 #endif
 #ifndef M4_TMC2130_SUP
-#define M4_TMC2130_SUP              2                       // 4sup
+    #define M4_TMC2130_SUP              2                       // 4sup
 #endif
 #ifndef M4_TMC2130_SDN
-#define M4_TMC2130_SDN              1                       // 4sdn
+    #define M4_TMC2130_SDN              1                       // 4sdn
+#endif
+#ifndef M4_TMC2130_DIAG0_STALL
+    #define M4_TMC2130_DIAG0_STALL      1                       // 4d0s
+#endif
+#ifndef M4_TMC2130_DIAG1_STALL
+    #define M4_TMC2130_DIAG1_STALL      1                       // 4d1s
 #endif
 
 #ifndef M5_TMC2130_TPWMTHRS
-#define M5_TMC2130_TPWMTHRS         1200                    // 5pth
+    #define M5_TMC2130_TPWMTHRS         1200                    // 5pth
 #endif
 #ifndef M5_TMC2130_TCOOLTHRS
-#define M5_TMC2130_TCOOLTHRS        1000                    // 5cth
+    #define M5_TMC2130_TCOOLTHRS        1000                    // 5cth
 #endif
 #ifndef M5_TMC2130_THIGH
-#define M5_TMC2130_THIGH            10                      // 5hth
+    #define M5_TMC2130_THIGH            10                      // 5hth
 #endif
 #ifndef M5_TMC2130_SGT
-#define M5_TMC2130_SGT              4                       // 5sgt
+    #define M5_TMC2130_SGT              4                       // 5sgt
 #endif
 #ifndef M5_TMC2130_TBL
-#define M5_TMC2130_TBL              2                       // 5tbl
+    #define M5_TMC2130_TBL              2                       // 5tbl
 #endif
 #ifndef M5_TMC2130_PWM_GRAD
-#define M5_TMC2130_PWM_GRAD         1                       // 5pgrd
+    #define M5_TMC2130_PWM_GRAD         1                       // 5pgrd
 #endif
 #ifndef M5_TMC2130_PWM_AMPL
-#define M5_TMC2130_PWM_AMPL         200                     // 5pamp
+    #define M5_TMC2130_PWM_AMPL         200                     // 5pamp
 #endif
 #ifndef M5_TMC2130_HEND
-#define M5_TMC2130_HEND             0                       // 5hend
+    #define M5_TMC2130_HEND             0                       // 5hend
 #endif
 #ifndef M5_TMC2130_HSTRT
-#define M5_TMC2130_HSTRT            0                       // 5hsrt
+    #define M5_TMC2130_HSTRT            0                       // 5hsrt
 #endif
 #ifndef M5_TMC2130_SMIN
-#define M5_TMC2130_SMIN             5                       // 5smin
+    #define M5_TMC2130_SMIN             5                       // 5smin
 #endif
 #ifndef M5_TMC2130_SMAX
-#define M5_TMC2130_SMAX             5                       // 5smax
+    #define M5_TMC2130_SMAX             5                       // 5smax
 #endif
 #ifndef M5_TMC2130_SUP
-#define M5_TMC2130_SUP              2                       // 5sup
+    #define M5_TMC2130_SUP              2                       // 5sup
 #endif
 #ifndef M5_TMC2130_SDN
-#define M5_TMC2130_SDN              1                       // 5sdn
+    #define M5_TMC2130_SDN              1                       // 5sdn
+#endif
+#ifndef M5_TMC2130_DIAG0_STALL
+    #define M5_TMC2130_DIAG0_STALL      1                       // 5d0s
+#endif
+#ifndef M5_TMC2130_DIAG1_STALL
+    #define M5_TMC2130_DIAG1_STALL      1                       // 5d1s
 #endif
 
 #ifndef M6_TMC2130_TPWMTHRS
-#define M6_TMC2130_TPWMTHRS         1200                    // 6pth
+    #define M6_TMC2130_TPWMTHRS         1200                    // 6pth
 #endif
 #ifndef M6_TMC2130_TCOOLTHRS
-#define M6_TMC2130_TCOOLTHRS        1000                    // 6cth
+    #define M6_TMC2130_TCOOLTHRS        1000                    // 6cth
 #endif
 #ifndef M6_TMC2130_THIGH
-#define M6_TMC2130_THIGH            10                      // 6hth
+    #define M6_TMC2130_THIGH            10                      // 6hth
 #endif
 #ifndef M6_TMC2130_SGT
-#define M6_TMC2130_SGT              4                       // 6sgt
+    #define M6_TMC2130_SGT              4                       // 6sgt
 #endif
 #ifndef M6_TMC2130_TBL
-#define M6_TMC2130_TBL              2                       // 6tbl
+    #define M6_TMC2130_TBL              2                       // 6tbl
 #endif
 #ifndef M6_TMC2130_PWM_GRAD
-#define M6_TMC2130_PWM_GRAD         1                       // 6pgrd
+    #define M6_TMC2130_PWM_GRAD         1                       // 6pgrd
 #endif
 #ifndef M6_TMC2130_PWM_AMPL
-#define M6_TMC2130_PWM_AMPL         200                     // 6pamp
+    #define M6_TMC2130_PWM_AMPL         200                     // 6pamp
 #endif
 #ifndef M6_TMC2130_HEND
-#define M6_TMC2130_HEND             0                       // 6hend
+    #define M6_TMC2130_HEND             0                       // 6hend
 #endif
 #ifndef M6_TMC2130_HSTRT
-#define M6_TMC2130_HSTRT            0                       // 6hsrt
+    #define M6_TMC2130_HSTRT            0                       // 6hsrt
 #endif
 #ifndef M6_TMC2130_SMIN
-#define M6_TMC2130_SMIN             5                       // 6smin
+    #define M6_TMC2130_SMIN             5                       // 6smin
 #endif
 #ifndef M6_TMC2130_SMAX
-#define M6_TMC2130_SMAX             5                       // 6smax
+    #define M6_TMC2130_SMAX             5                       // 6smax
 #endif
 #ifndef M6_TMC2130_SUP
-#define M6_TMC2130_SUP              2                       // 6sup
+    #define M6_TMC2130_SUP              2                       // 6sup
 #endif
 #ifndef M6_TMC2130_SDN
-#define M6_TMC2130_SDN              1                       // 6sdn
+    #define M6_TMC2130_SDN              1                       // 6sdn
 #endif
+#ifndef M6_TMC2130_DIAG0_STALL
+    #define M6_TMC2130_DIAG0_STALL      1                       // 6d0s
+#endif
+#ifndef M6_TMC2130_DIAG1_STALL
+    #define M6_TMC2130_DIAG1_STALL      1                       // 6d1s
+#endif
+
 // END Generated
 
 //*****************************************************************************

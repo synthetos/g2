@@ -30,6 +30,7 @@
 
 #include "util.h"
 #include "gcode.h" // for GCodeState_t
+#include "gpio.h" // for gpioDigitalInput
 
 /* Generic Functions
  *
@@ -83,9 +84,14 @@ struct KinematicsBase {
 
     // sync any external sensors with the current step position
     virtual void sync_encoders(const float step_position[motors], const float position[axes]);
+
+    virtual void set_virtual_input(gpioDigitalInputPinVirtual *const pin) {
+        // ignore by default
+    }
 };
 
-extern KinematicsBase<AXES, MOTORS> *kn;
+using KinematicsBase_t = KinematicsBase<AXES, MOTORS>;
+extern KinematicsBase_t *kn;
 
 /*
  * Old-style Global Scope Functions (depricated)
@@ -160,5 +166,6 @@ stat_t get_flow_volume(nvObj_t *nv);
 
 void kn_config_changed();
 void kn_forward_kinematics(const float steps[], float travel[]);
+void kn_get_current_position(float position[]);
 
 #endif  // End of include Guard: KINEMATICS_H_ONCE

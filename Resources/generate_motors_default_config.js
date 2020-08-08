@@ -44,6 +44,12 @@ for (n=1; n<=6; n++) {
 #ifndef M${n}_TMC2130_SDN
     #define M${n}_TMC2130_SDN              1                       // ${n}sdn
 #endif
+#ifndef M${n}_TMC2130_DIAG0_STALL
+    #define M${n}_TMC2130_DIAG0_STALL      1                       // ${n}d0s
+#endif
+#ifndef M${n}_TMC2130_DIAG1_STALL
+    #define M${n}_TMC2130_DIAG1_STALL      1                       // ${n}d1s
+#endif
 `
 );
 }

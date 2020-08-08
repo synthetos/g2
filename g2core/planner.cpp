@@ -379,8 +379,8 @@ void mp_queue_command(cm_exec_t cm_exec, float *value, bool *flag)
     bf->cm_func = cm_exec;            // callback to canonical machine exec function
 
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-        bf->unit[axis] = value[axis];               // use the unit vector to store command values
-        bf->axis_flags[axis] = flag[axis];
+        bf->unit[axis] = value != nullptr ? value[axis] : 0;               // use the unit vector to store command values
+        bf->axis_flags[axis] = flag != nullptr ? flag[axis] : 0;
     }
     mp_commit_write_buffer(BLOCK_TYPE_COMMAND);     // must be final operation before exit
 }

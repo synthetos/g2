@@ -44,6 +44,7 @@
 struct hmHomingSingleton {          // persistent homing runtime variables
                                     // controls for homing cycle
     bool   waiting_for_motion_end;  // true when waiting for motion to complete.
+    bool   saw_pin_change;          // true after the input pin change interrupt was triggered.
     int8_t axis;                    // axis currently being homed
     int8_t homing_input;            // homing input for current axis
     bool   set_coordinates;         // G28.4 flag. true = set coords to zero at the end of homing cycle
@@ -106,7 +107,10 @@ gpioDigitalInputHandler _homing_handler {
         if (edge != INPUT_EDGE_LEADING) { return GPIO_NOT_HANDLED; }
 
         en_take_encoder_snapshot();
-        cm_request_feedhold(FEEDHOLD_TYPE_SKIP, FEEDHOLD_EXIT_RESET_POSITION);
+        // cm_request_feedhold(FEEDHOLD_TYPE_SKIP, FEEDHOLD_EXIT_RESET_POSITION);
+        cm_request_feedhold(FEEDHOLD_TYPE_SCRAM, FEEDHOLD_EXIT_RESET_POSITION);
+
+        hm.saw_pin_change = true;
 
         return GPIO_HANDLED; // DO NOT allow others to see this notice (particularly limits)
     },
@@ -366,6 +370,10 @@ static stat_t _homing_axis_search(int8_t axis)  // drive to switch
  */
 static stat_t _homing_axis_clear(int8_t axis)  // drive away from switch at search speed
 {
+    if (!hm.saw_pin_change) {  // the switch never changed (might be closed again, that's okay)
+        return (_homing_error_exit(
+            axis, STAT_HOMING_CYCLE_FAILED));  // axis cannot be homed
+    }
     _homing_axis_move(axis, -hm.latch_backoff, hm.search_velocity);
     return (_set_homing_func(_homing_axis_latch));
 }
@@ -420,6 +428,7 @@ static stat_t _homing_axis_move(int8_t axis, float target, float velocity) {
     vect[axis]  = target;
     flags[axis] = true;
     cm_set_feed_rate(velocity);
+    hm.saw_pin_change = false;
 
     stat_t status = cm_straight_feed(vect, flags, PROFILE_FAST);
     if (status != STAT_OK) {

@@ -700,7 +700,7 @@ struct Trinamic2130 final : Stepper {
         GCONF.shaft               = 0;
         GCONF.diag0_error         = 0;
         GCONF.diag0_otpw          = 0;
-        GCONF.diag0_stall         = 0;
+        GCONF.diag0_stall         = 1;
         GCONF.diag1_stall         = 0;
         GCONF.diag1_index         = 0;
         GCONF.diag1_onstate       = 0;
@@ -1119,4 +1119,47 @@ struct Trinamic2130 final : Stepper {
     };
     static stat_t set_sdn_fn(nvObj_t *nv) { return get_fn<&type::set_sdn>(nv); };
 
+    stat_t get_diag0_stall(nvObj_t *nv) {
+        nv->value_int = GCONF.diag0_stall;
+        nv->valuetype = TYPE_INTEGER;
+        return STAT_OK;
+    };
+    static stat_t get_diag0_stall_fn(nvObj_t *nv) { return get_fn<&type::get_diag0_stall>(nv); };
+    stat_t set_diag0_stall(nvObj_t *nv) {
+        int32_t v = nv->value_int;
+        if (v < 0) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+        }
+        if (v > 1) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+        }
+        GCONF.diag0_stall = v;
+        GCONF_needs_written = true;
+        return STAT_OK;
+    };
+    static stat_t set_diag0_stall_fn(nvObj_t *nv) { return get_fn<&type::set_diag0_stall>(nv); };
+
+    stat_t get_diag1_stall(nvObj_t *nv) {
+        nv->value_int = GCONF.diag1_stall;
+        nv->valuetype = TYPE_INTEGER;
+        return STAT_OK;
+    };
+    static stat_t get_diag1_stall_fn(nvObj_t *nv) { return get_fn<&type::get_diag1_stall>(nv); };
+    stat_t set_diag1_stall(nvObj_t *nv) {
+        int32_t v = nv->value_int;
+        if (v < 0) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_LESS_THAN_MIN_VALUE);
+        }
+        if (v > 1) {
+            nv->valuetype = TYPE_NULL;
+            return (STAT_INPUT_EXCEEDS_MAX_VALUE);
+        }
+        GCONF.diag1_stall = v;
+        GCONF_needs_written = true;
+        return STAT_OK;
+    };
+    static stat_t set_diag1_stall_fn(nvObj_t *nv) { return get_fn<&type::set_diag1_stall>(nv); };
 };

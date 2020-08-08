@@ -46,6 +46,7 @@ void _start_job_kill(void);
 
 // Feedhold actions
 stat_t _feedhold_skip(void);
+stat_t _feedhold_scram(void);
 stat_t _feedhold_no_actions(void);
 stat_t _feedhold_with_actions(void);
 stat_t _feedhold_restart_with_actions(void);
@@ -595,6 +596,7 @@ void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit)
             case FEEDHOLD_TYPE_HOLD:     { op.add_action(_feedhold_no_actions); break; }
             case FEEDHOLD_TYPE_ACTIONS:  { op.add_action(_feedhold_with_actions); break; }
             case FEEDHOLD_TYPE_SKIP:     { op.add_action(_feedhold_skip); break; }
+            case FEEDHOLD_TYPE_SCRAM:     { op.add_action(_feedhold_scram); break; }
             default: {}
         }
         switch (cm1.hold_exit) {
@@ -618,6 +620,7 @@ void cm_request_feedhold(cmFeedholdType type, cmFeedholdExit exit)
             case FEEDHOLD_TYPE_HOLD:     { op.add_action(_feedhold_no_actions, true); break; }
             case FEEDHOLD_TYPE_ACTIONS:  { op.add_action(_feedhold_with_actions, true); break; }
             case FEEDHOLD_TYPE_SKIP:     { op.add_action(_feedhold_skip, true); break; }
+            case FEEDHOLD_TYPE_SCRAM:     { op.add_action(_feedhold_scram, true); break; }
             default: {}
         }
     }
@@ -706,7 +709,7 @@ void _check_motion_stopped()
         // Motion has stopped, so we can rely on positions and other values to be stable
         // If SKIP type, discard the remainder of the block and position to the next block
         // OR if the buffer is empty then there's nothing to discard, don't modify the buffer either
-        if ((cm->hold_type == FEEDHOLD_TYPE_SKIP) || (bf->buffer_state == MP_BUFFER_EMPTY)) {
+        if ((cm->hold_type == FEEDHOLD_TYPE_SKIP) || (cm->hold_type == FEEDHOLD_TYPE_SCRAM) || (bf->buffer_state == MP_BUFFER_EMPTY)) {
             copy_vector(mp->position, mr->position);    // update planner position to the final runtime position
             if (mp_get_run_buffer()) {
                 mp_free_run_buffer();                       // advance to next block, discarding the rest of the move
@@ -724,7 +727,7 @@ void _check_motion_stopped()
     }
 }
 
-stat_t _feedhold_skip()
+stat_t _feedhold_skip_or_scram(bool scram = false)
 {
     // check for actual motion to stop
     if (cm1.machine_state != MACHINE_CYCLE) {
@@ -732,7 +735,7 @@ stat_t _feedhold_skip()
     }
 
     if (cm1.hold_state == FEEDHOLD_OFF) {       // if entered while OFF start a feedhold
-        cm1.hold_type = FEEDHOLD_TYPE_SKIP;
+        cm1.hold_type = scram ? FEEDHOLD_TYPE_SCRAM : FEEDHOLD_TYPE_SKIP;
         cm1.hold_state = FEEDHOLD_SYNC;         // ...FLUSH can be overridden by setting hold_exit after this function
     }
     if (cm1.hold_state < FEEDHOLD_MOTION_STOPPED) {
@@ -743,6 +746,9 @@ stat_t _feedhold_skip()
     st_request_forward_plan();                  // replan from the new bf buffer
     return (STAT_OK);
 }
+
+stat_t _feedhold_skip() { return _feedhold_skip_or_scram(false); }
+stat_t _feedhold_scram() { return _feedhold_skip_or_scram(true); }
 
 stat_t _feedhold_no_actions()
 {

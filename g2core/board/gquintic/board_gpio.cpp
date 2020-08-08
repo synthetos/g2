@@ -66,10 +66,14 @@ gpioDigitalInputPin<IRQPin<Motate::kInput7_PinNumber>>  din7  {DI7_ENABLED,  DI7
 gpioDigitalInputPin<IRQPin<Motate::kInput8_PinNumber>>  din8  {DI8_ENABLED,  DI8_POLARITY,  8, DI8_EXTERNAL_NUMBER, Motate::kPinInterruptOnChange|Motate::kPinInterruptPriorityHigh};
 gpioDigitalInputPin<IRQPin<Motate::kInput9_PinNumber>>  din9  {DI9_ENABLED,  DI9_POLARITY,  9, DI9_EXTERNAL_NUMBER, Motate::kPinInterruptOnChange|Motate::kPinInterruptPriorityHigh};
 gpioDigitalInputPin<IRQPin<Motate::kInput10_PinNumber>> din10 {DI10_ENABLED, DI10_POLARITY, 10, DI10_EXTERNAL_NUMBER, Motate::kPinInterruptOnChange|Motate::kPinInterruptPriorityHigh};
-// gpioDigitalInputPin<IRQPin<Motate::kInput11_PinNumber>> din11 {DI11_ENABLED, DI11_POLARITY, 11, DI11_EXTERNAL_NUMBER, Motate::kPinInterruptOnChange|Motate::kPinInterruptPriorityHigh};
-// gpioDigitalInputPin<IRQPin<Motate::kInput12_PinNumber>> din12 {DI12_ENABLED, DI12_POLARITY, 12, DI12_EXTERNAL_NUMBER, Motate::kPinInterruptOnChange|Motate::kPinInterruptPriorityHigh};
+gpioDigitalInputPin<IRQPin<Motate::kTMC2130_DIAG0_pinNumber>> din11 {DI11_ENABLED, DI11_POLARITY, 11, DI11_EXTERNAL_NUMBER, Motate::kPinInterruptOnChange|Motate::kPinInterruptPriorityHigh};
 
-gpioDigitalInput*  const d_in[] = {&din1, &din2, &din3, &din4, &din5, &din6, &din7, &din8, &din9};
+#if HAS_HOBBY_SERVO_MOTOR
+gpioDigitalInputPinVirtual din12 {DI12_ENABLED, DI12_POLARITY, 12, DI12_EXTERNAL_NUMBER};
+#else
+gpioDigitalInputPin<IRQPin<Motate::kTMC2130_DIAG1_pinNumber>> din12 {DI12_ENABLED, DI12_POLARITY, 12, DI12_EXTERNAL_NUMBER, Motate::kPinInterruptOnChange|Motate::kPinInterruptPriorityHigh};
+#endif
+gpioDigitalInput*  const d_in[D_IN_CHANNELS] = {&din1, &din2, &din3, &din4, &din5, &din6, &din7, &din8, &din9, &din10, &din11, &din12};
 
 
 gpioDigitalOutputPin<OutputType<OUTPUT1_PWM,  Motate::kOutput1_PinNumber>>  dout1  { DO1_ENABLED,  DO1_POLARITY,  DO1_EXTERNAL_NUMBER,  (uint32_t)200000 };
@@ -171,6 +175,9 @@ VenturiFlowSensor flow_sensor1{
  **** CODE **************************************************************************
  ************************************************************************************/
 
+#if HAS_HOBBY_SERVO_MOTOR
+#include "kinematics.h"
+#endif
 
 // Register a SysTick event to call start_sampling every temperature_sample_freq ms
 const int16_t ain_sample_freq = 2;
@@ -202,4 +209,7 @@ void outputs_reset(void) {
 
 void inputs_reset(void) {
     SysTickTimer.registerEvent(&ain_tick_event);
+#if HAS_HOBBY_SERVO_MOTOR
+    kn->set_virtual_input(&din12);
+#endif
 }

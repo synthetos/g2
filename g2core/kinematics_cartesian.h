@@ -39,6 +39,7 @@
 #include "gpio.h"
 #include "encoder.h" // for encoder grabbing
 #include <cmath>
+#include <atomic>
 
 #include <atomic>
 
@@ -68,8 +69,9 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
     float joint_position[joints];
     float joint_position_encoder_max[joints];
     float joint_position_encoder_min[joints];
-    float joint_position_offset[joints];
+    float motor_joint_position_offset[motors];
     float joint_position_delayed[joints];  // joint_position, but delayed by 20 segments to accomodate delay in the servo
+    float joint_target[joints];  // that last requested target, for idle to keep track of where to aim for
 
     double joint_vel[joints];
     double joint_accel[joints];
@@ -81,6 +83,8 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
     uint8_t encoder_reads[motors];  // keep track of how many times the encoder is read before uses
     bool encoder_needs_read[motors];               // as it says - used to know when to request another sensor read
     bool encoder_synced[motors];  // used to know when the encoer offset is valid (false means no, and they need synced)
+
+    gpioDigitalInputPinVirtual *virtual_pin;
 
     bool inited = false;
 
@@ -107,6 +111,7 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
 
                     this->encoder_needs_read[motor] = true;
                     this->encoder_reads[motor]++;
+                    // Motate::debug.send(encoder_reads[motor], 0);
 
                     if (!worked) {
                         return;  // bail early
@@ -126,7 +131,9 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
         inited = true;
     }
 
-   void inverse_kinematics(const GCodeState_t &gm, const float target[axes], const float position[axes],
+    bool homing_pin = false;
+
+    void inverse_kinematics(const GCodeState_t &gm, const float target[axes], const float position[axes],
                             float start_velocities[motors], float end_velocities[motors], const float segment_time,
                             float steps[motors]) override
     {
@@ -137,10 +144,11 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
                 continue;
             }
 
-            #if HAS_HOBBY_SERVO_MOTOR
+#if HAS_HOBBY_SERVO_MOTOR
             if (motor != 5) {
                 steps[motor] = (target[joint] * steps_per_unit[motor]) + motor_offset[motor];
-                joint_position[joint] = target[joint];
+                joint_position[joint] = target[joint] + motor_joint_position_offset[motor];
+                joint_target[joint] = target[joint];
             } else {
                 // special hobby servo handling - and this is mostly specific to the axidraw at the moment
                 // convert the requested position to a velue that represents the angle that will yield the correct position
@@ -149,46 +157,52 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
                 // min angle is -pi/2, max angle is pi/2
                 // angle 0 = motor.travel_rev/2
 
-                if (!encoder_synced[motor] || encoder_position[motor] < 0) {
-                    encoder_offset[motor] = encoder_position[motor] - joint_position[joint];
+                float e_pos = encoder_position[motor] + encoder_offset[motor];
+                if (!encoder_synced[motor]) { //  || e_pos < 0 || joint_position[joint] >= 22.07
+                    encoder_offset[motor] = joint_position[joint] - encoder_position[motor];
                     encoder_synced[motor] = true;
+
+                    e_pos = encoder_position[motor];
                 }
 
-                float e_pos = this->encoder_position[motor] + this->encoder_offset[motor];
                 encoder_error[motor] = 0;
                 joint_position_delayed[joint] =
                     (joint_position[joint] * 1.0 / 20.0) + (joint_position_delayed[joint] * 19.0 / 20.0);
 
                 encoder_error[motor] = e_pos - joint_position_delayed[joint];
+                if (encoder_error[motor] > 2.0) {
+                    homing_pin = true;
+                } else if (encoder_error[motor] < 0.01) {
+                    homing_pin = false;
+                }
+
+                // encoder_error[motor] = e_pos - joint_position[joint];
 
                 // if (e_pos < joint_position_encoder_min[joint]) {
                 //     encoder_error[motor] = e_pos - joint_position_encoder_min[joint];
                 // } else if (e_pos > joint_position_encoder_max[joint]) {
                 //     encoder_error[motor] = e_pos - joint_position_encoder_max[joint];
                 // }
-                Motate::debug.send(encoder_error[motor], 0);
-                Motate::debug.send(e_pos, 1);
-                Motate::debug.send(joint_position_delayed[joint], 2);
+                // Motate::debug.send(e_pos, 1);
+                // Motate::debug.send(joint_position_delayed[joint], 2);
 
                 double new_target = 0;
                 double prev_joint_position = joint_position[joint];
                 double old_joint_vel = joint_vel[joint];
                 double old_joint_accel = joint_accel[joint];
 
-                double jmax = cm->a[joint].jerk_high * JERK_MULTIPLIER;
-                const double vmax = cm->a[joint].velocity_max * 1.5;
+                joint_target[joint] = target[joint];
 
-                float expected_position = prev_joint_position + encoder_error[motor];
+                // float expected_position = prev_joint_position + encoder_error[motor];
+                // motor_joint_position_offset[motor] -= encoder_error[motor] / 2;
 
-                new_target = sqrt(abs(expected_position - target[joint])) * (target[joint] < expected_position ? -1 : 1) + expected_position;
-
-                // if (target[joint] < -0.01) {
-                //     new_target = std::min((double)e_pos + 3.0, (double)e_pos + target[joint]);
-                // } else {
-                //     new_target = std::min((double)e_pos + 3.0, std::max((double)e_pos - 3.0, (double)target[joint]));
-                // }
+                // new_target = target[joint] + motor_joint_position_offset[motor];
+                new_target = target[joint] + motor_joint_position_offset[motor] + encoder_error[motor] * 1/20;
 
                 // jerk-limit the new target move
+#if 1
+                double jmax = cm->a[joint].jerk_high * JERK_MULTIPLIER;
+                const double vmax = cm->a[joint].velocity_max;
 
                 // find out what velocity we'll need to end up with to get to the requested position
                 double requested_velocity = 2 / segment_time * (new_target - prev_joint_position) - old_joint_vel;
@@ -231,25 +245,32 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
                 }
 
                 // // now that everything is done adjusting joint_vel[joint], we can recompute joint_accel[joint] (for next time)
-                // // joint_accel[joint] = (joint_vel[joint] - old_joint_vel) / segment_time - jmax * segment_time * 0.5;
-
-                // // and finally what our actual target position will be
-                // joint_position[joint] = joint_position[joint] + ((old_joint_vel + joint_vel[joint]) * 0.5 * segment_time);
-                joint_position[joint] = new_target;
-                // Motate::debug.send(joint_position[joint], 2);
+                joint_accel[joint] = (joint_vel[joint] - old_joint_vel) / segment_time - jmax * segment_time * 0.5;
 
                 // setup start and end velocities
-                start_velocities[joint] = std::abs(old_joint_vel);
-                end_velocities[joint] = std::abs(joint_vel[joint]);
+                start_velocities[motor] = std::abs(old_joint_vel);
+                end_velocities[motor] = std::abs(joint_vel[joint]);
 
                 // sanity check, we can't do a reversal in the middle of a segment,
                 // so the start velocity and the end velocity have to have the same sign
-                // note: start_velocities[joint] and end_velocities[joint] are both ABS, so this sign change is lost there!
+                // note: start_velocities[joimotornt] and end_velocities[motor] are both ABS, so this sign change is lost there!
                 if (((old_joint_vel > 0) && (joint_vel[joint] < 0)) || ((old_joint_vel < 0) && (joint_vel[joint] > 0))) {
                     // solution: since we are reversing, we are going to start from zero
-                    start_velocities[joint] = std::abs(old_joint_vel + joint_vel[joint])*0.5;
-                    end_velocities[joint] = start_velocities[joint];
+                    start_velocities[motor] = std::abs(old_joint_vel + joint_vel[joint])*0.5;
+                    end_velocities[motor] = start_velocities[motor];
                 }
+
+                // // and finally what our actual target position will be
+                joint_position[joint] = joint_position[joint] + ((old_joint_vel + joint_vel[joint]) * 0.5 * segment_time);
+#else
+                joint_vel[joint] = 2 / segment_time * (new_target - prev_joint_position) - old_joint_vel;
+
+                start_velocities[motor] = std::abs(old_joint_vel);
+                end_velocities[motor] = std::abs(joint_vel[joint]);
+
+                joint_position[joint] = new_target;
+#endif
+                // Motate::debug.send(joint_position[joint], 2);
 
                 // Lookup table time!!
 
@@ -275,8 +296,6 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
                     {    22.07  , 22.07    }, // 17
                 };
 
-                // convert the target to a value from 0-1 along the range of the servo
-                // float target_pos_fractional = std::max(0.0f, std::min(1.0f, joint_position[joint] / travel_rev));
                 float target_pos = 0;
 
                 // apply the lookup table
@@ -302,11 +321,11 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
 
                 // Motate::debug.send(target_pos, 2);
 
-                steps[motor] = (target_pos * steps_per_unit[motor]) + motor_offset[motor];
+                steps[motor] = (target_pos * steps_per_unit[motor]); // ignore motor offset here
                 // setup encoder reading and stash values for next segment
                 if (this->encoder_needs_read[motor]) {
-                    external_linear_encoders[motor]->requestPositionMMs();
                     this->encoder_needs_read[motor] = true;
+                    external_linear_encoders[motor]->requestPositionMMs();
                 }
 
                 float segment_min = std::min((float)prev_joint_position, joint_position[joint]);
@@ -314,13 +333,28 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
 
                 joint_position_encoder_min[joint] = segment_min;
                 joint_position_encoder_max[joint] = segment_max;
+
+                // trigger if heading up and we go over the top
+                if (joint_position[joint] > 22.07 && prev_joint_position < joint_position[joint]) {
+                    homing_pin = true;
+
+                // release trigger if we're already triggered, going down below 22, and started above 22
+                } else if (homing_pin == true && joint_position[joint] <= 22.07  && prev_joint_position > 22.07) {
+                    homing_pin = false;
+                }
+
+                encoder_reads[motor] = 0;
             }
-            #else
+#else // if !HAS_HOBBY_SERVO_MOTOR
             steps[motor] = (target[joint] * steps_per_unit[motor]) + motor_offset[motor];
-            #endif
+#endif
+
+            if (virtual_pin) {
+                virtual_pin->pin_changed(homing_pin ? INPUT_ACTIVE : INPUT_INACTIVE);
+            }
         }
 
-        #if !HAS_HOBBY_SERVO_MOTOR
+#if !HAS_HOBBY_SERVO_MOTOR
         for (uint8_t joint = 0; joint < joints; joint++) {
             joint_position[joint] = target[joint];
         }
@@ -348,8 +382,25 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
                 continue;
             }
 
-            auto axis = joint; // it's cartesian, baby!
+            auto axis = joint;  // it's cartesian, baby!
             best_steps_per_unit[axis] = -1.0;
+
+#if HAS_HOBBY_SERVO_MOTOR
+
+            if (motor != 5) {
+                // If this motor has a better (or the only) resolution, then we use this motor's value
+                if (best_steps_per_unit[axis] < steps_per_unit[motor]) {
+                    best_steps_per_unit[axis] = steps_per_unit[motor];
+                    position[axis]            = (steps[motor]-motor_offset[motor]) / steps_per_unit[motor];
+                }
+
+                joint_position[joint] = position[joint];
+            } else {
+                position[axis] = encoder_position[motor] + encoder_offset[motor];
+                // joint_position[joint] = position[joint];
+            }
+
+#else // !HAS_HOBBY_SERVO_MOTOR
 
             // If this motor has a better (or the only) resolution, then we use this motor's value
             if (best_steps_per_unit[axis] < steps_per_unit[motor]) {
@@ -358,11 +409,13 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
             }
 
             joint_position[joint] = position[joint];
+
+#endif
         }
     }
 
     void sync_encoders(const float step_position[motors], const float position[axes]) override {
-        // We need to make joint_offset[joint] adjust any given position so that if it's given as a target
+        // We need to make motor_offset[joint] adjust any given position so that if it's given as a target
         // to inverse_kinematics then step_position[motor] will be given as the return steps[motor]
 
         // Why? Externally position[] may be unrelated to step_position[], so we need to adjust.
@@ -374,11 +427,36 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
 
             // This, solved for motor_offset: step_position[motor] = (position[joint]] * steps_per_unit[motor]) + motor_offset[motor];
             motor_offset[motor] = step_position[motor] - (position[joint] * steps_per_unit[motor]);
-            encoder_synced[motor] = false;
+
+            // Now adjust the joint position offset so that when given this position as a target, the current joint_position is returned
+            motor_joint_position_offset[motor] = joint_position[joint] - position[joint];
+            joint_target[joint] -= motor_joint_position_offset[motor];
+            // encoder_synced[motor] = false;
         }
     }
-};
 
+    // bool idle_task() override {
+    //     float start_velocities[motors];
+    //     float end_velocities[motors];
+    //     float steps[motors];
+
+    //     for (int motor = 0; motor < motors; motor++) {
+    //         start_velocities[motor] = 0;
+    //         end_velocities[motor] = 0;
+    //         steps[motor] = 0;
+    //     }
+
+    //     inverse_kinematics(cm->gm, joint_target, joint_target, start_velocities, end_velocities, MIN_SEGMENT_TIME,
+    //                        steps);
+
+    //     // tell the planner and runtime about them
+    //     mp_set_target_steps(steps, start_velocities, end_velocities, MIN_SEGMENT_TIME);
+
+    //     return true;
+    // }
+
+    void set_virtual_input(gpioDigitalInputPinVirtual *const pin) override { virtual_pin = pin; }
+};
 
 // Support for CoreXY Kinematics - http://corexy.com/
 template <uint8_t axes, uint8_t motors>
@@ -442,6 +520,44 @@ struct CoreXYKinematics final : CartesianKinematics<axes, motors> {
         position[0] = 0.5 * (deltaA + deltaB);
         position[1] = 0.5 * (deltaA - deltaB);
     }
+
+    void sync_encoders(const float step_position[motors], const float position[axes]) override {
+        // need to have a place to store the adjusted COREXY A and B
+        float axis_position[axes];
+
+        // The COREXY A and B are the X and Y axes mixed as follows
+        axis_position[0]=position[0]+position[1];
+        axis_position[1]=position[0]-position[1];
+
+        // the rest are just copied
+        for (uint8_t axis = 2; axis < AXES; axis++) {
+            axis_position[axis]=position[axis];
+        }
+
+        // just use the cartesian method from here on
+        parent::sync_encoders(step_position, axis_position);
+    }
+
+    float idle_start_velocities[motors];
+    float idle_end_velocities[motors];
+    float idle_steps[motors];
+
+    bool idle_task() override {
+        for (int motor = 0; motor < motors; motor++) {
+            idle_start_velocities[motor] = 0;
+            idle_end_velocities[motor] = 0;
+            idle_steps[motor] = 0;
+        }
+
+        parent::inverse_kinematics(cm->gm, parent::joint_target, parent::joint_position, idle_start_velocities, idle_end_velocities, MIN_SEGMENT_TIME,
+                           idle_steps);
+
+        // tell the planner and runtime about them
+        mp_set_target_steps(idle_steps, idle_start_velocities, idle_end_velocities, MIN_SEGMENT_TIME);
+
+        return true;
+    }
+
 };
 
 #endif  // End of include Guard: KINEMATICS_CARTESIAN_H_ONCE

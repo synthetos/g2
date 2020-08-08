@@ -35,17 +35,17 @@
 
 #if KINEMATICS==KINE_OTHER
 // kn must be assigned elsewhere!
-// KinematicsBase<AXES, MOTORS> *kn = &other_kinematics;
+// KinematicsBase_t *kn = &other_kinematics;
 #endif
 #if KINEMATICS==KINE_CARTESIAN
 #include "kinematics_cartesian.h"
 CartesianKinematics<AXES, MOTORS> cartesian_kinematics;
-KinematicsBase<AXES, MOTORS> *kn = &cartesian_kinematics;
+KinematicsBase_t *kn = &cartesian_kinematics;
 #endif
 #if KINEMATICS==KINE_CORE_XY
 #include "kinematics_cartesian.h"
 CoreXYKinematics<AXES, MOTORS> core_xy_kinematics;
-KinematicsBase<AXES, MOTORS> *kn = &core_xy_kinematics;
+KinematicsBase_t *kn = &core_xy_kinematics;
 
 stat_t kn_get_pos_a(nvObj_t *nv)
 {
@@ -59,7 +59,7 @@ stat_t kn_get_pos_a(nvObj_t *nv)
 #if KINEMATICS==KINE_FOUR_CABLE
 #include "kinematics_four_cable.h"
 FourCableKinematics<AXES, MOTORS> four_cable_kinematics;
-KinematicsBase<AXES, MOTORS> *kn = &four_cable_kinematics;
+KinematicsBase_t *kn = &four_cable_kinematics;
 
 // gpioDigitalInputHandler _pin_input_handler{
 //     [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
@@ -142,7 +142,7 @@ stat_t kn_get_pos_d(nvObj_t *nv)
 #if KINEMATICS==KINE_PRESSURE
 #include "kinematics_pressure.h"
 PressureKinematics<AXES, MOTORS> pressure_kinematics;
-KinematicsBase<AXES, MOTORS> *kn = &pressure_kinematics;
+KinematicsBase_t *kn = &pressure_kinematics;
 
 // volume
 stat_t kn_get_force(nvObj_t *nv)

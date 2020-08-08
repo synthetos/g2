@@ -525,6 +525,135 @@ struct gpioDigitalInputPin final : gpioDigitalInput {
 };
 
 
+/*
+ * gpioDigitalInputPinVirtual - concrete child of gpioDigitalInput that's externalls software controlled
+ */
+struct gpioDigitalInputPinVirtual final : gpioDigitalInput {
+    ioEnabled enabled;					// -1=unavailable, 0=disabled, 1=enabled
+    ioPolarity polarity;                // 0=normal/active high, 1=inverted/active low
+    inputAction action;                 // 0=none, 1=stop, 2=halt, 3=stop_steps, 4=reset
+
+    ioState state = INPUT_INACTIVE;
+
+    inputEdgeFlag edge;                 // keeps a transient record of edges for immediate inquiry
+
+    const uint8_t ext_pin_number;       // the number used externally for this pin ("din" + ext_pin_number)
+    uint8_t proxy_pin_number;           // the number used externally for this pin ("in" + proxy_pin_number)
+
+    // In constructor, simply forward all values to the Pin_t
+    // To get a different behavior, override this object.
+    gpioDigitalInputPinVirtual(const ioEnabled _enabled, const ioPolarity _polarity, const uint8_t _ext_pin_number, const uint8_t _proxy_pin_number) :
+        gpioDigitalInput{},
+        enabled{_enabled},
+        polarity{_polarity},
+        ext_pin_number{ _ext_pin_number },
+        proxy_pin_number{ 0 }
+    {
+        setExternalNumber(_proxy_pin_number);
+    };
+
+    // functions for use by other parts of the code, and are overridden
+
+    bool getState() override
+    {
+        if (enabled <= IO_DISABLED) {
+            return false;
+        }
+
+        return (ioState)(state ^ ((bool)polarity));
+    };
+
+
+    inputAction getAction() override
+    {
+        return action;
+    };
+    bool setAction(const inputAction a) override
+    {
+        action = a;
+        return true;
+    };
+
+    ioEnabled getEnabled() override
+    {
+        return enabled;
+    };
+    bool setEnabled(const ioEnabled m) override
+    {
+        if (enabled == IO_UNAVAILABLE) {
+            return false;
+        }
+        enabled = m;
+        return true;
+    };
+
+    ioPolarity getPolarity() override
+    {
+        return polarity;
+    };
+    bool setPolarity(const ioPolarity new_polarity) override
+    {
+        polarity = new_polarity;
+        return true;
+    };
+
+    bool setExternalNumber(const uint8_t e) override
+    {
+        if (e == proxy_pin_number) { return true; }
+        if (proxy_pin_number > 0) {
+            // clear the old pin
+            in_r[proxy_pin_number-1]->setPin(nullptr);
+        }
+        proxy_pin_number = e;
+        if (proxy_pin_number > 0) {
+            // set the new pin
+            in_r[proxy_pin_number-1]->setPin(this);
+        }
+        return true;
+    };
+
+    const uint8_t getExternalNumber() override
+    {
+        return proxy_pin_number;
+    };
+
+    void setLockout(const uint16_t new_lockout) override { ; } // ignored
+
+    // call this to change the in value
+
+    void pin_changed(ioState pin_value)
+    {
+        // return if input is disabled
+        if (enabled == IO_DISABLED) {
+            return;
+        }
+
+        // if nothing changed, we're done here
+        if (state == pin_value) {
+            return;
+        }
+
+        state = pin_value;
+
+        ioState pin_value_corrected = (ioState)(pin_value ^ ((bool)polarity));    // correct for NO or NC mode
+
+        // record the changed state
+        if (pin_value_corrected == INPUT_ACTIVE) {
+            edge = INPUT_EDGE_LEADING;
+        } else {
+            edge = INPUT_EDGE_TRAILING;
+        }
+
+        // start with INPUT_ACTION_INTERNAL for transient event processing like homing and probing
+        if (GPIO_NOT_HANDLED == din_handlers[INPUT_ACTION_INTERNAL].call(pin_value_corrected, edge, ext_pin_number)) {
+            din_handlers[action].call(pin_value_corrected, edge, ext_pin_number);
+        }
+
+        sr_request_status_report(SR_REQUEST_TIMED);
+    };
+};
+
+
 // forward declare
 struct gpioDigitalOutputWriter;
 extern gpioDigitalOutputWriter* const out_w[16];

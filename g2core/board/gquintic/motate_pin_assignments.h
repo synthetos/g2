@@ -145,6 +145,7 @@ pin_number kInput10_PinNumber       = 109;
 pin_number kInput11_PinNumber       = 110;
 pin_number kInput12_PinNumber       = -1;
 pin_number kTMC2130_DIAG0_pinNumber = 111;
+pin_number kTMC2130_DIAG1_pinNumber = 112;
 
 // START DEBUG PINS - Convenient pins to hijack for hardware debugging
 // To reuse a pin for debug change the original pin number to -1

@@ -255,6 +255,7 @@ constexpr cfgSubtableFromStaticArray pwr_config_1 {pwr_config_items_1};
 constexpr const configSubtable * const getPwrConfig_1() { return &pwr_config_1; }
 
 constexpr cfgItem_t motor_config_items_1[] = {
+
   // Motor parameters
   // generated with ${PROJECT_ROOT}/Resources/generate_motors_cfgArray.js
 
@@ -290,6 +291,8 @@ constexpr cfgItem_t motor_config_items_1[] = {
     { "1","1smax",_iip, 0, tx_print_nul, motor_1.get_smax_fn,motor_1.set_smax_fn, &motor_1, M1_TMC2130_SMAX },
     { "1","1sup", _iip, 0, tx_print_nul, motor_1.get_sup_fn, motor_1.set_sup_fn,  &motor_1, M1_TMC2130_SUP },
     { "1","1sdn", _iip, 0, tx_print_nul, motor_1.get_sdn_fn, motor_1.set_sdn_fn,  &motor_1, M1_TMC2130_SDN },
+    { "1","1d0s", _iip, 0, tx_print_nul, motor_1.get_diag0_stall_fn, motor_1.set_diag0_stall_fn,  &motor_1, M1_TMC2130_DIAG0_STALL },
+    { "1","1d1s", _iip, 0, tx_print_nul, motor_1.get_diag1_stall_fn, motor_1.set_diag1_stall_fn,  &motor_1, M1_TMC2130_DIAG1_STALL },
 #endif
 #endif
 
@@ -324,6 +327,8 @@ constexpr cfgItem_t motor_config_items_1[] = {
     { "2","2smax",_iip, 0, tx_print_nul, motor_2.get_smax_fn,motor_2.set_smax_fn, &motor_2, M2_TMC2130_SMAX },
     { "2","2sup", _iip, 0, tx_print_nul, motor_2.get_sup_fn, motor_2.set_sup_fn,  &motor_2, M2_TMC2130_SUP },
     { "2","2sdn", _iip, 0, tx_print_nul, motor_2.get_sdn_fn, motor_2.set_sdn_fn,  &motor_2, M2_TMC2130_SDN },
+    { "2","2d0s", _iip, 0, tx_print_nul, motor_2.get_diag0_stall_fn, motor_2.set_diag0_stall_fn,  &motor_2, M2_TMC2130_DIAG0_STALL },
+    { "2","2d1s", _iip, 0, tx_print_nul, motor_2.get_diag1_stall_fn, motor_2.set_diag1_stall_fn,  &motor_2, M2_TMC2130_DIAG1_STALL },
 #endif
 #endif
 
@@ -358,6 +363,8 @@ constexpr cfgItem_t motor_config_items_1[] = {
     { "3","3smax",_iip, 0, tx_print_nul, motor_3.get_smax_fn,motor_3.set_smax_fn, &motor_3, M3_TMC2130_SMAX },
     { "3","3sup", _iip, 0, tx_print_nul, motor_3.get_sup_fn, motor_3.set_sup_fn,  &motor_3, M3_TMC2130_SUP },
     { "3","3sdn", _iip, 0, tx_print_nul, motor_3.get_sdn_fn, motor_3.set_sdn_fn,  &motor_3, M3_TMC2130_SDN },
+    { "3","3d0s", _iip, 0, tx_print_nul, motor_3.get_diag0_stall_fn, motor_3.set_diag0_stall_fn,  &motor_3, M3_TMC2130_DIAG0_STALL },
+    { "3","3d1s", _iip, 0, tx_print_nul, motor_3.get_diag1_stall_fn, motor_3.set_diag1_stall_fn,  &motor_3, M3_TMC2130_DIAG1_STALL },
 #endif
 #endif
 
@@ -392,6 +399,8 @@ constexpr cfgItem_t motor_config_items_1[] = {
     { "4","4smax",_iip, 0, tx_print_nul, motor_4.get_smax_fn,motor_4.set_smax_fn, &motor_4, M4_TMC2130_SMAX },
     { "4","4sup", _iip, 0, tx_print_nul, motor_4.get_sup_fn, motor_4.set_sup_fn,  &motor_4, M4_TMC2130_SUP },
     { "4","4sdn", _iip, 0, tx_print_nul, motor_4.get_sdn_fn, motor_4.set_sdn_fn,  &motor_4, M4_TMC2130_SDN },
+    { "4","4d0s", _iip, 0, tx_print_nul, motor_4.get_diag0_stall_fn, motor_4.set_diag0_stall_fn,  &motor_4, M4_TMC2130_DIAG0_STALL },
+    { "4","4d1s", _iip, 0, tx_print_nul, motor_4.get_diag1_stall_fn, motor_4.set_diag1_stall_fn,  &motor_4, M4_TMC2130_DIAG1_STALL },
 #endif
 #endif
 
@@ -426,6 +435,8 @@ constexpr cfgItem_t motor_config_items_1[] = {
     { "5","5smax",_iip, 0, tx_print_nul, motor_5.get_smax_fn,motor_5.set_smax_fn, &motor_5, M5_TMC2130_SMAX },
     { "5","5sup", _iip, 0, tx_print_nul, motor_5.get_sup_fn, motor_5.set_sup_fn,  &motor_5, M5_TMC2130_SUP },
     { "5","5sdn", _iip, 0, tx_print_nul, motor_5.get_sdn_fn, motor_5.set_sdn_fn,  &motor_5, M5_TMC2130_SDN },
+    { "5","5d0s", _iip, 0, tx_print_nul, motor_5.get_diag0_stall_fn, motor_5.set_diag0_stall_fn,  &motor_5, M5_TMC2130_DIAG0_STALL },
+    { "5","5d1s", _iip, 0, tx_print_nul, motor_5.get_diag1_stall_fn, motor_5.set_diag1_stall_fn,  &motor_5, M5_TMC2130_DIAG1_STALL },
 #endif
 #endif
 
@@ -460,10 +471,13 @@ constexpr cfgItem_t motor_config_items_1[] = {
     { "6","6smax",_iip, 0, tx_print_nul, motor_6.get_smax_fn,motor_6.set_smax_fn, &motor_6, M6_TMC2130_SMAX },
     { "6","6sup", _iip, 0, tx_print_nul, motor_6.get_sup_fn, motor_6.set_sup_fn,  &motor_6, M6_TMC2130_SUP },
     { "6","6sdn", _iip, 0, tx_print_nul, motor_6.get_sdn_fn, motor_6.set_sdn_fn,  &motor_6, M6_TMC2130_SDN },
+    { "6","6d0s", _iip, 0, tx_print_nul, motor_6.get_diag0_stall_fn, motor_6.set_diag0_stall_fn,  &motor_6, M6_TMC2130_DIAG0_STALL },
+    { "6","6d1s", _iip, 0, tx_print_nul, motor_6.get_diag1_stall_fn, motor_6.set_diag1_stall_fn,  &motor_6, M6_TMC2130_DIAG1_STALL },
 #endif
 #endif
 
   // END generated with ${PROJECT_ROOT}/Resources/generate_motors_cfgArray.js
+
 };
 constexpr cfgSubtableFromStaticArray motor_config_1 {motor_config_items_1};
 constexpr const configSubtable * const getMotorConfig_1() { return &motor_config_1; }
@@ -1713,6 +1727,12 @@ constexpr cfgItem_t groups_config_items_1[] = {
 #endif
 #if (D_IN_CHANNELS >= 10)
     { "","di10", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
+#endif
+#if (D_IN_CHANNELS >= 11)
+    { "","di11", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
+#endif
+#if (D_IN_CHANNELS >= 12)
+    { "","di12", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
 #endif
 
 #define DIGITAL_OUT_GROUPS 14

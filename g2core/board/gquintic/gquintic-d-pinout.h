@@ -151,7 +151,7 @@ _MAKE_MOTATE_PIN(kSocket3_EnablePinNumber,         'A', 24); //
 _MAKE_MOTATE_PIN(kSocket2_DirPinNumber,            'A', 25); //
 _MAKE_MOTATE_PIN(kOutput5_PinNumber,               'A', 26); // TC 2,0
 _MAKE_MOTATE_PIN(kSocket3_DirPinNumber,            'A', 27); // On Timer 2!
-_MAKE_MOTATE_PIN(kUnassigned2,                     'A', 28); // DIAG1
+_MAKE_MOTATE_PIN(kTMC2130_DIAG1_pinNumber,         'A', 28); // DIAG1
 _MAKE_MOTATE_PIN(kUnassigned3,                     'A', 29); // NO PHYSICAL PIN
 _MAKE_MOTATE_PIN(kInput1_PinNumber,                'A', 30); //
 _MAKE_MOTATE_PIN(kInput4_PinNumber,                'A', 31); //

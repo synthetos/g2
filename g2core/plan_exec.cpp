@@ -1026,7 +1026,7 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
             // Motion has stopped, so we can rely on positions and other values to be stable
 
             // If hold was SKIP type, discard the remainder of the block and position to the next block
-            if (cm->hold_type == FEEDHOLD_TYPE_SKIP) {
+            if (cm->hold_type == FEEDHOLD_TYPE_SKIP || cm->hold_type == FEEDHOLD_TYPE_SCRAM) {
                 copy_vector(mp->position, mr->position);    // update planner position to the final runtime position
                 mp_free_run_buffer();                       // advance to next block, discarding the rest of the move
             }
@@ -1058,7 +1058,7 @@ static stat_t _exec_aline_feedhold(mpBuf_t *bf)
 
     // Case (3') - Decelerated to zero. See also Feedhold Case (3) in mp_exec_aline()
     // This state is needed to return an OK to complete the aline exec before transitioning to case (4).
-    if (cm->hold_state == FEEDHOLD_DECEL_COMPLETE) {
+    if (cm->hold_state == FEEDHOLD_DECEL_COMPLETE || cm->hold_type == FEEDHOLD_TYPE_SCRAM) {
         cm->hold_state = FEEDHOLD_MOTION_STOPPING;          // wait for motion to come to a complete stop
         return (STAT_OK);                                   // exit from mp_exec_aline()
     }

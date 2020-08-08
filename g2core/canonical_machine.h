@@ -117,7 +117,7 @@ typedef enum {                      // feedhold type parameter
     FEEDHOLD_TYPE_HOLD,             // simple feedhold at max jerk with no actions
     FEEDHOLD_TYPE_ACTIONS,          // feedhold at max jerk with hold entry actions
     FEEDHOLD_TYPE_SKIP,             // feedhold at max jerk with queue flush and sync command
-    FEEDHOLD_TYPE_SCRAM             // feedhold at high jerk and stop all active devices
+    FEEDHOLD_TYPE_SCRAM             // feedhold assuming motion has already stooped, then same as SKIP
 } cmFeedholdType;
 
 typedef enum {                      // feedhold final operation

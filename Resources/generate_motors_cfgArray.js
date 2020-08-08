@@ -40,6 +40,8 @@ for (n=1; n<=6; n++) {
     { "${n}","${n}smax",_iip, 0, tx_print_nul, motor_${n}.get_smax_fn,motor_${n}.set_smax_fn, &motor_${n}, M${n}_TMC2130_SMAX },
     { "${n}","${n}sup", _iip, 0, tx_print_nul, motor_${n}.get_sup_fn, motor_${n}.set_sup_fn,  &motor_${n}, M${n}_TMC2130_SUP },
     { "${n}","${n}sdn", _iip, 0, tx_print_nul, motor_${n}.get_sdn_fn, motor_${n}.set_sdn_fn,  &motor_${n}, M${n}_TMC2130_SDN },
+    { "${n}","${n}d0s", _iip, 0, tx_print_nul, motor_${n}.get_diag0_stall_fn, motor_${n}.set_diag0_stall_fn,  &motor_${n}, M${n}_TMC2130_DIAG0_STALL },
+    { "${n}","${n}d1s", _iip, 0, tx_print_nul, motor_${n}.get_diag1_stall_fn, motor_${n}.set_diag1_stall_fn,  &motor_${n}, M${n}_TMC2130_DIAG1_STALL },
 #endif
 #endif`);
 }

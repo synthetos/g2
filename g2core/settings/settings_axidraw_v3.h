@@ -129,6 +129,10 @@
 #endif
 
 #if MOTORS == 6
+#define M3_MOTOR_MAP                AXIS_COREXY_B
+#define M4_MOTOR_MAP                AXIS_COREXY_B
+#define M5_MOTOR_MAP                AXIS_COREXY_A
+
 // gQuintic
 #warning Autodetected gQuintic settings
 #define M6_MOTOR_MAP                AXIS_Z
