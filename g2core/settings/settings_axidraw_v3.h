@@ -102,6 +102,39 @@
 #define M1_POWER_MODE               MOTOR_POWER_MODE        // 1pm        standard
 #define M1_POWER_LEVEL              A_B_POWER_LEVEL         // 1pl
 
+#define M1_TMC2130_TPWMTHRS         1200                    // 1pth
+#define M1_TMC2130_TCOOLTHRS        1000                    // 1cth
+#define M1_TMC2130_THIGH            100                      // 1hth
+#define M1_TMC2130_SGT              20                      // 1sgt
+#define M1_TMC2130_TBL              2                       // 1tbl
+#define M1_TMC2130_PWM_GRAD         1                       // 1pgrd
+#define M1_TMC2130_PWM_AMPL         200                     // 1pamp
+#define M1_TMC2130_HEND             0                       // 1hend
+#define M1_TMC2130_HSTRT            0                       // 1hsrt
+#define M1_TMC2130_SMIN             5                       // 1smin
+#define M1_TMC2130_SMAX             5                       // 1smax
+#define M1_TMC2130_SUP              2                       // 1sup
+#define M1_TMC2130_SDN              1                       // 1sdn
+#define M1_TMC2130_DIAG0_STALL      1                       // 1d0s -- output stall signal on di11 for quintic
+#define M1_TMC2130_DIAG1_STALL      0                       // 1d1s
+
+#define M2_TMC2130_TPWMTHRS         M1_TMC2130_TPWMTHRS
+#define M2_TMC2130_TCOOLTHRS        M1_TMC2130_TCOOLTHRS
+#define M2_TMC2130_THIGH            M1_TMC2130_THIGH
+#define M2_TMC2130_SGT              M1_TMC2130_SGT
+#define M2_TMC2130_TBL              M1_TMC2130_TBL
+#define M2_TMC2130_PWM_GRAD         M1_TMC2130_PWM_GRAD
+#define M2_TMC2130_PWM_AMPL         M1_TMC2130_PWM_AMPL
+#define M2_TMC2130_HEND             M1_TMC2130_HEND
+#define M2_TMC2130_HSTRT            M1_TMC2130_HSTRT
+#define M2_TMC2130_SMIN             M1_TMC2130_SMIN
+#define M2_TMC2130_SMAX             M1_TMC2130_SMAX
+#define M2_TMC2130_SUP              M1_TMC2130_SUP
+#define M2_TMC2130_SDN              M1_TMC2130_SDN
+#define M2_TMC2130_DIAG0_STALL      M1_TMC2130_DIAG0_STALL
+#define M2_TMC2130_DIAG1_STALL      M1_TMC2130_DIAG1_STALL
+
+
 #define M2_MOTOR_MAP                AXIS_COREXY_B
 #define M2_STEP_ANGLE               1.8
 #define M2_TRAVEL_PER_REV           40
@@ -152,46 +185,46 @@
 
 
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX              15000                   // xvm  G0 max velocity in mm/min
-#define X_FEEDRATE_MAX              15000          // xfr  G1 max feed rate in mm/min
+#define X_VELOCITY_MAX              10000                   // xvm  G0 max velocity in mm/min
+#define X_FEEDRATE_MAX              10000                   // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel - used by soft limits and homing
 #define X_TRAVEL_MAX                400                     // xtm  maximum travel - used by soft limits and homing
 #define X_JERK_MAX                  JERK_MAX                // xjm
 #define X_JERK_HIGH_SPEED           X_JERK_MAX              // xjh
-#define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
+#define X_HOMING_INPUT              11                      // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIRECTION          0                       // xhd  0=search moves negative, 1= search moves positive
-#define X_SEARCH_VELOCITY           1000                    // xsv  move in negative direction
-#define X_LATCH_VELOCITY            100                     // xlv  mm/min
-#define X_LATCH_BACKOFF             10                      // xlb  mm
-#define X_ZERO_BACKOFF              2                       // xzb  mm
+#define X_SEARCH_VELOCITY           3000                    // xsv  move in negative direction
+#define X_LATCH_VELOCITY            200                     // xlv  mm/min
+#define X_LATCH_BACKOFF             0.5                     // xlb  mm
+#define X_ZERO_BACKOFF              0                       // xzb  mm
 
 #define Y_AXIS_MODE                 AXIS_STANDARD
-#define Y_VELOCITY_MAX              15000
-#define Y_FEEDRATE_MAX              15000
+#define Y_VELOCITY_MAX              10000
+#define Y_FEEDRATE_MAX              10000
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                175
 #define Y_JERK_MAX                  JERK_MAX
 #define Y_JERK_HIGH_SPEED           Y_JERK_MAX
-#define Y_HOMING_INPUT              3
-#define Y_HOMING_DIRECTION          0
-#define Y_SEARCH_VELOCITY           1000
-#define Y_LATCH_VELOCITY            100
-#define Y_LATCH_BACKOFF             10
-#define Y_ZERO_BACKOFF              2
+#define Y_HOMING_INPUT              11
+#define Y_HOMING_DIRECTION          1
+#define Y_SEARCH_VELOCITY           3000
+#define Y_LATCH_VELOCITY            200
+#define Y_LATCH_BACKOFF             0.5
+#define Y_ZERO_BACKOFF              0
 
 #define Z_AXIS_MODE                 AXIS_STANDARD
-#define Z_VELOCITY_MAX              2000
-#define Z_FEEDRATE_MAX              5000
+#define Z_VELOCITY_MAX              800
+#define Z_FEEDRATE_MAX              800
 #define Z_TRAVEL_MIN                0
-#define Z_TRAVEL_MAX                75
-#define Z_JERK_MAX                  500
+#define Z_TRAVEL_MAX                22.07
+#define Z_JERK_MAX                  200
 #define Z_JERK_HIGH_SPEED           Z_JERK_MAX*4
-#define Z_HOMING_INPUT              6
+#define Z_HOMING_INPUT              12
 #define Z_HOMING_DIRECTION          1
 #define Z_SEARCH_VELOCITY           600
 #define Z_LATCH_VELOCITY            100
 #define Z_LATCH_BACKOFF             10
-#define Z_ZERO_BACKOFF              2
+#define Z_ZERO_BACKOFF              0
 
 //*** Input / output settings ***
 #define DI1_POLARITY                IO_ACTIVE_HIGH
@@ -205,6 +238,14 @@
 
 #define DI4_POLARITY                IO_ACTIVE_HIGH
 #define DI4_ACTION                  INPUT_ACTION_NONE
+
+#define DI11_POLARITY               IO_ACTIVE_LOW
+#define DI11_ACTION                 INPUT_ACTION_NONE
+
+#define DI12_POLARITY               IO_ACTIVE_HIGH
+#define DI12_ACTION                 INPUT_ACTION_NONE
+
+#define PROBING_INPUT 12
 
 // TODO - correct these to reasonable values - needs to switch between quint and quad
 #define SPINDLE_ENABLE_OUTPUT_NUMBER 0 // off
