@@ -15,6 +15,7 @@ script:
   - make VERBOSE=1 COLOR=0 CONFIG=PrintrbotSimple1403
   - make VERBOSE=1 COLOR=0 CONFIG=PrintrbotSimple1608
   - make VERBOSE=1 COLOR=0 CONFIG=PrintrbotPlay
+  - make VERBOSE=1 COLOR=0 CONFIG=ShapeokoDualY BOARD=gShield
 
 # The tools take a while to download, and are rarely changed,
 # so we'll cache them. This is also nicer on launchpad, who hosts the arm tools.
@@ -38,6 +39,8 @@ before_deploy:
   - mv bin/PrintrbotSimple1608-printrboardG2v3/g2core.bin bin/g2core-PrintrbotSimple1608-printrboardG2v3-${TRAVIS_TAG}.bin
   - mv bin/PrintrbotPlay-printrboardG2v3/g2core.elf bin/g2core-PrintrbotPlay-printrboardG2v3-${TRAVIS_TAG}.elf
   - mv bin/PrintrbotPlay-printrboardG2v3/g2core.bin bin/g2core-PrintrbotPlay-printrboardG2v3-${TRAVIS_TAG}.bin
+  - mv bin/ShapeokoDualY-gShield/g2core.elf bin/g2core-ShapeokoDualY-gShield-${TRAVIS_TAG}.elf
+  - mv bin/ShapeokoDualY-gShield/g2core.bin bin/g2core-ShapeokoDualY-gShield-${TRAVIS_TAG}.bin
 
 deploy:
   provider: releases
@@ -62,6 +65,8 @@ deploy:
     - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-PrintrbotSimple1608-printrboardG2v3-${TRAVIS_TAG}.bin
     - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-PrintrbotPlay-printrboardG2v3-${TRAVIS_TAG}.elf
     - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-PrintrbotPlay-printrboardG2v3-${TRAVIS_TAG}.bin
+    - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-ShapeokoDualY-gShield-${TRAVIS_TAG}.elf
+    - ${TRAVIS_BUILD_DIR}/g2core/bin/g2core-ShapeokoDualY-gShield-${TRAVIS_TAG}.bin
   on:
     repo: synthetos/g2
     tags: true
