@@ -48,6 +48,7 @@ properties = {
   useRadius: false, // specifies that arcs should be output using the radius (R word) instead of the I, J, and K words
   useG53: false, // disable to avoid G53 output for safe machine retracts - when disabled you must manually ensure safe retracts
   usePostProcessorSpindleSpeedOverride: false, // Enables Min Max Spindle Overwriting by Fusion 360 Post Processor
+  EnableAAxis:true, // Enable A Axis
 };
 
 
@@ -124,7 +125,8 @@ function writeComment(text) {
 }
 
 function onOpen() {
-	
+  
+  if (properties.EnableAAxis) {
 	if (true) {
     var aAxis = createAxis({coordinate:0, table:true, axis:[-1, 0, 0], cyclic:true, preference:1});
     machineConfiguration = new MachineConfiguration(aAxis);
@@ -132,7 +134,8 @@ function onOpen() {
     setMachineConfiguration(machineConfiguration);
     optimizeMachineAngles2(1); // map tip mode
   }
-  
+
+}
   if (!machineConfiguration.isMachineCoordinate(0)) {
     aOutput.disable();
   }
