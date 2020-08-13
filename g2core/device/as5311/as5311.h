@@ -123,21 +123,23 @@ class AS5311 final : public ExternalLinearEncoder {
         if (!_inited || _transmitting) {
             if (++fails_ > 10) {
                 #ifdef IN_DEBUGGER
-                // __asm__("BKPT");  // about to send non-Setup message
-                // TWIHS0_Handler();
+                __asm__("BKPT");  // about to send non-Setup message
                 #endif
-                fails_ = 0;
-                _transmitting = false;
+                // fails_ = 0;
+                // _transmitting = false;
             }
 
-            if (_interrupt_handler) {
-                _interrupt_handler(false, 0.0);
-            }
+            // Motate::debug.send(fails_, 1);
+
+            // if (_interrupt_handler) {
+            //     _interrupt_handler(false, 0.0);
+            // }
             return;
         }
         _transmitting = true;  // preemptively say we're transmitting .. as a mutex
 
         fails_ = 0;
+        // Motate::debug.send(fails_, 1);
 
         // reading, prepare the address in the scribble buffer
         // we read 3 x "9-bit" blocks, which each become 16-bit half-words
