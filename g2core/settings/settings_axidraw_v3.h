@@ -63,7 +63,9 @@
 #define STATUS_REPORT_INTERVAL_MS   250                     // milliseconds - set $SV=0 to disable
 
 //#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","posa","bcr","feed","vel","unit","coor","dist","admo","frmo","momo","stat"
-#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","feed","vel","momo","stat","knpa"
+#define STATUS_REPORT_DEFAULTS "line","posx","posy","posz","feed","vel","momo","stat","knpa","in11","in12","1sgr","2sgr"
+// {sr:{line:t,posx:t,posy:t,posz:t,feed:t,vel:t,momo:t,stat:t,knpa:t,in11:t,in12:t,1sgr:t,2sgr:t}}
+
 
 // Alternate SRs
 //#define STATUS_REPORT_DEFAULTS "line","vel","mpox","mpoy","mpoz","mpoa","coor","ofsa","ofsx","ofsy","ofsz","dist","unit","stat","homz","homy","homx","momo"
