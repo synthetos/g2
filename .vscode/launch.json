@@ -282,69 +282,69 @@
       "linux": {
         "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-9m/bin/"
       },
-      "swoConfig": {
-        "enabled": true,
-        "source":"probe",
-        "swoFrequency": 8000000,
-        // "decoders": [
-        //   {
-        //     "port": 0,
-        //     "type": "console",
-        //     "label": "SWO output",
-        //     "encoding": "ascii"
-        //   }
-        // ]
-        "decoders": [
-          {
-            "type": "graph",
-            "port": 0,
-            "encoding": "float",
-            "graphId": "1",
-            "scale": 1
-          },
-          {
-            "type": "graph",
-            "port": 1,
-            "encoding": "float",
-            "graphId": "2",
-            "scale": 1
-          },
-          {
-            "type": "graph",
-            "port": 2,
-            "encoding": "float",
-            "graphId": "3",
-            "scale": 1
-          },
-        ],
-      },
-      "graphConfig": [
-        {
-          "label": "Position Error",
-          "timespan": 5,
-          "type": "realtime",
-          "annotate": false,
-          "maximum": 5,
-          "minimum": -5,
-          "plots": [
-            {
-              "graphId": "1",
-              "label": "error",
-              "color": "#dd2222"
-            },
-            {
-              "graphId": "2",
-              "label": "encoder",
-              "color": "#22dd22"
-            },
-            {
-              "graphId": "3",
-              "label": "position",
-              "color": "#2222dd"
-            },
-          ]
-        },
-      ],
+      // "swoConfig": {
+      //   "enabled": true,
+      //   "source":"probe",
+      //   "swoFrequency": 8000000,
+      //   // "decoders": [
+      //   //   {
+      //   //     "port": 0,
+      //   //     "type": "console",
+      //   //     "label": "SWO output",
+      //   //     "encoding": "ascii"
+      //   //   }
+      //   // ]
+      //   "decoders": [
+      //     {
+      //       "type": "graph",
+      //       "port": 0,
+      //       "encoding": "float", //
+      //       "graphId": "1",
+      //       "scale": 1
+      //     },
+      //     {
+      //       "type": "graph",
+      //       "port": 1,
+      //       "encoding": "float",
+      //       "graphId": "2",
+      //       "scale": 1
+      //     },
+      //     // {
+      //     //   "type": "graph",
+      //     //   "port": 2,
+      //     //   "encoding": "float",
+      //     //   "graphId": "3",
+      //     //   "scale": 1
+      //     // },
+      //   ],
+      // },
+      // "graphConfig": [
+      //   {
+      //     "label": "Position Error",
+      //     "timespan": 5,
+      //     "type": "realtime",
+      //     "annotate": false,
+      //     "maximum": 10,
+      //     "minimum": 0,
+      //     "plots": [
+      //       {
+      //         "graphId": "1",
+      //         "label": "reads",
+      //         "color": "#dd2222"
+      //       },
+      //       {
+      //         "graphId": "2",
+      //         "label": "fails",
+      //         "color": "#22dd22"
+      //       },
+      //       {
+      //         "graphId": "3",
+      //         "label": "position",
+      //         "color": "#2222dd"
+      //       },
+      //     ]
+      //   },
+      // ],
       "preLaunchTask": "Build CONFIG=AxiDrawv3-quint DebugSemihosting"
     }
   ]
