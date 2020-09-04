@@ -779,7 +779,7 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
             break;
 
             case 'M':
-            switch((uint8_t)value) {
+            switch((uint16_t)value) {
                 case 0: case 1: case 60:
                         SET_MODAL (MODAL_GROUP_M4, program_flow, PROGRAM_STOP);
                 case 2: case 30:
@@ -840,6 +840,7 @@ static stat_t _parse_gcode_block(char *buf, char *active_comment)
 
                 case 115: SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_REPORT_VERSION);   // report version information
                 case 117: status = STAT_COMPLETE; break;  //SET_NON_MODAL (next_action, NEXT_ACTION_MARLIN_DISPLAY_ON_SCREEN);
+                case 400: status = STAT_COMPLETE; break; // Workaround for OctoPrint. 
 #endif // MARLIN_COMPAT_ENABLED
 
                 default: status = STAT_MCODE_COMMAND_UNSUPPORTED;
