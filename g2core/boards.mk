@@ -60,7 +60,7 @@ endif
 
 ifeq ("$(CONFIG)","MiniMillrevD")
     ifeq ("$(BOARD)","NONE")
-        BOARD=gquintic-d
+        BOARD=gquintic-g
     endif
     SETTINGS_FILE="settings_minimill.h"
 endif
@@ -81,7 +81,7 @@ endif
 
 ifeq ("$(CONFIG)","CheapoLaser")
     ifeq ("$(BOARD)","NONE")
-        BOARD=gquintic-d
+        BOARD=gquintic-g
     endif
     SETTINGS_FILE="settings_cheapo_laser.h"
 endif
@@ -116,21 +116,21 @@ endif
 
 ifeq ("$(CONFIG)","TestQuintic-b")
     ifeq ("$(BOARD)","NONE")
-        BOARD=gquintic-b
+        BOARD=gquintic-g
     endif
     SETTINGS_FILE="settings_test.h"
 endif
 
 ifeq ("$(CONFIG)","TestQuintic")
     ifeq ("$(BOARD)","NONE")
-        BOARD=gquintic-c
+        BOARD=gquintic-g
     endif
     SETTINGS_FILE="settings_test.h"
 endif
 
 ifeq ("$(CONFIG)","Quintic-Xcarve-Extended")
     ifeq ("$(BOARD)","NONE")
-        BOARD=gquintic-c
+        BOARD=gquintic-g
     endif
     SETTINGS_FILE="settings_xcarve_extended.h"
 endif
@@ -192,7 +192,7 @@ endif
 
 ifeq ("$(CONFIG)","PrintrbotPlayQuintic")
     ifeq ("$(BOARD)","NONE")
-        BOARD=gquintic-c
+        BOARD=gquintic-g
     endif
     SETTINGS_FILE="settings_Printrbot_Play.h"
 endif
@@ -202,7 +202,7 @@ endif
 
 ifeq ("$(CONFIG)","Ultimaker2Plus")
     ifeq ("$(BOARD)","NONE")
-        BOARD=gquintic-d
+        BOARD=gquintic-g
     endif
     SETTINGS_FILE="settings_Ultimaker_2_Plus.h"
 endif
@@ -242,7 +242,7 @@ endif
 
 ifeq ("$(CONFIG)","Quintic-Ender")
    ifeq ("$(BOARD)","NONE")
-       BOARD=gquintic-c
+       BOARD=gquintic-g
    endif
    SETTINGS_FILE="settings_ender.h"
 endif
@@ -253,7 +253,7 @@ endif
 
 ifeq ("$(CONFIG)","r7")
     ifeq ("$(BOARD)","NONE")
-        BOARD=gquintic-d
+        BOARD=gquintic-g
     endif
     SETTINGS_FILE="settings_smw3d_r7.h"
 endif
@@ -263,7 +263,7 @@ endif
 
 ifeq ("$(CONFIG)","pendulum")
     ifeq ("$(BOARD)","NONE")
-        BOARD=gquintic-d
+        BOARD=gquintic-g
     endif
     SETTINGS_FILE="settings_synthetos_pendulum_v2.h"
 endif
@@ -273,7 +273,7 @@ endif
 
 ifeq ("$(CONFIG)","fourcable")
     ifeq ("$(BOARD)","NONE")
-        BOARD=gquintic-d
+        BOARD=gquintic-g
     endif
     SETTINGS_FILE="settings_fourcable.h"
 endif
