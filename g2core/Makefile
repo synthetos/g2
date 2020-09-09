@@ -65,6 +65,7 @@ endif
 #    DEVICE_DEFINES += DEBUG=1 IN_DEBUGGER=1 DEBUG_SEMIHOSTING=1
 #endif
 
+#Switch this to 9m if you are compiling the g2core binary on a Raspberry Pi
 TOOLS_VERSION = 7u2
 # TOOLS_VERSION = 9m
 
