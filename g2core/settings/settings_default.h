@@ -86,7 +86,7 @@
 #endif
 
 #ifndef SPINDLE_ENABLE_POLARITY
-#define SPINDLE_ENABLE_POLARITY     SPINDLE_ACTIVE_HIGH  // {spep: 0=active low, 1=active high
+#define SPINDLE_ENABLE_POLARITY     1  // {spep: 0=active low, 1=active high
 #endif
 
 #ifndef SPINDLE_DIR_POLARITY
@@ -132,6 +132,10 @@
 
 #ifndef SPINDLE_SPEED_MAX
 #define SPINDLE_SPEED_MAX     1000000.0     // {spsm:
+#endif
+
+#ifndef SPINDLE_SPEED_CHANGE_PER_MS
+#define SPINDLE_SPEED_CHANGE_PER_MS 10.0   // TODO
 #endif
 
 #ifndef COOLANT_MIST_POLARITY
@@ -276,7 +280,7 @@
 #define M1_ENABLE_POLARITY          IO_ACTIVE_LOW           // {1ep:  IO_ACTIVE_LOW or IO_ACTIVE_HIGH
 #endif
 #ifndef M1_STEP_POLARITY
-#define M1_STEP_POLARITY            IO_ACTIVE_HIGH          // {1ps:  IO_ACTIVE_LOW or IO_ACTIVE_HIGH
+#define M1_STEP_POLARITY            IO_ACTIVE_HIGH          // {1sp:  IO_ACTIVE_LOW or IO_ACTIVE_HIGH
 #endif
 #ifndef M1_POWER_MODE
 #define M1_POWER_MODE               MOTOR_DISABLED          // {1pm:  MOTOR_DISABLED, MOTOR_ALWAYS_POWERED, MOTOR_POWERED_IN_CYCLE, MOTOR_POWERED_ONLY_WHEN_MOVING
