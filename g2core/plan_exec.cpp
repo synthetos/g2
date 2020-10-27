@@ -191,7 +191,6 @@ stat_t mp_forward_plan()
 
     // Case 0: Examine current running buffer for early exit conditions
     if (bf == NULL) {                               // case 0a: NULL means nothing is running - this is OK
-        st_prep_null();
         return (STAT_OK);
     }
     if (bf->buffer_state < MP_BUFFER_BACK_PLANNED) { // case 0b: nothing to do. get outta here.
