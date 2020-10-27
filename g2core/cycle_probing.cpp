@@ -129,7 +129,7 @@ static void _motion_end_callback(float* vect, bool* flag)
  *   Will be registered only during homing mode - see gpio.h for more info
  */
 gpioDigitalInputHandler _probing_handler {
-    [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+    [](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
         if (cm->cycle_type != CYCLE_PROBE) { return GPIO_NOT_HANDLED; }
         if (triggering_pin_number != pb.probe_input) { return GPIO_NOT_HANDLED; }
 
