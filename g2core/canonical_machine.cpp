@@ -1677,6 +1677,7 @@ static void _exec_program_finalize(float* value, bool* flag) {
         spindle_stop();             // immediate M5
         coolant_control_immediate(COOLANT_OFF,COOLANT_BOTH);// immediate M9
         temperature_reset();                                // turn off all heaters and fans
+        cm_reset_overrides();                               // enable G48, reset feed rate, traverse and spindle overrides
     }
 
     sr_request_status_report(SR_REQUEST_IMMEDIATE);         // request a final and full status report (not filtered)
@@ -1707,7 +1708,6 @@ static void _exec_program_stop_end(cmMachineState machine_state)
         cm_set_arc_distance_mode(INCREMENTAL_DISTANCE_MODE);//  always the default
         cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);       //  G94
         cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE); // NIST specifies G1 (MOTION_MODE_STRAIGHT_FEED), but we cancel motion mode. Safer.
-        cm_reset_overrides();                               // enable G48, reset feed rate, traverse and spindle overrides
 
         // the rest will be queued and executed in _exec_program_finalize()
     }
@@ -1729,11 +1729,11 @@ void cm_cycle_start()
 
 void cm_cycle_end() {
     if (cm->cycle_type == CYCLE_MACHINING) {
-        // _exec_program_stop_end(MACHINE_PROGRAM_STOP);
-
         cm->machine_state = MACHINE_PROGRAM_STOP;
         cm->cycle_type = CYCLE_NONE;
         cm_set_motion_state(MOTION_STOP);
+
+        sr_request_status_report(SR_REQUEST_IMMEDIATE);         // request a final and full status report (not filtered)
     }
 }
 
