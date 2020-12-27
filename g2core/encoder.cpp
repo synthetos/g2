@@ -112,7 +112,14 @@ void en_take_encoder_snapshot() {
         en.snapshot[MOTOR_5] = en.en[MOTOR_5].encoder_steps + en.en[MOTOR_5].steps_run;
         en.snapshot[MOTOR_6] = en.en[MOTOR_6].encoder_steps + en.en[MOTOR_6].steps_run;
     */
+
+   en.snapped = true;
 }
+
+void en_clear_snapped() { en.snapped = false; }
+
+bool en_get_snapped() { return en.snapped; }
+
 
 float en_get_encoder_snapshot_steps(uint8_t motor) { return (en.snapshot[motor]); }
 
