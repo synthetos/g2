@@ -81,9 +81,9 @@ static void _send_probe_report(void);
  ***********************************************************************************/
 
 /***********************************************************************************
- * cm_probing_cycle_start()    - G38.x probing cycle using contact (digital input)
+ * cm_straight_probe()    - G38.x probing cycle using contact (digital input)
  *
- *  cm_probe_cycle_start() is the entry point for a probe cycle. It checks for 
+ *  cm_straight_probe() is the entry point for a probe cycle. It checks for 
  *  some errors, sets up the cycle, then prevents any new commands from queuing 
  *  to the planner so that the planner can move to a stop and report motion stopped.
  *
@@ -261,6 +261,8 @@ static uint8_t _probing_start()
         return(_probing_exception_exit(STAT_PROBE_IS_ALREADY_TRIPPED));
     }
 
+    en_clear_snapped();
+
     // Everything checks out. Run the probe move    
     _probe_move(pb.target, pb.flags);
     pb.func = _probing_backoff;
@@ -279,7 +281,7 @@ static stat_t _probing_backoff()
     // captured from the encoder in step space to steps to mm. The encoder snapshot 
     // was taken by input interrupt at the time of closure.
 
-    if (pb.trip_sense == gpio_read_input(pb.probe_input)) {  // exclusive or for booleans
+    if (en_get_snapped()) {
         cm->probe_state[0] = PROBE_SUCCEEDED;
         float contact_position[AXES];
         kn_forward_kinematics(en_get_encoder_snapshot_vector(), contact_position);
