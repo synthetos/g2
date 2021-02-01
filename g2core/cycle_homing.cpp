@@ -440,142 +440,29 @@ static stat_t _homing_finalize_exit(int8_t axis)  // third part of return to hom
  */
 
 static int8_t _get_next_axis(int8_t axis) {
-#if (HOMING_AXES <= 4)
-    if (axis == -1) {  // inelegant brute force solution
-        if (hm.axis_flags[AXIS_Z]) {
-            return (AXIS_Z);
-        }
-        if (hm.axis_flags[AXIS_X]) {
-            return (AXIS_X);
-        }
-        if (hm.axis_flags[AXIS_Y]) {
-            return (AXIS_Y);
-        }
-        if (hm.axis_flags[AXIS_A]) {
-            return (AXIS_A);
-        }
-        if (hm.axis_flags[AXIS_B]) {
-            return (AXIS_B);
-        }
-        if (hm.axis_flags[AXIS_C]) {
-            return (AXIS_C);
-        }
-        return (-2);  // error
-    } else if (axis == AXIS_Z) {
-        if (hm.axis_flags[AXIS_X]) {
-            return (AXIS_X);
-        }
-        if (hm.axis_flags[AXIS_Y]) {
-            return (AXIS_Y);
-        }
-        if (hm.axis_flags[AXIS_A]) {
-            return (AXIS_A);
-        }
-        if (hm.axis_flags[AXIS_B]) {
-            return (AXIS_B);
-        }
-        if (hm.axis_flags[AXIS_C]) {
-            return (AXIS_C);
-        }
-    } else if (axis == AXIS_X) {
-        if (hm.axis_flags[AXIS_Y]) {
-            return (AXIS_Y);
-        }
-        if (hm.axis_flags[AXIS_A]) {
-            return (AXIS_A);
-        }
-        if (hm.axis_flags[AXIS_B]) {
-            return (AXIS_B);
-        }
-        if (hm.axis_flags[AXIS_C]) {
-            return (AXIS_C);
-        }
-    } else if (axis == AXIS_Y) {
-        if (hm.axis_flags[AXIS_A]) {
-            return (AXIS_A);
-        }
-        if (hm.axis_flags[AXIS_B]) {
-            return (AXIS_B);
-        }
-        if (hm.axis_flags[AXIS_C]) {
-            return (AXIS_C);
-        }
-    }
-    return (-1);  // done
+    const int8_t homing_order[9] = {AXIS_Z, AXIS_X, AXIS_Y, AXIS_U, AXIS_V, AXIS_W, AXIS_A, AXIS_B, AXIS_C};
 
-#else
     if (axis == -1) {
-        if (hm.axis_flags[AXIS_Z]) {
-            return (AXIS_Z);
+        // search the first axis in the order whose flag is set
+        for (int i=0; i<9; i++) {
+            if (hm.axis_flags[homing_order[i]]) {
+                return homing_order[i];
+            }
         }
-        if (hm.axis_flags[AXIS_X]) {
-            return (AXIS_X);
-        }
-        if (hm.axis_flags[AXIS_Y]) {
-            return (AXIS_Y);
-        }
-        if (hm.axis_flags[AXIS_A]) {
-            return (AXIS_A);
-        }
-        if (hm.axis_flags[AXIS_B]) {
-            return (AXIS_B);
-        }
-        if (hm.axis_flags[AXIS_C]) {
-            return (AXIS_C);
-        }
-        return (-2);  // error
-    } else if (axis == AXIS_Z) {
-        if (hm.axis_flags[AXIS_X]) {
-            return (AXIS_X);
-        }
-        if (hm.axis_flags[AXIS_Y]) {
-            return (AXIS_Y);
-        }
-        if (hm.axis_flags[AXIS_A]) {
-            return (AXIS_A);
-        }
-        if (hm.axis_flags[AXIS_B]) {
-            return (AXIS_B);
-        }
-        if (hm.axis_flags[AXIS_C]) {
-            return (AXIS_C);
-        }
-    } else if (axis == AXIS_X) {
-        if (hm.axis_flags[AXIS_Y]) {
-            return (AXIS_Y);
-        }
-        if (hm.axis_flags[AXIS_A]) {
-            return (AXIS_A);
-        }
-        if (hm.axis_flags[AXIS_B]) {
-            return (AXIS_B);
-        }
-        if (hm.axis_flags[AXIS_C]) {
-            return (AXIS_C);
-        }
-    } else if (axis == AXIS_Y) {
-        if (hm.axis_flags[AXIS_A]) {
-            return (AXIS_A);
-        }
-        if (hm.axis_flags[AXIS_B]) {
-            return (AXIS_B);
-        }
-        if (hm.axis_flags[AXIS_C]) {
-            return (AXIS_C);
-        }
-    } else if (axis == AXIS_A) {
-        if (hm.axis_flags[AXIS_B]) {
-            return (AXIS_B);
-        }
-        if (hm.axis_flags[AXIS_C]) {
-            return (AXIS_C);
-        }
-    } else if (axis == AXIS_B) {
-        if (hm.axis_flags[AXIS_C]) {
-            return (AXIS_C);
-        }
-    }
-    return (-1);  // done
+        return -2; // no existing axis flag was set
 
-#endif  //  (HOMING_AXES <= 4)
+    } else {
+        // search the next axis in the order whose flag is set
+        for (int i=0; i<9; i++) {
+            if (axis == homing_order[i]) {
+                for (int j=i+1; j<9; j++) {
+                    if (hm.axis_flags[homing_order[j]]) {
+                        return homing_order[j];
+                    }
+                }
+                return -1; // no more axes, we are done
+            }
+        }
+        return -1; // called with non-existing axis, should never happen (but compiler insists on some return value)
+    }
 }
