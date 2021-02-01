@@ -138,6 +138,7 @@ uint8_t cm_straight_probe(float target[], bool flags[], bool trip_sense, bool al
 
     // error if no axes specified
     if (!(flags[AXIS_X] | flags[AXIS_Y] | flags[AXIS_Z] |
+          flags[AXIS_U] | flags[AXIS_V] | flags[AXIS_W] |
           flags[AXIS_A] | flags[AXIS_B] | flags[AXIS_C])) {
         return(cm_alarm(STAT_AXIS_IS_MISSING, "Axis is missing"));
     }
