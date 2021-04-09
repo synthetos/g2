@@ -86,7 +86,7 @@
 #endif
 
 #ifndef SPINDLE_ENABLE_POLARITY
-#define SPINDLE_ENABLE_POLARITY     SPINDLE_ACTIVE_HIGH  // {spep: 0=active low, 1=active high
+#define SPINDLE_ENABLE_POLARITY     1       // 0=active low, 1=active high
 #endif
 
 #ifndef SPINDLE_DIR_POLARITY
