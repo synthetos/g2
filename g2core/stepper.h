@@ -364,7 +364,7 @@ typedef struct stConfig {                   // stepper configs
 typedef struct stRunMotor {                 // one per controlled motor
     int64_t substep_increment;             // partial steps to increment substep_accumulator per tick
     int64_t substep_increment_increment;   // partial steps to increment substep_increment per tick
-    int64_t substep_accumulator;            // DDA phase angle accumulator
+    uint64_t substep_accumulator;            // DDA phase angle accumulator
     bool motor_flag;                        // true if motor is participating in this move
     uint32_t power_systick;                 // sys_tick for next motor power state transition
     float power_level_dynamic;              // power level for this segment of idle
