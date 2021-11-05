@@ -2525,7 +2525,7 @@ static void _print_axis_coord_flt(nvObj_t *nv, const char *format)
 
 static void _print_pos(nvObj_t *nv, const char *format, uint8_t units)
 {
-    char axes[] = {"XYZABC"};
+    char axes[] = {"XYZUVWABC"};
     uint8_t axis = _axis(nv);
     if (axis >= AXIS_A) { units = DEGREES;}
     sprintf(cs.out_buf, format, axes[axis], nv->value_flt, GET_TEXT_ITEM(msg_units, units));
@@ -2534,7 +2534,7 @@ static void _print_pos(nvObj_t *nv, const char *format, uint8_t units)
 
 static void _print_hom(nvObj_t *nv, const char *format)
 {
-    char axes[] = {"XYZABC"};
+    char axes[] = {"XYZUVWABC"};
     uint8_t axis = _axis(nv);
     sprintf(cs.out_buf, format, axes[axis], nv->value_int);
     xio_writeline(cs.out_buf);
