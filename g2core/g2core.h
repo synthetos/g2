@@ -59,12 +59,16 @@ typedef uint16_t magic_t;		        // magic number size
 
 // Note: If you change COORDS you must adjust the entries in cfgArray table in config.c
 
+<<<<<<< HEAD
 #include "hardware.h"                  // Status code definitions and strings
 #ifndef AXES
     #define AXES 9      // number of axes supported in this version
 #elif (AXES != 6 && AXES != 9)
 #error AXES must be undefined (defaulting to 9) or defined as 6 or 9
 #endif
+=======
+#define AXES 9          // number of axes supported in this version
+>>>>>>> 8590c1ff (Revert "Fix U,V,W axis operation, most notably homing, probing and moving with proper feed rates.")
 #define HOMING_AXES 4   // number of axes that can be homed (assumes Zxyabc sequence)
 #define COORDS 6        // number of supported coordinate systems (index starts at 1)
 #ifndef TOOLS
