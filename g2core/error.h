@@ -160,7 +160,6 @@ char *get_status_message(stat_t status);
 #define STAT_ERROR_83 83
 #define STAT_ERROR_84 84
 #define STAT_ERROR_85 85
-#define STAT_ERROR_86 86
 
 // Assertion failures - build down from 99 until they meet the system internal errors
 
@@ -395,7 +394,7 @@ static const char stat_15[] = "Initializing";
 static const char stat_16[] = "Entering boot loader";
 static const char stat_17[] = "Function is stubbed";
 static const char stat_18[] = "System alarm";
-static const char stat_19[] = "19";
+static const char stat_19[] = "No Display";
 
 static const char stat_20[] = "Internal error";
 static const char stat_21[] = "Internal range error";
@@ -416,7 +415,7 @@ static const char stat_34[] = "Persistence error";
 static const char stat_35[] = "Bad status report setting";
 static const char stat_36[] = "Failed to get planner buffer";
 
-static const char stat_37[] = "Backplan hit running buffer";
+static const char stat_37[] = "37";
 static const char stat_38[] = "38";
 static const char stat_39[] = "39";
 
@@ -503,8 +502,8 @@ static const char stat_116[] = "JSON value does not agree with variable type";
 static const char stat_117[] = "Input from a muted channel was ignored";
 static const char stat_118[] = "The provided checksum didn't match";
 static const char stat_119[] = "The provided line number was out of sequence";
+static const char stat_120[] = "Missing line number when given checksum";
 
-static const char stat_120[] = "120";
 static const char stat_121[] = "121";
 static const char stat_122[] = "122";
 static const char stat_123[] = "123";
