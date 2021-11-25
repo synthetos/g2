@@ -180,6 +180,11 @@ static void _exec_spindle_control(float *value, bool *flag)
             spindle.direction = control;
             spindle.state = control;
             spinup_delay = true;
+            if (cm_is_laser_tool() && spindle.direction == SPINDLE_CCW) {
+                // Since dynamic laser mode relies on spindle override to scale
+                // the power, ensure it is initialize when transitioning into this state.
+                spindle.override_factor = 0.0;
+            }
             break; 
         }
         case SPINDLE_PAUSE : { 
@@ -215,7 +220,7 @@ static void _exec_spindle_control(float *value, bool *flag)
     }
     pwm_set_duty(PWM_1, _get_spindle_pwm(spindle, pwm));
 
-    if (spinup_delay) {
+    if (spinup_delay && !cm_is_laser_tool()) {
         mp_request_out_of_band_dwell(spindle.spinup_delay);
     }
 }
@@ -261,7 +266,7 @@ static void _exec_spindle_speed(float *value, bool *flag)
     spindle.speed = value[0];
     pwm_set_duty(PWM_1, _get_spindle_pwm(spindle, pwm));
 
-    if (fp_ZERO(previous_speed)) {
+    if (fp_ZERO(previous_speed) && !cm_is_laser_tool()) {
         mp_request_out_of_band_dwell(spindle.spinup_delay);
     }
 }
@@ -318,6 +323,12 @@ static float _get_spindle_pwm (spSpindle_t &_spindle, pwmControl_t &_pwm)
         }
         // normalize speed to [0..1]
         float speed = (_spindle.speed - speed_lo) / (speed_hi - speed_lo);
+        if (cm_is_laser_tool() && spindle.direction == SPINDLE_CCW) {
+            // We are in dynamic laser mode (M4) + Laser tool.  Adjust
+            // speed based on override_factor which is updated based on
+            // current velocity.
+            speed *= spindle.override_factor;
+        }
         return ((speed * (phase_hi - phase_lo)) + phase_lo);
     } else {
         return (_pwm.c[PWM_1].phase_off);
@@ -367,6 +378,20 @@ void spindle_start_override(const float ramp_time, const float override_factor)
 void spindle_end_override(const float ramp_time)
 {
     return;
+}
+
+// Called in ISR so be careful and fast
+void spindle_update_laser_override(float current_velocity) {
+    float spindle_override = 0.0;
+    float feed_rate = cm_get_feed_rate(ACTIVE_MODEL);
+
+    if (feed_rate > 0.0) {
+        spindle_override = current_velocity / feed_rate;
+        if (spindle_override > 1.0) spindle_override = 1.0;
+        else if (spindle_override < 0.0) spindle_override = 0.0; 
+    }
+    spindle.override_factor = spindle_override;
+    pwm_set_duty(PWM_1, _get_spindle_pwm(spindle, pwm));
 }
 
 /****************************
