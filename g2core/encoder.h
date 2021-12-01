@@ -112,6 +112,7 @@ typedef struct enEncoder {          // one real or virtual encoder per controlle
 
 typedef struct enEncoders {
     magic_t     magic_start;
+    bool        snapped;
     enEncoder_t en[MOTORS];         // runtime encoder structures
     float       snapshot[MOTORS];   // snapshot vector
     magic_t     magic_end;
@@ -133,5 +134,8 @@ float en_read_encoder(uint8_t motor);
 void en_take_encoder_snapshot();
 float en_get_encoder_snapshot_steps(uint8_t motor);
 float* en_get_encoder_snapshot_vector();
+
+void en_clear_snapped();
+bool en_get_snapped();
 
 #endif  // End of include guard: ENCODER_H_ONCE
