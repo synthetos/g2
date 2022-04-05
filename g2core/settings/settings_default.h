@@ -1057,6 +1057,12 @@
 #ifndef P1_CW_PHASE_HI
 #define P1_CW_PHASE_HI              0.17
 #endif
+#ifndef P1_PWM_PHASE_OFF
+#define P1_PWM_PHASE_OFF            0.1
+#endif
+#ifndef P1_PWM2_FREQUENCY2
+#define P1_PWM2_FREQUENCY2            100                   // in Hz
+#endif
 #ifndef P1_CCW_SPEED_LO
 #define P1_CCW_SPEED_LO             7900    // 0.0
 #endif
@@ -1069,9 +1075,7 @@
 #ifndef P1_CCW_PHASE_HI
 #define P1_CCW_PHASE_HI             0.17    // 0.1
 #endif
-#ifndef P1_PWM_PHASE_OFF
-#define P1_PWM_PHASE_OFF            0.1
-#endif
+
 
 // *** Heater Settings - relevant to 3dp machines *** //
 
