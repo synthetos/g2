@@ -938,7 +938,8 @@ static stat_t _exec_aline_segment()
 
     for (uint8_t m=0; m<MOTORS; m++) {                      // and compute the distances to be traveled
         travel_steps[m] = mr->target_steps[m] - mr->position_steps[m];
-        if (fabs(travel_steps[m]) < 0.01) {                 // truncate very small moves to deal with rounding errors
+        //if (fabs(travel_steps[m]) < 0.01) {                 // truncate very small moves to deal with rounding errors   //tomash
+        if (fp_ZERO(fabs(travel_steps[m]))) {
             travel_steps[m] = 0;
         }
     }

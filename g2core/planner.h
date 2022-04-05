@@ -249,13 +249,13 @@ typedef enum {                      // code blocks for planning and trapezoid ge
 #define MIN_BLOCK_TIME              ((float)(MIN_BLOCK_MS / 60000))         // DO NOT CHANGE - time in minutes
 #define PHAT_CITY_TIME              ((float)(PHAT_CITY_MS / 60000))         // DO NOT CHANGE - time in minutes
 
-#define FEED_OVERRIDE_ENABLE        false               // initial value
+#define FEED_OVERRIDE_ENABLE        true               // initial value   //Tomash
 #define FEED_OVERRIDE_MIN           (0.05)              // 5% minimum
 #define FEED_OVERRIDE_MAX           (2.00)              // 200% maximum
 #define FEED_OVERRIDE_RAMP_TIME     (0.500/60)          // ramp time for feed overrides
 #define FEED_OVERRIDE_FACTOR        (1.00)              // initial value
 
-#define TRAVERSE_OVERRIDE_ENABLE    false               // initial value
+#define TRAVERSE_OVERRIDE_ENABLE    false               // initial value   //tomash
 #define TRAVERSE_OVERRIDE_MIN       (0.05)              // 5% minimum
 #define TRAVERSE_OVERRIDE_MAX       (1.00)              // 100% maximum
 #define TRAVERSE_OVERRIDE_FACTOR    (1.00)              // initial value

@@ -41,7 +41,7 @@ pwmControl_t pwm;
 
 // Setup motate PWM pins
 Motate::PWMOutputPin<Motate::kSpindle_PwmPinNumber>  spindle_pwm_pin {Motate::kNormal, P1_PWM_FREQUENCY};
-Motate::PWMOutputPin<Motate::kSpindle_Pwm2PinNumber> secondary_pwm_pin {Motate::kNormal, P1_PWM_FREQUENCY}; // assume the same frequency, to start with at least
+Motate::PWMOutputPin<Motate::kSpindle_Pwm2PinNumber> secondary_pwm_pin {Motate::kNormal, P1_PWM2_FREQUENCY2}; // assume the same frequency, to start with at least   //tomash
 
 /***** PWM code *****/
 /*
@@ -80,6 +80,20 @@ stat_t pwm_set_freq(uint8_t chan, float freq)
     return (STAT_OK);
 }
 
+stat_t pwm_set_freq2(uint8_t chan, float freq2)   //tomash do return stat ok
+{
+    if (chan > PWMS) { return (STAT_NO_SUCH_DEVICE);}
+    //if (freq < PWM_MIN_FREQ) { return (STAT_INPUT_LESS_THAN_MIN_VALUE);}
+    //if (freq > PWM_MAX_FREQ) { return (STAT_INPUT_EXCEEDS_MAX_VALUE);}
+
+    if (chan == PWM_1) {
+        spindle_pwm_pin.setFrequency(freq2);
+        } else if (chan == PWM_2) {
+        secondary_pwm_pin.setFrequency(freq2);
+    }
+
+    return (STAT_OK);
+}
 /*
  * pwm_set_duty() - set PWM channel duty cycle
  *
@@ -142,21 +156,24 @@ static const char fmt_p1csl[] = "[p1csl] pwm cw speed lo%16.0f RPM\n";
 static const char fmt_p1csh[] = "[p1csh] pwm cw speed hi%16.0f RPM\n";
 static const char fmt_p1cpl[] = "[p1cpl] pwm cw phase lo%16.3f [0..1]\n";
 static const char fmt_p1cph[] = "[p1cph] pwm cw phase hi%16.3f [0..1]\n";
-static const char fmt_p1wsl[] = "[p1wsl] pwm ccw speed lo%15.0f RPM\n";
-static const char fmt_p1wsh[] = "[p1wsh] pwm ccw speed hi%15.0f RPM\n";
-static const char fmt_p1wpl[] = "[p1wpl] pwm ccw phase lo%15.3f [0..1]\n";
-static const char fmt_p1wph[] = "[p1wph] pwm ccw phase hi%15.3f [0..1]\n";
-static const char fmt_p1pof[] = "[p1pof] pwm phase off%18.3f [0..1]\n";
+static const char fmt_p1fr2[] = "[p1fr2] pwm frequency%18.2f Hz\n";   //tomash
+static const char fmt_p1wsl[] = "[p1wsl] pwm ccw speed lo%15.0f RPM\n";   //tomash
+static const char fmt_p1wsh[] = "[p1wsh] pwm ccw speed hi%15.0f RPM\n";   //tomash
+static const char fmt_p1wpl[] = "[p1wpl] pwm ccw phase lo%15.3f [0..1]\n";   //tomash
+static const char fmt_p1wph[] = "[p1wph] pwm ccw phase hi%15.3f [0..1]\n";   //tomash
+static const char fmt_p1pof[] = "[p1pof] pwm phase off%18.3f [0..1]\n";   //tomash
+
 
 void pwm_print_p1frq(nvObj_t *nv) { text_print(nv, fmt_p1frq);}     // all TYPE_FLOAT
 void pwm_print_p1csl(nvObj_t *nv) { text_print(nv, fmt_p1csl);}
 void pwm_print_p1csh(nvObj_t *nv) { text_print(nv, fmt_p1csh);}
 void pwm_print_p1cpl(nvObj_t *nv) { text_print(nv, fmt_p1cpl);}
 void pwm_print_p1cph(nvObj_t *nv) { text_print(nv, fmt_p1cph);}
-void pwm_print_p1wsl(nvObj_t *nv) { text_print(nv, fmt_p1wsl);}
-void pwm_print_p1wsh(nvObj_t *nv) { text_print(nv, fmt_p1wsh);}
-void pwm_print_p1wpl(nvObj_t *nv) { text_print(nv, fmt_p1wpl);}
-void pwm_print_p1wph(nvObj_t *nv) { text_print(nv, fmt_p1wph);}
-void pwm_print_p1pof(nvObj_t *nv) { text_print(nv, fmt_p1pof);}
+void pwm_print_p1fr2(nvObj_t *nv) { text_print(nv, fmt_p1fr2);}   //tomash
+void pwm_print_p1wsl(nvObj_t *nv) { text_print(nv, fmt_p1wsl);}   //tomash
+void pwm_print_p1wsh(nvObj_t *nv) { text_print(nv, fmt_p1wsh);}   //tomash
+void pwm_print_p1wpl(nvObj_t *nv) { text_print(nv, fmt_p1wpl);}   //tomash
+void pwm_print_p1wph(nvObj_t *nv) { text_print(nv, fmt_p1wph);}   //tomash
+void pwm_print_p1pof(nvObj_t *nv) { text_print(nv, fmt_p1pof);}   //tomash
 
 #endif //__TEXT_MODE

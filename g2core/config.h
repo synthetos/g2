@@ -74,7 +74,7 @@
  *  "Groups" are collections of values that mimic REST resources. Groups include:
  *   - axis groups prefixed by "xyzuvwabc"
  *   - motor groups prefixed by "123456"    ("789" are reserved)
- *   - PWM groups prefixed by p1, p2         (p3 - p9 are reserved)
+ *   - PWM groups prefixed by p1, p2         (p3 - p9 are reserved)   //tomash
  *   - coordinate system groups prefixed by g54, g55, g56, g57, g59, g28, g30, g92
  *   - a system group is identified by "sys" and contains a collection of otherwise unrelated values
  *

@@ -24,6 +24,15 @@
 # To choose a CONFIG but apply it to a different BOARD:
 #   make CONFIG=PrintrbotPlus BOARD=g2ref-a
 
+
+ifeq ("$(CONFIG)","Tomash-CNC")
+    ifeq ("$(BOARD)","NONE")
+        BOARD=gShield
+    endif
+    SETTINGS_FILE="settings_Tomash-G2core.h"
+endif
+
+
 ##########
 # V9-based configs:
 

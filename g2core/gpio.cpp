@@ -388,7 +388,7 @@ void inputs_reset(void) {
             in->state = INPUT_DISABLED;
             continue;
         }
-        in->lockout_ms = INPUT_LOCKOUT_MS;
+        in->lockout_ms = INPUT_LOCKOUT_MS;   //tomash
         in->lockout_timer.clear();
     }
 

@@ -64,7 +64,7 @@ static stat_t _do_motors(nvObj_t *nv);      // print parameters for all motor gr
 static stat_t _do_axes(nvObj_t *nv);        // print parameters for all axis groups
 static stat_t _do_offsets(nvObj_t *nv);     // print offset parameters for G54-G59,G92, G28, G30
 static stat_t _do_inputs(nvObj_t *nv);      // print parameters for all input groups
-static stat_t _do_outputs(nvObj_t *nv);     // print parameters for all output groups
+//static stat_t _do_outputs(nvObj_t *nv);     // print parameters for all output groups
 static stat_t _do_all(nvObj_t *nv);         // print all parameters
 
 // communications settings and functions
@@ -540,10 +540,11 @@ const cfgItem_t cfgArray[] = {
     { "p1","p1csh",_fip, 0, pwm_print_p1csh, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].cw_speed_hi,  P1_CW_SPEED_HI },
     { "p1","p1cpl",_fip, 3, pwm_print_p1cpl, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].cw_phase_lo,  P1_CW_PHASE_LO },
     { "p1","p1cph",_fip, 3, pwm_print_p1cph, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].cw_phase_hi,  P1_CW_PHASE_HI },
-    { "p1","p1wsl",_fip, 0, pwm_print_p1wsl, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].ccw_speed_lo, P1_CCW_SPEED_LO },
-    { "p1","p1wsh",_fip, 0, pwm_print_p1wsh, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].ccw_speed_hi, P1_CCW_SPEED_HI },
-    { "p1","p1wpl",_fip, 3, pwm_print_p1wpl, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].ccw_phase_lo, P1_CCW_PHASE_LO },
-    { "p1","p1wph",_fip, 3, pwm_print_p1wph, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].ccw_phase_hi, P1_CCW_PHASE_HI },
+    { "p1","p1fr2",_fip, 0, pwm_print_p1fr2, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_2].frequency,    P1_PWM2_FREQUENCY2 }, //tomash
+    { "p1","p2wsl",_fip, 0, pwm_print_p1wsl, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].ccw_speed_lo, P1_CCW_SPEED_LO },   //tomash
+    { "p1","p2wsh",_fip, 0, pwm_print_p1wsh, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].ccw_speed_hi, P1_CCW_SPEED_HI },   //tomash
+    { "p1","p2wpl",_fip, 3, pwm_print_p1wpl, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].ccw_phase_lo, P1_CCW_PHASE_LO },   //tomash
+    { "p1","p2wph",_fip, 3, pwm_print_p1wph, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].ccw_phase_hi, P1_CCW_PHASE_HI },   //tomash
     { "p1","p1pof",_fip, 3, pwm_print_p1pof, get_flt, pwm_set_pwm,(float *)&pwm.c[PWM_1].phase_off,    P1_PWM_PHASE_OFF },
 
     // temperature configs - pid active values (read-only)
@@ -1265,6 +1266,8 @@ const cfgItem_t cfgArray[] = {
     { "","sp", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // Spindle group
     { "","co", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // Coolant group
 
+//{ "","p2", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // PWM 2 group
+
 #define AXIS_GROUPS AXES
     { "","x",  _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // axis groups
     { "","y",  _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
@@ -1306,21 +1309,21 @@ const cfgItem_t cfgArray[] = {
     { "","di8", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
     { "","di9", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
         
-#define DIGITAL_OUT_GROUPS 14
-    { "","out", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // output state
-    { "","do1", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // output configs
-    { "","do2", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
-    { "","do3", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
-    { "","do4", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
-    { "","do5", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
-    { "","do6", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
-    { "","do7", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
-    { "","do8", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
-    { "","do9", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
-    { "","do10", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
-    { "","do11", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
-    { "","do12", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
-    { "","do13", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
+//#define DIGITAL_OUT_GROUPS 14
+    //{ "","out", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // output state
+    //{ "","do1", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // output configs
+    //{ "","do2", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
+    //{ "","do3", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
+    //{ "","do4", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
+    //{ "","do5", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
+    //{ "","do6", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
+    //{ "","do7", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
+    //{ "","do8", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
+    //{ "","do9", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
+    //{ "","do10", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
+    //{ "","do11", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
+    //{ "","do12", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
+    //{ "","do13", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },
 
 #define COORDINATE_OFFSET_GROUPS 9
     { "","g54",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // coord offset groups
@@ -1333,40 +1336,40 @@ const cfgItem_t cfgArray[] = {
     { "","g28",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // g28 home position
     { "","g30",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // g30 home position
         
-#define TOOL_OFFSET_GROUPS 33
+#define TOOL_OFFSET_GROUPS 6
     { "","tof",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // current tool offsets
     { "","tt1",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // tt offsets
     { "","tt2",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // tt offsets
     { "","tt3",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // tt offsets
     { "","tt4",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // tt offsets
     { "","tt5",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // tt offsets
-    { "","tt6",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // tt offsets
-    { "","tt7",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // tt offsets
-    { "","tt8",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // tt offsets
-    { "","tt9",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // tt offsets
-    { "","tt10",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt11",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt12",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt13",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt14",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt15",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt16",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt17",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt18",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt19",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt20",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt21",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt22",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt23",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt24",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt25",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt26",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt27",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt28",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt29",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt30",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt31",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
-    { "","tt32",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
+    //{ "","tt6",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // tt offsets
+    //{ "","tt7",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // tt offsets
+    //{ "","tt8",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // tt offsets
+    //{ "","tt9",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // tt offsets
+    //{ "","tt10",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
+    //{ "","tt11",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
+    //{ "","tt12",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
+    //{ "","tt13",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
+    //{ "","tt14",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
+    //{ "","tt15",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
+    //{ "","tt16",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
+    //{ "","tt17",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
+    //{ "","tt18",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
+    //{ "","tt19",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
+    //{ "","tt20",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
+    //{ "","tt21",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
+    //{ "","tt22",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
+    //{ "","tt23",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
+    //{ "","tt24",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
+    //{ "","tt25",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
+    //{ "","tt26",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
+    //{ "","tt27",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
+    //{ "","tt28",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
+    //{ "","tt29",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
+    //{ "","tt30",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
+    //{ "","tt31",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
+    //{ "","tt32",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // tt offsets
         
 #define MACHINE_STATE_GROUPS 8
     { "","mpo",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // machine position group
@@ -1378,21 +1381,21 @@ const cfgItem_t cfgArray[] = {
     { "","jog",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // axis jogging state group
     { "","jid",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // job ID group
 
-#define TEMPERATURE_GROUPS 6
-    { "","he1", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // heater 1 group
-    { "","he2", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // heater 2 group
-    { "","he3", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // heater 3 group
-    { "","pid1",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // PID 1 group
-    { "","pid2",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // PID 2 group
-    { "","pid3",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // PID 3 group
+//#define TEMPERATURE_GROUPS 6
+    //{ "","he1", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // heater 1 group
+    //{ "","he2", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // heater 2 group
+    //{ "","he3", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // heater 3 group
+    //{ "","pid1",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // PID 1 group
+    //{ "","pid2",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // PID 2 group
+    //{ "","pid3",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // PID 3 group
 
-#ifdef __USER_DATA
-#define USER_DATA_GROUPS 4
-    { "","uda", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // user data group
-    { "","udb", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // user data group
-    { "","udc", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // user data group
-    { "","udd", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // user data group
-#endif
+//#ifdef __USER_DATA
+//#define USER_DATA_GROUPS 4
+    //{ "","uda", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // user data group
+    //{ "","udb", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // user data group
+    //{ "","udc", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // user data group
+    //{ "","udd", _f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },   // user data group
+//#endif
 
 #ifdef __DIAGNOSTIC_PARAMETERS
 #define DIAGNOSTIC_GROUPS 8
@@ -1406,14 +1409,14 @@ const cfgItem_t cfgArray[] = {
     { "","_fe",_f0, 0, tx_print_nul, get_grp, set_grp, nullptr, 0 },    // following error group
 #endif
 
-#define NV_COUNT_UBER_GROUPS 6
+#define NV_COUNT_UBER_GROUPS 5
     // Uber-group (groups of groups, for text-mode displays only)
     // *** Must agree with NV_COUNT_UBER_GROUPS below ****
     { "", "m", _f0, 0, tx_print_nul, _do_motors, set_nul, nullptr, 0 },
     { "", "q", _f0, 0, tx_print_nul, _do_axes,   set_nul, nullptr, 0 },
     { "", "o", _f0, 0, tx_print_nul, _do_offsets,set_nul, nullptr, 0 },
     { "", "di", _f0, 0, tx_print_nul,_do_inputs, set_nul, nullptr, 0 },
-    { "", "do", _f0, 0, tx_print_nul,_do_outputs,set_nul, nullptr, 0 },
+    //{ "", "do", _f0, 0, tx_print_nul,_do_outputs,set_nul, nullptr, 0 },
     { "", "$", _f0, 0, tx_print_nul, _do_all,    set_nul, nullptr, 0 }
 };
 
@@ -1423,13 +1426,13 @@ const cfgItem_t cfgArray[] = {
                         + AXIS_GROUPS \
                         + MOTOR_GROUPS \
                         + DIGITAL_IN_GROUPS \
-                        + DIGITAL_OUT_GROUPS \
                         + COORDINATE_OFFSET_GROUPS \
                         + TOOL_OFFSET_GROUPS \
                         + MACHINE_STATE_GROUPS \
-                        + TEMPERATURE_GROUPS \
-                        + USER_DATA_GROUPS \
                         + DIAGNOSTIC_GROUPS)
+//+ DIGITAL_OUT_GROUPS \ 5.place
+//+ TEMPERATURE_GROUPS \ 9.place
+//+ USER_DATA_GROUPS \ 10.place
 
 /* <DO NOT MESS WITH THESE DEFINES> */
 #define NV_INDEX_MAX (sizeof(cfgArray) / sizeof(cfgItem_t))
@@ -1681,25 +1684,25 @@ static stat_t _do_inputs(nvObj_t *nv)  // print parameters for all input groups
     return (STAT_COMPLETE);         // STAT_COMPLETE suppresses the normal response line
 }
 
-static stat_t _do_outputs(nvObj_t *nv)  // print parameters for all output groups
-{
-    char group[GROUP_LEN];
-    for (uint8_t i=1; i < D_OUT_CHANNELS+1; i++) {
-        sprintf(group, "do%d", i);
-        _do_group(nv, group);
-    }
-    return (STAT_COMPLETE);         // STAT_COMPLETE suppresses the normal response line
-}
-
-static stat_t _do_heaters(nvObj_t *nv)  // print parameters for all heater groups
-{
-    char group[GROUP_LEN];
-    for (uint8_t i=1; i < 4; i++) {
-        sprintf(group, "he%d", i);
-        _do_group(nv, group);
-    }
-    return (STAT_COMPLETE);         // STAT_COMPLETE suppresses the normal response line
-}
+//static stat_t _do_outputs(nvObj_t *nv)  // print parameters for all output groups
+//{
+    //char group[GROUP_LEN];
+    //for (uint8_t i=1; i < D_OUT_CHANNELS+1; i++) {
+        //sprintf(group, "do%d", i);
+        //_do_group(nv, group);
+    //}
+    //return (STAT_COMPLETE);         // STAT_COMPLETE suppresses the normal response line
+//}
+//
+//static stat_t _do_heaters(nvObj_t *nv)  // print parameters for all heater groups
+//{
+    //char group[GROUP_LEN];
+    //for (uint8_t i=1; i < 4; i++) {
+        //sprintf(group, "he%d", i);
+        //_do_group(nv, group);
+    //}
+    //return (STAT_COMPLETE);         // STAT_COMPLETE suppresses the normal response line
+//}
 
 static stat_t _do_all(nvObj_t *nv)  // print all parameters
 {
@@ -1707,9 +1710,10 @@ static stat_t _do_all(nvObj_t *nv)  // print all parameters
     _do_motors(nv);
     _do_axes(nv);
     _do_inputs(nv);
-    _do_outputs(nv);
-    _do_heaters(nv);                // there are no text mode prints for heaters
+    //_do_outputs(nv);
+    //_do_heaters(nv);                // there are no text mode prints for heaters
     _do_group(nv, (char *)"p1");    // PWM group
+    //_do_group(nv, (char *)"p2");    // PWM group   //tomash
     _do_offsets(nv);                // coordinate system offsets
     return (STAT_COMPLETE);         // STAT_COMPLETE suppresses a second JSON write that would cause a fault
 }

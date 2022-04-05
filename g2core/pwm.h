@@ -56,6 +56,7 @@ extern pwmControl_t pwm;
 
 void pwm_init(void);
 stat_t pwm_set_freq(uint8_t channel, float freq);
+stat_t pwm_set_freq2(uint8_t channel, float freq2);   //tomash
 stat_t pwm_set_duty(uint8_t channel, float duty);
 
 stat_t pwm_set_pwm(nvObj_t *nv);
@@ -67,11 +68,12 @@ stat_t pwm_set_pwm(nvObj_t *nv);
     void pwm_print_p1csh(nvObj_t *nv);
     void pwm_print_p1cpl(nvObj_t *nv);
     void pwm_print_p1cph(nvObj_t *nv);
-    void pwm_print_p1wsl(nvObj_t *nv);
-    void pwm_print_p1wsh(nvObj_t *nv);
-    void pwm_print_p1wpl(nvObj_t *nv);
-    void pwm_print_p1wph(nvObj_t *nv);
-    void pwm_print_p1pof(nvObj_t *nv);
+    void pwm_print_p1fr2(nvObj_t *nv);   //tomash
+    void pwm_print_p1wsl(nvObj_t *nv);   //tomash
+    void pwm_print_p1wsh(nvObj_t *nv);   //tomash
+    void pwm_print_p1wpl(nvObj_t *nv);   //tomash
+    void pwm_print_p1wph(nvObj_t *nv);   //tomash
+    void pwm_print_p1pof(nvObj_t *nv);   //tomash
 
 #else
 
@@ -80,11 +82,12 @@ stat_t pwm_set_pwm(nvObj_t *nv);
     #define pwm_print_p1csh tx_print_stub
     #define pwm_print_p1cpl tx_print_stub
     #define pwm_print_p1cph tx_print_stub
-    #define pwm_print_p1wsl tx_print_stub
-    #define pwm_print_p1wsh tx_print_stub
-    #define pwm_print_p1wpl tx_print_stub
-    #define pwm_print_p1wph tx_print_stub
-    #define pwm_print_p1pof tx_print_stub
+    #define pwm_print_p1fr2 tx_print_stub   //tomash
+    #define pwm_print_p1wsl tx_print_stub   //tomash
+    #define pwm_print_p1wsh tx_print_stub   //tomash
+    #define pwm_print_p1wpl tx_print_stub   //tomash
+    #define pwm_print_p1wph tx_print_stub   //tomash
+    #define pwm_print_p1pof tx_print_stub   //tomash
 
 #endif // __TEXT_MODE
 

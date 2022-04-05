@@ -170,7 +170,7 @@ static void _exec_spindle_control(float *value, bool *flag)
         case SPINDLE_NOP: { return; }
             
         case SPINDLE_OFF: {                 // enable_bit already set for this case
-            dir_bit = spindle.direction-1;  // spindle direction was stored as '1' & '2'
+            dir_bit = spindle.direction-2;  // spindle direction was stored as '1' & '2'   //tomash
             spindle.state = SPINDLE_OFF;    // the control might have been something other than SPINDLE_OFF
             break;
         }
@@ -302,10 +302,10 @@ static float _get_spindle_pwm (spSpindle_t &_spindle, pwmControl_t &_pwm)
         phase_lo = _pwm.c[PWM_1].cw_phase_lo;
         phase_hi = _pwm.c[PWM_1].cw_phase_hi;
     } else { // if (direction == SPINDLE_CCW ) {
-        speed_lo = _pwm.c[PWM_1].ccw_speed_lo;
-        speed_hi = _pwm.c[PWM_1].ccw_speed_hi;
-        phase_lo = _pwm.c[PWM_1].ccw_phase_lo;
-        phase_hi = _pwm.c[PWM_1].ccw_phase_hi;
+        speed_lo = _pwm.c[PWM_1].ccw_speed_lo;   //tomash
+        speed_hi = _pwm.c[PWM_1].ccw_speed_hi;   //tomash
+        phase_lo = _pwm.c[PWM_1].ccw_phase_lo;   //tomash
+        phase_hi = _pwm.c[PWM_1].ccw_phase_hi;   //tomash
     }
 
     if ((_spindle.state == SPINDLE_CW) || (_spindle.state == SPINDLE_CCW)) {
