@@ -86,54 +86,54 @@
  *      and have no buffer.
  */
 
-#include "g2core.h"     // #1
-#include "config.h"     // #2
-#include "gcode.h"      // #3
 #include "canonical_machine.h"
-#include "hardware.h"
-#include "controller.h"
-#include "json_parser.h"
-#include "text_parser.h"
-#include "settings.h"
 
+#include "config.h"  // #2
+#include "controller.h"
+#include "coolant.h"
+#include "encoder.h"
+#include "g2core.h"  // #1
+#include "gcode.h"   // #3
+#include "gpio.h"
+#include "hardware.h"
+#include "json_parser.h"
+#include "kinematics.h"  // for forward kinematics in cm_cycle_start
 #include "plan_arc.h"
 #include "planner.h"
-#include "stepper.h"
-#include "encoder.h"
-#include "spindle.h"
-#include "coolant.h"
 #include "pwm.h"
 #include "report.h"
-#include "gpio.h"
-#include "temperature.h"
-#include "hardware.h"
-#include "util.h"
 #include "settings.h"
-#include "xio.h"            // for serial queue flush
-#include "kinematics.h"     // for forward kinematics in cm_cycle_start
+#include "spindle.h"
+#include "stepper.h"
+#include "temperature.h"
+#include "text_parser.h"
+#include "util.h"
+#include "xio.h"  // for serial queue flush
 
 /****************************************************************************************
  **** CM GLOBALS & STRUCTURE ALLOCATIONS ************************************************
  ****************************************************************************************/
 
-cmMachine_t *cm;            // pointer to active canonical machine
-cmMachine_t cm1;            // canonical machine primary machine
-cmMachine_t cm2;            // canonical machine secondary machine
-cmToolTable_t tt;           // global tool table
+cmMachine_t *cm;   // pointer to active canonical machine
+cmMachine_t cm1;   // canonical machine primary machine
+cmMachine_t cm2;   // canonical machine secondary machine
+cmToolTable_t tt;  // global tool table
 
 /****************************************************************************************
  **** GENERIC STATIC FUNCTIONS AND VARIABLES ********************************************
  ****************************************************************************************/
 
-static int8_t _axis(const nvObj_t *nv);     // return axis number from token/group in nv
+static int8_t _axis(const nvObj_t *nv);  // return axis number from token/group in nv
 
 /*
  * _hold_input_handler - a gpioDigitalInputHandler to capture pin change events
  *   Will be registered at init
  */
-gpioDigitalInputHandler _hold_input_handler {
+gpioDigitalInputHandler _hold_input_handler{
     [](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
-        if (edge != INPUT_EDGE_LEADING) { return false; }
+        if (edge != INPUT_EDGE_LEADING) {
+            return false;
+        }
 
         // any action = d_in[triggering_pin_number]->getAction();
         // if (action == INPUT_ACTION_STOP) {
@@ -145,79 +145,86 @@ gpioDigitalInputHandler _hold_input_handler {
 
         cm_request_feedhold(FEEDHOLD_TYPE_HOLD, FEEDHOLD_EXIT_STOP);
 
-        return false; // allow others to see this notice
+        return false;  // allow others to see this notice
     },
-    5,    // priority
-    nullptr // next - nullptr to start with
+    5,       // priority
+    nullptr  // next - nullptr to start with
 };
 
 /*
  * _halt_input_handler - a gpioDigitalInputHandler to capture pin change events
  *   Will be registered at init
  */
-gpioDigitalInputHandler _halt_input_handler {
+gpioDigitalInputHandler _halt_input_handler{
     [](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
-        if (edge != INPUT_EDGE_LEADING) { return false; }
+        if (edge != INPUT_EDGE_LEADING) {
+            return false;
+        }
 
-        cm_halt();                              // hard stop, including spindle, coolant and heaters
+        cm_halt();  // hard stop, including spindle, coolant and heaters
 
-        return false; // allow others to see this notice
+        return false;  // allow others to see this notice
     },
-    5,    // priority
-    nullptr // next - nullptr to start with
+    5,       // priority
+    nullptr  // next - nullptr to start with
 };
-
 
 /*
  * _alarm_input_handler - a gpioDigitalInputHandler to capture pin change events
  *   Will be registered at init
  */
-gpioDigitalInputHandler _alarm_input_handler {
+gpioDigitalInputHandler _alarm_input_handler{
     [](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
-        if (edge != INPUT_EDGE_LEADING) { return false; }
+        if (edge != INPUT_EDGE_LEADING) {
+            return false;
+        }
 
         char msg[10];
         sprintf(msg, "input %d", triggering_pin_number);
         cm_alarm(STAT_ALARM, msg);
 
-        return false; // allow others to see this notice
+        return false;  // allow others to see this notice
     },
-    5,    // priority
-    nullptr // next - nullptr to start with
+    5,       // priority
+    nullptr  // next - nullptr to start with
 };
 
 /*
  * _panic_input_handler - a gpioDigitalInputHandler to capture pin change events
  *   Will be registered at init
  */
-gpioDigitalInputHandler _panic_input_handler {
+gpioDigitalInputHandler _panic_input_handler{
     [](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
-        if (edge != INPUT_EDGE_LEADING) { return false; }
+        if (edge != INPUT_EDGE_LEADING) {
+            return false;
+        }
 
         char msg[10];
         sprintf(msg, "input %d", triggering_pin_number);
         cm_panic(STAT_PANIC, msg);
 
-        return false; // allow others to see this notice
+        return false;  // allow others to see this notice
     },
-    5,    // priority
-    nullptr // next - nullptr to start with
+    5,       // priority
+    nullptr  // next - nullptr to start with
 };
 
 /*
  * _reset_input_handler - a gpioDigitalInputHandler to capture pin change events
  *   Will be registered at init
  */
-gpioDigitalInputHandler _reset_input_handler {
+gpioDigitalInputHandler _reset_input_handler{
     [](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
-        if (edge != INPUT_EDGE_LEADING) { return false; }
+        if (edge != INPUT_EDGE_LEADING) {
+            return false;
+        }
 
         hw_hard_reset();
 
-        return false; // this likely won't be seen, but just in case...
+        return false;  // this likely won't be seen, but just in case...
     },
-    5,    // priority
-    nullptr // next - nullptr to start with
+    5,       // priority
+    nullptr  // next - nullptr to start with
 };
 
 /****************************************************************************************
@@ -234,15 +241,14 @@ gpioDigitalInputHandler _reset_input_handler {
  * canonical_machine_reset_rotation()
  */
 
-void canonical_machine_inits()
-{
+void canonical_machine_inits() {
     planner_init(&mp1, &mr1, mp1_queue, PLANNER_QUEUE_SIZE);
     planner_init(&mp2, &mr2, mp2_queue, SECONDARY_QUEUE_SIZE);
-    canonical_machine_init(&cm1, &mp1); // primary canonical machine
-    canonical_machine_init(&cm2, &mp2); // secondary canonical machine
-    cm = &cm1;                          // set global canonical machine pointer to primary machine
-    mp = &mp1;                          // set global pointer to the primary planner
-    mr = &mr1;                          // and primary runtime
+    canonical_machine_init(&cm1, &mp1);  // primary canonical machine
+    canonical_machine_init(&cm2, &mp2);  // secondary canonical machine
+    cm = &cm1;                           // set global canonical machine pointer to primary machine
+    mp = &mp1;                           // set global pointer to the primary planner
+    mr = &mr1;                           // and primary runtime
 
     din_handlers[INPUT_ACTION_STOP].registerHandler(&_hold_input_handler);
     din_handlers[INPUT_ACTION_FAST_STOP].registerHandler(&_hold_input_handler);
@@ -252,34 +258,32 @@ void canonical_machine_inits()
     din_handlers[INPUT_ACTION_RESET].registerHandler(&_reset_input_handler);
 }
 
-void canonical_machine_init(cmMachine_t *_cm, void *_mp)
-{
+void canonical_machine_init(cmMachine_t *_cm, void *_mp) {
     // Note cm* was assignd in main()
     // If you can assume all memory has been zeroed by a hard reset you don't need this code:
-    memset(_cm, 0, sizeof(cmMachine_t));            // do not reset canonicalMachine once it's been initialized
-    memset(&_cm->gm, 0, sizeof(GCodeState_t));      // clear all values, pointers and status
+    memset(_cm, 0, sizeof(cmMachine_t));        // do not reset canonicalMachine once it's been initialized
+    memset(&_cm->gm, 0, sizeof(GCodeState_t));  // clear all values, pointers and status
 
-    canonical_machine_init_assertions(_cm);         // establish assertions
-    cm_arc_init(_cm);                               // setup arcs. Note: spindle and coolant inits are independent
-    _cm->mp = _mp;                                  // point to associated planner
-    _cm->am = MODEL;                                // setup initial Gcode model pointer
+    canonical_machine_init_assertions(_cm);  // establish assertions
+    cm_arc_init(_cm);                        // setup arcs. Note: spindle and coolant inits are independent
+    _cm->mp = _mp;                           // point to associated planner
+    _cm->am = MODEL;                         // setup initial Gcode model pointer
 }
 
 // *** Note: Run canonical_machine_init and profile initializations beforehand ***
-void canonical_machine_reset(cmMachine_t *_cm)
-{
+void canonical_machine_reset(cmMachine_t *_cm) {
     // reset canonical machine assertions
     canonical_machine_init_assertions(_cm);
 
     // set canonical machine gcode defaults
     cm_set_units_mode(cm->default_units_mode);
-    cm_set_coord_system(cm->default_coord_system);   // NB: queues a block to the planner with the coordinates
+    cm_set_coord_system(cm->default_coord_system);  // NB: queues a block to the planner with the coordinates
     cm_select_plane(cm->default_select_plane);
     cm_set_path_control(MODEL, cm->default_path_control);
     cm_set_distance_mode(cm->default_distance_mode);
-    cm_set_arc_distance_mode(INCREMENTAL_DISTANCE_MODE); // always the default
-    cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);   // always the default
-    cm_reset_overrides();                           // set overrides to initial conditions
+    cm_set_arc_distance_mode(INCREMENTAL_DISTANCE_MODE);  // always the default
+    cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);         // always the default
+    cm_reset_overrides();                                 // set overrides to initial conditions
 
     // NOTE: Should unhome axes here
     _cm->homing_state = HOMING_NOT_HOMED;
@@ -288,27 +292,26 @@ void canonical_machine_reset(cmMachine_t *_cm)
     _cm->queue_flush_state = QUEUE_FLUSH_OFF;
     _cm->cycle_start_state = CYCLE_START_OFF;
     _cm->job_kill_state = JOB_KILL_OFF;
-    _cm->limit_requested = 0;                       // resets switch closures that occurred during initialization
+    _cm->limit_requested = 0;  // resets switch closures that occurred during initialization
 
     // set initial state and signal that the machine is ready for action
     _cm->cycle_type = CYCLE_NONE;
     _cm->motion_state = MOTION_STOP;
     _cm->hold_state = FEEDHOLD_OFF;
     _cm->gmx.block_delete_switch = true;
-    _cm->gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE; // never start in a motion mode
+    _cm->gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;  // never start in a motion mode
     _cm->machine_state = MACHINE_READY;
 
-    cm_operation_init();                            // reset operations runner
+    cm_operation_init();  // reset operations runner
 
     canonical_machine_reset_rotation(_cm);
-    memset(&_cm->probe_state, 0, sizeof(cmProbeState)*PROBES_STORED);
-    memset(&_cm->probe_results, 0, sizeof(float)*PROBES_STORED*AXES);
+    memset(&_cm->probe_state, 0, sizeof(cmProbeState) * PROBES_STORED);
+    memset(&_cm->probe_results, 0, sizeof(float) * PROBES_STORED * AXES);
 }
 
 void canonical_machine_reset_rotation(cmMachine_t *_cm) {
-
     // Make it an identity matrix for no rotation
-    memset(&_cm->rotation_matrix, 0, sizeof(float)*3*3);
+    memset(&_cm->rotation_matrix, 0, sizeof(float) * 3 * 3);
     _cm->rotation_matrix[0][0] = 1.0;
     _cm->rotation_matrix[1][1] = 1.0;
     _cm->rotation_matrix[2][2] = 1.0;
@@ -323,8 +326,7 @@ void canonical_machine_reset_rotation(cmMachine_t *_cm) {
  * canonical_machine_test_assertions() - test assertions, return error code if violation exists
  */
 
-void canonical_machine_init_assertions(cmMachine_t *_cm)
-{
+void canonical_machine_init_assertions(cmMachine_t *_cm) {
     _cm->magic_start = MAGICNUM;
     _cm->magic_end = MAGICNUM;
     _cm->gmx.magic_start = MAGICNUM;
@@ -333,12 +335,10 @@ void canonical_machine_init_assertions(cmMachine_t *_cm)
     _cm->arc.magic_end = MAGICNUM;
 }
 
-stat_t canonical_machine_test_assertions(cmMachine_t *_cm)
-{
-    if ((BAD_MAGIC(_cm->magic_start))     || (BAD_MAGIC(_cm->magic_end)) ||
-        (BAD_MAGIC(_cm->gmx.magic_start)) || (BAD_MAGIC(_cm->gmx.magic_end)) ||
-        (BAD_MAGIC(_cm->arc.magic_start)) || (BAD_MAGIC(_cm->arc.magic_end))) {
-        return(cm_panic(STAT_CANONICAL_MACHINE_ASSERTION_FAILURE, "canonical_machine_test_assertions()"));
+stat_t canonical_machine_test_assertions(cmMachine_t *_cm) {
+    if ((BAD_MAGIC(_cm->magic_start)) || (BAD_MAGIC(_cm->magic_end)) || (BAD_MAGIC(_cm->gmx.magic_start)) ||
+        (BAD_MAGIC(_cm->gmx.magic_end)) || (BAD_MAGIC(_cm->arc.magic_start)) || (BAD_MAGIC(_cm->arc.magic_end))) {
+        return (cm_panic(STAT_CANONICAL_MACHINE_ASSERTION_FAILURE, "canonical_machine_test_assertions()"));
     }
     return (STAT_OK);
 }
@@ -349,8 +349,7 @@ stat_t canonical_machine_test_assertions(cmMachine_t *_cm)
 /*
  * cm_set_motion_state() - adjusts active model pointer as well
  */
-void cm_set_motion_state(const cmMotionState motion_state)
-{
+void cm_set_motion_state(const cmMotionState motion_state) {
     cm->motion_state = motion_state;
     ACTIVE_MODEL = ((motion_state == MOTION_STOP) ? MODEL : RUNTIME);
 }
@@ -363,34 +362,51 @@ void cm_set_motion_state(const cmMotionState motion_state)
  * cm_get_homing_state()
  * cm_get_probe_state()
  */
-cmMachineState  cm_get_machine_state() { return cm->machine_state;}
-cmCycleType     cm_get_cycle_type()    { return cm->cycle_type;}
-cmMotionState   cm_get_motion_state()  { return cm->motion_state;}
-cmFeedholdState cm_get_hold_state()    { return cm->hold_state;}
-cmHomingState   cm_get_homing_state()  { return cm->homing_state;}
-cmProbeState    cm_get_probe_state()   { return cm->probe_state[0];}
+cmMachineState cm_get_machine_state() { return cm->machine_state; }
+cmCycleType cm_get_cycle_type() { return cm->cycle_type; }
+cmMotionState cm_get_motion_state() { return cm->motion_state; }
+cmFeedholdState cm_get_hold_state() { return cm->hold_state; }
+cmHomingState cm_get_homing_state() { return cm->homing_state; }
+cmProbeState cm_get_probe_state() { return cm->probe_state[0]; }
 
 /*
  * cm_get_combined_state() - combines raw states into something a user might want to see
  */
-cmCombinedState cm_get_combined_state(cmMachine_t *_cm)
-{
-    switch(_cm->machine_state) {
+cmCombinedState cm_get_combined_state(cmMachine_t *_cm) {
+    switch (_cm->machine_state) {
         case MACHINE_INITIALIZING:
         case MACHINE_READY:
         case MACHINE_ALARM:
         case MACHINE_PROGRAM_STOP:
-        case MACHINE_PROGRAM_END:     { return ((cmCombinedState)_cm->machine_state); }
-        case MACHINE_INTERLOCK:       { return (COMBINED_INTERLOCK); }
-        case MACHINE_SHUTDOWN:        { return (COMBINED_SHUTDOWN); }
-        case MACHINE_PANIC:           { return (COMBINED_PANIC); }
+        case MACHINE_PROGRAM_END: {
+            return ((cmCombinedState)_cm->machine_state);
+        }
+        case MACHINE_INTERLOCK: {
+            return (COMBINED_INTERLOCK);
+        }
+        case MACHINE_SHUTDOWN: {
+            return (COMBINED_SHUTDOWN);
+        }
+        case MACHINE_PANIC: {
+            return (COMBINED_PANIC);
+        }
         case MACHINE_CYCLE: {
-            switch(_cm->cycle_type)   {
-                case CYCLE_NONE:      { break; } // CYCLE_NONE cannot ever get here
-                case CYCLE_MACHINING: { return (_cm->hold_state == FEEDHOLD_OFF ? COMBINED_RUN : COMBINED_HOLD); }
-                case CYCLE_HOMING:    { return (COMBINED_HOMING); }
-                case CYCLE_PROBE:     { return (COMBINED_PROBE); }
-                case CYCLE_JOG:       { return (COMBINED_JOG); }
+            switch (_cm->cycle_type) {
+                case CYCLE_NONE: {
+                    break;
+                }  // CYCLE_NONE cannot ever get here
+                case CYCLE_MACHINING: {
+                    return (_cm->hold_state == FEEDHOLD_OFF ? COMBINED_RUN : COMBINED_HOLD);
+                }
+                case CYCLE_HOMING: {
+                    return (COMBINED_HOMING);
+                }
+                case CYCLE_PROBE: {
+                    return (COMBINED_PROBE);
+                }
+                case CYCLE_JOG: {
+                    return (COMBINED_JOG);
+                }
             }
         }
     }
@@ -407,44 +423,38 @@ cmCombinedState cm_get_combined_state(cmMachine_t *_cm)
  *    ACTIVE_MODEL   cm->am                     // active model pointer is maintained by state management
  */
 
-uint32_t cm_get_linenum(const GCodeState_t *gcode_state) { return gcode_state->linenum;}
-cmMotionMode cm_get_motion_mode(const GCodeState_t *gcode_state) { return gcode_state->motion_mode;}
-uint8_t cm_get_coord_system(const GCodeState_t *gcode_state) { return gcode_state->coord_system;}
-uint8_t cm_get_units_mode(const GCodeState_t *gcode_state) { return gcode_state->units_mode;}
-uint8_t cm_get_select_plane(const GCodeState_t *gcode_state) { return gcode_state->select_plane;}
-uint8_t cm_get_path_control(const GCodeState_t *gcode_state) { return gcode_state->path_control;}
-uint8_t cm_get_distance_mode(const GCodeState_t *gcode_state) { return gcode_state->distance_mode;}
-uint8_t cm_get_arc_distance_mode(const GCodeState_t *gcode_state) { return gcode_state->arc_distance_mode;}
-uint8_t cm_get_feed_rate_mode(const GCodeState_t *gcode_state) { return gcode_state->feed_rate_mode;}
-uint8_t cm_get_tool(const GCodeState_t *gcode_state) { return gcode_state->tool;}
-uint8_t cm_get_block_delete_switch() { return cm->gmx.block_delete_switch;}
-uint8_t cm_get_runtime_busy() { return (mp_get_runtime_busy());}
-float cm_get_feed_rate(const GCodeState_t *gcode_state) { return gcode_state->feed_rate;}
+uint32_t cm_get_linenum(const GCodeState_t *gcode_state) { return gcode_state->linenum; }
+cmMotionMode cm_get_motion_mode(const GCodeState_t *gcode_state) { return gcode_state->motion_mode; }
+uint8_t cm_get_coord_system(const GCodeState_t *gcode_state) { return gcode_state->coord_system; }
+uint8_t cm_get_units_mode(const GCodeState_t *gcode_state) { return gcode_state->units_mode; }
+uint8_t cm_get_select_plane(const GCodeState_t *gcode_state) { return gcode_state->select_plane; }
+uint8_t cm_get_path_control(const GCodeState_t *gcode_state) { return gcode_state->path_control; }
+uint8_t cm_get_distance_mode(const GCodeState_t *gcode_state) { return gcode_state->distance_mode; }
+uint8_t cm_get_arc_distance_mode(const GCodeState_t *gcode_state) { return gcode_state->arc_distance_mode; }
+uint8_t cm_get_feed_rate_mode(const GCodeState_t *gcode_state) { return gcode_state->feed_rate_mode; }
+uint8_t cm_get_tool(const GCodeState_t *gcode_state) { return gcode_state->tool; }
+uint8_t cm_get_block_delete_switch() { return cm->gmx.block_delete_switch; }
+uint8_t cm_get_runtime_busy() { return (mp_get_runtime_busy()); }
+float cm_get_feed_rate(const GCodeState_t *gcode_state) { return gcode_state->feed_rate; }
 
-void cm_set_motion_mode(GCodeState_t *gcode_state, const uint8_t motion_mode)
-{
+void cm_set_motion_mode(GCodeState_t *gcode_state, const uint8_t motion_mode) {
     gcode_state->motion_mode = (cmMotionMode)motion_mode;
 }
 
-void cm_set_tool_number(GCodeState_t *gcode_state, const uint8_t tool)
-{
-    gcode_state->tool = tool;
-}
+void cm_set_tool_number(GCodeState_t *gcode_state, const uint8_t tool) { gcode_state->tool = tool; }
 
-void cm_set_absolute_override(GCodeState_t *gcode_state, const uint8_t absolute_override)
-{
+void cm_set_absolute_override(GCodeState_t *gcode_state, const uint8_t absolute_override) {
     gcode_state->absolute_override = (cmAbsoluteOverride)absolute_override;
-    cm_set_display_offsets(MODEL);      // must reset offsets if you change absolute override
+    cm_set_display_offsets(MODEL);  // must reset offsets if you change absolute override
 }
 
-void cm_set_model_linenum(int32_t linenum)
-{
+void cm_set_model_linenum(int32_t linenum) {
     if ((linenum < 0) || (linenum > MAX_LINENUM)) {
         linenum = 0;
         rpt_exception(STAT_INPUT_VALUE_RANGE_ERROR, "line number > 2B or negative; set to zero");
     }
-    cm->gm.linenum = linenum;           // you must first set the model line number,
-    nv_add_object((const char *)"n");   // then add the line number to the nv list
+    cm->gm.linenum = linenum;          // you must first set the model line number,
+    nv_add_object((const char *)"n");  // then add the line number to the nv list
 }
 
 /*
@@ -452,7 +462,7 @@ void cm_set_model_linenum(int32_t linenum)
  */
 
 stat_t cm_check_linenum() {
-    if (cm->gmx.last_line_number+1 != cm->gm.linenum) {
+    if (cm->gmx.last_line_number + 1 != cm->gm.linenum) {
         debug_trap("line number out of sequence");
         return STAT_LINE_NUMBER_OUT_OF_SEQUENCE;
     }
@@ -518,8 +528,7 @@ stat_t cm_check_linenum() {
  *      move will run in absolute coordinates and POS will display using no offsets.
  */
 
-float cm_get_combined_offset(const uint8_t axis)
-{
+float cm_get_combined_offset(const uint8_t axis) {
     if (cm->gm.absolute_override >= ABSOLUTE_OVERRIDE_ON_DISPLAY_WITH_OFFSETS) {
         return (0);
     }
@@ -530,15 +539,12 @@ float cm_get_combined_offset(const uint8_t axis)
     return (offset);
 }
 
-float cm_get_display_offset(const GCodeState_t *gcode_state, const uint8_t axis)
-{
+float cm_get_display_offset(const GCodeState_t *gcode_state, const uint8_t axis) {
     return (gcode_state->display_offset[axis]);
 }
 
-void cm_set_display_offsets(GCodeState_t *gcode_state)
-{
+void cm_set_display_offsets(GCodeState_t *gcode_state) {
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-
         // if absolute override is on for G53 so position should be displayed with no offsets
         if (cm->gm.absolute_override == ABSOLUTE_OVERRIDE_ON_DISPLAY_WITH_NO_OFFSETS) {
             gcode_state->display_offset[axis] = 0;
@@ -546,8 +552,7 @@ void cm_set_display_offsets(GCodeState_t *gcode_state)
 
         // all other cases: position should be displayed with currently active offsets
         else {
-            gcode_state->display_offset[axis] = cm->coord_offset[cm->gm.coord_system][axis] +
-                                                cm->tool_offset[axis];
+            gcode_state->display_offset[axis] = cm->coord_offset[cm->gm.coord_system][axis] + cm->tool_offset[axis];
             if (cm->gmx.g92_offset_enable == true) {
                 gcode_state->display_offset[axis] += cm->gmx.g92_offset[axis];
             }
@@ -567,8 +572,7 @@ void cm_set_display_offsets(GCodeState_t *gcode_state)
  *    ... that means in prevailing units (mm/inch) and with all offsets applied
  */
 
-float cm_get_display_position(const GCodeState_t *gcode_state, const uint8_t axis)
-{
+float cm_get_display_position(const GCodeState_t *gcode_state, const uint8_t axis) {
     float position;
 
     if (gcode_state == MODEL) {
@@ -576,7 +580,7 @@ float cm_get_display_position(const GCodeState_t *gcode_state, const uint8_t axi
     } else {
         position = mp_get_runtime_display_position(axis);
     }
-    if (axis <= LAST_LINEAR_AXIS) {   // linears
+    if (axis <= LAST_LINEAR_AXIS) {  // linears
         if (gcode_state->units_mode == INCHES) {
             position /= MM_PER_INCH;
         }
@@ -590,8 +594,7 @@ float cm_get_display_position(const GCodeState_t *gcode_state, const uint8_t axi
  *      ... machine position is always returned in mm mode. No units conversion is performed
  */
 
-float cm_get_absolute_position(const GCodeState_t *gcode_state, const uint8_t axis)
-{
+float cm_get_absolute_position(const GCodeState_t *gcode_state, const uint8_t axis) {
     if (gcode_state == MODEL) {
         return (cm->gmx.position[axis]);
     }
@@ -615,9 +618,8 @@ float cm_get_absolute_position(const GCodeState_t *gcode_state, const uint8_t ax
  *  point.
  */
 
-void cm_update_model_position()
-{
-    copy_vector(cm->gmx.position, cm->gm.target);   // would be mr->gm.target if from runtime
+void cm_update_model_position() {
+    copy_vector(cm->gmx.position, cm->gm.target);  // would be mr->gm.target if from runtime
 }
 
 /****************************************************************************************
@@ -627,21 +629,20 @@ void cm_update_model_position()
  *  are quiescent.
  */
 
-stat_t cm_deferred_write_callback()
-{
+stat_t cm_deferred_write_callback() {
     if ((cm->cycle_type == CYCLE_NONE) && (cm->deferred_write_flag == true)) {
         cm->deferred_write_flag = false;
         nvObj_t nv;
-        for (uint8_t i=1; i<=COORDS; i++) {
-            for (uint8_t j=0; j<AXES; j++) {
+        for (uint8_t i = 1; i <= COORDS; i++) {
+            for (uint8_t j = 0; j < AXES; j++) {
 #if (AXES == 9)
-                sprintf((char *)nv.token, "g%2d%c", 53+i, ("xyzuvwabc")[j]);
+                sprintf((char *)nv.token, "g%2d%c", 53 + i, ("xyzuvwabc")[j]);
 #else
-                sprintf((char *)nv.token, "g%2d%c", 53+i, ("xyzabc")[j]);
+                sprintf((char *)nv.token, "g%2d%c", 53 + i, ("xyzabc")[j]);
 #endif
                 nv.index = nv_get_index((const char *)"", nv.token);
                 nv.value_flt = cm->coord_offset[i][j];
-                nv_persist(&nv);    // Note: nv_persist() only writes values that have changed
+                nv_persist(&nv);  // Note: nv_persist() only writes values that have changed
             }
         }
     }
@@ -655,39 +656,30 @@ stat_t cm_deferred_write_callback()
  * For set_tram there MUST be three valid probes stored.
  */
 
-stat_t cm_get_tram(nvObj_t *nv)
-{
-    nv->value_int = true;   // believe it or not, the compiler likes this form best - most efficient code
+stat_t cm_get_tram(nvObj_t *nv) {
+    nv->value_int = true;  // believe it or not, the compiler likes this form best - most efficient code
 
-    if (fp_NOT_ZERO(cm->rotation_z_offset) ||
-    fp_NOT_ZERO(cm->rotation_matrix[0][1]) ||
-    fp_NOT_ZERO(cm->rotation_matrix[0][2]) ||
-    fp_NOT_ZERO(cm->rotation_matrix[1][0]) ||
-    fp_NOT_ZERO(cm->rotation_matrix[1][2]) ||
-    fp_NOT_ZERO(cm->rotation_matrix[2][0]) ||
-    fp_NOT_ZERO(cm->rotation_matrix[2][1]) ||
-    fp_NE(1.0,  cm->rotation_matrix[0][0]) ||
-    fp_NE(1.0,  cm->rotation_matrix[1][1]) ||
-    fp_NE(1.0,  cm->rotation_matrix[2][2]))
-    {
+    if (fp_NOT_ZERO(cm->rotation_z_offset) || fp_NOT_ZERO(cm->rotation_matrix[0][1]) ||
+        fp_NOT_ZERO(cm->rotation_matrix[0][2]) || fp_NOT_ZERO(cm->rotation_matrix[1][0]) ||
+        fp_NOT_ZERO(cm->rotation_matrix[1][2]) || fp_NOT_ZERO(cm->rotation_matrix[2][0]) ||
+        fp_NOT_ZERO(cm->rotation_matrix[2][1]) || fp_NE(1.0, cm->rotation_matrix[0][0]) ||
+        fp_NE(1.0, cm->rotation_matrix[1][1]) || fp_NE(1.0, cm->rotation_matrix[2][2])) {
         nv->value_int = false;
     }
     nv->valuetype = TYPE_BOOLEAN;
     return (STAT_OK);
 }
 
-stat_t cm_set_tram(nvObj_t *nv)
-{
-    if (!nv->value_int) {                       // if false, reset the matrix and return
+stat_t cm_set_tram(nvObj_t *nv) {
+    if (!nv->value_int) {  // if false, reset the matrix and return
         canonical_machine_reset_rotation(cm);
         return (STAT_OK);
     }
 
     // check to make sure we have three valid probes in a row
-    if (!((cm->probe_state[0] == PROBE_SUCCEEDED) &&
-          (cm->probe_state[1] == PROBE_SUCCEEDED) &&
+    if (!((cm->probe_state[0] == PROBE_SUCCEEDED) && (cm->probe_state[1] == PROBE_SUCCEEDED) &&
           (cm->probe_state[2] == PROBE_SUCCEEDED))) {
-            return (STAT_COMMAND_NOT_ACCEPTED);     // do not have 3 valid probes
+        return (STAT_COMMAND_NOT_ACCEPTED);  // do not have 3 valid probes
     }
 
     // Step 1: Get the normal of the plane formed by the three probes. Naming:
@@ -705,13 +697,13 @@ stat_t cm_set_tram(nvObj_t *nv)
 
     // Step 1b: compute the combined magnitude
     // since sqrt(a)*sqrt(b) = sqrt(a*b), we can save a sqrt in making the unit normal
-    float combined_magnitude_inv = 1.0/sqrt((d0_x*d0_x + d0_y*d0_y + d0_z*d0_z) *
-                                            (d2_x*d2_x + d2_y*d2_y + d2_z*d2_z));
+    float combined_magnitude_inv =
+        1.0 / sqrt((d0_x * d0_x + d0_y * d0_y + d0_z * d0_z) * (d2_x * d2_x + d2_y * d2_y + d2_z * d2_z));
 
     // Step 1c: compute the cross product and normalize
-    float n_x = (d0_z*d2_y - d0_y*d2_z) * combined_magnitude_inv;
-    float n_y = (d0_x*d2_z - d0_z*d2_x) * combined_magnitude_inv;
-    float n_z = (d0_y*d2_x - d0_x*d2_y) * combined_magnitude_inv;
+    float n_x = (d0_z * d2_y - d0_y * d2_z) * combined_magnitude_inv;
+    float n_y = (d0_x * d2_z - d0_z * d2_x) * combined_magnitude_inv;
+    float n_z = (d0_y * d2_x - d0_x * d2_y) * combined_magnitude_inv;
 
     // Step 1d: flip the normal if it's negative
     if (n_z < 0.0) {
@@ -721,12 +713,12 @@ stat_t cm_set_tram(nvObj_t *nv)
     }
 
     // Step 2: make the quaternion for the rotation to {0,0,1}
-    float p = sqrt(n_x*n_x + n_y*n_y + n_z*n_z);
-    float m = sqrt(2.0)*sqrt(p*(p+n_z));
+    float p = sqrt(n_x * n_x + n_y * n_y + n_z * n_z);
+    float m = sqrt(2.0) * sqrt(p * (p + n_z));
     float q_w = (n_z + p) / m;
     float q_x = -n_y / m;
     float q_y = n_x / m;
-    //float q_z = 0; // already optimized out
+    // float q_z = 0; // already optimized out
 
     // Step 3: compute the rotation matrix
     float q_wx_2 = q_w * q_x * 2.0;
@@ -756,9 +748,8 @@ stat_t cm_set_tram(nvObj_t *nv)
     cm->rotation_matrix[2][2] = 1 - q_xx_2 - q_yy_2;
 
     // Step 4: compute the z-offset
-    cm->rotation_z_offset = (n_x*cm->probe_results[1][0] +
-                             n_y*cm->probe_results[1][1]) /
-                             n_z + cm->probe_results[1][2];
+    cm->rotation_z_offset =
+        (n_x * cm->probe_results[1][0] + n_y * cm->probe_results[1][1]) / n_z + cm->probe_results[1][2];
     return (STAT_OK);
 }
 
@@ -767,19 +758,16 @@ stat_t cm_set_tram(nvObj_t *nv)
  * cm_get_nxt_line() - JSON query to get the next expected line number
  */
 
-stat_t cm_set_nxln(nvObj_t *nv)
-{
-    if (nv->valuetype == TYPE_INTEGER || nv->valuetype == TYPE_FLOAT)
-    {
+stat_t cm_set_nxln(nvObj_t *nv) {
+    if (nv->valuetype == TYPE_INTEGER || nv->valuetype == TYPE_FLOAT) {
         cm->gmx.last_line_number = nv->value_int - 1;
         return (STAT_OK);
     }
     return (STAT_INPUT_VALUE_RANGE_ERROR);
 }
 
-stat_t cm_get_nxln(nvObj_t *nv)
-{
-    nv->value_int = cm->gmx.last_line_number+1;
+stat_t cm_get_nxln(nvObj_t *nv) {
+    nv->value_int = cm->gmx.last_line_number + 1;
     nv->valuetype = TYPE_INTEGER;
     return (STAT_OK);
 }
@@ -808,17 +796,15 @@ stat_t cm_get_nxln(nvObj_t *nv)
 //        registers we moved this block into its own function so that we get a fresh stack push
 // ALDEN: This shows up in avr-gcc 4.7.0 and avr-libc 1.8.0
 
-static float _calc_ABC(const uint8_t axis, const float target[])
-{
+static float _calc_ABC(const uint8_t axis, const float target[]) {
     if ((cm->a[axis].axis_mode == AXIS_STANDARD) || (cm->a[axis].axis_mode == AXIS_INHIBITED)) {
-        return(target[axis]);    // no mm conversion - it's in degrees
+        return (target[axis]);  // no mm conversion - it's in degrees
     }
     // radius mode
     return (_to_millimeters(target[axis]) * 360.0 / (2 * M_PI * cm->a[axis].radius));
 }
 
-void cm_set_model_target(const float target[], const bool flags[])
-{
+void cm_set_model_target(const float target[], const bool flags[]) {
     uint8_t axis;
     float tmp = 0;
 
@@ -826,9 +812,9 @@ void cm_set_model_target(const float target[], const bool flags[])
     copy_vector(cm->gm.target, cm->gmx.position);
 
     // process linear axes (XYZUVW) first
-    for (axis=AXIS_X; axis<=LAST_LINEAR_AXIS; axis++) {
+    for (axis = AXIS_X; axis <= LAST_LINEAR_AXIS; axis++) {
         if (!flags[axis] || cm->a[axis].axis_mode == AXIS_DISABLED) {
-            continue;        // skip axis if not flagged for update or its disabled
+            continue;  // skip axis if not flagged for update or its disabled
         } else if ((cm->a[axis].axis_mode == AXIS_STANDARD) || (cm->a[axis].axis_mode == AXIS_INHIBITED)) {
             if (cm->gm.distance_mode == ABSOLUTE_DISTANCE_MODE) {
                 cm->gm.target[axis] = cm_get_combined_offset(axis) + _to_millimeters(target[axis]);
@@ -839,9 +825,9 @@ void cm_set_model_target(const float target[], const bool flags[])
         }
     }
     // FYI: The ABC loop below relies on the XYZUVW loop having been run first
-    for (axis=AXIS_A; axis<=AXIS_C; axis++) {
+    for (axis = AXIS_A; axis <= AXIS_C; axis++) {
         if (!flags[axis] || cm->a[axis].axis_mode == AXIS_DISABLED) {
-            continue;        // skip axis if not flagged for update or its disabled
+            continue;  // skip axis if not flagged for update or its disabled
         } else {
             tmp = _calc_ABC(axis, target);
         }
@@ -852,22 +838,19 @@ void cm_set_model_target(const float target[], const bool flags[])
         if (mst.marlin_flavor && (cm->a[axis].axis_mode == AXIS_RADIUS)) {
             if ((cm->gm.distance_mode == INCREMENTAL_DISTANCE_MODE) || (mst.extruder_mode == EXTRUDER_MOVES_RELATIVE)) {
                 cm->gm.target[axis] += tmp;
-            }
-            else { // if (cm.gmx.extruder_mode == EXTRUDER_MOVES_NORMAL)
+            } else {  // if (cm.gmx.extruder_mode == EXTRUDER_MOVES_NORMAL)
                 cm->gm.target[axis] = tmp + cm_get_combined_offset(axis);
             }
             // TODO - volumetric filament conversion
-//            else {
-//                cm->gm.target[axis] += tmp * cm.gmx.volume_to_filament_length[axis-3];
-//            }
-        }
-        else
-#endif // MARLIN_COMPAT_ENABLED
+            //            else {
+            //                cm->gm.target[axis] += tmp * cm.gmx.volume_to_filament_length[axis-3];
+            //            }
+        } else
+#endif  // MARLIN_COMPAT_ENABLED
 
-        if (cm->gm.distance_mode == ABSOLUTE_DISTANCE_MODE) {
-            cm->gm.target[axis] = tmp + cm_get_combined_offset(axis); // sacidu93's fix to Issue #22
-        }
-        else {
+            if (cm->gm.distance_mode == ABSOLUTE_DISTANCE_MODE) {
+            cm->gm.target[axis] = tmp + cm_get_combined_offset(axis);  // sacidu93's fix to Issue #22
+        } else {
             cm->gm.target[axis] += tmp;
         }
         cm->return_flags[axis] = true;
@@ -890,27 +873,33 @@ void cm_set_model_target(const float target[], const bool flags[])
 bool cm_get_soft_limits() { return (cm->soft_limit_enable); }
 void cm_set_soft_limits(bool enable) { cm->soft_limit_enable = enable; }
 
-static stat_t _finalize_soft_limits(const stat_t status)
-{
-    cm->gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;    // cancel motion
-    copy_vector(cm->gm.target, cm->gmx.position);           // reset model target
-    return (cm_alarm(status, "soft_limits"));               // throw an alarm
+static stat_t _finalize_soft_limits(const stat_t status) {
+    cm->gm.motion_mode = MOTION_MODE_CANCEL_MOTION_MODE;  // cancel motion
+    copy_vector(cm->gm.target, cm->gmx.position);         // reset model target
+    return (cm_alarm(status, "soft_limits"));             // throw an alarm
 }
 
-stat_t cm_test_soft_limits(const float target[])
-{
+stat_t cm_test_soft_limits(const float target[]) {
     if (cm->soft_limit_enable == true) {
         for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
-            if (cm->homed[axis] != true) { continue; }                               // skip axis if not homed
-            if (fp_EQ(cm->a[axis].travel_min, cm->a[axis].travel_max)) { continue; } // skip axis if identical
-            if (fabs(cm->a[axis].travel_min) > DISABLE_SOFT_LIMIT) { continue; }     // skip min test if disabled
-            if (fabs(cm->a[axis].travel_max) > DISABLE_SOFT_LIMIT) { continue; }     // skip max test if disabled
+            if (cm->homed[axis] != true) {
+                continue;
+            }  // skip axis if not homed
+            if (fp_EQ(cm->a[axis].travel_min, cm->a[axis].travel_max)) {
+                continue;
+            }  // skip axis if identical
+            if (fabs(cm->a[axis].travel_min) > DISABLE_SOFT_LIMIT) {
+                continue;
+            }  // skip min test if disabled
+            if (fabs(cm->a[axis].travel_max) > DISABLE_SOFT_LIMIT) {
+                continue;
+            }  // skip max test if disabled
 
             if (target[axis] < cm->a[axis].travel_min) {
-                return (_finalize_soft_limits(STAT_SOFT_LIMIT_EXCEEDED_XMIN + 2*axis));
+                return (_finalize_soft_limits(STAT_SOFT_LIMIT_EXCEEDED_XMIN + 2 * axis));
             }
             if (target[axis] > cm->a[axis].travel_max) {
-                return (_finalize_soft_limits(STAT_SOFT_LIMIT_EXCEEDED_XMAX + 2*axis));
+                return (_finalize_soft_limits(STAT_SOFT_LIMIT_EXCEEDED_XMAX + 2 * axis));
             }
         }
     }
@@ -939,27 +928,23 @@ stat_t cm_test_soft_limits(const float target[])
  *  These functions assume input validation occurred upstream, most likely in gcode parser.
  */
 
-stat_t cm_select_plane(const uint8_t plane)
-{
+stat_t cm_select_plane(const uint8_t plane) {
     cm->gm.select_plane = (cmCanonicalPlane)plane;
     return (STAT_OK);
 }
 
-stat_t cm_set_units_mode(const uint8_t mode)
-{
-    cm->gm.units_mode = (cmUnitsMode)mode;               // 0 = inches, 1 = mm.
-    return(STAT_OK);
-}
-
-stat_t cm_set_distance_mode(const uint8_t mode)
-{
-    cm->gm.distance_mode = (cmDistanceMode)mode;         // 0 = absolute mode, 1 = incremental
+stat_t cm_set_units_mode(const uint8_t mode) {
+    cm->gm.units_mode = (cmUnitsMode)mode;  // 0 = inches, 1 = mm.
     return (STAT_OK);
 }
 
-stat_t cm_set_arc_distance_mode(const uint8_t mode)
-{
-    cm->gm.arc_distance_mode = (cmDistanceMode)mode;     // 0 = absolute mode, 1 = incremental
+stat_t cm_set_distance_mode(const uint8_t mode) {
+    cm->gm.distance_mode = (cmDistanceMode)mode;  // 0 = absolute mode, 1 = incremental
+    return (STAT_OK);
+}
+
+stat_t cm_set_arc_distance_mode(const uint8_t mode) {
+    cm->gm.arc_distance_mode = (cmDistanceMode)mode;  // 0 = absolute mode, 1 = incremental
     return (STAT_OK);
 }
 
@@ -972,10 +957,8 @@ stat_t cm_set_arc_distance_mode(const uint8_t mode)
  *  It also does resets the display offsets to reflect the new values.
  */
 
-stat_t cm_set_g10_data(const uint8_t P_word, const bool P_flag,
-                       const uint8_t L_word, const bool L_flag,
-                       const float offset[], const bool flag[])
-{
+stat_t cm_set_g10_data(const uint8_t P_word, const bool P_flag, const uint8_t L_word, const bool L_flag,
+                       const float offset[], const bool flag[]) {
     if (!L_flag) {
         return (STAT_L_WORD_IS_MISSING);
     }
@@ -983,7 +966,7 @@ stat_t cm_set_g10_data(const uint8_t P_word, const bool P_flag,
     if ((L_word == 2) || (L_word == 20)) {
         // coordinate system offset command
         if ((P_word < G54) || (P_word > COORD_SYSTEM_MAX)) {
-            return (STAT_P_WORD_IS_INVALID);                // you can't set G53
+            return (STAT_P_WORD_IS_INVALID);  // you can't set G53
         }
         for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
             if (flag[axis]) {
@@ -991,33 +974,29 @@ stat_t cm_set_g10_data(const uint8_t P_word, const bool P_flag,
                     cm->coord_offset[P_word][axis] = _to_millimeters(offset[axis]);
                 } else {
                     // Should L20 take into account G92 offsets?
-                    cm->coord_offset[P_word][axis] = cm->gmx.position[axis] -
-                        _to_millimeters(offset[axis]) -
-                        cm->tool_offset[axis];
+                    cm->coord_offset[P_word][axis] =
+                        cm->gmx.position[axis] - _to_millimeters(offset[axis]) - cm->tool_offset[axis];
                 }
-                cm->deferred_write_flag = true;         // persist offsets once machining cycle is over
+                cm->deferred_write_flag = true;  // persist offsets once machining cycle is over
             }
         }
-    }
-    else if ((L_word == 1) || (L_word == 10)) {
-        if ((P_word < 1) || (P_word > TOOLS)) {         // tool table offset command. L11 not supported atm.
+    } else if ((L_word == 1) || (L_word == 10)) {
+        if ((P_word < 1) || (P_word > TOOLS)) {  // tool table offset command. L11 not supported atm.
             return (STAT_P_WORD_IS_INVALID);
         }
         for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
             if (flag[axis]) {
                 if (L_word == 1) {
                     tt.tt_offset[P_word][axis] = _to_millimeters(offset[axis]);
-                } else {                                // L10 should also take into account G92 offset
-                    tt.tt_offset[P_word][axis] =
-                        cm->gmx.position[axis] - _to_millimeters(offset[axis]) -
-                        cm->coord_offset[cm->gm.coord_system][axis] -
-                        (cm->gmx.g92_offset[axis] * cm->gmx.g92_offset_enable);
+                } else {  // L10 should also take into account G92 offset
+                    tt.tt_offset[P_word][axis] = cm->gmx.position[axis] - _to_millimeters(offset[axis]) -
+                                                 cm->coord_offset[cm->gm.coord_system][axis] -
+                                                 (cm->gmx.g92_offset[axis] * cm->gmx.g92_offset_enable);
                 }
-                cm->deferred_write_flag = true;         // persist offsets once machining cycle is over
+                cm->deferred_write_flag = true;  // persist offsets once machining cycle is over
             }
         }
-    }
-    else {
+    } else {
         return (STAT_L_WORD_IS_INVALID);
     }
     cm_set_display_offsets(MODEL);
@@ -1032,14 +1011,13 @@ stat_t cm_set_g10_data(const uint8_t P_word, const bool P_flag,
  * cm_set_coord_system() - G54-G59
  */
 
-stat_t cm_set_tl_offset(const uint8_t H_word, const bool H_flag, const bool apply_additional)
-{
+stat_t cm_set_tl_offset(const uint8_t H_word, const bool H_flag, const bool apply_additional) {
     uint8_t tool;
     if (H_flag) {
         if (H_word > TOOLS) {
             return (STAT_H_WORD_IS_INVALID);
         }
-        if (H_word == 0) {    // interpret H0 as "current tool", just like no H at all.
+        if (H_word == 0) {  // interpret H0 as "current tool", just like no H at all.
             tool = cm->gm.tool;
         } else {
             tool = H_word;
@@ -1051,28 +1029,27 @@ stat_t cm_set_tl_offset(const uint8_t H_word, const bool H_flag, const bool appl
         for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
             cm->tool_offset[axis] += tt.tt_offset[tool][axis];
         }
-        } else {
+    } else {
         for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
             cm->tool_offset[axis] = tt.tt_offset[tool][axis];
         }
     }
-    cm_set_display_offsets(MODEL);                      // display new offsets in the model right now
+    cm_set_display_offsets(MODEL);  // display new offsets in the model right now
     return (STAT_OK);
 }
 
-stat_t cm_cancel_tl_offset()
-{
+stat_t cm_cancel_tl_offset() {
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         cm->tool_offset[axis] = 0;
     }
-    cm_set_display_offsets(MODEL);                      // display new offsets in the model right now
-   return (STAT_OK);
+    cm_set_display_offsets(MODEL);  // display new offsets in the model right now
+    return (STAT_OK);
 }
 
 stat_t cm_set_coord_system(const uint8_t coord_system)  // set coordinate system sync'd with planner
 {
     cm->gm.coord_system = (cmCoordSystem)coord_system;
-    cm_set_display_offsets(MODEL);                      // must reset display offsets if you change coordinate system
+    cm_set_display_offsets(MODEL);  // must reset display offsets if you change coordinate system
     return (STAT_OK);
 }
 
@@ -1098,8 +1075,7 @@ stat_t cm_set_coord_system(const uint8_t coord_system)  // set coordinate system
  *  TODO: Turn this into a queued command so it executes from the planner
  */
 
-void cm_set_position_by_axis(const uint8_t axis, const float position)
-{
+void cm_set_position_by_axis(const uint8_t axis, const float position) {
     cm->gmx.position[axis] = position;
     cm->gm.target[axis] = position;
     mp_set_planner_position(axis, position);
@@ -1107,8 +1083,7 @@ void cm_set_position_by_axis(const uint8_t axis, const float position)
     mp_set_steps_to_runtime_position();
 }
 
-void cm_reset_position_to_absolute_position(cmMachine_t *_cm)
-{
+void cm_reset_position_to_absolute_position(cmMachine_t *_cm) {
     mpPlanner_t *_mp = (mpPlanner_t *)_cm->mp;
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         cm_set_position_by_axis(axis, mp_get_runtime_absolute_position(_mp->mr, axis));
@@ -1128,28 +1103,27 @@ void cm_reset_position_to_absolute_position(cmMachine_t *_cm)
  *  as homed.
  */
 
-static void _exec_absolute_origin(float *value, bool *flag)
-{
+static void _exec_absolute_origin(float *value, bool *flag) {
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         if (flag[axis]) {
             mp_set_runtime_position(axis, value[axis]);
-            cm->homed[axis] = true;    // G28.3 is not considered homed until you get here
+            cm->homed[axis] = true;  // G28.3 is not considered homed until you get here
         }
     }
     mp_set_steps_to_runtime_position();
 }
-
-stat_t cm_set_absolute_origin(const float origin[], bool flag[])
-{
+// BUG - flag needs copied!!!
+stat_t cm_set_absolute_origin(const float origin[], bool flag[]) {
     float value[AXES];
 
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         if (flag[axis]) {
-// REMOVED  value[axis] = cm->offset[cm->gm.coord_system][axis] + _to_millimeters(origin[axis]);    // G2 Issue #26
-            value[axis] = _to_millimeters(origin[axis]);    // replaced the above
-            cm->gmx.position[axis] = value[axis];           // set model position
-            cm->gm.target[axis] = value[axis];              // reset model target
-            mp_set_planner_position(axis, value[axis]);     // set mm position
+            // REMOVED  value[axis] = cm->offset[cm->gm.coord_system][axis] + _to_millimeters(origin[axis]);    // G2
+            // Issue #26
+            value[axis] = _to_millimeters(origin[axis]);  // replaced the above
+            cm->gmx.position[axis] = value[axis];         // set model position
+            cm->gm.target[axis] = value[axis];            // reset model target
+            mp_set_planner_position(axis, value[axis]);   // set mm position
         }
     }
     mp_queue_command(_exec_absolute_origin, value, flag);
@@ -1166,16 +1140,13 @@ stat_t cm_set_absolute_origin(const float origin[], bool flag[])
  * http://linuxcnc.org/docs/html/gcode/gcode.html#sec:G92-G92.1-G92.2-G92.3
  */
 
-stat_t cm_set_g92_offsets(const float offset[], const bool flag[])
-{
+stat_t cm_set_g92_offsets(const float offset[], const bool flag[]) {
     // set offsets in the Gcode model extended context
     cm->gmx.g92_offset_enable = true;
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         if (flag[axis]) {
-            cm->gmx.g92_offset[axis] = cm->gmx.position[axis] -
-                                       cm->coord_offset[cm->gm.coord_system][axis] -
-                                       cm->tool_offset[axis] -
-                                       _to_millimeters(offset[axis]);
+            cm->gmx.g92_offset[axis] = cm->gmx.position[axis] - cm->coord_offset[cm->gm.coord_system][axis] -
+                                       cm->tool_offset[axis] - _to_millimeters(offset[axis]);
         }
     }
     // now pass the offset to the callback - setting the coordinate system also applies the offsets
@@ -1183,8 +1154,7 @@ stat_t cm_set_g92_offsets(const float offset[], const bool flag[])
     return (STAT_OK);
 }
 
-stat_t cm_reset_g92_offsets()
-{
+stat_t cm_reset_g92_offsets() {
     cm->gmx.g92_offset_enable = false;
     for (uint8_t axis = AXIS_X; axis < AXES; axis++) {
         cm->gmx.g92_offset[axis] = 0;
@@ -1193,15 +1163,13 @@ stat_t cm_reset_g92_offsets()
     return (STAT_OK);
 }
 
-stat_t cm_suspend_g92_offsets()
-{
+stat_t cm_suspend_g92_offsets() {
     cm->gmx.g92_offset_enable = false;
     cm_set_display_offsets(MODEL);
     return (STAT_OK);
 }
 
-stat_t cm_resume_g92_offsets()
-{
+stat_t cm_resume_g92_offsets() {
     cm->gmx.g92_offset_enable = true;
     cm_set_display_offsets(MODEL);
     return (STAT_OK);
@@ -1214,11 +1182,10 @@ stat_t cm_resume_g92_offsets()
  * cm_straight_traverse() - G0 linear rapid
  */
 
-stat_t cm_straight_traverse(const float *target, const bool *flags, const cmMotionProfile motion_profile)
-{
+stat_t cm_straight_traverse(const float *target, const bool *flags, const cmMotionProfile motion_profile) {
     cm->gm.motion_mode = MOTION_MODE_STRAIGHT_TRAVERSE;
 #ifdef TRAVERSE_AT_HIGH_JERK
-    cm->gm.motion_profile = PROFILE_FAST; // override to make all traverses use high jerk
+    cm->gm.motion_profile = PROFILE_FAST;  // override to make all traverses use high jerk
 #else
     cm->gm.motion_profile = motion_profile;
 #endif
@@ -1229,7 +1196,7 @@ stat_t cm_straight_traverse(const float *target, const bool *flags, const cmMoti
           flags[AXIS_U] | flags[AXIS_V] | flags[AXIS_W] |
 #endif
           flags[AXIS_A] | flags[AXIS_B] | flags[AXIS_C])) {
-        return(STAT_OK);
+        return (STAT_OK);
     }
     cm_set_model_target(target, flags);
     ritorno(cm_test_soft_limits(cm->gm.target));  // test soft limits; exit if thrown
@@ -1256,57 +1223,55 @@ stat_t cm_straight_traverse(const float *target, const bool *flags, const cmMoti
  * _goto_stored_position() - helper
  */
 
-stat_t _goto_stored_position(const float stored_position[],     // always in mm
-                             const float intermediate_target[], // in current units (G20/G21)
-                             const bool flags[])                // all false if no intermediate move
+stat_t _goto_stored_position(const float stored_position[],      // always in mm
+                             const float intermediate_target[],  // in current units (G20/G21)
+                             const bool flags[])                 // all false if no intermediate move
 {
     // Go through intermediate point if one is provided
-    while (mp_planner_is_full(mp));                             // Make sure you have available buffers
+    while (mp_planner_is_full(mp))
+        ;                                                                       // Make sure you have available buffers
     ritorno(cm_straight_traverse(intermediate_target, flags, PROFILE_NORMAL));  // w/no action if no axis flags
 
     // If G20 adjust stored position (always in mm) to inches so traverse will be correct
-    float target[AXES]; // make a local stored position as it may be modified
+    float target[AXES];  // make a local stored position as it may be modified
     copy_vector(target, stored_position);
 
     if (cm->gm.units_mode == INCHES) {
-        for (uint8_t i=0; i<AXIS_A; i++) {                  // Only convert linears (not rotaries)
+        for (uint8_t i = 0; i < AXIS_A; i++) {  // Only convert linears (not rotaries)
             target[i] *= INCHES_PER_MM;
         }
     }
 
     // Run the stored position move
-    while (mp_planner_is_full(mp));                         // Make sure you have available buffers
+    while (mp_planner_is_full(mp))
+        ;  // Make sure you have available buffers
 
     uint8_t saved_distance_mode = cm_get_distance_mode(MODEL);
     cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_ON_DISPLAY_WITH_OFFSETS);  // Position stored in abs coords
-    cm_set_distance_mode(ABSOLUTE_DISTANCE_MODE);           // Must run in absolute distance mode
+    cm_set_distance_mode(ABSOLUTE_DISTANCE_MODE);                                // Must run in absolute distance mode
 
     bool flags2[] = INIT_AXES_TRUE;
-    stat_t status = cm_straight_traverse(target, flags2, PROFILE_NORMAL);   // Go to stored position
+    stat_t status = cm_straight_traverse(target, flags2, PROFILE_NORMAL);  // Go to stored position
     cm_set_absolute_override(MODEL, ABSOLUTE_OVERRIDE_OFF);
-    cm_set_distance_mode(saved_distance_mode);              // Restore distance mode
+    cm_set_distance_mode(saved_distance_mode);  // Restore distance mode
     return (status);
 }
 
-stat_t cm_set_g28_position(void)
-{
-    copy_vector(cm->gmx.g28_position, cm->gmx.position);    // in MM and machine coordinates
+stat_t cm_set_g28_position(void) {
+    copy_vector(cm->gmx.g28_position, cm->gmx.position);  // in MM and machine coordinates
     return (STAT_OK);
 }
 
-stat_t cm_goto_g28_position(const float target[], const bool flags[])
-{
+stat_t cm_goto_g28_position(const float target[], const bool flags[]) {
     return (_goto_stored_position(cm->gmx.g28_position, target, flags));
 }
 
-stat_t cm_set_g30_position(void)
-{
-    copy_vector(cm->gmx.g30_position, cm->gmx.position);    // in MM and machine coordinates
+stat_t cm_set_g30_position(void) {
+    copy_vector(cm->gmx.g30_position, cm->gmx.position);  // in MM and machine coordinates
     return (STAT_OK);
 }
 
-stat_t cm_goto_g30_position(const float target[], const bool flags[])
-{
+stat_t cm_goto_g30_position(const float target[], const bool flags[]) {
     return (_goto_stored_position(cm->gmx.g30_position, target, flags));
 }
 
@@ -1319,13 +1284,12 @@ stat_t cm_goto_g30_position(const float target[], const bool flags[])
  * Normalize feed rate to mm/min or to minutes if in inverse time mode
  */
 
-stat_t cm_set_feed_rate(const float feed_rate)
-{
+stat_t cm_set_feed_rate(const float feed_rate) {
     if (cm->gm.feed_rate_mode == INVERSE_TIME_MODE) {
         if (fp_ZERO(feed_rate)) {
             return (STAT_FEEDRATE_NOT_SPECIFIED);
         }
-        cm->gm.feed_rate = 1/feed_rate;    // normalize to minutes (NB: active for this gcode block only)
+        cm->gm.feed_rate = 1 / feed_rate;  // normalize to minutes (NB: active for this gcode block only)
     } else {
         cm->gm.feed_rate = _to_millimeters(feed_rate);
     }
@@ -1340,8 +1304,7 @@ stat_t cm_set_feed_rate(const float feed_rate)
  *  UNITS_PER_REVOLUTION_MODE       // G95 (unimplemented)
  */
 
-stat_t cm_set_feed_rate_mode(const uint8_t mode)
-{
+stat_t cm_set_feed_rate_mode(const uint8_t mode) {
     cm->gm.feed_rate_mode = (cmFeedRateMode)mode;
     return (STAT_OK);
 }
@@ -1350,8 +1313,7 @@ stat_t cm_set_feed_rate_mode(const uint8_t mode)
  * cm_set_path_control() - G61, G61.1, G64
  */
 
-stat_t cm_set_path_control(GCodeState_t *gcode_state, const uint8_t mode)
-{
+stat_t cm_set_path_control(GCodeState_t *gcode_state, const uint8_t mode) {
     gcode_state->path_control = (cmPathControl)mode;
     return (STAT_OK);
 }
@@ -1366,8 +1328,7 @@ stat_t cm_set_path_control(GCodeState_t *gcode_state, const uint8_t mode)
 /****************************************************************************************
  * cm_dwell() - G4, P parameter (seconds)
  */
-stat_t cm_dwell(const float seconds)
-{
+stat_t cm_dwell(const float seconds) {
     cm->gm.P_word = seconds;
     mp_dwell(seconds);
     return (STAT_OK);
@@ -1377,8 +1338,7 @@ stat_t cm_dwell(const float seconds)
  * cm_straight_feed() - G1
  */
 
-stat_t cm_straight_feed(const float *target, const bool *flags, const cmMotionProfile motion_profile)
-{
+stat_t cm_straight_feed(const float *target, const bool *flags, const cmMotionProfile motion_profile) {
     // trap zero feed rate condition
     if (fp_ZERO(cm->gm.feed_rate)) {
         return (STAT_FEEDRATE_NOT_SPECIFIED);
@@ -1391,7 +1351,7 @@ stat_t cm_straight_feed(const float *target, const bool *flags, const cmMotionPr
           flags[AXIS_U] | flags[AXIS_V] | flags[AXIS_W] |
 #endif
           flags[AXIS_A] | flags[AXIS_B] | flags[AXIS_C])) {
-        return(STAT_OK);
+        return (STAT_OK);
     }
 
     cm_set_model_target(target, flags);
@@ -1429,31 +1389,25 @@ stat_t cm_straight_feed(const float *target, const bool *flags, const cmMotionPr
  * Note: These functions don't actually do anything for now, and there's a bug
  *       where T and M in different blocks don't work correctly
  */
-static void _exec_select_tool(float *value, bool *flag)
-{
-    cm->gm.tool_select = (uint8_t)value[0];
-}
+static void _exec_select_tool(float *value, bool *flag) { cm->gm.tool_select = (uint8_t)value[0]; }
 
-stat_t cm_select_tool(const uint8_t tool_select)
-{
+stat_t cm_select_tool(const uint8_t tool_select) {
     if (tool_select > TOOLS) {
         return (STAT_T_WORD_IS_INVALID);
     }
-    float value[] = { (float)tool_select };
+    float value[] = {(float)tool_select};
     mp_queue_command(_exec_select_tool, value, nullptr);
     return (STAT_OK);
 }
 
-static void _exec_change_tool(float *value, bool *flag)
-{
+static void _exec_change_tool(float *value, bool *flag) {
     cm->gm.tool = cm->gm.tool_select;
 
     spindle_set_toolhead(toolhead_for_tool(cm->gm.tool));
     // TODO - change tool offsets and update display offsets
 }
 
-stat_t cm_change_tool(const uint8_t tool_change)
-{
+stat_t cm_change_tool(const uint8_t tool_change) {
     mp_queue_command(_exec_change_tool, nullptr, nullptr);
     return (STAT_OK);
 }
@@ -1467,9 +1421,8 @@ stat_t cm_change_tool(const uint8_t tool_change)
  * cm_message() - queue a RAM string as a message in the response (unconditionally)
  */
 
-void cm_message(const char *message)
-{
-    nv_add_string((const char *)"msg", message);    // add message to the response object
+void cm_message(const char *message) {
+    nv_add_string((const char *)"msg", message);  // add message to the response object
 }
 
 /****************************************************************************************
@@ -1480,8 +1433,7 @@ void cm_message(const char *message)
  * cm_reset_overrides() - reset manual feedrate and spindle overrides to initial conditions
  */
 
-void cm_reset_overrides()
-{
+void cm_reset_overrides() {
     cm->gmx.m48_enable = true;
     cm->gmx.mfo_enable = true;  // feed rate overrides
     cm->gmx.mfo_factor = 1.0;
@@ -1511,11 +1463,11 @@ void cm_reset_overrides()
  *  ENABLE      ENABLE      disable     no action, no state change
  *  ENABLE      ENABLE      ENABLE      no action, no state change
  */
-stat_t cm_m48_enable(uint8_t enable)        // M48, M49
+stat_t cm_m48_enable(uint8_t enable)  // M48, M49
 {
     // handle changes to feed override given new state of m48/m49
 
-    cm->gmx.m48_enable = enable;             // update state
+    cm->gmx.m48_enable = enable;  // update state
     return (STAT_OK);
 }
 
@@ -1671,28 +1623,26 @@ stat_t cm_m48_enable(uint8_t enable)        // M48, M49
  *   10.  Turn off all heaters and fans
  */
 
-static void _exec_program_finalize(float* value, bool* flag) {
+static void _exec_program_finalize(float *value, bool *flag) {
     // perform the following resets if it's a program END
-    if (cm->machine_state == MACHINE_PROGRAM_END) {
-        spindle_stop();             // immediate M5
-        coolant_control_immediate(COOLANT_OFF,COOLANT_BOTH);// immediate M9
-        temperature_reset();                                // turn off all heaters and fans
-        cm_reset_overrides();                               // enable G48, reset feed rate, traverse and spindle overrides
+    if (flag != nullptr) {
+        spindle_stop();                                        // immediate M5
+        coolant_control_immediate(COOLANT_OFF, COOLANT_BOTH);  // immediate M9
+        temperature_reset();                                   // turn off all heaters and fans
+        cm_reset_overrides();  // enable G48, reset feed rate, traverse and spindle overrides
     }
 
-    sr_request_status_report(SR_REQUEST_IMMEDIATE);         // request a final and full status report (not filtered)
+    sr_request_status_report(SR_REQUEST_IMMEDIATE);  // request a final and full status report (not filtered)
 }
 
-static void _exec_program_stop_end(cmMachineState machine_state)
-{
-    // WARNING: We must not queue more than four things here, or we'll use up all the spare queue slots and crash the system
-    // The good news is we shouldn't need to queue much
+static void _exec_program_stop_end(cmMachineState machine_state) {
+    // WARNING: We must not queue more than four things here, or we'll use up all the spare queue slots and crash the
+    // system The good news is we shouldn't need to queue much
 
     // If we are already out of cycle, then adjust the machine state
-    if ((cm->cycle_type == CYCLE_NONE) && // cm->cycle_type == CYCLE_MACHINING ||
-        (cm->machine_state != MACHINE_ALARM) &&
-        (cm->machine_state != MACHINE_SHUTDOWN)) {
-        cm->machine_state = machine_state;                  // don't update macs/cycs if we're in the middle of a canned cycle,
+    if ((cm->cycle_type == CYCLE_NONE) &&  // cm->cycle_type == CYCLE_MACHINING ||
+        (cm->machine_state != MACHINE_ALARM) && (cm->machine_state != MACHINE_SHUTDOWN)) {
+        cm->machine_state = machine_state;  // don't update macs/cycs if we're in the middle of a canned cycle,
     }
 
     // reset the rest of the states
@@ -1701,62 +1651,52 @@ static void _exec_program_stop_end(cmMachineState machine_state)
 
     // perform the following resets if it's a program END
     if (machine_state == MACHINE_PROGRAM_END) {
-        cm_suspend_g92_offsets();                           //  G92.2 - as per NIST
-        cm_set_coord_system(cm->default_coord_system);      //  reset to default coordinate system
-        cm_select_plane(cm->default_select_plane);          //  reset to default arc plane
-        cm_set_distance_mode(cm->default_distance_mode);    //  reset to default distance mode
-        cm_set_arc_distance_mode(INCREMENTAL_DISTANCE_MODE);//  always the default
-        cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);       //  G94
-        cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE); // NIST specifies G1 (MOTION_MODE_STRAIGHT_FEED), but we cancel motion mode. Safer.
+        cm_suspend_g92_offsets();                                   //  G92.2 - as per NIST
+        cm_set_coord_system(cm->default_coord_system);              //  reset to default coordinate system
+        cm_select_plane(cm->default_select_plane);                  //  reset to default arc plane
+        cm_set_distance_mode(cm->default_distance_mode);            //  reset to default distance mode
+        cm_set_arc_distance_mode(INCREMENTAL_DISTANCE_MODE);        //  always the default
+        cm_set_feed_rate_mode(UNITS_PER_MINUTE_MODE);               //  G94
+        cm_set_motion_mode(MODEL, MOTION_MODE_CANCEL_MOTION_MODE);  // NIST specifies G1 (MOTION_MODE_STRAIGHT_FEED),
+                                                                    // but we cancel motion mode. Safer.
 
         // the rest will be queued and executed in _exec_program_finalize()
     }
 
-    cm_set_motion_state(MOTION_STOP);                       // also changes active model back to MODEL
+    cm_set_motion_state(MOTION_STOP);  // also changes active model back to MODEL
 
     mp_queue_command(_exec_program_finalize, nullptr, nullptr);
 }
 
 // Will start a cycle regardless of whether the planner has moves or not
-void cm_cycle_start()
-{
-    if (cm->cycle_type == CYCLE_NONE) {                     // don't (re)start homing, probe or other canned cycles
+void cm_cycle_start() {
+    if (cm->cycle_type == CYCLE_NONE) {  // don't (re)start homing, probe or other canned cycles
         cm->cycle_type = CYCLE_MACHINING;
         cm->machine_state = MACHINE_CYCLE;
-        qr_init_queue_report();                             // clear queue reporting buffer counts//
+        qr_init_queue_report();  // clear queue reporting buffer counts//
     }
 }
 
-void cm_cycle_end() {
+void cm_cycle_end(bool from_command /* = false*/) {
     if (cm->cycle_type == CYCLE_MACHINING) {
-        cm->machine_state = MACHINE_PROGRAM_STOP;
+        cm->machine_state = from_command ? MACHINE_PROGRAM_END : MACHINE_PROGRAM_STOP;
         cm->cycle_type = CYCLE_NONE;
         cm_set_motion_state(MOTION_STOP);
 
-        sr_request_status_report(SR_REQUEST_IMMEDIATE);         // request a final and full status report (not filtered)
+        sr_request_status_report(SR_REQUEST_IMMEDIATE);  // request a final and full status report (not filtered)
     }
 }
 
-void cm_canned_cycle_end()
-{
+void cm_canned_cycle_end() {
     cm->cycle_type = CYCLE_NONE;
     _exec_program_stop_end(MACHINE_PROGRAM_STOP);
 }
 
-void cm_program_stop()
-{
-    _exec_program_stop_end(MACHINE_PROGRAM_STOP);
-}
+void cm_program_stop() { _exec_program_stop_end(MACHINE_PROGRAM_STOP); }
 
-void cm_optional_program_stop()
-{
-    _exec_program_stop_end(MACHINE_PROGRAM_STOP);
-}
+void cm_optional_program_stop() { _exec_program_stop_end(MACHINE_PROGRAM_STOP); }
 
-void cm_program_end()
-{
-    _exec_program_stop_end(MACHINE_PROGRAM_END);
-}
+void cm_program_end() { _exec_program_stop_end(MACHINE_PROGRAM_END); }
 
 /****************************************************************************************
  **** Additional Functions **************************************************************
@@ -1765,34 +1705,24 @@ void cm_program_end()
  * cm_json_command() - M100
  * cm_json_wait() - M102
  */
-stat_t cm_json_command(char *json_string)
-{
-    return mp_json_command(json_string);
-}
+stat_t cm_json_command(char *json_string) { return mp_json_command(json_string); }
 
 /*
  * cm_json_command_immediate() - M100.1
  */
-stat_t cm_json_command_immediate(char *json_string)
-{
-    return mp_json_command_immediate(json_string);
-}
+stat_t cm_json_command_immediate(char *json_string) { return mp_json_command_immediate(json_string); }
 
 /*
  * cm_json_wait() - M102
  */
-stat_t cm_json_wait(char *json_string)
-{
-    return mp_json_wait(json_string);
-}
+stat_t cm_json_wait(char *json_string) { return mp_json_wait(json_string); }
 
 /****************************************************************************************
  * cm_run_home() - run homing sequence
  */
 
-stat_t cm_run_home(nvObj_t *nv)
-{
-    if (nv->value_int) {    // if true
+stat_t cm_run_home(nvObj_t *nv) {
+    if (nv->value_int) {  // if true
         float axes[] = INIT_AXES_ONES;
         bool flags[] = INIT_AXES_TRUE;
         cm_homing_cycle_start(axes, flags);
@@ -1807,13 +1737,9 @@ stat_t cm_run_home(nvObj_t *nv)
  * cm_run_jog()
  */
 
-float cm_get_jogging_dest(void)
-{
-    return cm->jogging_dest;
-}
+float cm_get_jogging_dest(void) { return cm->jogging_dest; }
 
-stat_t cm_run_jog(nvObj_t *nv)
-{
+stat_t cm_run_jog(nvObj_t *nv) {
     set_float(nv, cm->jogging_dest);
     cm_jogging_cycle_start(_axis(nv));
     return (STAT_OK);
@@ -1837,10 +1763,10 @@ stat_t cm_run_jog(nvObj_t *nv)
  * cm_get_axis_char() - return ASCII char for internal axis number provided
  */
 
-static int8_t _coord(nvObj_t *nv)   // extract coordinate system from 3rd character
+static int8_t _coord(nvObj_t *nv)  // extract coordinate system from 3rd character
 {
-    char *ptr = ((*nv->group == 0) ? &nv->token[1] : &nv->group[1]); // skip past the 'g' to the number
-    return (std::max ((atoi(ptr)-53), -1));  // return G54-G59 as 0-5, error as -1
+    char *ptr = ((*nv->group == 0) ? &nv->token[1] : &nv->group[1]);  // skip past the 'g' to the number
+    return (std::max((atoi(ptr) - 53), -1));                          // return G54-G59 as 0-5, error as -1
 }
 
 /* _axis()
@@ -1860,8 +1786,7 @@ static int8_t _coord(nvObj_t *nv)   // extract coordinate system from 3rd charac
  *  such as 'coph' But it should not be called in these cases in any event.
  */
 
-static int8_t _axis(const nvObj_t *nv)
-{
+static int8_t _axis(const nvObj_t *nv) {
     auto &cfgTmp = cfgArray[nv->index];
 
     // // test if this is a SYS parameter (global), in which case there will be no axis
@@ -1883,17 +1808,16 @@ static int8_t _axis(const nvObj_t *nv)
 #else
     char axes[] = {"xyzabc"};
 #endif
-    if ((ptr = strchr(axes, c)) == NULL) {      // not NULL indicates a prefixed axis
-        c = *(cfgTmp.token + strlen(cfgTmp.token) -1); // get the last character
-        if ((ptr = strchr(axes, c)) == NULL) {  // test for a postfixed axis
+    if ((ptr = strchr(axes, c)) == NULL) {               // not NULL indicates a prefixed axis
+        c = *(cfgTmp.token + strlen(cfgTmp.token) - 1);  // get the last character
+        if ((ptr = strchr(axes, c)) == NULL) {           // test for a postfixed axis
             return (AXIS_TYPE_UNDEFINED);
         }
     }
     return (ptr - axes);
 }
 
-cmAxisType cm_get_axis_type(const nvObj_t *nv)
-{
+cmAxisType cm_get_axis_type(const nvObj_t *nv) {
     int8_t axis = _axis(nv);
     if (axis <= AXIS_TYPE_UNDEFINED) {
         return ((cmAxisType)axis);
@@ -1904,7 +1828,7 @@ cmAxisType cm_get_axis_type(const nvObj_t *nv)
     return (AXIS_TYPE_LINEAR);
 }
 
-char cm_get_axis_char(const int8_t axis)    // Uses internal axis numbering
+char cm_get_axis_char(const int8_t axis)  // Uses internal axis numbering
 {
 #if (AXES == 9)
     char axis_char[] = "XYZUVWABC";
@@ -1952,23 +1876,23 @@ char cm_get_axis_char(const int8_t axis)    // Uses internal axis numbering
 
 // Strings for text mode displays:
 
-static const char msg_units0[] = " in";    // used by generic print functions
+static const char msg_units0[] = " in";  // used by generic print functions
 static const char msg_units1[] = " mm";
 static const char msg_units2[] = " deg";
-static const char *const msg_units[] = { msg_units0, msg_units1, msg_units2 };
+static const char *const msg_units[] = {msg_units0, msg_units1, msg_units2};
 #define DEGREE_INDEX 2
 
 static const char msg_am00[] = "[disabled]";
 static const char msg_am01[] = "[standard]";
 static const char msg_am02[] = "[inhibited]";
 static const char msg_am03[] = "[radius]";
-static const char *const msg_am[] = { msg_am00, msg_am01, msg_am02, msg_am03};
+static const char *const msg_am[] = {msg_am00, msg_am01, msg_am02, msg_am03};
 
 static const char msg_g20[] = "G20 - inches mode";
 static const char msg_g21[] = "G21 - millimeter mode";
-static const char *const msg_unit[] = { msg_g20, msg_g21 };
+static const char *const msg_unit[] = {msg_g20, msg_g21};
 
-static const char msg_stat0[] = "Initializing";    // combined state (stat) uses this array
+static const char msg_stat0[] = "Initializing";  // combined state (stat) uses this array
 static const char msg_stat1[] = "Ready";
 static const char msg_stat2[] = "Alarm";
 static const char msg_stat3[] = "Stop";
@@ -1982,10 +1906,8 @@ static const char msg_stat10[] = "Jog";
 static const char msg_stat11[] = "Interlock";
 static const char msg_stat12[] = "Shutdown";
 static const char msg_stat13[] = "Panic";
-static const char *const msg_stat[] = { msg_stat0, msg_stat1, msg_stat2, msg_stat3,
-                                        msg_stat4, msg_stat5, msg_stat6, msg_stat7,
-                                        msg_stat8, msg_stat9, msg_stat10, msg_stat11,
-                                        msg_stat12, msg_stat13 };
+static const char *const msg_stat[] = {msg_stat0, msg_stat1, msg_stat2, msg_stat3,  msg_stat4,  msg_stat5,  msg_stat6,
+                                       msg_stat7, msg_stat8, msg_stat9, msg_stat10, msg_stat11, msg_stat12, msg_stat13};
 
 static const char msg_macs0[] = "Initializing";
 static const char msg_macs1[] = "Ready";
@@ -1996,22 +1918,21 @@ static const char msg_macs5[] = "Cycle";
 static const char msg_macs6[] = "Interlock";
 static const char msg_macs7[] = "SHUTDOWN";
 static const char msg_macs8[] = "PANIC";
-static const char *const msg_macs[] = { msg_macs0, msg_macs1, msg_macs2, msg_macs3,
-                                        msg_macs4, msg_macs5, msg_macs6, msg_macs7,
-                                        msg_macs8 };
+static const char *const msg_macs[] = {msg_macs0, msg_macs1, msg_macs2, msg_macs3, msg_macs4,
+                                       msg_macs5, msg_macs6, msg_macs7, msg_macs8};
 
 static const char msg_cycs0[] = "Off";
 static const char msg_cycs1[] = "Machining";
 static const char msg_cycs2[] = "Homing";
 static const char msg_cycs3[] = "Probe";
 static const char msg_cycs4[] = "Jog";
-static const char *const msg_cycs[] = { msg_cycs0, msg_cycs1, msg_cycs2, msg_cycs3,  msg_cycs4 };
+static const char *const msg_cycs[] = {msg_cycs0, msg_cycs1, msg_cycs2, msg_cycs3, msg_cycs4};
 
 static const char msg_mots0[] = "Stop";
 static const char msg_mots1[] = "Planning";
 static const char msg_mots2[] = "Run";
 static const char msg_mots3[] = "Hold";
-static const char *const msg_mots[] = { msg_mots0, msg_mots1, msg_mots2, msg_mots3 };
+static const char *const msg_mots[] = {msg_mots0, msg_mots1, msg_mots2, msg_mots3};
 
 static const char msg_hold0[] = "Off";
 static const char msg_hold1[] = "Requested";
@@ -2026,19 +1947,18 @@ static const char msg_hold9[] = "Hold Actions Complete";
 static const char msg_hold10[] = "Holding";
 static const char msg_hold11[] = "Hold Exit Actions Pending";
 static const char msg_hold12[] = "Hold Exit Actions Complete";
-static const char *const msg_hold[] = { msg_hold0, msg_hold1, msg_hold2, msg_hold3, msg_hold4,
-                                        msg_hold5, msg_hold6, msg_hold7, msg_hold8, msg_hold9,
-                                        msg_hold10, msg_hold11, msg_hold12 };
+static const char *const msg_hold[] = {msg_hold0, msg_hold1, msg_hold2, msg_hold3,  msg_hold4,  msg_hold5, msg_hold6,
+                                       msg_hold7, msg_hold8, msg_hold9, msg_hold10, msg_hold11, msg_hold12};
 
 static const char msg_home0[] = "Not Homed";
 static const char msg_home1[] = "Homed";
 static const char msg_home2[] = "Homing";
-static const char *const msg_home[] = { msg_home0, msg_home1, msg_home2 };
+static const char *const msg_home[] = {msg_home0, msg_home1, msg_home2};
 
 static const char msg_probe0[] = "Probe Failed";
 static const char msg_probe1[] = "Probe Succeeded";
 static const char msg_probe2[] = "Probe Waiting";
-static const char *const msg_probe[] = { msg_probe0, msg_probe1, msg_probe2 };
+static const char *const msg_probe[] = {msg_probe0, msg_probe1, msg_probe2};
 
 static const char msg_g53[] = "G53 - machine coordinate system";
 static const char msg_g54[] = "G54 - coordinate system 1";
@@ -2047,37 +1967,37 @@ static const char msg_g56[] = "G56 - coordinate system 3";
 static const char msg_g57[] = "G57 - coordinate system 4";
 static const char msg_g58[] = "G58 - coordinate system 5";
 static const char msg_g59[] = "G59 - coordinate system 6";
-static const char *const msg_coor[] = { msg_g53, msg_g54, msg_g55, msg_g56, msg_g57, msg_g58, msg_g59 };
+static const char *const msg_coor[] = {msg_g53, msg_g54, msg_g55, msg_g56, msg_g57, msg_g58, msg_g59};
 
 static const char msg_g00[] = "G0  - linear traverse";
 static const char msg_g01[] = "G1  - linear feed";
 static const char msg_g02[] = "G2  - clockwise arc feed";
 static const char msg_g03[] = "G3  - counter clockwise arc feed";
 static const char msg_g80[] = "G80 - cancel motion mode (none active)";
-static const char *const msg_momo[] = { msg_g00, msg_g01, msg_g02, msg_g03, msg_g80 };
+static const char *const msg_momo[] = {msg_g00, msg_g01, msg_g02, msg_g03, msg_g80};
 
 static const char msg_g17[] = "G17 - XY plane";
 static const char msg_g18[] = "G18 - XZ plane";
 static const char msg_g19[] = "G19 - YZ plane";
-static const char *const msg_plan[] = { msg_g17, msg_g18, msg_g19 };
+static const char *const msg_plan[] = {msg_g17, msg_g18, msg_g19};
 
 static const char msg_g61[] = "G61 - exact path mode";
 static const char msg_g6a[] = "G61.1 - exact stop mode";
 static const char msg_g64[] = "G64 - continuous mode";
-static const char *const msg_path[] = { msg_g61, msg_g6a, msg_g64 };
+static const char *const msg_path[] = {msg_g61, msg_g6a, msg_g64};
 
 static const char msg_g90[] = "G90 - absolute distance mode";
 static const char msg_g91[] = "G91 - incremental distance mode";
-static const char *const msg_dist[] = { msg_g90, msg_g91 };
+static const char *const msg_dist[] = {msg_g90, msg_g91};
 
 static const char msg_g901[] = "G90.1 - absolute distance mode";
 static const char msg_g911[] = "G91.1 - incremental distance mode (default mode)";
-static const char *const msg_admo[] = { msg_g901, msg_g911 };
+static const char *const msg_admo[] = {msg_g901, msg_g911};
 
 static const char msg_g93[] = "G93 - inverse time mode";
 static const char msg_g94[] = "G94 - units-per-minute mode (i.e. feedrate mode)";
 static const char msg_g95[] = "G95 - units-per-revolution mode";
-static const char *const msg_frmo[] = { msg_g93, msg_g94, msg_g95 };
+static const char *const msg_frmo[] = {msg_g93, msg_g94, msg_g95};
 
 #else
 
@@ -2098,38 +2018,36 @@ static const char *const msg_frmo[] = { msg_g93, msg_g94, msg_g95 };
 #define msg_frmo NULL
 #define msg_am NULL
 
-#endif // __TEXT_MODE
+#endif  // __TEXT_MODE
 
 //_get_msg_helper() - add the string for the enum to the nv, but leave it as a TYPE_INTEGER
-stat_t _get_msg_helper(nvObj_t *nv, const char *const msg_array[], int32_t value)
-{
+stat_t _get_msg_helper(nvObj_t *nv, const char *const msg_array[], int32_t value) {
     nv->value_int = value;
     nv->valuetype = TYPE_INTEGER;
-    return(nv_copy_string(nv, (const char *)GET_TEXT_ITEM(msg_array, value)));
+    return (nv_copy_string(nv, (const char *)GET_TEXT_ITEM(msg_array, value)));
 }
 
-stat_t cm_get_stat(nvObj_t *nv) { return(_get_msg_helper(nv, msg_stat, cm_get_combined_state(&cm1)));}
-stat_t cm_get_stat2(nvObj_t *nv){ return(_get_msg_helper(nv, msg_stat, cm_get_combined_state(&cm2)));}
-stat_t cm_get_macs(nvObj_t *nv) { return(_get_msg_helper(nv, msg_macs, cm_get_machine_state()));}
-stat_t cm_get_cycs(nvObj_t *nv) { return(_get_msg_helper(nv, msg_cycs, cm_get_cycle_type()));}
-stat_t cm_get_mots(nvObj_t *nv) { return(_get_msg_helper(nv, msg_mots, cm_get_motion_state()));}
-stat_t cm_get_hold(nvObj_t *nv) { return(_get_msg_helper(nv, msg_hold, cm_get_hold_state()));}
+stat_t cm_get_stat(nvObj_t *nv) { return (_get_msg_helper(nv, msg_stat, cm_get_combined_state(&cm1))); }
+stat_t cm_get_stat2(nvObj_t *nv) { return (_get_msg_helper(nv, msg_stat, cm_get_combined_state(&cm2))); }
+stat_t cm_get_macs(nvObj_t *nv) { return (_get_msg_helper(nv, msg_macs, cm_get_machine_state())); }
+stat_t cm_get_cycs(nvObj_t *nv) { return (_get_msg_helper(nv, msg_cycs, cm_get_cycle_type())); }
+stat_t cm_get_mots(nvObj_t *nv) { return (_get_msg_helper(nv, msg_mots, cm_get_motion_state())); }
+stat_t cm_get_hold(nvObj_t *nv) { return (_get_msg_helper(nv, msg_hold, cm_get_hold_state())); }
 
-stat_t cm_get_unit(nvObj_t *nv) { return(_get_msg_helper(nv, msg_unit, cm_get_units_mode(ACTIVE_MODEL)));}
-stat_t cm_get_coor(nvObj_t *nv) { return(_get_msg_helper(nv, msg_coor, cm_get_coord_system(ACTIVE_MODEL)));}
-stat_t cm_get_momo(nvObj_t *nv) { return(_get_msg_helper(nv, msg_momo, cm_get_motion_mode(ACTIVE_MODEL)));}
-stat_t cm_get_plan(nvObj_t *nv) { return(_get_msg_helper(nv, msg_plan, cm_get_select_plane(ACTIVE_MODEL)));}
-stat_t cm_get_path(nvObj_t *nv) { return(_get_msg_helper(nv, msg_path, cm_get_path_control(ACTIVE_MODEL)));}
-stat_t cm_get_dist(nvObj_t *nv) { return(_get_msg_helper(nv, msg_dist, cm_get_distance_mode(ACTIVE_MODEL)));}
-stat_t cm_get_admo(nvObj_t *nv) { return(_get_msg_helper(nv, msg_admo, cm_get_arc_distance_mode(ACTIVE_MODEL)));}
-stat_t cm_get_frmo(nvObj_t *nv) { return(_get_msg_helper(nv, msg_frmo, cm_get_feed_rate_mode(ACTIVE_MODEL)));}
+stat_t cm_get_unit(nvObj_t *nv) { return (_get_msg_helper(nv, msg_unit, cm_get_units_mode(ACTIVE_MODEL))); }
+stat_t cm_get_coor(nvObj_t *nv) { return (_get_msg_helper(nv, msg_coor, cm_get_coord_system(ACTIVE_MODEL))); }
+stat_t cm_get_momo(nvObj_t *nv) { return (_get_msg_helper(nv, msg_momo, cm_get_motion_mode(ACTIVE_MODEL))); }
+stat_t cm_get_plan(nvObj_t *nv) { return (_get_msg_helper(nv, msg_plan, cm_get_select_plane(ACTIVE_MODEL))); }
+stat_t cm_get_path(nvObj_t *nv) { return (_get_msg_helper(nv, msg_path, cm_get_path_control(ACTIVE_MODEL))); }
+stat_t cm_get_dist(nvObj_t *nv) { return (_get_msg_helper(nv, msg_dist, cm_get_distance_mode(ACTIVE_MODEL))); }
+stat_t cm_get_admo(nvObj_t *nv) { return (_get_msg_helper(nv, msg_admo, cm_get_arc_distance_mode(ACTIVE_MODEL))); }
+stat_t cm_get_frmo(nvObj_t *nv) { return (_get_msg_helper(nv, msg_frmo, cm_get_feed_rate_mode(ACTIVE_MODEL))); }
 
-stat_t cm_get_toolv(nvObj_t *nv) { return(get_integer(nv, cm_get_tool(ACTIVE_MODEL))); }
-stat_t cm_get_mline(nvObj_t *nv) { return(get_integer(nv, cm_get_linenum(MODEL))); }
-stat_t cm_get_line(nvObj_t *nv)  { return(get_integer(nv, cm_get_linenum(ACTIVE_MODEL))); }
+stat_t cm_get_toolv(nvObj_t *nv) { return (get_integer(nv, cm_get_tool(ACTIVE_MODEL))); }
+stat_t cm_get_mline(nvObj_t *nv) { return (get_integer(nv, cm_get_linenum(MODEL))); }
+stat_t cm_get_line(nvObj_t *nv) { return (get_integer(nv, cm_get_linenum(ACTIVE_MODEL))); }
 
-stat_t cm_get_vel(nvObj_t *nv)
-{
+stat_t cm_get_vel(nvObj_t *nv) {
     if (cm_get_motion_state() == MOTION_STOP) {
         nv->value_flt = 0;
     } else {
@@ -2144,44 +2062,42 @@ stat_t cm_get_vel(nvObj_t *nv)
 }
 
 stat_t cm_get_feed(nvObj_t *nv) { return (get_float(nv, cm_get_feed_rate(ACTIVE_MODEL))); }
-stat_t cm_get_pos(nvObj_t *nv)  { return (get_float(nv, cm_get_display_position(ACTIVE_MODEL, _axis(nv)))); }
-stat_t cm_get_mpo(nvObj_t *nv)  { return (get_float(nv, cm_get_absolute_position(ACTIVE_MODEL, _axis(nv)))); }
-stat_t cm_get_ofs(nvObj_t *nv)  { return (get_float(nv, cm_get_display_offset(ACTIVE_MODEL, _axis(nv)))); }
+stat_t cm_get_pos(nvObj_t *nv) { return (get_float(nv, cm_get_display_position(ACTIVE_MODEL, _axis(nv)))); }
+stat_t cm_get_mpo(nvObj_t *nv) { return (get_float(nv, cm_get_absolute_position(ACTIVE_MODEL, _axis(nv)))); }
+stat_t cm_get_ofs(nvObj_t *nv) { return (get_float(nv, cm_get_display_offset(ACTIVE_MODEL, _axis(nv)))); }
 
-stat_t cm_get_home(nvObj_t *nv) { return(_get_msg_helper(nv, msg_home, cm_get_homing_state())); }
+stat_t cm_get_home(nvObj_t *nv) { return (_get_msg_helper(nv, msg_home, cm_get_homing_state())); }
 stat_t cm_set_home(nvObj_t *nv) { return (set_integer(nv, ((uint8_t &)(cm->homing_state)), false, true)); }
-stat_t cm_get_hom(nvObj_t *nv)  { return (get_integer(nv, cm->homed[_axis(nv)])); }
+stat_t cm_get_hom(nvObj_t *nv) { return (get_integer(nv, cm->homed[_axis(nv)])); }
 
-stat_t cm_get_prob(nvObj_t *nv) { return(_get_msg_helper(nv, msg_probe, cm_get_probe_state())); }
-stat_t cm_get_prb(nvObj_t *nv)  { return (get_float(nv, cm->probe_results[0][_axis(nv)])); }
+stat_t cm_get_prob(nvObj_t *nv) { return (_get_msg_helper(nv, msg_probe, cm_get_probe_state())); }
+stat_t cm_get_prb(nvObj_t *nv) { return (get_float(nv, cm->probe_results[0][_axis(nv)])); }
 stat_t cm_get_probe_input(nvObj_t *nv) { return (get_integer(nv, cm->probe_input)); }
 stat_t cm_set_probe_input(nvObj_t *nv) { return (set_integer(nv, cm->probe_input, 0, D_IN_CHANNELS)); }
 
 stat_t cm_get_coord(nvObj_t *nv) { return (get_float(nv, cm->coord_offset[_coord(nv)][_axis(nv)])); }
 stat_t cm_set_coord(nvObj_t *nv) { return (set_float(nv, cm->coord_offset[_coord(nv)][_axis(nv)])); }
 
-stat_t cm_get_g92e(nvObj_t *nv)  { return (get_integer(nv, cm->gmx.g92_offset_enable)); }
-stat_t cm_get_g92(nvObj_t *nv)   { return (get_float(nv, cm->gmx.g92_offset[_axis(nv)])); }
-stat_t cm_get_g28(nvObj_t *nv)   { return (get_float(nv, cm->gmx.g28_position[_axis(nv)])); }
-stat_t cm_get_g30(nvObj_t *nv)   { return (get_float(nv, cm->gmx.g30_position[_axis(nv)])); }
+stat_t cm_get_g92e(nvObj_t *nv) { return (get_integer(nv, cm->gmx.g92_offset_enable)); }
+stat_t cm_get_g92(nvObj_t *nv) { return (get_float(nv, cm->gmx.g92_offset[_axis(nv)])); }
+stat_t cm_get_g28(nvObj_t *nv) { return (get_float(nv, cm->gmx.g28_position[_axis(nv)])); }
+stat_t cm_get_g30(nvObj_t *nv) { return (get_float(nv, cm->gmx.g30_position[_axis(nv)])); }
 
 /*****************************************************
  **** TOOL TABLE AND OFFSET GET AND SET FUNCTIONS ****
  *****************************************************/
 
-static uint8_t _tool(nvObj_t *nv)
-{
+static uint8_t _tool(nvObj_t *nv) {
     if (nv->group[0] != 0) {
-        return (atoi(&nv->group[2]));   // ttNN is the group, axis is in the token
+        return (atoi(&nv->group[2]));  // ttNN is the group, axis is in the token
     }
-    return (atoi(&nv->token[2]));       // ttNNx is all in the token
+    return (atoi(&nv->token[2]));  // ttNNx is all in the token
 }
 
 stat_t cm_get_tof(nvObj_t *nv) { return (get_float(nv, cm->tool_offset[_axis(nv)])); }
 stat_t cm_set_tof(nvObj_t *nv) { return (set_float(nv, cm->tool_offset[_axis(nv)])); }
 
-stat_t cm_get_tt(nvObj_t *nv)
-{
+stat_t cm_get_tt(nvObj_t *nv) {
     uint8_t toolnum = _tool(nv);
     if (toolnum > TOOLS) {
         return (STAT_INPUT_EXCEEDS_MAX_VALUE);
@@ -2189,13 +2105,12 @@ stat_t cm_get_tt(nvObj_t *nv)
     return (get_float(nv, tt.tt_offset[toolnum][_axis(nv)]));
 }
 
-stat_t cm_set_tt(nvObj_t *nv)
-{
+stat_t cm_set_tt(nvObj_t *nv) {
     uint8_t toolnum = _tool(nv);
     if (toolnum > TOOLS) {
         return (STAT_INPUT_EXCEEDS_MAX_VALUE);
     }
-    return(set_float(nv, tt.tt_offset[toolnum][_axis(nv)]));
+    return (set_float(nv, tt.tt_offset[toolnum][_axis(nv)]));
 }
 
 /************************************
@@ -2210,14 +2125,13 @@ stat_t cm_set_tt(nvObj_t *nv)
  * cm_set_tm() - set axis travel max
  */
 
-stat_t cm_get_am(nvObj_t *nv)
-{
+stat_t cm_get_am(nvObj_t *nv) {
     int8_t axis = _axis(nv);
     nv->value_int = cm->a[axis].axis_mode;
-    return(_get_msg_helper(nv, msg_am, nv->value_int));
+    return (_get_msg_helper(nv, msg_am, nv->value_int));
 }
 
-stat_t cm_set_am(nvObj_t *nv)        // axis mode
+stat_t cm_set_am(nvObj_t *nv)  // axis mode
 {
     if (cm_get_axis_type(nv) == AXIS_TYPE_LINEAR) {
         if (nv->value_int > AXIS_MODE_LINEAR_MAX) {
@@ -2232,7 +2146,7 @@ stat_t cm_set_am(nvObj_t *nv)        // axis mode
     }
     nv->valuetype = TYPE_INTEGER;
     cm->a[_axis(nv)].axis_mode = (cmAxisMode)nv->value_int;
-    return(STAT_OK);
+    return (STAT_OK);
 }
 
 stat_t cm_get_tn(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv)].travel_min)); }
@@ -2250,27 +2164,25 @@ float cm_get_axis_jerk(const uint8_t axis) { return (cm->a[axis].jerk_max); }
 
 // Precompute sqrt(3)/10 for the max_junction_accel.
 // See plan_line.cpp -> _calculate_junction_vmax() notes for details.
-static const float _junction_accel_multiplier = sqrt(3.0)/10.0;
+static const float _junction_accel_multiplier = sqrt(3.0) / 10.0;
 
 // Important note: Actual jerk is stored jerk * JERK_MULTIPLIER, and
 // Time Quanta is junction_integration_time / 1000.
 void _cm_recalc_junction_accel(const uint8_t axis) {
     float T = cm->junction_integration_time / 1000.0;
-    float T2 = T*T;
+    float T2 = T * T;
     cm->a[axis].max_junction_accel = _junction_accel_multiplier * T2 * (cm->a[axis].jerk_max * JERK_MULTIPLIER);
     cm->a[axis].high_junction_accel = _junction_accel_multiplier * T2 * (cm->a[axis].jerk_high * JERK_MULTIPLIER);
 }
 
-void cm_set_axis_max_jerk(const uint8_t axis, const float jerk)
-{
+void cm_set_axis_max_jerk(const uint8_t axis, const float jerk) {
     cm->a[axis].jerk_max = jerk;
-    _cm_recalc_junction_accel(axis);    // Must recalculate the max_junction_accel now that the jerk has changed.
+    _cm_recalc_junction_accel(axis);  // Must recalculate the max_junction_accel now that the jerk has changed.
 }
 
-void cm_set_axis_high_jerk(const uint8_t axis, const float jerk)
-{
+void cm_set_axis_high_jerk(const uint8_t axis, const float jerk) {
     cm->a[axis].jerk_high = jerk;
-    _cm_recalc_junction_accel(axis);    // Must recalculate the max_junction_accel now that the jerk has changed.
+    _cm_recalc_junction_accel(axis);  // Must recalculate the max_junction_accel now that the jerk has changed.
 }
 
 /**** Axis Velocity and Jerk Settings
@@ -2294,39 +2206,35 @@ void cm_set_axis_high_jerk(const uint8_t axis, const float jerk)
  */
 
 stat_t cm_get_vm(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv)].velocity_max)); }
-stat_t cm_set_vm(nvObj_t *nv)
-{
+stat_t cm_set_vm(nvObj_t *nv) {
     uint8_t axis = _axis(nv);
     ritorno(set_float_range(nv, cm->a[axis].velocity_max, 0, MAX_LONG));
-    cm->a[axis].recip_velocity_max = 1/nv->value_flt;
-    return(STAT_OK);
+    cm->a[axis].recip_velocity_max = 1 / nv->value_flt;
+    return (STAT_OK);
 }
 
 stat_t cm_get_fr(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv)].feedrate_max)); }
-stat_t cm_set_fr(nvObj_t *nv)
-{
+stat_t cm_set_fr(nvObj_t *nv) {
     uint8_t axis = _axis(nv);
     ritorno(set_float_range(nv, cm->a[axis].feedrate_max, 0, MAX_LONG));
-    cm->a[axis].recip_feedrate_max = 1/nv->value_flt;
-    return(STAT_OK);
+    cm->a[axis].recip_feedrate_max = 1 / nv->value_flt;
+    return (STAT_OK);
 }
 
 stat_t cm_get_jm(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv)].jerk_max)); }
-stat_t cm_set_jm(nvObj_t *nv)
-{
+stat_t cm_set_jm(nvObj_t *nv) {
     uint8_t axis = _axis(nv);
     ritorno(set_float_range(nv, cm->a[axis].jerk_max, JERK_INPUT_MIN, JERK_INPUT_MAX));
     cm_set_axis_max_jerk(axis, nv->value_flt);
-    return(STAT_OK);
+    return (STAT_OK);
 }
 
 stat_t cm_get_jh(nvObj_t *nv) { return (get_float(nv, cm->a[_axis(nv)].jerk_high)); }
-stat_t cm_set_jh(nvObj_t *nv)
-{
+stat_t cm_set_jh(nvObj_t *nv) {
     uint8_t axis = _axis(nv);
     ritorno(set_float_range(nv, cm->a[axis].jerk_high, JERK_INPUT_MIN, JERK_INPUT_MAX));
     cm_set_axis_high_jerk(axis, nv->value_flt);
-    return(STAT_OK);
+    return (STAT_OK);
 }
 
 /**** Axis Homing Settings
@@ -2373,55 +2281,64 @@ stat_t cm_set_zb(nvObj_t *nv) { return (set_float(nv, cm->a[_axis(nv)].zero_back
  * cm_set_mto() - set manual traverse override factor
  */
 
-stat_t cm_get_jt(nvObj_t *nv) { return(get_float(nv, cm->junction_integration_time)); }
-stat_t cm_set_jt(nvObj_t *nv)
-{
+stat_t cm_get_jt(nvObj_t *nv) { return (get_float(nv, cm->junction_integration_time)); }
+stat_t cm_set_jt(nvObj_t *nv) {
     ritorno(set_float_range(nv, cm->junction_integration_time, JUNCTION_INTEGRATION_MIN, JUNCTION_INTEGRATION_MAX));
-    for (uint8_t axis=0; axis<AXES; axis++) { // recalculate max_junction_accel now that time quanta has changed.
+    for (uint8_t axis = 0; axis < AXES; axis++) {  // recalculate max_junction_accel now that time quanta has changed.
         _cm_recalc_junction_accel(axis);
     }
-    return(STAT_OK);
+    return (STAT_OK);
 }
 
-stat_t cm_get_ct(nvObj_t *nv) { return(get_float(nv, cm->chordal_tolerance)); }
-stat_t cm_set_ct(nvObj_t *nv) { return(set_float_range(nv, cm->chordal_tolerance, CHORDAL_TOLERANCE_MIN, 10000000)); }
+stat_t cm_get_ct(nvObj_t *nv) { return (get_float(nv, cm->chordal_tolerance)); }
+stat_t cm_set_ct(nvObj_t *nv) { return (set_float_range(nv, cm->chordal_tolerance, CHORDAL_TOLERANCE_MIN, 10000000)); }
 
-stat_t cm_get_zl(nvObj_t *nv) { return(get_float(nv, cm->feedhold_z_lift)); }
-stat_t cm_set_zl(nvObj_t *nv) { return(set_float(nv, cm->feedhold_z_lift)); }
+stat_t cm_get_zl(nvObj_t *nv) { return (get_float(nv, cm->feedhold_z_lift)); }
+stat_t cm_set_zl(nvObj_t *nv) { return (set_float(nv, cm->feedhold_z_lift)); }
 
-stat_t cm_get_sl(nvObj_t *nv) { return(get_integer(nv, cm->soft_limit_enable)); }
-stat_t cm_set_sl(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)cm->soft_limit_enable, 0, 1)); }
+stat_t cm_get_sl(nvObj_t *nv) { return (get_integer(nv, cm->soft_limit_enable)); }
+stat_t cm_set_sl(nvObj_t *nv) { return (set_integer(nv, (uint8_t &)cm->soft_limit_enable, 0, 1)); }
 
-stat_t cm_get_lim(nvObj_t *nv) { return(get_integer(nv, cm->limit_enable)); }
-stat_t cm_set_lim(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)cm->limit_enable, 0, 1)); }
+stat_t cm_get_lim(nvObj_t *nv) { return (get_integer(nv, cm->limit_enable)); }
+stat_t cm_set_lim(nvObj_t *nv) { return (set_integer(nv, (uint8_t &)cm->limit_enable, 0, 1)); }
 
-stat_t cm_get_m48(nvObj_t *nv) { return(get_integer(nv, cm->gmx.m48_enable)); }
-stat_t cm_set_m48(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)cm->gmx.m48_enable, 0, 1)); }
+stat_t cm_get_m48(nvObj_t *nv) { return (get_integer(nv, cm->gmx.m48_enable)); }
+stat_t cm_set_m48(nvObj_t *nv) { return (set_integer(nv, (uint8_t &)cm->gmx.m48_enable, 0, 1)); }
 
-stat_t cm_get_froe(nvObj_t *nv) { return(get_integer(nv, cm->gmx.mfo_enable)); }
-stat_t cm_set_froe(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)cm->gmx.mfo_enable, 0, 1)); }
-stat_t cm_get_fro(nvObj_t *nv)  { return(get_float(nv, cm->gmx.mfo_factor)); }
-stat_t cm_set_fro(nvObj_t *nv)  { return(set_float_range(nv, cm->gmx.mfo_factor, FEED_OVERRIDE_MIN, FEED_OVERRIDE_MAX)); }
+stat_t cm_get_froe(nvObj_t *nv) { return (get_integer(nv, cm->gmx.mfo_enable)); }
+stat_t cm_set_froe(nvObj_t *nv) { return (set_integer(nv, (uint8_t &)cm->gmx.mfo_enable, 0, 1)); }
+stat_t cm_get_fro(nvObj_t *nv) { return (get_float(nv, cm->gmx.mfo_factor)); }
+stat_t cm_set_fro(nvObj_t *nv) {
+    return (set_float_range(nv, cm->gmx.mfo_factor, FEED_OVERRIDE_MIN, FEED_OVERRIDE_MAX));
+}
 
-stat_t cm_get_troe(nvObj_t *nv) { return(get_integer(nv, cm->gmx.mto_enable)); }
-stat_t cm_set_troe(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)cm->gmx.mto_enable, 0, 1)); }
-stat_t cm_get_tro(nvObj_t *nv)  { return(get_float(nv, cm->gmx.mto_factor)); }
-stat_t cm_set_tro(nvObj_t *nv)  { return(set_float_range(nv, cm->gmx.mto_factor, TRAVERSE_OVERRIDE_MIN, TRAVERSE_OVERRIDE_MAX)); }
+stat_t cm_get_troe(nvObj_t *nv) { return (get_integer(nv, cm->gmx.mto_enable)); }
+stat_t cm_set_troe(nvObj_t *nv) { return (set_integer(nv, (uint8_t &)cm->gmx.mto_enable, 0, 1)); }
+stat_t cm_get_tro(nvObj_t *nv) { return (get_float(nv, cm->gmx.mto_factor)); }
+stat_t cm_set_tro(nvObj_t *nv) {
+    return (set_float_range(nv, cm->gmx.mto_factor, TRAVERSE_OVERRIDE_MIN, TRAVERSE_OVERRIDE_MAX));
+}
 
-stat_t cm_get_gpl(nvObj_t *nv) { return(get_integer(nv, cm->default_select_plane)); }
-stat_t cm_set_gpl(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)cm->default_select_plane, CANON_PLANE_XY, CANON_PLANE_YZ)); }
+stat_t cm_get_gpl(nvObj_t *nv) { return (get_integer(nv, cm->default_select_plane)); }
+stat_t cm_set_gpl(nvObj_t *nv) {
+    return (set_integer(nv, (uint8_t &)cm->default_select_plane, CANON_PLANE_XY, CANON_PLANE_YZ));
+}
 
-stat_t cm_get_gun(nvObj_t *nv) { return(get_integer(nv, cm->default_units_mode)); }
-stat_t cm_set_gun(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)cm->default_units_mode, INCHES, MILLIMETERS)); }
+stat_t cm_get_gun(nvObj_t *nv) { return (get_integer(nv, cm->default_units_mode)); }
+stat_t cm_set_gun(nvObj_t *nv) { return (set_integer(nv, (uint8_t &)cm->default_units_mode, INCHES, MILLIMETERS)); }
 
-stat_t cm_get_gco(nvObj_t *nv) { return(get_integer(nv, cm->default_coord_system)); }
-stat_t cm_set_gco(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)cm->default_coord_system, G54, G59)); }
+stat_t cm_get_gco(nvObj_t *nv) { return (get_integer(nv, cm->default_coord_system)); }
+stat_t cm_set_gco(nvObj_t *nv) { return (set_integer(nv, (uint8_t &)cm->default_coord_system, G54, G59)); }
 
-stat_t cm_get_gpa(nvObj_t *nv) { return(get_integer(nv, cm->default_path_control)); }
-stat_t cm_set_gpa(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)cm->default_path_control, PATH_EXACT_PATH, PATH_CONTINUOUS)); }
+stat_t cm_get_gpa(nvObj_t *nv) { return (get_integer(nv, cm->default_path_control)); }
+stat_t cm_set_gpa(nvObj_t *nv) {
+    return (set_integer(nv, (uint8_t &)cm->default_path_control, PATH_EXACT_PATH, PATH_CONTINUOUS));
+}
 
-stat_t cm_get_gdi(nvObj_t *nv) { return(get_integer(nv, cm->default_distance_mode)); }
-stat_t cm_set_gdi(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)cm->default_distance_mode, ABSOLUTE_DISTANCE_MODE, INCREMENTAL_DISTANCE_MODE)); }
+stat_t cm_get_gdi(nvObj_t *nv) { return (get_integer(nv, cm->default_distance_mode)); }
+stat_t cm_set_gdi(nvObj_t *nv) {
+    return (set_integer(nv, (uint8_t &)cm->default_distance_mode, ABSOLUTE_DISTANCE_MODE, INCREMENTAL_DISTANCE_MODE));
+}
 
 /*** Canonical Machine Global Settings Table Additions ***/
 /*
@@ -2437,12 +2354,12 @@ stat_t cm_set_gdi(nvObj_t *nv) { return(set_integer(nv, (uint8_t &)cm->default_d
  */
 
 struct grouplessCfgItem_t {
-    const char * token;            // token - stripped of group prefix (w/NUL termination)
-    uint8_t flags;                      // operations flags - see defines below
-    int8_t precision;                   // decimal precision for display (JSON)
-    fptrPrint print;                    // print binding: aka void (*print)(nvObj_t *nv);
-    fptrCmd get;                        // GET binding aka uint8_t (*get)(nvObj_t *nv)
-    fptrCmd set;                        // SET binding aka uint8_t (*set)(nvObj_t *nv)
+    const char *token;  // token - stripped of group prefix (w/NUL termination)
+    uint8_t flags;      // operations flags - see defines below
+    int8_t precision;   // decimal precision for display (JSON)
+    fptrPrint print;    // print binding: aka void (*print)(nvObj_t *nv);
+    fptrCmd get;        // GET binding aka uint8_t (*get)(nvObj_t *nv)
+    fptrCmd set;        // SET binding aka uint8_t (*set)(nvObj_t *nv)
 };
 
 // class cfgSubtableFromGrouplessStaticArray : public configSubtable {
@@ -2484,41 +2401,43 @@ struct grouplessCfgItem_t {
 //     // }
 // };
 // char cfgSubtableFromGrouplessStaticArray::tmpToken[TOKEN_LEN + 1];
-// cfgItem_t cfgSubtableFromGrouplessStaticArray::cfgTmp = {"", &tmpToken[0], _i0, 0, nullptr, nullptr, nullptr, nullptr, 0};
+// cfgItem_t cfgSubtableFromGrouplessStaticArray::cfgTmp = {"", &tmpToken[0], _i0, 0, nullptr, nullptr, nullptr,
+// nullptr, 0};
 
 constexpr cfgItem_t cm_config_items_1[] = {
     // dynamic model attributes for reporting purposes (up front for speed)
-    {"",  "stat",  _i0, 0, cm_print_stat, cm_get_stat,  set_ro,        nullptr, 0},  // combined machine state
-    {"",  "stat2", _i0, 0, cm_print_stat, cm_get_stat2, set_ro,        nullptr, 0},  // combined machine state
-    {"",  "n",     _ii, 0, cm_print_line, cm_get_mline, set_noop,      nullptr, 0},  // Model line number
-    {"",  "line",  _ii, 0, cm_print_line, cm_get_line,  set_ro,        nullptr, 0},  // Active line number - model or runtime line number
-    {"",  "vel",   _f0, 2, cm_print_vel,  cm_get_vel,   set_ro,        nullptr, 0},  // current velocity
-    {"",  "feed",  _f0, 2, cm_print_feed, cm_get_feed,  set_ro,        nullptr, 0},  // feed rate
-    {"",  "macs",  _i0, 0, cm_print_macs, cm_get_macs,  set_ro,        nullptr, 0},  // raw machine state
-    {"",  "cycs",  _i0, 0, cm_print_cycs, cm_get_cycs,  set_ro,        nullptr, 0},  // cycle state
-    {"",  "mots",  _i0, 0, cm_print_mots, cm_get_mots,  set_ro,        nullptr, 0},  // motion state
-    {"",  "hold",  _i0, 0, cm_print_hold, cm_get_hold,  set_ro,        nullptr, 0},  // feedhold state
-    {"",  "unit",  _i0, 0, cm_print_unit, cm_get_unit,  set_ro,        nullptr, 0},  // units mode
-    {"",  "coor",  _i0, 0, cm_print_coor, cm_get_coor,  set_ro,        nullptr, 0},  // coordinate system
-    {"",  "momo",  _i0, 0, cm_print_momo, cm_get_momo,  set_ro,        nullptr, 0},  // motion mode
-    {"",  "plan",  _i0, 0, cm_print_plan, cm_get_plan,  set_ro,        nullptr, 0},  // plane select
-    {"",  "path",  _i0, 0, cm_print_path, cm_get_path,  set_ro,        nullptr, 0},  // path control mode
-    {"",  "dist",  _i0, 0, cm_print_dist, cm_get_dist,  set_ro,        nullptr, 0},  // distance mode
-    {"",  "admo",  _i0, 0, cm_print_admo, cm_get_admo,  set_ro,        nullptr, 0},  // arc distance mode
-    {"",  "frmo",  _i0, 0, cm_print_frmo, cm_get_frmo,  set_ro,        nullptr, 0},  // feed rate mode
-    {"",  "tool",  _i0, 0, cm_print_tool, cm_get_toolv, set_ro,        nullptr, 0},  // active tool
-    {"",  "g92e",  _i0, 0, cm_print_g92e, cm_get_g92e,  set_ro,        nullptr, 0},  // G92 enable state
+    {"", "stat", _i0, 0, cm_print_stat, cm_get_stat, set_ro, nullptr, 0},    // combined machine state
+    {"", "stat2", _i0, 0, cm_print_stat, cm_get_stat2, set_ro, nullptr, 0},  // combined machine state
+    {"", "n", _ii, 0, cm_print_line, cm_get_mline, set_noop, nullptr, 0},    // Model line number
+    {"", "line", _ii, 0, cm_print_line, cm_get_line, set_ro, nullptr,
+     0},  // Active line number - model or runtime line number
+    {"", "vel", _f0, 2, cm_print_vel, cm_get_vel, set_ro, nullptr, 0},      // current velocity
+    {"", "feed", _f0, 2, cm_print_feed, cm_get_feed, set_ro, nullptr, 0},   // feed rate
+    {"", "macs", _i0, 0, cm_print_macs, cm_get_macs, set_ro, nullptr, 0},   // raw machine state
+    {"", "cycs", _i0, 0, cm_print_cycs, cm_get_cycs, set_ro, nullptr, 0},   // cycle state
+    {"", "mots", _i0, 0, cm_print_mots, cm_get_mots, set_ro, nullptr, 0},   // motion state
+    {"", "hold", _i0, 0, cm_print_hold, cm_get_hold, set_ro, nullptr, 0},   // feedhold state
+    {"", "unit", _i0, 0, cm_print_unit, cm_get_unit, set_ro, nullptr, 0},   // units mode
+    {"", "coor", _i0, 0, cm_print_coor, cm_get_coor, set_ro, nullptr, 0},   // coordinate system
+    {"", "momo", _i0, 0, cm_print_momo, cm_get_momo, set_ro, nullptr, 0},   // motion mode
+    {"", "plan", _i0, 0, cm_print_plan, cm_get_plan, set_ro, nullptr, 0},   // plane select
+    {"", "path", _i0, 0, cm_print_path, cm_get_path, set_ro, nullptr, 0},   // path control mode
+    {"", "dist", _i0, 0, cm_print_dist, cm_get_dist, set_ro, nullptr, 0},   // distance mode
+    {"", "admo", _i0, 0, cm_print_admo, cm_get_admo, set_ro, nullptr, 0},   // arc distance mode
+    {"", "frmo", _i0, 0, cm_print_frmo, cm_get_frmo, set_ro, nullptr, 0},   // feed rate mode
+    {"", "tool", _i0, 0, cm_print_tool, cm_get_toolv, set_ro, nullptr, 0},  // active tool
+    {"", "g92e", _i0, 0, cm_print_g92e, cm_get_g92e, set_ro, nullptr, 0},   // G92 enable state
 #ifdef TEMPORARY_HAS_LEDS
-    {"",  "_leds", _i0, 0, tx_print_nul, _get_leds,_set_leds,          nullptr, 0}, // TEMPORARY - change LEDs
+    {"", "_leds", _i0, 0, tx_print_nul, _get_leds, _set_leds, nullptr, 0},  // TEMPORARY - change LEDs
 #endif
 };
-const cfgSubtableFromStaticArray cm_config_1 {cm_config_items_1};
-const configSubtable * const getCmConfig_1() { return &cm_config_1; }
+const cfgSubtableFromStaticArray cm_config_1{cm_config_items_1};
+const configSubtable *const getCmConfig_1() { return &cm_config_1; }
 
 class cfgSubtableFromTokenList : public configSubtable {
     const char *group_name;
     const size_t group_name_length;
-    const char * const * subkeys; // read it backward: "pointer to const pointers to const chars"
+    const char *const *subkeys;  // read it backward: "pointer to const pointers to const chars"
     // const size_t subkeys_length;
 
     // hold on to a reloadable full cfgItem_t to setup and return
@@ -2535,10 +2454,10 @@ class cfgSubtableFromTokenList : public configSubtable {
           group_name_length{group_length - 1},  // string lengths include the null
           subkeys{i},
           //   subkeys_length{subkey_count},
-          cfgTmp{&new_group_name[0], tmpToken, new_flags, new_precision, new_print, new_get_fn, new_set_fn, nullptr, 0}
-        {};
+          cfgTmp{&new_group_name[0], tmpToken, new_flags, new_precision, new_print, new_get_fn,
+                 new_set_fn,         nullptr,  0} {};
 
-    const cfgItem_t * const get(std::size_t idx) const override {
+    const cfgItem_t *const get(std::size_t idx) const override {
         char *dst = tmpToken;
         // strcpy(dst, group_name);
         // strcpy(dst+group_name_length, subkeys[idx]);
@@ -2549,13 +2468,13 @@ class cfgSubtableFromTokenList : public configSubtable {
 
     index_t find(const char *token) const override {
         std::size_t idx = 0;
-        if (*(token+group_name_length) == 0 || strncmp(token, group_name, group_name_length) != 0) {
+        if (*(token + group_name_length) == 0 || strncmp(token, group_name, group_name_length) != 0) {
             // wrong group or looking for just the group
             return NO_MATCH;
         }
         while (idx < length) {
             // groupname is incorporated into tokens
-            if (strcmp(subkeys[idx]+group_name_length, token+group_name_length) == 0) {
+            if (strcmp(subkeys[idx] + group_name_length, token + group_name_length) == 0) {
                 return idx;
             }
             idx++;
@@ -2567,11 +2486,12 @@ char cfgSubtableFromTokenList::tmpToken[TOKEN_LEN + 1];
 // cfgItem_t cfgSubtableFromTokenList::cfgTmp = {nullptr, &tmpToken[0], _i0, 0, nullptr, nullptr, nullptr, nullptr, 0};
 
 #if (AXES == 9)
-const char * const mpo_axis_keys[] = {"mpox", "mpoy", "mpoz", "mpou", "mpov", "mpow", "mpoa", "mpob", "mpoc"};
+const char *const mpo_axis_keys[] = {"mpox", "mpoy", "mpoz", "mpou", "mpov", "mpow", "mpoa", "mpob", "mpoc"};
 #else
-const char * const mpo_axis_keys[] = {"mpox", "mpoy", "mpoz", "mpoa", "mpob", "mpoc"};
+const char *const mpo_axis_keys[] = {"mpox", "mpoy", "mpoz", "mpoa", "mpob", "mpoc"};
 #endif
-cfgSubtableFromTokenList mpo_config{"mpo", mpo_axis_keys, _f0, 5, cm_print_mpo, cm_get_mpo, set_ro};  // machine position
+cfgSubtableFromTokenList mpo_config{"mpo",        mpo_axis_keys, _f0,   5,
+                                    cm_print_mpo, cm_get_mpo,    set_ro};  // machine position
 const configSubtable *const getMpoConfig_1() { return &mpo_config; }
 
 // constexpr cfgItem_t pos_config_items_1[] = {
@@ -2587,9 +2507,9 @@ const configSubtable *const getMpoConfig_1() { return &mpo_config; }
 // };
 // constexpr cfgSubtableFromStaticArray pos_config_1{pos_config_items_1};
 #if (AXES == 9)
-const char * const pos_axis_keys[] = {"posx", "posy", "posz", "posu", "posv", "posw", "posa", "posb", "posc"};
+const char *const pos_axis_keys[] = {"posx", "posy", "posz", "posu", "posv", "posw", "posa", "posb", "posc"};
 #else
-const char * const pos_axis_keys[] = {"posx", "posy", "posz", "posa", "posb", "posc"};
+const char *const pos_axis_keys[] = {"posx", "posy", "posz", "posa", "posb", "posc"};
 #endif
 cfgSubtableFromTokenList pos_config_1{"pos", pos_axis_keys, _f0, 5, cm_print_pos, cm_get_pos, set_ro};  // work position
 const configSubtable *const getPosConfig_1() { return &pos_config_1; }
@@ -2607,9 +2527,9 @@ const configSubtable *const getPosConfig_1() { return &pos_config_1; }
 // };
 // constexpr cfgSubtableFromStaticArray ofs_config_1{ofs_config_items_1};
 #if (AXES == 9)
-const char * const ofs_axis_keys[] = {"ofsx", "ofsy", "ofsz", "ofsu", "ofsv", "ofsw", "ofsa", "ofsb", "ofsc"};
+const char *const ofs_axis_keys[] = {"ofsx", "ofsy", "ofsz", "ofsu", "ofsv", "ofsw", "ofsa", "ofsb", "ofsc"};
 #else
-const char * const ofs_axis_keys[] = {"ofsx", "ofsy", "ofsz", "ofsa", "ofsb", "ofsc"};
+const char *const ofs_axis_keys[] = {"ofsx", "ofsy", "ofsz", "ofsa", "ofsb", "ofsc"};
 #endif
 cfgSubtableFromTokenList ofs_config_1{"ofs", ofs_axis_keys, _f0, 5, cm_print_ofs, cm_get_ofs, set_ro};  // work offsets
 const configSubtable *const getOfsConfig_1() { return &ofs_config_1; }
@@ -2662,9 +2582,9 @@ const configSubtable *const getPrbConfig_1() { return &prb_config_1; }
 // };
 // constexpr cfgSubtableFromStaticArray jog_config_1{jog_config_items_1};
 #if (AXES == 9)
-const char * const jog_axis_keys[] = {"jogx", "jogy", "jogz", "jogu", "jogv", "jogw", "joga", "jogb", "jogc"};
+const char *const jog_axis_keys[] = {"jogx", "jogy", "jogz", "jogu", "jogv", "jogw", "joga", "jogb", "jogc"};
 #else
-const char * const jog_axis_keys[] = {"jogx", "jogy", "jogz", "joga", "jogb", "jogc"};
+const char *const jog_axis_keys[] = {"jogx", "jogy", "jogz", "joga", "jogb", "jogc"};
 #endif
 cfgSubtableFromTokenList jog_config_1{"jog", jog_axis_keys, _f0, 0, tx_print_nul, get_nul, cm_run_jog};  // job
 const configSubtable *const getJogConfig_1() { return &jog_config_1; }
@@ -2802,8 +2722,8 @@ constexpr cfgItem_t axis_config_items_1[] = {
     {"c", "clb", _fipc, 5, cm_print_lb, cm_get_lb, cm_set_lb, nullptr, C_LATCH_BACKOFF},
     {"c", "czb", _fipc, 5, cm_print_zb, cm_get_zb, cm_set_zb, nullptr, C_ZERO_BACKOFF},
 };
-constexpr cfgSubtableFromStaticArray axis_config_1 {axis_config_items_1};
-const configSubtable * const getAxisConfig_1() { return &axis_config_1; }
+constexpr cfgSubtableFromStaticArray axis_config_1{axis_config_items_1};
+const configSubtable *const getAxisConfig_1() { return &axis_config_1; }
 
 /***********************************************************************************
  * Debugging Commands
@@ -2812,8 +2732,7 @@ const configSubtable * const getAxisConfig_1() { return &axis_config_1; }
  * cm_dam() - dump active model
  */
 
-stat_t cm_dam(nvObj_t *nv)
-{
+stat_t cm_dam(nvObj_t *nv) {
     xio_writeline("Active model:\n");
     cm_print_vel(nv);
     cm_print_feed(nv);
@@ -2845,16 +2764,16 @@ stat_t cm_dam(nvObj_t *nv)
 
 /* model state print functions */
 
-static const char fmt_vel[]  = "Velocity:%17.3f%s/min\n";
+static const char fmt_vel[] = "Velocity:%17.3f%s/min\n";
 static const char fmt_feed[] = "Feed rate:%16.3f%s/min\n";
 static const char fmt_line[] = "Line number:%10lu\n";
-static const char fmt_stat[] = "Machine state:       %s\n"; // combined machine state
-static const char fmt_macs[] = "Raw machine state:   %s\n"; // raw machine state
+static const char fmt_stat[] = "Machine state:       %s\n";  // combined machine state
+static const char fmt_macs[] = "Raw machine state:   %s\n";  // raw machine state
 static const char fmt_cycs[] = "Cycle state:         %s\n";
 static const char fmt_mots[] = "Motion state:        %s\n";
 static const char fmt_hold[] = "Feedhold state:      %s\n";
 static const char fmt_home[] = "Homing state:        %s\n";
-static const char fmt_unit[] = "Units:               %s\n"; // units mode as ASCII string
+static const char fmt_unit[] = "Units:               %s\n";  // units mode as ASCII string
 static const char fmt_coor[] = "Coordinate system:   %s\n";
 static const char fmt_momo[] = "Motion mode:         %s\n";
 static const char fmt_plan[] = "Plane:               %s\n";
@@ -2865,25 +2784,25 @@ static const char fmt_frmo[] = "Feed rate mode:      %s\n";
 static const char fmt_tool[] = "Tool number          %d\n";
 static const char fmt_g92e[] = "G92 enabled          %d\n";
 
-void cm_print_vel(nvObj_t *nv) { text_print_flt_units(nv, fmt_vel, GET_UNITS(ACTIVE_MODEL));}
-void cm_print_feed(nvObj_t *nv) { text_print_flt_units(nv, fmt_feed, GET_UNITS(ACTIVE_MODEL));}
-void cm_print_line(nvObj_t *nv) { text_print(nv, fmt_line);}     // TYPE_INT
-void cm_print_tool(nvObj_t *nv) { text_print(nv, fmt_tool);}     // TYPE_INT
-void cm_print_g92e(nvObj_t *nv) { text_print(nv, fmt_g92e);}     // TYPE_INT
-void cm_print_stat(nvObj_t *nv) { text_print_str(nv, fmt_stat);} // print all these as TYPE_STRING
-void cm_print_macs(nvObj_t *nv) { text_print_str(nv, fmt_macs);} // See _get_msg_helper() for details
-void cm_print_cycs(nvObj_t *nv) { text_print_str(nv, fmt_cycs);}
-void cm_print_mots(nvObj_t *nv) { text_print_str(nv, fmt_mots);}
-void cm_print_hold(nvObj_t *nv) { text_print_str(nv, fmt_hold);}
-void cm_print_home(nvObj_t *nv) { text_print_str(nv, fmt_home);}
-void cm_print_unit(nvObj_t *nv) { text_print_str(nv, fmt_unit);}
-void cm_print_coor(nvObj_t *nv) { text_print_str(nv, fmt_coor);}
-void cm_print_momo(nvObj_t *nv) { text_print_str(nv, fmt_momo);}
-void cm_print_plan(nvObj_t *nv) { text_print_str(nv, fmt_plan);}
-void cm_print_path(nvObj_t *nv) { text_print_str(nv, fmt_path);}
-void cm_print_dist(nvObj_t *nv) { text_print_str(nv, fmt_dist);}
-void cm_print_admo(nvObj_t *nv) { text_print_str(nv, fmt_admo);}
-void cm_print_frmo(nvObj_t *nv) { text_print_str(nv, fmt_frmo);}
+void cm_print_vel(nvObj_t *nv) { text_print_flt_units(nv, fmt_vel, GET_UNITS(ACTIVE_MODEL)); }
+void cm_print_feed(nvObj_t *nv) { text_print_flt_units(nv, fmt_feed, GET_UNITS(ACTIVE_MODEL)); }
+void cm_print_line(nvObj_t *nv) { text_print(nv, fmt_line); }      // TYPE_INT
+void cm_print_tool(nvObj_t *nv) { text_print(nv, fmt_tool); }      // TYPE_INT
+void cm_print_g92e(nvObj_t *nv) { text_print(nv, fmt_g92e); }      // TYPE_INT
+void cm_print_stat(nvObj_t *nv) { text_print_str(nv, fmt_stat); }  // print all these as TYPE_STRING
+void cm_print_macs(nvObj_t *nv) { text_print_str(nv, fmt_macs); }  // See _get_msg_helper() for details
+void cm_print_cycs(nvObj_t *nv) { text_print_str(nv, fmt_cycs); }
+void cm_print_mots(nvObj_t *nv) { text_print_str(nv, fmt_mots); }
+void cm_print_hold(nvObj_t *nv) { text_print_str(nv, fmt_hold); }
+void cm_print_home(nvObj_t *nv) { text_print_str(nv, fmt_home); }
+void cm_print_unit(nvObj_t *nv) { text_print_str(nv, fmt_unit); }
+void cm_print_coor(nvObj_t *nv) { text_print_str(nv, fmt_coor); }
+void cm_print_momo(nvObj_t *nv) { text_print_str(nv, fmt_momo); }
+void cm_print_plan(nvObj_t *nv) { text_print_str(nv, fmt_plan); }
+void cm_print_path(nvObj_t *nv) { text_print_str(nv, fmt_path); }
+void cm_print_dist(nvObj_t *nv) { text_print_str(nv, fmt_dist); }
+void cm_print_admo(nvObj_t *nv) { text_print_str(nv, fmt_admo); }
+void cm_print_frmo(nvObj_t *nv) { text_print_str(nv, fmt_frmo); }
 
 static const char fmt_gpl[] = "[gpl] default gcode plane%10d [0=G17,1=G18,2=G19]\n";
 static const char fmt_gun[] = "[gun] default gcode units mode%5d [0=G20,1=G21]\n";
@@ -2891,11 +2810,11 @@ static const char fmt_gco[] = "[gco] default gcode coord system%3d [1-6 (G54-G59
 static const char fmt_gpa[] = "[gpa] default gcode path control%3d [0=G61,1=G61.1,2=G64]\n";
 static const char fmt_gdi[] = "[gdi] default gcode distance mode%2d [0=G90,1=G91]\n";
 
-void cm_print_gpl(nvObj_t *nv) { text_print(nv, fmt_gpl);}  // TYPE_INT
-void cm_print_gun(nvObj_t *nv) { text_print(nv, fmt_gun);}  // TYPE_INT
-void cm_print_gco(nvObj_t *nv) { text_print(nv, fmt_gco);}  // TYPE_INT
-void cm_print_gpa(nvObj_t *nv) { text_print(nv, fmt_gpa);}  // TYPE_INT
-void cm_print_gdi(nvObj_t *nv) { text_print(nv, fmt_gdi);}  // TYPE_INT
+void cm_print_gpl(nvObj_t *nv) { text_print(nv, fmt_gpl); }  // TYPE_INT
+void cm_print_gun(nvObj_t *nv) { text_print(nv, fmt_gun); }  // TYPE_INT
+void cm_print_gco(nvObj_t *nv) { text_print(nv, fmt_gco); }  // TYPE_INT
+void cm_print_gpa(nvObj_t *nv) { text_print(nv, fmt_gpa); }  // TYPE_INT
+void cm_print_gdi(nvObj_t *nv) { text_print(nv, fmt_gdi); }  // TYPE_INT
 
 /* system parameter print functions */
 
@@ -2903,31 +2822,31 @@ static const char fmt_jt[] = "[jt]  junction integration time%7.2f\n";
 static const char fmt_ct[] = "[ct]  chordal tolerance%17.4f%s\n";
 static const char fmt_zl[] = "[zl]  Z lift on feedhold%16.3f%s\n";
 static const char fmt_sl[] = "[sl]  soft limit enable%12d [0=disable,1=enable]\n";
-static const char fmt_lim[] ="[lim] limit switch enable%10d [0=disable,1=enable]\n";
-static const char fmt_saf[] ="[saf] safety interlock enable%6d [0=disable,1=enable]\n";
+static const char fmt_lim[] = "[lim] limit switch enable%10d [0=disable,1=enable]\n";
+static const char fmt_saf[] = "[saf] safety interlock enable%6d [0=disable,1=enable]\n";
 
-void cm_print_jt(nvObj_t *nv) { text_print(nv, fmt_jt);}        // TYPE FLOAT
-void cm_print_ct(nvObj_t *nv) { text_print_flt_units(nv, fmt_ct, GET_UNITS(ACTIVE_MODEL));}
-void cm_print_zl(nvObj_t *nv) { text_print_flt_units(nv, fmt_zl, GET_UNITS(ACTIVE_MODEL));}
-void cm_print_sl(nvObj_t *nv) { text_print(nv, fmt_sl);}        // TYPE_INT
-void cm_print_lim(nvObj_t *nv){ text_print(nv, fmt_lim);}       // TYPE_INT
-void cm_print_saf(nvObj_t *nv){ text_print(nv, fmt_saf);}       // TYPE_INT
+void cm_print_jt(nvObj_t *nv) { text_print(nv, fmt_jt); }  // TYPE FLOAT
+void cm_print_ct(nvObj_t *nv) { text_print_flt_units(nv, fmt_ct, GET_UNITS(ACTIVE_MODEL)); }
+void cm_print_zl(nvObj_t *nv) { text_print_flt_units(nv, fmt_zl, GET_UNITS(ACTIVE_MODEL)); }
+void cm_print_sl(nvObj_t *nv) { text_print(nv, fmt_sl); }    // TYPE_INT
+void cm_print_lim(nvObj_t *nv) { text_print(nv, fmt_lim); }  // TYPE_INT
+void cm_print_saf(nvObj_t *nv) { text_print(nv, fmt_saf); }  // TYPE_INT
 
-static const char fmt_m48[]  = "[m48] overrides enabled%12d [0=disable,1=enable]\n";
+static const char fmt_m48[] = "[m48] overrides enabled%12d [0=disable,1=enable]\n";
 static const char fmt_froe[] = "[froe] feed override enable%8d [0=disable,1=enable]\n";
-static const char fmt_fro[]  = "[fro]  feedrate override%15.3f [0.05 < mfo < 2.00]\n";
+static const char fmt_fro[] = "[fro]  feedrate override%15.3f [0.05 < mfo < 2.00]\n";
 static const char fmt_troe[] = "[troe] traverse over enable%8d [0=disable,1=enable]\n";
-static const char fmt_tro[]  = "[tro]  traverse override%15.3f [0.05 < mto < 1.00]\n";
+static const char fmt_tro[] = "[tro]  traverse override%15.3f [0.05 < mto < 1.00]\n";
 static const char fmt_tram[] = "[tram] is coordinate space rotated to be tram %s\n";
 static const char fmt_nxln[] = "[nxln] next line number %lu\n";
 
-void cm_print_m48(nvObj_t *nv)  { text_print(nv, fmt_m48);}    // TYPE_INT
-void cm_print_froe(nvObj_t *nv) { text_print(nv, fmt_froe);}    // TYPE INT
-void cm_print_fro(nvObj_t *nv)  { text_print(nv, fmt_fro);}     // TYPE FLOAT
-void cm_print_troe(nvObj_t *nv) { text_print(nv, fmt_troe);}    // TYPE INT
-void cm_print_tro(nvObj_t *nv)  { text_print(nv, fmt_tro);}     // TYPE FLOAT
-void cm_print_tram(nvObj_t *nv) { text_print(nv, fmt_tram);};   // TYPE BOOL
-void cm_print_nxln(nvObj_t *nv) { text_print(nv, fmt_nxln);};   // TYPE INT
+void cm_print_m48(nvObj_t *nv) { text_print(nv, fmt_m48); }     // TYPE_INT
+void cm_print_froe(nvObj_t *nv) { text_print(nv, fmt_froe); }   // TYPE INT
+void cm_print_fro(nvObj_t *nv) { text_print(nv, fmt_fro); }     // TYPE FLOAT
+void cm_print_troe(nvObj_t *nv) { text_print(nv, fmt_troe); }   // TYPE INT
+void cm_print_tro(nvObj_t *nv) { text_print(nv, fmt_tro); }     // TYPE FLOAT
+void cm_print_tram(nvObj_t *nv) { text_print(nv, fmt_tram); };  // TYPE BOOL
+void cm_print_nxln(nvObj_t *nv) { text_print(nv, fmt_nxln); };  // TYPE INT
 
 /*
  * axis print functions
@@ -2978,14 +2897,12 @@ static const char fmt_ofs[] = "%c work offset:%12.3f%s\n";
 static const char fmt_tof[] = "%c tool length offset:%12.3f%s\n";
 static const char fmt_hom[] = "%c axis homing state:%2.0f\n";
 
-static void _print_axis_ui8(nvObj_t *nv, const char *format)
-{
+static void _print_axis_ui8(nvObj_t *nv, const char *format) {
     sprintf(cs.out_buf, format, nv->group, nv->token, nv->group, nv->value_int);
     xio_writeline(cs.out_buf);
 }
 
-static void _print_axis_flt(nvObj_t *nv, const char *format)
-{
+static void _print_axis_flt(nvObj_t *nv, const char *format) {
     char *units;
     if (cm_get_axis_type(nv) == AXIS_TYPE_LINEAR) {
         units = (char *)GET_UNITS(MODEL);
@@ -2996,8 +2913,7 @@ static void _print_axis_flt(nvObj_t *nv, const char *format)
     xio_writeline(cs.out_buf);
 }
 
-static void _print_axis_coord_flt(nvObj_t *nv, const char *format)
-{
+static void _print_axis_coord_flt(nvObj_t *nv, const char *format) {
     char *units;
     if (cm_get_axis_type(nv) == AXIS_TYPE_LINEAR) {
         units = (char *)GET_UNITS(MODEL);
@@ -3008,52 +2924,52 @@ static void _print_axis_coord_flt(nvObj_t *nv, const char *format)
     xio_writeline(cs.out_buf);
 }
 
-static void _print_pos(nvObj_t *nv, const char *format, uint8_t units)
-{
+static void _print_pos(nvObj_t *nv, const char *format, uint8_t units) {
     char axes[] = {"XYZABC"};
     uint8_t axis = _axis(nv);
-    if (axis >= AXIS_A) { units = DEGREES;}
+    if (axis >= AXIS_A) {
+        units = DEGREES;
+    }
     sprintf(cs.out_buf, format, axes[axis], nv->value_flt, GET_TEXT_ITEM(msg_units, units));
     xio_writeline(cs.out_buf);
 }
 
-static void _print_hom(nvObj_t *nv, const char *format)
-{
+static void _print_hom(nvObj_t *nv, const char *format) {
     char axes[] = {"XYZABC"};
     uint8_t axis = _axis(nv);
     sprintf(cs.out_buf, format, axes[axis], nv->value_int);
     xio_writeline(cs.out_buf);
 }
 
-void cm_print_am(nvObj_t *nv)    // print axis mode with enumeration string
+void cm_print_am(nvObj_t *nv)  // print axis mode with enumeration string
 {
     sprintf(cs.out_buf, fmt_Xam, nv->group, nv->token, nv->group, (int)nv->value_int,
-        GET_TEXT_ITEM(msg_am, nv->value_int));
+            GET_TEXT_ITEM(msg_am, nv->value_int));
     xio_writeline(cs.out_buf);
 }
 
-void cm_print_fr(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xfr);}
-void cm_print_vm(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xvm);}
-void cm_print_tm(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xtm);}
-void cm_print_tn(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xtn);}
-void cm_print_jm(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xjm);}
-void cm_print_jh(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xjh);}
-void cm_print_ra(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xra);}
+void cm_print_fr(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xfr); }
+void cm_print_vm(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xvm); }
+void cm_print_tm(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xtm); }
+void cm_print_tn(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xtn); }
+void cm_print_jm(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xjm); }
+void cm_print_jh(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xjh); }
+void cm_print_ra(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xra); }
 
-void cm_print_hi(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xhi);}
-void cm_print_hd(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xhd);}
-void cm_print_sv(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xsv);}
-void cm_print_lv(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xlv);}
-void cm_print_lb(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xlb);}
-void cm_print_zb(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xzb);}
+void cm_print_hi(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xhi); }
+void cm_print_hd(nvObj_t *nv) { _print_axis_ui8(nv, fmt_Xhd); }
+void cm_print_sv(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xsv); }
+void cm_print_lv(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xlv); }
+void cm_print_lb(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xlb); }
+void cm_print_zb(nvObj_t *nv) { _print_axis_flt(nv, fmt_Xzb); }
 
-void cm_print_cofs(nvObj_t *nv) { _print_axis_coord_flt(nv, fmt_cofs);}
-void cm_print_cpos(nvObj_t *nv) { _print_axis_coord_flt(nv, fmt_cpos);}
+void cm_print_cofs(nvObj_t *nv) { _print_axis_coord_flt(nv, fmt_cofs); }
+void cm_print_cpos(nvObj_t *nv) { _print_axis_coord_flt(nv, fmt_cpos); }
 
-void cm_print_pos(nvObj_t *nv) { _print_pos(nv, fmt_pos, cm_get_units_mode(MODEL));}
-void cm_print_mpo(nvObj_t *nv) { _print_pos(nv, fmt_mpo, MILLIMETERS);}
-void cm_print_ofs(nvObj_t *nv) { _print_pos(nv, fmt_ofs, MILLIMETERS);}
-void cm_print_tof(nvObj_t *nv) { _print_pos(nv, fmt_tof, MILLIMETERS);}
-void cm_print_hom(nvObj_t *nv) { _print_hom(nv, fmt_hom);}
+void cm_print_pos(nvObj_t *nv) { _print_pos(nv, fmt_pos, cm_get_units_mode(MODEL)); }
+void cm_print_mpo(nvObj_t *nv) { _print_pos(nv, fmt_mpo, MILLIMETERS); }
+void cm_print_ofs(nvObj_t *nv) { _print_pos(nv, fmt_ofs, MILLIMETERS); }
+void cm_print_tof(nvObj_t *nv) { _print_pos(nv, fmt_tof, MILLIMETERS); }
+void cm_print_hom(nvObj_t *nv) { _print_hom(nv, fmt_hom); }
 
-#endif // __TEXT_MODE
+#endif  // __TEXT_MODE

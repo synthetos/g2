@@ -43,14 +43,15 @@
 #define HARD_LIMIT_ENABLE           0                       // 0=off, 1=on
 #define SAFETY_INTERLOCK_ENABLE     1                       // 0=off, 1=on
 
-#define SPINDLE_ENABLE_OUTPUT_NUMBER 4
-#define SPINDLE_ENABLE_POLARITY     1                       // 0=active low, 1=active high
+#define SPINDLE_ENABLE_OUTPUT_NUMBER    4
+#define SPINDLE_ENABLE_POLARITY         1                   // 0=active low, 1=active high
 #define SPINDLE_DIRECTION_OUTPUT_NUMBER 5
-#define SPINDLE_DIR_POLARITY        0                       // 0=clockwise is low, 1=clockwise is high
-#define SPINDLE_PAUSE_ON_HOLD       true
-#define SPINDLE_SPINUP_DELAY        1.0
-#define SPINDLE_PWM_NUMBER          6
-#define SECONDARY_PWM_OUTPUT_NUMBER 0                       // disabled
+#define SPINDLE_DIR_POLARITY            0                   // 0=clockwise is low, 1=clockwise is high
+#define SPINDLE_PAUSE_ON_HOLD           true
+#define SPINDLE_SPINUP_DELAY            1.0
+#define SPINDLE_PWM_NUMBER              6
+#define SECONDARY_PWM_OUTPUT_NUMBER     0                   // disabled
+#define SPINDLE_SPEED_CHANGE_PER_MS     4                   // 20k RPM in 5 seconds
 
 #define COOLANT_MIST_POLARITY       1                       // 0=active low, 1=active high
 #define COOLANT_FLOOD_POLARITY      1                       // 0=active low, 1=active high
@@ -60,7 +61,7 @@
 
 // Communications and reporting settings
 
-#define USB_SERIAL_PORTS_EXPOSED	1						// 1=single endpoint usb, 2=dual endpoint usb
+#define USB_SERIAL_PORTS_EXPOSED	1                       // 1=single endpoint usb, 2=dual endpoint usb
 #define COMM_MODE                   JSON_MODE               // one of: TEXT_MODE, JSON_MODE
 #define XIO_ENABLE_FLOW_CONTROL FLOW_CONTROL_RTS            // FLOW_CONTROL_OFF, FLOW_CONTROL_RTS
 
@@ -97,7 +98,7 @@
 #define M1_TRAVEL_PER_REV           8.0934060625            // 1tr
 #define M1_MICROSTEPS               64                       // 1mi  1,2,4,8,16,32
 #define M1_POLARITY                 1                       // 1po  0=normal, 1=reversed
-#define M1_POWER_MODE               MOTOR_ALWAYS_POWERED        // 1pm  TRUE=low power idle enabled
+#define M1_POWER_MODE               MOTOR_ALWAYS_POWERED    // 1pm  TRUE=low power idle enabled
 #define M1_POWER_LEVEL              0.500
 
 #define M2_MOTOR_MAP                AXIS_Y
@@ -129,11 +130,11 @@
 #define JERK_MAX                    5000
 
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX              5000                   // xvm  G0 max velocity in mm/min
+#define X_VELOCITY_MAX              5000                    // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel for soft limits
 #define X_TRAVEL_MAX                824                     // xtm  travel between switches or crashes
-#define X_JERK_MAX                  3500                // xjm  jerk * 1,000,000
+#define X_JERK_MAX                  3500                    // xjm  jerk * 1,000,000
 #define X_JERK_HIGH_SPEED           20000                   // xjh
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIRECTION          1                       // xhd  0=search moves negative, 1= search moves positive

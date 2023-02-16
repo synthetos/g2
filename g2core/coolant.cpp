@@ -25,15 +25,15 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "g2core.h"             // #1 dependency order
-#include "config.h"             // #2
-#include "canonical_machine.h"  // #3
-#include "text_parser.h"        // #4
-
-#include "gpio.h"
 #include "coolant.h"
-#include "planner.h"
+
+#include "canonical_machine.h"  // #3
+#include "config.h"             // #2
+#include "g2core.h"             // #1 dependency order
+#include "gpio.h"
 #include "hardware.h"
+#include "planner.h"
+#include "text_parser.h"  // #4
 #include "util.h"
 
 /**** Allocate structures ****/
@@ -57,7 +57,7 @@ coCoolant_t coolant;
 
 /**** Static functions ****/
 
-static void _exec_coolant_control(float* value, bool* flag);
+static void _exec_coolant_control(float *value, bool *flag);
 
 /****************************************************************************************
  * coolant_init()
@@ -65,17 +65,17 @@ static void _exec_coolant_control(float* value, bool* flag);
  */
 void coolant_init() {
     if (MIST_ENABLE_OUTPUT_NUMBER > 0) {
-        coolant.mist.output = d_out[MIST_ENABLE_OUTPUT_NUMBER-1];
+        coolant.mist.output = d_out[MIST_ENABLE_OUTPUT_NUMBER - 1];
         coolant.mist.output->setEnabled(IO_ENABLED);
         coolant.mist.output->setPolarity((ioPolarity)COOLANT_MIST_POLARITY);
     }
     if (FLOOD_ENABLE_OUTPUT_NUMBER > 0) {
-        coolant.flood.output = d_out[FLOOD_ENABLE_OUTPUT_NUMBER-1];
+        coolant.flood.output = d_out[FLOOD_ENABLE_OUTPUT_NUMBER - 1];
         coolant.flood.output->setEnabled(IO_ENABLED);
         coolant.flood.output->setPolarity((ioPolarity)COOLANT_FLOOD_POLARITY);
     }
 
-    coolant.mist.state  = COOLANT_OFF;
+    coolant.mist.state = COOLANT_OFF;
     coolant.flood.state = COOLANT_OFF;
 }
 
@@ -90,16 +90,14 @@ void coolant_reset() {
  * _exec_coolant_control()     - actually execute the coolant command
  */
 
-stat_t coolant_control_immediate(coControl control, coSelect select)
-{
-    float value[] = { (float)control };
-    bool flags[] = { (select & COOLANT_MIST), (select & COOLANT_FLOOD) };
+stat_t coolant_control_immediate(coControl control, coSelect select) {
+    float value[] = {(float)control};
+    bool flags[] = {(select & COOLANT_MIST), (select & COOLANT_FLOOD)};
     _exec_coolant_control(value, flags);
-    return(STAT_OK);
+    return (STAT_OK);
 }
 
-stat_t coolant_control_sync(coControl control, coSelect select)
-{
+stat_t coolant_control_sync(coControl control, coSelect select) {
     // Skip the PAUSE operation if pause_enable is not enabled (pause-on-hold)
     // The pause setting in mist coolant is treated as the master even though it's replicated in flood
     if ((control == COOLANT_PAUSE) && (!coolant.mist.pause_enable)) {
@@ -107,14 +105,13 @@ stat_t coolant_control_sync(coControl control, coSelect select)
     }
 
     // queue the coolant control
-    float value[] = { (float)control };
-    bool flags[]  = { (select & COOLANT_MIST), (select & COOLANT_FLOOD) };
+    float value[] = {(float)control};
+    bool flags[] = {(select & COOLANT_MIST), (select & COOLANT_FLOOD)};
     mp_queue_command(_exec_coolant_control, value, flags);
-    return(STAT_OK);
+    return (STAT_OK);
 }
 
 static void _exec_coolant_helper(coCoolantChannel_t &co, coControl control) {
-
     bool action = true;
     int8_t enable_bit = 0;
     switch (control) {
@@ -152,16 +149,15 @@ static void _exec_coolant_helper(coCoolantChannel_t &co, coControl control) {
     }
 }
 
-static void _exec_coolant_control(float* value, bool* flag) {
-
+static void _exec_coolant_control(float *value, bool *flag) {
     coControl control = (coControl)value[0];
     if (control > COOLANT_ACTION_MAX) {
         return;
     }
-    if (flag[0]) {          // Mist, M7
+    if (flag[0]) {  // Mist, M7
         _exec_coolant_helper(coolant.mist, control);
     }
-    if (flag[1]) {          // Flood, M8
+    if (flag[1]) {  // Flood, M8
         _exec_coolant_helper(coolant.flood, control);
     }
 }
@@ -176,31 +172,30 @@ bool coolant_ready() { return true; }
  **** Coolant Settings ******************************************************************
  ****************************************************************************************/
 
-stat_t co_get_com(nvObj_t *nv) { return(get_integer(nv, coolant.mist.state)); }
-stat_t co_set_com(nvObj_t *nv) { return(coolant_control_immediate((coControl)nv->value_int, COOLANT_MIST)); }
-stat_t co_get_cof(nvObj_t *nv) { return(get_integer(nv, coolant.flood.state)); }
-stat_t co_set_cof(nvObj_t *nv) { return(coolant_control_immediate((coControl)nv->value_int, COOLANT_FLOOD)); }
+stat_t co_get_com(nvObj_t *nv) { return (get_integer(nv, coolant.mist.state)); }
+stat_t co_set_com(nvObj_t *nv) { return (coolant_control_immediate((coControl)nv->value_int, COOLANT_MIST)); }
+stat_t co_get_cof(nvObj_t *nv) { return (get_integer(nv, coolant.flood.state)); }
+stat_t co_set_cof(nvObj_t *nv) { return (coolant_control_immediate((coControl)nv->value_int, COOLANT_FLOOD)); }
 
-stat_t co_get_coph(nvObj_t *nv) { return(get_integer(nv, coolant.mist.pause_enable)); }
-stat_t co_set_coph(nvObj_t *nv)
-{
+stat_t co_get_coph(nvObj_t *nv) { return (get_integer(nv, coolant.mist.pause_enable)); }
+stat_t co_set_coph(nvObj_t *nv) {
     ritorno(set_integer(nv, (uint8_t &)coolant.mist.pause_enable, 0, 1));
     return (set_integer(nv, (uint8_t &)coolant.flood.pause_enable, 0, 1));
 }
 
-stat_t co_get_comp(nvObj_t *nv) { return(get_integer(nv, coolant.mist.polarity)); }
+stat_t co_get_comp(nvObj_t *nv) { return (get_integer(nv, coolant.mist.polarity)); }
 stat_t co_set_comp(nvObj_t *nv) {
     stat_t ret = set_integer(nv, (uint8_t &)coolant.mist.polarity, 0, 1);
     if (ret == STAT_OK && coolant.mist.output) {
-        coolant.mist.output->setPolarity((ioPolarity) coolant.mist.polarity);
+        coolant.mist.output->setPolarity((ioPolarity)coolant.mist.polarity);
     }
     return ret;
 }
-stat_t co_get_cofp(nvObj_t *nv) { return(get_integer(nv, coolant.flood.polarity)); }
+stat_t co_get_cofp(nvObj_t *nv) { return (get_integer(nv, coolant.flood.polarity)); }
 stat_t co_set_cofp(nvObj_t *nv) {
     stat_t ret = set_integer(nv, (uint8_t &)coolant.flood.polarity, 0, 1);
     if (ret == STAT_OK && coolant.flood.output) {
-        coolant.flood.output->setPolarity((ioPolarity) coolant.flood.polarity);
+        coolant.flood.output->setPolarity((ioPolarity)coolant.flood.polarity);
     }
     return ret;
 }
@@ -215,13 +210,13 @@ stat_t co_set_cofp(nvObj_t *nv) {
 const char fmt_coph[] = "[coph] coolant pause on hold%7d [0=no,1=pause_on_hold]\n";
 const char fmt_comp[] = "[comp] coolant mist polarity%7d [0=low is ON,1=high is ON]\n";
 const char fmt_cofp[] = "[cofp] coolant flood polarity%6d [0=low is ON,1=high is ON]\n";
-const char fmt_com[]  = "[com]  coolant mist%16d [0=OFF,1=ON]\n";
-const char fmt_cof[]  = "[cof]  coolant flood%15d [0=OFF,1=ON]\n";
+const char fmt_com[] = "[com]  coolant mist%16d [0=OFF,1=ON]\n";
+const char fmt_cof[] = "[cof]  coolant flood%15d [0=OFF,1=ON]\n";
 
-void co_print_coph(nvObj_t* nv) { text_print(nv, fmt_coph); }  // TYPE_INT
-void co_print_comp(nvObj_t* nv) { text_print(nv, fmt_comp); }  // TYPE_INT
-void co_print_cofp(nvObj_t* nv) { text_print(nv, fmt_cofp); }  // TYPE_INT
-void co_print_com(nvObj_t* nv) { text_print(nv, fmt_com); }    // TYPE_INT
-void co_print_cof(nvObj_t* nv) { text_print(nv, fmt_cof); }    // TYPE_INT
+void co_print_coph(nvObj_t *nv) { text_print(nv, fmt_coph); }  // TYPE_INT
+void co_print_comp(nvObj_t *nv) { text_print(nv, fmt_comp); }  // TYPE_INT
+void co_print_cofp(nvObj_t *nv) { text_print(nv, fmt_cofp); }  // TYPE_INT
+void co_print_com(nvObj_t *nv) { text_print(nv, fmt_com); }    // TYPE_INT
+void co_print_cof(nvObj_t *nv) { text_print(nv, fmt_cof); }    // TYPE_INT
 
 #endif  // __TEXT_MODE
