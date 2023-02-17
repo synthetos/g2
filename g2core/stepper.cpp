@@ -98,7 +98,7 @@ https://github.com/synthetos/Motate/blob/41e5b92a98de4b268d1804bf6eadf3333298fc7
 It's just like a function, and is used as a function pointer.
 
 But the closure part means that whatever variables that were in scope where the
-[&](parameters){code} is will be captured by the compiler as references in the generated
+[](parameters){code} is will be captured by the compiler as references in the generated
 function and used wherever the function gets called. In this particular use, there isn't
 anything that wouldn't be available anywhere in that file, but they're not being called
 from that file. They're being called by the systick interrupt which is over in SamTmers.cpp
