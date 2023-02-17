@@ -44,19 +44,21 @@
 #define SAFETY_INTERLOCK_ENABLE     1                       // 0=off, 1=on
 
 #define SPINDLE_ENABLE_OUTPUT_NUMBER 4
-#define SPINDLE_ENABLE_POLARITY     1                       // 0=active low, 1=active high
+#define SPINDLE_ENABLE_POLARITY      0                      // 1=active low, 0=active high
 #define SPINDLE_DIRECTION_OUTPUT_NUMBER 5
-#define SPINDLE_DIR_POLARITY        0                       // 0=clockwise is low, 1=clockwise is high
+#define SPINDLE_DIR_POLARITY        1                       // 0=clockwise is low, 1=clockwise is high
 #define SPINDLE_PAUSE_ON_HOLD       true
-#define SPINDLE_SPINUP_DELAY        1.0
+#define SPINDLE_SPINUP_DELAY        10.0
 #define SPINDLE_PWM_NUMBER          6
 #define SECONDARY_PWM_OUTPUT_NUMBER 0                       // disabled
 
-#define COOLANT_MIST_POLARITY       1                       // 0=active low, 1=active high
-#define COOLANT_FLOOD_POLARITY      1                       // 0=active low, 1=active high
+#define COOLANT_MIST_POLARITY       0                       // 1=active low, 0=active high
+#define COOLANT_FLOOD_POLARITY      0                       // 1=active low, 0=active high
 #define COOLANT_PAUSE_ON_HOLD       false
-#define FLOOD_ENABLE_OUTPUT_NUMBER  0                       // disabled
-#define MIST_ENABLE_OUTPUT_NUMBER 0                         // disabled
+#define FLOOD_ENABLE_OUTPUT_NUMBER  9                       // disabled
+#define MIST_ENABLE_OUTPUT_NUMBER   7                       // disabled
+
+#define FEEDHOLD_Z_LIFT             -1                      // mm to lift Z on feedhold, or -1 to go to Z-max
 
 // Communications and reporting settings
 
@@ -129,7 +131,7 @@
 #define JERK_MAX                    5000
 
 #define X_AXIS_MODE                 AXIS_STANDARD           // xam  see canonical_machine.h cmAxisMode for valid values
-#define X_VELOCITY_MAX              5000                   // xvm  G0 max velocity in mm/min
+#define X_VELOCITY_MAX              2000                   // xvm  G0 max velocity in mm/min
 #define X_FEEDRATE_MAX              X_VELOCITY_MAX          // xfr  G1 max feed rate in mm/min
 #define X_TRAVEL_MIN                0                       // xtn  minimum travel for soft limits
 #define X_TRAVEL_MAX                824                     // xtm  travel between switches or crashes
@@ -137,13 +139,13 @@
 #define X_JERK_HIGH_SPEED           20000                   // xjh
 #define X_HOMING_INPUT              1                       // xhi  input used for homing or 0 to disable
 #define X_HOMING_DIRECTION          1                       // xhd  0=search moves negative, 1= search moves positive
-#define X_SEARCH_VELOCITY           2000                    // xsv  minus means move to minimum switch
+#define X_SEARCH_VELOCITY           1000                    // xsv  minus means move to minimum switch
 #define X_LATCH_VELOCITY            100                     // xlv  mm/min
 #define X_LATCH_BACKOFF             4                       // xlb  mm
 #define X_ZERO_BACKOFF              2                       // xzb  mm
 
 #define Y_AXIS_MODE                 AXIS_STANDARD
-#define Y_VELOCITY_MAX              5000
+#define Y_VELOCITY_MAX              4000
 #define Y_FEEDRATE_MAX              Y_VELOCITY_MAX
 #define Y_TRAVEL_MIN                0
 #define Y_TRAVEL_MAX                781
@@ -151,7 +153,7 @@
 #define Y_JERK_HIGH_SPEED           20000
 #define Y_HOMING_INPUT              2
 #define Y_HOMING_DIRECTION          1
-#define Y_SEARCH_VELOCITY           2000
+#define Y_SEARCH_VELOCITY           1000
 #define Y_LATCH_VELOCITY            100
 #define Y_LATCH_BACKOFF             4
 #define Y_ZERO_BACKOFF              2
@@ -208,7 +210,7 @@
 //#define DI4_ACTION                  INPUT_ACTION_LIMIT
 #define DI4_ACTION                  INPUT_ACTION_NONE
 
-#define DI5_POLARITY                IO_ACTIVE_HIGH   // Z probe
+#define DI5_POLARITY                IO_ACTIVE_LOW   // Z probe
 #define DI5_ACTION                  INPUT_ACTION_NONE
 
 #define DI6_POLARITY                IO_ACTIVE_HIGH

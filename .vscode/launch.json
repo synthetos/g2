@@ -29,9 +29,9 @@
       "request": "launch",
       "servertype": "jlink",
       "cwd": "${workspaceRoot}/g2core/",
-      "executable": "./bin/r7-gquintic-d/g2core.elf",
-      "device": "ATSAMS70N19",
-      "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sams70/ATSAMS70N19.svd",
+      "executable": "./bin/r7-gquintic-g/g2core.elf",
+      "device": "ATSAMS70N20",
+      "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sams70/ATSAMS70N20B.svd",
       "interface": "swd",
       "showDevDebugOutput": false,
       "osx": {
