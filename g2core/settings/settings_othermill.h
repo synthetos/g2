@@ -35,6 +35,20 @@
 
 //**** GLOBAL / GENERAL SETTINGS ******************************************************
 
+#define MIST_ENABLE_OUTPUT_NUMBER 0
+#define FLOOD_ENABLE_OUTPUT_NUMBER 0
+
+// #define SPINDLE_ENABLE_OUTPUT_NUMBER 4
+// #define SPINDLE_DIRECTION_OUTPUT_NUMBER 5
+// #define SPINDLE_PWM_NUMBER 6
+
+#define SPINDLE_ENABLE_OUTPUT_NUMBER 1
+#define SPINDLE_DIRECTION_OUTPUT_NUMBER 2
+#define SPINDLE_PWM_NUMBER 3
+
+// #define FEEDHOLD_Z_LIFT 3  // mm to lift Z on feedhold
+
+
 #define JUNCTION_INTEGRATION_TIME   0.1     // cornering - between 0.10 and 2.00 (higher is faster)
 #define CHORDAL_TOLERANCE           0.01    // chordal accuracy for arc drawing (in mm)
 
@@ -46,7 +60,7 @@
 #define SPINDLE_DIR_POLARITY        0       // 0=clockwise is low, 1=clockwise is high
 #define SPINDLE_PAUSE_ON_HOLD       true
 #define SPINDLE_SPINUP_DELAY        0.1     // after unpausing and turning the spindle on, dwell for 1.5s
-#define SPINDLE_SPEED_CHANGE_PER_MS 7.0
+#define SPINDLE_SPEED_CHANGE_PER_MS 7.0     // external non-speed-controlled spindle, but we can use this as a built-in delay
 
 #define ESC_BOOT_TIME               5000    // how long the ESC takes to boot, in milliseconds
 #define ESC_LOCKOUT_TIME            900     // how long the interlock needs to be engaged before killing power... actually 1s, but be conservative

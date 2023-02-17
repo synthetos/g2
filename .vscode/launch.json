@@ -14,12 +14,12 @@
       "device": "ATSAMS70N19",
       "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sams70/ATSAMS70N19.svd",
       "interface": "swd",
-      "showDevDebugOutput": false,
+      "showDevDebugOutput": "none",
       "osx": {
-        "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/"
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-12.2r1/bin/"
       },
       "linux": {
-        "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-9m/bin/"
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-12.2r1/bin/"
       },
       "preLaunchTask": "Build CONFIG=fourcable"
     },
@@ -33,12 +33,12 @@
       "device": "ATSAMS70N20",
       "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sams70/ATSAMS70N20B.svd",
       "interface": "swd",
-      "showDevDebugOutput": false,
+      "showDevDebugOutput": "none",
       "osx": {
-        "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/"
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-12.2r1/bin/"
       },
       "linux": {
-        "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-9m/bin/"
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-12.2r1/bin/"
       },
       "preLaunchTask": "Build CONFIG=r7 Debug"
     },
@@ -52,12 +52,12 @@
       "device": "ATSAM3X8E",
       "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sam3x/ATSAM3X8E.svd",
       "interface": "swd",
-      "showDevDebugOutput": false,
+      "showDevDebugOutput": "none",
       "osx": {
-        "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/"
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-12.2r1/bin/"
       },
       "linux": {
-        "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-9m/bin/"
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-12.2r1/bin/"
       },
       "preLaunchTask": "Build CONFIG=MiniMillgShield Debug"
     },
@@ -71,12 +71,12 @@
       "device": "ATSAM3X8E",
       "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sam3x/ATSAM3X8E.svd",
       "interface": "swd",
-      "showDevDebugOutput": false,
+      "showDevDebugOutput": "none",
       "osx": {
-        "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/"
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-12.2r1/bin/"
       },
       "linux": {
-        "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-9m/bin/"
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-12.2r1/bin/"
       },
       "preLaunchTask": "Build CONFIG=ShapeokoDualY"
     },
@@ -90,12 +90,12 @@
       "device": "ATSAM3X8E",
       "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sam3x/ATSAM3X8E.svd",
       "interface": "swd",
-      "showDevDebugOutput": false,
+      "showDevDebugOutput": "none",
       "osx": {
-        "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/"
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-12.2r1/bin/"
       },
       "linux": {
-        "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-9m/bin/"
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-12.2r1/bin/"
       },
       "preLaunchTask": "Build CONFIG=MiniMillv9 Debug"
     },
@@ -105,16 +105,16 @@
       "request": "launch",
       "servertype": "jlink",
       "cwd": "${workspaceRoot}/g2core/",
-      "executable": "./bin/MiniMill-gquintic-d/g2core.elf",
+      "executable": "./bin/MiniMill-gquintic-g/g2core.elf",
       "device": "ATSAMS70N19",
       "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sams70/ATSAMS70N19.svd",
       "interface": "swd",
-      "showDevDebugOutput": false,
+      "showDevDebugOutput": "none",
       "osx": {
-        "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/"
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-12.2r1/bin/"
       },
       "linux": {
-        "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-9m/bin/"
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-12.2r1/bin/"
       },
       "preLaunchTask": "Build CONFIG=MiniMill Debug"
     },
@@ -128,16 +128,16 @@
       "device": "ATSAMS70N20",
       "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sams70/ATSAMS70N20B.svd",
       "interface": "swd",
-      "showDevDebugOutput": false,
+      "showDevDebugOutput": "none",
       "osx": {
-        "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/"
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-12.2r1/bin/"
       },
       "linux": {
-        "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-9m/bin/"
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-12.2r1/bin/"
       },
       "swoConfig": {
         "enabled": true,
-        "source":"probe",
+        "source": "probe",
         "swoFrequency": 8000000,
         "decoders": [
           {
@@ -198,12 +198,12 @@
       "device": "ATSAMS70N20",
       "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sams70/ATSAMS70N20B.svd",
       "interface": "swd",
-      "showDevDebugOutput": false,
+      "showDevDebugOutput": "none",
       "osx": {
-        "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/"
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-12.2r1/bin/"
       },
       "linux": {
-        "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-9m/bin/"
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-12.2r1/bin/"
       },
       "preLaunchTask": "Build CONFIG=MiniMill Debug"
     },
@@ -217,12 +217,12 @@
       "device": "ATSAMS70N19",
       "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sams70/ATSAMS70N19.svd",
       "interface": "swd",
-      "showDevDebugOutput": false,
+      "showDevDebugOutput": "none",
       "osx": {
-        "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/"
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-12.2r1/bin/"
       },
       "linux": {
-        "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-9m/bin/"
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-12.2r1/bin/"
       },
       "preLaunchTask": "Build CONFIG=CheapoLaser Debug"
     },
@@ -235,13 +235,13 @@
       "executable": "./bin/OthermillPro-g2v9k/g2core.elf",
       "device": "ATSAM3X8E",
       "interface": "swd",
-      "showDevDebugOutput": false,
+      "showDevDebugOutput": "none",
       "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sam3x/ATSAM3X8E.svd",
       "osx": {
-        "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/"
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-12.2r1/bin/"
       },
       "linux": {
-        "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-9m/bin/"
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-12.2r1/bin/"
       },
       "preLaunchTask": "Build CONFIG=OthermillPro Debug"
     },
@@ -255,12 +255,12 @@
       "device": "ATSAMS70N20",
       "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sams70/ATSAMS70N20B.svd",
       "interface": "swd",
-      "showDevDebugOutput": false,
+      "showDevDebugOutput": "none",
       "osx": {
-        "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/"
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-12.2r1/bin/"
       },
       "linux": {
-        "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-9m/bin/"
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-12.2r1/bin/"
       },
       "preLaunchTask": "Build CONFIG=AxiDrawv3-quint Debug"
     }
