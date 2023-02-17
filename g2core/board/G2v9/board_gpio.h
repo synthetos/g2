@@ -37,64 +37,54 @@
  */
 //--- change as required for board and switch hardware ---//
 
-#define D_IN_CHANNELS      10         // v9    // number of digital inputs supported
-#define D_OUT_CHANNELS     13         // number of digital outputs supported
-#define A_IN_CHANNELS	    0           // number of analog inputs supported
-#define A_OUT_CHANNELS	    0           // number of analog outputs supported
+#define D_IN_CHANNELS 10   // v9    // number of digital inputs supported
+#define D_OUT_CHANNELS 13  // number of digital outputs supported
+#define A_IN_CHANNELS 0    // number of analog inputs supported
+#define A_OUT_CHANNELS 0   // number of analog outputs supported
 
-#define INPUT_LOCKOUT_MS    10          // milliseconds to go dead after input firing
-
-// Setup spindle and coolant pin assignments
-#define SPINDLE_ENABLE_OUTPUT_NUMBER 1
-#define SPINDLE_DIRECTION_OUTPUT_NUMBER 2
-#define SPINDLE_PWM_NUMBER 3
-#define MIST_ENABLE_OUTPUT_NUMBER 4
-
-#define FLOOD_ENABLE_OUTPUT_NUMBER 0
-#define SECONDARY_PWM_OUTPUT_NUMBER 0
+#define INPUT_LOCKOUT_MS 10  // milliseconds to go dead after input firing
 
 /*
  * The GPIO objects themselves - this must match up with board_gpio.cpp!
  */
 
-extern gpioDigitalInput*   const d_in[D_IN_CHANNELS];
-extern gpioDigitalOutput*  const d_out[D_OUT_CHANNELS];
+extern gpioDigitalInput* const d_in[D_IN_CHANNELS];
+extern gpioDigitalOutput* const d_out[D_OUT_CHANNELS];
 // extern gpioAnalogInput*    a_in[A_IN_CHANNELS];
 // extern gpioAnalogOutput*   a_out[A_OUT_CHANNELS];
 
 // prepare the objects as externs (for config_app to not bloat)
 using Motate::IRQPin;
-using Motate::PWMOutputPin;
 using Motate::PWMLikeOutputPin;
-template<bool can_pwm, Motate::pin_number... V>
+using Motate::PWMOutputPin;
+template <bool can_pwm, Motate::pin_number... V>
 using OutputType = typename std::conditional<can_pwm, PWMOutputPin<V...>, PWMLikeOutputPin<V...>>::type;
 
-extern gpioDigitalInputPin<IRQPin<Motate::kInput1_PinNumber>>  din1;
-extern gpioDigitalInputPin<IRQPin<Motate::kInput2_PinNumber>>  din2;
-extern gpioDigitalInputPin<IRQPin<Motate::kInput3_PinNumber>>  din3;
-extern gpioDigitalInputPin<IRQPin<Motate::kInput4_PinNumber>>  din4;
-extern gpioDigitalInputPin<IRQPin<Motate::kInput5_PinNumber>>  din5;
-extern gpioDigitalInputPin<IRQPin<Motate::kInput6_PinNumber>>  din6;
-extern gpioDigitalInputPin<IRQPin<Motate::kInput7_PinNumber>>  din7;
-extern gpioDigitalInputPin<IRQPin<Motate::kInput8_PinNumber>>  din8;
-extern gpioDigitalInputPin<IRQPin<Motate::kInput9_PinNumber>>  din9;
+extern gpioDigitalInputPin<IRQPin<Motate::kInput1_PinNumber>> din1;
+extern gpioDigitalInputPin<IRQPin<Motate::kInput2_PinNumber>> din2;
+extern gpioDigitalInputPin<IRQPin<Motate::kInput3_PinNumber>> din3;
+extern gpioDigitalInputPin<IRQPin<Motate::kInput4_PinNumber>> din4;
+extern gpioDigitalInputPin<IRQPin<Motate::kInput5_PinNumber>> din5;
+extern gpioDigitalInputPin<IRQPin<Motate::kInput6_PinNumber>> din6;
+extern gpioDigitalInputPin<IRQPin<Motate::kInput7_PinNumber>> din7;
+extern gpioDigitalInputPin<IRQPin<Motate::kInput8_PinNumber>> din8;
+extern gpioDigitalInputPin<IRQPin<Motate::kInput9_PinNumber>> din9;
 extern gpioDigitalInputPin<IRQPin<Motate::kSocket2_SPISlaveSelectPinNumber>> din10;
 // extern gpioDigitalInputPin<IRQPin<Motate::kInput11_PinNumber>> din11;
 // extern gpioDigitalInputPin<IRQPin<Motate::kInput12_PinNumber>> din12;
 
-extern gpioDigitalOutputPin<OutputType<OUTPUT1_PWM,  Motate::kOutput1_PinNumber>>  dout1;
-extern gpioDigitalOutputPin<OutputType<OUTPUT2_PWM,  Motate::kOutput2_PinNumber>>  dout2;
-extern gpioDigitalOutputPin<OutputType<OUTPUT3_PWM,  Motate::kOutput3_PinNumber>>  dout3;
-extern gpioDigitalOutputPin<OutputType<OUTPUT4_PWM,  Motate::kOutput4_PinNumber>>  dout4;
-extern gpioDigitalOutputPin<OutputType<OUTPUT5_PWM,  Motate::kOutput5_PinNumber>>  dout5;
-extern gpioDigitalOutputPin<OutputType<OUTPUT6_PWM,  Motate::kOutput6_PinNumber>>  dout6;
-extern gpioDigitalOutputPin<OutputType<OUTPUT7_PWM,  Motate::kOutput7_PinNumber>>  dout7;
-extern gpioDigitalOutputPin<OutputType<OUTPUT8_PWM,  Motate::kOutput8_PinNumber>>  dout8;
-extern gpioDigitalOutputPin<OutputType<OUTPUT9_PWM,  Motate::kOutput9_PinNumber>>  dout9;
+extern gpioDigitalOutputPin<OutputType<OUTPUT1_PWM, Motate::kOutput1_PinNumber>> dout1;
+extern gpioDigitalOutputPin<OutputType<OUTPUT2_PWM, Motate::kOutput2_PinNumber>> dout2;
+extern gpioDigitalOutputPin<OutputType<OUTPUT3_PWM, Motate::kOutput3_PinNumber>> dout3;
+extern gpioDigitalOutputPin<OutputType<OUTPUT4_PWM, Motate::kOutput4_PinNumber>> dout4;
+extern gpioDigitalOutputPin<OutputType<OUTPUT5_PWM, Motate::kOutput5_PinNumber>> dout5;
+extern gpioDigitalOutputPin<OutputType<OUTPUT6_PWM, Motate::kOutput6_PinNumber>> dout6;
+extern gpioDigitalOutputPin<OutputType<OUTPUT7_PWM, Motate::kOutput7_PinNumber>> dout7;
+extern gpioDigitalOutputPin<OutputType<OUTPUT8_PWM, Motate::kOutput8_PinNumber>> dout8;
+extern gpioDigitalOutputPin<OutputType<OUTPUT9_PWM, Motate::kOutput9_PinNumber>> dout9;
 extern gpioDigitalOutputPin<OutputType<OUTPUT10_PWM, Motate::kOutput10_PinNumber>> dout10;
 extern gpioDigitalOutputPin<OutputType<OUTPUT11_PWM, Motate::kOutput11_PinNumber>> dout11;
 extern gpioDigitalOutputPin<OutputType<OUTPUT12_PWM, Motate::kOutput12_PinNumber>> dout12;
 extern gpioDigitalOutputPin<OutputType<OUTPUT13_PWM, Motate::kOutput13_PinNumber>> dout13;
 
-
-#endif // End of include guard: BOARD_GPIO_H_ONCE
+#endif  // End of include guard: BOARD_GPIO_H_ONCE

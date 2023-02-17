@@ -62,13 +62,15 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
     float motor_offset[motors];
     bool needs_sync_encoders = true; // if true, we need to update the steps_offset
     int8_t motor_map[motors];  // for each motor, which joint it maps from
-
+    bool hold_motor[motors]; // true if the motor is to be held when the axis moves - for homing only ATM
     float joint_position[joints];
+    float last_known_steps[motors];
 
     void configure(const float new_steps_per_unit[motors], const int8_t new_motor_map[motors]) override
     {
         for (uint8_t motor = 0; motor < motors; motor++) {
             motor_map[motor] = new_motor_map[motor];
+            hold_motor[motor] = false;
             int8_t joint = motor_map[motor];
             if (joint == -1) {
                 motor_offset[motor] = 0;
@@ -91,7 +93,13 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
                 continue;
             }
 
-            steps[motor] = (target[joint] * steps_per_unit[motor]) + motor_offset[motor];
+            if (hold_motor[motor]) {
+                steps[motor] = last_known_steps[motor];
+                motor_offset[motor] = steps[motor] - (target[joint] * steps_per_unit[motor]);
+            } else {
+                steps[motor] = (target[joint] * steps_per_unit[motor]) + motor_offset[motor];
+                last_known_steps[motor] = steps[motor];
+            }
         }
 
         for (uint8_t joint = 0; joint < joints; joint++) {
@@ -148,7 +156,41 @@ struct CartesianKinematics : KinematicsBase<axes, motors> {
             motor_offset[motor] = step_position[motor] - (position[joint] * steps_per_unit[motor]);
         }
     }
-};
+
+    virtual uint8_t axis_homing_moves(uint8_t axis) {
+        uint8_t motors_used = 0;
+        for (uint8_t motor = 0; motor < motors; motor++) {
+            int8_t joint = motor_map[motor];
+            if (joint == axis) { motors_used++; }
+        }
+        // if we have two or more motors, we need an additional (first) move for all motors together
+        if (motors_used > 1) {
+            motors_used++;
+        }
+        return motors_used;
+    }
+
+    void axis_set_homing_move(uint8_t axis, uint8_t move) override {
+        uint8_t motors_seen = 0;
+        for (uint8_t motor = 0; motor < motors; motor++) {
+            int8_t joint = motor_map[motor];
+
+            // move == 0 means move all motors
+            // move == 1 mean hold all but the first motor
+            // move == 2 mean hold all but the second motor
+            if (joint == axis) {
+                motors_seen++;
+                hold_motor[motor] = (move != 0) && (motors_seen != move);
+            }
+        }
+    }
+
+    void set_homing_done() override {
+        for (uint8_t motor = 0; motor < motors; motor++) {
+            hold_motor[motor] = false;
+        }
+    }
+}; // CartesianKinematics
 
 
 // Support for CoreXY Kinematics - http://corexy.com/
@@ -212,6 +254,6 @@ struct CoreXYKinematics final : CartesianKinematics<axes, motors> {
         position[0] = 0.5 * (deltaA + deltaB);
         position[1] = 0.5 * (deltaA - deltaB);
     }
-};
+}; // CoreXYKinematics
 
 #endif  // End of include Guard: KINEMATICS_CARTESIAN_H_ONCE

@@ -258,6 +258,13 @@ ifeq ("$(CONFIG)","r7")
     SETTINGS_FILE="settings_smw3d_r7.h"
 endif
 
+ifeq ("$(CONFIG)","r7-v9k")
+    ifeq ("$(BOARD)","NONE")
+        BOARD=g2v9k
+    endif
+    SETTINGS_FILE="settings_smw3d_r7_v9k.h"
+endif
+
 ##########
 # Synthetos Pendulum v2 config:
 

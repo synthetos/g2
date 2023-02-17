@@ -1,18 +1,17 @@
 {
-    "configurations": [
-        {
-            "name": "Mac",
-            "compileCommands": "${workspaceFolder}/g2core/compile_commands.json",
-            "compilerPath": "${workspaceFolder}/Motate/Tools/osx/gcc-arm-none-eabi-7u2/bin/arm-none-eabi-gcc",
-            "cStandard": "c11",
-            "cppStandard": "c++17",
-            "intelliSenseMode": "gcc-x64",
-            "browse": {
-                "path": [
-                    "${workspaceFolder}"
-                ]
-            }
-        }
-    ],
-    "version": 4
+  "configurations": [
+    {
+      "name": "Mac",
+      "compileCommands": "${workspaceFolder}/g2core/compile_commands.json",
+      "compilerPath": "${workspaceFolder}/Motate/Tools/osx/gcc-arm-none-eabi-12.2r1/bin/arm-none-eabi-gcc",
+      "cStandard": "c11",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "gcc-x64",
+      "browse": {
+        "path": ["${workspaceFolder}"]
+      },
+      "configurationProvider": "ms-vscode.makefile-tools"
+    }
+  ],
+  "version": 4
 }
