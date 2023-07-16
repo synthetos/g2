@@ -72,6 +72,13 @@ ifeq ("$(CONFIG)","MiniMill")
     SETTINGS_FILE="settings_minimill.h"
 endif
 
+ifeq ("$(CONFIG)","Liteplacer")
+    ifeq ("$(BOARD)","NONE")
+        BOARD=gquintic-g
+    endif
+    SETTINGS_FILE="settings_liteplacer.h"
+endif
+
 ifeq ("$(CONFIG)","MiniMillgShield")
     ifeq ("$(BOARD)","NONE")
         BOARD=gShield
