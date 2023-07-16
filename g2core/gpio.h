@@ -116,7 +116,7 @@ extern gpioDigitalInputReader* const in_r[16];
  * Example gpioDigitalInputHandler object creation:
 
     gpioDigitalInputHandler limitHandler {
-        [&](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
+        [](const bool state, const inputEdgeFlag edge, const uint8_t triggering_pin_number) {
             if (edge != INPUT_EDGE_LEADING) { return; }
             limit_requested = true; // record that a limit was requested for later processing
             return false; // allow others to see this notice

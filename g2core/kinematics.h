@@ -75,6 +75,18 @@ struct KinematicsBase {
 
     // sync any external sensors with the current step position
     virtual void sync_encoders(const float step_position[motors], const float position[axes]);
+
+    // homing support - since kinematics is between the stepper and the gcode, we put this here
+
+    // how many moves will this axis need to home? normal is 1, but if it has two motors on it it may need 3 (see cartesian override)
+    virtual uint8_t axis_homing_moves(uint8_t axis) { return 1; }
+
+    // set which of the axis moves will be homed next - may freeze motors or change the kinematics output somehow
+    // if move > axis_homing_moves(axis) then it clears homing for that axis
+    virtual void axis_set_homing_move(uint8_t axis, uint8_t move) { /* nothing to do */ }
+
+    // called to give the opportunity to clean up after any homing setups
+    virtual void set_homing_done() { /* nothing to do here */ }
 };
 
 extern KinematicsBase<AXES, MOTORS> *kn;

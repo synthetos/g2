@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: Build G2
 
 on:
   push:
@@ -10,19 +10,21 @@ on:
   #   branches:
 
 jobs:
-  checkout:
-    name: checkout the repo with submodules
+  Build:
+    name: Checkout and Build
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+      
+    - uses: actions/checkout@v3
       with:
         submodules: recursive
+
     - name: Cache Tools
       id: cache-tools
-      uses: actions/cache@v1
+      uses: actions/cache@v3
       with:
         path: ./Motate/Tools/linux
-        key: ${{ runner.os }}-tools-02 # Change the number to invalidate the tools caches
+        key: ${{ runner.os }}-tools-03 # Change the number to invalidate the tools caches
 
     - name: prepare
       working-directory: ${{ github.workspace }}/g2core/
