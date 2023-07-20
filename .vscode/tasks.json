@@ -11,8 +11,13 @@
       "label": "Build CONFIG=ShapeokoDualY",
       "type": "process",
       "command": "make",
-      "args": ["CONFIG=ShapeokoDualY", "VERBOSE=2", "COLOR=0", "DEBUG=2",
-         "RECORD=1"],
+      "args": [
+        "CONFIG=ShapeokoDualY",
+        "VERBOSE=2",
+        "COLOR=0",
+        "DEBUG=2",
+        "RECORD=1"
+      ],
       "group": "build",
       "problemMatcher": {
         "base": "$gcc",
@@ -34,8 +39,13 @@
       "label": "Build CONFIG=MiniMill Debug",
       "type": "process",
       "command": "make",
-      "args": ["CONFIG=MiniMill", "VERBOSE=2", "COLOR=0", "DEBUG=2",
-         "RECORD=1"],
+      "args": [
+        "CONFIG=MiniMill",
+        "VERBOSE=2",
+        "COLOR=0",
+        "DEBUG=2",
+        "RECORD=1"
+      ],
       "group": "build",
       "problemMatcher": {
         "base": "$gcc",
@@ -46,8 +56,13 @@
       "label": "Build CONFIG=MiniMill DebugSemihosting",
       "type": "process",
       "command": "make",
-      "args": ["CONFIG=MiniMill", "VERBOSE=2", "COLOR=0", "DEBUG=3",
-         "RECORD=1"],
+      "args": [
+        "CONFIG=MiniMill",
+        "VERBOSE=2",
+        "COLOR=0",
+        "DEBUG=3",
+        "RECORD=1"
+      ],
       "group": "build",
       "problemMatcher": {
         "base": "$gcc",
@@ -58,8 +73,7 @@
       "label": "Build CONFIG=MiniMill Production",
       "type": "process",
       "command": "make",
-      "args": ["CONFIG=MiniMill", "VERBOSE=2", "COLOR=0",
-         "RECORD=1"],
+      "args": ["CONFIG=MiniMill", "VERBOSE=2", "COLOR=0", "RECORD=1"],
       "group": "build",
       "problemMatcher": {
         "base": "$gcc",
@@ -81,8 +95,13 @@
       "label": "Build CONFIG=MiniMillgShield Debug",
       "type": "process",
       "command": "make",
-      "args": ["CONFIG=MiniMillgShield", "VERBOSE=2", "COLOR=0", "DEBUG=2",
-         "RECORD=1"],
+      "args": [
+        "CONFIG=MiniMillgShield",
+        "VERBOSE=2",
+        "COLOR=0",
+        "DEBUG=2",
+        "RECORD=1"
+      ],
       "group": "build",
       "problemMatcher": {
         "base": "$gcc",
@@ -93,8 +112,7 @@
       "label": "Build CONFIG=MiniMillgShield Production",
       "type": "process",
       "command": "make",
-      "args": ["CONFIG=MiniMillgShield", "VERBOSE=2", "COLOR=0",
-         "RECORD=1"],
+      "args": ["CONFIG=MiniMillgShield", "VERBOSE=2", "COLOR=0", "RECORD=1"],
       "group": "build",
       "problemMatcher": {
         "base": "$gcc",
@@ -116,8 +134,13 @@
       "label": "Build CONFIG=MiniMillv9 Debug",
       "type": "process",
       "command": "make",
-      "args": ["CONFIG=MiniMillv9", "VERBOSE=2", "COLOR=0", "DEBUG=2",
-         "RECORD=1"],
+      "args": [
+        "CONFIG=MiniMillv9",
+        "VERBOSE=2",
+        "COLOR=0",
+        "DEBUG=2",
+        "RECORD=1"
+      ],
       "group": "build",
       "problemMatcher": {
         "base": "$gcc",
@@ -128,8 +151,7 @@
       "label": "Build CONFIG=MiniMillv9 Production",
       "type": "process",
       "command": "make",
-      "args": ["CONFIG=MiniMillv9", "VERBOSE=2", "COLOR=0",
-         "RECORD=1"],
+      "args": ["CONFIG=MiniMillv9", "VERBOSE=2", "COLOR=0", "RECORD=1"],
       "group": "build",
       "problemMatcher": {
         "base": "$gcc",
@@ -151,8 +173,13 @@
       "label": "Build CONFIG=AxiDrawv3 Debug",
       "type": "process",
       "command": "make",
-      "args": ["CONFIG=AxiDrawv3", "VERBOSE=2", "COLOR=0", "DEBUG=2",
-         "RECORD=1"],
+      "args": [
+        "CONFIG=AxiDrawv3",
+        "VERBOSE=2",
+        "COLOR=0",
+        "DEBUG=2",
+        "RECORD=1"
+      ],
       "group": "build",
       "problemMatcher": {
         "base": "$gcc",
@@ -163,8 +190,7 @@
       "label": "Build CONFIG=AxiDrawv3 Production",
       "type": "process",
       "command": "make",
-      "args": ["CONFIG=AxiDrawv3", "VERBOSE=2", "COLOR=0",
-         "RECORD=1"],
+      "args": ["CONFIG=AxiDrawv3", "VERBOSE=2", "COLOR=0", "RECORD=1"],
       "group": "build",
       "problemMatcher": {
         "base": "$gcc",
@@ -186,8 +212,30 @@
       "label": "Build CONFIG=AxiDrawv3-quint Debug",
       "type": "process",
       "command": "make",
-      "args": ["CONFIG=AxiDrawv3-quint", "VERBOSE=2", "COLOR=0", "DEBUG=2",
-         "RECORD=1"],
+      "args": [
+        "CONFIG=AxiDrawv3-quint",
+        "VERBOSE=2",
+        "COLOR=0",
+        "DEBUG=2",
+        "RECORD=1"
+      ],
+      "group": "build",
+      "problemMatcher": {
+        "base": "$gcc",
+        "fileLocation": ["relative", "${workspaceRoot}/g2core"]
+      }
+    },
+    {
+      "label": "Build CONFIG=AxiDrawv3-quint DebugSemihosting",
+      "type": "process",
+      "command": "make",
+      "args": [
+        "CONFIG=AxiDrawv3-quint",
+        "VERBOSE=2",
+        "COLOR=0",
+        "DEBUG=3",
+        "RECORD=1"
+      ],
       "group": "build",
       "problemMatcher": {
         "base": "$gcc",
@@ -198,8 +246,7 @@
       "label": "Build CONFIG=AxiDrawv3-quint Production",
       "type": "process",
       "command": "make",
-      "args": ["CONFIG=AxiDrawv3-quint", "VERBOSE=2", "COLOR=0",
-         "RECORD=1"],
+      "args": ["CONFIG=AxiDrawv3-quint", "VERBOSE=2", "COLOR=0", "RECORD=1"],
       "group": "build",
       "problemMatcher": {
         "base": "$gcc",
@@ -221,8 +268,13 @@
       "label": "Build CONFIG=Othermill Debug",
       "type": "process",
       "command": "make",
-      "args": ["CONFIG=Othermill", "VERBOSE=2", "COLOR=0", "DEBUG=2",
-         "RECORD=1"],
+      "args": [
+        "CONFIG=Othermill",
+        "VERBOSE=2",
+        "COLOR=0",
+        "DEBUG=2",
+        "RECORD=1"
+      ],
       "group": "build",
       "problemMatcher": {
         "base": "$gcc",
@@ -233,8 +285,7 @@
       "label": "Build CONFIG=Othermill Production",
       "type": "process",
       "command": "make",
-      "args": ["CONFIG=Othermill", "VERBOSE=2", "COLOR=0",
-         "RECORD=1"],
+      "args": ["CONFIG=Othermill", "VERBOSE=2", "COLOR=0", "RECORD=1"],
       "group": "build",
       "problemMatcher": {
         "base": "$gcc",
@@ -256,8 +307,13 @@
       "label": "Build CONFIG=OthermillPro Debug",
       "type": "process",
       "command": "make",
-      "args": ["CONFIG=OthermillPro", "VERBOSE=2", "COLOR=0", "DEBUG=2",
-         "RECORD=1"],
+      "args": [
+        "CONFIG=OthermillPro",
+        "VERBOSE=2",
+        "COLOR=0",
+        "DEBUG=2",
+        "RECORD=1"
+      ],
       "group": "build",
       "problemMatcher": {
         "base": "$gcc",
@@ -268,8 +324,7 @@
       "label": "Build CONFIG=OthermillPro Production",
       "type": "process",
       "command": "make",
-      "args": ["CONFIG=OthermillPro", "VERBOSE=2", "COLOR=0",
-         "RECORD=1"],
+      "args": ["CONFIG=OthermillPro", "VERBOSE=2", "COLOR=0", "RECORD=1"],
       "group": "build",
       "problemMatcher": {
         "base": "$gcc",
@@ -346,7 +401,13 @@
       "label": "Build CONFIG=CheapoLaser Debug",
       "type": "process",
       "command": "make",
-      "args": ["CONFIG=CheapoLaser", "VERBOSE=2", "COLOR=0", "DEBUG=2", "RECORD=1"],
+      "args": [
+        "CONFIG=CheapoLaser",
+        "VERBOSE=2",
+        "COLOR=0",
+        "DEBUG=2",
+        "RECORD=1"
+      ],
       "group": "build",
       "problemMatcher": {
         "base": "$gcc",

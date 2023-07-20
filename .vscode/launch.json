@@ -263,6 +263,42 @@
         "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-12.2r1/bin/"
       },
       "preLaunchTask": "Build CONFIG=AxiDrawv3-quint Debug"
+    },
+    {
+      "name": "Debug CONFIG=AxiDrawv3-quint (J-Link/Semihosting)",
+      "type": "cortex-debug",
+      "request": "launch",
+      "servertype": "jlink",
+      "cwd": "${workspaceRoot}/g2core/",
+      "executable": "./bin/AxiDrawv3-quint-gquintic-g/g2core.elf",
+      "device": "ATSAMS70N20",
+      "svdFile": "${workspaceRoot}/Motate/MotateProject/motate/cmsis/TARGET_Atmel/sams70/ATSAMS70N20B.svd",
+      "interface": "swd",
+      "showDevDebugOutput": "none",
+      "osx": {
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/osx/gcc-arm-none-eabi-12.2r1/bin/"
+      },
+      "linux": {
+        "armToolchainPath": "${workspaceRoot}/Motate/Tools/linux/gcc-arm-none-eabi-12.2r1/bin/"
+      },
+      "swoConfig": {
+        "enabled": true,
+        "source": "probe",
+        "swoFrequency": 8000000,
+        "decoders": [
+          {
+            "port": 0,
+            "type": "console",
+            "label": "SWO output",
+            "encoding": "ascii"
+          }
+        ]
+      },
+      "liveWatch": {
+        "enabled": true,
+        "samplesPerSecond": 4
+      },
+      "preLaunchTask": "Build CONFIG=AxiDrawv3-quint DebugSemihosting"
     }
   ]
 }
