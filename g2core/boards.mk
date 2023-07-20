@@ -60,7 +60,7 @@ endif
 
 ifeq ("$(CONFIG)","MiniMillrevD")
     ifeq ("$(BOARD)","NONE")
-        BOARD=gquintic-g
+        BOARD=gquintic-d
     endif
     SETTINGS_FILE="settings_minimill.h"
 endif
