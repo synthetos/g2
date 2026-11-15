@@ -1,5 +1,7 @@
 <img src="https://raw.githubusercontent.com/wiki/synthetos/g2/images/g2core.png" width="300" height="129" alt="g2core">
 
+**Website: [synthetos.com](https://synthetos.com)** · [Wiki](https://github.com/synthetos/g2/wiki) · [Releases](https://github.com/synthetos/g2/releases)
+
 [![Build Status](https://travis-ci.org/synthetos/g2.svg?branch=edge)](https://travis-ci.org/synthetos/g2)
 
 # What it is
